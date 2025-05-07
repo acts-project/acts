@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
     static_cast<void>(tsp);
-    VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
+    VectorMultiTrajectory::ConstTrackStateProxy ctsp{t.getTrackState(i0)};
     static_cast<void>(ctsp);
 
     tsp.predicted().setRandom();
@@ -90,6 +90,10 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     // tsp_const.predicted().setRandom();
     // ctsp.predicted().setRandom();
   }
+
+  // is this something we actually want?
+  ConstVectorMultiTrajectory ct{t};
+  BOOST_CHECK_EQUAL(ct.size(), t.size());
 
   ConstVectorMultiTrajectory ctm{std::move(t)};
   BOOST_CHECK_EQUAL(ctm.size(), t.size());

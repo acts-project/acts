@@ -7,17 +7,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -42,29 +41,28 @@ class LineSurface : public Surface {
   friend class Surface;
 
  protected:
-  /// Constructor from Transform3 and bounds
+  /// Constructor for LineSurface from Transform3 and radial dimensions
   ///
-  /// @param transform The transform that positions the surface in the global
-  /// frame
-  /// @param radius The straw radius
+  /// @param transform The transform that positions the line in the global frame
+  /// @param radius The radius of the line
   /// @param halez The half length in z
-  LineSurface(const Transform3& transform, double radius, double halez);
+  explicit LineSurface(const Transform3& transform, double radius,
+                       double halez);
 
-  /// Constructor from Transform3 and a shared bounds object
+  /// Constructor for LineSurface from Transform3 and LineBounds
   ///
-  /// @param transform The transform that positions the surface in the global
-  /// frame
-  /// @param lbounds The bounds describing the straw dimensions, can be
-  /// optionally nullptr
-  LineSurface(const Transform3& transform,
-              std::shared_ptr<const LineBounds> lbounds = nullptr);
+  /// @param transform The transform that positions the line in the global frame
+  /// @param lbounds The bounds describing the line dimensions
+  explicit LineSurface(const Transform3& transform,
+                       std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
-  /// @param lbounds The bounds describing the straw dimensions
+  /// @param lbounds are the bounds describing the line dimensions, they must
+  /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
-  LineSurface(std::shared_ptr<const LineBounds> lbounds,
-              const DetectorElementBase& detelement);
+  explicit LineSurface(std::shared_ptr<const LineBounds> lbounds,
+                       const DetectorElementBase& detelement);
 
   /// Copy constructor
   ///
@@ -76,13 +74,10 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param shift is the additional transform applied after copying
-  LineSurface(const GeometryContext& gctx, const LineSurface& other,
-              const Transform3& shift);
+  explicit LineSurface(const GeometryContext& gctx, const LineSurface& other,
+                       const Transform3& shift);
 
  public:
-  ~LineSurface() override = default;
-  LineSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying
@@ -95,11 +90,11 @@ class LineSurface : public Surface {
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the binning type to be used
+  /// @param aDir is the axis direction for the reference position request
   ///
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///

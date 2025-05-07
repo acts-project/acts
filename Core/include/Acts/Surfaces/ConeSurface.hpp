@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -19,12 +18,10 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -41,7 +38,7 @@ namespace Acts {
 /// at the tip of the cone.
 /// Propagations to a cone surface will be returned in
 /// curvilinear coordinates.
-
+///
 class ConeSurface : public RegularSurface {
   friend class Surface;
 
@@ -85,9 +82,6 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
-  ~ConeSurface() override = default;
-  ConeSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
@@ -96,11 +90,11 @@ class ConeSurface : public RegularSurface {
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue defines the type of binning applied in the global frame
+  /// @param aDir defines the direction of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

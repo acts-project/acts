@@ -77,20 +77,6 @@ struct GaussianSumFitter {
   /// The actor type
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
-  /// This allows to break the propagation by setting the navigationBreak
-  /// TODO refactor once we can do this more elegantly
-  struct NavigationBreakAborter {
-    NavigationBreakAborter() = default;
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
-                    const navigator_t& navigator,
-                    const Logger& /*logger*/) const {
-      return navigator.navigationBreak(state.navigation);
-    }
-  };
-
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             TrackContainerFrontend track_container_t>
@@ -105,7 +91,7 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActorList<GsfActor, NavigationBreakAborter>;
+      using Actors = ActorList<GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
@@ -150,14 +136,21 @@ struct GaussianSumFitter {
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
     // Initialize the forward propagation with the DirectNavigator
-    auto fwdPropInitializer = [this](const auto& opts) {
-      using Actors =
-          ActorList<GsfActor, EndOfWorldReached, NavigationBreakAborter>;
+    auto fwdPropInitializer = [&](const auto& opts) {
+      using Actors = ActorList<GsfActor, EndOfWorldReached>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
+      }
 
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
@@ -166,13 +159,21 @@ struct GaussianSumFitter {
     };
 
     // Initialize the backward propagation with the DirectNavigator
-    auto bwdPropInitializer = [this](const auto& opts) {
+    auto bwdPropInitializer = [&](const auto& opts) {
       using Actors = ActorList<GsfActor, EndOfWorldReached>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
+      }
 
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
@@ -279,7 +280,21 @@ struct GaussianSumFitter {
         params = sParameters;
       }
 
-      auto state = m_propagator.makeState(*params, fwdPropOptions);
+      auto state = m_propagator.makeState(fwdPropOptions);
+
+      // Type deduction for propagation result to pass on errors
+      using OptionsType = decltype(fwdPropOptions);
+      using StateType = decltype(state);
+      using PropagationResultType =
+          decltype(m_propagator.propagate(std::declval<StateType&>()));
+      using ResultType = decltype(m_propagator.makeResult(
+          std::declval<StateType&&>(), std::declval<PropagationResultType>(),
+          std::declval<const OptionsType&>(), false));
+
+      auto initRes = m_propagator.initialize(state, *params);
+      if (!initRes.ok()) {
+        return ResultType::failure(initRes.error());
+      }
 
       auto& r = state.template get<typename GsfActor::result_type>();
       r.fittedStates = &trackContainer.trackStateContainer();
@@ -335,12 +350,29 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
-      auto state =
-          m_propagator.template makeState<MultiComponentBoundTrackParameters,
-                                          decltype(bwdPropOptions),
-                                          MultiStepperSurfaceReached>(
-              params, target, bwdPropOptions);
+      assert(!fwdGsfResult.lastMeasurementComponents.empty());
+      assert(fwdGsfResult.lastMeasurementSurface != nullptr);
+      MultiComponentBoundTrackParameters params(
+          fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
+          fwdGsfResult.lastMeasurementComponents,
+          sParameters.particleHypothesis());
+      auto state = m_propagator.template makeState<decltype(bwdPropOptions),
+                                                   MultiStepperSurfaceReached>(
+          target, bwdPropOptions);
+
+      // Type deduction for propagation result to pass on errors
+      using OptionsType = decltype(bwdPropOptions);
+      using StateType = decltype(state);
+      using PropagationResultType =
+          decltype(m_propagator.propagate(std::declval<StateType&>()));
+      using ResultType = decltype(m_propagator.makeResult(
+          std::declval<StateType&&>(), std::declval<PropagationResultType>(),
+          target, std::declval<const OptionsType&>()));
+
+      auto initRes = m_propagator.initialize(state, params);
+      if (!initRes.ok()) {
+        return ResultType::failure(initRes.error());
+      }
 
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&

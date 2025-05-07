@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -27,12 +26,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <type_traits>
 #include <utility>
 
 using namespace Acts::UnitLiterals;
@@ -135,11 +132,15 @@ template <typename Parameters>
 void testJacobianToGlobal(const Parameters& pars) {
   // Jacobian creation for Propagator/Steppers
   // a) ATLAS stepper
-  AtlasStepperType::State astepState(tgContext, bField->makeCache(mfContext),
-                                     pars);
+  AtlasStepperType astep(bField);
+  AtlasStepperType::State astepState =
+      astep.makeState(AtlasStepperType::Options(tgContext, mfContext));
+  astep.initialize(astepState, pars);
   // b) Eigen stepper
-  EigenStepperType::State estepState(tgContext, bField->makeCache(mfContext),
-                                     pars);
+  EigenStepperType estep(bField);
+  EigenStepperType::State estepState =
+      estep.makeState(EigenStepperType::Options(tgContext, mfContext));
+  estep.initialize(estepState, pars);
 
   // create the matrices
   auto asMatrix = convertToMatrix(astepState.pVector);
@@ -154,9 +155,9 @@ BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,
       0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0, 0, 0;
-  CurvilinearTrackParameters curvilinear(Vector4(341., 412., 93., 0.),
-                                         Vector3(1.2, 8.3, 0.45), 1 / 10.0, cov,
-                                         ParticleHypothesis::pion());
+  BoundTrackParameters curvilinear = BoundTrackParameters::createCurvilinear(
+      Vector4(341., 412., 93., 0.), Vector3(1.2, 8.3, 0.45), 1 / 10.0, cov,
+      ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(curvilinear);
@@ -210,7 +211,8 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   Vector3 sNormal = Vector3(1.2, -0.3, 0.05).normalized();
 
   // Create a surface & parameters with covariance on the surface
-  auto pSurface = CurvilinearSurface(sPosition, sNormal).planeSurface();
+  std::shared_ptr<PlaneSurface> pSurface =
+      CurvilinearSurface(sPosition, sNormal).planeSurface();
 
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,

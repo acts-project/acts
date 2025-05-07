@@ -97,7 +97,8 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  auto seeder = std::make_shared<Seeder>(Seeder::Config{{densityCfg}});
+  auto seeder = std::make_shared<Seeder>(
+      Seeder::Config{Acts::GaussianTrackDensity(densityCfg)});
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
@@ -122,7 +123,7 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   }
 
   // show some debug output
-  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  ACTS_DEBUG("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
     ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
                                   << vtx.tracks().size() << " tracks.");

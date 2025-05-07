@@ -27,7 +27,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    float cut = 0.21;
+    float cut = 0.5;
   };
 
   OnnxEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
@@ -35,7 +35,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
 
   std::tuple<std::any, std::any, std::any, std::any> operator()(
       std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      torch::Device device = torch::Device(torch::kCPU)) override;
+      const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
   torch::Device device() const override { return m_device; };

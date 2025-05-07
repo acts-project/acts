@@ -1013,8 +1013,10 @@ class MultiTrajectoryTestsCommon {
     auto i0 = t.addTrackState(kMask);
 
     typename trajectory_t::TrackStateProxy tp = t.getTrackState(i0);  // mutable
-    typename trajectory_t::TrackStateProxy tp2{tp};       // mutable to mutable
+    typename trajectory_t::TrackStateProxy tp2{tp};  // mutable to mutable
+    static_cast<void>(tp2);
     typename trajectory_t::ConstTrackStateProxy tp3{tp};  // mutable to const
+    static_cast<void>(tp3);
     // const to mutable: this won't compile
     // MultiTrajectory::TrackStateProxy tp4{tp3};
   }
@@ -1235,7 +1237,7 @@ class MultiTrajectoryTestsCommon {
     auto [par2, cov2] = generateBoundParametersCovariance(rng, {});
 
     ts.allocateCalibrated(3);
-    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), ActsVector<3>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
                       ActsSquareMatrix<3>::Zero());
 

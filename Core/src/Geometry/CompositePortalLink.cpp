@@ -15,10 +15,13 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
@@ -30,7 +33,7 @@ namespace Acts {
 namespace {
 std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
                                               const Surface& b,
-                                              BinningValue direction) {
+                                              AxisDirection direction) {
   if (a.type() != b.type()) {
     throw std::invalid_argument{"Cannot merge surfaces of different types"};
   }
@@ -48,7 +51,9 @@ std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
     return merged;
   } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(&a);
              planeA != nullptr) {
-    throw std::logic_error{"Plane surfaces not implemented yet"};
+    const auto& planeB = dynamic_cast<const PlaneSurface&>(b);
+    auto [merged, reversed] = planeA->mergedWith(planeB, direction);
+    return merged;
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }
@@ -56,7 +61,7 @@ std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
 
 std::shared_ptr<RegularSurface> mergePortalLinks(
     const std::vector<std::unique_ptr<PortalLinkBase>>& links,
-    BinningValue direction) {
+    AxisDirection direction) {
   assert(std::ranges::all_of(links,
                              [](const auto& link) { return link != nullptr; }));
   assert(!links.empty());
@@ -73,7 +78,7 @@ std::shared_ptr<RegularSurface> mergePortalLinks(
 
 CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
                                          std::unique_ptr<PortalLinkBase> b,
-                                         BinningValue direction, bool flatten)
+                                         AxisDirection direction, bool flatten)
     : PortalLinkBase(mergedSurface(a->surface(), b->surface(), direction)),
       m_direction{direction} {
   if (!flatten) {
@@ -99,7 +104,7 @@ CompositePortalLink::CompositePortalLink(std::unique_ptr<PortalLinkBase> a,
 }
 
 CompositePortalLink::CompositePortalLink(
-    std::vector<std::unique_ptr<PortalLinkBase>> links, BinningValue direction,
+    std::vector<std::unique_ptr<PortalLinkBase>> links, AxisDirection direction,
     bool flatten)
     : PortalLinkBase(mergePortalLinks(links, direction)),
       m_direction(direction) {
@@ -135,9 +140,9 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
   Vector3 global = m_surface->localToGlobal(gctx, position);
   auto res = resolveVolume(gctx, global, tolerance);
   if (!res.ok()) {
-    return res.error();
+    return Result<const TrackingVolume*>::failure(res.error());
   }
-  return *res;
+  return Result<const TrackingVolume*>::success(*res);
 }
 
 Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
@@ -153,7 +158,8 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     }
   }
 
-  return PortalError::PositionNotOnAnyChildPortalLink;
+  return Result<const TrackingVolume*>::failure(
+      PortalError::PositionNotOnAnyChildPortalLink);
 }
 
 std::size_t CompositePortalLink::depth() const {
@@ -207,7 +213,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
   if (surface().type() == Surface::SurfaceType::Cylinder) {
     ACTS_VERBOSE("Combining composite into cylinder grid");
 
-    if (m_direction != BinningValue::binZ) {
+    if (m_direction != AxisDirection::AxisZ) {
       ACTS_ERROR("Cylinder grid only supports binning in Z direction");
       throw std::runtime_error{"Unsupported binning direction"};
     }
@@ -241,17 +247,18 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     Axis axis{AxisBound, edges};
 
-    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    auto gridPortalLink =
+        GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      gridPortalLink->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
-    return grid;
+    return gridPortalLink;
 
   } else if (surface().type() == Surface::SurfaceType::Disc) {
     ACTS_VERBOSE("Combining composite into disc grid");
 
-    if (m_direction != BinningValue::binR) {
+    if (m_direction != AxisDirection::AxisR) {
       ACTS_ERROR("Disc grid only supports binning in R direction");
       throw std::runtime_error{"Unsupported binning direction"};
     }
@@ -284,12 +291,60 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;
   } else if (surface().type() == Surface::SurfaceType::Plane) {
-    throw std::runtime_error{"Plane surfaces not implemented yet"};
+    ACTS_VERBOSE("Combining composite into plane grid");
+
+    if (m_direction != AxisDirection::AxisX &&
+        m_direction != AxisDirection::AxisY) {
+      ACTS_ERROR("Plane grid only supports binning in x/y direction");
+      throw std::runtime_error{"Unsupported binning direction"};
+    }
+
+    bool dirX = m_direction == AxisDirection::AxisX;
+
+    std::vector<double> edges;
+    edges.reserve(m_children.size() + 1);
+
+    const Transform3& groupTransform = m_surface->transform(gctx);
+    Transform3 itransform = groupTransform.inverse();
+
+    std::size_t sortingDir = dirX ? eX : eY;
+    std::ranges::sort(trivialLinks, [&itransform, &gctx, sortingDir](
+                                        const auto& a, const auto& b) {
+      return (itransform * a->surface().transform(gctx))
+                 .translation()[sortingDir] <
+             (itransform * b->surface().transform(gctx))
+                 .translation()[sortingDir];
+    });
+
+    for (const auto& [i, child] : enumerate(trivialLinks)) {
+      const auto& bounds =
+          dynamic_cast<const RectangleBounds&>(child->surface().bounds());
+      Transform3 ltransform = itransform * child->surface().transform(gctx);
+      double half = dirX ? bounds.halfLengthX() : bounds.halfLengthY();
+      double min = ltransform.translation()[sortingDir] - half;
+      double max = ltransform.translation()[sortingDir] + half;
+      if (i == 0) {
+        edges.push_back(min);
+      }
+      edges.push_back(max);
+    }
+
+    ACTS_VERBOSE("~> Determined bin edges to be " << printEdges(edges));
+
+    Axis axis{AxisBound, edges};
+
+    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    for (const auto& [i, child] : enumerate(trivialLinks)) {
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
+    }
+
+    return grid;
+
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }

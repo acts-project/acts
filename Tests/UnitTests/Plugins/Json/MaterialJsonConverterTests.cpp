@@ -16,8 +16,6 @@
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
-#include <array>
-#include <fstream>
 #include <memory>
 #include <numbers>
 #include <vector>
@@ -28,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(MaterialJsonIO)
 
 BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material(), 0.0);  // vacuum
+  material.emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
   material.emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
   material.emplace_back(
@@ -55,11 +53,10 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
       std::move(localX));
 
   auto globalX = std::make_unique<
-      const Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>>();
+      const Acts::GridAccess::GlobalSubspace<Acts::AxisDirection::AxisX>>();
   Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
-  gToX.connect<
-      &Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>::toGridLocal>(
-      std::move(globalX));
+  gToX.connect<&Acts::GridAccess::GlobalSubspace<
+      Acts::AxisDirection::AxisX>::toGridLocal>(std::move(globalX));
 
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
       std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
@@ -80,7 +77,7 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
       dynamic_cast<const Acts::IndexedSurfaceMaterial<EqGrid>*>(ismRead);
   BOOST_REQUIRE(ismReadTyped != nullptr);
 
-  auto gridRead = ismReadTyped->grid();
+  const auto& gridRead = ismReadTyped->grid();
   BOOST_CHECK(gridRead.atPosition(Point{0.5}) == 1u);  // material 1
   BOOST_CHECK(gridRead.atPosition(Point{1.5}) == 0u);  // vacuum
   BOOST_CHECK(gridRead.atPosition(Point{2.5}) == 2u);  // material 2
@@ -88,7 +85,10 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   BOOST_CHECK(gridRead.atPosition(Point{4.5}) == 3u);  // material 3
 
   // Check the accessor is there and the material is filled
-  auto accessorRead = ismReadTyped->materialAccessor();
+  const auto& accessorRead = ismReadTyped->materialAccessor();
+
+  auto materialRead = accessorRead.material;
+  BOOST_REQUIRE(materialRead.size() == 4);
   CHECK_CLOSE_ABS(accessorRead.material[0].thickness(), 0.0, 1e-5);
   CHECK_CLOSE_ABS(accessorRead.material[1].thickness(), 1.0, 1e-5);
   CHECK_CLOSE_ABS(accessorRead.material[2].thickness(), 2.0, 1e-5);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
 
 BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material(), 1.0);  // vacuum
+  material.emplace_back(Acts::Material::Vacuum(), 1.0);  // vacuum
   material.emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
   material.emplace_back(
@@ -132,10 +132,10 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
 
   // With z shift 10
   auto globalToGrid = std::make_unique<const Acts::GridAccess::GlobalSubspace<
-      Acts::BinningValue::binZ, Acts::BinningValue::binPhi>>();
+      Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisPhi>>();
   Acts::IndexedSurfaceMaterial<EqEqGrid>::GlobalToGridLocalDelegate gToZphi;
   gToZphi.connect<&Acts::GridAccess::GlobalSubspace<
-      Acts::BinningValue::binZ, Acts::BinningValue::binPhi>::toGridLocal>(
+      Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisPhi>::toGridLocal>(
       std::move(globalToGrid));
 
   // Create the indexed material grid

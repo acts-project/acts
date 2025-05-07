@@ -113,7 +113,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   }
 
   // Attach surface material if present
-  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface,
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -155,10 +155,13 @@ void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
   if (protoMaterial) {
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
-    Experimental::BinningDescription pmBinning{
-        DD4hepBinningHelpers::convertBinning(
-            dd4hepElement, prefix + "_proto_material_binning")};
-    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    auto materialBinning = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, prefix + "_proto_material_binning");
+    std::vector<DirectedProtoAxis> pmBinning = {};
+    for (const auto& [dpAxis, bins] : materialBinning) {
+      pmBinning.emplace_back(dpAxis);
+    }
+    ACTS_VERBOSE(" - converted binning is " << pmBinning);
     Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
         gctx, surface, pmBinning);
 

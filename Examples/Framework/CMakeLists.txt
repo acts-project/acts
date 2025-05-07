@@ -5,6 +5,7 @@ set(ActsExamplesFramework_SOURCES)
 add_library(
     ActsExamplesFramework
     SHARED
+    src/EventData/MuonSpacePoint.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/ScalingCalibrator.cpp
@@ -15,6 +16,7 @@ add_library(
     src/Framework/RandomNumbers.cpp
     src/Framework/Sequencer.cpp
     src/Framework/DataHandle.cpp
+    src/Framework/BufferedReader.cpp
     src/Utilities/EventDataTransforms.cpp
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
@@ -24,6 +26,7 @@ add_library(
     src/Validation/FakeRatePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
+    src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
 )
 
@@ -56,6 +59,8 @@ if(NOT TBB_FOUND)
     find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
 endif()
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
+
+acts_compile_headers(ActsExamplesFramework GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesFramework

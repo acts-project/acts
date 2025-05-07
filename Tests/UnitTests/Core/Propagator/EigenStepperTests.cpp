@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
@@ -33,7 +33,6 @@
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -50,7 +49,6 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -60,11 +58,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class ISurfaceMaterial;
-class Logger;
-}  // namespace Acts
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
@@ -78,31 +71,6 @@ static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
-
-/// @brief Simplified propagator state
-template <typename stepper_state_t>
-struct PropState {
-  /// @brief Constructor
-  PropState(Direction direction, stepper_state_t sState)
-      : stepping(std::move(sState)) {
-    options.direction = direction;
-  }
-  /// State of the eigen stepper
-  stepper_state_t stepping;
-  /// Propagator options which only carry the relevant components
-  struct {
-    Direction direction = Direction::Forward;
-    struct {
-      double stepTolerance = 1e-4;
-      double stepSizeCutOff = 0.;
-      unsigned int maxRungeKuttaStepTrials = 10000;
-    } stepping;
-  } options;
-};
-
-struct MockNavigator {};
-
-static constexpr MockNavigator mockNavigator;
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
 /// a custom made threshold.
@@ -185,7 +153,6 @@ struct StepCollector {
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
-  double stepSize = 123.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
   Vector3 pos(1., 2., 3.);
@@ -194,13 +161,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   double absMom = 8.;
   double charge = -1.;
 
-  // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                std::nullopt, ParticleHypothesis::pion());
-  EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                stepSize);
+  EigenStepper<>::Options esOptions(tgContext, mfContext);
 
+  // Test charged parameters without covariance matrix
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, std::nullopt,
+      ParticleHypothesis::pion());
   EigenStepper<> es(bField);
+  EigenStepper<>::State esState = es.makeState(esOptions);
+  es.initialize(esState, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -209,22 +178,22 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
-  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
-                                 std::nullopt, ParticleHypothesis::pion0());
-  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  stepSize);
+  BoundTrackParameters ncp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, 1 / absMom, std::nullopt,
+      ParticleHypothesis::pion0());
+  esOptions = EigenStepper<>::Options(tgContext, mfContext);
+  es.initialize(esState, ncp);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
-                                   ParticleHypothesis::pion0());
-  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  stepSize);
+  ncp = BoundTrackParameters::createCurvilinear(makeVector4(pos, time), dir,
+                                                1 / absMom, cov,
+                                                ParticleHypothesis::pion0());
+  es.initialize(esState, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -234,7 +203,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 /// The numerical correctness of the stepper is tested in the integration tests
 BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Set up some variables for the state
-  Direction navDir = Direction::Backward;
+  Direction navDir = Direction::Backward();
   double stepSize = 123.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
   auto bCache = bField->makeCache(mfContext);
@@ -246,13 +215,18 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom = 8.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov, ParticleHypothesis::pion());
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, cov,
+      ParticleHypothesis::pion());
 
-  // Build the state and the stepper
-  EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                stepSize);
+  EigenStepper<>::Options esOptions(tgContext, mfContext);
+  esOptions.maxStepSize = stepSize;
+  esOptions.initialStepSize = 10_m;
+
+  // Build the stepper and the state
   EigenStepper<> es(bField);
+  EigenStepper<>::State esState = es.makeState(esOptions);
+  es.initialize(esState, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
@@ -266,11 +240,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.updateStepSize(esState, -1337., ConstrainedStep::actor);
+  es.updateStepSize(esState, -1337., ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState, ConstrainedStep::actor);
+  es.releaseStepSize(esState, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
@@ -309,27 +283,26 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
-  PropState ps(navDir, std::move(esState));
 
-  ps.stepping.covTransport = false;
-  es.step(ps, mockNavigator).value();
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
-  BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
-  BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
-  BOOST_CHECK_LT(es.time(ps.stepping), newTime);
-  BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
-  BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
+  esState.covTransport = false;
+  es.step(esState, navDir, nullptr).value();
+  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
+  BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  BOOST_CHECK_LT(es.time(esState), newTime);
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
 
-  ps.stepping.covTransport = true;
-  es.step(ps, mockNavigator).value();
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
-  BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
-  BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
-  BOOST_CHECK_LT(es.time(ps.stepping), newTime);
-  BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
-  BOOST_CHECK_NE(ps.stepping.jacTransport, FreeMatrix::Identity());
+  esState.covTransport = true;
+  es.step(esState, navDir, nullptr).value();
+  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
+  BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  BOOST_CHECK_LT(es.time(esState), newTime);
+  BOOST_CHECK_NE(esState.derivative, FreeVector::Zero());
+  BOOST_CHECK_NE(esState.jacTransport, FreeMatrix::Identity());
 
   /// Test the state reset
   // Construct the parameters
@@ -339,18 +312,17 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
-                                 charge2 / absMom2, cov2,
-                                 ParticleHypothesis::pion());
+  BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
+      ParticleHypothesis::pion());
   FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
-  navDir = Direction::Forward;
-  double stepSize2 = -2. * stepSize;
+  navDir = Direction::Forward();
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
-                                       cp, stepSize);
+    std::decay_t<decltype(state)> copy = es.makeState(esOptions);
+    es.initialize(copy, cp);
     copy.pars = state.pars;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
@@ -366,7 +338,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
         std::in_place_type<typename field_t::Cache>,
         state.fieldCache.template as<typename field_t::Cache>());
 
-    copy.geoContext = state.geoContext;
     copy.extension = state.extension;
     copy.stepData = state.stepData;
 
@@ -374,13 +345,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   };
 
   // Reset all possible parameters
-  EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
+  EigenStepper<>::State esStateCopy = copyState(*bField, esState);
   BOOST_CHECK(cp2.covariance().has_value());
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.referenceSurface(), stepSize2);
+  es.initialize(esStateCopy, cp2.parameters(), *cp2.covariance(),
+                cp2.particleHypothesis(), cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, esState.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
@@ -391,94 +362,48 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(esState));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), navDir * stepSize2);
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-
-  // Reset all possible parameters except the step size
-  esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.referenceSurface());
-  // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(es.position(esStateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
-  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-
-  // Reset the least amount of parameters
-  esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.referenceSurface());
-  // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(es.position(esStateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
-  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
-  auto plane = CurvilinearSurface(pos, dir.normalized()).planeSurface();
+  std::shared_ptr<PlaneSurface> plane =
+      CurvilinearSurface(pos, dir.normalized()).planeSurface();
   auto bp = BoundTrackParameters::create(
-                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                tgContext, plane, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
-                                  stepSize);
+  es.initialize(esState, bp);
 
   // Test the intersection in the context of a surface
-  auto targetSurface =
+  std::shared_ptr<PlaneSurface> targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
-                         BoundaryTolerance::Infinite());
-  CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
-                  eps);
+                         BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+                         ConstrainedStep::Type::Navigator);
+  CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::Type::Navigator),
+                  navDir * 2., eps);
 
   // Test the step size modification in the context of a surface
   es.updateStepSize(esState,
                     targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
+                        ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
                                     BoundaryTolerance::Infinite())
                         .closest(),
-                    navDir, false);
+                    navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
+  es.releaseStepSize(esState, ConstrainedStep::Type::Navigator);
   es.updateStepSize(esState,
                     targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
+                        ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
                                     BoundaryTolerance::Infinite())
                         .closest(),
-                    navDir, true);
+                    navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
@@ -515,28 +440,29 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.stepping.stepTolerance = 2. * 4.4258e+09;
+  esState.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(ps, mockNavigator);
+  es.step(esState, navDir, nullptr);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
   auto nBfield = std::make_shared<NullBField>();
   EigenStepper<> nes(nBfield);
-  EigenStepper<>::State nesState(tgContext, nBfield->makeCache(mfContext), cp,
-                                 stepSize);
-  PropState nps(navDir, copyState(*nBfield, nesState));
+  EigenStepper<>::Options nesOptions(tgContext, mfContext);
+  EigenStepper<>::State nesState = nes.makeState(nesOptions);
+  nes.initialize(nesState, cp);
+  auto nEsState = copyState(*nBfield, nesState);
   // Test that we can reach the minimum step size
-  nps.options.stepping.stepTolerance = 1e-21;
-  nps.options.stepping.stepSizeCutOff = 1e20;
-  auto res = nes.step(nps, mockNavigator);
+  nEsState.options.stepTolerance = 1e-21;
+  nEsState.options.stepSizeCutOff = 1e20;
+  auto res = nes.step(nEsState, navDir, nullptr);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeStalled);
 
   // Test that the number of trials exceeds
-  nps.options.stepping.stepSizeCutOff = 0.;
-  nps.options.stepping.maxRungeKuttaStepTrials = 0.;
-  res = nes.step(nps, mockNavigator);
+  nEsState.options.stepSizeCutOff = 0.;
+  nEsState.options.maxRungeKuttaStepTrials = 0.;
+  res = nes.step(nEsState, navDir, nullptr);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeAdjustmentFailed);
 }
@@ -579,8 +505,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
-                                        cov, ParticleHypothesis::pion());
+  const BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), startDir, 1_e / 1_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
@@ -674,8 +600,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
-                                        cov, ParticleHypothesis::pion());
+  const BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), startDir, 1_e / 5_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
@@ -818,9 +744,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Navigator naviDet({det, true, true, true});
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
-                                  1_e / 5_GeV, Covariance::Identity(),
-                                  ParticleHypothesis::pion());
+  BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), 0_degree, 90_degree, 1_e / 5_GeV, Covariance::Identity(),
+      ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
@@ -1051,9 +977,9 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Navigator naviVac({detector, true, true, true});
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
-                                  1_e / 1_GeV, Covariance::Identity(),
-                                  ParticleHypothesis::pion());
+  BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), 0_degree, 90_degree, 1_e / 1_GeV, Covariance::Identity(),
+      ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;

@@ -13,6 +13,36 @@ include(ActsRetrieveVersion)
 
 project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
+# policy settings
+
+# Steers how project() handles the VERSION option
+cmake_policy(SET CMP0048 NEW)
+
+# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
+# only local scope, i.e. they are not accessible her for dependencies added
+# via `add_subdirectory`. this overrides the `project(...)` function for
+# sub-projects such that the resulting `<project_name>_VERSION` has
+# global scope and is accessible within the main project later on.
+macro(project)
+    _project(${ARGN})
+    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
+
+# Controls the way python is located
+if(POLICY CMP0094)
+    cmake_policy(SET CMP0094 NEW)
+endif()
+
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
+# Use boost's cmake config files
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 # build options
 
 # all options and compile-time parameters must be defined here for clear
@@ -67,12 +97,13 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -84,7 +115,6 @@ else()
   set(_default_examples_unit_tests OFF)
 endif()
 option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
-option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -98,6 +128,7 @@ set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
 set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
+option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
 
 # handle option inter-dependencies and the everything flag
@@ -110,7 +141,6 @@ set_option_if(
   ACTS_BUILD_EXAMPLES_DD4HEP
   OR ACTS_BUILD_EXAMPLES_EDM4HEP
   OR ACTS_BUILD_EXAMPLES_GEANT4
-  OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_HASHING
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
@@ -130,6 +160,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
   ACTS_BUILD_EXAMPLES_EDM4HEP
+)
+set_option_if(
+  ACTS_BUILD_PLUGIN_PODIO
+  ACTS_BUILD_EXAMPLES_PODIO
 )
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
@@ -223,7 +257,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.50)
+set(_acts_actsvg_version 0.4.56)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_geant4_version 11.1.3)
@@ -239,31 +273,25 @@ set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.309)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.75.3)
-set(_acts_traccc_version 0.16.0)
-set(_acts_covfie_version 0.10.0)
-set(_acts_vecmem_version 1.4.0)
-set(_acts_algebraplugins_version 0.22.0)
+set(_acts_detray_version 0.89.0)
+set(_acts_traccc_version 0.20.0)
+set(_acts_covfie_version 0.12.1)
+set(_acts_vecmem_version 1.14.0)
+set(_acts_algebraplugins_version 0.26.2)
 set(_acts_annoy_version 1.17.3)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
 set(_acts_boost_recommended_version 1.78.0)
 
+# Help with compiler flags discovery
+include(ActsFunctions)
+
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
-# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
-if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
 # required packages
 if(ACTS_SETUP_BOOST)
-    if(POLICY CMP0167)
-        cmake_policy(SET CMP0167 NEW)
-    endif()
-
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
     if(
@@ -310,17 +338,6 @@ if(ACTS_SETUP_EIGEN3)
 endif()
 
 find_package(Filesystem REQUIRED)
-
-# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
-# only local scope, i.e. they are not accessible her for dependencies added
-# via `add_subdirectory`. this overrides the `project(...)` function for
-# sub-projects such that the resulting `<project_name>_VERSION` has
-# global scope and is accessible within the main project later on.
-cmake_policy(SET CMP0048 NEW)
-macro(project)
-    _project(${ARGN})
-    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
-endmacro()
 
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
@@ -425,22 +442,12 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     else()
         message(STATUS "Build Exa.TrkX plugin for CPU only")
     endif()
-    if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
-        message(
-            FATAL_ERROR
-            "When building the Exa.TrkX plugin, at least one of ACTS_EXATRKX_ENABLE_ONNX \
-      and ACTS_EXATRKX_ENABLE_TORCHSCRIPT must be enabled."
-        )
-    endif()
-    if(ACTS_EXATRKX_ENABLE_ONNX)
-        find_package(cugraph REQUIRED)
-    endif()
     if(ACTS_EXATRKX_ENABLE_TORCH)
         find_package(TorchScatter REQUIRED)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
-    find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
+    find_package(onnxruntime ${_acts_onnxruntime_version} CONFIG REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
     find_package(podio ${_acts_podio_version} CONFIG)
@@ -503,46 +510,60 @@ endif()
 if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    # for simplicity always request all potentially required components.
-    find_package(
-        ROOT
-        ${_acts_root_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
-    )
-    check_root_compatibility()
-endif()
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-    if(ACTS_USE_SYSTEM_PYBIND11)
-        find_package(pybind11 CONFIG REQUIRED)
-    else()
-        add_subdirectory(thirdparty/pybind11)
-    endif()
-endif()
-if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
-    find_package(
-        DD4hep
-        ${_acts_dd4hep_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS DDCore DDG4 DDDetectors
-    )
-elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
-    find_package(
-        DD4hep
-        ${_acts_dd4hep_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS DDCore DDDetectors
-    )
-endif()
-if(ACTS_BUILD_EXAMPLES_HEPMC3)
+
     find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
-endif()
-if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-    find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
+
+    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
+    if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
+        add_library(HepMC3::HepMC3 SHARED IMPORTED)
+        set_property(
+            TARGET HepMC3::HepMC3
+            PROPERTY IMPORTED_LOCATION "${HEPMC3_LIB}"
+        )
+        target_include_directories(
+            HepMC3::HepMC3
+            INTERFACE "${HEPMC3_INCLUDE_DIR}"
+        )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+        # for simplicity always request all potentially required components.
+        find_package(
+            ROOT
+            ${_acts_root_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
+        )
+        check_root_compatibility()
+    endif()
+    if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+        if(ACTS_USE_SYSTEM_PYBIND11)
+            find_package(pybind11 CONFIG REQUIRED)
+        else()
+            add_subdirectory(thirdparty/pybind11)
+        endif()
+    endif()
+    if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
+        find_package(
+            DD4hep
+            ${_acts_dd4hep_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS DDCore DDG4 DDDetectors
+        )
+    elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
+        find_package(
+            DD4hep
+            ${_acts_dd4hep_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS DDCore DDDetectors
+        )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_PYTHIA8)
+        find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
+    endif()
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

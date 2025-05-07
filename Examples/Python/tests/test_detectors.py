@@ -21,8 +21,8 @@ def count_surfaces(geo):
 
 
 def check_extra_odd(srf):
-    if srf.geometryId().volume() in [28, 30, 23, 25, 16, 18]:
-        assert srf.geometryId().extra() != 0
+    if srf.geometryId.volume in [28, 30, 23, 25, 16, 18]:
+        assert srf.geometryId.extra != 0
     return
 
 
@@ -174,7 +174,7 @@ def test_coordinate_converter(trk_geo):
         digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
@@ -183,7 +183,7 @@ def test_coordinate_converter(trk_geo):
 
     def test_surface(surface):
         gctx = acts.GeometryContext()
-        geo_id = surface.geometryId().value()
+        geo_id = surface.geometryId.value
         geo_center = surface.center(gctx)
         x, y, z = geo_center[0], geo_center[1], geo_center[2]
 

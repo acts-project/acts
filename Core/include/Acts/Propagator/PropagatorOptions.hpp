@@ -25,10 +25,19 @@ namespace detail {
 /// @brief Holds the generic pure propagator options
 struct PurePropagatorPlainOptions {
   /// Propagation direction
-  Direction direction = Direction::Forward;
+  Direction direction = Direction::Forward();
 
   /// Maximum number of steps for one propagate call
+  ///
+  /// This ensures that the propagation does not hang in the stepping loop in
+  /// case of misconfiguration or bugs.
   unsigned int maxSteps = 1000;
+
+  /// Maximum number of next target calls for one step
+  ///
+  /// This ensures that the propagation does not hang in the target resolution
+  /// loop in case of misconfiguration or bugs.
+  unsigned int maxTargetSkipping = 100;
 
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
@@ -58,7 +67,10 @@ struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
   /// PropagatorPlainOptions with context
   PropagatorPlainOptions(const GeometryContext& gctx,
                          const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+      : geoContext(gctx),
+        magFieldContext(mctx),
+        stepping(gctx, mctx),
+        navigation(gctx) {}
 
   /// The context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -88,17 +100,22 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   /// PropagatorOptions with context
   PropagatorOptions(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+      : geoContext(gctx),
+        magFieldContext(mctx),
+        stepping(gctx, mctx),
+        navigation(gctx) {}
 
   /// PropagatorOptions with context and plain options
-  PropagatorOptions(const PropagatorPlainOptions& pOptions)
+  explicit PropagatorOptions(const PropagatorPlainOptions& pOptions)
       : geoContext(pOptions.geoContext),
-        magFieldContext(pOptions.magFieldContext) {
+        magFieldContext(pOptions.magFieldContext),
+        stepping(pOptions.geoContext, pOptions.magFieldContext),
+        navigation(pOptions.geoContext) {
     setPlainOptions(pOptions);
   }
 
   /// @brief Convert to plain options
-  operator PropagatorPlainOptions() const {
+  explicit operator PropagatorPlainOptions() const {
     PropagatorPlainOptions pOptions(geoContext, magFieldContext);
     static_cast<PurePropagatorPlainOptions&>(pOptions) =
         static_cast<const PurePropagatorPlainOptions&>(*this);

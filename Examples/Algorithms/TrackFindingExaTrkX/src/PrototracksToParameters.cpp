@@ -59,8 +59,9 @@ ProcessCode PrototracksToParameters::execute(
   const auto &sps = m_inputSpacePoints(ctx);
   auto prototracks = m_inputProtoTracks(ctx);
 
-  // Make some lookup tables. Allocate space for the maximum number of indices
-  // (max 2 source links per spacepoint)
+  // Make some lookup tables and pre-allocate some space
+  // Note this is a heuristic, since it is not garantueed that each measurement
+  // is part of a spacepoint
   std::vector<const SimSpacePoint *> indexToSpacepoint(2 * sps.size(), nullptr);
   std::vector<Acts::GeometryIdentifier> indexToGeoId(
       2 * sps.size(), Acts::GeometryIdentifier{0});
@@ -68,8 +69,12 @@ ProcessCode PrototracksToParameters::execute(
   for (const auto &sp : sps) {
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
-      indexToSpacepoint[isl.index()] = &sp;
-      indexToGeoId[isl.index()] = isl.geometryId();
+      if (isl.index() >= indexToSpacepoint.size()) {
+        indexToSpacepoint.resize(isl.index() + 1, nullptr);
+        indexToGeoId.resize(isl.index() + 1, Acts::GeometryIdentifier{0});
+      }
+      indexToSpacepoint.at(isl.index()) = &sp;
+      indexToGeoId.at(isl.index()) = isl.geometryId();
     }
   }
 
@@ -118,12 +123,14 @@ ProcessCode PrototracksToParameters::execute(
     }
 
     // Make the seed
+    auto result =
+        track | std::views::filter([&](auto i) {
+          return i < indexToSpacepoint.size() &&
+                 indexToSpacepoint.at(i) != nullptr;
+        }) |
+        std::views::transform([&](auto i) { return indexToSpacepoint.at(i); });
     tmpSps.clear();
-    std::transform(track.begin(), track.end(), std::back_inserter(tmpSps),
-                   [&](auto i) { return indexToSpacepoint[i]; });
-    tmpSps.erase(std::remove_if(tmpSps.begin(), tmpSps.end(),
-                                [](auto sp) { return sp == nullptr; }),
-                 tmpSps.end());
+    std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
       ACTS_WARNING("Could not find all spacepoints, skip");
@@ -141,9 +148,10 @@ ProcessCode PrototracksToParameters::execute(
     const auto z_vertex = -t / m;
     const auto s = tmpSps.size();
 
-    SimSeed seed = m_cfg.buildTightSeeds
-                       ? SimSeed(*tmpSps[0], *tmpSps[1], *tmpSps[2])
-                       : SimSeed(*tmpSps[0], *tmpSps[s / 2], *tmpSps[s - 1]);
+    SimSeed seed =
+        m_cfg.buildTightSeeds
+            ? SimSeed(*tmpSps.at(0), *tmpSps.at(1), *tmpSps.at(2))
+            : SimSeed(*tmpSps.at(0), *tmpSps.at(s / 2), *tmpSps.at(s - 1));
     seed.setVertexZ(z_vertex);
 
     // Compute parameters

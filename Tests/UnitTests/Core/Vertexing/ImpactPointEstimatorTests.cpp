@@ -267,14 +267,17 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
+  StraightPropagator::Options<> straightPOptions(geoContext, magFieldContext);
+  straightPOptions.direction = pOptions.direction;
+
   // Propagate to the 2D PCA of the reference point in a constant B field
   auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(result.ok());
   const auto& refParams = *result->endParameters;
 
   // Propagate to the 2D PCA of the reference point when B = 0
-  auto zeroFieldResult =
-      straightLinePropagator->propagate(params, *refPerigeeSurface, pOptions);
+  auto zeroFieldResult = straightLinePropagator->propagate(
+      params, *refPerigeeSurface, straightPOptions);
   BOOST_CHECK(zeroFieldResult.ok());
   const auto& zeroFieldRefParams = *zeroFieldResult->endParameters;
 
@@ -305,7 +308,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                              geoContext, rParams, vtxPos, state)
                           .value();
 
-    ActsVector<4> distVec = distAndMom.first;
+    Vector4 distVec = distAndMom.first;
     Vector3 momDir = distAndMom.second;
 
     // Check quantities:
@@ -436,7 +439,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
       Surface::makeShared<PerigeeSurface>(pos1.segment<3>(ePos0));
   // Some fixed track parameter values
   auto params1 = BoundTrackParameters::create(
-                     perigeeSurface, geoContext, pos1, mom1, 1_e / mom1.norm(),
+                     geoContext, perigeeSurface, pos1, mom1, 1_e / mom1.norm(),
                      BoundTrackParameters::CovarianceMatrix::Identity(),
                      ParticleHypothesis::pion())
                      .value();

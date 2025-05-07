@@ -49,8 +49,8 @@ class AccumulatedSurfaceMaterial {
   ///
   /// @param binUtility defines the binning structure on the surface
   /// @param splitFactor is the pre/post splitting directive
-  AccumulatedSurfaceMaterial(const BinUtility& binUtility,
-                             double splitFactor = 0.);
+  explicit AccumulatedSurfaceMaterial(const BinUtility& binUtility,
+                                      double splitFactor = 0.);
 
   /// Copy Constructor
   ///

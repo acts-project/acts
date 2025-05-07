@@ -7,11 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -107,7 +107,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
-    virtual std::vector<BinningValue> binningValues() const { return {}; };
+    virtual std::vector<AxisDirection> binningValues() const { return {}; };
 
     /// Pure virtual destructor
     virtual ~ISurfaceGridLookup() = 0;
@@ -139,7 +139,7 @@ class SurfaceArray {
     SurfaceGridLookup(std::function<point_t(const Vector3&)> globalToLocal,
                       std::function<Vector3(const point_t&)> localToGlobal,
                       std::tuple<Axes...> axes,
-                      std::vector<BinningValue> bValues = {})
+                      std::vector<AxisDirection> bValues = {})
         : m_globalToLocal(std::move(globalToLocal)),
           m_localToGlobal(std::move(localToGlobal)),
           m_grid(std::move(axes)),
@@ -149,7 +149,7 @@ class SurfaceArray {
 
     /// @brief Fill provided surfaces into the contained @c Grid.
     ///
-    /// This is done by iterating, accessing the binningPosition, lookup
+    /// This is done by iterating, accessing the referencePosition, lookup
     /// and append.
     /// Also populates the neighbor map by combining the filled bins of
     /// all bins around a given one.
@@ -159,7 +159,7 @@ class SurfaceArray {
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
       for (const auto& srf : surfaces) {
-        Vector3 pos = srf->binningPosition(gctx, BinningValue::binR);
+        Vector3 pos = srf->referencePosition(gctx, AxisDirection::AxisR);
         lookup(pos).push_back(srf);
       }
 
@@ -195,7 +195,8 @@ class SurfaceArray {
         minPath = std::numeric_limits<double>::max();
         for (const auto& srf : surfaces) {
           curPath =
-              (binCtr - srf->binningPosition(gctx, BinningValue::binR)).norm();
+              (binCtr - srf->referencePosition(gctx, AxisDirection::AxisR))
+                  .norm();
 
           if (curPath < minPath) {
             minPath = curPath;
@@ -257,7 +258,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes
-    std::vector<BinningValue> binningValues() const override {
+    std::vector<AxisDirection> binningValues() const override {
       return m_binValues;
     }
 
@@ -347,7 +348,7 @@ class SurfaceArray {
     std::function<point_t(const Vector3&)> m_globalToLocal;
     std::function<Vector3(const point_t&)> m_localToGlobal;
     Grid_t m_grid;
-    std::vector<BinningValue> m_binValues;
+    std::vector<AxisDirection> m_binValues;
     std::vector<SurfaceVector> m_neighborMap;
   };
 
@@ -356,12 +357,13 @@ class SurfaceArray {
   struct SingleElementLookup : ISurfaceGridLookup {
     /// @brief Default constructor.
     /// @param element the one and only element.
-    SingleElementLookup(SurfaceVector::value_type element)
+    explicit SingleElementLookup(SurfaceVector::value_type element)
         : m_element({element}) {}
 
     /// @brief Default constructor.
     /// @param elements the surfaces that are provided through a single lookup
-    SingleElementLookup(const SurfaceVector& elements) : m_element(elements) {}
+    explicit SingleElementLookup(const SurfaceVector& elements)
+        : m_element(elements) {}
 
     /// @brief Lookup, always returns @c element
     /// @return reference to vector containing only @c element
@@ -436,13 +438,13 @@ class SurfaceArray {
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
   /// @param transform Optional additional transform for this SurfaceArray
-  SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-               std::vector<std::shared_ptr<const Surface>> surfaces,
-               const Transform3& transform = Transform3::Identity());
+  explicit SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
+                        std::vector<std::shared_ptr<const Surface>> surfaces,
+                        const Transform3& transform = Transform3::Identity());
 
   /// @brief Constructor with a single surface
   /// @param srf The one and only surface
-  SurfaceArray(std::shared_ptr<const Surface> srf);
+  explicit SurfaceArray(std::shared_ptr<const Surface> srf);
 
   /// @brief Get all surfaces in bin given by position.
   /// @param position the lookup position
@@ -519,7 +521,7 @@ class SurfaceArray {
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes
-  std::vector<BinningValue> binningValues() const {
+  std::vector<AxisDirection> binningValues() const {
     return p_gridLookup->binningValues();
   };
 

@@ -9,16 +9,17 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
+
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 
 class Surface;
 
-namespace Experimental {
-
-struct BinningDescription;
-
-namespace detail::ProtoMaterialHelper {
+namespace Experimental::detail::ProtoMaterialHelper {
 
 /// @brief Method that attaches proto material to a surface given
 /// a proto binning description
@@ -29,10 +30,9 @@ namespace detail::ProtoMaterialHelper {
 ///
 /// @return an (eventual) updated binning description for structured
 ///         screen logging output
-BinningDescription attachProtoMaterial(const GeometryContext& gctx,
-                                       Surface& surface,
-                                       const BinningDescription& bDescription);
+std::vector<DirectedProtoAxis> attachProtoMaterial(
+    const GeometryContext& gctx, Surface& surface,
+    const std::vector<DirectedProtoAxis>& bDescription);
 
-}  // namespace detail::ProtoMaterialHelper
-}  // namespace Experimental
+}  // namespace Experimental::detail::ProtoMaterialHelper
 }  // namespace Acts

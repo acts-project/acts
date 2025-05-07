@@ -10,11 +10,11 @@
 
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <map>
 #include <memory>
@@ -39,24 +39,25 @@ class IGeometryIdGenerator;
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
-/// @note allowed BinningValue(s) for the cylindrical container builder are
-/// {binZ}, {binR}, {binPhi}, {binZ, binR}, whereas the last option indicates
-/// a wrapping setup.
+/// @note allowed AxisDirection(s) for the cylindrical container builder are
+/// {AxisZ}, {AxisR}, {AxisPhi}, {AxisZ, AxisR}, whereas the last option
+/// indicates a wrapping setup.
 class CylindricalContainerBuilder : public IDetectorComponentBuilder {
  public:
   /// Nested configuration object
   struct Config {
     /// The configured volume builders
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
-    /// Binning prescription of attachment
-    std::vector<BinningValue> binning = {};
+    /// The axis direction for the binning
+    std::vector<AxisDirection> binning = {};
     /// The root volume finder
     std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
         nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
+    std::map<unsigned int, std::vector<DirectedProtoAxis>>
+        portalMaterialBinning = {};
     /// An eventual reverse geometry id generation
     bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output
@@ -67,7 +68,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  CylindricalContainerBuilder(
+  explicit CylindricalContainerBuilder(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalContainerBuilder", Logging::INFO));
@@ -86,8 +87,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// @note that the naming of the builders is taken from the bluprint nodes
   ///
   /// @return a cylindrical container builder representing this blueprint
-  CylindricalContainerBuilder(
-      const Acts::Experimental::Blueprint::Node& bpNode,
+  explicit CylindricalContainerBuilder(
+      const Acts::Experimental::Gen2Blueprint::Node& bpNode,
       Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   /// The final implementation of the cylindrical container builder

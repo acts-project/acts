@@ -41,7 +41,6 @@ components:
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 - [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
-- [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
 - [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 
@@ -100,23 +99,16 @@ make the dependencies available.
 
 If you have access to a machine running [CVMFS](https://cernvm.cern.ch/fs/),
 e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
-via a LCG releases available through CVMFS. A setup script is provided to activate a compatible releases that can be used as follows:
+via an LCG releases available through CVMFS. Source the cvmfs setup script
+provided by the machine. It is suggested to select a recent `<lcg_release>`
+and `<lcg_platform>` combination. (Have a look at the CI jobs to get an
+overview on what we are currently testing):
 
 ```console
-cd <source>
-source CI/setup_cvmfs_lcg.sh
+source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
 
-After sourcing the setup script, you can build ACTS as described above. The
-following commands will build ACTS in the `<source>/build` directory with the
-Fatras component.
-
-```console
-cd <source>
-source CI/setup_cvmfs_lcg.sh
-cmake -B build -S . -DACTS_BUILD_FATRAS=on
-cmake --build build
-```
+After sourcing the setup script, you can build ACTS as described above.
 
 ### In a container
 
@@ -187,7 +179,7 @@ Building and running ACTS on your local machine is not officially supported.
 However, if you have the necessary prerequisites installed it is possible to
 use it locally. ACTS developers regularly use different Linux distributions and
 macOS to build and develop ACTS. It is possible to use Spack to more easily
-install ACTS' dependencies; see the [building with Spack](misc/spack) page for
+install ACTS' dependencies; see the [building with Spack](misc/spack.md) page for
 more information.
 
 (build_docs)=
@@ -295,18 +287,18 @@ components.
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_EXAMPLES_EXATRKX         | Build the Exa.TrkX example code<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
-| ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
+| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `ON`                                                                                                                                                                    |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_EXAMPLES_UNITTESTS       | Build unit tests<br> type: `bool`, default: `ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES`                                                                                                                                         |
-| ACTS_BUILD_NONCOMPILE_TESTS         | Build tests that check build failure<br>invariants<br> type: `bool`, default: `OFF`                                                                                                                                                |
 | ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
 | ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_BOOST                    | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                            |
@@ -317,6 +309,7 @@ components.
 | ACTS_GPERF_INSTALL_DIR              | Hint to help find gperf if profiling is<br>enabled<br> type: `string`, default: `""`                                                                                                                                               |
 | ACTS_ENABLE_LOG_FAILURE_THRESHOLD   | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
+| ACTS_COMPILE_HEADERS                | Generate targets to compile header files<br> type: `bool`, default: `ON`                                                                                                                                                           |
 <!-- CMAKE_OPTS_END -->
 
 All ACTS-specific options are disabled or empty by default and must be

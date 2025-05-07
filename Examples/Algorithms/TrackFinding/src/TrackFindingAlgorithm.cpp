@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -285,7 +286,7 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
-          return {cfg};
+          return Acts::TrackSelector(cfg);
         },
         m_cfg.trackSelectorCfg.value());
   }
@@ -318,33 +319,40 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  MeasurementSelector measSel{
-      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
   BranchStopper branchStopper(m_cfg);
-
-  Extensions extensions;
-  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
-      &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.measurementSelector.connect<&MeasurementSelector::select>(
-      &measSel);
-  extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
+  MeasurementSelector measSel{
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &measurements.orderedIndices();
-  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
-      slAccessorDelegate;
-  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+
+  using TrackStateCreatorType =
+      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
+                              TrackContainer>;
+  TrackStateCreatorType trackStateCreator;
+  trackStateCreator.sourceLinkAccessor
+      .template connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+  trackStateCreator.calibrator
+      .template connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
+  trackStateCreator.measurementSelector
+      .template connect<&MeasurementSelector::select>(&measSel);
+
+  Extensions extensions;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
+  extensions.createTrackStates
+      .template connect<&TrackStateCreatorType ::createTrackStates>(
+          &trackStateCreator);
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
-                                                   : Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
+                                                   : Acts::Direction::Forward();
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -357,13 +365,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Set the CombinatorialKalmanFilter options
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
-                                  ctx.calibContext, slAccessorDelegate,
-                                  extensions, firstPropOptions);
+                                  ctx.calibContext, extensions,
+                                  firstPropOptions);
+
   firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
-                                   ctx.calibContext, slAccessorDelegate,
-                                   extensions, secondPropOptions);
+                                   ctx.calibContext, extensions,
+                                   secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
 
@@ -411,6 +420,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true, true);
+    }
+    Acts::calculateTrackQuantities(track);
+
+    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
+      return;
+    }
+
     // flag seeds which are covered by the track
     visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
       if (auto it = discoveredSeeds.find(seedIdentifier);
@@ -418,16 +437,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         it->second = true;
       }
     });
-
-    // trim the track if requested
-    if (m_cfg.trimTracks) {
-      Acts::trimTrack(track, true, true, true);
-    }
-    Acts::calculateTrackQuantities(track);
-
-    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
-      return;
-    }
 
     ++m_nSelectedTracks;
 
@@ -493,8 +502,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       auto trackCandidate = tracksTemp.makeTrack();
       trackCandidate.copyFrom(firstTrack, true);
 
-      auto firstSmoothingResult =
-          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+      Acts::Result<void> firstSmoothingResult{
+          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -527,10 +536,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         }
 
         if (firstMeasurementOpt.has_value()) {
-          auto& firstMeasurement = firstMeasurementOpt.value();
+          TrackContainer::TrackStateProxy firstMeasurement{
+              firstMeasurementOpt.value()};
+          TrackContainer::ConstTrackStateProxy firstMeasurementConst{
+              firstMeasurement};
 
           Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(firstMeasurement);
+              trackCandidate.createParametersFromState(firstMeasurementConst);
 
           if (!secondInitialParameters.referenceSurface().insideBounds(
                   secondInitialParameters.localPosition())) {

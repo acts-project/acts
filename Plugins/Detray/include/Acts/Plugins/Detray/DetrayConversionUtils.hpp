@@ -16,6 +16,7 @@
 
 #include <detray/core/detector.hpp>
 #include <detray/definitions/grid_axis.hpp>
+#include <detray/detectors/default_metadata.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
 namespace Acts {
@@ -24,7 +25,9 @@ namespace Experimental {
 class DetectorVolume;
 }
 
-using DetrayHostDetector = detray::detector<detray::default_metadata>;
+using DetrayMetaData = detray::default_metadata<detray::array<double>>;
+
+using DetrayHostDetector = detray::detector<DetrayMetaData>;
 
 namespace DetrayConversionUtils {
 
@@ -36,7 +39,8 @@ struct Cache {
   /// Explicit constructor with detector volumes
   ///
   /// @param detectorVolumes the number of detector volumes
-  Cache(const std::vector<const Acts::Experimental::DetectorVolume*>& dVolumes)
+  explicit Cache(
+      const std::vector<const Acts::Experimental::DetectorVolume*>& dVolumes)
       : detectorVolumes(dVolumes) {}
 
   /// The volumes of the detector for index lookup
@@ -77,7 +81,7 @@ detray::axis::bounds convertBinningOption(BinningOption bOption);
 /// @param bValue the binning value
 ///
 /// @return a detray binning value
-detray::axis::label convertBinningValue(BinningValue bValue);
+detray::axis::label convertAxisDirection(AxisDirection bValue);
 
 /// Convert the binning type
 ///

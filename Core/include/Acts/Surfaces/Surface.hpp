@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -19,20 +18,14 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
-#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <utility>
 
 namespace Acts {
@@ -89,7 +82,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param transform Transform3 positions the surface in 3D global space
   /// @note also acts as default constructor
-  Surface(const Transform3& transform = Transform3::Identity());
+  explicit Surface(const Transform3& transform = Transform3::Identity());
 
   /// Copy constructor
   ///
@@ -102,7 +95,7 @@ class Surface : public virtual GeometryObject,
   /// Constructor from DetectorElementBase: Element proxy
   ///
   /// @param detelement Detector element which is represented by this surface
-  Surface(const DetectorElementBase& detelement);
+  explicit Surface(const DetectorElementBase& detelement);
 
   /// Copy constructor with optional shift
   ///

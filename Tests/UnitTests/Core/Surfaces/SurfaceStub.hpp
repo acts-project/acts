@@ -21,12 +21,12 @@ namespace Acts {
 /// Surface derived class stub
 class SurfaceStub : public RegularSurface {
  public:
-  SurfaceStub(const Transform3& htrans = Transform3::Identity())
+  explicit SurfaceStub(const Transform3& htrans = Transform3::Identity())
       : GeometryObject(), RegularSurface(htrans) {}
   SurfaceStub(const GeometryContext& gctx, const SurfaceStub& sf,
               const Transform3& transf)
       : GeometryObject(), RegularSurface(gctx, sf, transf) {}
-  SurfaceStub(const DetectorElementBase& detelement)
+  explicit SurfaceStub(const DetectorElementBase& detelement)
       : GeometryObject(), RegularSurface(detelement) {}
 
   ~SurfaceStub() override = default;
@@ -76,8 +76,8 @@ class SurfaceStub : public RegularSurface {
   }
 
   /// Inherited from GeometryObject base
-  Vector3 binningPosition(const GeometryContext& /*txt*/,
-                          BinningValue /*bValue*/) const final {
+  Vector3 referencePosition(const GeometryContext& /*txt*/,
+                            AxisDirection /*bValue*/) const final {
     const Vector3 v{0., 0., 0.};
     return v;
   }

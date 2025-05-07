@@ -15,15 +15,12 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -64,8 +61,8 @@ class DiscSurface : public RegularSurface {
   /// @param rmax The outer radius of the disc surface
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
-  DiscSurface(const Transform3& transform, double rmin, double rmax,
-              double hphisec = std::numbers::pi);
+  explicit DiscSurface(const Transform3& transform, double rmin, double rmax,
+                       double hphisec = std::numbers::pi);
 
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -78,22 +75,23 @@ class DiscSurface : public RegularSurface {
   /// @param maxR The inner radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
-  DiscSurface(const Transform3& transform, double minhalfx, double maxhalfx,
-              double minR, double maxR, double avephi = 0., double stereo = 0.);
+  explicit DiscSurface(const Transform3& transform, double minhalfx,
+                       double maxhalfx, double minR, double maxR,
+                       double avephi = 0., double stereo = 0.);
 
   /// Constructor for Discs from Transform3 and shared DiscBounds
   ///
   /// @param transform The transform that positions the disc in global 3D
   /// @param dbounds The disc bounds describing the surface coverage
-  DiscSurface(const Transform3& transform,
-              std::shared_ptr<const DiscBounds> dbounds = nullptr);
+  explicit DiscSurface(const Transform3& transform,
+                       std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param dbounds The disc bounds describing the surface coverage
   /// @param detelement The detector element represented by this surface
-  DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-              const DetectorElementBase& detelement);
+  explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
+                       const DetectorElementBase& detelement);
 
   /// Copy Constructor
   ///
@@ -109,9 +107,6 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
-  ~DiscSurface() override = default;
-  DiscSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
@@ -147,15 +142,24 @@ class DiscSurface : public RegularSurface {
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
 
-  /// The binning position The position calculated
-  /// for a certain binning type
+  /// A reference position for a given axis direction
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue The binning type to be used
-  ///
+  /// @param aDir The axis direction for the reference position request
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
+
+  /// A reference position value for a given axis direction
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param aDir the value generated for the reference position
+  ///
+  /// @note This calls the parent method except for AxisR
+  ///
+  /// @return float to be used for the binning schema
+  double referencePositionValue(const GeometryContext& gctx,
+                                AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -296,17 +300,6 @@ class DiscSurface : public RegularSurface {
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
-  /// Implement the binningValue
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
-  ///
-  /// @note This calls the parent method except for binR
-  ///
-  /// @return float to be used for the binning schema
-  double binningPositionValue(const GeometryContext& gctx,
-                              BinningValue bValue) const final;
-
   /// Return properly formatted class name for screen output
   std::string name() const override;
 
@@ -336,14 +329,14 @@ class DiscSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
   /// @param other The other disc surface to merge with
-  /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param direction The binning direction: either @c AxisR or @c AxisPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged disc surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
-      const DiscSurface& other, BinningValue direction, bool externalRotation,
+      const DiscSurface& other, AxisDirection direction, bool externalRotation,
       const Logger& logger = getDummyLogger()) const;
 
  protected:

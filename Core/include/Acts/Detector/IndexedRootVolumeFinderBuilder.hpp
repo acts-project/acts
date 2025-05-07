@@ -11,7 +11,7 @@
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <memory>
 #include <vector>
@@ -27,7 +27,7 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
   /// @brief Constructor with binning casts
   /// @param binning the cast values for the grid binning
   explicit IndexedRootVolumeFinderBuilder(
-      std::vector<Acts::BinningValue> binning);
+      std::vector<Acts::AxisDirection> binning);
 
   /// The virtual interface definition for root volume finder builders
   ///
@@ -41,7 +41,7 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
       const final;
 
  private:
-  std::vector<Acts::BinningValue> m_casts;
+  std::vector<Acts::AxisDirection> m_casts;
 };
 
 }  // namespace Acts::Experimental

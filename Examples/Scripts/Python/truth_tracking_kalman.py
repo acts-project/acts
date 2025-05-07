@@ -26,9 +26,10 @@ def runTruthTrackingKalman(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
     from acts.examples.reconstruction import (
         addSeeding,
@@ -69,10 +70,10 @@ def runTruthTrackingKalman(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                outputParticles="particles_input",
+                outputParticles="particles_generated",
             )
         )
-        s.addWhiteboardAlias("particles", "particles_input")
+        s.addWhiteboardAlias("particles", "particles_generated")
 
     if inputHitsPath is None:
         addFatras(
@@ -81,12 +82,6 @@ def runTruthTrackingKalman(
             field,
             rnd=rnd,
             enableInteractions=True,
-            postSelectParticles=ParticleSelectorConfig(
-                pt=(0.9 * u.GeV, None),
-                hits=(7, None),
-                removeNeutral=True,
-                removeSecondaries=True,
-            ),
         )
     else:
         logger.info("Reading hits from %s", inputHitsPath.resolve())
@@ -107,12 +102,22 @@ def runTruthTrackingKalman(
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
+    )
+
     addSeeding(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
-        inputParticles="particles_input",
+        inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
     )
@@ -179,16 +184,14 @@ if "__main__" == __name__:
 
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = (
-        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
     # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
-    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
