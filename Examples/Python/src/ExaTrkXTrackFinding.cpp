@@ -9,6 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
@@ -135,6 +136,26 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         "config"_a, "level"_a);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+  }
+#endif
+
+#ifdef ACTS_EXATRKX_WITH_MODULEMAP
+  {
+    using Alg = Acts::ModuleMapCuda;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
+            mex, "ModuleMapCuda")
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("ModuleMap", lvl));
+                 }),
+                 "config"_a, "level"_a);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, moduleMapPath, rScale, phiScale, zScale, etaScale,
+                       moreParallel, gpuDevice, gpuBlocks, epsilon);
   }
 #endif
 
