@@ -8,46 +8,54 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
-#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
-#include "Acts/Geometry/NavigationPolicyFactory.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-
 // Constructor
-Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(const Config& config, std::unique_ptr<const Acts::Logger> logger)
+Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
-
-    if (m_config.mlSurfaces.empty()) {
-        throw std::invalid_argument(
-            "MultiWireStructureBuilder: No surfaces are given");
-    } else if (m_config.binning.size() != 2u) {
-        throw ::std::invalid_argument(
-            "MultiWireStructureBuilder: Invalid binning provided");
-    }else if (m_config.bounds.size() < 4u) {
-        throw ::std::invalid_argument(
-            "MultiWireStructureBuilder: Invalid bounds provided for trapezoidal volume");
-    }
+  if (m_config.mlSurfaces.empty()) {
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: No surfaces are given");
+  } else if (m_config.binning.size() != 2u) {
+    throw ::std::invalid_argument(
+        "MultiWireStructureBuilder: Invalid binning provided");
+  } else if (m_config.bounds.size() < 4u) {
+    throw ::std::invalid_argument(
+        "MultiWireStructureBuilder: Invalid bounds provided for trapezoidal "
+        "volume");
+  }
 }
 
-std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(const Acts::GeometryContext& gctx) const {
-  
+std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
+    Acts::GeometryContext& gctx) const {
   // Create the tracking volume
 
-  ACTS_VERBOSE("Building a tracking volume with name " << m_config.name <<
-  " ,translation"<<toString(m_config.transform.translation())<<" and number of surfaces "<<m_config.mlSurfaces.size());
-  
+  ACTS_VERBOSE("Building a tracking volume with name "
+               << m_config.name << " ,translation"
+               << toString(m_config.transform.translation())
+               << " and number of surfaces " << m_config.mlSurfaces.size());
 
   auto bArray =
-    toArray<TrapezoidVolumeBounds::BoundValues::eSize>(m_config.bounds);
-  std::shared_ptr<TrapezoidVolumeBounds> volumeBounds = std::make_shared<TrapezoidVolumeBounds>(bArray);
+      toArray<TrapezoidVolumeBounds::BoundValues::eSize>(m_config.bounds);
+  std::shared_ptr<TrapezoidVolumeBounds> volumeBounds =
+      std::make_shared<TrapezoidVolumeBounds>(bArray);
 
-  std::unique_ptr<Acts::TrackingVolume> trackingVolume = 
-      std::make_unique<Acts::TrackingVolume>(m_config.transform, volumeBounds, m_config.name);
+  std::unique_ptr<Acts::TrackingVolume> trackingVolume =
+      std::make_unique<Acts::TrackingVolume>(m_config.transform, volumeBounds,
+                                             m_config.name);
+
+  SingleTrapezoidPortalShell portalShell(*trackingVolume.get());
+  portalShell.applyToVolume();
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
@@ -57,39 +65,59 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
   auto [protoAxisA, expansionA] = m_config.binning.at(0);
   auto [protoAxisB, expansionB] = m_config.binning.at(1);
 
-  //Use TryAll Navigation Policy for the portals and acceleration structure based on surface array for the sensitive surfaces
+  // Create the grid from the axis
+  const auto& iaxisA = protoAxisA.getAxis();
+  const auto& iaxisB = protoAxisB.getAxis();
+  // Binning needs to be equidistant
+  if (iaxisA.getType() != Acts::AxisType::Equidistant ||
+      iaxisB.getType() != Acts::AxisType::Equidistant) {
+    throw std::runtime_error(
+        "MultiWireVolumeBuilder: Binning axes need to be equidistant");
+  }
+
+  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axisA(
+      iaxisA.getBinEdges().front(), iaxisA.getBinEdges().back(),
+      iaxisA.getNBins());
+
+  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axisB(
+      iaxisB.getBinEdges().front(), iaxisB.getBinEdges().back(),
+      iaxisB.getNBins());
+
+  Acts::Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(
+      axisA, axisB);
+
+  // The indexed grid to be filled from the navigation policy
+  Acts::Experimental::IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
+      std::move(grid),
+      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()});
+
+  // Use TryAll Navigation Policy for the portals and acceleration structure
+  // with indexed surfaces for the sensitives
 
   Acts::TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
   tryAllConfig.sensitives = false;
 
-  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume.get(), *m_logger, tryAllConfig);
+  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume.get(),
+                                            *m_logger, tryAllConfig);
 
-  //Configure the navigation policy with the binning for the grid for the sensitive surfaces
-  Acts::MultiLayerNavigationPolicy::Config navConfig;
-  navConfig.layerType = Acts::MultiLayerNavigationPolicy::LayerType::Plane;
-  navConfig.bins = {protoAxisA.getAxis().getNBins(), protoAxisB.getAxis().getNBins()};
-  navConfig.binExtension = {expansionA, expansionB};
-  navConfig.axisDir = m_config.normalDir;
+  // Configure the navigation policy with the binning for the grid for the
+  // sensitive surfaces
 
-  Acts::MultiLayerNavigationPolicy navPolicy(gctx, *trackingVolume.get(), *m_logger, navConfig);
+  MultiLayerNavigationPolicy<decltype(indexedGrid)>::Config navConfig;
+  navConfig.binExpansion = {expansionA, expansionB};
+  navConfig.axis = {protoAxisA, protoAxisB};
 
+  std::unique_ptr<NavigationPolicyFactory> factory =
+      NavigationPolicyFactory::make()
+          .add<TryAllNavigationPolicy>(tryAllConfig)
+          .add<MultiLayerNavigationPolicy<decltype(indexedGrid)>>(navConfig,
+                                                                  indexedGrid)
+          .asUniquePtr();
 
-
-  // Set the Navigation Policy for the tracking volume using the factory
-  std::function<std::unique_ptr<Acts::INavigationPolicy>(
-    const GeometryContext&, const TrackingVolume&, const Logger&)>
-    factory = Acts::NavigationPolicyFactory::make()
-                  .add<Acts::TryAllNavigationPolicy>(tryAllConfig)         // no arguments
-                  .add<Acts::MultiLayerNavigationPolicy>(navConfig);  // config struct as argument
-
- 
-  auto policyBase = factory(gctx, *trackingVolume.get(), *m_logger);
+  auto policyBase = factory->build(gctx, *trackingVolume.get(), *m_logger);
 
   trackingVolume->setNavigationPolicy(std::move(policyBase));
-  
 
   return trackingVolume;
-
 }
-

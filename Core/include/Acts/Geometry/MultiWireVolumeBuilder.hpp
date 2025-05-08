@@ -13,62 +13,54 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts{
+namespace Acts {
 
 /// @class MultiWireVolumeBuilder
 
 ///@brief A class to build multiwire tracking volumes (e.g wire chambers)
 
-class MultiWireVolumeBuilder{
+class MultiWireVolumeBuilder {
+ public:
+  // Configuration Struct
+  struct Config {
+    // The name of the tracking volume
+    std::string name = "undefined";
 
-    public:
+    // The surfaces to be wrapped from the tracking volume
+    std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
 
-    // Configuration Struct
-    struct Config{
+    // The transform of the tracking volume
+    Transform3 transform = Transform3::Identity();
 
-        // The name of the tracking volume
-        std::string name ="undefined";
+    // The bounds of the tracking volume
+    std::vector<double> bounds = {};
 
-        // The surfaces to be wrapped from the tracking volume
-        std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
+    // The binning of the tracking volume
+    // The protoAxis and the expansion of the binning for the neighbors
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binning = {};
+  };
+  /// Constructor
+  /// @param config The configuration struct
+  /// @param logger The logger instance for screen output
+  explicit MultiWireVolumeBuilder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "MultiWireVolumeBuilder", Acts::Logging::VERBOSE));
 
-     
-        //The transform of the tracking volume
-        Transform3 transform = Transform3::Identity();
+  /// Destructor
+  ~MultiWireVolumeBuilder() = default;
 
-        // The bounds of the tracking volume
-        std::vector<double> bounds = {};
+  /// @brief Constructs the tracking volume with the wrapped surfaces
+  /// @return a unique ptr of the tracking volume
+  std::unique_ptr<Acts::TrackingVolume> buildVolume(
+      Acts::GeometryContext& gctx) const;
 
-        // The binning of the tracking volume
-        // The protoAxis and the expansion of the binning for the neighbors
-        std::vector<std::tuple<ProtoAxis,std::size_t>> binning = {};
+ private:
+  Config m_config;
 
-        // The direction of the normal vector to the grid (along the wires direction)
-        AxisDirection normalDir = AxisDirection::AxisX;
+  const Acts::Logger& logger() const { return *m_logger; }
 
-    };
-    /// Constructor
-    /// @param config The configuration struct
-    /// @param logger The logger instance for screen output
-    explicit MultiWireVolumeBuilder(const Config& config,  std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-        "MultiWireVolumeBuilder", Acts::Logging::VERBOSE));
-
-    /// Destructor
-    ~MultiWireVolumeBuilder() = default;
-
-    /// @brief Constructs the tracking volume with the wrapped surfaces
-    /// @return a unique ptr of the tracking volume
-    std::unique_ptr<Acts::TrackingVolume> buildVolume(const Acts::GeometryContext& gctx) const;
-
-    private:
-   
-    Config m_config;
-
-    const Acts::Logger& logger() const { return *m_logger; }
-
-    std::unique_ptr<const Acts::Logger> m_logger;
-      
-    
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-} //namespace Acts
+}  // namespace Acts
