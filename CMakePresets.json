@@ -153,7 +153,8 @@
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON"
+                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON",
+                "ACTS_EXATRKX_ENABLE_MODULEMAP": "OFF"
             }
         }
     ]
