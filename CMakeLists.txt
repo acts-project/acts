@@ -97,9 +97,9 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
@@ -141,7 +141,6 @@ set_option_if(
   ACTS_BUILD_EXAMPLES_DD4HEP
   OR ACTS_BUILD_EXAMPLES_EDM4HEP
   OR ACTS_BUILD_EXAMPLES_GEANT4
-  OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_HASHING
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
@@ -161,6 +160,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
   ACTS_BUILD_EXAMPLES_EDM4HEP
+)
+set_option_if(
+  ACTS_BUILD_PLUGIN_PODIO
+  ACTS_BUILD_EXAMPLES_PODIO
 )
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
@@ -254,7 +257,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.50)
+set(_acts_actsvg_version 0.4.56)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_geant4_version 11.1.3)
@@ -507,48 +510,60 @@ endif()
 if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-endif()
-if(ACTS_BUILD_EXAMPLES_ROOT)
-    # for simplicity always request all potentially required components.
-    find_package(
-        ROOT
-        ${_acts_root_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
-    )
-    check_root_compatibility()
-endif()
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-    if(ACTS_USE_SYSTEM_PYBIND11)
-        find_package(pybind11 CONFIG REQUIRED)
-    else()
-        add_subdirectory(thirdparty/pybind11)
-    endif()
-endif()
-if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
-    find_package(
-        DD4hep
-        ${_acts_dd4hep_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS DDCore DDG4 DDDetectors
-    )
-elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
-    find_package(
-        DD4hep
-        ${_acts_dd4hep_version}
-        REQUIRED
-        CONFIG
-        COMPONENTS DDCore DDDetectors
-    )
-endif()
-if(ACTS_BUILD_EXAMPLES_HEPMC3)
+
     find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
-endif()
-if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-    find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
+
+    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
+    if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
+        add_library(HepMC3::HepMC3 SHARED IMPORTED)
+        set_property(
+            TARGET HepMC3::HepMC3
+            PROPERTY IMPORTED_LOCATION "${HEPMC3_LIB}"
+        )
+        target_include_directories(
+            HepMC3::HepMC3
+            INTERFACE "${HEPMC3_INCLUDE_DIR}"
+        )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+        # for simplicity always request all potentially required components.
+        find_package(
+            ROOT
+            ${_acts_root_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
+        )
+        check_root_compatibility()
+    endif()
+    if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+        find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+        if(ACTS_USE_SYSTEM_PYBIND11)
+            find_package(pybind11 CONFIG REQUIRED)
+        else()
+            add_subdirectory(thirdparty/pybind11)
+        endif()
+    endif()
+    if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
+        find_package(
+            DD4hep
+            ${_acts_dd4hep_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS DDCore DDG4 DDDetectors
+        )
+    elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
+        find_package(
+            DD4hep
+            ${_acts_dd4hep_version}
+            REQUIRED
+            CONFIG
+            COMPONENTS DDCore DDDetectors
+        )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_PYTHIA8)
+        find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
+    endif()
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

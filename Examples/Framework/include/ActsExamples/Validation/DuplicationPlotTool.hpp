@@ -20,9 +20,6 @@
 
 class TEfficiency;
 class TProfile;
-namespace ActsFatras {
-class Particle;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
 
@@ -45,15 +42,19 @@ class DuplicationPlotTool {
   };
 
   /// @brief Nested Cache struct
-  struct DuplicationPlotCache {
-    TProfile* nDuplicated_vs_pT;   ///< Number of duplicated tracks vs pT
-    TProfile* nDuplicated_vs_eta;  ///< Number of duplicated tracks vs eta
-    TProfile* nDuplicated_vs_phi;  ///< Number of duplicated tracks vs phi
-    TEfficiency* duplicationRatio_vs_pT;  ///< Tracking duplication ratio vs pT
-    TEfficiency*
-        duplicationRatio_vs_eta;  ///< Tracking duplication ratio vs eta
-    TEfficiency*
-        duplicationRatio_vs_phi;  ///< Tracking duplication ratio vs phi
+  struct Cache {
+    /// Number of duplicated tracks vs pT
+    TProfile* nDuplicated_vs_pT;
+    /// Number of duplicated tracks vs eta
+    TProfile* nDuplicated_vs_eta;
+    /// Number of duplicated tracks vs phi
+    TProfile* nDuplicated_vs_phi;
+    /// Tracking duplication ratio vs pT
+    TEfficiency* duplicationRatio_vs_pT;
+    /// Tracking duplication ratio vs eta
+    TEfficiency* duplicationRatio_vs_eta;
+    /// Tracking duplication ratio vs phi
+    TEfficiency* duplicationRatio_vs_phi;
   };
 
   /// Constructor
@@ -64,40 +65,40 @@ class DuplicationPlotTool {
 
   /// @brief book the duplication plots
   ///
-  /// @param duplicationPlotCache the cache for duplication plots
-  void book(DuplicationPlotCache& duplicationPlotCache) const;
+  /// @param cache the cache for duplication plots
+  void book(Cache& cache) const;
 
   /// @brief fill duplication raio w.r.t. fitted track parameters
   ///
-  /// @param duplicationPlotCache cache object for duplication plots
+  /// @param cache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the (truth-matched) reconstructed track is duplicated or not
-  void fill(DuplicationPlotCache& duplicationPlotCache,
-            const Acts::BoundTrackParameters& fittedParameters,
+  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             bool status) const;
 
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///
-  /// @param duplicationPlotCache cache object for duplication plots
+  /// @param cache cache object for duplication plots
   /// @param truthParticle the truth Particle
   /// @param nDuplicatedTracks the number of duplicated tracks
-  void fill(DuplicationPlotCache& duplicationPlotCache,
-            const SimParticleState& truthParticle,
+  void fill(Cache& cache, const SimParticleState& truthParticle,
             std::size_t nDuplicatedTracks) const;
 
   /// @brief write the duplication plots to file
   ///
-  /// @param duplicationPlotCache cache object for duplication plots
-  void write(const DuplicationPlotCache& duplicationPlotCache) const;
+  /// @param cache cache object for duplication plots
+  void write(const Cache& cache) const;
 
   /// @brief delete the duplication plots
   ///
-  /// @param duplicationPlotCache cache object for duplication plots
-  void clear(DuplicationPlotCache& duplicationPlotCache) const;
+  /// @param cache cache object for duplication plots
+  void clear(Cache& cache) const;
 
  private:
-  Config m_cfg;                                  ///< The Config class
-  std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
+  /// The Config class
+  Config m_cfg;
+  /// The logging instance
+  std::unique_ptr<const Acts::Logger> m_logger;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

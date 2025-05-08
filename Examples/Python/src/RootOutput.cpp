@@ -198,9 +198,9 @@ void addRootOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::TrackFinderPerformanceWriter, mex,
       "TrackFinderPerformanceWriter", inputTracks, inputParticles,
-      inputTrackParticleMatching, inputParticleTrackMatching, filePath,
-      fileMode, effPlotToolConfig, fakePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+      inputTrackParticleMatching, inputParticleTrackMatching,
+      inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
+      fakePlotToolConfig, duplicationPlotToolConfig, trackSummaryPlotToolConfig,
       subDetectorTrackSummaryVolumes, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(

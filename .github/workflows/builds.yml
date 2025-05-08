@@ -20,7 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v7_b7
+  DEPENDENCY_TAG: v9.0.0
 
 jobs:
   linux_ubuntu:
@@ -159,7 +159,7 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rFsv -k "not exatrkx" -v
+          pytest -rfExw -k "not exatrkx" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:

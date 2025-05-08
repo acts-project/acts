@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -25,9 +24,6 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -85,13 +81,13 @@ class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
   TFile* m_outputFile{nullptr};
   /// Plot tool for residuals and pulls.
   ResPlotTool m_resPlotTool;
-  ResPlotTool::ResPlotCache m_resPlotCache;
+  ResPlotTool::Cache m_resPlotCache;
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
-  EffPlotTool::EffPlotCache m_effPlotCache;
+  EffPlotTool::Cache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
+  TrackSummaryPlotTool::Cache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

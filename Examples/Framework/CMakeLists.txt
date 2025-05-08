@@ -5,6 +5,7 @@ set(ActsExamplesFramework_SOURCES)
 add_library(
     ActsExamplesFramework
     SHARED
+    src/EventData/MuonSpacePoint.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/ScalingCalibrator.cpp
@@ -25,6 +26,7 @@ add_library(
     src/Validation/FakePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
+    src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
 )
 
