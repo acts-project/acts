@@ -101,11 +101,11 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
   }
 
   // Peek into the json object to understand what to do
-  Transform3 transform =
+  const Transform3 transform =
       Transform3JsonConverter::fromJson(jUpdater["transform"]);
-  auto jGrid = jUpdater["grid"];
-  auto jCasts = jUpdater["casts"].get<std::vector<AxisDirection>>();
-  auto jAxes = jGrid["axes"];
+  const auto jGrid = jUpdater["grid"];
+  const auto jCasts = jUpdater["casts"].get<std::vector<AxisDirection>>();
+  const auto jAxes = jGrid["axes"];
 
   // 1D cases
   if (jAxes.size() == 1u) {
