@@ -13,6 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/MultiWireStructureBuilder.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
@@ -62,9 +63,6 @@ void generateStrawSurfaces(
     for (std::size_t j = 0; j < nStraws; j++) {
       pos.x() = ipos.x() + 2 * j * radius;
 
-      //  auto surface = Surface::makeShared<StrawSurface>(
-      //      Transform3(Translation3(pos)), radius, halfZ);
-
       auto& element =
           elements.emplace_back(std::make_unique<DetectorElementStub>(
               Transform3(Translation3(pos)), lineBounds, 0));
@@ -102,7 +100,9 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
       {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
                          -vBounds[2], vBounds[2], nSurfacesY),
        0u}};
-  mlCfg.mlBounds = vBounds;
+  auto boundsPtr = std::make_unique<TrapezoidVolumeBounds>(
+      vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
+  mlCfg.mlBounds = boundsPtr->values();
 
   MultiWireStructureBuilder mlBuilder(mlCfg);
   auto [volumes, portals, roots] = mlBuilder.construct(tContext);
@@ -113,6 +113,12 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);
+  // wtf with the portals transform?
+  for (const auto& p : volumes.front().get()->portals()) {
+    std::cout << p->surface().center(tContext).x() << ","
+              << p->surface().center(tContext).y() << ","
+              << p->surface().center(tContext).z() << std::endl;
+  }
 
   // check the surface candidates after update (12 surfaces + 6 portals but only
   // 4 surfaces are reachable (one of each layer and one portal)
@@ -142,7 +148,9 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
       {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
                          -vBounds[2], vBounds[2], nSurfacesY),
        0u}};
-  mwCfg.bounds = vBounds;
+  auto boundsPtr = std::make_unique<Acts::TrapezoidVolumeBounds>(
+      vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
+  mwCfg.bounds = boundsPtr->values();
   mwCfg.transform = Transform3(Translation3(Vector3(0., 0., 0.)));
 
   // Build the volume
@@ -159,12 +167,6 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 
   BOOST_CHECK(volume->portals().size() == 6u);
 
-  // wtf with the portals transform?
-  for (const auto& p : volume->portals()) {
-    std::cout << p.surface().center(tContext).x() << ","
-              << p.surface().center(tContext).y() << ","
-              << p.surface().center(tContext).z() << std::endl;
-  }
   // check the navigation policy
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};

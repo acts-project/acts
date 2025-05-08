@@ -81,23 +81,27 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
   oSurfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
-  double poshOffset = get(eHalfLengthY) * std::tan(get(eAlpha));
-  double neghOffset = get(eHalfLengthY) * std::tan(get(eBeta));
+  double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
+  double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
   double topShift = poshOffset + neghOffset;
 
   // Face surfaces yz
   // (3) - At point B, attached to beta opening angle
   Vector3 fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
-  auto fbTransform = transform * Translation3(fbPosition) *
-                     AngleAxis3(get(eBeta), Vector3(0., 0., 1.)) * s_planeYZ;
+  auto fbTransform =
+      transform * Translation3(fbPosition) *
+      AngleAxis3(-std::numbers::pi / 2. + get(eBeta), Vector3(0., 0., 1.)) *
+      s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
   oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
 
   // (4) - At point A, attached to alpha opening angle
   Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
-  auto faTransform = transform * Translation3(faPosition) *
-                     AngleAxis3(get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
+  auto faTransform =
+      transform * Translation3(faPosition) *
+      AngleAxis3(-std::numbers::pi / 2. + get(eAlpha), Vector3(0., 0., 1.)) *
+      s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
   oSurfaces.push_back(
