@@ -157,7 +157,7 @@ build_exatrkx:
 
   script:
     # For now, we need to build boost to get the dependencies for the libraries
-    - wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
+    - curl --silent https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2 --output boost_1_87_0.tar.bz2
     - tar --bzip2 -xf boost_1_87_0.tar.bz2
     - cd boost_1_87_0
     - ./bootstrap.sh --prefix=${CI_PROJECT_DIR}/boost-install --with-libraries=regex,graph,program_options,test
