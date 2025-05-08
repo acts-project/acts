@@ -25,8 +25,8 @@ namespace ActsExamples {
 
 /// Tools to make fake rate/raio plots.
 ///
-/// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
-/// not matched with truth.
+/// The fake ratio (formerly called fake rate) is evaluated on all reco tracks.
+/// A track is 'fake' if it's not matched with truth.
 class FakePlotTool {
  public:
   /// @brief The nested configuration struct

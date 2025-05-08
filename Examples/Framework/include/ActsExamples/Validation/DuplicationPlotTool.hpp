@@ -23,13 +23,13 @@ class TProfile;
 
 namespace ActsExamples {
 
-// Tools to make duplication rate/ratio and duplication number plots to show
-// tracking duplication.
-//
-// The duplication is investigated for those truth-matched reco tracks. If there
-// are a few reco tracks matched to the same truth particle, the reco track with
-// the highest matching probability is tagges as 'real' and the others are
-// 'duplicated'.
+/// Tools to make duplication ratio (formerly called duplication rate) and
+/// duplication number plots to show tracking duplication.
+///
+/// The duplication ratio is evaluated on truth-matched reco tracks. If there
+/// is more than one track matched to the same truth particle, the reco track
+/// with the highest matching probability is tagged as 'real' and the others are
+/// 'duplicated'.
 class DuplicationPlotTool {
  public:
   /// @brief The nested configuration struct
