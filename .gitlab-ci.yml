@@ -162,6 +162,7 @@ build_exatrkx:
     - cd boost_1_87_0
     - ./bootstrap.sh --prefix=${CI_PROJECT_DIR}/boost-install --with-libraries=regex,graph,program_options,test
     - ./b2 install
+    - cd ..
     - rm -rf boost_1_87_0*
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
@@ -178,7 +179,7 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DBoost_DIR=boost-install/lib/cmake/Boost-1.87.0
+      -DBoost_DIR=${CI_PROJECT_DIR}/boost-install/lib/cmake/Boost-1.87.0
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
