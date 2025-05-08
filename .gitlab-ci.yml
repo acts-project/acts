@@ -127,6 +127,7 @@ build_exatrkx_cpu:
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
+      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
 
     - ccache -z
     - cmake --build build -- -j6
@@ -147,6 +148,7 @@ build_exatrkx:
 
   artifacts:
     paths:
+      - boost-install/
       - build/
     exclude:
       - build/**/*.o
@@ -154,6 +156,14 @@ build_exatrkx:
     expire_in: 6 hours
 
   script:
+    - sudo apt-get update -y
+    # For now, we need to build boost to get the dependencies for the libraries
+    - wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
+    - tar --bzip2 -xf boost_1_87_0.tar.bz2
+    - cd boost_1_87_0
+    - ./bootstrap.sh --prefix=${CI_PROJECT_DIR}/boost-install --with-libraries=regex,graph,program_options,test
+    - ./b2 install
+    - rm -rf boost_1_87_0*
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
@@ -169,6 +179,7 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
+      -DBoost_DIR=boost-install/lib/cmake/Boost-1.87.0
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
