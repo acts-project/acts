@@ -18,7 +18,7 @@ message(STATUS "Building ModuleMapGraph as part of the Acts project")
 FetchContent_Declare(
     ModuleMapGraph
     GIT_REPOSITORY https://gitlab.cern.ch/bhuth/ModuleMapGraph
-    GIT_TAG fa9ba14c09872e2b72fb794291c4fb777d71eeba
+    GIT_TAG 802dd6ec736683c83385bf4e11661fe67fa8c96a
     OVERRIDE_FIND_PACKAGE
 )
 
