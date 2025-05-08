@@ -156,7 +156,6 @@ build_exatrkx:
     expire_in: 6 hours
 
   script:
-    - sudo apt-get update -y
     # For now, we need to build boost to get the dependencies for the libraries
     - wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
     - tar --bzip2 -xf boost_1_87_0.tar.bz2
