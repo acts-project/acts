@@ -78,21 +78,12 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
           const double dy = options.unit * shape->GetDY();
           const double dz = options.unit * shape->GetDZ();
           for (auto x : std::vector<double>{-dx, dx}) {
-            if (!accept) {
-              break;
-            }
             for (auto y : std::vector<double>{-dy, dy}) {
-              if (!accept) {
-                break;
-              }
               for (auto z : std::vector<double>{-dz, dz}) {
-                if (!accept) {
-                  break;
-                }
                 const Vector3 edge = etrf * Vector3(x, y, z);
-                for (auto& [chkKey, chkValue] : options.parseRanges) {
-                  const double val = VectorHelpers::cast(edge, chkKey);
-                  if (val < chkValue.first || val > chkValue.second) {
+                for (auto& check : options.parseRanges) {
+                  const double val = VectorHelpers::cast(edge, check.first);
+                  if (val < check.second.first || val > check.second.second) {
                     accept = false;
                     break;
                   }
