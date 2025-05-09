@@ -26,11 +26,11 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
       std::any nodes, std::any edges, std::any edge_weights,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
-  torch::Device device() const override { return m_device; };
+
+  const Config &config() const { return m_cfg; }
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
-  torch::Device m_device;
   const auto &logger() const { return *m_logger; }
 };
 
