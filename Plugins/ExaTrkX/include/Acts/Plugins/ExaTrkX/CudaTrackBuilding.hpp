@@ -32,8 +32,6 @@ class CudaTrackBuilding final : public Acts::TrackBuildingBase {
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
 
-  const Config &config() const { return m_cfg; }
-
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;

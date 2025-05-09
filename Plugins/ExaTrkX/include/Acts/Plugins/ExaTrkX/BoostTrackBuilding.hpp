@@ -27,8 +27,6 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
 
-  const Config &config() const { return m_cfg; }
-
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
