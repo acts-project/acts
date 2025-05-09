@@ -22,6 +22,8 @@
 
 #include <memory>
 
+#include <boost/preprocessor/if.hpp>
+#include <boost/vmd/tuple/size.hpp>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -41,7 +43,8 @@
                    .def_property_readonly("config", &Alg::config);          \
                                                                             \
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
-    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
+    BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__), BOOST_PP_EMPTY(),          \
+                ACTS_PYTHON_STRUCT(c, __VA_ARGS__));                        \
   } while (0)
 
 namespace py = pybind11;
@@ -71,11 +74,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
   ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex);
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
-  ACTS_PYTHON_DECLARE_GNN_STAGE(
-      FullyConnectedGraphConstructor, GraphConstructionBase, mex, maxGraphSize,
-      maxOutEdges, maxDeltaR, maxDeltaZ, rScale, phiScale, zScale, etaScale,
-      rOffset, phiOffset, zOffset, etaOffset);
-
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, mex,
                                 modelPath, selectedFeatures, embeddingDim, rVal,
                                 knnVal, deviceID);
