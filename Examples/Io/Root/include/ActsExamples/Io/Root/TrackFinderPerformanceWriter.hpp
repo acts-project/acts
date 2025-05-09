@@ -16,7 +16,7 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/FakeRatePlotTool.hpp"
+#include "ActsExamples/Validation/FakePlotTool.hpp"
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
@@ -34,7 +34,7 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
-/// efficiency, fake rate etc.
+/// efficiency, fake rate/ratio etc.
 ///
 /// @TODO: add duplication plots
 ///
@@ -62,7 +62,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
 
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
-    FakeRatePlotTool::Config fakeRatePlotToolConfig;
+    FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
     TrackQualityPlotTool::Config trackQualityPlotToolConfig;
@@ -97,8 +97,8 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
   EffPlotTool m_effPlotTool;
   EffPlotTool::Cache m_effPlotCache;
   /// Plot tool for fake rate
-  FakeRatePlotTool m_fakeRatePlotTool;
-  FakeRatePlotTool::Cache m_fakeRatePlotCache{};
+  FakePlotTool m_fakePlotTool;
+  FakePlotTool::Cache m_fakePlotCache{};
   /// Plot tool for duplication rate
   DuplicationPlotTool m_duplicationPlotTool;
   DuplicationPlotTool::Cache m_duplicationPlotCache{};
