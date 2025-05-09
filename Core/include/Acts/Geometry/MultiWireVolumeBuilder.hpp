@@ -21,22 +21,22 @@ namespace Acts {
 
 class MultiWireVolumeBuilder {
  public:
-  // Configuration Struct
+  /// Configuration Struct
   struct Config {
-    // The name of the tracking volume
+    /// The name of the tracking volume
     std::string name = "undefined";
 
     // The surfaces to be wrapped from the tracking volume
     std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
 
-    // The transform of the tracking volume
+    /// The transform of the tracking volume
     Transform3 transform = Transform3::Identity();
 
-    // The bounds of the tracking volume
+    /// The bounds of the tracking volume
     std::vector<double> bounds = {};
 
-    // The binning of the tracking volume
-    // The protoAxis and the expansion of the binning for the neighbors
+    /// The binning of the tracking volume
+    /// The protoAxis and the expansion of the binning for the neighbors
     std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binning = {};
   };
   /// Constructor

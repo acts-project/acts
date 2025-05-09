@@ -40,13 +40,14 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     std::vector<DirectedProtoAxis> axis = {};
   };
 
-  /// Main constructor, which creates the indexed surfaces assigned to a grid
-  /// that is also constructed here
+  /// Main constructor, which expects the grid and will fill it with the
+  /// surfaces from the volume passed
   /// @note Expects that the grid is defined but not filled - it will be filled here with the surfaces assigned to the @p volume
   /// @param gctx The geometrycontext object
   /// @param volume The tracking volume holding the surfaces that will be the indexed objects
   /// @param config The configuration of the Navigation Policy
   /// @param logger A logging instance
+  /// @param grid The grid that will be filled with the surfaces
   explicit MultiLayerNavigationPolicy(const GeometryContext& gctx,
                                       const TrackingVolume& volume,
                                       const Logger& logger, Config config,
@@ -106,7 +107,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
                             eSurfaces.end());
     }
 
-    // remove duplicated candidates using geometryId
+    // remove duplicated candidates
     resolveDuplicates(surfCandidates);
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
                  << surfCandidates.size() << " candidates");
@@ -140,8 +141,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     return path;
   }
   /// Resolve duplicate on surface candidates
-  ///
-  /// @param gctx The geometry context of the current geometry
   /// @param surfaces is the surface candidates to check and resolve for duplicates
   void resolveDuplicates(std::vector<const Acts::Surface*>& surfaces) const {
     // sorting the surfaces according to their memory address
