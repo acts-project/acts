@@ -31,7 +31,7 @@ TruthGraphBuilder::TruthGraphBuilder(Config config, Acts::Logging::Level level)
       m_inputSimhits.isInitialized() && m_inputMeasSimhitMap.isInitialized();
 
   // Logical XOR operation
-  if (a == b) {
+  if (!a != !b) {
     throw std::invalid_argument("Missing inputs, cannot build truth graph");
   }
 }
@@ -77,9 +77,6 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       continue;
     }
 
-    std::sort(track.begin(), track.end());
-    track.erase(std::unique(track.begin(), track.end()), track.end());
-
     const Acts::Vector3 vtx = found->fourPosition().segment<3>(0);
     auto radiusForOrdering = [&](std::size_t i) {
       const auto& sp = spacepoints[i];
@@ -87,11 +84,8 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     };
 
     // Sort by radius (this breaks down if the particle has to low momentum)
-    if (m_cfg.preferCloseSpacepoints) {
-      std::ranges::sort(track, std::less{}, radiusForOrdering);
-    } else {
-      std::ranges::sort(track, std::greater{}, radiusForOrdering);
-    }
+    std::ranges::sort(track, {},
+                      [&](const auto& t) { return radiusForOrdering(t); });
 
     if (m_cfg.uniqueModules) {
       auto newEnd = std::unique(
@@ -108,11 +102,6 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
           });
       moduleDuplicatesRemoved += std::distance(newEnd, track.end());
       track.erase(newEnd, track.end());
-    }
-
-    // Since we sorted the other way around, we need to reverse now
-    if (!m_cfg.preferCloseSpacepoints) {
-      std::reverse(track.begin(), track.end());
     }
 
     for (auto i = 0ul; i < track.size() - 1; ++i) {

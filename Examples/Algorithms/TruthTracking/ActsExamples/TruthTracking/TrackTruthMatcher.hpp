@@ -40,8 +40,6 @@ class TrackTruthMatcher final : public IAlgorithm {
     double matchingRatio = 0.5;
     /// Whether to use double matching (track to particle and particle to track)
     bool doubleMatching = true;
-    /// Allows to re-weight volumes to confirm to ATLAS standard matching
-    std::map<std::size_t, double> reweightVolumes;
   };
 
   TrackTruthMatcher(const Config& config, Acts::Logging::Level level);

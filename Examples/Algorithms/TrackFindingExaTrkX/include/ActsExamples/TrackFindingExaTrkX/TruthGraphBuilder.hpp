@@ -45,10 +45,6 @@ class TruthGraphBuilder final : public IAlgorithm {
 
     /// Only allow one hit per track & module
     bool uniqueModules = false;
-
-    /// Whether to prefer spacepoints closer to the origin or
-    /// the other way around. Only has an effect if uniqueModules is true.
-    bool preferCloseSpacepoints = false;
   };
 
   TruthGraphBuilder(Config cfg, Acts::Logging::Level lvl);

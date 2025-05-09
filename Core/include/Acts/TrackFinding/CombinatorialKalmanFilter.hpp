@@ -912,10 +912,10 @@ class CombinatorialKalmanFilter {
         std::move(propState), propagationResult, propOptions, false);
 
     if (!result.ok()) {
-      ACTS_ERROR("Propagation failed: "
-                 << result.error() << " " << result.error().message()
-                 << " with the initial parameters: \n"
-                 << initialParameters.parameters().transpose());
+      ACTS_ERROR("Propagation failed: " << result.error() << " "
+                                        << result.error().message()
+                                        << " with the initial parameters: \n"
+                                        << initialParameters.parameters());
       return result.error();
     }
 

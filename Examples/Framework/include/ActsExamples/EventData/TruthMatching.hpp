@@ -37,10 +37,6 @@ struct TrackMatchEntry {
   /// Number of hits on the track that are associated to a particle
   /// Sorted by decreasing number of hits
   std::vector<ParticleHitCount> contributingParticles;
-
-  /// The contribution of majority particle
-  /// This is in fact redundant, but store it anyways for now
-  double majorityMatchingProbability = 0.f;
 };
 
 struct ParticleMatchEntry {
