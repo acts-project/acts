@@ -62,4 +62,5 @@ class MultiWireVolumeBuilder {
 
   std::unique_ptr<const Acts::Logger> m_logger;
 };
+
 }  // namespace Acts

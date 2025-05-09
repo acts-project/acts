@@ -111,7 +111,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
                  << surfCandidates.size() << " candidates");
 
-    // fill tne avigation stream with the container
+    // fill tne navigation stream with the container
     for (const auto* surf : surfCandidates) {
       stream.addSurfaceCandidate(*surf, args.tolerance);
     }
@@ -174,5 +174,4 @@ using gridType =
 using indexedUpdatorType = Experimental::IndexedSurfacesNavigation<gridType>;
 static_assert(
     NavigationPolicyConcept<MultiLayerNavigationPolicy<indexedUpdatorType>>);
-
 }  // namespace Acts
