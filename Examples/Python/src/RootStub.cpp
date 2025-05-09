@@ -11,4 +11,5 @@
 namespace Acts::Python {
 void addRootInput(Context& /*ctx*/) {}
 void addRootOutput(Context& /*ctx*/) {}
+void addRootDetector(Context& /*ctx*/) {}
 }  // namespace Acts::Python
