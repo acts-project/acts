@@ -39,7 +39,6 @@ class DummyEdgeClassifier final : public Acts::EdgeClassificationBase {
       const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
-  torch::Device device() const override { return torch::kCPU; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

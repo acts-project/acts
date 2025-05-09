@@ -216,7 +216,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
-                 py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("device"), py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }
 

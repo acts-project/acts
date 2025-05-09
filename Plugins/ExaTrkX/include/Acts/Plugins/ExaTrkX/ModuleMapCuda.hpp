@@ -107,9 +107,6 @@ class ModuleMapCuda : public GraphConstructionBase {
       std::vector<float> &inputValues, std::size_t numNodes,
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) override;
-
-  // TODO this returns nothing useful
-  torch::Device device() const override { return torch::Device(torch::kCUDA); }
 };
 
 }  // namespace Acts

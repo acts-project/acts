@@ -36,21 +36,19 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
                 .candidateLowThreshold = cfg.walkthroughLowCut,
                 .candidateHighThreshold = cfg.walkthroughHighCut},
             logger->clone()),
-        m_logger(std::move(logger)),
-        m_device(torch::Device(torch::kCPU)) {}
+        m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edge_weights,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
-  torch::Device device() const override { return m_device; };
+
   const Config &config() const { return m_cfg; }
 
  private:
   Config m_cfg;
   Acts::WalkthroughAlgorithm m_walkthrough;
   std::unique_ptr<const Acts::Logger> m_logger;
-  torch::Device m_device;
   const auto &logger() const { return *m_logger; }
 };
 

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(test_cuda_module_map) {
   cudaStreamCreate(&stream);
 
   Acts::ExecutionContext ctx;
-  ctx.device = torch::Device(torch::kCUDA);
+  ctx.device = Acts::Device::Cuda(0);
   ctx.stream = c10::cuda::getStreamFromExternal(stream, 0);
 
   auto features = makeFeatureVector();
