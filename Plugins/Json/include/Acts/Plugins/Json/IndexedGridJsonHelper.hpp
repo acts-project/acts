@@ -226,6 +226,10 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
       }
     }
   }
+
+  // Default return object if jAxes.size() != 1 or 2
+  updator_type updator;
+  return updator;
 }
 
 }  // namespace IndexedGridJsonHelper
