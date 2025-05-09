@@ -473,29 +473,25 @@ endif()
 
 # Convenience macro to simplify the check if we want to setup, and if
 # so, if we want to find it in the system or build internally
-macro(conditional_setup _var _package _path)
+macro(acts_conditional_setup _var _package _path)
     if(ACTS_SETUP_${_var})
         if(ACTS_USE_SYSTEM_${_var})
-            message(VERBOSE "Use system ${_package}")
             find_package(${_package} ${ARGN})
         else()
-            message(VERBOSE "Use internal ${_package}")
             add_subdirectory(${_path})
         endif()
-    else()
-        message(VERBOSE "Don't setup ${_package} explicitly")
     endif()
 endmacro()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
-    conditional_setup(ALGEBRAPLUGINS algebra-plugins thirdparty/algebra-plugins _acts_algebraplugins_version REQUIRED)
-    conditional_setup(DETRAY detray thirdparty/detray _acts_detray_version REQUIRED CONFIG)
-    conditional_setup(VECMEM vecmem thirdparty/vecmem _acts_vecmem_version REQUIRED)
+    acts_conditional_setup(ALGEBRAPLUGINS algebra-plugins thirdparty/algebra-plugins _acts_algebraplugins_version REQUIRED)
+    acts_conditional_setup(DETRAY detray thirdparty/detray _acts_detray_version REQUIRED CONFIG)
+    acts_conditional_setup(VECMEM vecmem thirdparty/vecmem _acts_vecmem_version REQUIRED)
     # Make the "VecMem language code" available for the whole project.
     if(ACTS_SETUP_VECMEM AND NOT ACTS_USE_SYSTEM_VECMEM)
         include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
     endif()
-    conditional_setup(COVFIE covfie thirdparty/covfie _acts_covfie_version REQUIRED CONFIG)
+    acts_conditional_setup(COVFIE covfie thirdparty/covfie _acts_covfie_version REQUIRED CONFIG)
 
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
