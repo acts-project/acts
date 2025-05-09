@@ -113,12 +113,6 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);
-  // wtf with the portals transform?
-  for (const auto& p : volumes.front().get()->portals()) {
-    std::cout << p->surface().center(tContext).x() << ","
-              << p->surface().center(tContext).y() << ","
-              << p->surface().center(tContext).z() << std::endl;
-  }
 
   // check the surface candidates after update (12 surfaces + 6 portals but only
   // 4 surfaces are reachable (one of each layer and one portal)
