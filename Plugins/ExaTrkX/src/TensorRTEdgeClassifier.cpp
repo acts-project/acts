@@ -115,21 +115,25 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
                                    std::any inEdgeIndex,
                                    std::any inEdgeFeatures,
                                    const ExecutionContext &execContext) {
-  assert(execContext.device.is_cuda());
+  assert(execContext.device.type == Acts::Device::Type::eCUDA);
+  const auto torchDevice =
+      execContext.device.type == Acts::Device::Type::eCUDA
+          ? torch::Device(torch::kCUDA, execContext.device.index)
+          : torch::kCPU;
+
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
   c10::cuda::CUDAStreamGuard(execContext.stream.value());
 
   auto nodeFeatures =
-      std::any_cast<torch::Tensor>(inNodeFeatures).to(execContext.device);
+      std::any_cast<torch::Tensor>(inNodeFeatures).to(torchDevice);
 
-  auto edgeIndex =
-      std::any_cast<torch::Tensor>(inEdgeIndex).to(execContext.device);
+  auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(torchDevice);
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   auto edgeFeatures =
-      std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
+      std::any_cast<torch::Tensor>(inEdgeFeatures).to(torchDevice);
   ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
 
   t1 = std::chrono::high_resolution_clock::now();

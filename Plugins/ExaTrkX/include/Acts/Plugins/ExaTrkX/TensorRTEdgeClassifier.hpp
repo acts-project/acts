@@ -44,7 +44,6 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
       const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
-  torch::Device device() const override { return torch::kCUDA; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

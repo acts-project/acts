@@ -47,15 +47,12 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
       const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
-  torch::Device device() const override { return m_device; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
 
   Config m_cfg;
-  c10::DeviceType m_deviceType;
-  torch::Device m_device;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
