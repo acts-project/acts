@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -13,8 +15,6 @@
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/Grid.hpp"
-
-#pragma once
 
 namespace Acts {
 
@@ -171,6 +171,8 @@ using gridType =
          Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
          Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
 using indexedUpdatorType = Experimental::IndexedSurfacesNavigation<gridType>;
+
 static_assert(
     NavigationPolicyConcept<MultiLayerNavigationPolicy<indexedUpdatorType>>);
+
 }  // namespace Acts

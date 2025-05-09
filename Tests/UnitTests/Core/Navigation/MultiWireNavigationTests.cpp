@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 
   // Check the volume
   // we do not except any children volumes
-  BOOST_CHECK(volume->volumes().size() == 0u);
+  BOOST_CHECK(volume->volumes().empty());
 
   // we expect 15*4 = 60 surfaces
   BOOST_CHECK(volume->surfaces().size() == 60u);

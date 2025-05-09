@@ -47,6 +47,7 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
 
   auto bArray =
       toArray<TrapezoidVolumeBounds::BoundValues::eSize>(m_config.bounds);
+  std::cout << bArray.size() << std::endl;
   std::shared_ptr<TrapezoidVolumeBounds> volumeBounds =
       std::make_shared<TrapezoidVolumeBounds>(bArray);
 
@@ -54,7 +55,7 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
       std::make_unique<Acts::TrackingVolume>(m_config.transform, volumeBounds,
                                              m_config.name);
 
-  SingleTrapezoidPortalShell portalShell(*trackingVolume.get());
+  SingleTrapezoidPortalShell portalShell(*trackingVolume);
   portalShell.applyToVolume();
 
   // Add the surfaces to the tracking volume
@@ -98,8 +99,8 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
   tryAllConfig.portals = true;
   tryAllConfig.sensitives = false;
 
-  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume.get(),
-                                            *m_logger, tryAllConfig);
+  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume, *m_logger,
+                                            tryAllConfig);
 
   // Configure the navigation policy with the binning for the grid for the
   // sensitive surfaces
@@ -115,7 +116,7 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
                                                                   indexedGrid)
           .asUniquePtr();
 
-  auto policyBase = factory->build(gctx, *trackingVolume.get(), *m_logger);
+  auto policyBase = factory->build(gctx, *trackingVolume, *m_logger);
 
   trackingVolume->setNavigationPolicy(std::move(policyBase));
 
