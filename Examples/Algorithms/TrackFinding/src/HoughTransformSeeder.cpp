@@ -173,11 +173,12 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
       for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++) {
-        if (passThreshold(m_houghHist, x, y)) {
+        if (!passThreshold(m_houghHist, x, y)) {
           continue;
         }
-        // now we need to unpack the hits; there should be multiple track
-        // candidates if we have multiple hits in a given layer So the first
+
+        // Now we need to unpack the hits; there should be multiple track
+        // candidates if we have multiple hits in a given layer. So the first
         // thing is to unpack the indices (which is what we need) by layer
 
         std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
@@ -191,10 +192,11 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
         }
         std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
 
-        // loop over all the combination
-        for (auto [icomb, hit_indices] : Acts::enumerate(combs)) {
+        for (auto [icomb, hit_indices] :
+             Acts::enumerate(combs)) {  // loop over all the combination
+
           ProtoTrack protoTrack;
-          for (std::size_t layer = 0; layer < m_cfg.nLayers; layer++) {
+          for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
             if (hit_indices[layer] >= 0) {
               for (auto index : hitIndicesAll[layer][hit_indices[layer]]) {
                 protoTrack.push_back(index);
@@ -276,12 +278,10 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
 bool ActsExamples::HoughTransformSeeder::passThreshold(
     HoughHist const& houghHist, unsigned x, unsigned y) const {
   // Pass window threshold
-  const unsigned width = m_cfg.threshold.size() / 2;
-
+  unsigned width = m_cfg.threshold.size() / 2;
   if (x < width || m_cfg.houghHistSize_x - x < width) {
     return false;
   }
-
   for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
     if (houghHist.atLocalBins({y, x - width + i}).first < m_cfg.threshold[i]) {
       return false;
@@ -289,47 +289,32 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
   }
 
   // Pass local-maximum check, if used
-  if (m_cfg.localMaxWindowSize == 0) {
-    return true;
-  }
-
-  for (int j = -m_cfg.localMaxWindowSize; j <= m_cfg.localMaxWindowSize; j++) {
-    if (y + j >= m_cfg.houghHistSize_y) {
-      continue;
-    }
-
-    for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
-         i++) {
-      if (i == 0 && j == 0) {
-        continue;
-      }
-
-      if (x + i >= m_cfg.houghHistSize_x) {
-        continue;
-      }
-
-      if (houghHist.atLocalBins({y + j, x + i}).first <
-          houghHist.atLocalBins({y, x}).first) {
-        continue;
-      }
-
-      if (houghHist.atLocalBins({y + j, x + i}).first >
-          houghHist.atLocalBins({y, x}).first) {
-        return false;
-      }
-
-      if (houghHist.atLocalBins({y + j, x + i}).second.size() <
-          houghHist.atLocalBins({y, x}).second.size()) {
-        continue;
-      }
-
-      if (houghHist.atLocalBins({y + j, x + i}).second.size() >
-          houghHist.atLocalBins({y, x}).second.size()) {
-        return false;
-      }
-
-      if (j <= 0 && i <= 0) {
-        return false;  // favor bottom-left (low phi, low neg q/pt)
+  if (m_cfg.localMaxWindowSize != 0) {
+    for (int j = -m_cfg.localMaxWindowSize; j <= m_cfg.localMaxWindowSize;
+         j++) {
+      for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
+           i++) {
+        if (i == 0 && j == 0) {
+          continue;
+        }
+        if (y + j < m_cfg.houghHistSize_y && x + i < m_cfg.houghHistSize_x) {
+          if (houghHist.atLocalBins({y + j, x + i}).first >
+              houghHist.atLocalBins({y, x}).first) {
+            return false;
+          }
+          if (houghHist.atLocalBins({y + j, x + i}).first ==
+              houghHist.atLocalBins({y, x}).first) {
+            if (houghHist.atLocalBins({y + j, x + i}).second.size() >
+                houghHist.atLocalBins({y, x}).second.size()) {
+              return false;
+            }
+            if (houghHist.atLocalBins({y + j, x + i}).second.size() ==
+                    houghHist.atLocalBins({y, x}).second.size() &&
+                j <= 0 && i <= 0) {
+              return false;  // favor bottom-left (low phi, low neg q/pt)
+            }
+          }
+        }
       }
     }
   }

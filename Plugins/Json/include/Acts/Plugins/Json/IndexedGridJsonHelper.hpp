@@ -122,14 +122,12 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
         EqClosed ecAG{range, bins};
         auto grid =
             GridJsonConverter::fromJson<EqClosed, ValueType>(jGrid, ecAG);
-        return generator.createUpdater(std::move(grid), {bValue},
-                                       transform);
+        return generator.createUpdater(std::move(grid), {bValue}, transform);
       } else {
         EqBound ebAG{range, bins};
         auto grid =
             GridJsonConverter::fromJson<EqBound, ValueType>(jGrid, ebAG);
-        return generator.createUpdater(std::move(grid), {bValue},
-                                       transform);
+        return generator.createUpdater(std::move(grid), {bValue}, transform);
       }
     } else {
       // Variable type
@@ -137,14 +135,12 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
         VarClosed vcAG{vExtractor(jAxis)};
         auto grid =
             GridJsonConverter::fromJson<VarClosed, ValueType>(jGrid, vcAG);
-        return generator.createUpdater(std::move(grid), {bValue},
-                                       transform);
+        return generator.createUpdater(std::move(grid), {bValue}, transform);
       } else {
         VarBound vbAG{vExtractor(jAxis)};
         auto grid =
             GridJsonConverter::fromJson<VarBound, ValueType>(jGrid, vbAG);
-        return generator.createUpdater(std::move(grid), {bValue},
-                                       transform);
+        return generator.createUpdater(std::move(grid), {bValue}, transform);
       }
     }
   } else if (jAxes.size() == 2u) {
@@ -167,35 +163,31 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
         if (axisTypeB == AxisType::Equidistant) {
           auto [rangeB, binsB] = eqExtractor(jAxisB);
           EqBoundEqBound ebebAG{rangeA, binsA, rangeB, binsB};
-          auto grid =
-              GridJsonConverter::fromJson<EqBoundEqBound, ValueType>(
-                  jGrid, ebebAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<EqBoundEqBound, ValueType>(
+              jGrid, ebebAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         } else {
           EqBoundVarBound ebvbAG{rangeA, binsA, vExtractor(jAxisB)};
-          auto grid =
-              GridJsonConverter::fromJson<EqBoundVarBound, ValueType>(
-                  jGrid, ebvbAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<EqBoundVarBound, ValueType>(
+              jGrid, ebvbAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         }
       } else {
         if (axisTypeB == AxisType::Equidistant) {
           auto [rangeB, binsB] = eqExtractor(jAxisB);
           VarBoundEqBound vbebAG{vExtractor(jAxisA), rangeB, binsB};
-          auto grid =
-              GridJsonConverter::fromJson<VarBoundEqBound, ValueType>(
-                  jGrid, vbebAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<VarBoundEqBound, ValueType>(
+              jGrid, vbebAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         } else {
           VarBoundVarBound vbvbAG{vExtractor(jAxisA), vExtractor(jAxisB)};
-          auto grid =
-              GridJsonConverter::fromJson<VarBoundVarBound, ValueType>(
-                  jGrid, vbvbAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<VarBoundVarBound, ValueType>(
+              jGrid, vbvbAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         }
       }
     } else {
@@ -205,35 +197,31 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
         if (axisTypeB == AxisType::Equidistant) {
           auto [rangeB, binsB] = eqExtractor(jAxisB);
           EqBoundEqClosed ebecAG{rangeA, binsA, rangeB, binsB};
-          auto grid =
-              GridJsonConverter::fromJson<EqBoundEqClosed, ValueType>(
-                  jGrid, ebecAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<EqBoundEqClosed, ValueType>(
+              jGrid, ebecAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         } else {
           EqBoundVarClosed ebvcAG{rangeA, binsA, vExtractor(jAxisB)};
-          auto grid =
-              GridJsonConverter::fromJson<EqBoundVarClosed, ValueType>(
-                  jGrid, ebvcAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<EqBoundVarClosed, ValueType>(
+              jGrid, ebvcAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         }
       } else {
         if (axisTypeB == AxisType::Equidistant) {
           auto [rangeB, binsB] = eqExtractor(jAxisB);
           VarBoundEqClosed vbecAG{vExtractor(jAxisA), rangeB, binsB};
-          auto grid =
-              GridJsonConverter::fromJson<VarBoundEqClosed, ValueType>(
-                  jGrid, vbecAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<VarBoundEqClosed, ValueType>(
+              jGrid, vbecAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         } else {
           VarBoundVarClosed vbvcAG{vExtractor(jAxisA), vExtractor(jAxisB)};
-          auto grid =
-              GridJsonConverter::fromJson<VarBoundVarClosed, ValueType>(
-                  jGrid, vbvcAG);
-          return generator.createUpdater(std::move(grid),
-                                         {bValueA, bValueB}, transform);
+          auto grid = GridJsonConverter::fromJson<VarBoundVarClosed, ValueType>(
+              jGrid, vbvcAG);
+          return generator.createUpdater(std::move(grid), {bValueA, bValueB},
+                                         transform);
         }
       }
     }
