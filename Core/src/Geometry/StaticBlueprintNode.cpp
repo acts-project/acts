@@ -67,7 +67,7 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
 
   } else if (type == VolumeBounds::eTrapezoid) {
     m_shell = std::make_unique<SingleTrapezoidPortalShell>(*m_volume);
-    
+
   } else {
     throw std::logic_error("Volume type is not supported");
   }
