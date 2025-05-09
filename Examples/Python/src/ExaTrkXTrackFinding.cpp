@@ -68,12 +68,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
   }
 
-  ACTS_PYTHON_DECLARE_GNN_STAGE(DummyEdgeClassifier, EdgeClassificationBase,
-                                mex, keepAll);
-
-  ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex,
-                                doJunctionRemoval, doWalkthrough,
-                                walkthroughLowCut, walkthroughHighCut);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex);
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(
