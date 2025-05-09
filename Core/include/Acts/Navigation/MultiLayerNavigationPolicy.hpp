@@ -112,7 +112,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
                  << surfCandidates.size() << " candidates");
 
-    // fill tne navigation stream with the container
+    // fill the navigation stream with the container
     for (const auto* surf : surfCandidates) {
       stream.addSurfaceCandidate(*surf, args.tolerance);
     }
