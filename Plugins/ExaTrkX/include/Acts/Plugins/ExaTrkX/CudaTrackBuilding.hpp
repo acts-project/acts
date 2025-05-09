@@ -34,6 +34,7 @@ class CudaTrackBuilding final : public Acts::TrackBuildingBase {
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
   torch::Device device() const override { return m_device; };
+  const Config &config() const { return m_cfg; }
 
  private:
   Config m_cfg;
