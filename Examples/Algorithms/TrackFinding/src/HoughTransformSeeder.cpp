@@ -182,7 +182,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
         // thing is to unpack the indices (which is what we need) by layer
 
         std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
-            m_cfg.nLayers);  // [layer,vector<Index]
+            m_cfg.nLayers);
         std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
         for (auto measurementIndex : m_houghHist.atLocalBins({y, x}).second) {
           HoughMeasurementStruct* meas =
@@ -190,11 +190,11 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
           hitIndicesAll[meas->layer].push_back(meas->indices);
           nHitsPerLayer[meas->layer]++;
         }
+
         std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
 
-        for (auto [icomb, hit_indices] :
-             Acts::enumerate(combs)) {  // loop over all the combination
-
+        // Loop over all combinations.
+        for (auto [icomb, hit_indices] : Acts::enumerate(combs)) {
           ProtoTrack protoTrack;
           for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
             if (hit_indices[layer] >= 0) {

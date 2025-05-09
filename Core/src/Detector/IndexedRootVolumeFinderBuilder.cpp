@@ -23,8 +23,8 @@ void fillGridIndices2D(
         rootVolumes,
     const std::array<std::vector<double>, 2u>& boundaries,
     const std::array<Acts::AxisDirection, 2u>& casts) {
-  if (casts != std::array<Acts::AxisDirection, 2u>{Acts::AxisDirection::binZ,
-                                                   Acts::AxisDirection::binR}) {
+  if (casts != std::array<Acts::AxisDirection, 2u>{
+                   Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR}) {
     return;
   }
 
