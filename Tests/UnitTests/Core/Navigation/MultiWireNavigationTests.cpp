@@ -179,6 +179,16 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
                           return lhs.surface() == rhs.surface();
                         });
   BOOST_CHECK(it == main.candidates().end());
+
+  // try with a different direction
+  double angle = M_PI / 4.;
+  startDir = {std::cos(angle), std::sin(angle), 0.};
+  args.direction = startDir;
+  // clear the candidates and re initialize with new arguments
+  main.candidates().clear();
+  volume->initializeNavigationCandidates(args, stream, *logger);
+  // we expect 18 candidates (12 surfaces + 6 portals)
+  BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
