@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   BOOST_CHECK(it == main.candidates().end());
 
   // try with a different direction
-  double angle = M_PI / 4.;
+  double angle = std::numbers::pi / 4.;
   startDir = {std::cos(angle), std::sin(angle), 0.};
   args.direction = startDir;
   // clear the candidates and re initialize with new arguments
