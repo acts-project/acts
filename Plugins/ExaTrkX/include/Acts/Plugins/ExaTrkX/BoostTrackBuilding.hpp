@@ -22,8 +22,7 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
   struct Config {};
 
   BoostTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
-      : m_cfg(cfg),
-        m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edge_weights,
