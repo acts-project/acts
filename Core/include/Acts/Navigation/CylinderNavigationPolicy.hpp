@@ -17,8 +17,9 @@ class TrackingVolume;
 class GeometryContext;
 class Logger;
 
-/// Policy which adds **all** candidates of the configured type to the
-/// stream
+/// Policy which adds only the outer portals of a cylinder. It uses some
+/// simplified calculations which set of portals to add to the candidate vector.
+/// This policy does not handle contained volumes at all.
 class CylinderNavigationPolicy final : public INavigationPolicy {
  public:
   struct Config {};
