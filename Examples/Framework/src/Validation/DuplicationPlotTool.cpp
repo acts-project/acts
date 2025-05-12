@@ -39,11 +39,11 @@ void DuplicationPlotTool::book(Cache& cache) const {
       "Duplication ratio;pT [GeV/c];Duplication ratio", bPt);
   // duplication ratio vs eta
   cache.duplicationRatio_vs_eta =
-      PlotHelpers::bookEff("duplicationRate_vs_eta",
+      PlotHelpers::bookEff("duplicationRatio_vs_eta",
                            "Duplication ratio;#eta;Duplication ratio", bEta);
   // duplication ratio vs phi
   cache.duplicationRatio_vs_phi =
-      PlotHelpers::bookEff("duplicationRate_vs_phi",
+      PlotHelpers::bookEff("duplicationRatio_vs_phi",
                            "Duplication ratio;#phi;Duplication ratio", bPhi);
 
   // duplication number vs pT
