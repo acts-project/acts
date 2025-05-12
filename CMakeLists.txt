@@ -471,27 +471,44 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
-# Convenience macro to simplify the check if we want to setup, and if
-# so, if we want to find it in the system or build internally
-macro(acts_conditional_setup _var _package _path)
-    if(ACTS_SETUP_${_var})
-        if(ACTS_USE_SYSTEM_${_var})
-            find_package(${_package} ${ARGN})
+if(ACTS_BUILD_PLUGIN_TRACCC)
+    if(ACTS_SETUP_ALGEBRAPLUGINS)
+        if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
+            find_package(
+                algebra-plugins
+                ${_acts_algebraplugins_version}
+                REQUIRED
+            )
         else()
-            add_subdirectory(${_path})
+            add_subdirectory(thirdparty/algebra-plugins)
         endif()
     endif()
-endmacro()
 
-if(ACTS_BUILD_PLUGIN_TRACCC)
-    acts_conditional_setup(ALGEBRAPLUGINS algebra-plugins thirdparty/algebra-plugins _acts_algebraplugins_version REQUIRED)
-    acts_conditional_setup(DETRAY detray thirdparty/detray _acts_detray_version REQUIRED CONFIG)
-    acts_conditional_setup(VECMEM vecmem thirdparty/vecmem _acts_vecmem_version REQUIRED)
-    # Make the "VecMem language code" available for the whole project.
-    if(ACTS_SETUP_VECMEM AND NOT ACTS_USE_SYSTEM_VECMEM)
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    if(ACTS_SETUP_DETRAY)
+        if(ACTS_USE_SYSTEM_DETRAY)
+            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+        else()
+            add_subdirectory(thirdparty/detray)
+        endif()
     endif()
-    acts_conditional_setup(COVFIE covfie thirdparty/covfie _acts_covfie_version REQUIRED CONFIG)
+
+    if(ACTS_SETUP_VECMEM)
+        if(ACTS_USE_SYSTEM_VECMEM)
+            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        else()
+            add_subdirectory(thirdparty/vecmem)
+            # Make the "VecMem language code" available for the whole project.
+            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+        endif()
+    endif()
+
+    if(ACTS_SETUP_COVFIE)
+        if(ACTS_USE_SYSTEM_COVFIE)
+            find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+        else()
+            add_subdirectory(thirdparty/covfie)
+        endif()
+    endif()
 
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
