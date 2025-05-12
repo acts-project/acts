@@ -31,7 +31,7 @@ void DuplicationPlotTool::book(Cache& cache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
-  ACTS_DEBUG("Initialize the histograms for duplication rate/ratio plots");
+  ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 
   // duplication ratio vs pT
   cache.duplicationRatio_vs_pT = PlotHelpers::bookEff(

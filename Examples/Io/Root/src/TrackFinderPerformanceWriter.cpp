@@ -250,7 +250,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalDuplicateTracks++;
     }
 
-    // Fill fake raio plots
+    // Fill fake ratio plots
     m_fakePlotTool.fill(
         m_fakePlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Fake);

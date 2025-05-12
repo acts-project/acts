@@ -20,16 +20,16 @@ using Acts::VectorHelpers::theta;
 
 namespace ActsExamples {
 
-ActsExamples::FakePlotTool::FakePlotTool(
-    const ActsExamples::FakePlotTool::Config& cfg, Acts::Logging::Level lvl)
+FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
+                           Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)) {}
 
-void ActsExamples::FakePlotTool::book(Cache& cache) const {
+void FakePlotTool::book(Cache& cache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
-  ACTS_DEBUG("Initialize the histograms for fake rate/ratio plots");
+  ACTS_DEBUG("Initialize the histograms for fake ratio plots");
 
   // number of reco tracks vs pT scatter plots
   cache.nReco_vs_pT = PlotHelpers::bookHisto(
@@ -66,7 +66,7 @@ void ActsExamples::FakePlotTool::book(Cache& cache) const {
       "fakeRatio_vs_phi", "Tracking fake ratio;#phi;Fake ratio", bPhi);
 }
 
-void ActsExamples::FakePlotTool::clear(Cache& cache) const {
+void FakePlotTool::clear(Cache& cache) const {
   delete cache.nReco_vs_pT;
   delete cache.nTruthMatched_vs_pT;
   delete cache.nFake_vs_pT;
@@ -78,7 +78,7 @@ void ActsExamples::FakePlotTool::clear(Cache& cache) const {
   delete cache.fakeRatio_vs_phi;
 }
 
-void ActsExamples::FakePlotTool::write(const Cache& cache) const {
+void FakePlotTool::write(const Cache& cache) const {
   ACTS_DEBUG("Write the plots to output file.");
   cache.nReco_vs_pT->Write();
   cache.nTruthMatched_vs_pT->Write();
@@ -91,9 +91,9 @@ void ActsExamples::FakePlotTool::write(const Cache& cache) const {
   cache.fakeRatio_vs_phi->Write();
 }
 
-void ActsExamples::FakePlotTool::fill(
-    Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
-    bool status) const {
+void FakePlotTool::fill(Cache& cache,
+                        const Acts::BoundTrackParameters& fittedParameters,
+                        bool status) const {
   const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
@@ -104,10 +104,9 @@ void ActsExamples::FakePlotTool::fill(
   PlotHelpers::fillEff(cache.fakeRatio_vs_phi, fit_phi, status);
 }
 
-void ActsExamples::FakePlotTool::fill(Cache& cache,
-                                      const SimParticleState& truthParticle,
-                                      std::size_t nTruthMatchedTracks,
-                                      std::size_t nFakeTracks) const {
+void FakePlotTool::fill(Cache& cache, const SimParticleState& truthParticle,
+                        std::size_t nTruthMatchedTracks,
+                        std::size_t nFakeTracks) const {
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 

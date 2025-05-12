@@ -68,7 +68,7 @@ class DuplicationPlotTool {
   /// @param cache the cache for duplication plots
   void book(Cache& cache) const;
 
-  /// @brief fill duplication raio w.r.t. fitted track parameters
+  /// @brief fill duplication ratio w.r.t. fitted track parameters
   ///
   /// @param cache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
