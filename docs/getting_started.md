@@ -32,7 +32,7 @@ The following dependencies are optional and are needed to build additional
 components:
 
 - [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
-- [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
+- [DD4hep](https://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 - [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 - [Geant4](https://geant4.org/) for some examples
 - [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
