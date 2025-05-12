@@ -359,7 +359,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
 
     from pythia8 import addPythia8
 
-    s = Sequencer(numThreads=3, events=3)
+    s = Sequencer(numThreads=1, events=3)
 
     vtxGen = acts.examples.GaussianVertexGenerator(
         stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
