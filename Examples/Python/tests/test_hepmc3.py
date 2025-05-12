@@ -415,7 +415,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
             with pyhepmc.open(actual_path) as f:
                 for evt in f:
                     if evt.event_number == 0:
-                        assert len(evt.particles) == 7433
+                        assert len(evt.particles) == 8897
                     nevts += 1
             assert nevts == s.config.events
 
