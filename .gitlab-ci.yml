@@ -111,7 +111,6 @@ build_exatrkx_cpu:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
@@ -156,7 +155,6 @@ build_exatrkx:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
@@ -169,7 +167,6 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
     - cmake --build build -- -j6
@@ -257,7 +254,6 @@ build_gnn_tensorrt:
     - mkdir build
     - >
       cmake -B build -S src --preset gitlab-ci-tensorrt
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
     - ccache -z
     - cmake --build build -- -j6
     - ccache -s

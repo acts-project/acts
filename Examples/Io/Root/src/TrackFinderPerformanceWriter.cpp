@@ -34,7 +34,8 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
       m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl),
+      m_trackQualityPlotTool(m_cfg.trackQualityPlotToolConfig, lvl) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -45,6 +46,9 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
   if (m_cfg.inputParticleTrackMatching.empty()) {
     throw std::invalid_argument("Missing input particle track matching");
   }
+  if (m_cfg.inputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument("Missing input measurement particles map");
+  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -52,6 +56,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
+  m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -77,6 +82,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
     m_trackSummaryPlotTool.book(m_subDetectorSummaryCaches[key], key);
   }
+  m_trackQualityPlotTool.book(m_trackQualityPlotCache);
 }
 
 TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
@@ -87,6 +93,7 @@ TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
     m_trackSummaryPlotTool.clear(m_subDetectorSummaryCaches.at(key));
   }
+  m_trackQualityPlotTool.clear(m_trackQualityPlotCache);
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -142,6 +149,7 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
       m_trackSummaryPlotTool.write(m_subDetectorSummaryCaches.at(key));
     }
+    m_trackQualityPlotTool.write(m_trackQualityPlotCache);
 
     writeFloat(eff_tracks, "eff_tracks");
     writeFloat(fakeRate_tracks, "fakerate_tracks");
@@ -168,6 +176,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
   const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
+  const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -254,6 +263,26 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
+
+    if (particleMatch.particle.has_value() &&
+        particleMeasurementsMap.contains(particleMatch.particle.value())) {
+      const auto measurements =
+          particleMeasurementsMap.equal_range(particleMatch.particle.value());
+
+      std::size_t nTrackMeasurements =
+          track.nMeasurements() + track.nOutliers();
+      std::size_t nMatchedHits =
+          particleMatch.contributingParticles.front().hitCount;
+      std::size_t nParticleHits =
+          std::distance(measurements.first, measurements.second);
+
+      double completeness = static_cast<double>(nMatchedHits) / nParticleHits;
+      double purity = static_cast<double>(nMatchedHits) / nTrackMeasurements;
+
+      // Fill the track quality plots
+      m_trackQualityPlotTool.fill(m_trackQualityPlotCache, fittedParameters,
+                                  completeness, purity);
+    }
   }
 
   if (unmatched > 0) {

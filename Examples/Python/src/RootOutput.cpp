@@ -198,10 +198,11 @@ void addRootOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::TrackFinderPerformanceWriter, mex,
       "TrackFinderPerformanceWriter", inputTracks, inputParticles,
-      inputTrackParticleMatching, inputParticleTrackMatching, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-      subDetectorTrackSummaryVolumes, writeMatchingDetails);
+      inputTrackParticleMatching, inputParticleTrackMatching,
+      inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
+      fakeRatePlotToolConfig, duplicationPlotToolConfig,
+      trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
+      writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

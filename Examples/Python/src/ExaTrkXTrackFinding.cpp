@@ -200,6 +200,13 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 
   {
+    auto cls =
+        py::class_<Acts::Device>(mex, "Device")
+            .def_static("Cpu", &Acts::Device::Cpu)
+            .def_static("Cuda", &Acts::Device::Cuda, py::arg("index") = 0);
+  }
+
+  {
     using Class = Acts::ExaTrkXPipeline;
 
     auto cls =
@@ -216,7 +223,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
-                 py::arg("device"), py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("device") = Acts::Device::Cuda(0),
+                 py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }
 
