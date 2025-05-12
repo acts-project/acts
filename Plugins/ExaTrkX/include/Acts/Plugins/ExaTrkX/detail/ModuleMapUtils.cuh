@@ -30,7 +30,7 @@ __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
   data[i] *= scale;
 }
 
-constexpr float g_pi = 3.141592654f;
+constexpr float g_pi = std::numbers::pi_v<float>;
 
 template <typename T>
 __device__ T resetAngle(T angle) {
@@ -40,6 +40,7 @@ __device__ T resetAngle(T angle) {
   if (angle < -g_pi) {
     return angle + 2.f * g_pi;
   }
+  assert(angle >= -g_pi && angle < g_pi);
   return angle;
 };
 
@@ -95,17 +96,6 @@ __global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
 
   srcNodes[i] = hit_ids[srcNodes[i]];
   tgtNodes[i] = hit_ids[tgtNodes[i]];
-}
-
-template <typename T>
-void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
-  std::vector<T> data_cpu(size);
-  cudaMemcpy(data_cpu.data(), data, size * sizeof(T), cudaMemcpyDeviceToHost);
-  std::cout << name << "[" << size << "]: ";
-  for (int i = 0; i < size; ++i) {
-    std::cout << data_cpu.at(i) << "  ";
-  }
-  std::cout << std::endl;
 }
 
 template <class T>

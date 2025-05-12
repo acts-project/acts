@@ -212,13 +212,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
 
   // Preprocess features
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_z(), 1000.f);
+      nHits, inputData.cuda_z(), m_cfg.zScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_R(), 1000.f);
+      nHits, inputData.cuda_R(), m_cfg.rScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_phi(), 3.14159f);
+      nHits, inputData.cuda_phi(), m_cfg.phiScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::computeXandY<<<gridDimHits, blockDim, 0, stream>>>(
