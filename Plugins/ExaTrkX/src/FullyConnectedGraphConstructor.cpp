@@ -28,6 +28,11 @@ FullyConnectedGraphConstructor::operator()(
     throw NoEdgesError{};
   }
 
+  const auto device =
+      execContext.device.type == Acts::Device::Type::eCUDA
+          ? torch::Device(torch::kCUDA, execContext.device.index)
+          : torch::kCPU;
+
   // Not sure why I must reset this here...
   auto lastCudaError = cudaGetLastError();
   ACTS_DEBUG("Retrieved last CUDA error: " << lastCudaError);
@@ -205,9 +210,9 @@ FullyConnectedGraphConstructor::operator()(
 
   ACTS_DEBUG("Move data to " << execContext.device);
 
-  auto inputTensorCuda = inputTensor.to(execContext.device);
-  auto edgeListCuda = edgeList.to(execContext.device);
-  auto edgeFeaturesCuda = edgeFeatures.to(execContext.device);
+  auto inputTensorCuda = inputTensor.to(device);
+  auto edgeListCuda = edgeList.to(device);
+  auto edgeFeaturesCuda = edgeFeatures.to(device);
 
   ACTS_VERBOSE("inputTensor: " << inputTensorCuda);
   ACTS_VERBOSE("edgeList: " << edgeListCuda);

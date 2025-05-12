@@ -49,10 +49,6 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) override;
 
-  torch::Device device() const override {
-    return torch::Device(torch::kCUDA, 0);
-  }
-
   const Config &config() const { return m_cfg; }
 
  private:
