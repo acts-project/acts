@@ -6,14 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
-#include <algorithm>
-#include <numeric>
-#include <utility>
-
 namespace Acts {
-// constructor
+
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
     const SeedFilterConfig& config,
@@ -27,7 +24,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
-    const SeedFilterConfig& config, std::unique_ptr<const Acts::Logger> logger,
+    const SeedFilterConfig& config, std::unique_ptr<const Logger> logger,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
@@ -36,12 +33,9 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
   }
 }
 
-// function to filter seeds based on all seeds with same bottom- and
-// middle-spacepoint.
-// return vector must contain weight of each seed
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
-    const Acts::SpacePointMutableData& mutableData,
+    const SpacePointMutableData& mutableData,
     const external_spacepoint_t& bottomSP,
     const external_spacepoint_t& middleSP,
     const std::vector<const external_spacepoint_t*>& topSpVec,
@@ -246,7 +240,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    Acts::SpacePointMutableData& mutableData,
+    SpacePointMutableData& mutableData,
     CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
     collection_t& outputCollection) const {
   // retrieve all candidates
@@ -261,7 +255,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    Acts::SpacePointMutableData& mutableData,
+    SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp<
         const external_spacepoint_t>::value_type>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
@@ -303,7 +297,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(medium->index(), bestSeedQuality);
     mutableData.setQuality(top->index(), bestSeedQuality);
 
-    Acts::Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
+    Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
@@ -311,7 +305,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                                     << medium->index() << ", t=" << top->index()
                                     << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
-    Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
+    detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
     ++numTotalSeeds;
   }
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
