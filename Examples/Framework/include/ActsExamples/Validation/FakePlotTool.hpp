@@ -23,11 +23,11 @@ class TH2F;
 
 namespace ActsExamples {
 
-/// Tools to make fake rate plots to show tracking fake rate.
+/// Tools to make fake ratio plots.
 ///
-/// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
-/// not matched with truth.
-class FakeRatePlotTool {
+/// The fake ratio (formerly called fake rate) is evaluated on all reco tracks.
+/// A track is 'fake' if it's not matched with truth.
+class FakePlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -52,28 +52,28 @@ class FakeRatePlotTool {
     TH2F* nTruthMatched_vs_eta;
     /// Number of fake (truth-unmatched) tracks vs eta scatter plot
     TH2F* nFake_vs_eta;
-    /// Tracking fake rate vs pT
-    TEfficiency* fakeRate_vs_pT;
-    /// Tracking fake rate vs eta
-    TEfficiency* fakeRate_vs_eta;
-    /// Tracking fake rate vs phi
-    TEfficiency* fakeRate_vs_phi;
+    /// Tracking fake ratio vs pT
+    TEfficiency* fakeRatio_vs_pT;
+    /// Tracking fake ratio vs eta
+    TEfficiency* fakeRatio_vs_eta;
+    /// Tracking fake ratio vs phi
+    TEfficiency* fakeRatio_vs_phi;
   };
 
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
-  FakeRatePlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  FakePlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the fake rate plots
+  /// @brief book the fake ratio plots
   ///
-  /// @param cache the cache for fake rate plots
+  /// @param cache the cache for fake ratio plots
   void book(Cache& cache) const;
 
-  /// @brief fill fake rate w.r.t. fitted track parameters
+  /// @brief fill fake ratio w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for fake rate plots
+  /// @param cache cache object for fake ratio plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
   void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
@@ -82,21 +82,21 @@ class FakeRatePlotTool {
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
   ///
-  /// @param cache cache object for fake rate plots
+  /// @param cache cache object for fake ratio plots
   /// @param truthParticle the truth Particle
-  /// @param nTruthMatchedTracks the number of truth-Matched tracks
+  /// @param nTruthMatchedTracks the number of truth-matched tracks
   /// @param nFakeTracks the number of fake tracks
   void fill(Cache& cache, const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
 
-  /// @brief write the fake rate plots to file
+  /// @brief write the fake ratio plots to file
   ///
-  /// @param cache cache object for fake rate plots
+  /// @param cache cache object for fake ratio plots
   void write(const Cache& cache) const;
 
-  /// @brief delete the fake rate plots
+  /// @brief delete the fake ratio plots
   ///
-  /// @param cache cache object for fake rate plots
+  /// @param cache cache object for fake ratio plots
   void clear(Cache& cache) const;
 
  private:
