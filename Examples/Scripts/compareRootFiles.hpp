@@ -423,8 +423,13 @@ struct BranchComparisonHarness {
           branch2Data(tree2Data) {}
 
     void operator()() override {
-      branch1Data.push_back(*branch1Reader);
-      branch2Data.push_back(*branch2Reader);
+      T* data1 = branch1Reader.Get();
+      T* data2 = branch2Reader.Get();
+      if (data1 == nullptr || data2 == nullptr) {
+        throw std::runtime_error{"Corrupt data"};
+      }
+      branch1Data.push_back(*data1);
+      branch2Data.push_back(*data2);
     }
 
    private:

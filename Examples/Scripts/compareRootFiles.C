@@ -346,7 +346,7 @@ int compareRootFiles(std::string file1, std::string file2,
         auto branchHarness = BranchComparisonHarness::create(
             treeMetadata, b1BranchName, b1DataType, b1ClassName);
         branchComparisonHarnesses.emplace_back(std::move(branchHarness));
-      } catch (BranchComparisonHarness::UnsupportedBranchType) {
+      } catch (const BranchComparisonHarness::UnsupportedBranchType&) {
         // When encountering an unsupported branch type, we can either skip
         // the branch or abort depending on configuration
         std::cout << "        + Unsupported branch type! "
