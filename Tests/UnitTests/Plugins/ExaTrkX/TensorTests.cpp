@@ -52,8 +52,9 @@ void testSigmoid(std::vector<float> input, Acts::ExecutionContext execContext) {
 
   auto result = copyToHost(tensor, execContext);
   BOOST_CHECK(result.size() == expected.size());
-  BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(),
-                                expected.end());
+  for (std::size_t i = 0; i < result.size(); ++i) {
+    BOOST_CHECK_CLOSE(result[i], expected[i], 1e-4);
+  }
 }
 
 void testEdgeSelection(const std::vector<float>& scores,

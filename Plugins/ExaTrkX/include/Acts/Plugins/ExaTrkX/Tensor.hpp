@@ -68,14 +68,14 @@ class Tensor {
     Deleter del;
 
     if (execContext.device.type == Acts::Device::Type::eCPU) {
-      ptr = new T(shape[0] * shape[1]);
+      ptr = new T[shape[0] * shape[1]];
       del = [](T *p) { delete[] p; };
     } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
       assert(execContext.stream.has_value());
       auto stream = *execContext.stream;
-      ACTS_CUDA_CHECK(
-          cudaMallocAsync(&ptr, sizeof(T) * shape[0] * shape[1], stream));
+      ACTS_CUDA_CHECK(cudaMallocAsync((void **)&ptr,
+                                      sizeof(T) * shape[0] * shape[1], stream));
       del = [stream](T *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); };
 #else
       throw std::runtime_error(

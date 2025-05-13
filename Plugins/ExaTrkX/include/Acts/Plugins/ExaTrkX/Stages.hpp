@@ -10,10 +10,14 @@
 
 #include <Acts/Plugins/ExaTrkX/Tensor.hpp>
 
+#include <any>
 #include <cstdint>
 #include <exception>
 #include <optional>
 #include <vector>
+
+#include <c10/cuda/CUDAStream.h>
+#include <torch/torch.h>
 
 namespace Acts {
 
@@ -39,7 +43,7 @@ class GraphConstructionBase {
   /// graph construction)
   /// @param execContext Device & stream information
   /// @return (node_features, edge_features, edge_index)
-  virtual PipelineTensors operator()(
+  virtual std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) = 0;
@@ -57,8 +61,9 @@ class EdgeClassificationBase {
   /// @param execContext Device & stream information
   ///
   /// @return (node_features, edge_features, edge_index, edge_scores)
-  virtual PipelineTensors operator()(
-      PipelineTensors tensors, const ExecutionContext &execContext = {}) = 0;
+  virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
+      const ExecutionContext &execContext = {}) = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -75,7 +80,8 @@ class TrackBuildingBase {
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      PipelineTensors tesnors, std::vector<int> &spacepointIDs,
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
+      std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~TrackBuildingBase() = default;

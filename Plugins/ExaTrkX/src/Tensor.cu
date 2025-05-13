@@ -70,12 +70,14 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
   thrust::copy_if(thrust::device.on(*execContext.stream), scores.data(),
                   scores.data() + scores.size(), mask, outputScores.data(),
                   pred);
+
+  const auto edgesBefore = edgeIndex.size() / 2;
   thrust::copy_if(thrust::device.on(*execContext.stream), edgeIndex.data(),
-                  edgeIndex.data() + edgeIndex.size(), mask,
-                  outputEdgeIndex.data(), pred);
+                  edgeIndex.data() + edgesBefore, mask, outputEdgeIndex.data(),
+                  pred);
   thrust::copy_if(thrust::device.on(*execContext.stream),
-                  edgeIndex.data() + edgeIndex.size(),
-                  edgeIndex.data() + 2 * edgeIndex.size(), mask,
+                  edgeIndex.data() + edgesBefore,
+                  edgeIndex.data() + 2 * edgesBefore, mask,
                   outputEdgeIndex.data() + nEdgesAfter, pred);
 
   ACTS_CUDA_CHECK(cudaFreeAsync(mask, *execContext.stream));

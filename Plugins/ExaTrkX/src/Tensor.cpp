@@ -57,10 +57,10 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
                      [&](std::size_t i) { return scores.data()[i] < cut; }),
       indices.end());
   auto n = indices.size();
-  auto outputScores = Tensor<float>::Create({static_cast<std::size_t>(n), 1},
-                                            {Acts::Device::Cpu(), {}});
+  auto outputScores =
+      Tensor<float>::Create({static_cast<std::size_t>(n), 1}, execContext);
   auto outputEdges = Tensor<std::int64_t>::Create(
-      {2, static_cast<std::size_t>(n)}, {Acts::Device::Cpu(), {}});
+      {2, static_cast<std::size_t>(n)}, execContext);
 
   auto scoreIt = outputScores.data();
   auto edgeIt1 = outputEdges.data();
@@ -68,7 +68,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
   for (auto i : indices) {
     *scoreIt = scores.data()[i];
     *edgeIt1 = edgeIndex.data()[i];
-    *edgeIt2 = edgeIndex.data()[i + n];
+    *edgeIt2 = edgeIndex.data()[i + scores.size()];
     ++scoreIt;
     ++edgeIt1;
     ++edgeIt2;
