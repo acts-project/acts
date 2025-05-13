@@ -345,10 +345,9 @@ StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,
         const double limitTh = fastHypot(seen.dTheta, solCandidate.dTheta);
         ACTS_VERBOSE(__func__
                      << "() " << __LINE__ << ": " << seen
-                     << std::format(" delta Y: {:.2f} {:} {:.2f}", deltaY,
-                                    deltaY < limitY ? '<' : '>', limitY)
-                     << std::format(" delta theta: {:.2f} {:} {:.2f}", dTheta,
-                                    dTheta < limitTh ? '<' : '>', limitTh));
+                     << " delta Y: "<<deltaY<<" "<<( deltaY < limitY ? '<' : '>') <<" "<<limitY
+                     << " delta theta: "<<dTheta<<" "<<(dTheta < limitTh ? '<' : '>')
+                     << " "<<limitTh);
         return deltaY < limitY && dTheta < limitTh;
         ;
       }) != m_seenSolutions.end()) {

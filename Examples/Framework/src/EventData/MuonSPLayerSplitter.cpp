@@ -24,6 +24,7 @@ namespace ActsExamples {
 MuonSPLayerSplitter::MuonSPLayerSplitter(const SpVec_t& spacePoints) {
   m_strawHits.reserve(spacePoints.size());
   m_stripHits.reserve(spacePoints.size());
+  using MuonId = MuonSpacePoint::MuonId;
   for (const MuonSpacePoint* sp : spacePoints) {
     LayerVec& pushMe{sp->id().technology() == MuonId::TechField::Mdt
                          ? m_strawHits

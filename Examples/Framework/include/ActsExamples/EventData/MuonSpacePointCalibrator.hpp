@@ -10,7 +10,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
-
+#include "ActsExamples/EventData/MuonSPLayerSplitter.hpp"
 #include <memory>
 namespace ActsExamples {
 
