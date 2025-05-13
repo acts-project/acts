@@ -23,13 +23,13 @@ class TProfile;
 
 namespace ActsExamples {
 
-/// Tools to make duplication rate and duplication number plots to show tracking
-/// duplication.
+/// Tools to make duplication ratio (formerly called duplication rate) and
+/// duplication number plots to show tracking duplication.
 ///
-/// The duplication is investigated for those truth-matched reco tracks. If
-/// there are a few reco tracks matched to the same truth particle, the reco
-/// track with the highest matching probability is tagges as 'real' and the
-/// others are 'duplicated'.
+/// The duplication ratio is evaluated on truth-matched reco tracks. If there
+/// is more than one track matched to the same truth particle, the reco track
+/// with the highest matching probability is tagged as 'real' and the others are
+/// 'duplicated'.
 class DuplicationPlotTool {
  public:
   /// @brief The nested configuration struct
@@ -49,12 +49,12 @@ class DuplicationPlotTool {
     TProfile* nDuplicated_vs_eta;
     /// Number of duplicated tracks vs phi
     TProfile* nDuplicated_vs_phi;
-    /// Tracking duplication rate vs pT
-    TEfficiency* duplicationRate_vs_pT;
-    /// Tracking duplication rate vs eta
-    TEfficiency* duplicationRate_vs_eta;
-    /// Tracking duplication rate vs phi
-    TEfficiency* duplicationRate_vs_phi;
+    /// Tracking duplication ratio vs pT
+    TEfficiency* duplicationRatio_vs_pT;
+    /// Tracking duplication ratio vs eta
+    TEfficiency* duplicationRatio_vs_eta;
+    /// Tracking duplication ratio vs phi
+    TEfficiency* duplicationRatio_vs_phi;
   };
 
   /// Constructor
@@ -68,7 +68,7 @@ class DuplicationPlotTool {
   /// @param cache the cache for duplication plots
   void book(Cache& cache) const;
 
-  /// @brief fill duplication rate w.r.t. fitted track parameters
+  /// @brief fill duplication ratio w.r.t. fitted track parameters
   ///
   /// @param cache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
