@@ -267,6 +267,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
           ACTS_ERROR(prefix() << "No current volume found");
           throw std::logic_error("No current volume found");
         }
+        if (portal.surface().geometryId() != GeometryIdentifier{}) {
+          return;
+        }
 
         iportal += 1;
         auto id = currentVolume->geometryId().withBoundary(iportal);
