@@ -15,9 +15,6 @@
 #include "../Utilities/ErrorCheck.cuh"
 #include "../Utilities/MatrixMacros.hpp"
 
-// Acts include(s).
-#include "Acts/Seeding/SeedFilterConfig.hpp"
-
 // CUDA include(s).
 #include <cuda_runtime.h>
 

@@ -206,7 +206,7 @@ struct SeedFinderConfig {
           "Invalid values for the seed filter inside the seed filter config: "
           "nullptr");
     }
-    if (!seedFilter->getSeedFilterConfig().isInInternalUnits) {
+    if (!seedFilter->getConfig().isInInternalUnits) {
       throw std::runtime_error(
           "The internal Seed Filter configuration, contained in the seed "
           "finder config, is not in internal units.");

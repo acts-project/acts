@@ -7,19 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
-
-#include <algorithm>
-#include <cmath>
-#include <functional>
-#include <numeric>
-#include <type_traits>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
     const external_spacepoint_t &low) const -> typename tree_t::range_t {
@@ -245,7 +236,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
-    std::unique_ptr<const Acts::Logger> logger)
+    std::unique_ptr<const Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
@@ -256,7 +247,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 
 template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    const SeedFinderOptions &options, Acts::SpacePointMutableData &mutableData,
+    const SeedFinderOptions &options, SpacePointMutableData &mutableData,
     const external_spacepoint_t &middle,
     const std::vector<const external_spacepoint_t *> &bottom,
     const std::vector<const external_spacepoint_t *> &top,
@@ -483,7 +474,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const SeedFinderOptions &options, Acts::SpacePointMutableData &mutableData,
+    const SeedFinderOptions &options, SpacePointMutableData &mutableData,
     const tree_t &tree, output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
@@ -506,9 +497,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Storage for seed candidates
    */
   std::size_t max_num_quality_seeds_per_spm =
-      m_config.seedFilter->getSeedFilterConfig().maxQualitySeedsPerSpMConf;
+      m_config.seedFilter->getConfig().maxQualitySeedsPerSpMConf;
   std::size_t max_num_seeds_per_spm =
-      m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
+      m_config.seedFilter->getConfig().maxSeedsPerSpMConf;
 
   CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
@@ -713,8 +704,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const Acts::SeedFinderOptions &options,
-    const input_container_t &spacePoints, output_container_t &out_cont) const {
+    const SeedFinderOptions &options, const input_container_t &spacePoints,
+    output_container_t &out_cont) const {
   ACTS_VERBOSE("Creating seeds with Orthogonal strategy");
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
@@ -740,11 +731,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   ACTS_VERBOSE("Running on " << spacePoints.size() << " input space points");
-  Acts::Extent rRangeSPExtent;
+  Extent rRangeSPExtent;
   std::vector<const external_spacepoint_t *> internal_sps;
   internal_sps.reserve(spacePoints.size());
 
-  Acts::SpacePointMutableData mutableData;
+  SpacePointMutableData mutableData;
   mutableData.resize(spacePoints.size());
 
   for (const external_spacepoint_t &p : spacePoints) {
@@ -755,10 +746,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   ACTS_VERBOSE(rRangeSPExtent);
 
   // variable middle SP radial region of interest
-  const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::AxisDirection::AxisR) / 2) * 2 +
+  const Range1D<float> rMiddleSPRange(
+      std::floor(rRangeSPExtent.min(AxisDirection::AxisR) / 2) * 2 +
           m_config.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::AxisDirection::AxisR) / 2) * 2 -
+      std::floor(rRangeSPExtent.max(AxisDirection::AxisR) / 2) * 2 -
           m_config.deltaRMiddleMaxSPRange);
 
   /*
@@ -806,7 +797,7 @@ template <typename external_spacepoint_t>
 template <typename input_container_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const Acts::SeedFinderOptions &options,
+    const SeedFinderOptions &options,
     const input_container_t &spacePoints) const {
   std::vector<seed_t> r;
   createSeeds(options, spacePoints, r);

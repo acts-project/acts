@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
