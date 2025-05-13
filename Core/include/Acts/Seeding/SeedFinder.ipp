@@ -6,10 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-#include <type_traits>
+#include "Acts/Seeding/SeedFinderUtils.hpp"
 
 namespace Acts {
 
@@ -41,10 +38,9 @@ template <typename container_t, Acts::GridBinCollection sp_range_t>
   requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
                                          3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid, container_t& outputCollection,
-    const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
-    const sp_range_t& topSPsIdx,
+    const Acts::SeedFinderOptions& options, State& state, const grid_t& grid,
+    container_t& outputCollection, const sp_range_t& bottomSPsIdx,
+    const std::size_t middleSPsIdx, const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
@@ -484,7 +480,7 @@ template <Acts::DetectorMeasurementInfo detailedMeasurement>
 inline void
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     const external_spacepoint_t& spM, const Acts::SeedFinderOptions& options,
-    SeedFilterState& seedFilterState, SeedingState& state) const {
+    SeedFilterState& seedFilterState, State& state) const {
   const float rM = spM.radius();
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
@@ -621,7 +617,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
             zPositionMiddle};
 
-        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(spM, positionMiddle, m_config.toleranceParam,
+                                rMTransf)) {
           continue;
         }
 
@@ -636,7 +633,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(*spB, positionBottom, m_config.toleranceParam,
+                                rBTransf)) {
           continue;
         }
 
@@ -650,7 +648,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(*spT, positionTop, m_config.toleranceParam,
+                                rTTransf)) {
           continue;
         }
 

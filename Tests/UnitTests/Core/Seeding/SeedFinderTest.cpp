@@ -14,7 +14,6 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
@@ -216,7 +215,7 @@ int main(int argc, char** argv) {
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
   std::vector<std::vector<seed_type>> seedVector;
-  decltype(a)::SeedingState state;
+  decltype(a)::State state;
   auto start = std::chrono::system_clock::now();
   for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();

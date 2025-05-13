@@ -8,7 +8,7 @@
 
 namespace Acts {
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
+inline LinCircle transformCoordinates(SpacePointMutableData& mutableData,
                                       const external_spacepoint_t& sp,
                                       const external_spacepoint_t& spM,
                                       bool bottom,
@@ -52,7 +52,7 @@ inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
 
 template <typename external_spacepoint_t>
 inline void transformCoordinates(
-    Acts::SpacePointMutableData& mutableData,
+    SpacePointMutableData& mutableData,
     const std::vector<const external_spacepoint_t*>& vec,
     const external_spacepoint_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -122,17 +122,17 @@ inline void transformCoordinates(
 }
 
 template <typename external_spacepoint_t>
-inline bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
-    double* outputCoordinates) {
+inline bool xyzCoordinateCheck(const external_spacepoint_t& sp,
+                               const double* spacepointPosition,
+                               double toleranceParam,
+                               double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  using namespace Acts::HashedStringLiteral;
-  const Acts::Vector3& topStripVector = sp.topStripVector();
-  const Acts::Vector3& bottomStripVector = sp.bottomStripVector();
-  const Acts::Vector3& stripCenterDistance = sp.stripCenterDistance();
+  using namespace HashedStringLiteral;
+  const Vector3& topStripVector = sp.topStripVector();
+  const Vector3& bottomStripVector = sp.bottomStripVector();
+  const Vector3& stripCenterDistance = sp.stripCenterDistance();
 
   const double xTopStripVector = topStripVector[0];
   const double yTopStripVector = topStripVector[1];
@@ -157,7 +157,7 @@ inline bool xyzCoordinateCheck(
   // spacepointPosition is inside the bottom detector element
   double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
                stripCenterDistance[2] * d1[2]);
-  if (std::abs(s1) > std::abs(bd1) * m_config.toleranceParam) {
+  if (std::abs(s1) > std::abs(bd1) * toleranceParam) {
     return false;
   }
 
@@ -173,14 +173,14 @@ inline bool xyzCoordinateCheck(
   // spacepointPosition is inside the top detector element
   double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
                stripCenterDistance[2] * d0[2]);
-  if (std::abs(s0) > std::abs(bd1) * m_config.toleranceParam) {
+  if (std::abs(s0) > std::abs(bd1) * toleranceParam) {
     return false;
   }
 
   // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3& topStripCenterPosition = sp.topStripCenterPosition();
+  const Vector3& topStripCenterPosition = sp.topStripCenterPosition();
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
