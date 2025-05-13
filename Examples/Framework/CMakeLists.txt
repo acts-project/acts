@@ -5,6 +5,7 @@ set(ActsExamplesFramework_SOURCES)
 add_library(
     ActsExamplesFramework
     SHARED
+    src/EventData/MuonSpacePoint.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/ScalingCalibrator.cpp
@@ -22,9 +23,10 @@ add_library(
     src/Utilities/Helpers.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
-    src/Validation/FakeRatePlotTool.cpp
+    src/Validation/FakePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
+    src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
 )
 
@@ -52,10 +54,12 @@ target_compile_definitions(
 # config-only mode. to avoid mismatches we explicitly search using
 # config-only mode first to be sure that we find the same version.
 find_package(TBB ${_acts_tbb_version} CONFIG)
+
 if(NOT TBB_FOUND)
     # no version check possible when using the find module
     find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
 endif()
+
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 
 acts_compile_headers(ActsExamplesFramework GLOB "include/**/*.hpp")
