@@ -70,10 +70,6 @@ int compareRootFiles(std::string file1, std::string file2,
   std::cout << "Comparing ROOT files " << file1 << " and " << file2
             << std::endl;
 
-  std::cout << "dump_data_on_failure: " << dump_data_on_failure << std::endl;
-  std::cout << "skip_unsupported_branches: " << skip_unsupported_branches
-            << std::endl;
-
   std::cout << "* Opening the files..." << std::endl;
   HomogeneousPair<TFile> files{file1.c_str(), file2.c_str()};
   if (files.first.IsZombie()) {
