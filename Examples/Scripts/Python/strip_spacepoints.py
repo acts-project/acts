@@ -9,10 +9,11 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def runTruthTrackingKalman(
+def createStripSpacepoints(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
+    geoSelection: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
@@ -43,10 +44,11 @@ def runTruthTrackingKalman(
     logger = acts.logging.getLogger("Truth tracking example")
 
     if inputParticlePath is None:
+        # Note: We restrict the eta range to [-2,2] to get tracks with long-strip hits
         addParticleGun(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-            EtaConfig(-3.0, 3.0, uniform=True),
+            EtaConfig(-2.0, 2.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
@@ -95,18 +97,24 @@ def runTruthTrackingKalman(
         rnd=rnd,
     )
 
-    testLayer = acts.GeometryIdentifier()
-    testLayer.volume = 28
-    testLayer.layer = 2
-    testLayer.extra = 1
-
+    # Create strip selection of ODD:
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
             level=acts.logging.VERBOSE,
             trackingGeometry=trackingGeometry,
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
-            stripGeometrySelection=[testLayer],
+            stripGeometrySelection=acts.examples.readJsonGeometryList(
+                str(geoSelection)
+            ),
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootSpacepointWriter(
+            level=acts.logging.INFO,
+            inputSpacepoints="spacepoints",
+            filePath="strip_spacepoints.root",
         )
     )
 
@@ -125,6 +133,10 @@ if "__main__" == __name__:
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
 
+    geoSelection = srcdir / "Examples/Configs/odd-strip-spacepoint-selection.json"
+    print(geoSelection.resolve())
+    assert geoSelection.exists()
+
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
     # trackingGeometry = detector.trackingGeometry()
@@ -135,9 +147,10 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runTruthTrackingKalman(
+    createStripSpacepoints(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
+        geoSelection=geoSelection,
         outputDir=Path.cwd(),
     ).run()
