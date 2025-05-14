@@ -124,7 +124,7 @@ inline void transformCoordinates(
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
+    ConstInternalSpacePointProxy sp, const double* spacepointPosition,
     double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
@@ -190,4 +190,5 @@ inline bool xyzCoordinateCheck(
   outputCoordinates[2] = topStripCenterPosition[2] + zTopStripVector * s0;
   return true;
 }
+
 }  // namespace Acts

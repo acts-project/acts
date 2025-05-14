@@ -8,25 +8,17 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 namespace Acts {
+
 /// @brief A description of a triplet candidate.
 /// @tparam external_space_point_t  The external spacepoint type.
-template <typename external_space_point_t>
 struct TripletCandidate {
   /// @brief Default Constructor
   TripletCandidate() = default;
-
-  /// @brief Default Destructor
-  ~TripletCandidate() = default;
 
   /// @brief constructor
   /// @param b The bottom space point
@@ -35,59 +27,21 @@ struct TripletCandidate {
   /// @param w The quality of the candidate
   /// @param z The z coordinate of the origin
   /// @param q Whether the candidate is high or low quality
-  TripletCandidate(external_space_point_t& b, external_space_point_t& m,
-                   external_space_point_t& t, float w, float z, bool q)
-      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q) {}
+  TripletCandidate(std::size_t b, std::size_t m, std::size_t t, float w,
+                   float z, bool q)
+      : bottom(b), middle(m), top(t), weight(w), zOrigin(z), isQuality(q) {}
 
-  /// @brief Copy operations
-  TripletCandidate(const TripletCandidate&) = default;
-  TripletCandidate& operator=(const TripletCandidate&) = default;
-
-  /// @brief Move operations
-  TripletCandidate(TripletCandidate&& other) noexcept
-      : bottom(std::exchange(other.bottom, nullptr)),
-        middle(std::exchange(other.middle, nullptr)),
-        top(std::exchange(other.top, nullptr)),
-        weight(other.weight),
-        zOrigin(other.zOrigin),
-        isQuality(other.isQuality) {}
-
-  TripletCandidate& operator=(TripletCandidate&& other) noexcept {
-    bottom = std::exchange(other.bottom, nullptr);
-    middle = std::exchange(other.middle, nullptr);
-    top = std::exchange(other.top, nullptr);
-    weight = other.weight;
-    zOrigin = other.zOrigin;
-    isQuality = other.isQuality;
-    return *this;
-  }
-
-  external_space_point_t* bottom{nullptr};
-  external_space_point_t* middle{nullptr};
-  external_space_point_t* top{nullptr};
+  std::size_t bottom{};
+  std::size_t middle{};
+  std::size_t top{};
   float weight{0.};
   float zOrigin{0.};
   bool isQuality{false};
 };
 
-/// @class CandidatesForMiddleSp
-/// The CandidatesForMiddleSp collects the triplet candidates given a
-/// fixed middle spacepoint. It internally stores the triplet candidates
-/// keeping only those with the higher quality.
-///
-/// @tparam external_space_point_t The external spacepoint type.
-
-template <typename external_space_point_t>
-concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
-  { spacePoint.x() } -> std::convertible_to<float>;
-  { spacePoint.y() } -> std::convertible_to<float>;
-  { spacePoint.z() } -> std::convertible_to<float>;
-};
-
-template <SatisfyCandidateConcept external_space_point_t>
 class CandidatesForMiddleSp {
  public:
-  using value_type = TripletCandidate<external_space_point_t>;
+  using value_type = TripletCandidate;
 
   /// @brief Setting maximum number of candidates to keep
   /// @param nLow Maximum number of candidates in the low-quality collection
@@ -97,7 +51,8 @@ class CandidatesForMiddleSp {
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
   /// elements with higher quality first
   /// @returns Vector of triplet candidates
-  std::vector<value_type> storage();
+  std::vector<value_type> storage(
+      const InternalSpacePointContainer& spacepoints);
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -108,9 +63,8 @@ class CandidatesForMiddleSp {
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
-  bool push(external_space_point_t& SpB, external_space_point_t& SpM,
-            external_space_point_t& SpT, float weight, float zOrigin,
-            bool isQuality);
+  bool push(std::size_t SpB, std::size_t SpM, std::size_t SpT, float weight,
+            float zOrigin, bool isQuality);
 
   /// @brief Clear the internal storage
   void clear();
@@ -119,13 +73,16 @@ class CandidatesForMiddleSp {
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
-  static bool descendingByQuality(const value_type& i1, const value_type& i2);
+  static bool descendingByQuality(
+      const InternalSpacePointContainer& spacepoints, const value_type& i1,
+      const value_type& i2);
 
   /// @brief A function for sorting the triplet candidates from lower to higher quality
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
-  static bool ascendingByQuality(const value_type& i1, const value_type& i2);
+  static bool ascendingByQuality(const InternalSpacePointContainer& spacepoints,
+                                 const value_type& i1, const value_type& i2);
 
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
@@ -149,9 +106,8 @@ class CandidatesForMiddleSp {
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
   bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t nMax, external_space_point_t& SpB,
-            external_space_point_t& SpM, external_space_point_t& SpT,
-            float weight, float zOrigin, bool isQuality);
+            const std::size_t nMax, std::size_t SpB, std::size_t SpM,
+            std::size_t SpT, float weight, float zOrigin, bool isQuality);
 
   /// @brief Check if an element exists in the collection. The element to be checked
   /// is supposed to be in the n position of the collection.

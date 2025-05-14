@@ -2,14 +2,14 @@ add_library(
     ActsExamplesTrackFinding
     SHARED
     src/SeedingAlgorithm.cpp
-    src/SeedingOrthogonalAlgorithm.cpp
+    #src/SeedingOrthogonalAlgorithm.cpp
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
     src/TrackFindingAlgorithmFunction.cpp
-    src/HoughTransformSeeder.cpp
+    #src/HoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
-    src/MuonHoughSeeder.cpp
-    src/GbtsSeedingAlgorithm.cpp
+    #src/MuonHoughSeeder.cpp
+    #src/GbtsSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
 )
 

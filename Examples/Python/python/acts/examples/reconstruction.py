@@ -285,7 +285,6 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
-    houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -1092,7 +1091,7 @@ def addHashingSeeding(
 
 def addHoughTransformSeeding(
     sequence: acts.examples.Sequencer,
-    config: acts.examples.HoughTransformSeeder.Config,
+    config,
     logLevel: acts.logging.Level = None,
 ):
     """

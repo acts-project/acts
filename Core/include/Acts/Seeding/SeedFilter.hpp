@@ -12,6 +12,7 @@
 #include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -38,13 +39,11 @@ struct SeedFilterState {
 template <typename external_spacepoint_t>
 class SeedFilter final {
  public:
-  explicit SeedFilter(
-      const SeedFilterConfig& config,
-      IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
-  explicit SeedFilter(
-      const SeedFilterConfig& config,
-      std::unique_ptr<const Acts::Logger> logger,
-      IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  explicit SeedFilter(const SeedFilterConfig& config,
+                      IExperimentCuts* expCuts = nullptr);
+  explicit SeedFilter(const SeedFilterConfig& config,
+                      std::unique_ptr<const Acts::Logger> logger,
+                      IExperimentCuts* expCuts = nullptr);
   SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
   SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
   SeedFilter(SeedFilter<external_spacepoint_t>&&) noexcept = default;
@@ -64,16 +63,15 @@ class SeedFilter final {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
-  void filterSeeds_2SpFixed(
-      const Acts::SpacePointMutableData& mutableData,
-      const external_spacepoint_t& bottomSP,
-      const external_spacepoint_t& middleSP,
-      const std::vector<const external_spacepoint_t*>& topSpVec,
-      const std::vector<float>& invHelixDiameterVec,
-      const std::vector<float>& impactParametersVec,
-      SeedFilterState& seedFilterState,
-      CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector)
-      const;
+  void filterSeeds_2SpFixed(const InternalSpacePointContainer& spacepoints,
+                            const Acts::SpacePointMutableData& mutableData,
+                            ConstInternalSpacePointProxy bottomSP,
+                            ConstInternalSpacePointProxy middleSP,
+                            const std::vector<std::size_t>& topSpVec,
+                            const std::vector<float>& invHelixDiameterVec,
+                            const std::vector<float>& impactParametersVec,
+                            SeedFilterState& seedFilterState,
+                            CandidatesForMiddleSp& candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param mutableData Container for mutable variables used in the seeding
@@ -81,10 +79,10 @@ class SeedFilter final {
   /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
   template <typename collection_t>
-  void filterSeeds_1SpFixed(
-      Acts::SpacePointMutableData& mutableData,
-      CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
-      collection_t& outputCollection) const;
+  void filterSeeds_1SpFixed(const InternalSpacePointContainer& spacepoints,
+                            Acts::SpacePointMutableData& mutableData,
+                            CandidatesForMiddleSp& candidates_collector,
+                            collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param mutableData Container for mutable variables used in the seeding
@@ -94,15 +92,13 @@ class SeedFilter final {
   /// for all seeds with the same middle space point
   template <typename collection_t>
   void filterSeeds_1SpFixed(
+      const InternalSpacePointContainer& spacepoints,
       Acts::SpacePointMutableData& mutableData,
-      std::vector<typename CandidatesForMiddleSp<
-          const external_spacepoint_t>::value_type>& candidates,
+      std::vector<typename CandidatesForMiddleSp::value_type>& candidates,
       const std::size_t numQualitySeeds, collection_t& outputCollection) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
-  const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
-    return m_experimentCuts;
-  }
+  const IExperimentCuts* getExperimentCuts() const { return m_experimentCuts; }
 
  private:
   const Logger& logger() const { return *m_logger; }
@@ -110,7 +106,9 @@ class SeedFilter final {
   const SeedFilterConfig m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Filter", Logging::Level::INFO);
-  const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
+  const IExperimentCuts* m_experimentCuts;
 };
+
 }  // namespace Acts
+
 #include "Acts/Seeding/SeedFilter.ipp"

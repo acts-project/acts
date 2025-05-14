@@ -12,6 +12,7 @@
 #include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -57,9 +58,13 @@ class SeedFinder {
 
  public:
   struct SeedingState {
+    InternalSpacePointContainer spacepoints;
+    // Mutable variables for Space points used in the seeding
+    SpacePointMutableData spacepointsMutable{};
+
     // bottom space point
-    std::vector<const external_spacepoint_t*> compatBottomSP{};
-    std::vector<const external_spacepoint_t*> compatTopSP{};
+    std::vector<std::size_t> compatBottomSP{};
+    std::vector<std::size_t> compatTopSP{};
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom{};
@@ -67,23 +72,20 @@ class SeedFinder {
     std::vector<LinCircle> linCircleTop{};
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const external_spacepoint_t*> topSpVec{};
+    std::vector<std::size_t> topSpVec{};
     std::vector<float> curvatures{};
     std::vector<float> impactParameters{};
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector{};
+    CandidatesForMiddleSp candidates_collector{};
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour<grid_t>,
+    boost::container::small_vector<Acts::Neighbour,
                                    Acts::detail::ipow(3, grid_t::DIM)>
         bottomNeighbours{};
-    boost::container::small_vector<Acts::Neighbour<grid_t>,
+    boost::container::small_vector<Acts::Neighbour,
                                    Acts::detail::ipow(3, grid_t::DIM)>
         topNeighbours{};
-
-    // Mutable variables for Space points used in the seeding
-    Acts::SpacePointMutableData spacePointMutableData{};
   };
 
   /// The only constructor. Requires a config object.
@@ -158,12 +160,12 @@ class SeedFinder {
   /// @param sinPhiM ratio between middle SP y position and radius
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options, const grid_t& grid,
+      const Acts::SeedFinderOptions& options,
+      const InternalSpacePointContainer& spacepoints,
       Acts::SpacePointMutableData& mutableData,
-      boost::container::small_vector<Neighbour<grid_t>,
-                                     Acts::detail::ipow(3, grid_t::DIM)>&
-          otherSPsNeighbours,
-      const external_spacepoint_t& mediumSP,
+      boost::container::small_vector<
+          Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+      ConstInternalSpacePointProxy mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
       const float uIP2, const float cosPhiM, const float sinPhiM) const;
@@ -175,7 +177,8 @@ class SeedFinder {
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
   template <Acts::DetectorMeasurementInfo detailedMeasurement>
-  void filterCandidates(const external_spacepoint_t& SpM,
+  void filterCandidates(const InternalSpacePointContainer& spacepoints,
+                        ConstInternalSpacePointProxy SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

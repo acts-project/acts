@@ -14,7 +14,6 @@
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
-#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -24,7 +23,6 @@
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -100,26 +98,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
     patchKwargsConstructor(c);
   }
-  {
-    using Config =
-        Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
-            ActsExamples::SpacePointContainer<
-                std::vector<const SimSpacePoint*>>,
-            Acts::detail::RefHolder>::SpacePointProxyType>;
-    auto c =
-        py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
-        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaZMax, sigmaScattering,
-        maxPtScattering, maxSeedsPerSpM, collisionRegionMin, collisionRegionMax,
-        phiMin, phiMax, zMin, zMax, rMax, rMin, radLengthPerSeed,
-        interactionPointCut, deltaPhiMax, highland, maxScatteringAngle2,
-        useVariableMiddleSPRange, deltaRMiddleMinSPRange,
-        deltaRMiddleMaxSPRange, rRangeMiddleSP, rMinMiddle, rMaxMiddle,
-        seedConfirmation, centralSeedConfirmationRange,
-        forwardSeedConfirmationRange);
-    patchKwargsConstructor(c);
-  }
 
   {
     using Config = Acts::Experimental::SeedFinderGbtsConfig<SimSpacePoint>;
@@ -162,28 +140,6 @@ void addTrackFinding(Context& ctx) {
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
-                                "SeedingOrthogonalAlgorithm", inputSpacePoints,
-                                outputSeeds, seedFilterConfig, seedFinderConfig,
-                                seedFinderOptions);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, seedFinderOptions,
-      layerMappingFile, geometrySelection, trackingGeometry, ActsGbtsMap,
-      fill_module_csv, inputClusters);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputProtoTracks, trackingGeometry, geometrySelection,
-      inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
-      houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
-      localMaxWindowSize, kA);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inTruthSegments,
-                                inSpacePoints, outHoughMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
