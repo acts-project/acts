@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2025 CERN for the benefit of the ACTS project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,15 +14,13 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <fastjet/JetDefinition.hh>
-#include <fastjet/PseudoJet.hh>
-#include <fastjet/ClusterSequence.hh>
+#include <string>
 
 #include <TFile.h>
 #include <TTree.h>
-
-
-#include <string>
+#include <fastjet/ClusterSequence.hh>
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/PseudoJet.hh>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -47,12 +45,13 @@ class TruthJetAlgorithm : public IAlgorithm {
 
  private:
   Config m_cfg;
-  ReadDataHandle<SimParticleContainer> m_inputTruthParticles{this, "inputTruthParticles"};
-  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputJets{this, "outputJets"};
+  ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
+      this, "inputTruthParticles"};
+  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputJets{this,
+                                                                "outputJets"};
+};
 
-    };
-
-const fastjet::JetDefinition DefaultJetDefinition = fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+const fastjet::JetDefinition DefaultJetDefinition =
+    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
 
 }  // namespace ActsExamples
-
