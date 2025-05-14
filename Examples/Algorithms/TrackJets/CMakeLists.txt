@@ -2,7 +2,6 @@ add_library(
     ActsExamplesTrackJets
     SHARED
     src/TruthJetAlgorithm.cpp
-    src/TrackToTruthJetAlgorithm.cpp
 )
 target_include_directories(
     ActsExamplesTrackJets

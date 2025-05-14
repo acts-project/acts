@@ -59,6 +59,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     fastjet::ClusterSequence clusterSeq(inputPseudoJets, DefaultJetDefinition);
     // Get the jets above pT 20 GeV
     std::vector<fastjet::PseudoJet> jets = sorted_by_pt(clusterSeq.inclusive_jets(10));
+    ACTS_DEBUG("Number of clustered jets: " << jets.size());
     // Store the jets in the output data handle
     m_outputJets(ctx, std::move(jets));
 

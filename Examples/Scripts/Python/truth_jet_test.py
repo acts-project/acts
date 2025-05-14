@@ -40,7 +40,7 @@ addTruthJetAlg(
     inputTruthParticles = "particles_generated",
     outputJets = "output_jets"
         ),
-    loglevel=acts.logging.DEBUG
+    loglevel=acts.logging.INFO
 )
 
 s.run()
