@@ -143,9 +143,9 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
       {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
                          -vBounds[2], vBounds[2], nSurfacesY),
        0u}};
-  auto boundsPtr = std::make_unique<Acts::TrapezoidVolumeBounds>(
+  auto boundsPtr = std::make_shared<Acts::TrapezoidVolumeBounds>(
       vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
-  mwCfg.bounds = boundsPtr->values();
+  mwCfg.bounds = boundsPtr;
   mwCfg.transform = Transform3(Translation3(Vector3(0., 0., 0.)));
 
   // Build the volume

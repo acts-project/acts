@@ -33,7 +33,7 @@ class MultiWireVolumeBuilder {
     Transform3 transform = Transform3::Identity();
 
     /// The bounds of the tracking volume
-    std::vector<double> bounds = {};
+    std::shared_ptr<Acts::VolumeBounds> bounds = nullptr;
 
     /// The binning of the tracking volume
     /// The protoAxis and the expansion of the binning for the neighbors

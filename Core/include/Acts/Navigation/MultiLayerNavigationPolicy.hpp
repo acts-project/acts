@@ -14,16 +14,20 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 
 /// Concept for the indexed grid type
 template <typename T>
 concept IndexGridConcept = requires(T igrid) {
-  igrid.grid;
-  igrid.transform;
-  igrid.extractor;
+  typename T::grid_type;
+  // grid must be of that type
+  { igrid.grid } -> std::same_as<typename T::grid_type&>;
+  // transform must be Transform3
+  { igrid.transform } -> std::same_as<Transform3&>;
 };
 
 /// A navigation policy that uses grid based navigation for indexed surfaces
@@ -68,11 +72,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
     Acts::Experimental::detail::IndexedGridFiller filler{config.binExpansion};
     filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
-
-    // Define step size and number of steps
-    m_step = std::sqrt(std::pow(m_indexedGrid.grid.binWidth()[0], 2) +
-                       std::pow(m_indexedGrid.grid.binWidth()[1], 2));
-    m_nSteps = m_indexedGrid.grid.numLocalBins()[1];
   }
 
   /// Update the navigation state from the surface array
@@ -86,25 +85,20 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
         "MultiLayerNavigationPolicy Candidates initialization for volume"
         << m_volume.volumeName());
     const Transform3& transform = m_volume.transform();
-    const Acts::Vector3 locPosition = transform * args.position;
+    const Acts::Vector3 locPosition = transform.inverse() * args.position;
     const Acts::Vector3 locDirection = transform.linear() * args.direction;
 
-    std::vector<Vector3> path =
-        generatePath(locPosition, locDirection, m_step, m_nSteps);
+    std::vector<Vector2> path = generatePath(locPosition, locDirection);
 
     const auto& surfaces = m_volume.surfaces();
     std::vector<const Surface*> surfCandidates = {};
+    surfCandidates.reserve(surfaces.size());
 
     for (const auto& pos : path) {
-      std::vector<const Surface*> eSurfaces;
       std::vector<std::size_t> indices = m_indexedGrid.grid.atPosition(pos);
-      eSurfaces.reserve(indices.size());
 
-      std::for_each(indices.begin(), indices.end(),
-                    [&](const auto& i) { eSurfaces.push_back(&surfaces[i]); });
-
-      surfCandidates.insert(surfCandidates.end(), eSurfaces.begin(),
-                            eSurfaces.end());
+      std::ranges::transform(indices, std::back_inserter(surfCandidates),
+                             [&](const auto& i) { return &surfaces[i]; });
     }
 
     // remove duplicated candidates
@@ -130,13 +124,26 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// @param stepSize The step size for the path
   /// @param numberOfSteps The number of steps to take
   /// @return A vector of positions along the path
-  std::vector<Vector3> generatePath(const Vector3& startPosition,
-                                    const Vector3& direction, double stepSize,
-                                    std::size_t numberOfSteps) const {
-    std::vector<Vector3> path;
-    path.reserve(numberOfSteps);
-    for (std::size_t i = 0; i < numberOfSteps; ++i) {
-      path.push_back(startPosition + i * stepSize * direction);
+  std::vector<Vector2> generatePath(const Vector3& startPosition,
+                                    const Vector3& direction) const {
+    std::vector<Vector2> path;
+
+    auto maxXIndex = m_indexedGrid.grid.numLocalBins()[0];
+    auto maxYIndex = m_indexedGrid.grid.numLocalBins()[1];
+
+    for (std::size_t i = 0; i < maxYIndex; i++) {
+      auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
+      auto v2 = m_indexedGrid.grid.upperRightBinEdge({maxXIndex, i + 1});
+
+      auto intersection = detail::IntersectionHelper2D::intersectSegment(
+          Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]),
+          Vector2(startPosition.x(), startPosition.y()),
+          Vector2(direction.x(), direction.y()));
+      if (!intersection.isValid()) {
+        continue;
+      }
+
+      path.push_back(intersection.position());
     }
     return path;
   }
@@ -157,12 +164,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
 
   // The grid that holds the indexed surfaces
   indexed_grid m_indexedGrid;
-
-  // The step size in the grid
-  double m_step;
-
-  // The number of steps in the grid
-  std::size_t m_nSteps;
 };
 
 // Make alias for the static assert check for the Navigation Policy

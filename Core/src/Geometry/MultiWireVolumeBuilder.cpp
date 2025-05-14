@@ -29,10 +29,6 @@ Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   } else if (m_config.binning.size() != 2u) {
     throw ::std::invalid_argument(
         "MultiWireStructureBuilder: Invalid binning provided");
-  } else if (m_config.bounds.size() < 4u) {
-    throw ::std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid bounds provided for trapezoidal "
-        "volume");
   }
 }
 
@@ -45,14 +41,15 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-  auto bArray =
-      toArray<TrapezoidVolumeBounds::BoundValues::eSize>(m_config.bounds);
-  std::cout << bArray.size() << std::endl;
-  std::shared_ptr<TrapezoidVolumeBounds> volumeBounds =
-      std::make_shared<TrapezoidVolumeBounds>(bArray);
+  const auto& bounds =
+      dynamic_pointer_cast<TrapezoidVolumeBounds>(m_config.bounds);
+  if (bounds == nullptr) {
+    throw std::runtime_error(
+        "MultiWireVolumeBuilder: Invalid bounds - trapezoidal needed");
+  }
 
   std::unique_ptr<Acts::TrackingVolume> trackingVolume =
-      std::make_unique<Acts::TrackingVolume>(m_config.transform, volumeBounds,
+      std::make_unique<Acts::TrackingVolume>(m_config.transform, bounds,
                                              m_config.name);
 
   SingleTrapezoidPortalShell portalShell(*trackingVolume);
