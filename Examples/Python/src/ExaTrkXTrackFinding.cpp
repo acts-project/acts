@@ -95,21 +95,15 @@ void addExaTrkXTrackFinding(Context &ctx) {
                                 useOneBlockImplementation, doJunctionRemoval);
 #endif
 
-#ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  ACTS_PYTHON_DECLARE_GNN_STAGE(
-      ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
-      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
-#endif
-
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, mex,
                                 modelPath, cut);
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, mex,
-                                moduleMapPath, rScale, phiScale, zScale,
-                                gpuDevice, gpuBlocks, moreParallel);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
+      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
