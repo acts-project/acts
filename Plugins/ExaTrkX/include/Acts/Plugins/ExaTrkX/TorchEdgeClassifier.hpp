@@ -40,9 +40,8 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any, std::any> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(PipelineTensors tensors,
+                             const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
 

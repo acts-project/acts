@@ -43,7 +43,7 @@ class GraphConstructionBase {
   /// graph construction)
   /// @param execContext Device & stream information
   /// @return (node_features, edge_features, edge_index)
-  virtual std::tuple<std::any, std::any, std::any> operator()(
+  virtual PipelineTensors operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) = 0;
@@ -61,9 +61,8 @@ class EdgeClassificationBase {
   /// @param execContext Device & stream information
   ///
   /// @return (node_features, edge_features, edge_index, edge_scores)
-  virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      const ExecutionContext &execContext = {}) = 0;
+  virtual PipelineTensors operator()(
+      PipelineTensors, const ExecutionContext &execContext = {}) = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -80,8 +79,7 @@ class TrackBuildingBase {
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
-      std::vector<int> &spacepointIDs,
+      PipelineTensors, std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~TrackBuildingBase() = default;

@@ -19,12 +19,13 @@ namespace bc = boost::container;
 
 namespace {
 
-Ort::Value torchToOnnx(Ort::MemoryInfo &memoryInfo, at::Tensor &tensor) {
+template <typename T>
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor) {
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
-  if (tensor.dtype() == torch::kFloat32) {
+  if constexpr (std::is_same_v<T, float>) {
     onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
-  } else if (tensor.dtype() == torch::kInt64) {
+  } else if constexpr (std::is_same_v<T, std::int64_t>) {
     onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
   } else {
     throw std::runtime_error(
@@ -32,12 +33,11 @@ Ort::Value torchToOnnx(Ort::MemoryInfo &memoryInfo, at::Tensor &tensor) {
   }
 
   bc::static_vector<std::int64_t, 2> shape;
-  for (auto size : tensor.sizes()) {
+  for (auto size : tensor.shape()) {
     shape.push_back(size);
   }
-  return Ort::Value::CreateTensor(memoryInfo, tensor.data_ptr(),
-                                  tensor.nbytes(), shape.data(), shape.size(),
-                                  onnxType);
+  return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
+                                  shape.data(), shape.size(), onnxType);
 }
 
 }  // namespace
@@ -112,15 +112,11 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any, std::any>
-OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
-                               std::any inEdgeFeatures,
-                               const ExecutionContext &execContext) {
+PipelineTensors OnnxEdgeClassifier::operator()(
+    PipelineTensors tensors, const ExecutionContext &execContext) {
   const char *deviceStr = "Cpu";
-  torch::Device torchDevice(torch::kCPU);
   if (execContext.device.type == Acts::Device::Type::eCUDA) {
     deviceStr = "Cuda";
-    torchDevice = torch::Device(torch::kCUDA, execContext.device.index);
   }
 
   ACTS_DEBUG("Create ORT memory info (" << deviceStr << ")");
@@ -131,39 +127,33 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   bc::static_vector<const char *, 3> inputNames;
 
   // Node tensor
-  auto nodeTensor = std::any_cast<torch::Tensor>(inputNodes).to(torchDevice);
-  ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
-  inputTensors.push_back(torchToOnnx(memoryInfo, nodeTensor));
+  // ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
 
   // Edge tensor
-  auto edgeIndex = std::any_cast<torch::Tensor>(inputEdges).to(torchDevice);
-  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
-  inputTensors.push_back(torchToOnnx(memoryInfo, edgeIndex));
+  // ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
   std::optional<torch::Tensor> edgeFeatures;
-  if (m_inputNames.size() == 3 && inEdgeFeatures.has_value()) {
-    edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(torchDevice);
+  if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
-    inputTensors.push_back(torchToOnnx(memoryInfo, *edgeFeatures));
+    inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
 
   // Output score tensor
   ACTS_DEBUG("Create score tensor");
-  auto scores = torch::empty(
-      edgeIndex.size(1),
-      torch::TensorOptions().device(torchDevice).dtype(torch::kFloat32));
-  if (m_model->GetOutputTypeInfo(0)
-          .GetTensorTypeAndShapeInfo()
-          .GetDimensionsCount() == 2) {
-    scores = scores.reshape({scores.numel(), 1});
-  }
+  auto scores =
+      execContext.device.type == Acts::Device::Type::eCUDA
+          ? Acts::Tensor<float>::CudaAsync({tensors.edgeIndex.shape()[1], 1ul},
+                                           *execContext.stream)
+          : Acts::Tensor<float>::Cpu({tensors.edgeIndex.shape()[1], 1ul});
 
   std::vector<Ort::Value> outputTensors;
-  outputTensors.push_back(torchToOnnx(memoryInfo, scores));
+  outputTensors.push_back(toOnnx(memoryInfo, scores));
   std::vector<const char *> outputNames{m_outputName.c_str()};
 
   ACTS_DEBUG("Run model");
@@ -171,29 +161,27 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   m_model->Run(options, inputNames.data(), inputTensors.data(),
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
-  scores = scores.squeeze();
 
-  ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
-               << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
+  //ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
+  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
-  scores.sigmoid_();
+  // ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
+  //ACTS_VERBOSE("Slice of classified output:\n"
+  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
-  ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
-  ACTS_VERBOSE("Slice of classified output:\n"
-               << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-
-  torch::Tensor filterMask = scores > m_cfg.cut;
-  torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), filterMask});
+  sigmoid(scores, execContext);
+  auto scoresAfterCut =
+      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext);
 
   ACTS_DEBUG("Finished edge classification, after cut: "
-             << edgesAfterCut.size(1) << " edges.");
+             << edgesAfterCut.shape()[1] << " edges.");
 
   if (edgesAfterCut.size(1) == 0) {
     throw Acts::NoEdgesError{};
   }
 
-  return {std::move(nodeTensor), edgesAfterCut.clone(),
-          std::move(inEdgeFeatures), std::move(scores)};
+  return {std::move(tensors.nodeFeatures), std::move(edgesAfterCut),
+          std::move(tensors), std::move(scores)};
 }
 
 }  // namespace Acts
