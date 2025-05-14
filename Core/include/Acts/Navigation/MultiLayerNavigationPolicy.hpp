@@ -121,8 +121,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// Generate a path in the multilayer
   /// @param startPosition The starting position of the path (in local frame)
   /// @param direction The direction of the path (in local frame)
-  /// @param stepSize The step size for the path
-  /// @param numberOfSteps The number of steps to take
   /// @return A vector of positions along the path
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const {
