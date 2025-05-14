@@ -42,7 +42,6 @@ class BoostTrackBuilding final : public Acts::TrackBuildingBase {
       std::any nodes, std::any edges, std::any edge_weights,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
-
   const Config &config() const { return m_cfg; }
 
  private:

@@ -77,6 +77,8 @@ class ModuleMapCuda : public GraphConstructionBase {
     bool moreParallel = true;
     int gpuDevice = 0;
     int gpuBlocks = 512;
+
+    float epsilon = 1e-8f;
   };
 
  private:

@@ -47,8 +47,8 @@ FullyConnectedGraphConstructor::operator()(
   // think We instead just synchronize the stream and use the default torch
   // stream
   // std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
-  if (execContext.device.is_cuda()) {
-    device_guard.emplace(execContext.device.index());
+  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+    device_guard.emplace(execContext.device.index);
     // streamGuard.emplace(execContext.stream.value());
     execContext.stream->synchronize();
   }

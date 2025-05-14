@@ -65,6 +65,19 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
     endif()
 endif()
 
+if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
+    )
+
+    target_link_libraries(
+        ActsPluginExaTrkX
+        PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
+    )
+    target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
+endif()
+
 if(ACTS_EXATRKX_ENABLE_ONNX)
     target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
     target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
@@ -138,7 +151,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
-        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
+        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
     )
     target_compile_options(
         ActsPluginExaTrkX

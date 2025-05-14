@@ -126,6 +126,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   }
 
   const auto nHits = moduleIds.size();
+  assert(inputValues.size() % moduleIds.size() == 0);
   const auto nFeatures = inputValues.size() / moduleIds.size();
   auto &features = inputValues;
 
@@ -135,18 +136,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
                                << ", blockDim: " << blockDim.x);
 
   // Get stream if available, otherwise use default stream
-  cudaStream_t stream;
-#if 0
-  ACTS_CUDA_CHECK(cudaStreamCreate(&stream));
-#else
-  assert(execContext.stream);
+  cudaStream_t stream = cudaStreamLegacy;
   std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (execContext.stream) {
-    ACTS_VERBOSE("Got stream " << *execContext.stream);
+    ACTS_DEBUG("Got stream " << *execContext.stream);
     stream = execContext.stream->stream();
     streamGuard.emplace(*execContext.stream);
   }
-#endif
 
   /////////////////////////
   // Prepare input data
@@ -216,13 +212,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
 
   // Preprocess features
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_z(), 1000.f);
+      nHits, inputData.cuda_z(), m_cfg.zScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_R(), 1000.f);
+      nHits, inputData.cuda_R(), m_cfg.rScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
-      nHits, inputData.cuda_phi(), 3.14159f);
+      nHits, inputData.cuda_phi(), m_cfg.phiScale);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::computeXandY<<<gridDimHits, blockDim, 0, stream>>>(
@@ -432,7 +428,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
             m_cudaModuleMapDoublet->cuda_phi_slope_max(),
             m_cudaModuleMapDoublet->cuda_dphi_min(),
             m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
-            cuda_edge_sum_per_src_hit.data());
+            cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
 
     thrust::exclusive_scan(
@@ -467,7 +463,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
             m_cudaModuleMapDoublet->cuda_dphi_min(),
             m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
             cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-            cuda_edge_sum_per_src_hit.data());
+            cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
 
     detail::computeDoubletEdgeSum<<<grid_dim, block_dim, 0, stream>>>(
@@ -492,7 +488,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapDoublet->cuda_phi_slope_max(),
         m_cudaModuleMapDoublet->cuda_dphi_min(),
         m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
-        cuda_nb_doublet_edges.data(), cuda_edge_sum.data());
+        cuda_nb_doublet_edges.data(), cuda_edge_sum.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
 
     // Copy the number of edges to the host, synchronize and allocate
@@ -505,7 +501,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
                            << " MB for edges");
     cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
-    cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
+    cuda_reduced_M2_hits.emplace(nb_doublet_edges, stream);
 
     // Prefix sum to get the edge offset for each doublet
     thrust::exclusive_scan(thrust::device.on(stream), cuda_edge_sum.data(),
@@ -525,7 +521,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapDoublet->cuda_dphi_min(),
         m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
         cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-        cuda_edge_sum.data());
+        cuda_edge_sum.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
   }
 
@@ -575,7 +571,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
       cuda_z0.data(), cuda_phi_slope.data(), cuda_deta.data(), cuda_dphi.data(),
       cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
       cuda_TThits.cuda_R(), cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(),
-      cuda_TThits.cuda_phi(), TMath::Pi(), nb_doublet_edges);
+      cuda_TThits.cuda_phi(), TMath::Pi(), nb_doublet_edges, m_cfg.epsilon);
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
@@ -654,7 +650,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapTriplet->cuda_diff_dzdr_max(), TMath::Pi(),
         cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
         cuda_sorted_M2_hits.data(), cuda_edge_sum.data(), cuda_vertices.data(),
-        cuda_mask.data());
+        cuda_mask.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
   } else {
     Acts::detail::triplet_cuts_new<float><<<grid_dim, block_dim, 0, stream>>>(
@@ -684,7 +680,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapTriplet->cuda_diff_dzdr_max(), TMath::Pi(),
         cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
         cuda_sorted_M2_hits.data(), cuda_edge_sum.data(), cuda_vertices.data(),
-        cuda_mask.data());
+        cuda_mask.data(), m_cfg.epsilon);
     ACTS_CUDA_CHECK(cudaGetLastError());
   }
 

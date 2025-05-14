@@ -15,7 +15,7 @@
 
 #include <cuda_runtime_api.h>
 
-#define NEW_OPTIMIZATIONS
+#define USE_LAUNCH_BOUNDS
 
 namespace Acts::detail {
 
@@ -30,7 +30,7 @@ __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
   data[i] *= scale;
 }
 
-constexpr float g_pi = 3.141592654f;
+constexpr float g_pi = std::numbers::pi_v<float>;
 
 template <typename T>
 __device__ T resetAngle(T angle) {
@@ -40,6 +40,7 @@ __device__ T resetAngle(T angle) {
   if (angle < -g_pi) {
     return angle + 2.f * g_pi;
   }
+  assert(angle >= -g_pi && angle < g_pi);
   return angle;
 };
 
@@ -97,17 +98,6 @@ __global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
   tgtNodes[i] = hit_ids[tgtNodes[i]];
 }
 
-template <typename T>
-void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
-  std::vector<T> data_cpu(size);
-  cudaMemcpy(data_cpu.data(), data, size * sizeof(T), cudaMemcpyDeviceToHost);
-  std::cout << name << "[" << size << "]: ";
-  for (int i = 0; i < size; ++i) {
-    std::cout << data_cpu.at(i) << "  ";
-  }
-  std::cout << std::endl;
-}
-
 template <class T>
 __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
                              const T *cuda_R, const T *cuda_phi) {
@@ -159,7 +149,7 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
 /// Counting kernel to allow counting the edges
 template <class T>
 __global__ void
-#ifdef NEW_OPTIMIZATIONS
+#ifdef USE_LAUNCH_BOUNDS
 __launch_bounds__(512, 2)
 #endif
     count_doublet_edges(int nb_doublets, const int *modules1,
@@ -168,7 +158,7 @@ __launch_bounds__(512, 2)
                         T *deta_min, T *deta_max, T *phi_slope_min,
                         T *phi_slope_max, T *dphi_min, T *dphi_max,
                         const int *indices, T pi, int *nb_edges_total,
-                        int *nb_edges_doublet) {
+                        int *nb_edges_doublet, T epsilon) {
   // loop over module1 SP
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nb_doublets) {
@@ -188,7 +178,7 @@ __launch_bounds__(512, 2)
     for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
       T z0, phi_slope, deta, dphi;
       hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, z0, phi_slope, deta, dphi);
+                             phi[l], pi, z0, phi_slope, deta, dphi, epsilon);
 
       if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
                                deta_min, deta_max, phi_slope_min, phi_slope_max,
@@ -206,7 +196,7 @@ __launch_bounds__(512, 2)
 /// New kernel that use precounted number of edges
 template <class T>
 __global__ void
-#ifdef NEW_OPTIMIZATIONS
+#ifdef USE_LAUNCH_BOUNDS
 __launch_bounds__(512, 2)
 #endif
     doublet_cuts_new(int nb_doublets, const int *modules1, const int *modules2,
@@ -214,7 +204,7 @@ __launch_bounds__(512, 2)
                      T *z0_min, T *z0_max, T *deta_min, T *deta_max,
                      T *phi_slope_min, T *phi_slope_max, T *dphi_min,
                      T *dphi_max, const int *indices, T pi, int *M1_SP,
-                     int *M2_SP, const int *nb_edges) {
+                     int *M2_SP, const int *nb_edges, T epsilon) {
   // loop over module1 SP
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nb_doublets) {
@@ -234,7 +224,7 @@ __launch_bounds__(512, 2)
     for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
       T z0, phi_slope, deta, dphi;
       hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, z0, phi_slope, deta, dphi);
+                             phi[l], pi, z0, phi_slope, deta, dphi, epsilon);
 
       if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
                                deta_min, deta_max, phi_slope_min, phi_slope_max,
@@ -275,7 +265,7 @@ __device__ void triplet_cuts_inner_loop_body(
     T *MD23_phi_slope_max, T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
     T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi, int *M1_SP,
     int *M2_SP, int *sorted_M2_SP, int *edge_indices, bool *vertices,
-    bool *edge_tag) {
+    bool *edge_tag, T epsilon) {
   int p = sorted_M2_SP[k];
 
   int SP1 = M1_SP[p];
@@ -293,7 +283,7 @@ __device__ void triplet_cuts_inner_loop_body(
   }
 
   int l = shift23;
-#ifdef NEW_OPTIMIZATIONS
+#ifdef USE_LAUNCH_BOUNDS
   findFirstWithBisect(shift23, ind23 - 1, SP2, l, M1_SP);
 #else
   for (; l < ind23 && SP2 != M1_SP[l]; l++) {
@@ -310,12 +300,12 @@ __device__ void triplet_cuts_inner_loop_body(
       continue;
     }
 
-    T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3);
+    T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3, epsilon);
     if (!((diff_dydx >= diff_dydx_min[i]) * (diff_dydx <= diff_dydx_max[i]))) {
       continue;
     }
 
-    T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3);
+    T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3, epsilon);
     if (!((diff_dzdr >= diff_dzdr_min[i]) * (diff_dzdr <= diff_dzdr_max[i]))) {
       continue;
     }
@@ -333,7 +323,7 @@ __device__ void triplet_cuts_inner_loop_body(
 
 template <typename T>
 __global__ void
-#ifdef NEW_OPTIMIZATIONS
+#ifdef USE_LAUNCH_BOUNDS
 __launch_bounds__(512, 2)
 #endif
     triplet_cuts_new(int nb_triplets, const int *modules12_map,
@@ -347,7 +337,8 @@ __launch_bounds__(512, 2)
                      T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
                      T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi,
                      int *M1_SP, int *M2_SP, int *sorted_M2_SP,
-                     int *edge_indices, bool *vertices, bool *edge_tag) {
+                     int *edge_indices, bool *vertices, bool *edge_tag,
+                     T epsilon) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nb_triplets) {
     return;
@@ -378,7 +369,7 @@ __launch_bounds__(512, 2)
         MD23_z0_min, MD23_z0_max, MD23_deta_min, MD23_deta_max,
         MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
         diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
-        M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag);
+        M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag, epsilon);
   }
 }
 
@@ -419,14 +410,12 @@ __device__ void locateInPrefixSumBisect(int left, int right, int i, int &result,
 }
 
 template <typename T, typename F>
-__device__ void doublet_cut_kernel(int i, int sum_nb_src_hits_per_doublet,
-                                   int nb_doublets, const int *doublet_offsets,
-                                   const int *modules1, const int *modules2,
-                                   const T *R, const T *z, const T *eta,
-                                   const T *phi, T *z0_min, T *z0_max,
-                                   T *deta_min, T *deta_max, T *phi_slope_min,
-                                   T *phi_slope_max, T *dphi_min, T *dphi_max,
-                                   const int *indices, F &&function) {
+__device__ void doublet_cut_kernel(
+    int i, int sum_nb_src_hits_per_doublet, int nb_doublets,
+    const int *doublet_offsets, const int *modules1, const int *modules2,
+    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
+    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
+    T *dphi_max, const int *indices, T epsilon, F &&function) {
   // Since doublet_offsets should be the prefix sum of the
   // number of space points per doublet, we can construct the doublet index
   // TODO this is a linear search, can be optimized
@@ -449,7 +438,8 @@ __device__ void doublet_cut_kernel(int i, int sum_nb_src_hits_per_doublet,
   for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
     T z0, phi_slope, deta, dphi;
     hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                           phi[l], detail::g_pi, z0, phi_slope, deta, dphi);
+                           phi[l], detail::g_pi, z0, phi_slope, deta, dphi,
+                           epsilon);
 
     if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,
                              z0_max, deta_min, deta_max, phi_slope_min,
@@ -465,7 +455,7 @@ __global__ void count_doublet_edges_new(
     const int *doublet_offsets, const int *modules1, const int *modules2,
     const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
     T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-    T *dphi_max, const int *indices, int *nb_edges_per_src_hit) {
+    T *dphi_max, const int *indices, int *nb_edges_per_src_hit, T epsilon) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= sum_nb_src_hits_per_doublet) {
     return;
@@ -475,7 +465,7 @@ __global__ void count_doublet_edges_new(
   doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
                         doublet_offsets, modules1, modules2, R, z, eta, phi,
                         z0_min, z0_max, deta_min, deta_max, phi_slope_min,
-                        phi_slope_max, dphi_min, dphi_max, indices,
+                        phi_slope_max, dphi_min, dphi_max, indices, epsilon,
                         [&] __device__(int, int) { edges++; });
   nb_edges_per_src_hit[i] = edges;
 }
@@ -487,7 +477,7 @@ __global__ void build_doublet_edges_new(
     const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
     T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
     T *dphi_max, const int *indices, int *reduced_M1_hits, int *reduced_M2_hits,
-    int *edge_sum) {
+    int *edge_sum, T epsilon) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= sum_nb_src_hits_per_doublet) {
     return;
@@ -497,7 +487,7 @@ __global__ void build_doublet_edges_new(
   doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
                         doublet_offsets, modules1, modules2, R, z, eta, phi,
                         z0_min, z0_max, deta_min, deta_max, phi_slope_min,
-                        phi_slope_max, dphi_min, dphi_max, indices,
+                        phi_slope_max, dphi_min, dphi_max, indices, epsilon,
                         [&] __device__(int k, int l) {
                           reduced_M1_hits[edge_sum[i] + edges] = k;
                           reduced_M2_hits[edge_sum[i] + edges] = l;
@@ -551,7 +541,7 @@ __global__ void count_triplet_hits(int nb_triplets, const int *modules12_map,
 
 template <typename T>
 __global__ void
-#ifdef NEW_OPTIMIZATIONS
+#ifdef USE_LAUNCH_BOUNDS
 __launch_bounds__(512, 2)
 #endif
     triplet_cuts_new2(int nb_src_hits_per_triplet_sum, int nb_triplets,
@@ -566,7 +556,8 @@ __launch_bounds__(512, 2)
                       T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
                       T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max,
                       T pi, int *M1_SP, int *M2_SP, int *sorted_M2_SP,
-                      int *edge_indices, bool *vertices, bool *edge_tag) {
+                      int *edge_indices, bool *vertices, bool *edge_tag,
+                      T epsilon) {
   int ii = blockIdx.x * blockDim.x + threadIdx.x;
   if (ii >= nb_src_hits_per_triplet_sum) {
     return;
@@ -604,7 +595,7 @@ __launch_bounds__(512, 2)
       MD23_z0_min, MD23_z0_max, MD23_deta_min, MD23_deta_max,
       MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
       diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
-      M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag);
+      M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag, epsilon);
 }
 
 // =======================

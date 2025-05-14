@@ -11,7 +11,6 @@
 #include "Acts/Plugins/ExaTrkX/DummyEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/FullyConnectedGraphConstructor.hpp"
-#include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
@@ -29,6 +28,8 @@
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/preprocessor/if.hpp>
+#include <boost/vmd/tuple/size.hpp>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -48,7 +49,8 @@
                    .def_property_readonly("config", &Alg::config);          \
                                                                             \
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
-    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
+    BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__), BOOST_PP_EMPTY(),          \
+                ACTS_PYTHON_STRUCT(c, __VA_ARGS__));                        \
   } while (0)
 
 namespace py = pybind11;
@@ -83,11 +85,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
                                 walkthroughLowCut, walkthroughHighCut);
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
-  ACTS_PYTHON_DECLARE_GNN_STAGE(
-      FullyConnectedGraphConstructor, GraphConstructionBase, mex, maxGraphSize,
-      maxOutEdges, maxDeltaR, maxDeltaZ, rScale, phiScale, zScale, etaScale,
-      rOffset, phiOffset, zOffset, etaOffset);
-
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, mex,
                                 modelPath, selectedFeatures, embeddingDim, rVal,
                                 knnVal, deviceID);
@@ -95,6 +92,11 @@ void addExaTrkXTrackFinding(Context &ctx) {
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchEdgeClassifier, EdgeClassificationBase,
                                 mex, modelPath, selectedFeatures, cut, nChunks,
                                 undirected, deviceID, useEdgeFeatures);
+
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      FullyConnectedGraphConstructor, GraphConstructionBase, mex, maxGraphSize,
+      maxOutEdges, maxDeltaR, maxDeltaZ, rScale, phiScale, zScale, etaScale,
+      rOffset, phiOffset, zOffset, etaOffset);
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_TENSORRT
@@ -114,9 +116,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, mex,
-                                moduleMapPath, rScale, phiScale, zScale,
-                                gpuDevice, gpuBlocks, moreParallel);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
+      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
