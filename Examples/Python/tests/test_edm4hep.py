@@ -321,7 +321,7 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
 
     ddsim = DD4hepSimulation()
 
-    ddsim.random.seed = 42
+    ddsim.random.seed = 37
 
     if isinstance(ddsim.compactFile, list):
         ddsim.compactFile = [input]
