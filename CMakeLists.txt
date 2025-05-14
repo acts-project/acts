@@ -72,6 +72,7 @@ option(ACTS_SETUP_VECMEM "If we want to setup vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
+option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
@@ -88,6 +89,7 @@ option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
 option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
+option(ACTS_EXATRKX_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
@@ -213,6 +215,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_HASHING
   ACTS_BUILD_EXAMPLES_HASHING
+)
+set_option_if(
+  ACTS_EXATRKX_ENABLE_CUDA
+  ACTS_EXATRKX_ENABLE_MODULEMAP
 )
 
 # feature tests
@@ -453,6 +459,13 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     endif()
     if(ACTS_EXATRKX_ENABLE_TORCH)
         find_package(TorchScatter REQUIRED)
+    endif()
+    if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+        if(ACTS_USE_SYSTEM_MODULEMAPGRAPH)
+            find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
+        else()
+            add_subdirectory(thirdparty/ModuleMapGraph)
+        endif()
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
