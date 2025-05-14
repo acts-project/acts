@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+import os
+import argparse
+import pathlib
+
+import acts
+import acts.examples
+from acts.examples.track_jet import addTruthJetAlg, TruthJetConfig
+from acts.examples.simulation import addPythia8
+
+
+outputDir="/eos/user/d/delitez/acts/acts_test"
+u = acts.UnitConstants
+rnd = acts.examples.RandomNumbers(seed=42)
+
+s = acts.examples.Sequencer(
+    events=10,
+    outputDir=outputDir
+)
+
+addPythia8(
+            s,
+            hardProcess=["Top:qqbar2ttbar=on"],
+            npileup=50,
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                ),
+            ),
+            rnd=rnd,
+            outputDirRoot=outputDir,
+            outputDirCsv=outputDir
+        )
+
+addTruthJetAlg(
+    s,
+    TruthJetConfig(
+    inputTruthParticles = "particles_generated",
+    outputJets = "output_jets"
+        ),
+    loglevel=acts.logging.DEBUG
+)
+
+s.run()
+
+
+
+
+
+

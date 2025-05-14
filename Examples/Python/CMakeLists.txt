@@ -27,6 +27,7 @@ pybind11_add_module(ActsPythonBindings
   src/Obj.cpp
   src/TruthTracking.cpp
   src/TrackFitting.cpp
+  src/TruthJet.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
   src/AmbiguityResolution.cpp
@@ -62,6 +63,7 @@ target_link_libraries(
         ActsExamplesPrinters
         ActsExamplesTrackFinding
         ActsExamplesTrackFitting
+        ActsExamplesTrackJets
         ActsExamplesVertexing
         ActsExamplesFatras
         ActsExamplesDetectorTelescope
@@ -80,6 +82,7 @@ set(py_files
     examples/reconstruction.py
     examples/itk.py
     examples/odd.py
+    examples/truth_jet.py
     _adapter.py
 )
 
@@ -256,6 +259,15 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_FASTJET)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackJets)
+    target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
+    list(APPEND py_files examples/truth_jet_test.py)
+    list(APPEND py_files examples/track_jet.py)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_HASHING)
