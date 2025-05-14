@@ -116,8 +116,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, deviceID,
-                       doSigmoid);
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut);
   }
 #endif
 

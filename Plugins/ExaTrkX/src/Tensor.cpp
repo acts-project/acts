@@ -11,16 +11,16 @@
 namespace Acts {
 
 namespace detail {
-void cudaSigmoid(Tensor<float> &tensor, const ExecutionContext &execContext);
+void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream);
 std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
     const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, const ExecutionContext &execContext);
+    float cut, cudaStream_t stream);
 }  // namespace detail
 
-void sigmoid(Tensor<float> &tensor, const ExecutionContext &execContext) {
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
+  if (tensor.device().type == Acts::Device::Type::eCUDA) {
 #ifdef ACTS_EXATRKX_WITH_CUDA
-    return detail::cudaSigmoid(tensor, execContext);
+    return detail::cudaSigmoid(tensor, *stream);
 #else
     throw std::runtime_error(
         "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
@@ -35,14 +35,16 @@ void sigmoid(Tensor<float> &tensor, const ExecutionContext &execContext) {
 
 std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
     const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, const ExecutionContext &execContext) {
+    float cut, std::optional<cudaStream_t> stream) {
   assert(scores.shape()[1] == 1);
   assert(edgeIndex.shape()[0] == 2);
   assert(edgeIndex.shape()[1] == scores.shape()[0]);
+  assert(scores.device() == edgeIndex.device());
+  ExecutionContext execContext{scores.device(), stream};
 
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+  if (scores.device().type == Acts::Device::Type::eCUDA) {
 #ifdef ACTS_EXATRKX_WITH_CUDA
-    return detail::cudaApplyScoreCut(scores, edgeIndex, cut, execContext);
+    return detail::cudaApplyScoreCut(scores, edgeIndex, cut, *stream);
 #else
     throw std::runtime_error(
         "Cannot apply score cut to CUDA tensor, library was not compiled with "

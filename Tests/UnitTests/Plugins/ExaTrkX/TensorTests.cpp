@@ -10,50 +10,34 @@
 
 #include <Acts/Plugins/ExaTrkX/Tensor.hpp>
 
-template <typename T>
-void fillTensor(Acts::Tensor<T>& tensor, const std::vector<T>& data,
-                Acts::ExecutionContext execContext) {
-  BOOST_CHECK(tensor.size() == data.size());
+#ifdef ACTS_EXATRKX_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
 
-  if (execContext.device.type == Acts::Device::Type::eCPU) {
-    std::copy(data.begin(), data.end(), tensor.data());
-  } else {
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(tensor.data(), data.data(), tensor.nbytes(),
-                                    cudaMemcpyHostToDevice,
-                                    *execContext.stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(*execContext.stream));
-  }
-}
+const Acts::ExecutionContext execContextCpu{Acts::Device::Cpu(), {}};
 
 template <typename T>
-std::vector<T> copyToHost(const Acts::Tensor<T>& tensor,
-                          Acts::ExecutionContext execContext) {
-  std::vector<T> data(tensor.size());
-  if (execContext.device.type == Acts::Device::Type::eCPU) {
-    std::copy(tensor.data(), tensor.data() + tensor.size(), data.begin());
-  } else {
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(data.data(), tensor.data(), tensor.nbytes(),
-                                    cudaMemcpyDeviceToHost,
-                                    *execContext.stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(*execContext.stream));
-  }
-  return data;
+Acts::Tensor<T> createCpuTensor(const std::vector<T>& data,
+                                std::array<std::size_t, 2> shape) {
+  auto tensor = Acts::Tensor<T>::Create(shape, execContextCpu);
+  std::copy(data.begin(), data.end(), tensor.data());
+  return tensor;
 }
 
 void testSigmoid(std::vector<float> input, Acts::ExecutionContext execContext) {
-  auto tensor = Acts::Tensor<float>::Create({input.size(), 1}, execContext);
-  fillTensor(tensor, input, execContext);
+  auto tensor = createCpuTensor(input, {input.size(), 1ul});
 
-  Acts::sigmoid(tensor, execContext);
+  auto tensorTarget = tensor.clone(execContext);
+  Acts::sigmoid(tensorTarget, execContext.stream);
+  auto result = tensorTarget.clone(execContextCpu);
 
   std::vector<float> expected(input.size());
   std::transform(input.begin(), input.end(), expected.begin(),
                  [](float x) { return 1.f / (1.f + std::exp(-x)); });
 
-  auto result = copyToHost(tensor, execContext);
   BOOST_CHECK(result.size() == expected.size());
   for (std::size_t i = 0; i < result.size(); ++i) {
-    BOOST_CHECK_CLOSE(result[i], expected[i], 1e-4);
+    BOOST_CHECK_CLOSE(result.data()[i], expected[i], 1e-4);
   }
 }
 
@@ -61,32 +45,29 @@ void testEdgeSelection(const std::vector<float>& scores,
                        const std::vector<std::int64_t>& edgeIndex,
                        const std::vector<std::int64_t>& edgeIndexExpected,
                        Acts::ExecutionContext execContext) {
-  auto scoreTensor =
-      Acts::Tensor<float>::Create({scores.size(), 1}, execContext);
-  auto edgeTensor = Acts::Tensor<std::int64_t>::Create(
-      {2, edgeIndex.size() / 2}, execContext);
+  auto scoreTensor = createCpuTensor<float>(scores, {scores.size(), 1ul});
+  auto edgeTensor = createCpuTensor(edgeIndex, {2, edgeIndex.size() / 2});
 
-  fillTensor(scoreTensor, scores, execContext);
-  fillTensor(edgeTensor, edgeIndex, execContext);
+  auto scoreTensorTarget = scoreTensor.clone(execContext);
+  auto edgeTensorTarget = edgeTensor.clone(execContext);
 
-  auto [selectedScores, selectedEdges] =
-      Acts::applyScoreCut(scoreTensor, edgeTensor, 0.5f, execContext);
+  auto [selectedScores, selectedEdges] = Acts::applyScoreCut(
+      scoreTensorTarget, edgeTensorTarget, 0.5f, execContext.stream);
 
-  auto selectedScoresHost = copyToHost(selectedScores, execContext);
-  auto selectedEdgesHost = copyToHost(selectedEdges, execContext);
+  auto selectedScoresHost = selectedScores.clone(execContextCpu);
+  auto selectedEdgesHost = selectedEdges.clone(execContextCpu);
 
   BOOST_CHECK(selectedScoresHost.size() == 2);
 
   BOOST_CHECK(selectedEdgesHost.size() == edgeIndexExpected.size());
   BOOST_CHECK_EQUAL_COLLECTIONS(
-      selectedEdgesHost.begin(), selectedEdgesHost.end(),
+      selectedEdgesHost.data(),
+      selectedEdgesHost.data() + selectedEdgesHost.size(),
       edgeIndexExpected.begin(), edgeIndexExpected.end());
 }
 
-const Acts::ExecutionContext execContextCpu{Acts::Device::Cpu(), {}};
-
-BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
-  auto tensor = Acts::Tensor<float>::Create({10, 1}, execContextCpu);
+void testConstructionAndMove(Acts::ExecutionContext execContext) {
+  auto tensor = Acts::Tensor<float>::Create({10, 1}, execContext);
 
   BOOST_CHECK(tensor.shape()[1] == 1);
   BOOST_CHECK(tensor.shape()[0] == 10);
@@ -96,6 +77,27 @@ BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
   BOOST_CHECK(tensor2.shape()[0] == 10);
   BOOST_CHECK(tensor2.data() != nullptr);
   BOOST_CHECK(tensor.data() == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
+  testConstructionAndMove(execContextCpu);
+}
+
+BOOST_AUTO_TEST_CASE(test_clone_cpu) {
+  std::vector<float> data = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f};
+  auto tensor = createCpuTensor(data, {3, 2});
+  auto tensorClone = tensor.clone(execContextCpu);
+
+  BOOST_CHECK(tensorClone.shape()[0] == 3);
+  BOOST_CHECK(tensorClone.shape()[1] == 2);
+  BOOST_CHECK(tensorClone.data() != nullptr);
+  BOOST_CHECK(tensorClone.data() != tensor.data());
+  BOOST_CHECK(tensorClone.size() == tensor.size());
+  BOOST_CHECK(tensorClone.nbytes() == tensor.nbytes());
+
+  BOOST_CHECK_EQUAL_COLLECTIONS(tensorClone.data(),
+                                tensorClone.data() + tensorClone.size(),
+                                data.begin(), data.end());
 }
 
 BOOST_AUTO_TEST_CASE(tensor_sigmoid_cpu) {
@@ -112,22 +114,30 @@ BOOST_AUTO_TEST_CASE(tensor_edge_selection_cpu) {
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
 
-#include <cuda_runtime_api.h>
-
 const Acts::ExecutionContext execContextCuda{Acts::Device::Cuda(0),
                                              cudaStreamLegacy};
 
 BOOST_AUTO_TEST_CASE(tensor_create_move_cuda) {
-  auto tensor = Acts::Tensor<float>::Create({10, 1}, execContextCuda);
+  testConstructionAndMove(execContextCuda);
+}
 
-  BOOST_CHECK(tensor.shape()[1] == 1);
-  BOOST_CHECK(tensor.shape()[0] == 10);
+BOOST_AUTO_TEST_CASE(tensor_clone_roundtrip) {
+  std::vector<float> data = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f};
+  auto tensorOrigHost = createCpuTensor(data, {3, 2});
 
-  auto tensor2 = std::move(tensor);
-  BOOST_CHECK(tensor2.shape()[1] == 1);
-  BOOST_CHECK(tensor2.shape()[0] == 10);
-  BOOST_CHECK(tensor2.data() != nullptr);
-  BOOST_CHECK(tensor.data() == nullptr);
+  auto tensorClone = tensorOrigHost.clone(execContextCuda);
+  auto tensorCloneCuda = tensorClone.clone(execContextCuda);
+  auto tensorCloneHost = tensorCloneCuda.clone(execContextCpu);
+
+  BOOST_CHECK(tensorCloneHost.shape()[0] == 3);
+  BOOST_CHECK(tensorCloneHost.shape()[1] == 2);
+  BOOST_CHECK(tensorCloneHost.data() != nullptr);
+  BOOST_CHECK(tensorCloneHost.data() != tensorCloneCuda.data());
+  BOOST_CHECK(tensorCloneHost.size() == tensorCloneCuda.size());
+  BOOST_CHECK(tensorCloneHost.nbytes() == tensorCloneCuda.nbytes());
+  BOOST_CHECK_EQUAL_COLLECTIONS(tensorCloneHost.data(),
+                                tensorCloneHost.data() + tensorCloneHost.size(),
+                                data.begin(), data.end());
 }
 
 BOOST_AUTO_TEST_CASE(tensor_sigmoid_cuda) {
