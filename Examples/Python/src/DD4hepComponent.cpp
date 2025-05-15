@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
 #include <memory>
 #include <utility>
@@ -73,6 +74,22 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
 
     m.def("alignedDD4hepDetectorElementFactory",
           &ActsExamples::alignedDD4hepDetectorElementFactory);
+  }
+
+  {
+    auto odd =
+        py::class_<OpenDataDetector, DD4hepDetectorBase,
+                   std::shared_ptr<OpenDataDetector>>(m, "OpenDataDetector")
+            .def(py::init<const OpenDataDetector::Config&,
+                          const Acts::GeometryContext&>(),
+                 "config"_a, "gctx"_a);
+
+    auto c = py::class_<OpenDataDetector::Config, DD4hepDetectorBase::Config>(
+                 odd, "Config")
+                 .def(py::init<>());
+    // ACTS_PYTHON_STRUCT(c, );
+
+    patchKwargsConstructor(c);
   }
 
   {
