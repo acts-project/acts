@@ -43,6 +43,8 @@ class CandidatesForMiddleSp {
  public:
   using value_type = TripletCandidate;
 
+  std::size_t size() const { return m_storage.size(); }
+
   /// @brief Setting maximum number of candidates to keep
   /// @param nLow Maximum number of candidates in the low-quality collection
   /// @param nHigh Maximum number of candidates in the high-quality collection

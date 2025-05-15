@@ -284,7 +284,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
     // we make a copy of the iterator here since we need it to remain
     // the same in the Neighbour object
-    auto min_itr = otherSPCol.range.first;
+    auto min_itr = otherSPCol.index;
 
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
@@ -305,7 +305,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     // We update the iterator in the Neighbour object
     // that mean that we have changed the middle space point
     // and the lower bound has moved accordingly
-    otherSPCol.range.first = min_itr;
+    otherSPCol.index = min_itr;
 
     for (; min_itr != otherSPCol.range.second; ++min_itr) {
       auto otherSP = spacepoints.at(min_itr);

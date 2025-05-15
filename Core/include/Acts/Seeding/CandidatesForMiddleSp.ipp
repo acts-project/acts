@@ -68,8 +68,6 @@ bool CandidatesForMiddleSp::push(std::size_t SpB, std::size_t SpM,
                                  bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
-  std::cout << "CandidatesForMiddleSp::push m_nHigh: " << m_nHigh
-            << " m_nLow: " << m_nLow << std::endl;
   if (isQuality) {
     return push(m_indicesHigh, m_nHigh, m_maxSizeHigh, SpB, SpM, SpT, weight,
                 zOrigin, isQuality);

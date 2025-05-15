@@ -30,7 +30,9 @@ struct Neighbour {
   Neighbour(const InternalSpacePointContainer& spacepoints,
             std::pair<std::size_t, std::size_t> range, const float lowerBound);
 
-  std::pair<std::size_t, std::size_t> range;
+  std::size_t index{};
+
+  std::pair<std::size_t, std::size_t> range{};
 };
 
 Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
@@ -43,8 +45,21 @@ Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
     return;
   }
 
-  if (spacepoints.at(range.first).radius() <= lowerBound &&
-      spacepoints.at(range.second - 1).radius() >= lowerBound) {
+  /// First check that the first element is not already above the lower bound
+  /// If so, avoid any computation and set the iterator to begin()
+  if (spacepoints.at(range.first).radius() > lowerBound) {
+    index = range.first;
+  }
+  /// In case the last element is below the lower bound, that means that there
+  /// can't be any element in that collection that can be considered a valuable
+  /// candidate.
+  /// Set the iterator to end() so that we do not run on this collection
+  else if (spacepoints.at(range.second - 1).radius() < lowerBound) {
+    index = range.second;
+  }
+  /// Cannot decide a priori. We need to find the first element such that it's
+  /// radius is > lower bound. We use a binary search in this case
+  else {
     // custom binary search which was observed to be faster than
     // `std::lower_bound` see https://github.com/acts-project/acts/pull/3095
     std::size_t start = range.first;
@@ -52,22 +67,23 @@ Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
     while (start <= stop) {
       std::size_t mid = (start + stop) / 2;
       if (spacepoints.at(mid).radius() == lowerBound) {
-        break;
+        index = range.first + mid;
+        return;
       } else if (spacepoints.at(mid).radius() > lowerBound) {
-        stop = mid - 1;
         if (mid > 0 && spacepoints.at(mid - 1).radius() < lowerBound) {
-          break;
+          index = range.first + mid;
+          return;
         }
+        stop = mid - 1;
       } else {
-        start = mid + 1;
-        if (mid + 1 < spacepoints.size() &&
+        if (mid + 1 < (range.second - range.first) &&
             spacepoints.at(mid + 1).radius() > lowerBound) {
-          break;
+          index = range.first + mid + 1;
+          return;
         }
+        start = mid + 1;
       }
     }  // while loop
-    range.first = start;
-    range.second = stop + 1;
   }
 }
 
