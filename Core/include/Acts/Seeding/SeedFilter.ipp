@@ -6,8 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
+
+#include <algorithm>
+#include <numeric>
+#include <utility>
 
 namespace Acts {
 
@@ -24,7 +27,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(const SeedFilterConfig& config,
 
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
-    const SeedFilterConfig& config, std::unique_ptr<const Logger> logger,
+    const SeedFilterConfig& config, std::unique_ptr<const Acts::Logger> logger,
     IExperimentCuts* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
@@ -39,7 +42,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     const InternalSpacePointContainer& spacepoints,
-    const SpacePointMutableData& mutableData,
+    const Acts::SpacePointMutableData& mutableData,
     ConstInternalSpacePointProxy bottomSP,
     ConstInternalSpacePointProxy middleSP,
     const std::vector<std::size_t>& topSpVec,
@@ -248,7 +251,7 @@ template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     const InternalSpacePointContainer& spacepoints,
-    SpacePointMutableData& mutableData,
+    Acts::SpacePointMutableData& mutableData,
     CandidatesForMiddleSp& candidates_collector,
     collection_t& outputCollection) const {
   // retrieve all candidates
@@ -264,7 +267,7 @@ template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     const InternalSpacePointContainer& spacepoints,
-    SpacePointMutableData& mutableData,
+    Acts::SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp::value_type>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
@@ -305,22 +308,23 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(medium, bestSeedQuality);
     mutableData.setQuality(top, bestSeedQuality);
 
-    Seed<external_spacepoint_t> seed{*spacepoints.at(bottom)
-                                          .sourceLinks()[0]
-                                          .get<const external_spacepoint_t*>(),
-                                     *spacepoints.at(medium)
-                                          .sourceLinks()[0]
-                                          .get<const external_spacepoint_t*>(),
-                                     *spacepoints.at(top)
-                                          .sourceLinks()[0]
-                                          .get<const external_spacepoint_t*>()};
+    Acts::Seed<external_spacepoint_t> seed{
+        *spacepoints.at(bottom)
+             .sourceLinks()[0]
+             .get<const external_spacepoint_t*>(),
+        *spacepoints.at(medium)
+             .sourceLinks()[0]
+             .get<const external_spacepoint_t*>(),
+        *spacepoints.at(top)
+             .sourceLinks()[0]
+             .get<const external_spacepoint_t*>()};
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
     ACTS_VERBOSE("Adding seed: [b=" << bottom << ", m=" << medium << ", t="
                                     << top << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
-    detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
+    Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
     ++numTotalSeeds;
   }
 
