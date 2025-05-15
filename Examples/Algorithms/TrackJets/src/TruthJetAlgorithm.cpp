@@ -35,6 +35,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
 
+  const fastjet::JetDefinition defaultJetDefinition = fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+
   // Get the 4-momentum information from the simulated truth particles
   // and create fastjet::PseudoJet objects
   std::vector<fastjet::PseudoJet> inputPseudoJets;
@@ -51,7 +53,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   }
   ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
   // Run the jet clustering
-  fastjet::ClusterSequence clusterSeq(inputPseudoJets, DefaultJetDefinition);
+  fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
   // Get the jets above pT 20 GeV
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(10));

@@ -49,7 +49,4 @@ class TruthJetAlgorithm : public IAlgorithm {
                                                                 "outputJets"};
 };
 
-const fastjet::JetDefinition DefaultJetDefinition =
-    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
-
 }  // namespace ActsExamples
