@@ -16,8 +16,6 @@
 
 #include <string>
 
-#include <TFile.h>
-#include <TTree.h>
 #include <fastjet/ClusterSequence.hh>
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
