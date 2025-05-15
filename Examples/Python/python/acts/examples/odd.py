@@ -20,6 +20,7 @@ def getOpenDataDetector(
     materialDecorator=None,
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
+    gen3=False,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
