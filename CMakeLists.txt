@@ -61,13 +61,18 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to setup algebra-plugins" ON)
+option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_SETUP_COVFIE "If we want to setup covfie" ON)
+option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_SETUP_DETRAY "If we want to setup detray" ON)
+option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_SETUP_VECMEM "If we want to setup vecmem" ON)
+option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
+option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
@@ -83,6 +88,7 @@ option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
 option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
+option(ACTS_EXATRKX_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
@@ -208,6 +214,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_HASHING
   ACTS_BUILD_EXAMPLES_HASHING
+)
+set_option_if(
+  ACTS_EXATRKX_ENABLE_CUDA
+  ACTS_EXATRKX_ENABLE_MODULEMAP
 )
 
 # feature tests
@@ -446,6 +456,13 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     if(ACTS_EXATRKX_ENABLE_TORCH)
         find_package(TorchScatter REQUIRED)
     endif()
+    if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+        if(ACTS_USE_SYSTEM_MODULEMAPGRAPH)
+            find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
+        else()
+            add_subdirectory(thirdparty/ModuleMapGraph)
+        endif()
+    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
     find_package(onnxruntime ${_acts_onnxruntime_version} CONFIG REQUIRED)
@@ -469,30 +486,42 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
-    if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-        find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
-    else()
-        add_subdirectory(thirdparty/algebra-plugins)
+    if(ACTS_SETUP_ALGEBRAPLUGINS)
+        if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
+            find_package(
+                algebra-plugins
+                ${_acts_algebraplugins_version}
+                REQUIRED
+            )
+        else()
+            add_subdirectory(thirdparty/algebra-plugins)
+        endif()
     endif()
 
-    if(ACTS_USE_SYSTEM_DETRAY)
-        find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/detray)
+    if(ACTS_SETUP_DETRAY)
+        if(ACTS_USE_SYSTEM_DETRAY)
+            find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+        else()
+            add_subdirectory(thirdparty/detray)
+        endif()
     endif()
 
-    if(ACTS_USE_SYSTEM_VECMEM)
-        find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-    else()
-        add_subdirectory(thirdparty/vecmem)
-        # Make the "VecMem language code" available for the whole project.
-        include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+    if(ACTS_SETUP_VECMEM)
+        if(ACTS_USE_SYSTEM_VECMEM)
+            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        else()
+            add_subdirectory(thirdparty/vecmem)
+            # Make the "VecMem language code" available for the whole project.
+            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+        endif()
     endif()
 
-    if(ACTS_USE_SYSTEM_COVFIE)
-        find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/covfie)
+    if(ACTS_SETUP_COVFIE)
+        if(ACTS_USE_SYSTEM_COVFIE)
+            find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+        else()
+            add_subdirectory(thirdparty/covfie)
+        endif()
     endif()
 
     # traccc also depends on vecmem and covfie, but those plugins should always
