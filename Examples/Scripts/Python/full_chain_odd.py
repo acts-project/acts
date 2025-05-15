@@ -337,7 +337,6 @@ if args.reco:
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
-        logLevel=acts.logging.VERBOSE,
     )
 
     if seedFilter_ML:

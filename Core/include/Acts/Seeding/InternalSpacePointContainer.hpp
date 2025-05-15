@@ -293,6 +293,9 @@ class InternalSpacePointContainer {
   const Vector2 &beamPos() const { return m_beamPos; }
 
   ConstProxyType at(IndexType index) const {
+    if (index >= size()) {
+      throw std::out_of_range("Index out of range");
+    }
     return ConstProxyType(*this, index);
   }
 

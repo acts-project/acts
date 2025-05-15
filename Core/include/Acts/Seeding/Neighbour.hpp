@@ -67,18 +67,18 @@ Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
     while (start <= stop) {
       std::size_t mid = (start + stop) / 2;
       if (spacepoints.at(mid).radius() == lowerBound) {
-        index = range.first + mid;
+        index = mid;
         return;
       } else if (spacepoints.at(mid).radius() > lowerBound) {
         if (mid > 0 && spacepoints.at(mid - 1).radius() < lowerBound) {
-          index = range.first + mid;
+          index = mid;
           return;
         }
         stop = mid - 1;
       } else {
         if (mid + 1 < (range.second - range.first) &&
             spacepoints.at(mid + 1).radius() > lowerBound) {
-          index = range.first + mid + 1;
+          index = mid + 1;
           return;
         }
         start = mid + 1;
