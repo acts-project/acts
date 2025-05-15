@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
+
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
   LinCircle() = default;
@@ -26,6 +26,57 @@ struct LinCircle {
   float V{0.};
   float x{0.};
   float y{0.};
+};
+
+/// @class SpacePointMutableData
+/// This class contains mutable data associated to the
+/// external space points provided by the customers
+/// These variables are used mainly internally by the seeding algorithm, that
+/// reads and updates them for seed selection purposes.
+/// The quality is also accessed after the seeding for an additional selection
+/// round on the candidates
+class SpacePointMutableData {
+ public:
+  /// @brief Default constructor
+  SpacePointMutableData() = default;
+
+  /// No copies
+  SpacePointMutableData(const SpacePointMutableData& other) = delete;
+  SpacePointMutableData& operator=(const SpacePointMutableData& other) = delete;
+
+  /// @brief Move operations
+  SpacePointMutableData(SpacePointMutableData&& other) noexcept = default;
+  SpacePointMutableData& operator=(SpacePointMutableData&& other) noexcept =
+      default;
+
+  /// @brief Destructor
+  ~SpacePointMutableData() = default;
+
+  std::size_t size() const { return m_quality.size(); }
+
+  /// @brief Getters
+  float quality(const std::size_t idx) const;
+  float deltaR(const std::size_t idx) const;
+  const LinCircle& linCircle(const std::size_t idx) const;
+  float cotTheta(const std::size_t idx) const;
+
+  /// @brief Setters
+  void setQuality(const std::size_t idx, const float value);
+  void setDeltaR(const std::size_t idx, const float value);
+  void setLinCircle(const std::size_t idx, const LinCircle& value);
+
+  /// @brief Resize vectors
+  void resize(const std::size_t n);
+
+  /// @brief clear vectors
+  void clear();
+
+ private:
+  /// Variables
+  std::vector<float> m_quality{};
+  std::vector<float> m_deltaR{};
+  std::vector<LinCircle> m_linCircle{};
+  std::vector<float> m_cotTheta{};
 };
 
 template <typename external_spacepoint_t, typename callable_t>

@@ -8,21 +8,18 @@
 
 #pragma once
 
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <mutex>
-#include <queue>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
+
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
@@ -30,8 +27,7 @@ struct SeedFilterState {
   std::size_t nTopSeedConf = 0;
   // radius of bottom component of seed that is used to define the number of
   // compatible top required
-  float rMaxSeedConf =
-      std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
+  float rMaxSeedConf = std::numeric_limits<float>::max();  // UnitConstants::mm
 };
 
 /// Filter seeds at various stages with the currently
@@ -42,7 +38,7 @@ class SeedFilter final {
   explicit SeedFilter(const SeedFilterConfig& config,
                       IExperimentCuts* expCuts = nullptr);
   explicit SeedFilter(const SeedFilterConfig& config,
-                      std::unique_ptr<const Acts::Logger> logger,
+                      std::unique_ptr<const Logger> logger,
                       IExperimentCuts* expCuts = nullptr);
   SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
   SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
@@ -64,7 +60,7 @@ class SeedFilter final {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   void filterSeeds_2SpFixed(const InternalSpacePointContainer& spacepoints,
-                            const Acts::SpacePointMutableData& mutableData,
+                            const SpacePointMutableData& mutableData,
                             ConstInternalSpacePointProxy bottomSP,
                             ConstInternalSpacePointProxy middleSP,
                             const std::vector<std::size_t>& topSpVec,
@@ -80,7 +76,7 @@ class SeedFilter final {
   /// for all seeds with the same middle space point
   template <typename collection_t>
   void filterSeeds_1SpFixed(const InternalSpacePointContainer& spacepoints,
-                            Acts::SpacePointMutableData& mutableData,
+                            SpacePointMutableData& mutableData,
                             CandidatesForMiddleSp& candidates_collector,
                             collection_t& outputCollection) const;
 
@@ -93,7 +89,7 @@ class SeedFilter final {
   template <typename collection_t>
   void filterSeeds_1SpFixed(
       const InternalSpacePointContainer& spacepoints,
-      Acts::SpacePointMutableData& mutableData,
+      SpacePointMutableData& mutableData,
       std::vector<typename CandidatesForMiddleSp::value_type>& candidates,
       const std::size_t numQualitySeeds, collection_t& outputCollection) const;
 
@@ -104,8 +100,8 @@ class SeedFilter final {
   const Logger& logger() const { return *m_logger; }
 
   const SeedFilterConfig m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("Filter", Logging::Level::INFO);
+  std::unique_ptr<const Logger> m_logger =
+      getDefaultLogger("Filter", Logging::Level::INFO);
   const IExperimentCuts* m_experimentCuts;
 };
 

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSpacePointContainer.hpp"
@@ -65,11 +64,6 @@ class SeedFinder {
     // bottom space point
     std::vector<std::size_t> compatBottomSP{};
     std::vector<std::size_t> compatTopSP{};
-    // contains parameters required to calculate circle with linear equation
-    // ...for bottom-middle
-    std::vector<LinCircle> linCircleBottom{};
-    // ...for middle-top
-    std::vector<LinCircle> linCircleTop{};
 
     // create vectors here to avoid reallocation in each loop
     std::vector<std::size_t> topSpVec{};
@@ -165,8 +159,7 @@ class SeedFinder {
       Acts::SpacePointMutableData& mutableData,
       boost::container::small_vector<
           Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
-      ConstInternalSpacePointProxy mediumSP,
-      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+      ConstInternalSpacePointProxy mediumSP, out_range_t& outVec,
       const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
       const float uIP2, const float cosPhiM, const float sinPhiM) const;
 
@@ -178,6 +171,7 @@ class SeedFinder {
   /// @param state State object that holds memory used
   template <Acts::DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(const InternalSpacePointContainer& spacepoints,
+                        Acts::SpacePointMutableData& mutableData,
                         ConstInternalSpacePointProxy SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,

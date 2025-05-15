@@ -7,6 +7,64 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 namespace Acts {
+
+inline float SpacePointMutableData::quality(const std::size_t idx) const {
+  assert(idx < m_quality.size());
+  return m_quality[idx];
+}
+
+inline float SpacePointMutableData::deltaR(const std::size_t idx) const {
+  assert(idx < m_deltaR.size());
+  return m_deltaR[idx];
+}
+
+inline const LinCircle& SpacePointMutableData::linCircle(
+    const std::size_t idx) const {
+  assert(idx < m_linCircle.size());
+  return m_linCircle[idx];
+}
+
+inline float SpacePointMutableData::cotTheta(const std::size_t idx) const {
+  assert(idx < m_linCircle.size());
+  return m_cotTheta[idx];
+}
+
+inline void SpacePointMutableData::setQuality(const std::size_t idx,
+                                              const float value) {
+  assert(idx < m_quality.size());
+  if (value > m_quality[idx]) {
+    m_quality[idx] = value;
+  }
+}
+
+inline void SpacePointMutableData::setDeltaR(const std::size_t idx,
+                                             const float value) {
+  assert(idx < m_deltaR.size());
+  m_deltaR[idx] = value;
+}
+
+inline void SpacePointMutableData::setLinCircle(const std::size_t idx,
+                                                const LinCircle& value) {
+  assert(idx < m_linCircle.size());
+  m_linCircle[idx] = value;
+  m_cotTheta[idx] = value.cotTheta;
+}
+
+inline void SpacePointMutableData::resize(const std::size_t n) {
+  clear();
+  m_quality.resize(n, -std::numeric_limits<float>::infinity());
+  m_deltaR.resize(n, 0.f);
+  m_linCircle.resize(n);
+  m_cotTheta.resize(n, 0.f);
+}
+
+inline void SpacePointMutableData::clear() {
+  m_quality.clear();
+  m_deltaR.clear();
+  m_linCircle.clear();
+  m_cotTheta.clear();
+}
+
 template <typename external_spacepoint_t, typename callable_t>
 inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                                       const external_spacepoint_t& sp,
