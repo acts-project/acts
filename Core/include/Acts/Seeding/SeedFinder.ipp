@@ -513,23 +513,31 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
-  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
+  for (std::size_t i = 0; i < sorted_bottoms.size(); ++i) {
     sorted_bottoms[i] = i;
   }
 
   std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
-  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
+  for (std::size_t i = 0; i < sorted_tops.size(); ++i) {
     sorted_tops[i] = i;
   }
 
   if constexpr (detailedMeasurement ==
                 Acts::DetectorMeasurementInfo::eDefault) {
-    std::ranges::sort(sorted_bottoms, {}, [&state](const std::size_t s) {
-      return state.linCircleBottom[s].cotTheta;
-    });
+    std::vector<float> cotThetaBottom(state.linCircleBottom.size());
+    for (std::size_t i = 0; i < state.linCircleBottom.size(); ++i) {
+      cotThetaBottom[i] = state.linCircleBottom[i].cotTheta;
+    }
+    std::ranges::sort(
+        sorted_bottoms, {},
+        [&cotThetaBottom](const std::size_t s) { return cotThetaBottom[s]; });
 
-    std::ranges::sort(sorted_tops, {}, [&state](const std::size_t s) {
-      return state.linCircleTop[s].cotTheta;
+    std::vector<float> cotThetaTop(state.linCircleTop.size());
+    for (std::size_t i = 0; i < state.linCircleTop.size(); ++i) {
+      cotThetaTop[i] = state.linCircleTop[i].cotTheta;
+    }
+    std::ranges::sort(sorted_tops, {}, [&cotThetaTop](const std::size_t s) {
+      return cotThetaTop[s];
     });
   }
 
