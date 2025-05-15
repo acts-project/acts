@@ -142,6 +142,19 @@ Ordering compare(const std::vector<U>& v1, const std::vector<U>& v2) {
   }
 }
 
+// std::swap does not work with std::vector<bool> because it does not return
+// lvalue references.
+template <typename U>
+void swap(std::vector<U>& vec, std::size_t i, std::size_t j) {
+  if constexpr (std::is_same_v<U, bool>) {
+    bool temp = vec[i];
+    vec[i] = vec[j];
+    vec[j] = temp;
+  } else {
+    std::swap(vec[i], vec[j]);
+  }
+};
+
 // === GENERIC SORTING MECHANISM ===
 
 // The following functions are generic implementations of sorting algorithms,
@@ -368,14 +381,14 @@ struct BranchComparisonHarness {
               return compare(tree1Data[i], tree1Data[j]);
             },
             [&tree1Data](std::size_t i, std::size_t j) {
-              std::swap(tree1Data[i], tree1Data[j]);
+              swap(tree1Data, i, j);
             }),
         std::make_pair(
             [&tree2Data](std::size_t i, std::size_t j) -> Ordering {
               return compare(tree2Data[i], tree2Data[j]);
             },
             [&tree2Data](std::size_t i, std::size_t j) {
-              std::swap(tree2Data[i], tree2Data[j]);
+              swap(tree2Data, i, j);
             }));
 
     // Setup order-sensitive tree comparison
