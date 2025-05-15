@@ -1,7 +1,5 @@
-from typing import Optional, Union, Any, List
-from pathlib import Path
+from typing import Optional
 from collections import namedtuple
-from collections.abc import Iterable
 
 import acts
 from acts.examples import TruthJetAlgorithm
