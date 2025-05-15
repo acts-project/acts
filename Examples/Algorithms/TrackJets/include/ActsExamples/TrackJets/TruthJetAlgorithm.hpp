@@ -29,9 +29,10 @@ class TruthJetAlgorithm : public IAlgorithm {
   struct Config {
     /// Input particles collection.
     std::string inputTruthParticles;
-
     /// Output jets collection.
     std::string outputJets;
+    /// Minimum jet pT.
+    double jetPtMin;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

@@ -5,7 +5,7 @@ import acts
 from acts.examples import TruthJetAlgorithm
 
 TruthJetConfig = namedtuple(
-    "TruthJetConfig", ["inputTruthParticles", "outputJets"], defaults=[None, None]
+    "TruthJetConfig", ["inputTruthParticles", "outputJets", "jetPtMin"], defaults=[None, None]
 )
 
 
@@ -13,6 +13,7 @@ def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
     return {
         "inputTruthParticles": config.inputTruthParticles,
         "outputJets": config.outputJets,
+        "jetPtMin": config.jetPtMin
     }
 
 

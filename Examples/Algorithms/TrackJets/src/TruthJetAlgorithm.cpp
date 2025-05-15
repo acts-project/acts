@@ -54,9 +54,9 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
   // Run the jet clustering
   fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
-  // Get the jets above pT 20 GeV
+  // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
-      sorted_by_pt(clusterSeq.inclusive_jets(10));
+      sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
   ACTS_DEBUG("Number of clustered jets: " << jets.size());
   // Store the jets in the output data handle
   m_outputJets(ctx, std::move(jets));

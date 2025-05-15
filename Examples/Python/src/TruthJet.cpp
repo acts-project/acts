@@ -28,6 +28,6 @@ void addTruthJet(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthJetAlgorithm, mex,
                                 "TruthJetAlgorithm", inputTruthParticles,
-                                outputJets);
+                                outputJets, jetPtMin);
 }  // addTruthJet
 }  // namespace Acts::Python
