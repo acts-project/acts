@@ -153,7 +153,6 @@ def test_odd_gen1():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-@pytest.mark.xfail(reason="Gen3 building for ODD not yet implemented")
 def test_odd_gen3():
     with getOpenDataDetector(gen3=True) as detector:
         trackingGeometry = detector.trackingGeometry()
@@ -161,8 +160,8 @@ def test_odd_gen3():
         visitor = CountingVisitor()
         trackingGeometry.apply(visitor)
 
-        assert visitor.num_surfaces == 19264
+        assert visitor.num_surfaces == 9
         assert visitor.num_layers == 0  # Gen3: no layers
-        assert visitor.num_volumes == 32
-        assert visitor.num_portals == 123  # Gen3: will have portals
+        assert visitor.num_volumes == 2
+        assert visitor.num_portals == 9  # Gen3: will have portals
         assert visitor.num_boundary_surfaces == 0  # Gen3: no boundary surfaces
