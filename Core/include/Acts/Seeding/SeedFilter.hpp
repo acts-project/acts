@@ -54,8 +54,8 @@ class SeedFilter final {
   /// @param candidatesCollector container for the seed candidates
   void filterSeeds_2SpFixed(
       const SpacePointMutableData& mutableData,
-      const external_spacepoint_t& bottomSP,
-      const external_spacepoint_t& middleSP,
+      const external_spacepoint_t& bottomSp,
+      const external_spacepoint_t& middleSp,
       const std::vector<const external_spacepoint_t*>& topSpVec,
       const std::vector<float>& invHelixDiameterVec,
       const std::vector<float>& impactParametersVec,

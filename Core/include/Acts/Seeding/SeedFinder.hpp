@@ -48,8 +48,8 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<const external_spacepoint_t*> compatBottomSP{};
-    std::vector<const external_spacepoint_t*> compatTopSP{};
+    std::vector<const external_spacepoint_t*> compatBottomSp{};
+    std::vector<const external_spacepoint_t*> compatTopSp{};
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom{};
@@ -62,7 +62,7 @@ class SeedFinder {
     std::vector<float> impactParameters{};
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector{};
+    CandidatesForMiddleSp<const external_spacepoint_t> candidatesCollector{};
 
     // managing doublet candidates
     boost::container::small_vector<Neighbour<grid_t>,
@@ -146,12 +146,12 @@ class SeedFinder {
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param SpM space point candidate to be used as middle SP in a seed
+  /// @param spM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
   template <DetectorMeasurementInfo detailedMeasurement>
-  void filterCandidates(const external_spacepoint_t& SpM,
+  void filterCandidates(const external_spacepoint_t& spM,
                         const SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
