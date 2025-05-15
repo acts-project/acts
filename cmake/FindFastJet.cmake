@@ -1,5 +1,7 @@
 # Find the FastJet includes and libraries.
 
+include(FindPackageHandleStandardArgs)
+
 find_library(FastJet_LIBRARY NAMES FastJet fastjet DOC "The FastJet library")
 
 find_path(
