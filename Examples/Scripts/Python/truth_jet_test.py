@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
-
-import os
-import argparse
-import pathlib
-
 import acts
 import acts.examples
 from acts.examples.track_jet import addTruthJetAlg, TruthJetConfig
 from acts.examples.simulation import addPythia8
 
 
-outputDir = "/eos/user/d/delitez/acts/acts_test"
+outputDir = "./truth_jet_test_output"
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
