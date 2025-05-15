@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import acts
 import acts.examples
-from acts.examples.track_jet import addTruthJetAlg, TruthJetConfig
-from acts.examples.simulation import addPythia8
+from acts.examples.simulation import addPythia8, addTruthJetAlg, TruthJetConfig
 
 
 outputDir = "./truth_jet_test_output"
