@@ -142,6 +142,23 @@ void addTrackFinding(Context& ctx) {
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, seedFinderOptions,
+      layerMappingFile, geometrySelection, trackingGeometry, ActsGbtsMap,
+      fill_module_csv, inputClusters);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
+      inputSpacePoints, outputProtoTracks, trackingGeometry, geometrySelection,
+      inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
+      houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
+      localMaxWindowSize, kA);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,

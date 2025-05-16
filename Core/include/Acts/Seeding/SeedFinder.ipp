@@ -10,8 +10,8 @@ namespace Acts {
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    std::unique_ptr<const Acts::Logger> logger)
+    const SeedFinderConfig<external_spacepoint_t>& config,
+    std::unique_ptr<const Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
@@ -32,40 +32,38 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename container_t, Acts::GridBinCollection sp_range_t>
-  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
-                                         3ul>
+template <typename container_t, GridBinCollection sp_range_t>
+  requires CollectionStoresSeedsTo<container_t, external_spacepoint_t, 3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid, container_t& outputCollection,
-    const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
-    const sp_range_t& topSPsIdx,
-    const Acts::Range1D<float>& rMiddleSPRange) const {
+    const SeedFinderOptions& options, SeedingState& state, const grid_t& grid,
+    container_t& outputCollection, const sp_range_t& bottomSPsIdx,
+    const std::size_t middleSPsIdx, const sp_range_t& topSPsIdx,
+    const Range1D<float>& rMiddleSPRange) const {
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
   }
 
-  state.spacepoints.clear();
-  state.spacepointsMutable.clear();
+  state.spacePoints.clear();
+  state.spacePointsMutable.clear();
 
   auto copyFromGrid =
       [&](std::size_t gridIndex) -> std::pair<std::size_t, std::size_t> {
-    std::size_t begin = state.spacepoints.size();
+    std::size_t begin = state.spacePoints.size();
     for (const external_spacepoint_t* sp : grid.at(gridIndex)) {
-      state.spacepoints.addSpacePoint(SourceLink(sp), sp->x(), sp->y(), sp->z(),
+      state.spacePoints.addSpacePoint(SourceLink(sp), sp->x(), sp->y(), sp->z(),
                                       sp->phi(), sp->radius(), sp->varianceR(),
                                       sp->varianceZ());
     }
-    std::size_t end = state.spacepoints.size();
+    std::size_t end = state.spacePoints.size();
     return {begin, end};
   };
 
   // This is used for seed filtering later
   const std::size_t max_num_seeds_per_spm =
-      m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
+      m_config.seedFilter->getConfig().maxSeedsPerSpMConf;
   const std::size_t max_num_quality_seeds_per_spm =
-      m_config.seedFilter->getSeedFilterConfig().maxQualitySeedsPerSpMConf;
+      m_config.seedFilter->getConfig().maxQualitySeedsPerSpMConf;
 
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
@@ -98,7 +96,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
     auto range = copyFromGrid(idx);
     state.bottomNeighbours.emplace_back(
-        state.spacepoints, range,
+        state.spacePoints, range,
         middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
   }
   // if no bottom candidates, then no need to proceed
@@ -114,7 +112,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
     auto range = copyFromGrid(idx);
     state.topNeighbours.emplace_back(
-        state.spacepoints, range,
+        state.spacePoints, range,
         middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
   // if no top candidates, then no need to proceed
@@ -122,7 +120,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     return;
   }
 
-  state.spacepointsMutable.resize(state.spacepoints.size());
+  state.spacePointsMutable.resize(state.spacePoints.size());
 
   // we compute this here since all middle space point candidates belong to the
   // same z-bin
@@ -136,7 +134,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
   for (std::size_t middleSpIndex = middleSpRange.first;
        middleSpIndex < middleSpRange.second; ++middleSpIndex) {
-    auto spM = state.spacepoints.at(middleSpIndex);
+    auto spM = state.spacePoints.at(middleSpIndex);
 
     const float rM = spM.radius();
 
@@ -156,8 +154,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const float uIP2 = uIP * uIP;
 
     // Iterate over middle-top dublets
-    getCompatibleDoublets<Acts::SpacePointCandidateType::eTop>(
-        options, state.spacepoints, state.spacepointsMutable,
+    getCompatibleDoublets<SpacePointCandidateType::eTop>(
+        options, state.spacePoints, state.spacePointsMutable,
         state.topNeighbours, spM, state.linCircleTop, state.compatTopSP,
         m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM,
         sinPhiM);
@@ -195,8 +193,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
 
     // Iterate over middle-bottom dublets
-    getCompatibleDoublets<Acts::SpacePointCandidateType::eBottom>(
-        options, state.spacepoints, state.spacepointsMutable,
+    getCompatibleDoublets<SpacePointCandidateType::eBottom>(
+        options, state.spacePoints, state.spacePointsMutable,
         state.bottomNeighbours, spM, state.linCircleBottom,
         state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
@@ -213,29 +211,29 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
                                 << middleSpIndex);
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
-      filterCandidates<Acts::DetectorMeasurementInfo::eDetailed>(
-          state.spacepoints, spM, options, seedFilterState, state);
+      filterCandidates<DetectorMeasurementInfo::eDetailed>(
+          state.spacePoints, spM, options, seedFilterState, state);
     } else {
-      filterCandidates<Acts::DetectorMeasurementInfo::eDefault>(
-          state.spacepoints, spM, options, seedFilterState, state);
+      filterCandidates<DetectorMeasurementInfo::eDefault>(
+          state.spacePoints, spM, options, seedFilterState, state);
     }
 
-    m_config.seedFilter->filterSeeds_1SpFixed(
-        state.spacepoints, state.spacepointsMutable, state.candidates_collector,
+    m_config.seedFilter->template filterSeeds_1SpFixed<external_spacepoint_t>(
+        state.spacePoints, state.spacePointsMutable, state.candidates_collector,
         outputCollection);
 
   }  // loop on mediums
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
+template <SpacePointCandidateType candidateType, typename out_range_t>
 inline void
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
-    const Acts::SeedFinderOptions& options,
-    const InternalSpacePointContainer& spacepoints,
-    Acts::SpacePointMutableData& mutableData,
-    boost::container::small_vector<
-        Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+    const SeedFinderOptions& options,
+    const InternalSpacePointContainer& spacePoints,
+    SpacePointMutableData& mutableData,
+    boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>&
+        otherSPsNeighbours,
     ConstInternalSpacePointProxy mediumSP, std::vector<LinCircle>& linCircleVec,
     out_range_t& outVec, const float deltaRMinSP, const float deltaRMaxSP,
     const float uIP, const float uIP2, const float cosPhiM,
@@ -243,7 +241,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
   float impactMax = m_config.impactMax;
 
   constexpr bool isBottomCandidate =
-      candidateType == Acts::SpacePointCandidateType::eBottom;
+      candidateType == SpacePointCandidateType::eBottom;
 
   if constexpr (isBottomCandidate) {
     impactMax = -impactMax;
@@ -289,8 +287,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
     for (; min_itr != otherSPCol.range.second; ++min_itr) {
-      auto otherSP = spacepoints.at(min_itr);
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      auto otherSP = spacePoints.at(min_itr);
+      if constexpr (candidateType == SpacePointCandidateType::eBottom) {
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP.radius()) <= deltaRMaxSP) {
           break;
@@ -308,7 +306,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     otherSPCol.index = min_itr;
 
     for (; min_itr != otherSPCol.range.second; ++min_itr) {
-      auto otherSP = spacepoints.at(min_itr);
+      auto otherSP = spacePoints.at(min_itr);
 
       if constexpr (isBottomCandidate) {
         deltaR = (rM - otherSP.radius());
@@ -497,11 +495,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <Acts::DetectorMeasurementInfo detailedMeasurement>
+template <DetectorMeasurementInfo detailedMeasurement>
 inline void
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
-    const InternalSpacePointContainer& spacepoints,
-    ConstInternalSpacePointProxy spM, const Acts::SeedFinderOptions& options,
+    const InternalSpacePointContainer& spacePoints,
+    ConstInternalSpacePointProxy spM, const SeedFinderOptions& options,
     SeedFilterState& seedFilterState, SeedingState& state) const {
   const float rM = spM.radius();
   const float cosPhiM = spM.x() / rM;
@@ -522,8 +520,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  if constexpr (detailedMeasurement ==
-                Acts::DetectorMeasurementInfo::eDefault) {
+  if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
     std::vector<float> cotThetaBottom(state.linCircleBottom.size());
     for (std::size_t i = 0; i < state.linCircleBottom.size(); ++i) {
       cotThetaBottom[i] = state.linCircleBottom[i].cotTheta;
@@ -589,8 +586,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
-    if constexpr (detailedMeasurement ==
-                  Acts::DetectorMeasurementInfo::eDetailed) {
+    if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
       rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
       rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
     }
@@ -600,7 +596,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
-        spacepoints.at(state.compatBottomSP[b]).radius() >
+        spacePoints.at(state.compatBottomSP[b]).radius() >
             seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
@@ -628,8 +624,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       float iDeltaRB2 = 0.;
       float iDeltaRT2 = 0.;
 
-      if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::eDetailed) {
+      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         // protects against division by 0
         float dU = lt.U - Ub;
         if (dU == 0.) {
@@ -661,7 +656,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
             zPositionMiddle};
 
-        auto spB = spacepoints.at(state.compatBottomSP[b]);
+        auto spB = spacePoints.at(state.compatBottomSP[b]);
         double rBTransf[3];
         if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
           continue;
@@ -675,7 +670,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
             zPositionMiddle};
 
-        auto spT = spacepoints.at(state.compatTopSP[t]);
+        auto spT = spacePoints.at(state.compatTopSP[t]);
         double rTTransf[3];
         if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
           continue;
@@ -698,8 +693,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::eDetailed) {
+      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         // use arithmetic average
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
@@ -729,7 +723,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
         if constexpr (detailedMeasurement ==
-                      Acts::DetectorMeasurementInfo::eDetailed) {
+                      DetectorMeasurementInfo::eDetailed) {
           continue;
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -741,8 +735,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         continue;
       }
 
-      if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::eDetailed) {
+      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
         double irMxy = 1 / rMxy;
         float Ax = rMTransf[0] * irMxy;
@@ -760,8 +753,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       float B = 0;
       float B2 = 0;
 
-      if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::eDetailed) {
+      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         dU = ut - ub;
         // protects against division by 0
         if (dU == 0.) {
@@ -815,7 +807,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if constexpr (detailedMeasurement ==
-                      Acts::DetectorMeasurementInfo::eDetailed) {
+                      DetectorMeasurementInfo::eDetailed) {
           continue;
         }
         if (cotThetaB - cotThetaT < 0) {
@@ -828,8 +820,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
       float Im = 0;
-      if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::eDetailed) {
+      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         Im = std::abs((A - B * rMxy) * rMxy);
       } else {
         Im = std::abs((A - B * rM) * rM);
@@ -854,8 +845,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
-        state.spacepoints, state.spacepointsMutable,
-        spacepoints.at(state.compatBottomSP[b]), spM, state.topSpVec,
+        state.spacePoints, state.spacePointsMutable,
+        spacePoints.at(state.compatBottomSP[b]), spM, state.topSpVec,
         state.curvatures, state.impactParameters, seedFilterState,
         state.candidates_collector);
   }  // loop on bottoms
@@ -863,9 +854,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
-    retrieveRadiusRangeForMiddle(
-        const external_spacepoint_t& spM,
-        const Acts::Range1D<float>& rMiddleSPRange) const {
+    retrieveRadiusRangeForMiddle(const external_spacepoint_t& spM,
+                                 const Range1D<float>& rMiddleSPRange) const {
   if (m_config.useVariableMiddleSPRange) {
     return {rMiddleSPRange.min(), rMiddleSPRange.max()};
   }

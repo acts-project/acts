@@ -63,24 +63,24 @@ inline void CandidatesForMiddleSp::clear() {
   m_indicesLow.clear();
 }
 
-bool CandidatesForMiddleSp::push(std::size_t SpB, std::size_t SpM,
-                                 std::size_t SpT, float weight, float zOrigin,
-                                 bool isQuality) {
+inline bool CandidatesForMiddleSp::push(std::size_t spB, std::size_t spM,
+                                        std::size_t spT, float weight,
+                                        float zOrigin, bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_nHigh, m_maxSizeHigh, SpB, SpM, SpT, weight,
+    return push(m_indicesHigh, m_nHigh, m_maxSizeHigh, spB, spM, spT, weight,
                 zOrigin, isQuality);
   }
-  return push(m_indicesLow, m_nLow, m_maxSizeLow, SpB, SpM, SpT, weight,
+  return push(m_indicesLow, m_nLow, m_maxSizeLow, spB, spM, spT, weight,
               zOrigin, isQuality);
 }
 
-bool CandidatesForMiddleSp::push(std::vector<std::size_t>& indices,
-                                 std::size_t& n, const std::size_t nMax,
-                                 std::size_t SpB, std::size_t SpM,
-                                 std::size_t SpT, float weight, float zOrigin,
-                                 bool isQuality) {
+inline bool CandidatesForMiddleSp::push(std::vector<std::size_t>& indices,
+                                        std::size_t& n, const std::size_t nMax,
+                                        std::size_t spB, std::size_t spM,
+                                        std::size_t spT, float weight,
+                                        float zOrigin, bool isQuality) {
   // If we do not want to store candidates, returns
   if (nMax == 0) {
     return false;
@@ -88,8 +88,9 @@ bool CandidatesForMiddleSp::push(std::vector<std::size_t>& indices,
 
   // if there is still space, add anything
   if (n < nMax) {
-    addToCollection(indices, n, nMax,
-                    value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
+    addToCollection(
+        indices, n, nMax,
+        TripletCandidate(spB, spM, spT, weight, zOrigin, isQuality));
     return true;
   }
 
@@ -102,14 +103,13 @@ bool CandidatesForMiddleSp::push(std::vector<std::size_t>& indices,
   // remove element with lower weight and add this one
   pop(indices, n);
   addToCollection(indices, n, nMax,
-                  value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
+                  TripletCandidate(spB, spM, spT, weight, zOrigin, isQuality));
   return true;
 }
 
-void CandidatesForMiddleSp::addToCollection(std::vector<std::size_t>& indices,
-                                            std::size_t& n,
-                                            const std::size_t nMax,
-                                            value_type&& element) {
+inline void CandidatesForMiddleSp::addToCollection(
+    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t nMax,
+    TripletCandidate&& element) {
   // adds elements to the end of the collection
   if (indices.size() == nMax) {
     m_storage[indices[n]] = std::move(element);
@@ -121,8 +121,9 @@ void CandidatesForMiddleSp::addToCollection(std::vector<std::size_t>& indices,
   bubbleup(indices, n++);
 }
 
-void CandidatesForMiddleSp::bubbledw(std::vector<std::size_t>& indices,
-                                     std::size_t n, std::size_t actualSize) {
+inline void CandidatesForMiddleSp::bubbledw(std::vector<std::size_t>& indices,
+                                            std::size_t n,
+                                            std::size_t actualSize) {
   while (n < actualSize) {
     // The collection of indexes are sorted as min heap trees
     // left child : 2 * n + 1
@@ -177,8 +178,8 @@ void CandidatesForMiddleSp::bubbledw(std::vector<std::size_t>& indices,
   }  // while loop
 }
 
-void CandidatesForMiddleSp::bubbleup(std::vector<std::size_t>& indices,
-                                     std::size_t n) {
+inline void CandidatesForMiddleSp::bubbleup(std::vector<std::size_t>& indices,
+                                            std::size_t n) {
   while (n != 0) {
     // The collection of indexes are sorted as min heap trees
     // parent: (n - 1) / 2;
@@ -198,11 +199,11 @@ void CandidatesForMiddleSp::bubbleup(std::vector<std::size_t>& indices,
   }
 }
 
-std::vector<typename CandidatesForMiddleSp::value_type>
-CandidatesForMiddleSp::storage(const InternalSpacePointContainer& spacepoints) {
+inline std::vector<TripletCandidate> CandidatesForMiddleSp::storage(
+    const InternalSpacePointContainer& spacepoints) {
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
-  std::vector<value_type> output(m_nHigh + m_nLow);
+  std::vector<TripletCandidate> output(m_nHigh + m_nLow);
   std::size_t outIdx = output.size() - 1;
 
   // rely on the fact that m_indices* are both min heap trees
@@ -245,9 +246,9 @@ CandidatesForMiddleSp::storage(const InternalSpacePointContainer& spacepoints) {
   return output;
 }
 
-bool CandidatesForMiddleSp::descendingByQuality(
-    const InternalSpacePointContainer& spacepoints, const value_type& i1,
-    const value_type& i2) {
+inline bool CandidatesForMiddleSp::descendingByQuality(
+    const InternalSpacePointContainer& spacepoints, const TripletCandidate& i1,
+    const TripletCandidate& i2) {
   if (i1.weight != i2.weight) {
     return i1.weight > i2.weight;
   }
@@ -277,17 +278,17 @@ bool CandidatesForMiddleSp::descendingByQuality(
   return seed1_sum > seed2_sum;
 }
 
-bool CandidatesForMiddleSp::ascendingByQuality(
-    const InternalSpacePointContainer& spacepoints, const value_type& i1,
-    const value_type& i2) {
+inline bool CandidatesForMiddleSp::ascendingByQuality(
+    const InternalSpacePointContainer& spacepoints, const TripletCandidate& i1,
+    const TripletCandidate& i2) {
   return !descendingByQuality(spacepoints, i1, i2);
 }
 
-std::size_t CandidatesForMiddleSp::nLowQualityCandidates() const {
+inline std::size_t CandidatesForMiddleSp::nLowQualityCandidates() const {
   return m_nLow;
 }
 
-std::size_t CandidatesForMiddleSp::nHighQualityCandidates() const {
+inline std::size_t CandidatesForMiddleSp::nHighQualityCandidates() const {
   return m_nHigh;
 }
 

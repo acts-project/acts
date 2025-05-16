@@ -15,20 +15,15 @@
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -185,9 +180,8 @@ int main(int argc, char** argv) {
       numPhiNeighbors, zBinNeighborsTop, 0);
   Acts::SeedFilterConfig sfconf;
 
-  Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter =
-      std::make_unique<Acts::SeedFilter<value_type>>(sfconf, &atlasCuts);
+  Acts::ATLASCuts atlasCuts = Acts::ATLASCuts();
+  config.seedFilter = std::make_unique<Acts::SeedFilter>(sfconf, &atlasCuts);
   Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>
       a;  // test creation of unconfigured finder
   a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(

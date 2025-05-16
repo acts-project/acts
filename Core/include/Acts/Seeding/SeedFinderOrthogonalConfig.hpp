@@ -8,23 +8,20 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 #include <numbers>
 
 namespace Acts {
-// forward declaration to avoid cyclic dependence
-template <typename T>
-class SeedFilter;
 
 /// @brief Structure that holds configuration parameters for the orthogonal seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderOrthogonalConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  std::shared_ptr<Acts::SeedFilter> seedFilter;
 
   /// Seeding parameters for geometry settings and detector ROI
 

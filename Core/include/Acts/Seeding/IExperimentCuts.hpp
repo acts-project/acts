@@ -11,9 +11,6 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSpacePointContainer.hpp"
 
-#include <limits>
-#include <memory>
-
 namespace Acts {
 
 /// @c IExperimentCuts can be used to increase or decrease seed weights
@@ -24,6 +21,7 @@ namespace Acts {
 class IExperimentCuts {
  public:
   virtual ~IExperimentCuts() = default;
+
   /// Returns seed weight bonus/malus depending on detector considerations.
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
@@ -46,9 +44,9 @@ class IExperimentCuts {
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
   /// @return vector of seed candidates that pass the cut
-  virtual std::vector<typename CandidatesForMiddleSp::value_type>
-  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp::value_type>
-                     seedCandidates) const = 0;
+  virtual std::vector<TripletCandidate> cutPerMiddleSP(
+      std::vector<TripletCandidate> seedCandidates,
+      const InternalSpacePointContainer& spacePoints) const = 0;
 };
 
 }  // namespace Acts

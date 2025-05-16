@@ -58,9 +58,9 @@ class SeedFinder {
 
  public:
   struct SeedingState {
-    InternalSpacePointContainer spacepoints;
+    InternalSpacePointContainer spacePoints;
     // Mutable variables for Space points used in the seeding
-    SpacePointMutableData spacepointsMutable{};
+    SpacePointMutableData spacePointsMutable{};
 
     // bottom space point
     std::vector<std::size_t> compatBottomSP{};
@@ -161,7 +161,7 @@ class SeedFinder {
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      const InternalSpacePointContainer& spacepoints,
+      const InternalSpacePointContainer& spacePoints,
       Acts::SpacePointMutableData& mutableData,
       boost::container::small_vector<
           Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
@@ -177,7 +177,7 @@ class SeedFinder {
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
   template <Acts::DetectorMeasurementInfo detailedMeasurement>
-  void filterCandidates(const InternalSpacePointContainer& spacepoints,
+  void filterCandidates(const InternalSpacePointContainer& spacePoints,
                         ConstInternalSpacePointProxy SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,

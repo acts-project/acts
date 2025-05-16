@@ -6,10 +6,10 @@ add_library(
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
     src/TrackFindingAlgorithmFunction.cpp
-    #src/HoughTransformSeeder.cpp
+    src/HoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
-    #src/MuonHoughSeeder.cpp
-    #src/GbtsSeedingAlgorithm.cpp
+    src/MuonHoughSeeder.cpp
+    src/GbtsSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
 )
 

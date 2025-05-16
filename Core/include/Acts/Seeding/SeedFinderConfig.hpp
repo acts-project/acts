@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <limits>
@@ -20,14 +21,10 @@
 
 namespace Acts {
 
-// forward declaration to avoid cyclic dependence
-template <typename T>
-class SeedFilter;
-
 /// @brief Structure that holds configuration parameters for the seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  std::shared_ptr<Acts::SeedFilter> seedFilter;
 
   /// Seeding parameters used in the space-point grid creation and bin finding
 
@@ -206,7 +203,7 @@ struct SeedFinderConfig {
           "Invalid values for the seed filter inside the seed filter config: "
           "nullptr");
     }
-    if (!seedFilter->getSeedFilterConfig().isInInternalUnits) {
+    if (!seedFilter->getConfig().isInInternalUnits) {
       throw std::runtime_error(
           "The internal Seed Filter configuration, contained in the seed "
           "finder config, is not in internal units.");

@@ -35,9 +35,9 @@ struct Neighbour {
   std::pair<std::size_t, std::size_t> range{};
 };
 
-Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
-                     std::pair<std::size_t, std::size_t> range_,
-                     const float lowerBound)
+inline Neighbour::Neighbour(const InternalSpacePointContainer& spacepoints,
+                            std::pair<std::size_t, std::size_t> range_,
+                            const float lowerBound)
     : range(range_) {
   /// If there are no elements in the bin, we simply set the iterator to begin()
   /// and return. In this case begin() == end() so we run on nothing

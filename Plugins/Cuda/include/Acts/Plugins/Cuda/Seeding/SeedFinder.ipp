@@ -64,7 +64,7 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> minHelixDiameter2_cuda(&m_options.minHelixDiameter2);
   CudaScalar<float> pT2perRadius_cuda(&m_options.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
-  const auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
+  const auto seedFilterConfig = m_config.seedFilter->getConfig();
   CudaScalar<float> deltaInvHelixDiameter_cuda(
       &seedFilterConfig.deltaInvHelixDiameter);
   CudaScalar<float> impactWeightFactor_cuda(

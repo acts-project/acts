@@ -41,8 +41,6 @@ struct TripletCandidate {
 
 class CandidatesForMiddleSp {
  public:
-  using value_type = TripletCandidate;
-
   std::size_t size() const { return m_storage.size(); }
 
   /// @brief Setting maximum number of candidates to keep
@@ -53,19 +51,19 @@ class CandidatesForMiddleSp {
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
   /// elements with higher quality first
   /// @returns Vector of triplet candidates
-  std::vector<value_type> storage(
+  std::vector<TripletCandidate> storage(
       const InternalSpacePointContainer& spacepoints);
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
-  /// @param SpB Bottom space point
-  /// @param SpM Medium space point
-  /// @param SpT Top space point
+  /// @param spB Bottom space point
+  /// @param spM Medium space point
+  /// @param spT Top space point
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
-  bool push(std::size_t SpB, std::size_t SpM, std::size_t SpT, float weight,
+  bool push(std::size_t spB, std::size_t spM, std::size_t spT, float weight,
             float zOrigin, bool isQuality);
 
   /// @brief Clear the internal storage
@@ -76,15 +74,16 @@ class CandidatesForMiddleSp {
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
   static bool descendingByQuality(
-      const InternalSpacePointContainer& spacepoints, const value_type& i1,
-      const value_type& i2);
+      const InternalSpacePointContainer& spacepoints,
+      const TripletCandidate& i1, const TripletCandidate& i2);
 
   /// @brief A function for sorting the triplet candidates from lower to higher quality
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
   static bool ascendingByQuality(const InternalSpacePointContainer& spacepoints,
-                                 const value_type& i1, const value_type& i2);
+                                 const TripletCandidate& i1,
+                                 const TripletCandidate& i2);
 
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
@@ -100,16 +99,16 @@ class CandidatesForMiddleSp {
   /// @param indices The collection into which the candidate should be stored
   /// @param n The current number of stored elements in the container
   /// @param nMax The maximum number of elements that can be stored in the container
-  /// @param SpB The bottom space point
-  /// @param SpM The middle space point
-  /// @param SpT The top space point
+  /// @param spB The bottom space point
+  /// @param spM The middle space point
+  /// @param spT The top space point
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
   bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t nMax, std::size_t SpB, std::size_t SpM,
-            std::size_t SpT, float weight, float zOrigin, bool isQuality);
+            const std::size_t nMax, std::size_t spB, std::size_t spM,
+            std::size_t spT, float weight, float zOrigin, bool isQuality);
 
   /// @brief Check if an element exists in the collection. The element to be checked
   /// is supposed to be in the n position of the collection.
@@ -157,7 +156,7 @@ class CandidatesForMiddleSp {
   /// @param nMax The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
   void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
-                       const std::size_t nMax, value_type&& element);
+                       const std::size_t nMax, TripletCandidate&& element);
 
  private:
   // sizes
@@ -171,7 +170,7 @@ class CandidatesForMiddleSp {
   std::size_t m_nLow{0};
 
   // storage contains the collection of the candidates
-  std::vector<value_type> m_storage{};
+  std::vector<TripletCandidate> m_storage{};
 
   // The following vectors store indexes to elements in the storage
   // They are sorted as a min heap tree, in which

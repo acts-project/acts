@@ -6,18 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
-
-#include <algorithm>
-#include <numeric>
-#include <utility>
 
 namespace Acts {
 
-// constructor
-template <typename external_spacepoint_t>
-SeedFilter<external_spacepoint_t>::SeedFilter(const SeedFilterConfig& config,
-                                              IExperimentCuts* expCuts /* = 0*/)
+inline SeedFilter::SeedFilter(const SeedFilterConfig& config,
+                              IExperimentCuts* expCuts /* = 0*/)
     : m_cfg(config), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
@@ -25,10 +20,9 @@ SeedFilter<external_spacepoint_t>::SeedFilter(const SeedFilterConfig& config,
   }
 }
 
-template <typename external_spacepoint_t>
-SeedFilter<external_spacepoint_t>::SeedFilter(
-    const SeedFilterConfig& config, std::unique_ptr<const Acts::Logger> logger,
-    IExperimentCuts* expCuts /* = 0*/)
+inline SeedFilter::SeedFilter(const SeedFilterConfig& config,
+                              std::unique_ptr<const Acts::Logger> logger,
+                              IExperimentCuts* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
@@ -36,12 +30,8 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
   }
 }
 
-// function to filter seeds based on all seeds with same bottom- and
-// middle-spacepoint.
-// return vector must contain weight of each seed
-template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
-    const InternalSpacePointContainer& spacepoints,
+inline void SeedFilter::filterSeeds_2SpFixed(
+    const InternalSpacePointContainer& spacePoints,
     const Acts::SpacePointMutableData& mutableData,
     ConstInternalSpacePointProxy bottomSP,
     ConstInternalSpacePointProxy middleSP,
@@ -103,8 +93,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // use deltaR instead of top radius
     float currentTopR =
         m_cfg.useDeltaRorTopRadius
-            ? mutableData.deltaR(spacepoints.at(topSpVec[topSPIndex]).index())
-            : spacepoints.at(topSpVec[topSPIndex]).radius();
+            ? mutableData.deltaR(spacePoints.at(topSpVec[topSPIndex]).index())
+            : spacePoints.at(topSpVec[topSPIndex]).radius();
     float impact = impactParametersVec[topSPIndex];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
@@ -120,8 +110,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       float otherTopR =
           m_cfg.useDeltaRorTopRadius
               ? mutableData.deltaR(
-                    spacepoints.at(topSpVec[compatibleTopSPIndex]).index())
-              : spacepoints.at(topSpVec[compatibleTopSPIndex]).radius();
+                    spacePoints.at(topSpVec[compatibleTopSPIndex]).index())
+              : spacePoints.at(topSpVec[compatibleTopSPIndex]).radius();
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
@@ -161,11 +151,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
       weight += m_experimentCuts->seedWeight(
-          bottomSP, middleSP, spacepoints.at(topSpVec[topSPIndex]));
+          bottomSP, middleSP, spacePoints.at(topSpVec[topSPIndex]));
       // discard seeds according to detector specific cuts (e.g.: weight)
       if (!m_experimentCuts->singleSeedCut(
               weight, bottomSP, middleSP,
-              spacepoints.at(topSpVec[topSPIndex]))) {
+              spacePoints.at(topSpVec[topSPIndex]))) {
         continue;
       }
     }
@@ -245,12 +235,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   }
 }
 
-// after creating all seeds with a common middle space point, filter again
-
-template <typename external_spacepoint_t>
-template <typename collection_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    const InternalSpacePointContainer& spacepoints,
+template <typename external_spacepoint_t, typename collection_t>
+void SeedFilter::filterSeeds_1SpFixed(
+    const InternalSpacePointContainer& spacePoints,
     Acts::SpacePointMutableData& mutableData,
     CandidatesForMiddleSp& candidates_collector,
     collection_t& outputCollection) const {
@@ -258,20 +245,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is already sorted
   // higher weights first
   std::size_t numQualitySeeds = candidates_collector.nHighQualityCandidates();
-  auto extended_collection = candidates_collector.storage(spacepoints);
-  filterSeeds_1SpFixed(spacepoints, mutableData, extended_collection,
-                       numQualitySeeds, outputCollection);
+  auto extended_collection = candidates_collector.storage(spacePoints);
+  filterSeeds_1SpFixed<external_spacepoint_t>(
+      spacePoints, mutableData, extended_collection, numQualitySeeds,
+      outputCollection);
 }
 
-template <typename external_spacepoint_t>
-template <typename collection_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    const InternalSpacePointContainer& spacepoints,
+template <typename external_spacepoint_t, typename collection_t>
+void SeedFilter::filterSeeds_1SpFixed(
+    const InternalSpacePointContainer& spacePoints,
     Acts::SpacePointMutableData& mutableData,
-    std::vector<typename CandidatesForMiddleSp::value_type>& candidates,
+    std::vector<TripletCandidate>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
-    candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
+    candidates =
+        m_experimentCuts->cutPerMiddleSP(std::move(candidates), spacePoints);
   }
 
   unsigned int maxSeeds = candidates.size();
@@ -309,13 +297,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(top, bestSeedQuality);
 
     Acts::Seed<external_spacepoint_t> seed{
-        *spacepoints.at(bottom)
+        *spacePoints.at(bottom)
              .sourceLinks()[0]
              .get<const external_spacepoint_t*>(),
-        *spacepoints.at(medium)
+        *spacePoints.at(medium)
              .sourceLinks()[0]
              .get<const external_spacepoint_t*>(),
-        *spacepoints.at(top)
+        *spacePoints.at(top)
              .sourceLinks()[0]
              .get<const external_spacepoint_t*>()};
     seed.setVertexZ(zOrigin);
