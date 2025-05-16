@@ -33,20 +33,19 @@ class DD4hepGeometryContext {
   ///
   /// @param detElem The DD4hep DetElement which should be associated to
   ///
-  /// If none is found, a null pointer is returned, which trigers the
+  /// If none is found, a null pointer is returned, which triggers the
   /// detector element to use its nominal transform.
   ///
   /// @return a pointer to the transform if found, otherwise nullptr
   const Transform3* contextualTransform(
       const DD4hepDetectorElement& detElem) const {
-  
-    if (m_aligmentStore.connected()) {
-      return m_aligmentStore(detElem);
+    if (m_alignmentStore.connected()) {
+      return m_alignmentStore(detElem);
     }
     return nullptr;
   }
 
  private:
-  AlignmentStore m_aligmentStore;
+  AlignmentStore m_alignmentStore;
 };
 }  // namespace Acts

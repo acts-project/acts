@@ -20,7 +20,7 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// @brief A simple alignment decorator for the DD4hep geometry
-/// allowing to load a single static alginment onto the geometry
+/// allowing to load a single static alignment onto the geometry
 ///
 /// The alignments are stored in a HierarchyMap in a hierarchical way
 class DD4hepAlignmentDecorator : public IContextDecorator {
@@ -29,7 +29,7 @@ class DD4hepAlignmentDecorator : public IContextDecorator {
   struct Config {
     /// The alignment store map higher bound IOV (i.e. event number)
     std::map<std::size_t, std::shared_ptr<Acts::IDD4hepAlignmentStore>>
-        alignmentStores; 
+        alignmentStores;
     /// The nominal alignment store (before first bound, after last bound)
     std::shared_ptr<Acts::IDD4hepAlignmentStore> nominalStore = nullptr;
   };

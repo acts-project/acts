@@ -9,14 +9,14 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 #include <unordered_map>
 
 namespace Acts {
 
-/// @brief  Base class for aligment stores which is valid within one
+/// @brief  Base class for alignment stores which is valid within one
 /// geometry context.
 class IDD4hepAlignmentStore {
  public:
@@ -33,11 +33,11 @@ class IDD4hepAlignmentStore {
 /// @brief A simple alignment store for the DD4hep geometry with a lookup map
 /// from geometry id, that is taken from the DD4hep detector element via the
 /// Acts::Surface
-class DD4hepAligmentStoreGeometryId : public IDD4hepAlignmentStore {
+class DD4hepAlignmentStoreGeometryId : public IDD4hepAlignmentStore {
  public:
   /// Constructor from a map of geometry ids and transforms
   /// @param transformMap the map of geometry ids and transforms
-  DD4hepAligmentStoreGeometryId(
+  DD4hepAlignmentStoreGeometryId(
       std::unordered_map<GeometryIdentifier, Acts::Transform3> transformMap)
       : m_transformMap(std::move(transformMap)) {}
 
@@ -53,6 +53,7 @@ class DD4hepAligmentStoreGeometryId : public IDD4hepAlignmentStore {
     return nullptr;
   }
 
+ private:
   /// The geometry id map
   std::unordered_map<GeometryIdentifier, Acts::Transform3> m_transformMap;
 };
