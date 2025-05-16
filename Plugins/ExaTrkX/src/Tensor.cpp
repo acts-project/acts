@@ -60,6 +60,9 @@ TensorMemoryImpl::TensorMemoryImpl(TensorMemoryImpl &&other) noexcept
 
 TensorMemoryImpl &TensorMemoryImpl::operator=(
     TensorMemoryImpl &&other) noexcept {
+  if (m_deleter) {
+    m_deleter(m_ptr);
+  }
   moveConstruct(std::move(other));
   return *this;
 }
