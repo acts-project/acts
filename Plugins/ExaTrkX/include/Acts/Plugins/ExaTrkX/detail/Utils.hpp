@@ -10,8 +10,6 @@
 
 #include <ostream>
 
-#include <torch/torch.h>
-
 namespace Acts::detail {
 
 template <typename It>

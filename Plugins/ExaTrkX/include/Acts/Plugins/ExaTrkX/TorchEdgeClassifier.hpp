@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace torch::jit {
 class Module;
 }

@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <chrono>
@@ -64,10 +65,8 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any, std::any>
-TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
-                                std::any inEdgeFeatures,
-                                const ExecutionContext& execContext) {
+PipelineTensors TorchEdgeClassifier::operator()(
+    PipelineTensors tensors, const ExecutionContext& execContext) {
   const auto device =
       execContext.device.type == Acts::Device::Type::eCUDA
           ? torch::Device(torch::kCUDA, execContext.device.index)
@@ -87,8 +86,16 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   }
 #endif
 
-  auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
-  auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
+  auto nodeFeatures =
+      torch::from_blob(tensors.nodeFeatures.data(),
+                       {static_cast<long>(tensors.nodeFeatures.shape()[0]),
+                        static_cast<long>(tensors.nodeFeatures.shape()[1])},
+                       device);
+  auto edgeIndex =
+      torch::from_blob(tensors.edgeIndex.data(),
+                       {static_cast<long>(tensors.edgeIndex.shape()[0]),
+                        static_cast<long>(tensors.edgeIndex.shape()[1])},
+                       device);
 
   if (edgeIndex.numel() == 0) {
     throw NoEdgesError{};
@@ -97,8 +104,12 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
-  if (inEdgeFeatures.has_value()) {
-    edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(device);
+  if (tensors.edgeFeatures.has_value()) {
+    edgeFeatures =
+        torch::from_blob(tensors.edgeFeatures->data(),
+                         {static_cast<long>(tensors.edgeFeatures->shape()[0]),
+                          static_cast<long>(tensors.edgeFeatures->shape()[1])},
+                         device);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
   t1 = std::chrono::high_resolution_clock::now();
@@ -182,8 +193,13 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   ACTS_DEBUG("Time model forward:          " << milliseconds(t2, t3));
   ACTS_DEBUG("Time sigmoid and cut:        " << milliseconds(t3, t4));
 
-  return {std::move(nodeFeatures), std::move(edgesAfterCut),
-          std::move(inEdgeFeatures), output.masked_select(mask)};
+  // Don't propagate edge features right now since they are not needed by any
+  // track building algorithm
+  return {std::move(tensors.nodeFeatures),
+          detail::torchToActsTensor<std::int64_t>(edgesAfterCut, execContext),
+          {},
+          detail::torchToActsTensor<float>(output.masked_select(mask),
+                                           execContext)};
 }
 
 }  // namespace Acts

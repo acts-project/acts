@@ -14,8 +14,6 @@
 #include <memory>
 #include <vector>
 
-#include <torch/torch.h>
-
 namespace nvinfer1 {
 class IRuntime;
 class ICudaEngine;

@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace Acts {
 
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {

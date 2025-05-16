@@ -10,14 +10,10 @@
 
 #include <Acts/Plugins/ExaTrkX/Tensor.hpp>
 
-#include <any>
 #include <cstdint>
 #include <exception>
 #include <optional>
 #include <vector>
-
-#include <c10/cuda/CUDAStream.h>
-#include <torch/torch.h>
 
 namespace Acts {
 

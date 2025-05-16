@@ -11,19 +11,17 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
-#include <map>
 
 #include <boost/beast/core/span.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include <torch/torch.h>
 
 namespace {
 template <typename vertex_t, typename weight_t>
 auto weaklyConnectedComponents(vertex_t numNodes,
-                               boost::beast::span<vertex_t>& rowIndices,
-                               boost::beast::span<vertex_t>& colIndices,
-                               boost::beast::span<weight_t>& edgeWeights,
+                               boost::beast::span<const vertex_t>& rowIndices,
+                               boost::beast::span<const vertex_t>& colIndices,
+                               boost::beast::span<const weight_t>& edgeWeights,
                                std::vector<vertex_t>& trackLabels) {
   using Graph =
       boost::adjacency_list<boost::vecS,         // edge list
@@ -48,17 +46,24 @@ namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
-    const ExecutionContext& execContext) {
+    const ExecutionContext& /*execContext*/) {
   ACTS_DEBUG("Start track building");
-  const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
-  const auto edgeWeightTensor =
-      std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
+  using RTF = const Tensor<float>&;
+  using RTI = const Tensor<std::int64_t>&;
+  const auto& edgeTensor = tensors.edgeIndex.device().isCpu()
+                               ? static_cast<RTI>(tensors.edgeIndex)
+                               : static_cast<RTI>(tensors.edgeIndex.clone(
+                                     {Acts::Device::Cpu(), {}}));
+  const auto& scoreTensor = tensors.edgeScores->device().isCpu()
+                                ? static_cast<RTF>(*tensors.edgeScores)
+                                : static_cast<RTF>(tensors.edgeScores->clone(
+                                      {Acts::Device::Cpu(), {}}));
 
-  assert(edgeTensor.size(0) == 2);
-  assert(edgeTensor.size(1) == edgeWeightTensor.size(0));
+  assert(edgeTensor.shape()[0] == 2);
+  assert(edgeTensor.shape()[1] == edgeWeightTensor.shape()[0]);
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdges = static_cast<std::size_t>(edgeWeightTensor.size(0));
+  const auto numEdges = scoreTensor.shape().at(1);
 
   if (numEdges == 0) {
     ACTS_WARNING("No edges remained after edge classification");
@@ -68,12 +73,10 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   using vertex_t = std::int64_t;
   using weight_t = float;
 
-  boost::beast::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(),
-                                          numEdges);
-  boost::beast::span<vertex_t> colIndices(
-      edgeTensor.data_ptr<vertex_t>() + numEdges, numEdges);
-  boost::beast::span<weight_t> edgeWeights(edgeWeightTensor.data_ptr<float>(),
-                                           numEdges);
+  boost::beast::span<const vertex_t> rowIndices(edgeTensor.data(), numEdges);
+  boost::beast::span<const vertex_t> colIndices(edgeTensor.data() + numEdges,
+                                                numEdges);
+  boost::beast::span<const weight_t> edgeWeights(scoreTensor.data(), numEdges);
 
   std::vector<vertex_t> trackLabels(numSpacepoints);
 

@@ -8,13 +8,9 @@
 
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 
-#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
-
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
-#include <torch/script.h>
 
-using namespace torch::indexing;
 namespace bc = boost::container;
 
 namespace {
@@ -29,7 +25,7 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor) {
     onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
   } else {
     throw std::runtime_error(
-        "Cannot convert torch::Tensor to Ort::Value (datatype)");
+        "Cannot convert Acts::Tensor to Ort::Value (datatype)");
   }
 
   bc::static_vector<std::int64_t, 2> shape;
@@ -80,12 +76,12 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-  if (torch::cuda::is_available()) {
-    ACTS_INFO("Try to add ONNX execution provider for CUDA");
-    OrtCUDAProviderOptions cuda_options;
-    cuda_options.device_id = 0;
-    sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
-  }
+#ifndef ACTS_EXATRKX_CPUONLY
+  ACTS_INFO("Try to add ONNX execution provider for CUDA");
+  OrtCUDAProviderOptions cuda_options;
+  cuda_options.device_id = 0;
+  sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
+#endif
 
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
                                            sessionOptions);
@@ -137,21 +133,17 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
-  std::optional<torch::Tensor> edgeFeatures;
+  std::optional<Acts::Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
-    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
+    // ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
     inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
 
   // Output score tensor
   ACTS_DEBUG("Create score tensor");
-  auto scores =
-      execContext.device.type == Acts::Device::Type::eCUDA
-          ? Acts::Tensor<float>::CudaAsync({tensors.edgeIndex.shape()[1], 1ul},
-                                           *execContext.stream)
-          : Acts::Tensor<float>::Cpu({tensors.edgeIndex.shape()[1], 1ul});
-
+  auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
+                                            execContext);
   std::vector<Ort::Value> outputTensors;
   outputTensors.push_back(toOnnx(memoryInfo, scores));
   std::vector<const char *> outputNames{m_outputName.c_str()};
@@ -169,19 +161,21 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   //ACTS_VERBOSE("Slice of classified output:\n"
   //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
-  sigmoid(scores, execContext);
-  auto scoresAfterCut =
-      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext);
+  sigmoid(scores, execContext.stream);
+  auto [newScores, newEdgeIndex] =
+      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext.stream);
 
   ACTS_DEBUG("Finished edge classification, after cut: "
-             << edgesAfterCut.shape()[1] << " edges.");
+             << newEdgeIndex.shape()[1] << " edges.");
 
-  if (edgesAfterCut.size(1) == 0) {
+  if (newEdgeIndex.shape()[1] == 0) {
     throw Acts::NoEdgesError{};
   }
 
-  return {std::move(tensors.nodeFeatures), std::move(edgesAfterCut),
-          std::move(tensors), std::move(scores)};
+  return {std::move(tensors.nodeFeatures),
+          std::move(newEdgeIndex),
+          {},
+          std::move(newScores)};
 }
 
 }  // namespace Acts

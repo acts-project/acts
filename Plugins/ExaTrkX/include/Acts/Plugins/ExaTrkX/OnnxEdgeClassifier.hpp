@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace Ort {
 class Env;
 class Session;
