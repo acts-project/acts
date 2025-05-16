@@ -8,16 +8,24 @@
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <iostream>
 #include <numbers>
 
 namespace Acts {
+
+GridPortalLink::GridPortalLink(std::shared_ptr<RegularSurface> surface,
+                               AxisDirection direction)
+    : PortalLinkBase(std::move(surface)), m_direction(direction) {}
+
+GridPortalLink::~GridPortalLink() = default;
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
     const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
@@ -509,6 +517,15 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 
   fillGrid1dTo2d(fillDir, *this, *grid);
   return grid;
+}
+
+std::span<const TrivialPortalLink> GridPortalLink::artifactPortalLinks() const {
+  return {m_artifactPortalLinks};
+}
+
+void GridPortalLink::setArtifactPortalLinks(
+    std::vector<TrivialPortalLink> links) {
+  m_artifactPortalLinks = std::move(links);
 }
 
 }  // namespace Acts
