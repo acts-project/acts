@@ -8,9 +8,12 @@
 
 #pragma once
 
+#include <Acts/Plugins/ExaTrkX/Tensor.hpp>
+
 #include <any>
 #include <cstdint>
 #include <exception>
+#include <optional>
 #include <vector>
 
 #include <c10/cuda/CUDAStream.h>
@@ -21,35 +24,13 @@ namespace Acts {
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
 
-/// A simple device description struct
-struct Device {
-  enum class Type { eCPU, eCUDA };
-  Type type = Type::eCPU;
-  std::size_t index = 0;
-
-  static Device Cpu() { return {Type::eCPU, 0}; }
-  static Device Cuda(std::size_t index = 0) { return {Type::eCUDA, index}; }
+/// Struct that ties together the tensors used in the GNN pipeline
+struct PipelineTensors {
+  Tensor<float> nodeFeatures;
+  Tensor<std::int64_t> edgeIndex;
+  std::optional<Tensor<float>> edgeFeatures;
+  std::optional<Tensor<float>> edgeScores;
 };
-
-inline std::ostream &operator<<(std::ostream &os, Device device) {
-  if (device.type == Device::Type::eCPU) {
-    os << "CPU";
-  } else {
-    os << "CUDA(" << device.index << ")";
-  }
-  return os;
-}
-
-/// Capture the context of the execution
-struct ExecutionContext {
-  Acts::Device device{Acts::Device::Type::eCPU};
-  std::optional<c10::cuda::CUDAStream> stream;
-};
-
-// TODO maybe replace std::any with some kind of variant<unique_ptr<torch>,
-// unique_ptr<onnx>>?
-// TODO maybe replace input for GraphConstructionBase with some kind of
-// boost::multi_array / Eigen::Array
 
 class GraphConstructionBase {
  public:
