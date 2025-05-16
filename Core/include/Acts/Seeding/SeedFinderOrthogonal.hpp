@@ -16,16 +16,12 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
-#include <iostream>
-#include <list>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 class SeedFinderOrthogonal {
  public:
@@ -57,9 +53,9 @@ class SeedFinderOrthogonal {
    * @param logger The ACTS logger.
    */
   explicit SeedFinderOrthogonal(
-      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
-      std::unique_ptr<const Acts::Logger> logger =
-          Acts::getDefaultLogger("Finder", Logging::Level::INFO));
+      const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("Finder", Logging::Level::INFO));
   /**
    * @brief Destroy the orthogonal seed finder object.
    */
@@ -104,7 +100,7 @@ class SeedFinderOrthogonal {
    * covariance of the external space point
    */
   template <typename input_container_t, typename output_container_t>
-  void createSeeds(const Acts::SeedFinderOptions &options,
+  void createSeeds(const SeedFinderOptions &options,
                    const input_container_t &spacePoints,
                    output_container_t &out_cont) const;
 
@@ -124,7 +120,7 @@ class SeedFinderOrthogonal {
    * @return A vector of seeds.
    */
   template <typename input_container_t>
-  std::vector<seed_t> createSeeds(const Acts::SeedFinderOptions &options,
+  std::vector<seed_t> createSeeds(const SeedFinderOptions &options,
                                   const input_container_t &spacePoints) const;
 
  private:
@@ -205,7 +201,7 @@ class SeedFinderOrthogonal {
    * iterator.
    *
    * @param options frequently changing configuration (like beam position)
-   * @param mutableData Container for mutable variables used in the seeding
+   * @param spacePointsMutable Container for mutable variables used in the seeding
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
@@ -215,19 +211,19 @@ class SeedFinderOrthogonal {
    */
   void filterCandidates(
       const SeedFinderOptions &options,
-      Acts::SpacePointMutableData &mutableData,
+      const InternalSpacePointContainer &spacePoints,
+      SpacePointMutableData &spacePointsMutable,
       const external_spacepoint_t &middle,
       const std::vector<const external_spacepoint_t *> &bottom,
       const std::vector<const external_spacepoint_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<const external_spacepoint_t> &candidates_collector)
-      const;
+      CandidatesForMiddleSp &candidates_collector) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
    *
    * @param options frequently changing configuration (like beam position)
-   * @param mutableData Container for mutable variables used in the seeding
+   * @param spacePointsMutable Container for mutable variables used in the seeding
    * @tparam NDims Number of dimensions for our spatial embedding (probably 3).
    * @tparam output_container_t Type of the output container.
    *
@@ -237,14 +233,14 @@ class SeedFinderOrthogonal {
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options,
-                           Acts::SpacePointMutableData &mutableData,
+                           SpacePointMutableData &spacePointsMutable,
                            const tree_t &tree, output_container_t &out_cont,
                            const typename tree_t::pair_t &middle_p) const;
 
   /**
    * @brief The configuration for the seeding algorithm.
    */
-  Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+  SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
 
   /**
    * @brief Get the logger.
@@ -254,8 +250,9 @@ class SeedFinderOrthogonal {
   /**
    * @brief The logger
    */
-  std::unique_ptr<const Acts::Logger> m_logger{getDummyLogger().clone()};
+  std::unique_ptr<const Logger> m_logger{getDummyLogger().clone()};
 };
+
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderOrthogonal.ipp"

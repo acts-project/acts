@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointMutableData.hpp"
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
@@ -61,7 +62,7 @@ void transformCoordinates(Acts::SpacePointMutableData& mutableData,
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
+    ConstInternalSpacePointProxy sp, const double* spacepointPosition,
     double* outputCoordinates);
 
 }  // namespace Acts
