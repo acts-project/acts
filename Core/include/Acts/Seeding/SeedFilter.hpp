@@ -44,8 +44,8 @@ class SeedFilter final {
   /// Create Seeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
   /// @param mutableData Container for mutable variables used in the seeding
-  /// @param bottomSP fixed bottom space point
-  /// @param middleSP fixed middle space point
+  /// @param bottomSp fixed bottom space point
+  /// @param middleSp fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
   ///                 with both bottom and middle space point
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
