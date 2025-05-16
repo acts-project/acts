@@ -35,10 +35,9 @@ struct LoopHook : public Acts::ExaTrkXHook {
 
   ~LoopHook() {}
 
-  void operator()(const std::any& nodes, const std::any& edges,
-                  const std::any& weights) const override {
+  void operator()(const Acts::PipelineTensors& tensors) const override {
     for (auto hook : hooks) {
-      (*hook)(nodes, edges, weights);
+      (*hook)(tensors);
     }
   }
 };
