@@ -10,6 +10,9 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "GeoModelKernel/throwExcept.h"
 namespace ActsExamples {
 
@@ -23,6 +26,13 @@ GeoModelDetector::GeoModelDetector(const Config& cfg)
     if (!m_cfg.geoModelTree.worldVolume) {
         THROW_EXCEPTION("Failed to load geometry from '"<<m_cfg.path<<"'");
     }
+    //// Dummy tracking geometry for the moments
+
+    auto worldTrkVol = std::make_unique<Acts::TrackingVolume>(Acts::Transform3::Identity(),
+                                                              std::make_unique<Acts::CuboidVolumeBounds>(10,10,10),
+                                                              "SmallWorld");
+    
+    m_trackingGeometry = std::make_unique<Acts::TrackingGeometry>(std::move(worldTrkVol));
 }
 
 

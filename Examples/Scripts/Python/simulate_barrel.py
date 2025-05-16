@@ -20,6 +20,7 @@ def runGeant4(
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
+    from pathlib import Path
 
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
     s.config.logLevel = acts.logging.INFO
@@ -77,11 +78,12 @@ def main():
     
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
+    gmDetectorCfg.sensitiveVols = ["MDTDriftGas"]
     detector = gm.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    # trackingGeometry = acts.TrackingGeometry()
+    trackingGeometry = detector.trackingGeometry()
     runGeant4(detector, trackingGeometry, field, args.outDir).run()
 
 
