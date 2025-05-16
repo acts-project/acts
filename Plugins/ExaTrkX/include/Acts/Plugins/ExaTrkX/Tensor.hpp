@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -19,11 +17,9 @@
 #include <optional>
 #include <ostream>
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
-typedef __device_builtin__ struct CUstream_st *cudaStream_t;
-#else
-using cudaStream_t = void *;
-#endif
+/// Forward declare cuda stream, to be able to use the header without cuda
+struct CUstream_st;
+using cudaStream_t = CUstream_st *;
 
 namespace Acts {
 

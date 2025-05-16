@@ -8,6 +8,11 @@
 
 #include "Acts/Plugins/ExaTrkX/Tensor.hpp"
 
+#ifdef ACTS_EXATRKX_WITH_CUDA
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+#endif
+
+#include <cstring>
 #include <numeric>
 
 namespace Acts {
