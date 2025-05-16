@@ -16,12 +16,11 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
-#include <numeric>
 #include <optional>
 #include <ostream>
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
-#include <cuda_runtime_api.h>
+typedef __device_builtin__ struct CUstream_st *cudaStream_t;
 #else
 using cudaStream_t = void *;
 #endif
@@ -59,6 +58,39 @@ struct ExecutionContext {
   std::optional<cudaStream_t> stream;
 };
 
+namespace detail {
+
+/// This class implements the memory management for the Acts::Tensor
+class TensorMemoryImpl {
+ public:
+  using Deleter = std::function<void(void *)>;
+
+  TensorMemoryImpl(std::size_t nbytes, const ExecutionContext &execContext);
+
+  TensorMemoryImpl(const TensorMemoryImpl &) = delete;
+  TensorMemoryImpl(TensorMemoryImpl &&) noexcept;
+
+  TensorMemoryImpl &operator=(const TensorMemoryImpl &) = delete;
+  TensorMemoryImpl &operator=(TensorMemoryImpl &&) noexcept;
+
+  ~TensorMemoryImpl();
+
+  TensorMemoryImpl clone(std::size_t nbytes, const ExecutionContext &to) const;
+
+  void *data() { return m_ptr; }
+  const void *data() const { return m_ptr; }
+
+  Acts::Device device() const { return m_device; }
+
+ private:
+  void moveConstruct(TensorMemoryImpl &&) noexcept;
+
+  void *m_ptr{};
+  Deleter m_deleter;
+  Acts::Device m_device{};
+};
+}  // namespace detail
+
 /// This is a very small, limited class that models a 2D tensor of arbitrary
 /// type. It is move-only, and only possible to create via static factory
 /// functions to ensure lifetime management.
@@ -67,28 +99,11 @@ template <typename T>
 class Tensor {
  public:
   using Shape = std::array<std::size_t, 2>;
-  using Deleter = std::function<void(T *)>;
 
   static Tensor Create(Shape shape, const ExecutionContext &execContext) {
-    T *ptr{};
-    Deleter del;
-
-    if (execContext.device.type == Acts::Device::Type::eCPU) {
-      ptr = new T[shape[0] * shape[1]];
-      del = [](T *p) { delete[] p; };
-    } else {
-#ifdef ACTS_EXATRKX_WITH_CUDA
-      assert(execContext.stream.has_value());
-      auto stream = *execContext.stream;
-      ACTS_CUDA_CHECK(cudaMallocAsync((void **)&ptr,
-                                      sizeof(T) * shape[0] * shape[1], stream));
-      del = [stream](T *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); };
-#else
-      throw std::runtime_error(
-          "Cannot create CUDA tensor, library was not compiled with CUDA");
-#endif
-    }
-    return Tensor(ptr, shape, del, execContext.device);
+    detail::TensorMemoryImpl memory(shape[0] * shape[1] * sizeof(T),
+                                    execContext);
+    return Tensor(std::move(memory), shape);
   }
 
   /// Clone the tensor, copying the data to the new device
@@ -96,74 +111,23 @@ class Tensor {
   /// @note This is a always a deep copy, even if the source and destination are the
   /// same device
   Tensor clone(const ExecutionContext &to) const {
-    auto clone = Create(m_shape, to);
-
-    if (m_device.isCpu() && to.device.isCpu()) {
-      std::memcpy(clone.data(), m_data, nbytes());
-    } else {
-#ifdef ACTS_EXATRKX_WITH_CUDA
-      assert(to.stream.has_value());
-      if (m_device.isCuda() && to.device.isCuda()) {
-        ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_data, nbytes(),
-                                        cudaMemcpyDeviceToDevice, *to.stream));
-      } else if (m_device.isCpu() && to.device.isCuda()) {
-        ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_data, nbytes(),
-                                        cudaMemcpyHostToDevice, *to.stream));
-      } else if (m_device.isCuda() && to.device.isCpu()) {
-        ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_data, nbytes(),
-                                        cudaMemcpyDeviceToHost, *to.stream));
-      }
-#else
-      throw std::runtime_error(
-          "Cannot clone CUDA tensor, library was not compiled with CUDA");
-#endif
-    }
-    return clone;
+    auto clonedMemory = m_memory.clone(nbytes(), to);
+    return Tensor(std::move(clonedMemory), m_shape);
   }
 
-  Tensor(const Tensor &) = delete;
-  Tensor &operator=(const Tensor &) = delete;
-
-  Tensor(Tensor &&other) { moveConstruct(std::move(other)); }
-
-  Tensor &operator=(Tensor &&other) {
-    moveConstruct(std::move(other));
-    return *this;
-  }
-
-  ~Tensor() {
-    if (m_deleter) {
-      m_deleter(m_data);
-    }
-  }
-
-  T *data() { return m_data; }
-  const T *data() const { return m_data; }
+  T *data() { return static_cast<T *>(m_memory.data()); }
+  const T *data() const { return static_cast<const T *>(m_memory.data()); }
   Shape shape() const { return m_shape; }
   std::size_t size() const { return m_shape[0] * m_shape[1]; }
   std::size_t nbytes() const { return size() * sizeof(T); }
-  Acts::Device device() const { return m_device; }
+  Acts::Device device() const { return m_memory.device(); }
 
  private:
-  Tensor(T *ptr, Shape shape, Deleter deleter, Acts::Device device)
-      : m_data(ptr),
-        m_shape(shape),
-        m_deleter(std::move(deleter)),
-        m_device(device) {}
+  Tensor(detail::TensorMemoryImpl memory, Shape shape)
+      : m_shape(shape), m_memory(std::move(memory)) {}
 
-  void moveConstruct(Tensor &&other) {
-    // Swap the deleters, so there is no double free
-    std::swap(m_deleter, other.m_deleter);
-    m_data = other.m_data;
-    m_shape = other.m_shape;
-    other.m_data = nullptr;
-    other.m_shape = {0ul, 0ul};
-  };
-
-  T *m_data{};
   Shape m_shape{};
-  Deleter m_deleter{};
-  Acts::Device m_device{};
+  detail::TensorMemoryImpl m_memory;
 };
 
 /// Element-wise sigmoid function for float cpu tensors

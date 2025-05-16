@@ -8,19 +8,95 @@
 
 #include "Acts/Plugins/ExaTrkX/Tensor.hpp"
 
+#include <numeric>
+
 namespace Acts {
 
 namespace detail {
+
+TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
+                                   const ExecutionContext &execContext)
+    : m_device(execContext.device) {
+  if (execContext.device.type == Acts::Device::Type::eCPU) {
+    m_ptr = std::malloc(nbytes);
+    m_deleter = [](void *p) { std::free(p); };
+  } else {
+#ifdef ACTS_EXATRKX_WITH_CUDA
+    assert(execContext.stream.has_value());
+    auto stream = *execContext.stream;
+    ACTS_CUDA_CHECK(cudaMallocAsync(&m_ptr, nbytes, stream));
+    m_deleter = [stream](void *p) {
+      ACTS_CUDA_CHECK(cudaFreeAsync(p, stream));
+    };
+#else
+    throw std::runtime_error(
+        "Cannot create CUDA tensor, library was not compiled with CUDA");
+#endif
+  }
+}
+
+TensorMemoryImpl::~TensorMemoryImpl() {
+  if (m_deleter) {
+    m_deleter(m_ptr);
+  }
+}
+
+void TensorMemoryImpl::moveConstruct(TensorMemoryImpl &&other) noexcept {
+  std::swap(m_deleter, other.m_deleter);
+  m_ptr = other.m_ptr;
+  m_device = other.m_device;
+  other.m_ptr = nullptr;
+}
+
+TensorMemoryImpl::TensorMemoryImpl(TensorMemoryImpl &&other) noexcept
+    : m_ptr(other.m_ptr), m_deleter(other.m_deleter) {
+  moveConstruct(std::move(other));
+}
+
+TensorMemoryImpl &TensorMemoryImpl::operator=(
+    TensorMemoryImpl &&other) noexcept {
+  moveConstruct(std::move(other));
+  return *this;
+}
+
+TensorMemoryImpl TensorMemoryImpl::clone(std::size_t nbytes,
+                                         const ExecutionContext &to) const {
+  auto clone = TensorMemoryImpl(nbytes, to);
+  if (m_device.isCpu() && to.device.isCpu()) {
+    std::memcpy(clone.data(), m_ptr, nbytes);
+  } else {
+#ifdef ACTS_EXATRKX_WITH_CUDA
+    assert(to.stream.has_value());
+    if (m_device.isCuda() && to.device.isCuda()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr, nbytes,
+                                      cudaMemcpyDeviceToDevice, *to.stream));
+    } else if (m_device.isCpu() && to.device.isCuda()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr, nbytes,
+                                      cudaMemcpyHostToDevice, *to.stream));
+    } else if (m_device.isCuda() && to.device.isCpu()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr, nbytes,
+                                      cudaMemcpyDeviceToHost, *to.stream));
+    }
+#else
+    throw std::runtime_error(
+        "Cannot clone CUDA tensor, library was not compiled with CUDA");
+#endif
+  }
+  return clone;
+}
+
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream);
+
 std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
     const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
     float cut, cudaStream_t stream);
+
 }  // namespace detail
 
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   if (tensor.device().type == Acts::Device::Type::eCUDA) {
 #ifdef ACTS_EXATRKX_WITH_CUDA
-    return detail::cudaSigmoid(tensor, *stream);
+    return Acts::detail::cudaSigmoid(tensor, *stream);
 #else
     throw std::runtime_error(
         "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
