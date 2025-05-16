@@ -14,7 +14,6 @@
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
