@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <limits>
+
 namespace Acts {
 
 template <SatisfyCandidateConcept external_space_point_t>
@@ -70,23 +72,23 @@ inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
 
 template <SatisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
-    external_space_point_t& SpB, external_space_point_t& SpM,
-    external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
+    external_space_point_t& spB, external_space_point_t& spM,
+    external_space_point_t& spT, float weight, float zOrigin, bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
-    return push(m_indicesHigh, m_nHigh, m_maxSizeHigh, SpB, SpM, SpT, weight,
+    return push(m_indicesHigh, m_nHigh, m_maxSizeHigh, spB, spM, spT, weight,
                 zOrigin, isQuality);
   }
-  return push(m_indicesLow, m_nLow, m_maxSizeLow, SpB, SpM, SpT, weight,
+  return push(m_indicesLow, m_nLow, m_maxSizeLow, spB, spM, spT, weight,
               zOrigin, isQuality);
 }
 
 template <SatisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
     std::vector<std::size_t>& indices, std::size_t& n, const std::size_t nMax,
-    external_space_point_t& SpB, external_space_point_t& SpM,
-    external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
+    external_space_point_t& spB, external_space_point_t& spM,
+    external_space_point_t& spT, float weight, float zOrigin, bool isQuality) {
   // If we do not want to store candidates, returns
   if (nMax == 0) {
     return false;
@@ -95,7 +97,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
   // if there is still space, add anything
   if (n < nMax) {
     addToCollection(indices, n, nMax,
-                    value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
+                    value_type(spB, spM, spT, weight, zOrigin, isQuality));
     return true;
   }
 
@@ -108,7 +110,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
   // remove element with lower weight and add this one
   pop(indices, n);
   addToCollection(indices, n, nMax,
-                  value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
+                  value_type(spB, spM, spT, weight, zOrigin, isQuality));
   return true;
 }
 
