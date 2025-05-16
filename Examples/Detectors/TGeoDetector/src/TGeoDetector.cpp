@@ -161,7 +161,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detElementStore,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator,
     const Acts::Logger& logger) {
   // configure surface array creator
   Acts::SurfaceArrayCreator::Config sacConfig;
@@ -306,7 +306,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // create the tracking geometry
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the builders
-  tgConfig.materialDecorator = std::move(mdecorator);
+  tgConfig.materialDecorator = std::move(materialDecorator);
   tgConfig.geometryIdentifierHook = config.geometryIdentifierHook;
 
   for (auto& vb : volumeBuilders) {

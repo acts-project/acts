@@ -13,7 +13,7 @@ oddDir = getOpenDataDetectorDirectory()
 oddMaterialMap = oddDir / "data/odd-material-maps.root"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(mdecorator=oddMaterialDeco)
+detector = getOpenDataDetector(materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 ```
