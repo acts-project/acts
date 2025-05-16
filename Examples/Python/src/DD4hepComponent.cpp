@@ -13,6 +13,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepAlignmentDecorator.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include <memory>
@@ -44,7 +45,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
                        bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
                        defaultLayerThickness, materialDecorator,
-                       geometryIdentifierHook);
+                       alignmentDecorator, geometryIdentifierHook);
 
     patchKwargsConstructor(c);
   }
@@ -85,6 +86,36 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
             // Visit the surfaces & return what you have
             tGeometry.visitSurfaces(dd4hepIdGrabber);
             return dd4hepIdGrabber.dd4hepIdGeoIdMap;
+          });
+  }
+
+  {
+    py::class_<ActsExamples::DD4hepAlignmentDecorator,
+               ActsExamples::IContextDecorator,
+               std::shared_ptr<ActsExamples::DD4hepAlignmentDecorator>>(
+        m, "DD4hepAlignmentDecorator")
+        .def(py::init<const ActsExamples::DD4hepAlignmentDecorator::Config&>())
+        .def("decorate", &ActsExamples::DD4hepAlignmentDecorator::decorate)
+        .def("name", &ActsExamples::DD4hepAlignmentDecorator::name);
+
+    m.def("createAlignmentDecorator",
+          [&](const std::string& fileName, Acts::Logging::Level logLevel)
+              -> std::shared_ptr<ActsExamples::DD4hepAlignmentDecorator> {
+            // No file name, return
+            if (fileName.empty()) {
+              return nullptr;
+            }
+
+            auto logger =
+                Acts::getDefaultLogger("DD4hepAlignmentDecorator", logLevel);
+            // auto alignmentStore =
+            //     std::make_shared<Acts::DD4hepAlignmentStore>(fileName,
+            //     logger);
+            auto decorator =
+                std::make_shared<ActsExamples::DD4hepAlignmentDecorator>(
+                    ActsExamples::DD4hepAlignmentDecorator::Config{});
+            //        {{0, alignmentStore}}});
+            return decorator;
           });
   }
 

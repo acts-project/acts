@@ -72,6 +72,8 @@ class DD4hepDetector : public Detector {
     double defaultLayerThickness = 1e-10;
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
+    /// Alignment decorator
+    std::shared_ptr<IContextDecorator> alignmentDecorator = nullptr;
     /// Material decorator
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
 
@@ -93,6 +95,13 @@ class DD4hepDetector : public Detector {
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();
 
+  /// The DD4hep context decorators
+  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators()
+      const override;
+
+  /// @brief This returns a  Geant4 detector construction object
+  /// @param options  The Geant4 construction options
+  /// @return  A unique pointer to the Geant4 detector construction object
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 

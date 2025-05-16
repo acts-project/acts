@@ -57,6 +57,15 @@ TGeoNode& DD4hepDetector::tgeoGeometry() {
   return *m_detector->world().placement().ptr();
 }
 
+std::vector<std::shared_ptr<IContextDecorator>>
+DD4hepDetector::contextDecorators() const {
+  std::vector<std::shared_ptr<IContextDecorator>> decorators;
+  if (m_cfg.alignmentDecorator) {
+    decorators.push_back(m_cfg.alignmentDecorator);
+  }
+  return decorators;
+}
+
 std::unique_ptr<dd4hep::Detector> DD4hepDetector::buildDD4hepGeometry() const {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
