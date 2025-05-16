@@ -23,7 +23,6 @@
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 
 // System include(s).

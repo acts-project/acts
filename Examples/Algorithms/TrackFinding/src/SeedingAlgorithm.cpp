@@ -273,7 +273,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // run the seeding
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
-  static thread_local decltype(m_seedFinder)::SeedingState state;
+  static thread_local decltype(m_seedFinder)::State state;
   state.spacePointMutableData.resize(spContainer.size());
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
