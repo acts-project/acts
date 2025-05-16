@@ -16,10 +16,17 @@
 
 namespace ActsExamples {
 
+/** @brief Detector implementation to convert GeoModelTrees to the Geant4 
+ *         geometry description. */
 struct GeoModelDetector : public Detector {
   struct Config {
-    std::string path;
-
+    /** @brief Define which Geant4 volumes are defined to be sensitive.
+     *         I.e. the step through the volume is recorded. */
+    std::vector<std::string> sensitiveVols{};
+    /** @brief Configured instance to the GeoModel loaded geoModel tree */
+    Acts::GeoModelTree geoModelTree{};
+    /** @brief Path to the GeoModel file. Used if the GeoModelTree remains unconfigured*/
+    std::string path{};
     /// Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
@@ -30,8 +37,7 @@ struct GeoModelDetector : public Detector {
       const Geant4ConstructionOptions& options) const override;
 
  private:
-  Config m_cfg;
-  Acts::GeoModelTree m_geoModel;
+  Config m_cfg{};
 };
 
 }  // namespace ActsExamples

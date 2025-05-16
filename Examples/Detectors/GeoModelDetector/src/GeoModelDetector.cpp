@@ -10,13 +10,20 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-
+#include "GeoModelKernel/throwExcept.h"
 namespace ActsExamples {
 
 GeoModelDetector::GeoModelDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GeoModelDetector", cfg.logLevel)),
       m_cfg(cfg) {
-  m_geoModel = Acts::GeoModelReader::readFromDb(m_cfg.path);
+
+    if(!m_cfg.geoModelTree.worldVolume) {
+        m_cfg.geoModelTree = Acts::GeoModelReader::readFromDb(m_cfg.path);
+    }
+    if (!m_cfg.geoModelTree.worldVolume) {
+        THROW_EXCEPTION("Failed to load geometry from '"<<m_cfg.path<<"'");
+    }
 }
+
 
 }  // namespace ActsExamples

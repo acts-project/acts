@@ -67,10 +67,10 @@ class GeoModelDetectorObjectFactory {
 
   std::vector<GeoChildNodeWithTrf> findAllSubVolumes(const PVConstLink& vol);
 
-  bool convertBox(std::string name);
+  bool convertBox(const std::string& name);
   bool matches(const std::string& name, const PVConstLink& physvol);
 
-  void convertFpv(const std::string& name, GeoFullPhysVol* fpv, Cache& cache,
+  void convertFpv(const std::string& name, const GeoFullPhysVol* fpv, Cache& cache,
                   const GeometryContext& gctx);
 
  private:

@@ -14,7 +14,7 @@ namespace ActsExamples {
 std::unique_ptr<G4VUserDetectorConstruction>
 GeoModelDetector::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& options) const {
-  return std::make_unique<GeoModelGeant4DetectorConstruction>(m_geoModel,
+  return std::make_unique<GeoModelGeant4DetectorConstruction>(m_cfg.geoModelTree,
                                                               options);
 }
 
