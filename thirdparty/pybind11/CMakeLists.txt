@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 include(FetchContent)
 
 # Tell the user what's happening.
-message(STATUS "Stonjek: Building pybind11 as part of the ACTS project")
+message(STATUS "Building pybind11 as part of the ACTS project")
 
 # Declare where to get pybind from.
 FetchContent_Declare(pybind11 SYSTEM ${ACTS_PYBIND11_SOURCE})
