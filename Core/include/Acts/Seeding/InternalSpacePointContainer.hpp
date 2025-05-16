@@ -14,6 +14,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iterator>
+#include <optional>
 #include <utility>
 
 namespace Acts {

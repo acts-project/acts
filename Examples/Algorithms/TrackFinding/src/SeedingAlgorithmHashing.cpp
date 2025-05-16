@@ -30,23 +30,19 @@
 #include <csignal>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
-    ActsExamples::SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SeedingAlgorithmHashing", lvl),
-      m_cfg(std::move(cfg)) {
+SeedingAlgorithmHashing::SeedingAlgorithmHashing(
+    SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("SeedingAlgorithmHashing", lvl), m_cfg(std::move(cfg)) {
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -194,7 +190,7 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
           m_cfg.hashingTrainingConfig);
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
+ProcessCode SeedingAlgorithmHashing::execute(
     const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Start of SeedingAlgorithmHashing execute");
   using SpacePointPtrVector = std::vector<const SimSpacePoint*>;
@@ -245,25 +241,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   }
 
   using value_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
   // Create the set with custom comparison function
-  static thread_local std::set<ActsExamples::SimSeed,
-                               SeedComparison<SimSpacePoint>>
-      seedsSet;
+  static thread_local std::set<SimSeed, SeedComparison<SimSpacePoint>> seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointMutableData.resize(maxNSpacePoints);
 
   for (SpacePointPtrVector& bucket : bucketsPtrs) {
     std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;
-    state.spacePointMutableData.clear();
-    state.spacePointMutableData.resize(maxNSpacePoints);
 
     // Prepare interface SpacePoint backend-ACTS
-    ActsExamples::SpacePointContainer<SpacePointPtrVector> container(bucket);
+    SpacePointContainer<SpacePointPtrVector> container(bucket);
     // Prepare Acts API
     Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
         spContainer(spConfig, spOptions, container);
@@ -320,7 +311,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
       const SimSpacePoint* middle = sps[1]->externalSpacePoint();
       const SimSpacePoint* top = sps[2]->externalSpacePoint();
 
-      ActsExamples::SimSeed toAdd(*bottom, *middle, *top);
+      SimSeed toAdd(*bottom, *middle, *top);
       toAdd.setVertexZ(seed.z());
       toAdd.setQuality(seed.seedQuality());
 
@@ -329,9 +320,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   }
 
   // convert the set to a simseed collection
-  ActsExamples::SimSeedContainer seeds;
+  SimSeedContainer seeds;
   seeds.reserve(seedsSet.size());
-  for (const ActsExamples::SimSeed& seed : seedsSet) {
+  for (const SimSeed& seed : seedsSet) {
     seeds.push_back(seed);
   }
 
@@ -350,5 +341,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   m_outputBuckets(ctx, std::vector<SimSpacePointContainer>{buckets});
 
   ACTS_DEBUG("End of SeedingAlgorithmHashing execute");
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
