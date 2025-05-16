@@ -127,11 +127,12 @@ class GroupBy {
   }
 };
 
-/// Construct the group-by proxy for a container.
-template <typename Container, typename KeyGetter>
-auto makeGroupBy(const Container& container, KeyGetter keyGetter)
-    -> GroupBy<decltype(std::begin(container)), KeyGetter> {
-  return {std::begin(container), std::end(container), std::move(keyGetter)};
+/// Construct the group-by proxy for a range.
+template <std::ranges::range Range, typename KeyGetter>
+auto makeGroupBy(Range&& range, KeyGetter keyGetter)
+    -> GroupBy<decltype(std::ranges::begin(range)), KeyGetter> {
+  return {std::ranges::begin(range), std::ranges::end(range),
+          std::move(keyGetter)};
 }
 
 }  // namespace ActsExamples
