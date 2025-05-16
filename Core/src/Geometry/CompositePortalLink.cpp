@@ -187,6 +187,16 @@ void CompositePortalLink::toStream(std::ostream& os) const {
 std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     const GeometryContext& gctx, const Logger& logger) const {
   ACTS_VERBOSE("Attempting to make a grid from a composite portal link");
+
+  if (std::ranges::any_of(m_children, [](const auto& child) {
+        return dynamic_cast<const TrivialPortalLink*>(child.get()) == nullptr;
+      })) {
+    ACTS_ERROR(
+        "Cannot make a grid from a composite portal link with "
+        "non-trivial children");
+    return nullptr;
+  }
+
   std::vector<TrivialPortalLink> trivialLinks;
   std::ranges::transform(
       m_children, std::back_inserter(trivialLinks),
