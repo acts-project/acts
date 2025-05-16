@@ -11,7 +11,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
-#include <cuda_runtime_api.h>
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 
 namespace {
 struct CudaStreamGuard {
@@ -74,7 +74,6 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
     hook(tensors);
 
-    std::any edgeScores;
     timing->classifierTimes.clear();
 
     for (const auto &edgeClassifier : m_edgeClassifiers) {

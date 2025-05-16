@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/Tensor.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 
 #include <thrust/copy.h>
 #include <thrust/count.h>
