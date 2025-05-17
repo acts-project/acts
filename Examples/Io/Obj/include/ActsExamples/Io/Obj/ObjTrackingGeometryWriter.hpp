@@ -41,13 +41,15 @@ class ObjTrackingGeometryWriter {
    public:
     double outputScalor = 1.0;        ///< scale output values
     std::size_t outputPrecision = 6;  ///< floating point precision
-    std::string outputDir = ".";
+    std::filesystem::path outputDir = ".";
 
     Acts::ViewConfig containerView = {.color = {220, 220, 220}};
     Acts::ViewConfig volumeView = {.color = {220, 220, 0}};
     Acts::ViewConfig sensitiveView = {.color = {0, 180, 240}};
     Acts::ViewConfig passiveView = {.color = {240, 280, 0}};
     Acts::ViewConfig gridView = {.color = {220, 0, 0}};
+
+    Acts::ViewConfig portalView = passiveView;
   };
 
   /// Constructor
@@ -75,7 +77,7 @@ class ObjTrackingGeometryWriter {
   /// @param context the Algorithm/Event context for this call
   /// @param tVolume the volume to be processed
   void write(const AlgorithmContext& context,
-             const Acts::TrackingVolume& tVolume);
+             const Acts::TrackingVolume& tVolume, bool gen3 = false);
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
