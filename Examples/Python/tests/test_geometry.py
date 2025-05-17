@@ -12,7 +12,11 @@ from helpers import dd4hepEnabled
     "detectorFactory,aligned,nobj",
     [
         (functools.partial(GenericDetector, gen3=False), True, 450),
-        pytest.param(functools.partial(GenericDetector, gen3=True), True, 2),
+        pytest.param(
+            functools.partial(GenericDetector, gen3=True),
+            True,
+            2,  # Gen3 geometry visualiztion produces a single file + materials
+        ),
         pytest.param(
             getOpenDataDetector,
             True,
