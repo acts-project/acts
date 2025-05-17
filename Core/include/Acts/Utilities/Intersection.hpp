@@ -16,6 +16,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <span>
+#include <type_traits>
 
 #include <boost/container/static_vector.hpp>
 
@@ -44,16 +46,33 @@ template <unsigned int DIM>
 class Intersection {
  public:
   /// Position type
-  using Position = ActsVector<DIM>;
+  using Position = Eigen::Map<const ActsVector<DIM>>;
 
   /// Constructor with arguments
   ///
   /// @param position is the position of the intersection
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
+  constexpr Intersection(const ActsVector<DIM>& position, double pathLength,
+                         IntersectionStatus status) noexcept
+      : Intersection(std::span<const double, DIM>{position.data(), DIM},
+                     pathLength, status) {}
+
   constexpr Intersection(const Position& position, double pathLength,
-                         IntersectionStatus status)
-      : m_position(position), m_pathLength(pathLength), m_status(status) {}
+                         IntersectionStatus status) noexcept
+      : Intersection(std::span<const double, DIM>{position.data(), DIM},
+                     pathLength, status) {}
+
+  constexpr Intersection(std::span<const double, DIM> position,
+                         double pathLength, IntersectionStatus status) noexcept
+      : m_pathLength(pathLength), m_status(status) {
+    std::ranges::copy(position, m_position.begin());
+  }
+
+  Intersection(const Intersection&) noexcept = default;
+  Intersection(Intersection&&) noexcept = default;
+  Intersection& operator=(const Intersection&) noexcept = default;
+  Intersection& operator=(Intersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const {
@@ -61,7 +80,7 @@ class Intersection {
   }
 
   /// Returns the position of the interseciton
-  constexpr const Position& position() const { return m_position; }
+  constexpr Position position() const { return Position{m_position.data()}; }
 
   /// Returns the path length to the interseciton
   constexpr double pathLength() const { return m_pathLength; }
@@ -111,7 +130,7 @@ class Intersection {
 
  private:
   /// Position of the intersection
-  Position m_position = Position::Zero();
+  std::array<double, DIM> m_position{};
   /// Signed path length to the intersection (if valid)
   double m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
@@ -122,6 +141,10 @@ class Intersection {
 
 using Intersection2D = Intersection<2>;
 using Intersection3D = Intersection<3>;
+
+static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
+static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
+static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
 static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
 using MultiIntersection3D =
@@ -137,8 +160,14 @@ class ObjectIntersection {
   /// @param object is the object to be instersected
   /// @param index is the intersection index
   constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object, std::uint8_t index = 0)
+                               const object_t* object,
+                               std::uint8_t index = 0) noexcept
       : m_intersection(intersection), m_object(object), m_index(index) {}
+
+  ObjectIntersection(const ObjectIntersection&) noexcept = default;
+  ObjectIntersection(ObjectIntersection&&) noexcept = default;
+  ObjectIntersection& operator=(const ObjectIntersection&) noexcept = default;
+  ObjectIntersection& operator=(ObjectIntersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
@@ -149,7 +178,7 @@ class ObjectIntersection {
   }
 
   /// Returns the position of the interseciton
-  constexpr const Intersection3D::Position& position() const {
+  Intersection3D::Position position() const {
     return m_intersection.position();
   }
 
@@ -201,6 +230,9 @@ class ObjectIntersection {
 
   constexpr ObjectIntersection() = default;
 };
+
+static_assert(std::is_trivially_move_constructible_v<ObjectIntersection<int>>);
+static_assert(std::is_trivially_move_assignable_v<ObjectIntersection<int>>);
 
 template <typename object_t>
 class ObjectMultiIntersection {

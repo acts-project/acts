@@ -25,10 +25,14 @@ struct NavigationArguments {
   Vector3 direction;
 
   BoundaryTolerance tolerance = BoundaryTolerance::None();
+
+  bool wantsPortals = true;
+  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support
 /// (type-erased) navigation delegate chains (i.e. multiple policies).
+// @TODO: Add geometry context to navigation delegate signature
 using NavigationDelegate = OwningDelegate<void(
     const NavigationArguments&, AppendOnlyNavigationStream&, const Logger&)>;
 
