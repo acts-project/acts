@@ -52,7 +52,7 @@ def runGeometry(
 
         if outputObj:
             writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=str(outputDir / "obj")
+                level=acts.logging.INFO, outputDir=outputDir / "obj"
             )
             writer.write(context, trackingGeometry)
 
