@@ -70,7 +70,7 @@ void addGeoModel(Context& ctx) {
 
     auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, geoModelTree, logLevel, sensitiveVols, path);
+    ACTS_PYTHON_STRUCT(c, geoModelTree, logLevel, path);
 
     // patch the constructor
     patchKwargsConstructor(c);
