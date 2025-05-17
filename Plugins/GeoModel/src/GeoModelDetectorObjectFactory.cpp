@@ -32,30 +32,8 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
+#include <GeoModelHelpers/GeoShapeUtils.h>
 
-namespace {
-std::string recType(const GeoShapeShift &gshift);
-std::string recType(const GeoShapeUnion &gunion);
-std::string recType(const GeoShape &gshape);
-
-std::string recType(const GeoShapeShift &gshift) {
-  return "Shift[" + recType(*gshift.getOp()) + "]";
-}
-std::string recType(const GeoShapeUnion &gunion) {
-  return "Union[" + recType(*gunion.getOpA()) + ", " +
-         recType(*gunion.getOpB()) + "]";
-}
-std::string recType(const GeoShape &gshape) {
-  if (auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr) {
-    return recType(*ptr);
-  }
-  if (auto ptr = dynamic_cast<const GeoShapeShift *>(&gshape); ptr != nullptr) {
-    return recType(*ptr);
-  }
-  return gshape.type();
-}
-
-}  // namespace
 
 namespace Acts {
 Acts::GeoModelDetectorObjectFactory::GeoModelDetectorObjectFactory(
@@ -81,6 +59,7 @@ void Acts::GeoModelDetectorObjectFactory::construct(
       if (!matches(name, physVol)) {
         continue;
       }
+      ACTS_INFO("Convert volume "<<name);
       convertFpv(name, fpv, cache, gctx);
     }
   }
@@ -96,7 +75,8 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::geoShapesConverters(shapeId);
   if (converter == nullptr) {
-    throw std::runtime_error("The converter for " + recType(*shape) +
+    
+    throw std::runtime_error("The converter for " + printGeoShape(shape) +
                              " is nullptr");
   }
 
@@ -104,10 +84,9 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
   if (converted.ok()) {
     sensitives.push_back(converted.value());
     const auto &[el, sf] = converted.value();
-    auto ss = std::get<1>(converted.value());
 
-    ACTS_VERBOSE("(successfully converted: "
-                 << name << " / " << recType(*shape) << " / "
+    ACTS_INFO("(successfully converted: "
+                 << name << " / " << printGeoShape(shape) << " / "
                  << logVol->getMaterial()->getName() << ")");
 
     if (!el || !sf) {
@@ -116,7 +95,7 @@ void Acts::GeoModelDetectorObjectFactory::convertSensitive(
     }
     return;
   }
-  ACTS_ERROR(name << " / " << recType(*shape)
+  ACTS_ERROR(name << " / " << printGeoShape(shape)
                   << ") could not be converted by any converter");
 }
 
@@ -124,7 +103,7 @@ std::vector<GeoChildNodeWithTrf>
 Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) {
   std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(vol, false);
   std::vector<GeoChildNodeWithTrf> sensitives;
-  for (auto subvolume : subvolumes) {
+  for (auto& subvolume : subvolumes) {
     if (matches(subvolume.nodeName, subvolume.volume)) {
       sensitives.push_back(subvolume);
     }
@@ -141,7 +120,7 @@ Acts::GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) {
   return sensitives;
 }
 
-bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
+bool Acts::GeoModelDetectorObjectFactory::convertBox(const std::string& name) {
   auto convB = std::ranges::any_of(m_cfg.convertBox, [&](const auto &n) {
     return name.find(n) != std::string::npos;
   });
@@ -149,7 +128,7 @@ bool Acts::GeoModelDetectorObjectFactory::convertBox(std::string name) {
 }
 
 void Acts::GeoModelDetectorObjectFactory::convertFpv(
-    const std::string &name, GeoFullPhysVol *fpv, Cache &cache,
+    const std::string &name, const GeoFullPhysVol *fpv, Cache &cache,
     const GeometryContext &gctx) {
   const auto prevSize = cache.sensitiveSurfaces.size();
   PVConstLink physVol{fpv};
@@ -162,16 +141,15 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   std::vector<GeoModelSensitiveSurface> sensitives;
 
   for (const auto &surface : surfaces) {
-    const Transform3 &transform =
-        fpv->getAbsoluteTransform() * surface.transform;
+    const Transform3 transform = fpv->getAbsoluteTransform() * surface.transform;
     convertSensitive(surface.volume, transform, sensitives);
   }
   cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
                                  sensitives.begin(), sensitives.end());
+  // Extract the bounding box surrounding the surface
   if (convertBox(name)) {
-    const GeoLogVol *logVol =
-        physVol->getLogVol();  // get logVol for the shape of the volume
-    const GeoShape *shape = logVol->getShape();  // get shape
+    // get logVol for the shape of the volume
+    const GeoShape *shape = physVol->getLogVol()->getShape();  // get shape
     const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
     // convert bounding boxes with surfaces inside
@@ -191,6 +169,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
     auto &[detEl, _] = cache.sensitiveSurfaces[i];
     detEl->setDatabaseEntryName(name);
+    ACTS_INFO("What's my name? "<<detEl->databaseEntryName());
   }
 }
 // function to determine if object fits query
@@ -211,8 +190,6 @@ bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
       [&](const auto &m) { return matStr.find(m) != std::string::npos; });
 
   bool match = matchMaterial && matchName;
-  GeoIntrusivePtr<const GeoVFullPhysVol> fullVol =
-      dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
 
   // for the fullphysvol we only check the name
   if (m_cfg.nameList.empty()) {
@@ -220,7 +197,7 @@ bool Acts::GeoModelDetectorObjectFactory::matches(const std::string &name,
   }
 
   // if no material specified or we're looking at fpv judge by name only
-  if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
+  if (m_cfg.materialList.empty() || dynamic_pointer_cast<const GeoVFullPhysVol>(physvol)) {
     return matchName;
   }
   return match;

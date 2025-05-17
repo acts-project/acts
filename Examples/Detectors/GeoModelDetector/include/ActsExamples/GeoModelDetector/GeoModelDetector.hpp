@@ -16,10 +16,14 @@
 
 namespace ActsExamples {
 
+/** @brief Detector implementation to connect the GeoModel detector description with the 
+ *         translation to the G4 geometry and with the tracking geometry. */
 struct GeoModelDetector : public Detector {
   struct Config {
-    std::string path;
-
+    /** @brief Configured instance to the GeoModel loaded geoModel tree */
+    Acts::GeoModelTree geoModelTree{};
+    /** @brief Path to the GeoModel file. Used if the GeoModelTree remains unconfigured*/
+    std::string path{};
     /// Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
@@ -30,8 +34,7 @@ struct GeoModelDetector : public Detector {
       const Geant4ConstructionOptions& options) const override;
 
  private:
-  Config m_cfg;
-  Acts::GeoModelTree m_geoModel;
+  Config m_cfg{};
 };
 
 }  // namespace ActsExamples
