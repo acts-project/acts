@@ -15,8 +15,8 @@ def runGeant4(
     trackingGeometry,
     field,
     outputDir,
-    materialMappings=["Silicon"],
-    volumeMappings=[],
+    materialMappings=[],
+    volumeMappings=["MDTDriftGas"],
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
@@ -78,7 +78,6 @@ def main():
     
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
-    gmDetectorCfg.sensitiveVols = ["MDTDriftGas"]
     detector = gm.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

@@ -182,7 +182,6 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       remapSensitiveNames(state, gctx, g4LogicalVolume->GetDaughter(id),
                           localG4ToGlobal);
     }
-    return;
   }
 
   const std::string& volumeName{g4LogicalVolume->GetName()};
@@ -204,6 +203,8 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                  << ") were not found");
     return;
   }
+  ACTS_VERBOSE("Attempt to map "<<g4PhysicalVolume->GetName() << "' at "
+  << g4AbsPosition.transpose()<<" to the tracking geometry");
 
   // Prepare the mapped surface
   const Acts::Surface* mappedSurface = nullptr;
