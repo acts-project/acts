@@ -9,6 +9,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
@@ -16,6 +18,7 @@
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
@@ -196,6 +199,51 @@ void addJson(Context& ctx) {
 
     m.def("readDetectorElementsFromJson",
           Acts::JsonSurfacesReader::readDetectorElements);
+
+    m.def("writeIdentifiedTransforms",
+          [](const Acts::GeometryContext& gctx,
+             const Acts::TrackingGeometry& tGeometry, const std::string& fname,
+             bool compress = true,
+             const std::vector<Acts::GeometryIdentifier>& selection = {}) {
+            // Run through the entire hierarchy map and fill it into a
+            // convenient multimap
+            std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
+                identifiedTransforms;
+
+            ActsExamples::GeometryIdMultiset<const Acts::Surface*>
+                surfaceMultiSet;
+            for (const auto& [geoId, surface] : tGeometry.geoIdSurfaceMap()) {
+              if (selection.empty()) {
+                identifiedTransforms.emplace_hint(identifiedTransforms.end(),
+                                                  geoId,
+                                                  surface->transform(gctx));
+              } else {
+                surfaceMultiSet.emplace_hint(surfaceMultiSet.end(), surface);
+              }
+            }
+            // The path of the selection
+            if (!selection.empty()) {
+              for (const auto& sId : selection) {
+                auto selectedSurfaces =
+                    ActsExamples::selectLowestNonZeroGeometryObject(
+                        surfaceMultiSet, sId);
+                for (const auto& surface : selectedSurfaces) {
+                  identifiedTransforms.emplace(surface->geometryId(),
+                                               surface->transform(gctx));
+                }
+              }
+            }
+            // Now write
+            std::ofstream jsonOut;
+            jsonOut.open(fname);
+            Acts::IdentifiedTransform3JsonConverter::Options ijOptions;
+            ijOptions.compressIdentifier = compress;
+            auto jIdentifiedTransforms =
+                Acts::IdentifiedTransform3JsonConverter::toJson(
+                    identifiedTransforms, ijOptions);
+            jsonOut << jIdentifiedTransforms.dump(4);
+            jsonOut.close();
+          });
   }
 
   {

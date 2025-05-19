@@ -24,10 +24,17 @@ class DD4hepDetectorElement;
 /// detector elements.
 class DD4hepGeometryContext {
  public:
-  using AlignmentStore =
+  /// @brief Definition of an alignment delegate
+  using Alignment =
       Delegate<const Acts::Transform3*(const DD4hepDetectorElement&)>;
 
+  /// Disconnected geometry context
   DD4hepGeometryContext() {}
+
+  /// Explicit constructor from an alignment delegate
+  /// @param alignment the alignment delegate representing this
+  explicit DD4hepGeometryContext(Alignment alignment) 
+   : m_alignment(std::move(alignment)){}
 
   /// Check if a contextual transform is available for this detector element
   ///
@@ -39,13 +46,13 @@ class DD4hepGeometryContext {
   /// @return a pointer to the transform if found, otherwise nullptr
   const Transform3* contextualTransform(
       const DD4hepDetectorElement& detElem) const {
-    if (m_alignmentStore.connected()) {
-      return m_alignmentStore(detElem);
+    if (m_alignment.connected()) {
+      return m_alignment(detElem);
     }
     return nullptr;
   }
 
  private:
-  AlignmentStore m_alignmentStore;
+ Alignment m_alignment;
 };
 }  // namespace Acts

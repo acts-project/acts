@@ -8,7 +8,10 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
+#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
+
 #include <array>
+#include <iostream>
 #include <stdexcept>
 
 void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
@@ -80,4 +83,44 @@ Acts::Transform3 Acts::Transform3JsonConverter::fromJson(
   Transform3 t = Transform3::Identity();
   Acts::from_json(jTransform, t);
   return t;
+}
+
+nlohmann::json Acts::IdentifiedTransform3JsonConverter::toJson(
+    const Collection& identifiedTransforms, const Options& options) {
+  nlohmann::json jIdentifiedTransforms;
+
+  for (const auto& [geometryId, transform] : identifiedTransforms) {
+    nlohmann::json jit;
+    // The compressed option
+    if (options.compressIdentifier) {
+      jit["geo_id"] = geometryId.value();
+    } else {
+      jit["geo_id"] =
+          GeometryHierarchyMapJsonConverter<int>::encodeIdentifier(geometryId);
+    }
+    jit["transform"] =
+        Transform3JsonConverter::toJson(transform, options.transformOptions);
+    jIdentifiedTransforms.push_back(jit);
+  }
+  return jIdentifiedTransforms;
+}
+
+Acts::IdentifiedTransform3JsonConverter::Collection
+Acts::IdentifiedTransform3JsonConverter::fromJson(
+    const nlohmann::json& jIdentifiedTransforms) {
+  Collection identifiedTransforms;
+
+  for (const auto& jit : jIdentifiedTransforms) {
+    GeometryIdentifier geoId;
+    nlohmann::json jGeoId = jit["geo_id"];
+    if (jGeoId.size() == 1) {
+      geoId = GeometryIdentifier(jGeoId.get<GeometryIdentifier::Value>());
+    } else {
+      geoId = GeometryHierarchyMapJsonConverter<int>::decodeIdentifier(jGeoId);
+    }
+    auto transform = Transform3JsonConverter::fromJson(jit["transform"]);
+    identifiedTransforms[geoId] = transform;
+  }
+
+  return identifiedTransforms;
 }

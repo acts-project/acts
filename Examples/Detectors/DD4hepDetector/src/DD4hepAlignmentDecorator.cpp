@@ -41,6 +41,9 @@ ActsExamples::ProcessCode ActsExamples::DD4hepAlignmentDecorator::decorate(
         ", check IOV bounds and/or configuration of nominal alignment store");
   }
 
-  context.geoContext = Acts::DD4hepDetectorElement::ContextType();
+  // Create a DetectorElement alignment store for this context
+  Acts::DD4hepGeometryContext::Alignment currentAlignment; 
+  currentAlignment.connect<&Acts::IDD4hepAlignmentStore::contextualTransform>(currentStore.get());
+  context.geoContext = Acts::DD4hepGeometryContext(currentAlignment);
   return ActsExamples::ProcessCode::SUCCESS;
 }

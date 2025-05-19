@@ -25,7 +25,7 @@ class IDD4hepAlignmentStore {
 
   /// @brief  Get the alignment transform for a given DD4hep detector element
   /// @param dd4hepElement the DD4hep detector element for which the alignment is queried
-  /// @return a pointer to the transform if round, otherwise nullptr
+  /// @return a pointer to the transform if found, otherwise nullptr
   virtual const Transform3* contextualTransform(
       const DD4hepDetectorElement& dd4hepElement) const = 0;
 };
@@ -39,15 +39,15 @@ class DD4hepAlignmentStoreGeometryId : public IDD4hepAlignmentStore {
   /// @param transformMap the map of geometry ids and transforms
   DD4hepAlignmentStoreGeometryId(
       std::unordered_map<GeometryIdentifier, Acts::Transform3> transformMap)
-      : m_transformMap(std::move(transformMap)) {}
+      : m_identifiedTransforms(std::move(transformMap)) {}
 
-  /// @brief  Get the alignment transform for a given DD4hep detector element
+  /// @brief Get the alignment transform for a given DD4hep detector element
   /// @param dd4hepElement the DD4hep detector element for which the alignment is queried
-  /// @return a pointer to the transform if round, otherwise nullptr
+  /// @return a pointer to the transform if found, otherwise nullptr
   const Transform3* contextualTransform(
       const DD4hepDetectorElement& dd4hepElement) const {
-    auto it = m_transformMap.find(dd4hepElement.surface().geometryId());
-    if (it != m_transformMap.end()) {
+    auto it = m_identifiedTransforms.find(dd4hepElement.surface().geometryId());
+    if (it != m_identifiedTransforms.end()) {
       return &(it->second);
     }
     return nullptr;
@@ -55,7 +55,7 @@ class DD4hepAlignmentStoreGeometryId : public IDD4hepAlignmentStore {
 
  private:
   /// The geometry id map
-  std::unordered_map<GeometryIdentifier, Acts::Transform3> m_transformMap;
+  std::unordered_map<GeometryIdentifier, Acts::Transform3> m_identifiedTransforms;
 };
 
 }  // namespace Acts

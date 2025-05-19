@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -150,6 +151,60 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[transposedIndices[i]], rr, 1e-5);
   }
+}
+
+BOOST_AUTO_TEST_CASE(IdentifiedTransformsJson) {
+  std::unordered_map<GeometryIdentifier, Transform3> transformMap;
+  std::ofstream out;
+
+  Transform3 reference0 = Transform3::Identity();
+  reference0.pretranslate(Vector3(1., 2., 3.));
+  reference0.rotate(Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized()));
+
+  std::vector<double> referenceT0 = {1., 2., 3.};
+  std::vector<double> referenceR0 = {0.992946,   -0.0975562, 0.0673888,
+                                     0.0997267,  0.994574,   -0.0296247,
+                                     -0.0641331, 0.0361362,  0.997287};
+
+  Transform3 reference1 = Transform3::Identity();
+
+  auto geometryId0 =
+      GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(3);
+  auto geometryId1 = GeometryIdentifier().withVolume(10).withBoundary(4);
+
+  transformMap[geometryId0] = reference0;
+  transformMap[geometryId1] = reference1;
+
+  // Write the standard map out
+  IdentifiedTransform3JsonConverter::Options jOptions{};
+
+  nlohmann::json itsOut =
+      IdentifiedTransform3JsonConverter::toJson(transformMap, jOptions);
+
+  out.open("IdentifiedTransforms.json");
+  out << itsOut.dump(4);
+  out.close();
+
+  jOptions.compressIdentifier = true;
+  nlohmann::json itsOutCompressed =
+      IdentifiedTransform3JsonConverter::toJson(transformMap, jOptions);
+
+  out.open("IdentifiedTransformsCompressed.json");
+  out << itsOutCompressed.dump(4);
+  out.close();
+
+  auto itsIn = IdentifiedTransform3JsonConverter::fromJson(itsOut);
+
+  BOOST_CHECK_EQUAL(itsIn.size(), transformMap.size());
+  BOOST_CHECK(itsIn[geometryId0].isApprox(transformMap[geometryId0]));
+  BOOST_CHECK(itsIn[geometryId1].isApprox(transformMap[geometryId1]));
+
+  auto itsInCompressed =
+      IdentifiedTransform3JsonConverter::fromJson(itsOutCompressed);
+
+  BOOST_CHECK_EQUAL(itsInCompressed.size(), transformMap.size());
+  BOOST_CHECK(itsInCompressed[geometryId0].isApprox(transformMap[geometryId0]));
+  BOOST_CHECK(itsInCompressed[geometryId1].isApprox(transformMap[geometryId1]));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
