@@ -20,14 +20,6 @@ namespace Acts {
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
 
-/// Struct that ties together the tensors used in the GNN pipeline
-struct PipelineTensors {
-  Tensor<float> nodeFeatures;
-  Tensor<std::int64_t> edgeIndex;
-  std::optional<Tensor<float>> edgeFeatures;
-  std::optional<Tensor<float>> edgeScores;
-};
-
 class GraphConstructionBase {
  public:
   /// Perform the graph construction

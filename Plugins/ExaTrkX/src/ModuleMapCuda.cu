@@ -139,7 +139,7 @@ PipelineTensors ModuleMapCuda::operator()(
   cudaStream_t stream = cudaStreamLegacy;
   if (execContext.stream) {
     ACTS_DEBUG("Got stream " << *execContext.stream);
-    stream = *execContext.stream;
+    stream = execContext.stream.value();
   }
 
   /////////////////////////

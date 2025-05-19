@@ -24,6 +24,9 @@ TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
     : m_device(execContext.device) {
   if (execContext.device.type == Acts::Device::Type::eCPU) {
     m_ptr = std::malloc(nbytes);
+    if (m_ptr == nullptr) {
+      throw std::bad_alloc{};
+    }
     m_deleter = [](void *p) { std::free(p); };
   } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
@@ -47,19 +50,21 @@ TensorMemoryImpl::~TensorMemoryImpl() {
 }
 
 void TensorMemoryImpl::moveConstruct(TensorMemoryImpl &&other) noexcept {
-  std::swap(m_deleter, other.m_deleter);
+  m_deleter = std::move(other.m_deleter);
   m_ptr = other.m_ptr;
   m_device = other.m_device;
   other.m_ptr = nullptr;
 }
 
-TensorMemoryImpl::TensorMemoryImpl(TensorMemoryImpl &&other) noexcept
-    : m_ptr(other.m_ptr), m_deleter(other.m_deleter) {
+TensorMemoryImpl::TensorMemoryImpl(TensorMemoryImpl &&other) noexcept {
   moveConstruct(std::move(other));
 }
 
 TensorMemoryImpl &TensorMemoryImpl::operator=(
     TensorMemoryImpl &&other) noexcept {
+  if (m_deleter) {
+    m_deleter(m_ptr);
+  }
   moveConstruct(std::move(other));
   return *this;
 }
@@ -101,7 +106,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   if (tensor.device().type == Acts::Device::Type::eCUDA) {
 #ifdef ACTS_EXATRKX_WITH_CUDA
-    return Acts::detail::cudaSigmoid(tensor, *stream);
+    return Acts::detail::cudaSigmoid(tensor, stream.value());
 #else
     throw std::runtime_error(
         "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
@@ -125,7 +130,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
 
   if (scores.device().type == Acts::Device::Type::eCUDA) {
 #ifdef ACTS_EXATRKX_WITH_CUDA
-    return detail::cudaApplyScoreCut(scores, edgeIndex, cut, *stream);
+    return detail::cudaApplyScoreCut(scores, edgeIndex, cut, stream.value());
 #else
     throw std::runtime_error(
         "Cannot apply score cut to CUDA tensor, library was not compiled with "
