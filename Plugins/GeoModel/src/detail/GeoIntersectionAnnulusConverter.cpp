@@ -29,7 +29,8 @@
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoIntersectionAnnulusConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
-    const Transform3& absTransform, bool sensitive) const {
+    const Transform3& absTransform, 
+    Acts::SurfaceBoundFactory& boundFactory, bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;

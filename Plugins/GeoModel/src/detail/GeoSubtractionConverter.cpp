@@ -20,7 +20,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
-#include <GeoModelKernel/GeoFullPhysVol.h>
+#include <GeoModelKernel/GeoPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoShape.h>
 #include <GeoModelKernel/GeoShapeShift.h>
@@ -30,6 +30,7 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoSubtractionConverter::operator()(
     [[maybe_unused]] const PVConstLink& geoPV,
     const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
+    SurfaceBoundFactory& boundFactory,
     [[maybe_unused]] bool sensitive) const {
   const GeoShape* shapeA = geoSub.getOpA();
   int shapeId = shapeA->typeID();
@@ -40,12 +41,12 @@ Acts::detail::GeoSubtractionConverter::operator()(
                              " is nullptr");
   }
   // Material and name for the PVConstLink declaration are dummie variables
-  GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
-  GeoIntrusivePtr<GeoLogVol> logA(new GeoLogVol("", shapeA, material));
-  PVConstLink pvA = new GeoVPhysVol(logA);
+  auto  material = make_intrusive<GeoMaterial>("Material", 1.0);
+  auto logA = make_intrusive<GeoLogVol>("", shapeA, material);
+  PVConstLink pvA = make_intrusive<GeoPhysVol>(logA);
 
   // recursively call the the converter
-  auto converted = converter->toSensitiveSurface(pvA, absTransform);
+  auto converted = converter->toSensitiveSurface(pvA, absTransform, boundFactory);
   if (converted.ok()) {
     return converted.value();
   } else {

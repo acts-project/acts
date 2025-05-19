@@ -17,9 +17,7 @@ class RegionCreator;
 
 namespace ActsExamples {
 
-/** @brief Helper struct to pass construction options of the Geant 4 geometry to 
- *         the 
- */
+/** @brief Helper struct to pass additional options for the G4 Geometry construction. */
 struct Geant4ConstructionOptions {
   std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
 };

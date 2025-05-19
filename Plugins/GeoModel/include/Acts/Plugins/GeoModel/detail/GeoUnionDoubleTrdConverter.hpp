@@ -12,6 +12,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <memory>
 #include <tuple>
@@ -38,6 +39,7 @@ struct GeoUnionDoubleTrdConverter {
   Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoShapeUnion& geoUnion,
                                               const Transform3& absTransform,
+                                              SurfaceBoundFactory& boundFactory,
                                               bool sensitive) const;
 };
 

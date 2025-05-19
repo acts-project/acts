@@ -16,9 +16,11 @@
 
 namespace ActsExamples {
 
-/** @brief Detector implementation to connect the GeoModel detector description with the 
- *         translation to the G4 geometry and with the tracking geometry. */
+/** @brief Detector experiment implementation to connect the GeoModel description with the 
+ *         translation to the G4 geometry and to build the tracking geometry from it. */
 struct GeoModelDetector : public Detector {
+  /** @brief Configuration options needed to build the G4 & tracking geometry
+   *         from a GeoModel tree */
   struct Config {
     /** @brief Configured instance to the GeoModel loaded geoModel tree */
     Acts::GeoModelTree geoModelTree{};

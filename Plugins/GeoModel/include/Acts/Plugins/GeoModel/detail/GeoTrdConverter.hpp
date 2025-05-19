@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <memory>
 #include <tuple>
@@ -37,6 +38,7 @@ struct GeoTrdConverter {
   Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoTrd& geoTrd,
                                               const Transform3& absTransform,
+                                              SurfaceBoundFactory& boundFactory,
                                               bool sensitive) const;
 };
 }  // namespace detail
