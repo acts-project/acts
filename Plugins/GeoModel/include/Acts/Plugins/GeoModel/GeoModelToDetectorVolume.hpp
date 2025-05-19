@@ -22,8 +22,11 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape);
 ///
 /// @param shape the GeoModel shape
 /// @param transform the transform to be applied
-/// @return the DetectorVolume
-std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
+/// @param name the name of the volume
+/// @param sensitives the sensitive surfaces
+/// @return the pair of Volume and DetectorVolume (for gen1/3 and gen2 use cases)
+std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>
+convertVolumeDetectorVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const GeoTrf::Transform3D& transform,
     const std::vector<GeoModelSensitiveSurface>& sensitives);

@@ -42,11 +42,11 @@ struct GeoDims {
 void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
   for (const auto& box : cache.boundingBoxes) {
-    const Acts::VolumeBounds& bounds = box->volumeBounds();
+    const Acts::VolumeBounds& bounds = box.second->volumeBounds();
     for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
-    std::vector<const Acts::Surface*> surfaces = box->surfaces();
+    std::vector<const Acts::Surface*> surfaces = box.second->surfaces();
 
     for (auto surface : surfaces) {
       const Acts::SurfaceBounds& sbounds = surface->bounds();
@@ -106,13 +106,17 @@ GeoGeometry constructGeoModel() {
       std::abs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
-  auto boxXY = make_intrusive<GeoBox>(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
-  auto tube = make_intrusive<GeoTube>(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]);
-  auto ssurface = make_intrusive<GeoBox>(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
-  auto trd = make_intrusive<GeoTrd>(1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]);
+  auto boxXY =
+      make_intrusive<GeoBox>(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
+  auto tube = make_intrusive<GeoTube>(geoDims.tube[0], geoDims.tube[1],
+                                      geoDims.tube[2]);
+  auto ssurface =
+      make_intrusive<GeoBox>(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
+  auto trd = make_intrusive<GeoTrd>(1, 1, geoDims.trapHls[0],
+                                    geoDims.trapHls[1], geoDims.trapHls[2]);
 
   // create logvols
-  auto logXY =make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
+  auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
   auto logTube = make_intrusive<GeoLogVol>("LogTube", tube, al);
   auto logSurface = make_intrusive<GeoLogVol>("LogSurface", ssurface, al);
   auto logTrd = make_intrusive<GeoLogVol>("LogTrd", trd, al);

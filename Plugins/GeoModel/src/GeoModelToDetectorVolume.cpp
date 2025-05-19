@@ -134,24 +134,31 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
   return Volume(newTrf, bounds);
 }
 
-std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
+std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>
+convertVolumeDetectorVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const GeoTrf::Transform3D& transform,
     const std::vector<GeoModelSensitiveSurface>& sensitives) {
-  // type conversion from GeoModelSensitiveSurface to Surface
   std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
   std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
                  [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>,
                                      std::shared_ptr<Surface>>& t) {
                    return std::get<1>(t);
                  });
+
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   Volume vol = convertVolume(transform, shape);
-  return Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
-      sensSurfaces,
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
-      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
+  std::shared_ptr<Experimental::DetectorVolume> detVol =
+      Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, context, name, vol.transform(),
+          vol.volumeBoundsPtr(), sensSurfaces,
+          std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
+          Experimental::tryNoVolumes(),
+          Experimental::tryAllPortalsAndSurfaces());
+
+  std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>> volumePair =
+      std::make_pair(vol, detVol);
+  return volumePair;
 }
 
 }  // namespace Acts::GeoModel
