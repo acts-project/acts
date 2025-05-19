@@ -141,7 +141,7 @@ if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
     pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsDD4hep
-        PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep
+        PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep ActsPluginJson
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
 

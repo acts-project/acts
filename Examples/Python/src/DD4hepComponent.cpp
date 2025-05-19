@@ -11,6 +11,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepAlignmentDecorator.hpp"
@@ -98,25 +99,54 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
         .def("decorate", &ActsExamples::DD4hepAlignmentDecorator::decorate)
         .def("name", &ActsExamples::DD4hepAlignmentDecorator::name);
 
-    m.def("createAlignmentDecorator",
-          [&](const std::string& fileName, Acts::Logging::Level logLevel)
-              -> std::shared_ptr<ActsExamples::DD4hepAlignmentDecorator> {
-            // No file name, return
-            if (fileName.empty()) {
-              return nullptr;
-            }
+    m.def(
+        "createAlignmentDecorator",
+        [&](const std::string& nominalFile,
+            const std::vector<std::tuple<std::array<std::size_t, 2u>, std::string>>&
+                iovFiles,
+            Acts::Logging::Level logLevel)
+            -> std::shared_ptr<ActsExamples::DD4hepAlignmentDecorator> {
+          // No file name, return
+          if (nominalFile.empty()) {
+            return nullptr;
+          }
 
-            auto logger =
-                Acts::getDefaultLogger("DD4hepAlignmentDecorator", logLevel);
-            // auto alignmentStore =
-            //     std::make_shared<Acts::DD4hepAlignmentStore>(fileName,
-            //     logger);
-            auto decorator =
-                std::make_shared<ActsExamples::DD4hepAlignmentDecorator>(
-                    ActsExamples::DD4hepAlignmentDecorator::Config{});
-            //        {{0, alignmentStore}}});
-            return decorator;
-          });
+          auto logger =
+              Acts::getDefaultLogger("DD4hepAlignmentDecorator", logLevel);
+
+          auto readStore = [](const std::string& fileName) {
+            // Read the identified transforms
+            std::ifstream ifs(fileName);
+            if (!ifs.is_open()) {
+              throw std::runtime_error("Could not open file: " + fileName);
+            }
+            nlohmann::json itsRead;
+            ifs >> itsRead;
+            ifs.close();
+
+            auto its =
+                Acts::IdentifiedTransform3JsonConverter::fromJson(itsRead);
+            return std::make_shared<Acts::DD4hepAlignmentStoreGeometryId>(its);
+          };
+          // Create the alignment configuration struct
+          auto alignmentConfig =
+              ActsExamples::DD4hepAlignmentDecorator::Config{};
+          // Add nominal alignment store
+          auto nominalStore = readStore(nominalFile);
+          alignmentConfig.nominalStore = nominalStore;
+          // Add the iov dependent alignments
+          for (const auto& iovFile : iovFiles) {
+            const auto& [iov, fileName] = iovFile;
+            auto store = readStore(fileName);
+            alignmentConfig.alignmentStores.emplace_back(iov, store);
+          }
+          // Create the alignment decorator
+          auto decorator =
+              std::make_shared<ActsExamples::DD4hepAlignmentDecorator>(
+                  alignmentConfig,
+                  Acts::getDefaultLogger("DD4hepAlignmentDecorator", logLevel));
+          return decorator;
+        });
   }
 
   {

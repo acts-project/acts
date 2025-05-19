@@ -19,6 +19,26 @@ ActsExamples::DD4hepAlignmentDecorator::DD4hepAlignmentDecorator(
         "Missing alignment stores (and nominal store), run without alignment "
         "decorator!");
   }
+  // Sort on leading IOV
+  std::sort(m_cfg.alignmentStores.begin(), m_cfg.alignmentStores.end(),
+            [](const auto& lhs, const auto& rhs) {
+              const auto& [lhsIov, lhsStore] = lhs;
+              const auto& [rhsIov, rhsStore] = rhs;
+              return lhsIov[0u] < rhsIov[0u];
+            });
+  // Check for overlapping IOVs
+  for (const auto [istore, iovStore] : Acts::enumerate(m_cfg.alignmentStores)) {
+    if (istore > 0) {
+      const auto& [iov, store] = iovStore;
+      const auto& [prevIov, prevStore] = m_cfg.alignmentStores[istore - 1];
+      if (iov[0] == prevIov[0] || prevIov[1] >= iov[0]) {
+        throw std::invalid_argument(
+            "Intersecting IOVs found as [" + std::to_string(prevIov[0]) + ", " +
+            std::to_string(prevIov[1]) + "] and [" + std::to_string(iov[0]) +
+            ", " + std::to_string(iov[1]) + "]");
+      }
+    }
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::DD4hepAlignmentDecorator::decorate(
@@ -27,12 +47,20 @@ ActsExamples::ProcessCode ActsExamples::DD4hepAlignmentDecorator::decorate(
 
   // Start with the current alignment store
   auto currentStore = m_cfg.nominalStore;
-  if (eventNumber > m_cfg.alignmentStores.begin()->first) {
-    auto currentStoreBound = m_cfg.alignmentStores.lower_bound(eventNumber);
-    if (currentStoreBound != m_cfg.alignmentStores.end()) {
-      currentStore = currentStoreBound->second;
-    }
+  auto matchedStore =
+      std::find_if(m_cfg.alignmentStores.begin(), m_cfg.alignmentStores.end(),
+                   [eventNumber](const auto& iovStore) {
+                     const auto& [iov, store] = iovStore;
+                     return iov[0] >= eventNumber && eventNumber <= iov[1];
+                   });
+  if (matchedStore != m_cfg.alignmentStores.end()) {
+    const auto& [iov, store] = *matchedStore;
+    ACTS_VERBOSE("Found alignment store for event number " +
+                 std::to_string(eventNumber) + " in [" +
+                 std::to_string(iov[0]) + ", " + std::to_string(iov[1]) + "]");
+    currentStore = store;
   }
+
   // We must have a valid alignment store at this point
   if (currentStore == nullptr) {
     throw std::invalid_argument(

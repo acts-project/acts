@@ -14,7 +14,11 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <map>
+#include <array>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -28,7 +32,8 @@ class DD4hepAlignmentDecorator : public IContextDecorator {
   /// @brief nested configuration struct
   struct Config {
     /// The alignment store map higher bound IOV (i.e. event number)
-    std::map<std::size_t, std::shared_ptr<Acts::IDD4hepAlignmentStore>>
+    std::vector<std::tuple<std::array<std::size_t, 2u>,
+                           std::shared_ptr<Acts::IDD4hepAlignmentStore>>>
         alignmentStores;
     /// The nominal alignment store (before first bound, after last bound)
     std::shared_ptr<Acts::IDD4hepAlignmentStore> nominalStore = nullptr;
