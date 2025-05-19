@@ -63,9 +63,7 @@ def main():
     # Read the geometry model from the database
     gmTree = gm.readFromDb(args.input)
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
-    gmFactoryConfig.materialList = ["muo::RPCgas", "muo::ArCO2"]
-    gmFactoryConfig.nameList = ["RPC", "MDT", ]
-    gmFactoryConfig.convertBox = ["RpcGasGap", "RPC",  "MDT", "MDTDriftGas"]
+    gmFactoryConfig.nameList = ["RpcGasGap", "MDTDriftGas", ]
     gmFactoryConfig.convertSubVolumes = True
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -73,7 +71,7 @@ def main():
     gmFactoryOptions.queries = ["Muon"]
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    #gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
     
     gmDetectorCfg = gm.GeoModelDetector.Config()
