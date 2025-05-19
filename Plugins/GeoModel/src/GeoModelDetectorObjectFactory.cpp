@@ -78,14 +78,14 @@ void GeoModelDetectorObjectFactory::convertSensitive(
   }
 
   auto converted = converter->toSensitiveSurface(geoPV, transform, boundFactory);
-  if (converted.ok()) {
-    sensitives.push_back(converted.value());
+  if (converted.ok()) {    
     const auto &[el, sf] = converted.value();
 
     if (!el || !sf) {
       throw std::runtime_error(
           "The Detector Element or the Surface is a nullptr");
     }
+    sensitives.push_back(converted.value());
     ACTS_VERBOSE("(successfully converted: "
                  << name << " / " << printGeoShape(shape) << " / "
                  << logVol->getMaterial()->getName() << ")");
