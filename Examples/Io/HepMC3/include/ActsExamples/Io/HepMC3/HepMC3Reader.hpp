@@ -54,6 +54,17 @@ class HepMC3Reader final : public IReader {
     /// provide it here if known, otherwise the reader will have to read the
     /// whole file
     std::optional<std::size_t> numEvents = std::nullopt;
+
+    /// If true, the reader will check if the read `HepMC3::GenEvent` has the
+    /// same event number as the internal one.
+    /// This will only be correct if the events were written in sequential order
+    /// and numbered correctly.
+    bool checkEventNumber = true;
+
+    /// In multi-threading mode, the reader will need to buffer events to read
+    /// them predictably and in order. This defines the maximum queue size being
+    /// used. If this number is exceeded the reader will error out.
+    std::size_t maxEventBufferSize = 128;
   };
 
   /// Construct the particle reader.
@@ -77,10 +88,26 @@ class HepMC3Reader final : public IReader {
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
+  ProcessCode skip(std::size_t events) override;
+
  private:
   std::size_t determineNumEvents(HepMC3::Reader& reader) const;
 
   std::shared_ptr<HepMC3::Reader> makeReader() const;
+
+  static std::shared_ptr<HepMC3::GenEvent> makeEvent();
+
+  ProcessCode readPerEvent(const ActsExamples::AlgorithmContext& ctx,
+                           std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readSingleFile(const ActsExamples::AlgorithmContext& ctx,
+                             std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readCached(const ActsExamples::AlgorithmContext& ctx,
+                         std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readBuffer(const ActsExamples::AlgorithmContext& ctx,
+                         std::shared_ptr<HepMC3::GenEvent>& event);
 
   /// The configuration of this writer
   Config m_cfg;
@@ -93,6 +120,14 @@ class HepMC3Reader final : public IReader {
 
   WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
       this, "OutputEvent"};
+
+  std::vector<std::pair<std::size_t, std::shared_ptr<HepMC3::GenEvent>>>
+      m_events;
+  std::size_t m_nextEvent = 0;
+
+  std::size_t m_maxEventBufferSize = 0;
+
+  bool m_bufferError = false;
 
   std::mutex m_mutex;
 
