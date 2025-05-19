@@ -25,6 +25,7 @@ class GeometryContext;
 class TrackingGeometry;
 class SurfaceBounds;
 class Surface;
+class Portal;
 
 class DetrayPayloadConverter {
  public:
@@ -51,7 +52,7 @@ class DetrayPayloadConverter {
                                              const Surface& surface) const;
 
   detray::io::surface_payload convertPortal(const GeometryContext& gctx,
-                                            const Surface& surface) const;
+                                            const Portal& portal) const;
 
   explicit DetrayPayloadConverter(const Config& config);
 
