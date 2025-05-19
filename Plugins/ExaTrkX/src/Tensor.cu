@@ -41,7 +41,7 @@ namespace Acts::detail {
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
   dim3 blockDim = 1024;
   dim3 gridDim = (tensor.size() + blockDim.x - 1) / blockDim.x;
-  sigmoidImpl<<<blockDim, gridDim, 0, stream>>>(tensor.size(), tensor.data());
+  sigmoidImpl<<<gridDim, blockDim, 0, stream>>>(tensor.size(), tensor.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
 }
 
@@ -55,7 +55,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
   bool *mask{};
   ACTS_CUDA_CHECK(cudaMallocAsync(&mask, scores.size() * sizeof(bool), stream));
 
-  applyCut<<<blockDim, gridDim, 0, stream>>>(scores.size(), cut, scores.data(),
+  applyCut<<<gridDim, blockDim, 0, stream>>>(scores.size(), cut, scores.data(),
                                              mask);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
