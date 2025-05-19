@@ -17,6 +17,7 @@ struct detector_payload;
 struct transform_payload;
 struct mask_payload;
 struct surface_payload;
+struct volume_payload;
 }  // namespace detray::io
 
 namespace Acts {
@@ -26,6 +27,7 @@ class TrackingGeometry;
 class SurfaceBounds;
 class Surface;
 class Portal;
+class TrackingVolume;
 
 class DetrayPayloadConverter {
  public:
@@ -53,6 +55,8 @@ class DetrayPayloadConverter {
 
   detray::io::surface_payload convertPortal(const GeometryContext& gctx,
                                             const Portal& portal) const;
+
+  detray::io::volume_payload convertVolume(const TrackingVolume& volume) const;
 
   explicit DetrayPayloadConverter(const Config& config);
 
