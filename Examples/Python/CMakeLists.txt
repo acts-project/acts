@@ -63,7 +63,6 @@ target_link_libraries(
         ActsExamplesPrinters
         ActsExamplesTrackFinding
         ActsExamplesTrackFitting
-        ActsExamplesTrackJets
         ActsExamplesVertexing
         ActsExamplesFatras
         ActsExamplesDetectorTelescope
@@ -82,7 +81,6 @@ set(py_files
     examples/reconstruction.py
     examples/itk.py
     examples/odd.py
-    examples/truth_jet.py
     _adapter.py
 )
 
@@ -264,7 +262,6 @@ endif()
 if(ACTS_BUILD_PLUGIN_FASTJET)
     target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackJets)
     target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
-    list(APPEND py_files examples/truth_jet_test.py)
 else()
     target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
 endif()
