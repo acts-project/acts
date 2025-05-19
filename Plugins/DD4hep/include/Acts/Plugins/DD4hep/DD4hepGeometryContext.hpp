@@ -33,8 +33,8 @@ class DD4hepGeometryContext {
 
   /// Explicit constructor from an alignment delegate
   /// @param alignment the alignment delegate representing this
-  explicit DD4hepGeometryContext(Alignment alignment) 
-   : m_alignment(std::move(alignment)){}
+  explicit DD4hepGeometryContext(Alignment alignment)
+      : m_alignment(std::move(alignment)) {}
 
   /// Check if a contextual transform is available for this detector element
   ///
@@ -53,6 +53,6 @@ class DD4hepGeometryContext {
   }
 
  private:
- Alignment m_alignment;
+  Alignment m_alignment;
 };
 }  // namespace Acts

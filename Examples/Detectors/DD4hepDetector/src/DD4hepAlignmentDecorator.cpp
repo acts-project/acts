@@ -42,8 +42,9 @@ ActsExamples::ProcessCode ActsExamples::DD4hepAlignmentDecorator::decorate(
   }
 
   // Create a DetectorElement alignment store for this context
-  Acts::DD4hepGeometryContext::Alignment currentAlignment; 
-  currentAlignment.connect<&Acts::IDD4hepAlignmentStore::contextualTransform>(currentStore.get());
+  Acts::DD4hepGeometryContext::Alignment currentAlignment;
+  currentAlignment.connect<&Acts::IDD4hepAlignmentStore::contextualTransform>(
+      currentStore.get());
   context.geoContext = Acts::DD4hepGeometryContext(currentAlignment);
   return ActsExamples::ProcessCode::SUCCESS;
 }

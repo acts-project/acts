@@ -55,7 +55,8 @@ class DD4hepAlignmentStoreGeometryId : public IDD4hepAlignmentStore {
 
  private:
   /// The geometry id map
-  std::unordered_map<GeometryIdentifier, Acts::Transform3> m_identifiedTransforms;
+  std::unordered_map<GeometryIdentifier, Acts::Transform3>
+      m_identifiedTransforms;
 };
 
 }  // namespace Acts
