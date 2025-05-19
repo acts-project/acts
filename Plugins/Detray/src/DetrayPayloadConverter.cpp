@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -233,6 +234,34 @@ detray::io::surface_payload DetrayPayloadConverter::convertPortal(
   detray::io::surface_payload payload =
       convertSurfaceCommon(gctx, portal.surface(), m_cfg.sensitiveStrategy);
   payload.mask = convertMask(portal.surface().bounds(), true);
+  return payload;
+}
+
+detray::io::volume_payload DetrayPayloadConverter::convertVolume(
+    const TrackingVolume& volume) const {
+  detray::io::volume_payload payload;
+  payload.transform =
+      DetrayPayloadConverter::convertTransform(volume.transform());
+  payload.name = volume.volumeName();
+  switch (volume.volumeBounds().type()) {
+    using enum VolumeBounds::BoundsType;
+    using enum detray::volume_id;
+    case eCylinder:
+      payload.type = e_cylinder;
+      break;
+    case eCuboid:
+      payload.type = e_cuboid;
+      break;
+    case eTrapezoid:
+      payload.type = e_trapezoid;
+      break;
+    case eCone:
+      payload.type = e_cone;
+      break;
+    default:
+      payload.type = e_unknown;
+      break;
+  }
   return payload;
 }
 
