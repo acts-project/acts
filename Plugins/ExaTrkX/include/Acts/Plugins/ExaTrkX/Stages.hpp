@@ -20,6 +20,14 @@ namespace Acts {
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
 
+/// Struct that ties together the tensors used in the GNN pipeline
+struct PipelineTensors {
+  Tensor<float> nodeFeatures;
+  Tensor<std::int64_t> edgeIndex;
+  std::optional<Tensor<float>> edgeFeatures;
+  std::optional<Tensor<float>> edgeScores;
+};
+
 class GraphConstructionBase {
  public:
   /// Perform the graph construction
@@ -43,14 +51,12 @@ class EdgeClassificationBase {
  public:
   /// Perform edge classification
   ///
-  /// @param nodeFeatures Node tensor with shape (n_nodes, n_node_features)
-  /// @param edgeIndex Edge-index tensor with shape (2, n_edges)
-  /// @param edgeFeatures Edge-feature tensor with shape (n_edges, n_edge_features)
+  /// @param tensors Input pipeline tensors
   /// @param execContext Device & stream information
   ///
   /// @return (node_features, edge_features, edge_index, edge_scores)
   virtual PipelineTensors operator()(
-      PipelineTensors, const ExecutionContext &execContext = {}) = 0;
+      PipelineTensors tensors, const ExecutionContext &execContext = {}) = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -59,15 +65,13 @@ class TrackBuildingBase {
  public:
   /// Perform track building
   ///
-  /// @param nodeFeatures Node tensor with shape (n_nodes, n_node_features)
-  /// @param edgeIndex Edge-index tensor with shape (2, n_edges)
-  /// @param edgeScores Scores of the previous edge classification phase
+  /// @param tensors Input pipeline tensors
   /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
   /// @param execContext Device & stream information
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      PipelineTensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~TrackBuildingBase() = default;
