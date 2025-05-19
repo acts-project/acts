@@ -16,6 +16,7 @@ namespace detray::io {
 struct detector_payload;
 struct transform_payload;
 struct mask_payload;
+struct surface_payload;
 }  // namespace detray::io
 
 namespace Acts {
@@ -23,11 +24,25 @@ namespace Acts {
 class GeometryContext;
 class TrackingGeometry;
 class SurfaceBounds;
+class Surface;
 
 class DetrayPayloadConverter {
  public:
+  struct Config {
+    enum class SensitiveStrategy {
+      /// Checks if the sensitive component of the surface is set to check if
+      /// it's a sensitive surface
+      Identifier,
+      /// Check if the surface is a sensitive surface by checking for an
+      /// associated detector element
+      DetectorElement
+    };
+    SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
+  };
+
   static detray::io::detector_payload convert(
-      const GeometryContext& gctx, const TrackingGeometry& trackingGeometry);
+      const Config& config, const GeometryContext& gctx,
+      const TrackingGeometry& trackingGeometry);
 
   static detray::io::transform_payload convertTransform(
       const Transform3& transform);
@@ -36,14 +51,23 @@ class DetrayPayloadConverter {
   static detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                               bool forPortal);
 
- private:
-  explicit DetrayPayloadConverter(const GeometryContext& gctx,
-                                  const TrackingGeometry& trackingGeometry);
+  static detray::io::surface_payload convertSurface(const Config& config,
+                                                    const GeometryContext& gctx,
+                                                    const Surface& surface);
 
+  static detray::io::surface_payload convertPortal(const Config& config,
+                                                   const GeometryContext& gctx,
+                                                   const Surface& surface);
+
+ private:
+  explicit DetrayPayloadConverter(const Config& config,
+                                  const GeometryContext& gctx,
+                                  const TrackingGeometry& trackingGeometry);
   ~DetrayPayloadConverter();
 
   void convertPayload();
 
   std::unique_ptr<detray::io::detector_payload> m_detectorPayload;
+  Config m_cfg;
 };
 }  // namespace Acts

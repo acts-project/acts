@@ -31,15 +31,20 @@
 namespace Acts {
 
 detray::io::detector_payload DetrayPayloadConverter::convert(
-    const GeometryContext& gctx, const TrackingGeometry& trackingGeometry) {
-  DetrayPayloadConverter converter(gctx, trackingGeometry);
+    const Config& config, const GeometryContext& gctx,
+    const TrackingGeometry& trackingGeometry) {
+  DetrayPayloadConverter converter(config, gctx, trackingGeometry);
   converter.convertPayload();
   return std::move(*converter.m_detectorPayload);
 }
 
 DetrayPayloadConverter::DetrayPayloadConverter(
-    const GeometryContext& /*gctx*/,
-    const TrackingGeometry& /*trackingGeometry*/) {}
+    const Config& config, const GeometryContext& gctx,
+    const TrackingGeometry& trackingGeometry)
+    : m_cfg(config) {
+  static_cast<void>(gctx);
+  static_cast<void>(trackingGeometry);
+}
 
 DetrayPayloadConverter::~DetrayPayloadConverter() = default;
 
@@ -203,6 +208,48 @@ detray::io::mask_payload DetrayPayloadConverter::convertMask(
       break;
   }
 
+  return payload;
+}
+
+namespace {
+
+detray::io::surface_payload convertSurfaceCommon(
+    const GeometryContext& gctx, const Surface& surface,
+    const DetrayPayloadConverter::Config::SensitiveStrategy&
+        sensitiveStrategy) {
+  detray::io::surface_payload payload;
+
+  payload.transform =
+      DetrayPayloadConverter::convertTransform(surface.transform(gctx));
+  payload.source = surface.geometryId().value();
+  payload.barcode = std::nullopt;
+
+  bool isSensitive = false;
+  if (sensitiveStrategy ==
+      DetrayPayloadConverter::Config::SensitiveStrategy::Identifier) {
+    isSensitive = surface.geometryId().sensitive() > 0;
+  } else {
+    isSensitive = surface.associatedDetectorElement() != nullptr;
+  }
+  payload.type = isSensitive ? detray::surface_id::e_sensitive
+                             : detray::surface_id::e_passive;
+  return payload;
+}
+}  // namespace
+
+detray::io::surface_payload DetrayPayloadConverter::convertSurface(
+    const Config& config, const GeometryContext& gctx, const Surface& surface) {
+  detray::io::surface_payload payload =
+      convertSurfaceCommon(gctx, surface, config.sensitiveStrategy);
+  payload.mask = convertMask(surface.bounds(), false);
+  return payload;
+}
+
+detray::io::surface_payload DetrayPayloadConverter::convertPortal(
+    const Config& config, const GeometryContext& gctx, const Surface& surface) {
+  detray::io::surface_payload payload =
+      convertSurfaceCommon(gctx, surface, config.sensitiveStrategy);
+  payload.mask = convertMask(surface.bounds(), true);
   return payload;
 }
 
