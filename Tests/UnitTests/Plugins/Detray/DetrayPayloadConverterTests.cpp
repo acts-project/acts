@@ -9,14 +9,19 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -24,6 +29,7 @@
 #include <memory>
 #include <numbers>
 
+#include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
@@ -206,6 +212,109 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
     MockUnknownBounds mockUnknown;
     auto payload = DetrayPayloadConverter::convertMask(mockUnknown, false);
     BOOST_CHECK(payload.shape == detray::io::shape_id::unknown);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
+  // Create a transform with translation and rotation
+  Transform3 transform = Transform3::Identity();
+  transform.pretranslate(Vector3(1., 2., 3.));
+  transform.rotate(Eigen::AngleAxisd(0.5 * std::numbers::pi, Vector3::UnitZ()));
+
+  // Create rectangle bounds
+  auto bounds = std::make_shared<RectangleBounds>(5., 10.);
+
+  // Create a plane surface
+  auto surface = Surface::makeShared<PlaneSurface>(transform, bounds);
+
+  // Test surface conversion with Identifier strategy
+  {
+    DetrayPayloadConverter::Config cfg;
+    cfg.sensitiveStrategy =
+        DetrayPayloadConverter::Config::SensitiveStrategy::Identifier;
+
+    // Test passive surface (default)
+    {
+      auto payload = DetrayPayloadConverter::convertSurface(
+          cfg, GeometryContext(), *surface);
+
+      // Check type
+      BOOST_CHECK(payload.type == detray::surface_id::e_passive);
+
+      // Check transform
+      CHECK_CLOSE_ABS(payload.transform.tr[0], 1., 1e-10);
+      CHECK_CLOSE_ABS(payload.transform.tr[1], 2., 1e-10);
+      CHECK_CLOSE_ABS(payload.transform.tr[2], 3., 1e-10);
+
+      // Check mask
+      BOOST_CHECK(payload.mask.shape == detray::io::shape_id::rectangle2);
+      using enum detray::rectangle2D::boundaries;
+      CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_x], 5., 1e-10);
+      CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_y], 10., 1e-10);
+    }
+
+    // Test sensitive surface
+    {
+      auto sensitiveSurface =
+          Surface::makeShared<PlaneSurface>(transform, bounds);
+      sensitiveSurface->assignGeometryId(GeometryIdentifier().withSensitive(1));
+
+      auto payload = DetrayPayloadConverter::convertSurface(
+          cfg, GeometryContext(), *sensitiveSurface);
+
+      BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
+    }
+  }
+
+  // Test surface conversion with DetectorElement strategy
+  {
+    DetrayPayloadConverter::Config cfg;
+    cfg.sensitiveStrategy =
+        DetrayPayloadConverter::Config::SensitiveStrategy::DetectorElement;
+
+    // Test passive surface (no detector element)
+    {
+      auto payload = DetrayPayloadConverter::convertSurface(
+          cfg, GeometryContext(), *surface);
+      BOOST_CHECK(payload.type == detray::surface_id::e_passive);
+    }
+
+    // Test sensitive surface with detector element
+    {
+      // Create detector element first
+      auto detElement = std::make_shared<Acts::Test::DetectorElementStub>(
+          transform, bounds, 1.0);
+
+      // Create surface using the detector element
+      auto sensitiveSurface =
+          Surface::makeShared<PlaneSurface>(bounds, *detElement);
+
+      auto payload = DetrayPayloadConverter::convertSurface(
+          cfg, GeometryContext(), *sensitiveSurface);
+      BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
+    }
+  }
+
+  // Test portal conversion
+  {
+    DetrayPayloadConverter::Config cfg;
+    auto payload =
+        DetrayPayloadConverter::convertPortal(cfg, GeometryContext(), *surface);
+
+    // Portal should always be passive
+    BOOST_CHECK(payload.type == detray::surface_id::e_passive);
+
+    // Check transform is preserved
+    CHECK_CLOSE_ABS(payload.transform.tr[0], 1., 1e-10);
+    CHECK_CLOSE_ABS(payload.transform.tr[1], 2., 1e-10);
+    CHECK_CLOSE_ABS(payload.transform.tr[2], 3., 1e-10);
+
+    // Check mask - should be same as surface since rectangle doesn't have
+    // special portal handling
+    BOOST_CHECK(payload.mask.shape == detray::io::shape_id::rectangle2);
+    using enum detray::rectangle2D::boundaries;
+    CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_y], 10., 1e-10);
   }
 }
 
