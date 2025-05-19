@@ -27,7 +27,6 @@ pybind11_add_module(ActsPythonBindings
   src/Obj.cpp
   src/TruthTracking.cpp
   src/TrackFitting.cpp
-  src/TruthJet.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
   src/AmbiguityResolution.cpp
