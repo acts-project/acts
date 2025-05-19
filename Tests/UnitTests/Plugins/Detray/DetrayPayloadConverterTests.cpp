@@ -216,6 +216,8 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
 }
 
 BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
+  GeometryContext gctx;
+
   // Create a transform with translation and rotation
   Transform3 transform = Transform3::Identity();
   transform.pretranslate(Vector3(1., 2., 3.));
@@ -233,10 +235,11 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
     cfg.sensitiveStrategy =
         DetrayPayloadConverter::Config::SensitiveStrategy::Identifier;
 
+    DetrayPayloadConverter converter(cfg);
+
     // Test passive surface (default)
     {
-      auto payload = DetrayPayloadConverter::convertSurface(
-          cfg, GeometryContext(), *surface);
+      auto payload = converter.convertSurface(gctx, *surface);
 
       // Check type
       BOOST_CHECK(payload.type == detray::surface_id::e_passive);
@@ -259,8 +262,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
           Surface::makeShared<PlaneSurface>(transform, bounds);
       sensitiveSurface->assignGeometryId(GeometryIdentifier().withSensitive(1));
 
-      auto payload = DetrayPayloadConverter::convertSurface(
-          cfg, GeometryContext(), *sensitiveSurface);
+      auto payload = converter.convertSurface(gctx, *sensitiveSurface);
 
       BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
     }
@@ -272,10 +274,11 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
     cfg.sensitiveStrategy =
         DetrayPayloadConverter::Config::SensitiveStrategy::DetectorElement;
 
+    DetrayPayloadConverter converter(cfg);
+
     // Test passive surface (no detector element)
     {
-      auto payload = DetrayPayloadConverter::convertSurface(
-          cfg, GeometryContext(), *surface);
+      auto payload = converter.convertSurface(gctx, *surface);
       BOOST_CHECK(payload.type == detray::surface_id::e_passive);
     }
 
@@ -289,8 +292,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
       auto sensitiveSurface =
           Surface::makeShared<PlaneSurface>(bounds, *detElement);
 
-      auto payload = DetrayPayloadConverter::convertSurface(
-          cfg, GeometryContext(), *sensitiveSurface);
+      auto payload = converter.convertSurface(gctx, *sensitiveSurface);
       BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
     }
   }
@@ -298,8 +300,8 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
   // Test portal conversion
   {
     DetrayPayloadConverter::Config cfg;
-    auto payload =
-        DetrayPayloadConverter::convertPortal(cfg, GeometryContext(), *surface);
+    DetrayPayloadConverter converter(cfg);
+    auto payload = converter.convertPortal(gctx, *surface);
 
     // Portal should always be passive
     BOOST_CHECK(payload.type == detray::surface_id::e_passive);

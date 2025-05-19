@@ -30,25 +30,8 @@
 
 namespace Acts {
 
-detray::io::detector_payload DetrayPayloadConverter::convert(
-    const Config& config, const GeometryContext& gctx,
-    const TrackingGeometry& trackingGeometry) {
-  DetrayPayloadConverter converter(config, gctx, trackingGeometry);
-  converter.convertPayload();
-  return std::move(*converter.m_detectorPayload);
-}
-
-DetrayPayloadConverter::DetrayPayloadConverter(
-    const Config& config, const GeometryContext& gctx,
-    const TrackingGeometry& trackingGeometry)
-    : m_cfg(config) {
-  static_cast<void>(gctx);
-  static_cast<void>(trackingGeometry);
-}
-
-DetrayPayloadConverter::~DetrayPayloadConverter() = default;
-
-void DetrayPayloadConverter::convertPayload() {}
+DetrayPayloadConverter::DetrayPayloadConverter(const Config& config)
+    : m_cfg(config) {}
 
 detray::io::transform_payload DetrayPayloadConverter::convertTransform(
     const Transform3& transform) {
@@ -238,17 +221,17 @@ detray::io::surface_payload convertSurfaceCommon(
 }  // namespace
 
 detray::io::surface_payload DetrayPayloadConverter::convertSurface(
-    const Config& config, const GeometryContext& gctx, const Surface& surface) {
+    const GeometryContext& gctx, const Surface& surface) const {
   detray::io::surface_payload payload =
-      convertSurfaceCommon(gctx, surface, config.sensitiveStrategy);
+      convertSurfaceCommon(gctx, surface, m_cfg.sensitiveStrategy);
   payload.mask = convertMask(surface.bounds(), false);
   return payload;
 }
 
 detray::io::surface_payload DetrayPayloadConverter::convertPortal(
-    const Config& config, const GeometryContext& gctx, const Surface& surface) {
+    const GeometryContext& gctx, const Surface& surface) const {
   detray::io::surface_payload payload =
-      convertSurfaceCommon(gctx, surface, config.sensitiveStrategy);
+      convertSurfaceCommon(gctx, surface, m_cfg.sensitiveStrategy);
   payload.mask = convertMask(surface.bounds(), true);
   return payload;
 }

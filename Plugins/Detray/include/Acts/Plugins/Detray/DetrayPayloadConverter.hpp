@@ -40,10 +40,6 @@ class DetrayPayloadConverter {
     SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
   };
 
-  static detray::io::detector_payload convert(
-      const Config& config, const GeometryContext& gctx,
-      const TrackingGeometry& trackingGeometry);
-
   static detray::io::transform_payload convertTransform(
       const Transform3& transform);
 
@@ -51,23 +47,15 @@ class DetrayPayloadConverter {
   static detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                               bool forPortal);
 
-  static detray::io::surface_payload convertSurface(const Config& config,
-                                                    const GeometryContext& gctx,
-                                                    const Surface& surface);
+  detray::io::surface_payload convertSurface(const GeometryContext& gctx,
+                                             const Surface& surface) const;
 
-  static detray::io::surface_payload convertPortal(const Config& config,
-                                                   const GeometryContext& gctx,
-                                                   const Surface& surface);
+  detray::io::surface_payload convertPortal(const GeometryContext& gctx,
+                                            const Surface& surface) const;
+
+  explicit DetrayPayloadConverter(const Config& config);
 
  private:
-  explicit DetrayPayloadConverter(const Config& config,
-                                  const GeometryContext& gctx,
-                                  const TrackingGeometry& trackingGeometry);
-  ~DetrayPayloadConverter();
-
-  void convertPayload();
-
-  std::unique_ptr<detray::io::detector_payload> m_detectorPayload;
   Config m_cfg;
 };
 }  // namespace Acts
