@@ -25,7 +25,11 @@ addPythia8(
 
 addTruthJetAlg(
     s,
-    TruthJetConfig(inputTruthParticles="particles_generated", outputJets="output_jets", jetPtMin=20 * u.GeV),
+    TruthJetConfig(
+        inputTruthParticles="particles_generated",
+        outputJets="output_jets",
+        jetPtMin=20 * u.GeV,
+    ),
     loglevel=acts.logging.INFO,
 )
 

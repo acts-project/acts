@@ -12,7 +12,7 @@ from acts.examples import (
     ParticlesPrinter,
     RootParticleWriter,
     RootVertexWriter,
-    TruthJetAlgorithm
+    TruthJetAlgorithm,
 )
 
 import acts.examples.hepmc3
@@ -55,8 +55,11 @@ ParticleSelectorConfig = namedtuple(
 )
 
 TruthJetConfig = namedtuple(
-    "TruthJetConfig", ["inputTruthParticles", "outputJets", "jetPtMin"], defaults=[None, None]
+    "TruthJetConfig",
+    ["inputTruthParticles", "outputJets", "jetPtMin"],
+    defaults=[None, None],
 )
+
 
 def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
     return {
@@ -86,11 +89,12 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
         "measurementCounter": config.nMeasurementsGroupMin,
     }
 
+
 def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
     return {
         "inputTruthParticles": config.inputTruthParticles,
         "outputJets": config.outputJets,
-        "jetPtMin": config.jetPtMin
+        "jetPtMin": config.jetPtMin,
     }
 
 
@@ -847,6 +851,7 @@ def addDigiParticleSelection(
     s.addWhiteboardAlias(
         "particles_digitized_selected", selector.config.outputParticles
     )
+
 
 def addTruthJetAlg(
     s: acts.examples.Sequencer,

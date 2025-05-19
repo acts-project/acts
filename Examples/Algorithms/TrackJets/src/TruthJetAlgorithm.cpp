@@ -35,7 +35,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
 
-  const fastjet::JetDefinition defaultJetDefinition = fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+  const fastjet::JetDefinition defaultJetDefinition =
+      fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
 
   // Get the 4-momentum information from the simulated truth particles
   // and create fastjet::PseudoJet objects
