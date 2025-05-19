@@ -6,6 +6,7 @@ acts_add_library(
     src/DetrayGeometryConverter.cpp
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
+    src/DetrayPayloadConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
