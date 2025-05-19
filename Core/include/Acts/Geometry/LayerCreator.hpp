@@ -65,9 +65,6 @@ class LayerCreator {
                         std::unique_ptr<const Logger> logger =
                             getDefaultLogger("LayerCreator", Logging::INFO));
 
-  /// Destructor
-  ~LayerCreator() = default;
-
   /// returning a cylindrical layer
   ///
   /// @param gctx is the geometry context with which the geometry is built
