@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 
   auto material = GeoIntrusivePtr(new GeoMaterial("Material", 1.0));
   auto box = GeoIntrusivePtr(new GeoBox(100, 200, 2));
-  auto log = GeoIntrusivePtr(new GeoLogVol("LogVolumeXY", box, material));
+  auto log = GeoIntrusivePtr(make_intrusive<GeoLogVol>("LogVolumeXY", box, material));
   auto fphys = GeoIntrusivePtr(new GeoFullPhysVol(log));
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
 

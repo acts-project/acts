@@ -128,7 +128,7 @@ GeoModelDetectorObjectFactory::findAllSubVolumes(const PVConstLink &vol) const {
   return sensitives;
 }
 
-bool GeoModelDetectorObjectFactory::convertBox(const std::string& name) {
+bool GeoModelDetectorObjectFactory::convertBox(const std::string& name) const {
   auto convB = std::ranges::any_of(m_cfg.convertBox, [&](const auto &n) {
     return name.find(n) != std::string::npos;
   });

@@ -83,8 +83,7 @@ Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
   }
   transform.linear() = trotation;
 
-  auto trapezoidBounds =
-      std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
+  auto trapezoidBounds = boundFactory.makeBounds<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
 
   if (!sensitive) {
     auto surface =

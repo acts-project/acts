@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // (BOX object) - XY
   std::vector<double> dims = {5, 6, 50};
   auto tube = new GeoTube(dims[0], dims[1], dims[2]);
-  auto logTube = new GeoLogVol("Tube", tube, material);
+  auto logTube = make_intrusive<GeoLogVol>("Tube", tube, material);
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion

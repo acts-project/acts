@@ -64,10 +64,21 @@ class GeoModelDetectorObjectFactory {
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "GeoModelDetectorObjectFactory", Acts::Logging::WARNING));
 
+  /** @brief Run the translation from the GeoModelTree to the (sensitive) surfaces.
+   *  @param cache: Cache object which will contain the surfaces & box volume bounds
+   *  @param gctx: Instance to an geometry context in order to build the envelope volumes
+   *  @param geoModelTree: Configured instance of the GeoModelTree to run the construction on
+   *  @param options: Options configuring which volumes / materials shall be converted to surfaces */
   void construct(Cache& cache, const GeometryContext& gctx,
                  const GeoModelTree& geoModelTree, const Options& options);
 
-
+  /** @brief Convert a full physical volume (and the appropiate children) into sensitive surfaces
+   *  @param name: Published name of the full physical volume in the GeoModelTree
+   *  @param fpv: Pointer to the full physical volume to convert
+   *  @param cache: Output cache object in which the constructed surfaces are saved
+   *  @param gctx: Instance to an geometry context in order to build the envelope volumes */
+  void convertFpv(const std::string& name, const GeoFullPhysVol* fpv, Cache& cache,
+                  const GeometryContext& gctx);
  private:
 
   /** @brief Convert the GeoPhysVol into a sensitive Acts::Surface.
@@ -92,11 +103,10 @@ class GeoModelDetectorObjectFactory {
    *               the published GeoFullPhysVol entry
    *  @param physvol: Reference to the PhysicalVolume to additionally check material compatibility */
   bool matches(const std::string& name, const PVConstLink& physvol) const;
-  
-  void convertFpv(const std::string& name, const GeoFullPhysVol* fpv, Cache& cache,
-    const GeometryContext& gctx);
-bool convertBox(const std::string& name);
-
+  /** @brief Returns whether the name of the published full physical volume is on the list 
+   *         to also convert the volume to an envelope volume
+   *  @param name: Name of the published full physical volume */
+  bool convertBox(const std::string& name) const;
 
 
   std::unique_ptr<const Logger> m_logger;

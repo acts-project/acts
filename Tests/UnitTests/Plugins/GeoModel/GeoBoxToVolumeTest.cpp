@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // (BOX object) - XY
   std::vector<double> hls = {100, 200, 2};
   auto box = new GeoBox(hls[0], hls[1], hls[2]);
-  auto logBox = new GeoLogVol("Box", box, material);
+  auto logBox = make_intrusive<GeoLogVol>("Box", box, material);
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
 
   // create pars for conversion

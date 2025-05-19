@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   for (const auto& eVert : errVerts) {
     err->addVertex(eVert[0], eVert[1]);
   }
-  auto logTrap = new GeoLogVol("LogTrap", trap, al);
-  auto logPoly = new GeoLogVol("LogPoly", poly, al);
-  auto logErr = new GeoLogVol("LogErr", err, al);
+  auto logTrap = make_intrusive<GeoLogVol>("LogTrap", trap, al);
+  auto logPoly = make_intrusive<GeoLogVol>("LogPoly", poly, al);
+  auto logErr = make_intrusive<GeoLogVol>("LogErr", err, al);
 
   auto physTrap = new GeoFullPhysVol(logTrap);
   auto physPoly = new GeoFullPhysVol(logPoly);

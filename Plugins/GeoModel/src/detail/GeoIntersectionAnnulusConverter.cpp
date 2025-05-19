@@ -80,14 +80,14 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
                                                       faceVertices);
         if (!sensitive) {
           auto surface =
-              Surface::makeShared<DiscSurface>(annulusTransform, annulusBounds);
+              Surface::makeShared<DiscSurface>(annulusTransform,boundFactory.insert(annulusBounds));
           return std::make_tuple(nullptr, surface);
         }
 
         // Create the detector element
         auto detectorElement =
             GeoModelDetectorElement::createDetectorElement<DiscSurface>(
-                geoPV, annulusBounds, annulusTransform, thickness);
+                geoPV,boundFactory.insert(annulusBounds), annulusTransform, thickness);
         auto surface = detectorElement->surface().getSharedPtr();
         return std::make_tuple(detectorElement, surface);
       }
