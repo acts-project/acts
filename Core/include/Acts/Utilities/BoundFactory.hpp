@@ -88,14 +88,13 @@ namespace Acts{
                             }
                             const std::vector<double> avalues{a->values()};
                             const std::vector<double> bvalues{b->values()};
-                            std::size_t size = avalues.size();
                             /** Loop over the defining parameters of the two bounds and compare them pairwise.
                              *  If a difference is spotted return the evaluation of the < of the pair */
                             return std::lexicographical_compare(
                                 avalues.begin(), avalues.end(),
                                 bvalues.begin(), bvalues.end(),
-                                [](double a, double b) {
-                                    return a < b;
+                                [](double parA, double parB) {
+                                    return parA < parB;
                                 });
                         }
 
