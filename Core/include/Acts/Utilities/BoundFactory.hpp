@@ -11,7 +11,12 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 #include <set>
-
+#include <memory>
+#include <vector>
+#include <type_traits>
+#include <limits>
+#include <cmath>
+#include <cassert>
 namespace Acts{
     /** @brief Factory helper class to construct volume or surface bounds where the constructed bounds
      *         are cached inside the factory and if the same bound parameters are requested at a later
