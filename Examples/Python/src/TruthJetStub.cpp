@@ -7,12 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // This is a stub version when the FastJet plugin is not available
-#include <pybind11/pybind11.h>
+#include "Acts/Plugins/Python/Utilities.hpp"
 
-namespace py = pybind11;
-
-namespace Acts::Examples::Python {
-void exportTruthJet(py::module& m) {
-  // Empty implementation when FastJet is not available
-}
-}  // namespace Acts::Examples::Python
+namespace Acts::Python {
+void addTruthJet(Context& /*ctx*/) {}
+}  // namespace Acts::Python
