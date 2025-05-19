@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -16,6 +17,9 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Geometry/TrivialPortalLink.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -342,6 +346,95 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
     using enum detray::rectangle2D::boundaries;
     CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_x], 5., 1e-10);
     CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_y], 10., 1e-10);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
+  // Create a transform with translation and rotation
+  Transform3 transform = Transform3::Identity();
+  transform.pretranslate(Vector3(1., 2., 3.));
+  transform.rotate(Eigen::AngleAxisd(0.5 * std::numbers::pi, Vector3::UnitZ()));
+
+  DetrayPayloadConverter::Config cfg;
+  DetrayPayloadConverter converter(cfg);
+
+  // Test cylinder volume
+  {
+    auto cvlBounds = std::make_shared<CylinderVolumeBounds>(5., 10., 10.);
+    auto volume =
+        std::make_shared<TrackingVolume>(transform, cvlBounds, "TestCylinder");
+
+    auto payload = converter.convertVolume(*volume);
+
+    // Check type
+    BOOST_CHECK(payload.type == detray::volume_id::e_cylinder);
+
+    // Check name
+    BOOST_CHECK_EQUAL(payload.name, "TestCylinder");
+
+    // Check transform
+    CHECK_CLOSE_ABS(payload.transform.tr[0], 1., 1e-10);
+    CHECK_CLOSE_ABS(payload.transform.tr[1], 2., 1e-10);
+    CHECK_CLOSE_ABS(payload.transform.tr[2], 3., 1e-10);
+  }
+
+  // Test cuboid volume
+  {
+    auto cuboidBounds = std::make_shared<CuboidVolumeBounds>(5., 10., 15.);
+    auto volume =
+        std::make_shared<TrackingVolume>(transform, cuboidBounds, "TestCuboid");
+
+    auto payload = converter.convertVolume(*volume);
+
+    BOOST_CHECK(payload.type == detray::volume_id::e_cuboid);
+    BOOST_CHECK_EQUAL(payload.name, "TestCuboid");
+  }
+
+  // Test trapezoid volume
+  {
+    auto trapBounds = std::make_shared<TrapezoidVolumeBounds>(4., 8., 10., 15.);
+    auto volume = std::make_shared<TrackingVolume>(transform, trapBounds,
+                                                   "TestTrapezoid");
+
+    auto payload = converter.convertVolume(*volume);
+
+    BOOST_CHECK(payload.type == detray::volume_id::e_trapezoid);
+    BOOST_CHECK_EQUAL(payload.name, "TestTrapezoid");
+  }
+
+  // Test unknown volume type
+  {
+    class MockVolumeBounds : public VolumeBounds {
+     public:
+      BoundsType type() const final { return BoundsType::eOther; }
+      std::vector<double> values() const final { return {}; }
+      bool inside(const Vector3& /*pos*/, double /*tol*/) const final {
+        return false;
+      }
+      std::ostream& toStream(std::ostream& sl) const final { return sl; }
+
+      std::vector<OrientedSurface> orientedSurfaces(
+          const Transform3& /*trf*/) const final {
+        return {};
+      }
+
+      Volume::BoundingBox boundingBox(const Transform3* /*trf*/,
+                                      const Vector3& /*envelope*/,
+                                      const Volume* /*entity*/) const final {
+        return {nullptr, Vector3::Zero(), Vector3::Zero()};
+      }
+    };
+
+    auto mockBounds = std::make_shared<MockVolumeBounds>();
+    TrackingVolume tv(transform, mockBounds, "TestUnknown");
+
+    auto volume =
+        std::make_shared<TrackingVolume>(transform, mockBounds, "TestUnknown");
+
+    auto payload = converter.convertVolume(*volume);
+
+    BOOST_CHECK(payload.type == detray::volume_id::e_unknown);
+    BOOST_CHECK_EQUAL(payload.name, "TestUnknown");
   }
 }
 
