@@ -9,8 +9,6 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -100,6 +98,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Setup hooks
   LoopHook hook;
 
+  /*
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
   if (m_inputTruthGraph.isInitialized()) {
     truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
@@ -111,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   if (m_outputGraph.isInitialized()) {
     graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
     hook.hooks.push_back(&*graphStoreHook);
-  }
+  }*/
 
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
@@ -225,12 +224,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
-  if (m_outputGraph.isInitialized()) {
+  /*if (m_outputGraph.isInitialized()) {
     auto graph = graphStoreHook->storedGraph();
     std::transform(graph.first.begin(), graph.first.end(), graph.first.begin(),
                    [&](const auto& a) -> std::int64_t { return idxs.at(a); });
     m_outputGraph(ctx, {graph.first, graph.second});
-  }
+  }*/
 
   auto t3 = Clock::now();
 
