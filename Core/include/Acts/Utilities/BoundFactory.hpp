@@ -89,14 +89,20 @@ namespace Acts{
                             const std::vector<double> avalues{a->values()};
                             const std::vector<double> bvalues{b->values()};
                             std::size_t size = avalues.size();
-                            /** Loop over the defining parameters of the two bounds and compare them pairwise.
-                             *  If a difference is spotted return the evaluation of the < of the pair */
-                            for(std::size_t i=0; i<size-1; ++i) {
-                                if(std::abs(avalues[i]- bvalues[i]) > std::numeric_limits<double>::epsilon()){
-                                    return avalues[i] < bvalues[i];
-                                }
-                            }
-                            return avalues[size-1] < bvalues[size-1];
+-                           /** Loop over the defining parameters of the two bounds and compare them pairwise.
+-                            *  If a difference is spotted return the evaluation of the < of the pair */
+-                           for(std::size_t i=0; i<size-1; ++i) {
+-                               if(std::abs(avalues[i]- bvalues[i]) > std::numeric_limits<double>::epsilon()){
+-                                   return avalues[i] < bvalues[i];
+-                               }
+-                           }
+-                           return avalues[size-1] < bvalues[size-1];
++                           return std::lexicographical_compare(
++                               avalues.begin(), avalues.end(),
++                               bvalues.begin(), bvalues.end(),
++                               [](double a, double b) {
++                                   return a < b - std::numeric_limits<double>::epsilon();
++                               });
                         }
 
             };
