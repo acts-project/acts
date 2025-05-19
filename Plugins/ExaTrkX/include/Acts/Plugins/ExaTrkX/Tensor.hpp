@@ -112,11 +112,22 @@ class Tensor {
     return Tensor(std::move(clonedMemory), m_shape);
   }
 
+  /// Get the non-const data pointer
   T *data() { return static_cast<T *>(m_memory.data()); }
+
+  /// Get the const data pointer
   const T *data() const { return static_cast<const T *>(m_memory.data()); }
+
+  /// Get the shape of the tensor
   Shape shape() const { return m_shape; }
+
+  /// Get the number of elements in the tensor
   std::size_t size() const { return m_shape[0] * m_shape[1]; }
+
+  /// Get the number of bytes of the tensor
   std::size_t nbytes() const { return size() * sizeof(T); }
+
+  /// Get the device of the tensor
   Acts::Device device() const { return m_memory.device(); }
 
  private:
@@ -129,14 +140,15 @@ class Tensor {
 
 /// Element-wise sigmoid function for float cpu tensors
 /// @param tensor The tensor to apply the sigmoid function to
-/// @param execContext The execution context
+/// @param stream The stream to use for the operation in case of CUDA
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream = {});
 
 /// Apply a score cut to the tensor and return a new tensor with the values that
 /// satisfy the cut
-/// @param tensor The tensor to apply the cut to
-/// @param cut The cut value
-/// @param execContext The execution context
+/// @param scores The edge score tensor
+/// @param edgeIndex The edge index tensor
+/// @param cut The score cut value which edges to accept
+/// @param stream The stream to use for the operation in case of CUDA
 std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
     const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
     float cut, std::optional<cudaStream_t> stream = {});
