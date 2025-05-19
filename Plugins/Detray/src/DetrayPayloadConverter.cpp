@@ -229,10 +229,10 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
 }
 
 detray::io::surface_payload DetrayPayloadConverter::convertPortal(
-    const GeometryContext& gctx, const Surface& surface) const {
+    const GeometryContext& gctx, const Portal& portal) const {
   detray::io::surface_payload payload =
-      convertSurfaceCommon(gctx, surface, m_cfg.sensitiveStrategy);
-  payload.mask = convertMask(surface.bounds(), true);
+      convertSurfaceCommon(gctx, portal.surface(), m_cfg.sensitiveStrategy);
+  payload.mask = convertMask(portal.surface().bounds(), true);
   return payload;
 }
 
