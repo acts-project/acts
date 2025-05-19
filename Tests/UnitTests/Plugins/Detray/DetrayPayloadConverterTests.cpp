@@ -9,9 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -296,12 +300,33 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
       BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
+  GeometryContext gctx;
+
+  // Create a transform with translation and rotation
+  Transform3 transform = Transform3::Identity();
+  transform.pretranslate(Vector3(1., 2., 3.));
+  transform.rotate(Eigen::AngleAxisd(0.5 * std::numbers::pi, Vector3::UnitZ()));
+
+  // Create rectangle bounds
+  auto bounds = std::make_shared<RectangleBounds>(5., 10.);
+
+  auto cvlBounds = std::make_shared<CylinderVolumeBounds>(5., 10., 10.);
+  TrackingVolume tv(transform, cvlBounds);
+
+  // Create a plane surface
+  auto surface = Surface::makeShared<PlaneSurface>(transform, bounds);
+
+  // Create a portal with the surface
+  auto portal = std::make_shared<Portal>(Direction::AlongNormal(), surface, tv);
 
   // Test portal conversion
   {
     DetrayPayloadConverter::Config cfg;
     DetrayPayloadConverter converter(cfg);
-    auto payload = converter.convertPortal(gctx, *surface);
+    auto payload = converter.convertPortal(gctx, *portal);
 
     // Portal should always be passive
     BOOST_CHECK(payload.type == detray::surface_id::e_passive);
