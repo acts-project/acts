@@ -291,6 +291,7 @@ set(_acts_covfie_version 0.12.1)
 set(_acts_vecmem_version 1.14.0)
 set(_acts_algebraplugins_version 0.26.2)
 set(_acts_annoy_version 1.17.3)
+set(_acts_fastjet_version 3.4.3)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -405,7 +406,7 @@ if(ACTS_BUILD_PLUGIN_JSON)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_FASTJET)
-    find_package(FastJet REQUIRED)
+    find_package(FastJet ${_acts_fastjet_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
