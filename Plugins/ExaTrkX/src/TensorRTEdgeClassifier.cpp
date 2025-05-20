@@ -112,12 +112,6 @@ TensorRTEdgeClassifier::~TensorRTEdgeClassifier() {}
 PipelineTensors TensorRTEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
   assert(execContext.device.type == Acts::Device::Type::eCUDA);
-  assert(tensors.nodeFeatures.device().type == execContext.device.type);
-  assert(tensors.edgeIndex.device().type == execContext.device.type);
-  assert(tensors.edgeFeatures->device().type == execContext.device.type);
-
-  ACTS_DEBUG("Start TensorRT classifier");
-  auto stream = execContext.stream.value();
 
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
@@ -152,15 +146,12 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
 
   auto scores =
       Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul}, execContext);
-  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-  ACTS_DEBUG("Scores number of elements: " << scores.size());
   context->setTensorAddress("output", scores.data());
 
   t2 = std::chrono::high_resolution_clock::now();
 
-  ACTS_DEBUG("Call inference");
+  auto stream = execContext.stream.value();
   auto status = context->enqueueV3(stream);
-  ACTS_CUDA_CHECK(cudaGetLastError());
   if (!status) {
     throw std::runtime_error("Failed to execute TensorRT model");
   }
@@ -172,8 +163,6 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
     std::lock_guard<std::mutex> lock(m_contextMutex);
     m_contexts.push_back(std::move(context));
   }
-
-  ACTS_DEBUG("Postprocessing edge scores");
 
   sigmoid(scores, execContext.stream);
 
