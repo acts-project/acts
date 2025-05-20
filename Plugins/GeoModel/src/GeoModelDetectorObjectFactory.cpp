@@ -54,9 +54,9 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
 
     /** Full phyiscal volumes represent  logical detector units.*/
     for (const auto &[name, fpv] : qFPV) {
-      PVConstLink physVol{fpv};
+      FPVConstLink physVol{fpv};
       ACTS_INFO("Convert volume " << name);
-      convertFpv(name, fpv, cache, gctx);
+      convertFpv(name, physVol, cache, gctx);
     }
   }
 }
@@ -137,59 +137,52 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
 }
 
 void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
-                                               const GeoFullPhysVol *fpv,
+                                               const FPVConstLink& physVol,
                                                Cache &cache,
                                                const GeometryContext &gctx) {
-  const auto prevSize = cache.sensitiveSurfaces.size();
-  PVConstLink physVol{fpv};
+  const std::size_t prevSize = cache.sensitiveSurfaces.size();
+  {
+    /** Search all subvolumes that may be converted to sensitive surfaces */
+    std::vector<GeoChildNodeWithTrf> subVolToTrf = findAllSubVolumes(physVol);
 
-  /** Search all subvolumes that may be converted to sensitive surfaces */
-  std::vector<GeoChildNodeWithTrf> surfaces = findAllSubVolumes(physVol);
-  std::vector<GeoModelSensitiveSurface> sensitives;
-  sensitives.reserve(surfaces.size());
+    std::vector<GeoModelSensitiveSurface> sensitives;
+    sensitives.reserve(subVolToTrf.size());
 
-  for (const auto &surface : surfaces) {
-    /** Align the surface with the global position of the detector */
-    const Transform3 transform =
-        fpv->getAbsoluteTransform() * surface.transform;
-    convertSensitive(surface.volume, transform, *cache.surfBoundFactory,
-                     sensitives);
+    for (const auto &trfMe : subVolToTrf) {
+      /** Align the surface with the global position of the detector */
+      const Transform3 transform = physVol->getAbsoluteTransform() * trfMe.transform;
+      convertSensitive(trfMe.volume, transform, *cache.surfBoundFactory, sensitives);
+    }
+
+    if (sensitives.empty() && matches(name, physVol)) {
+      convertSensitive(physVol, physVol->getAbsoluteTransform(), *cache.surfBoundFactory, 
+                       cache.sensitiveSurfaces);
+    }
+    cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
+                                  std::make_move_iterator(sensitives.begin()), 
+                                  std::make_move_iterator(sensitives.end()));
+    // Set the corresponding database entry name to all sensitive surfaces
+    for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
+      const auto& detEl =  std::get<0>(cache.sensitiveSurfaces[i]);
+      detEl->setDatabaseEntryName(name);
+      ACTS_VERBOSE("Set database name of the DetectorElement to "<<detEl->databaseEntryName());
+    }
   }
-  cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
-                                 std::make_move_iterator(sensitives.begin()),
-                                 std::make_move_iterator(sensitives.end()));
   // Extract the bounding box surrounding the surface
   if (convertBox(name)) {
-    // get logVol for the shape of the volume
-    const GeoShape *shape = fpv->getLogVol()->getShape();  // get shape
-    const Transform3 &fpvtransform = fpv->getAbsoluteTransform();
-
-    std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>> volume =
-        Acts::GeoModel::convertVolumeDetectorVolume(gctx, *shape, name,
-                                                    fpvtransform, sensitives);
-
+    auto volume = GeoModel::convertVolume(physVol->getAbsoluteTransform(),
+                                          physVol->getLogVol()->getShape(),
+                                          *cache.volumeBoundFactory);
+    
+    std::vector<std::shared_ptr<Surface>> surfacesToPut{};
+    std::transform(cache.sensitiveSurfaces.begin() + prevSize,
+                   cache.sensitiveSurfaces.end(), std::back_inserter(surfacesToPut),
+                   [](const GeoModelSensitiveSurface& sensitive){
+                       return std::get<1>(sensitive);
+                   });
     // convert bounding boxes with surfaces inside
-    // std::shared_ptr<Experimental::DetectorVolume> box =
-    //     Acts::GeoModel::convertDetectorVolume(gctx, *shape, name,
-    //     fpvtransform,
-    //                                           sensitives);
-    cache.boundingBoxes.push_back(volume);
-    cache.volumeBoxFPVs.push_back(
-        std::make_tuple(volume.first, volume.second, fpv));
-
-  }
-  // If fpv has no subs and should not be converted to volume convert to surface
-  else if (surfaces.empty() && matches(name, physVol)) {
-    convertSensitive(fpv, fpv->getAbsoluteTransform(), *cache.surfBoundFactory,
-                     cache.sensitiveSurfaces);
-  }
-
-  // Set the corresponding database entry name to all sensitive surfaces
-  for (auto i = prevSize; i < cache.sensitiveSurfaces.size(); ++i) {
-    auto &[detEl, _] = cache.sensitiveSurfaces[i];
-    detEl->setDatabaseEntryName(name);
-    ACTS_VERBOSE("Set database name of the DetectorElement to "
-                 << detEl->databaseEntryName());
+    auto volumeGen2 = GeoModel::convertDetectorVolume(gctx, *volume, name, surfacesToPut);
+    cache.volumeBoxFPVs.emplace_back(std::make_tuple(volume, volumeGen2, physVol));
   }
 }
 // function to determine if object fits query

@@ -18,6 +18,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "GeoModelKernel/throwExcept.h"
 
 using namespace Acts::UnitLiterals;
 
@@ -26,7 +27,7 @@ namespace ActsExamples {
 GeoModelMuonMockupBuilder::GeoModelMuonMockupBuilder(const Config& cfg)
     : m_cfg(cfg) {
   if (m_cfg.sensitiveSurfaces.empty()) {
-    throw std::runtime_error("No sensitive surfaces provided");
+    THROW_EXCEPTION("No sensitive surfaces provided");
   }
 }
 
@@ -81,7 +82,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         });
 
     if (it_first == boundingBoxes.end() || it_second == boundingBoxes.end()) {
-      throw std::runtime_error("No bounding box found ");
+      THROW_EXCEPTION("No bounding box found ");
       continue;
     }
 
@@ -103,8 +104,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     auto parent = std::get<2>(*it_first)->getParent();
 
     if (!parent) {
-      throw std::runtime_error("No parent found for " + name +
-                               " sector: " + std::to_string(sector));
+      THROW_EXCEPTION("No parent found for "<<name <<" sector: " <<sector);
     }
 
     // COnstruct the parent as the chamber tracking volume
@@ -150,8 +150,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
 
   // create the cylinder bounds for the barrel cylinder node
 
-  double rmincyl = std::hypot(volChambers.front()->center().x(),
-                              volChambers.front()->center().y()) -
+  double rmincyl = volChambers.front()->center().perp() -
                    volChambers.front()->volumeBounds().values()[0];
   double rmaxcyl =
       std::hypot(rmincyl + 2 * volChambers.front()->volumeBounds().values()[0],

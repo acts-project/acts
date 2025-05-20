@@ -9,26 +9,32 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "GeoModelKernel/GeoDefinitions.h"
 class GeoShape;
 
 namespace Acts::GeoModel {
 
-// function converts GeoShape to Acts::Volume
-Volume convertVolume(const Transform3& trf, const GeoShape& shape);
+/** @brief Converts a GeoShape into a bounded volume. For the supported shape types and the 
+ *         choosen strategie please consult the cpp file. May throw an exception if the 
+ *         GeoShape is not yet considered.
+ *  @param trf: Transform to align position in the volume in space
+ *  @param shape: Pointer to the GeoShape from which the VolumeBounds are translated
+ *  @param boundFactory: Reference to the bound factory to avoid multiple instances of 
+ *                       equivalent bound parameters 
+ *  @return A shared pointer initialized with the new volume */
+std::shared_ptr<Volume> convertVolume(const Transform3& trf, const GeoShape* shape, VolumeBoundFactory& boundFactory);
 
-/// @brief Convert a GeoModel shape to a DetectorVolume
-///
-/// @param shape the GeoModel shape
-/// @param transform the transform to be applied
-/// @param name the name of the volume
-/// @param sensitives the sensitive surfaces
-/// @return the pair of Volume and DetectorVolume (for gen1/3 and gen2 use cases)
-std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>
-convertVolumeDetectorVolume(
-    const GeometryContext& context, const GeoShape& shape,
-    const std::string& name, const GeoTrf::Transform3D& transform,
-    const std::vector<GeoModelSensitiveSurface>& sensitives);
+/** @brief Converts a simple Volume into a Gen-2 DetectorVolume with associated sensitive surfaces inside
+ *  @param context: GeometryContext to align the volume needed during the construction phase of the volume
+ *  @param vol: Non-const reference to the volume to convert
+ *  @param name: Name of the constructed Gen-2 volume
+ *  @param sensitives: List of sensitive surfaces to be put inside the detector volume.
+ *  @return A shared pointer initialized with the new Gen-2 volume */
+std::shared_ptr<Experimental::DetectorVolume> 
+    convertDetectorVolume(const GeometryContext& context, 
+                          Volume& vol,
+                          const std::string& name,
+                          const std::vector<std::shared_ptr<Surface>>& sensitives);
 
 }  // namespace Acts::GeoModel

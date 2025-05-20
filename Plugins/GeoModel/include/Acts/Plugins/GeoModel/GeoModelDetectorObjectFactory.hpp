@@ -27,11 +27,13 @@ namespace Acts {
 /** @brief Factory class to convert GeoModel objects into Acts volumes. Currently,  */
 class GeoModelDetectorObjectFactory {
  public:
-  using GeoModelBoundingBox =
-      std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>;
+  /** @brief abrivation of the smart pointer to a full physical volume */
+  using FPVConstLink = GeoIntrusivePtr<const GeoVFullPhysVol>;
+  /** @brief Tuple describing the shared ptr to a Volume which will be turned into a TrackingVolume,
+   *          a Gen-2 volume and the pointer to the full physical volume */
   using GeoModelVolumeFPVTuple =
-      std::tuple<Volume, std::shared_ptr<Experimental::DetectorVolume>,
-                 PVConstLink>;
+      std::tuple<std::shared_ptr<Volume>, std::shared_ptr<Experimental::DetectorVolume>,
+      FPVConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -55,9 +57,6 @@ class GeoModelDetectorObjectFactory {
   struct Cache {
     // The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-
-    // The created representation of bounding box
-    std::vector<GeoModelBoundingBox> boundingBoxes;
     /** @brief Pointer to the surface bound factory  */
     std::shared_ptr<SurfaceBoundFactory> surfBoundFactory =
         std::make_shared<SurfaceBoundFactory>();
@@ -88,7 +87,7 @@ class GeoModelDetectorObjectFactory {
    *  @param fpv: Pointer to the full physical volume to convert
    *  @param cache: Output cache object in which the constructed surfaces are saved
    *  @param gctx: Instance to an geometry context in order to build the envelope volumes */
-  void convertFpv(const std::string& name, const GeoFullPhysVol* fpv,
+  void convertFpv(const std::string& name, const FPVConstLink& fpv,
                   Cache& cache, const GeometryContext& gctx);
 
  private:

@@ -161,7 +161,7 @@ void addGeoModel(Context& ctx) {
             &Acts::GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
         .def_readwrite(
             "boundingBoxes",
-            &Acts::GeoModelDetectorObjectFactory::Cache::boundingBoxes);
+            &Acts::GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs);
 
     py::class_<Acts::GeoModelDetectorObjectFactory::Options>(a, "Options")
         .def(py::init<>())
