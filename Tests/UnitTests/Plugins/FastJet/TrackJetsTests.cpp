@@ -20,7 +20,7 @@ class Track {
   Track(float pt, float eta, float phi) {
     m_momentum[0] = pt * std::cos(phi);
     m_momentum[1] = pt * std::sin(phi);
-    m_momentum[1] = pt * std::sinh(eta);
+    m_momentum[2] = pt * std::sinh(eta);
   }
   Acts::Vector3 momentum() const { return m_momentum; }
   ParticleHypothesis particleHypothesis() const { return ParticleHypothesis(); }

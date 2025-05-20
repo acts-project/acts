@@ -15,6 +15,9 @@ string(
     _
     ${FastJet_VERSION_FILE}
 )
+if(NOT CMAKE_MATCH_1)
+  message(FATAL_ERROR "Failed to extract FastJet version from config_auto.h")
+endif()
 
 set(FastJet_VERSION ${CMAKE_MATCH_1})
 

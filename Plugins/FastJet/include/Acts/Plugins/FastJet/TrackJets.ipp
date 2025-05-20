@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Definitions/Common.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 
 template <typename TrackContainer>
 Acts::FastJet::TrackJetSequence<TrackContainer> Acts::FastJet::makeTrackJets(
