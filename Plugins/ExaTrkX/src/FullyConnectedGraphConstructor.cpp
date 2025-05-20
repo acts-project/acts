@@ -13,14 +13,13 @@
 #include <Acts/Plugins/ExaTrkX/FullyConnectedGraphConstructor.hpp>
 #include <Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp>
 
-#ifndef ACTS_EXATRKX_CPUONLY
-#include <c10/cuda/CUDAGuard.h>
+#ifdef ACTS_EXATRKX_WITH_CUDA
+#include <cuda_runtime.h>
 #endif
 
 namespace Acts {
 
-std::tuple<std::any, std::any, std::any>
-FullyConnectedGraphConstructor::operator()(
+PipelineTensors FullyConnectedGraphConstructor::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<std::uint64_t> & /*moduleIds*/,
     const ExecutionContext &execContext) {
@@ -28,33 +27,11 @@ FullyConnectedGraphConstructor::operator()(
     throw NoEdgesError{};
   }
 
-  const auto device =
-      execContext.device.type == Acts::Device::Type::eCUDA
-          ? torch::Device(torch::kCUDA, execContext.device.index)
-          : torch::kCPU;
-
   // Not sure why I must reset this here...
+#ifdef ACTS_EXATRKX_WITH_CUDA
   auto lastCudaError = cudaGetLastError();
   ACTS_DEBUG("Retrieved last CUDA error: " << lastCudaError);
-  c10::InferenceMode guard(true);
-
-  // add a protection to avoid calling for kCPU
-#ifdef ACTS_EXATRKX_CPUONLY
-  assert(device == torch::Device(torch::kCPU));
-#else
-  std::optional<c10::cuda::CUDAGuard> device_guard;
-  // At least under torch 2.3 and below stream guard causes a memory leak I
-  // think We instead just synchronize the stream and use the default torch
-  // stream
-  // std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
-    device_guard.emplace(execContext.device.index);
-    // streamGuard.emplace(execContext.stream.value());
-    execContext.stream->synchronize();
-  }
 #endif
-
-  torch::NoGradGuard noGradGuard;
 
   auto numAllFeatures = inputValues.size() / numNodes;
 
@@ -132,20 +109,12 @@ FullyConnectedGraphConstructor::operator()(
   ACTS_DEBUG("Built " << numEdges << " edges, skipped " << skipped);
 
   // Bring the edge list into the right format
-  std::vector<std::int64_t> edgeListVector;
-  edgeListVector.reserve(numEdges * 2);
-  std::transform(edgeData.begin(), edgeData.end(),
-                 std::back_inserter(edgeListVector),
-                 [](const auto &edge) { return std::get<0>(edge); });
-  std::transform(edgeData.begin(), edgeData.end(),
-                 std::back_inserter(edgeListVector),
-                 [](const auto &edge) { return std::get<1>(edge); });
-
-  // Convert the edge list to a tensor
   auto edgeList =
-      detail::vectorToTensor2D(edgeListVector, numEdges).contiguous();
-  assert(edgeList.size(0) == 2);
-  assert(edgeList.size(1) == static_cast<std::int64_t>(numEdges));
+      Acts::Tensor<std::int64_t>::Create({2, numEdges}, {Device::Cpu(), {}});
+  std::transform(edgeData.begin(), edgeData.end(), edgeList.data(),
+                 [](const auto &edge) { return std::get<0>(edge); });
+  std::transform(edgeData.begin(), edgeData.end(), edgeList.data() + numEdges,
+                 [](const auto &edge) { return std::get<1>(edge); });
 
   // TODO I think this is already somewhere in the codebase
   const float pi = std::numbers::pi_v<float>;
@@ -167,11 +136,11 @@ FullyConnectedGraphConstructor::operator()(
 
   // TODO Unify edge feature building, this is only to get it in fast
   constexpr static std::size_t numEdgeFeatures = 6;
-  std::vector<float> edgeFeatureVector;
-  edgeFeatureVector.reserve(numEdgeFeatures * edgeList.size(1));
-  for (auto i = 0; i < edgeList.size(1); ++i) {
-    auto src = edgeList.index({0, i}).item<int>();
-    auto dst = edgeList.index({1, i}).item<int>();
+  auto edgeFeatures = Acts::Tensor<float>::Create({numEdges, numEdgeFeatures},
+                                                  {Device::Cpu(), {}});
+  for (auto i = 0ul; i < numEdges; ++i) {
+    auto src = *(edgeList.data() + i);
+    auto dst = *(edgeList.data() + numEdges + i);
 
     // Edge features
     // See
@@ -194,31 +163,28 @@ FullyConnectedGraphConstructor::operator()(
       rphislope = avgR * phislope;
     }
 
-    for (auto f : {deltaR, deltaPhi, deltaZ, deltaEta, phislope, rphislope}) {
-      edgeFeatureVector.push_back(f);
-    }
+    *(edgeFeatures.data() + i * numEdgeFeatures + 0) = deltaR;
+    *(edgeFeatures.data() + i * numEdgeFeatures + 1) = deltaPhi;
+    *(edgeFeatures.data() + i * numEdgeFeatures + 2) = deltaZ;
+    *(edgeFeatures.data() + i * numEdgeFeatures + 3) = deltaEta;
+    *(edgeFeatures.data() + i * numEdgeFeatures + 4) = phislope;
+    *(edgeFeatures.data() + i * numEdgeFeatures + 5) = rphislope;
   }
 
-  auto edgeFeatures =
-      detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures);
-  assert(edgeFeatures.size(0) == static_cast<std::int64_t>(numEdges));
-  assert(edgeFeatures.size(1) == numEdgeFeatures);
-
-  auto inputTensor = detail::vectorToTensor2D(inputValues, numAllFeatures);
-  assert(inputTensor.size(0) == static_cast<std::int64_t>(numNodes));
-  assert(inputTensor.size(1) == static_cast<std::int64_t>(numAllFeatures));
+  auto nodeFeatures = Acts::Tensor<float>::Create({numNodes, numAllFeatures},
+                                                  {Device::Cpu(), {}});
+  std::copy(inputValues.begin(), inputValues.end(), nodeFeatures.data());
 
   ACTS_DEBUG("Move data to " << execContext.device);
 
-  auto inputTensorCuda = inputTensor.to(device);
-  auto edgeListCuda = edgeList.to(device);
-  auto edgeFeaturesCuda = edgeFeatures.to(device);
+  auto edgeListDevice = edgeList.clone(execContext);
+  auto edgeFeaturesDevice = edgeFeatures.clone(execContext);
+  auto nodeFeaturesDevice = nodeFeatures.clone(execContext);
 
-  ACTS_VERBOSE("inputTensor: " << inputTensorCuda);
-  ACTS_VERBOSE("edgeList: " << edgeListCuda);
-  ACTS_VERBOSE("edgeFeatures: " << edgeFeaturesCuda);
-
-  return {inputTensorCuda, edgeListCuda, edgeFeaturesCuda};
+  return {std::move(nodeFeaturesDevice),
+          std::move(edgeListDevice),
+          std::move(edgeFeaturesDevice),
+          {}};
 }
 
 }  // namespace Acts

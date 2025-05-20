@@ -165,7 +165,6 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     Accumulator trackBuildingTime;
     Accumulator postprocessingTime;
     Accumulator fullTime;
-    std::size_t count = 0;
   } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,

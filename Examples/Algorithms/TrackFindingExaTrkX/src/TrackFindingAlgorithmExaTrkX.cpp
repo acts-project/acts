@@ -9,8 +9,6 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -36,10 +34,9 @@ struct LoopHook : public Acts::ExaTrkXHook {
 
   ~LoopHook() {}
 
-  void operator()(const std::any& nodes, const std::any& edges,
-                  const std::any& weights) const override {
+  void operator()(const Acts::PipelineTensors& tensors) const override {
     for (auto hook : hooks) {
-      (*hook)(nodes, edges, weights);
+      (*hook)(tensors);
     }
   }
 };
@@ -58,24 +55,6 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing protoTrack output collection");
   }
-
-  // Sanitizer run with dummy input to detect configuration issues
-  // TODO This would be quite helpful I think, but currently it does not work
-  // in general because the stages do not expose the number of node features.
-  // However, this must be addressed anyway when we also want to allow to
-  // configure this more flexible with e.g. cluster information as input. So
-  // for now, we disable this.
-#if 0
-  if( m_cfg.sanitize ) {
-  Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
-  std::vector<float> dummyInputVec(dummyInput.data(),
-                                   dummyInput.data() + dummyInput.size());
-  std::vector<int> spacepointIDs;
-  std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-
-  runPipeline(dummyInputVec, spacepointIDs);
-  }
-#endif
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
@@ -122,6 +101,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Setup hooks
   LoopHook hook;
 
+  /*
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
   if (m_inputTruthGraph.isInitialized()) {
     truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
@@ -133,7 +113,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   if (m_outputGraph.isInitialized()) {
     graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
     hook.hooks.push_back(&*graphStoreHook);
-  }
+  }*/
 
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
@@ -162,7 +142,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // per spacepoint
     // TODO does it work for the module map construction to use only the first
     // sp?
-    const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
+    const auto& sl1 = sp.sourceLinks().at(0).template get<IndexSourceLink>();
 
     if (m_cfg.geometryIdMap != nullptr) {
       moduleIds.push_back(m_cfg.geometryIdMap->right.at(sl1.geometryId()));
@@ -252,22 +232,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
-  if (m_outputGraph.isInitialized()) {
+  /*if (m_outputGraph.isInitialized()) {
     auto graph = graphStoreHook->storedGraph();
     std::transform(graph.first.begin(), graph.first.end(), graph.first.begin(),
                    [&](const auto& a) -> std::int64_t { return idxs.at(a); });
     m_outputGraph(ctx, {graph.first, graph.second});
-  }
+  }*/
 
   auto t3 = Clock::now();
 
   {
     std::lock_guard<std::mutex> lock(m_mutex);
-
-    m_timing.count++;
-    if (m_timing.count <= 3) {
-      return ActsExamples::ProcessCode::SUCCESS;
-    }
 
     m_timing.preprocessingTime(Duration(t1 - t0).count());
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());

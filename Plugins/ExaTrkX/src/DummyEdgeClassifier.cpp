@@ -8,8 +8,6 @@
 
 #include "Acts/Plugins/ExaTrkX/DummyEdgeClassifier.hpp"
 
-#include <torch/torch.h>
-
 namespace Acts {
 
 DummyEdgeClassifier::DummyEdgeClassifier(const Config& cfg,
@@ -18,25 +16,19 @@ DummyEdgeClassifier::DummyEdgeClassifier(const Config& cfg,
 
 DummyEdgeClassifier::~DummyEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any, std::any>
-DummyEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
-                                std::any inEdgeFeatures,
-                                const ExecutionContext& /*execContext*/) {
+PipelineTensors DummyEdgeClassifier::operator()(
+    PipelineTensors tensors, const ExecutionContext& execContext) {
   if (m_cfg.keepAll) {
-    auto scores = torch::ones(std::any_cast<at::Tensor>(inEdgeIndex).size(1))
-                      .to(torch::kFloat32);
+    auto scores = Acts::Tensor<float>::Create(
+        {1, tensors.edgeIndex.shape().at(1)}, {Device::Cpu(), {}});
+    std::fill(scores.data(), scores.data() + scores.size(), 1.f);
 
-    return {std::move(inNodeFeatures), std::move(inEdgeFeatures),
-            std::move(inEdgeFeatures), std::move(scores)};
+    tensors.edgeScores = scores.clone(execContext);
   } else {
-    auto noEdges =
-        torch::empty({2, 0}, at::TensorOptions{}.dtype(torch::kLong));
-    at::Tensor scores =
-        torch::empty({0}, at::TensorOptions{}.dtype(torch::kFloat32));
-
-    return {std::move(inNodeFeatures), std::move(noEdges),
-            std::move(inEdgeFeatures), std::move(scores)};
+    tensors.edgeIndex = Acts::Tensor<std::int64_t>::Create({2, 0}, execContext);
+    tensors.edgeScores = Acts::Tensor<float>::Create({0, 1}, execContext);
   }
+  return tensors;
 }
 
 }  // namespace Acts

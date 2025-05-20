@@ -18,16 +18,15 @@
 #include <boost/container/small_vector.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include <torch/torch.h>
 
 namespace bc = boost::container;
 
 namespace {
 template <typename vertex_t, typename weight_t>
 auto weaklyConnectedComponents(vertex_t numNodes,
-                               std::span<vertex_t>& srcIndices,
-                               std::span<vertex_t>& dstIndices,
-                               std::span<weight_t>& edgeWeights,
+                               std::span<const vertex_t>& srcIndices,
+                               std::span<const vertex_t>& dstIndices,
+                               std::span<const weight_t>& edgeWeights,
                                std::vector<vertex_t>& trackLabels) {
   using Graph =
       boost::adjacency_list<boost::vecS,         // edge list
@@ -51,19 +50,25 @@ auto weaklyConnectedComponents(vertex_t numNodes,
 namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-    std::any /*nodes*/, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, const ExecutionContext& execContext) {
+    PipelineTensors tensors, std::vector<int>& spacepointIDs,
+    const ExecutionContext& /*execContext*/) {
   ACTS_DEBUG("Start track building");
-  const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
-  const auto edgeWeightTensor =
-      std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
+  using RTF = const Tensor<float>&;
+  using RTI = const Tensor<std::int64_t>&;
+  const auto& edgeTensor = tensors.edgeIndex.device().isCpu()
+                               ? static_cast<RTI>(tensors.edgeIndex)
+                               : static_cast<RTI>(tensors.edgeIndex.clone(
+                                     {Acts::Device::Cpu(), {}}));
+  const auto& scoreTensor = tensors.edgeScores->device().isCpu()
+                                ? static_cast<RTF>(*tensors.edgeScores)
+                                : static_cast<RTF>(tensors.edgeScores->clone(
+                                      {Acts::Device::Cpu(), {}}));
 
-  assert(edgeTensor.size(0) == 2);
-  assert(edgeTensor.size(1) == edgeWeightTensor.size(0));
+  assert(edgeTensor.shape().at(0) == 2);
+  assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdgesInitial =
-      static_cast<std::size_t>(edgeWeightTensor.size(0));
+  const auto numEdgesInitial = scoreTensor.shape().at(1);
 
   if (numEdgesInitial == 0) {
     ACTS_WARNING("No edges remained after edge classification");
@@ -73,17 +78,10 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   using vertex_t = std::int64_t;
   using weight_t = float;
 
-  std::span<vertex_t> srcIndices(edgeTensor.data_ptr<vertex_t>(),
-                                 numEdgesInitial);
-  std::span<vertex_t> dstIndices(
-      edgeTensor.data_ptr<vertex_t>() + numEdgesInitial, numEdgesInitial);
-  std::span<weight_t> edgeWeights(edgeWeightTensor.data_ptr<float>(),
-                                  numEdgesInitial);
-
-  if (m_cfg.doWalkthrough) {
-    ACTS_DEBUG("Do walkthrough algorithm");
-    return m_walkthrough(srcIndices, dstIndices, edgeWeights, numSpacepoints);
-  }
+  std::span<const vertex_t> srcIndices(edgeTensor.data(), numEdgesInitial);
+  std::span<const vertex_t> dstIndices(edgeTensor.data() + numEdgesInitial,
+                                       numEdgesInitial);
+  std::span<const weight_t> edgeWeights(scoreTensor.data(), numEdgesInitial);
 
   // In case we do junction removal, these vectors hold the resulting new edges
   std::vector<vertex_t> srcIndicesJR, dstIndicesJR;
@@ -121,7 +119,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
           continue;
         }
         auto maxEdge = *std::ranges::max_element(
-            ioEdges, {}, [&](auto i) { return edgeWeights[i]; });
+            ioEdges, {}, [&](auto j) { return edgeWeights[j]; });
         for (auto e : ioEdges) {
           if (e != maxEdge) {
             edgeMask.at(e) = false;

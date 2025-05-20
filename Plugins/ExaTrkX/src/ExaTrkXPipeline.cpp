@@ -11,7 +11,20 @@
 #include "Acts/Plugins/ExaTrkX/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <algorithm>
+#ifdef ACTS_EXATRKX_WITH_CUDA
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+
+namespace {
+struct CudaStreamGuard {
+  cudaStream_t stream{};
+  CudaStreamGuard() { ACTS_CUDA_CHECK(cudaStreamCreate(&stream)); }
+  ~CudaStreamGuard() {
+    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_CUDA_CHECK(cudaStreamDestroy(stream));
+  }
+};
+}  // namespace
+#endif
 
 namespace Acts {
 
@@ -42,16 +55,18 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifdef ACTS_EXATRKX_WITH_CUDA
+  std::optional<CudaStreamGuard> streamGuard;
   if (ctx.device.type == Acts::Device::Type::eCUDA) {
-    ctx.stream = c10::cuda::getStreamFromPool(true, ctx.device.index);
+    streamGuard.emplace();
+    ctx.stream = streamGuard->stream;
   }
 #endif
 
   try {
     auto t0 = std::chrono::high_resolution_clock::now();
     ACTS_NVTX_START(graph_construction);
-    auto [nodeFeatures, edgeIndex, edgeFeatures] =
+    auto tensors =
         (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
     ACTS_NVTX_STOP(graph_construction);
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -60,9 +75,8 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
       timing->graphBuildingTime = t1 - t0;
     }
 
-    hook(nodeFeatures, edgeIndex, {});
+    hook(tensors);
 
-    std::any edgeScores;
     if (timing != nullptr) {
       timing->classifierTimes.clear();
     }
@@ -70,9 +84,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     for (const auto &edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();
       ACTS_NVTX_START(edge_classifier);
-      auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =
-          (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeIndex),
-                            std::move(edgeFeatures), ctx);
+      tensors = (*edgeClassifier)(std::move(tensors), ctx);
       ACTS_NVTX_STOP(edge_classifier);
       t1 = std::chrono::high_resolution_clock::now();
 
@@ -80,18 +92,12 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
         timing->classifierTimes.push_back(t1 - t0);
       }
 
-      nodeFeatures = std::move(newNodeFeatures);
-      edgeFeatures = std::move(newEdgeFeatures);
-      edgeIndex = std::move(newEdgeIndex);
-      edgeScores = std::move(newEdgeScores);
-
-      hook(nodeFeatures, edgeIndex, edgeScores);
+      hook(tensors);
     }
 
     t0 = std::chrono::high_resolution_clock::now();
     ACTS_NVTX_START(track_building);
-    auto res = (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
-                                 std::move(edgeScores), spacepointIDs, ctx);
+    auto res = (*m_trackBuilder)(std::move(tensors), spacepointIDs, ctx);
     ACTS_NVTX_STOP(track_building);
     t1 = std::chrono::high_resolution_clock::now();
 

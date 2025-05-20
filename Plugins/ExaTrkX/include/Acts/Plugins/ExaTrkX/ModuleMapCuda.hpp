@@ -105,10 +105,10 @@ class ModuleMapCuda : public GraphConstructionBase {
 
   const auto &config() const { return m_cfg; }
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<std::uint64_t> &moduleIds,
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(std::vector<float> &inputValues,
+                             std::size_t numNodes,
+                             const std::vector<std::uint64_t> &moduleIds,
+                             const ExecutionContext &execContext = {}) override;
 };
 
 }  // namespace Acts

@@ -25,8 +25,7 @@ class TorchGraphStoreHook : public ExaTrkXHook {
   TorchGraphStoreHook();
   ~TorchGraphStoreHook() override {}
 
-  void operator()(const std::any &, const std::any &edges,
-                  const std::any &weights) const override;
+  void operator()(const PipelineTensors &tensors) const override;
 
   const Graph &storedGraph() const { return *m_storedGraph; }
 };

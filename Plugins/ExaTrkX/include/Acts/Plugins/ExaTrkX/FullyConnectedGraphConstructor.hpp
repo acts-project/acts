@@ -44,10 +44,10 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
                                  std::unique_ptr<const Acts::Logger> _logger)
       : m_cfg(cfg), m_logger(std::move(_logger)) {}
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<std::uint64_t> &moduleIds,
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(std::vector<float> &inputValues,
+                             std::size_t numNodes,
+                             const std::vector<std::uint64_t> &moduleIds,
+                             const ExecutionContext &execContext = {}) override;
 
   const Config &config() const { return m_cfg; }
 

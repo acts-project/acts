@@ -3,17 +3,18 @@ add_library(
     SHARED
     src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
-    src/BoostWalkthrough.cpp
     src/DummyEdgeClassifier.cpp
     src/GNNTrackFitterCPU.cpp
     src/FullyConnectedGraphConstructor.cpp
+    src/Tensor.cpp
+    src/BoostTrackBuilding.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
@@ -104,12 +105,9 @@ endif()
 if(ACTS_EXATRKX_ENABLE_TORCH)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE
-            src/TorchEdgeClassifier.cpp
-            src/TorchMetricLearning.cpp
-            src/BoostTrackBuilding.cpp
-            src/TorchTruthGraphMetricsHook.cpp
-            src/TorchGraphStoreHook.cpp
+        PRIVATE src/TorchEdgeClassifier.cpp src/TorchMetricLearning.cpp
+        #    src/TorchTruthGraphMetricsHook.cpp
+        #src/TorchGraphStoreHook.cpp
     )
 endif()
 
@@ -151,16 +149,9 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(
-    ActsPluginExaTrkX
-    PUBLIC
-        ActsCore
-        Boost::boost
-        torch # TODO try to make this private again (torch::Device is leaking)
-)
+target_link_libraries(ActsPluginExaTrkX PUBLIC ActsCore Boost::boost)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
@@ -177,6 +168,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         ActsPluginExaTrkX
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
+    target_link_libraries(ActsPluginExaTrkX PRIVATE CUDA::cudart)
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
@@ -187,6 +179,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
 
+    target_link_libraries(ActsPluginExaTrkX PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(

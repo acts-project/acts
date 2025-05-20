@@ -13,16 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
-namespace torch::jit {
-class Module;
-}
-
-namespace c10 {
-enum class DeviceType : std::int8_t;
-}
-
 namespace Acts {
 
 class DummyEdgeClassifier final : public Acts::EdgeClassificationBase {
@@ -34,9 +24,8 @@ class DummyEdgeClassifier final : public Acts::EdgeClassificationBase {
   DummyEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~DummyEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any, std::any> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(PipelineTensors tensors,
+                             const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
 
