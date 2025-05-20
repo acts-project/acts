@@ -27,11 +27,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsExamples {
 
 GeoModelMuonMockupBuilder::GeoModelMuonMockupBuilder(const Config& cfg)
-    : m_cfg(cfg) {
-  if (m_cfg.sensitiveSurfaces.empty()) {
-    THROW_EXCEPTION("No sensitive surfaces provided");
-  }
-}
+    : m_cfg(cfg) {}
 
 std::unique_ptr<const Acts::TrackingGeometry>
 GeoModelMuonMockupBuilder::trackingGeometry(
@@ -47,8 +43,8 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 
   // Add the station nodes as static cylidner nodes
   for (const auto& str : m_cfg.stationNames) {
-    auto node = buildBarrelNode(m_cfg.boundingBoxes, m_cfg.sensitiveSurfaces,
-                                str, *m_cfg.volumeBoundFactory);
+    auto node =
+        buildBarrelNode(m_cfg.boundingBoxes, str, *m_cfg.volumeBoundFactory);
     cyl.addChild(std::move(node));
   }
 
@@ -59,8 +55,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 GeoModelMuonMockupBuilder::buildBarrelNode(
-    const GeoModelVolumeFPVsVec& boundingBoxes,
-    const SensitiveSurfaces& sensitiveSurfaces, const std::string& name,
+    const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
     Acts::VolumeBoundFactory& boundFactory) const {
   /** Assume a station paradigm. MDT multilayers and complementary strip
    * detectors are residing under a common parent node representing a muon
@@ -93,7 +88,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
           std::make_unique<Acts::TrackingVolume>(*vol,
                                                  std::get<1>(child)->name());
 
-      // add the sensitives in the constructed tracking volume
+      // add the sensitives (tubes) in the constructed tracking volume
       auto sensitives = std::get<1>(child)->surfacePtrs();
 
       for (const auto& surface : sensitives) {
@@ -101,6 +96,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       }
 
       chamberVolume->addVolume(std::move(trVol));
+
       volChambers.push_back(std::move(chamberVolume));
     }
   }

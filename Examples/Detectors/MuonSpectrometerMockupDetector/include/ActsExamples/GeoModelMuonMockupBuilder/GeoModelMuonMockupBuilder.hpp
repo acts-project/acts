@@ -16,27 +16,27 @@
 namespace ActsExamples {
 
 /// @brief Tracking Geometry Builder implementation to connect the GeoModel detector description with the
-///        translation to a gen-3 tracking geometry for a mockup muon spectrometer. 
+///        translation to a gen-3 tracking geometry for a mockup muon
+///        spectrometer.
 
 class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
  public:
   /** @brief Recycle the tuple of Volume, DetectorVolume, PVConstLink */
-  using GeoModelVolumeFPVTuple = Acts::GeoModelDetectorObjectFactory::GeoModelVolumeFPVTuple;
+  using GeoModelVolumeFPVTuple =
+      Acts::GeoModelDetectorObjectFactory::GeoModelVolumeFPVTuple;
   using SensitiveSurfaces = std::vector<Acts::GeoModelSensitiveSurface>;
   using GeoModelVolumeFPVsVec = std::vector<GeoModelVolumeFPVTuple>;
 
   struct Config {
-    /// The sensitive surfaces as a tuple of Detector Element and Surface
-    SensitiveSurfaces sensitiveSurfaces = {};
-
     /// The bounding boxes as a tuple of a Volume, DetectorVolume and
-    /// PVConstLInk
+    /// PVConstLInk holding the sensitive surfaces
     GeoModelVolumeFPVsVec boundingBoxes = {};
 
     /// The station names to be built (e.g for barrel: BIL, BML etc)
     std::vector<std::string> stationNames = {};
     /** @brief Pointer to the volume bound factory to share the bounds across several volumes */
-    std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory = std::make_shared<Acts::VolumeBoundFactory>();
+    std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory =
+        std::make_shared<Acts::VolumeBoundFactory>();
   };
 
   GeoModelMuonMockupBuilder(const Config& cfg);
@@ -49,9 +49,7 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   Config m_cfg;
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> buildBarrelNode(
-      const GeoModelVolumeFPVsVec& boundingBoxes,
-      const SensitiveSurfaces& sensitiveSurfaces,
-      const std::string& name,
+      const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
       Acts::VolumeBoundFactory& boundFactory) const;
 };
 }  // namespace ActsExamples
