@@ -49,7 +49,7 @@ struct GeoModelDetector : public Detector {
   std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
       const Acts::GeometryContext& gctx, T& builder) {
     m_trackingGeometry = builder.trackingGeometry(gctx);
-    return m_trackingGeometry;
+    return std::move(m_trackingGeometry);
   }
 
  private:
