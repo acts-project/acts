@@ -13,8 +13,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ostream>
 
@@ -61,29 +61,18 @@ namespace detail {
 class TensorMemoryImpl {
  public:
   using Deleter = std::function<void(void *)>;
+  using Ptr = std::unique_ptr<void, Deleter>;
 
   TensorMemoryImpl(std::size_t nbytes, const ExecutionContext &execContext);
-
-  TensorMemoryImpl(const TensorMemoryImpl &) = delete;
-  TensorMemoryImpl(TensorMemoryImpl &&) noexcept;
-
-  TensorMemoryImpl &operator=(const TensorMemoryImpl &) = delete;
-  TensorMemoryImpl &operator=(TensorMemoryImpl &&) noexcept;
-
-  ~TensorMemoryImpl();
-
   TensorMemoryImpl clone(std::size_t nbytes, const ExecutionContext &to) const;
 
-  void *data() { return m_ptr; }
-  const void *data() const { return m_ptr; }
+  void *data() { return m_ptr.get(); }
+  const void *data() const { return m_ptr.get(); }
 
   Acts::Device device() const { return m_device; }
 
  private:
-  void moveConstruct(TensorMemoryImpl &&) noexcept;
-
-  void *m_ptr{};
-  Deleter m_deleter;
+  Ptr m_ptr;
   Acts::Device m_device{};
 };
 }  // namespace detail
