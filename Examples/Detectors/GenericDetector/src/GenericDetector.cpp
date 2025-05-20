@@ -384,8 +384,6 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   }};
   Blueprint root{cfg};
 
-  // @TODO: Add beampipe passive layer
-  // @TODO: Add Pixel
 
   root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
     auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
@@ -406,10 +404,6 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
       buildLongStrip(detector, gctx);
     }
   });
-
-  // @TODO: Add Pixel Support Tube
-  // @TODO: Add Short Strip
-  // @TODO: Add Long Strip
 
   if (graphvizFile) {
     std::ofstream file(*graphvizFile);
