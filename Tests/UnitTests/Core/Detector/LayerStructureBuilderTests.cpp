@@ -40,12 +40,11 @@ namespace {
 /// infrastructure with the new const-correct detector design
 ///
 std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
-    const std::vector<const Acts::Surface*>& surfaces) {
+    const std::vector<Acts::Surface*>& surfaces) {
   std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
-  for (const auto& s : surfaces) {
-    Surface* ncs = const_cast<Surface*>(s);
-    uSurfaces.push_back(ncs->getSharedPtr());
+  for (auto* s : surfaces) {
+    uSurfaces.push_back(s->getSharedPtr());
   }
   return uSurfaces;
 }
