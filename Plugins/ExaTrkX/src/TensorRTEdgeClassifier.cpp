@@ -187,7 +187,7 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   ACTS_DEBUG("Time sigmoid and cut: " << milliseconds(t3, t4));
 
   return {std::move(tensors.nodeFeatures), std::move(newEdgeIndex),
-          std::move(newScores), std::nullopt};
+          std::nullopt, std::move(newScores)};
 }
 
 }  // namespace Acts
