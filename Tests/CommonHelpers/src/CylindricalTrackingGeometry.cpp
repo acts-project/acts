@@ -8,13 +8,22 @@
 
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+
 namespace Acts::Test {
 
-std::vector<const Surface*> CylindricalTrackingGeometry::surfacesRing(
+std::vector<Surface*> CylindricalTrackingGeometry::surfacesRing(
     DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
     double moduleHalfY, double moduleThickness, double moduleTilt,
     double ringRadius, double ringZ, double zStagger, int nPhi) {
-  std::vector<const Surface*> layerSurfaces;
+  std::vector<Surface*> layerSurfaces;
 
   // Module material from input
   MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
@@ -45,7 +54,7 @@ std::vector<const Surface*> CylindricalTrackingGeometry::surfacesRing(
         AngleAxis3(moduleTilt, Vector3::UnitY()));
 
     // Create the detector element
-    auto detElement = std::make_unique<const DetectorElementStub>(
+    auto detElement = std::make_unique<DetectorElementStub>(
         mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
 
     layerSurfaces.push_back(&detElement->surface());
@@ -55,12 +64,12 @@ std::vector<const Surface*> CylindricalTrackingGeometry::surfacesRing(
   return layerSurfaces;
 }
 
-std::vector<const Surface*> CylindricalTrackingGeometry::surfacesCylinder(
+std::vector<Surface*> CylindricalTrackingGeometry::surfacesCylinder(
     DetectorStore& detStore, double moduleHalfX, double moduleHalfY,
     double moduleThickness, double moduleTiltPhi, double layerRadius,
     double radialStagger, double longitudinalOverlap,
     const std::pair<int, int>& binningSchema) {
-  std::vector<const Surface*> layerSurfaces;
+  std::vector<Surface*> layerSurfaces;
 
   // Module material from input
   MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
@@ -97,7 +106,7 @@ std::vector<const Surface*> CylindricalTrackingGeometry::surfacesCylinder(
     // Get the moduleTransform
     auto mModuleTransform = Transform3(Translation3(mCenter) * moduleRotation);
     // Create the detector element
-    auto detElement = std::make_unique<const DetectorElementStub>(
+    auto detElement = std::make_unique<DetectorElementStub>(
         mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
 
     layerSurfaces.push_back(&detElement->surface());
@@ -139,7 +148,7 @@ std::vector<Vector3> CylindricalTrackingGeometry::modulePositionsCylinder(
 }
 
 std::shared_ptr<const TrackingGeometry>
-CylindricalTrackingGeometry::operator()() {
+CylindricalTrackingGeometry::buildGen1() {
   using namespace Acts::UnitLiterals;
 
   Logging::Level surfaceLLevel = Logging::INFO;
@@ -174,9 +183,10 @@ CylindricalTrackingGeometry::operator()() {
   MaterialSlab beamPipeMaterial(makeBeryllium(), 0.8_mm);
   PassiveLayerBuilder::Config bplConfig;
   bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
-  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 1000.);
-  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8);
+  bplConfig.centralLayerRadii = std::vector<double>(1, kBeamPipeRadius);
+  bplConfig.centralLayerHalflengthZ =
+      std::vector<double>(1, kBeamPipeHalfLengthZ);
+  bplConfig.centralLayerThickness = std::vector<double>(1, kBeamPipeThickness);
   bplConfig.centralLayerMaterial = {
       std::make_shared<const HomogeneousSurfaceMaterial>(beamPipeMaterial)};
   auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
@@ -202,25 +212,21 @@ CylindricalTrackingGeometry::operator()() {
   // Layer material properties - thickness, X0, L0, A, Z, Rho
   MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
-  std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr =
-      std::shared_ptr<const ISurfaceMaterial>(
-          new Acts::HomogeneousSurfaceMaterial(lProperties));
-
-  std::vector<double> pLayerRadii = {32., 72., 116., 172.};
-  std::vector<std::pair<int, int>> pLayerBinning = {
-      {16, 14}, {32, 14}, {52, 14}, {78, 14}};
-  std::vector<double> pModuleTiltPhi = {0.145, 0.145, 0.145, 0.145};
-  std::vector<double> pModuleHalfX = {8.4, 8.4, 8.4, 8.4};
-  std::vector<double> pModuleHalfY = {36., 36., 36., 36.};
-  std::vector<double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
+  auto layerMaterialPtr =
+      std::make_shared<HomogeneousSurfaceMaterial>(lProperties);
 
   std::vector<LayerPtr> pLayers;
 
-  for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces =
-        surfacesCylinder(detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
-                         pModuleThickness[ilp], pModuleTiltPhi[ilp],
-                         pLayerRadii[ilp], 2_mm, 5_mm, pLayerBinning[ilp]);
+  for (std::size_t ilp = 0; ilp < kLayerRadii.size(); ++ilp) {
+    std::vector<Surface*> layerSurfacesMutable =
+        surfacesCylinder(detectorStore, kModuleHalfX[ilp], kModuleHalfY[ilp],
+                         kModuleThickness[ilp], kModuleTiltPhi[ilp],
+                         kLayerRadii[ilp], 2_mm, 5_mm, kLayerBinning[ilp]);
+
+    std::vector<const Surface*> layerSurfaces;
+    std::ranges::transform(layerSurfacesMutable,
+                           std::back_inserter(layerSurfaces),
+                           [](Surface* s) { return s; });
 
     // Make a shared version out of it
     std::vector<std::shared_ptr<const Surface>> layerSurfacePtrs;
@@ -233,8 +239,8 @@ CylindricalTrackingGeometry::operator()() {
     ProtoLayer protoLayer(geoContext, layerSurfaces);
     protoLayer.envelope[AxisDirection::AxisR] = {0.5, 0.5};
     auto pLayer = layerCreator->cylinderLayer(
-        geoContext, std::move(layerSurfacePtrs), pLayerBinning[ilp].first,
-        pLayerBinning[ilp].second, protoLayer);
+        geoContext, std::move(layerSurfacePtrs), kLayerBinning[ilp].first,
+        kLayerBinning[ilp].second, protoLayer);
     auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
     auto mutableOuterSurface =
         const_cast<Acts::Surface*>(approachSurfaces.at(1));
@@ -259,5 +265,94 @@ CylindricalTrackingGeometry::operator()() {
 
   // create and return the geometry
   return std::make_shared<const TrackingGeometry>(detectorVolume);
+}
+
+std::shared_ptr<const TrackingGeometry>
+CylindricalTrackingGeometry::buildGen3() {
+  using namespace Acts::Experimental;
+  using namespace Acts::UnitLiterals;
+  using enum Acts::CylinderVolumeBounds::Face;
+  using enum Acts::AxisDirection;
+  using LayerType = LayerBlueprintNode::LayerType;
+
+  Blueprint::Config cfg;
+  cfg.envelope = Acts::ExtentEnvelope{{
+      .z = {20_mm, 20_mm},
+      .r = {0_mm, 20_mm},
+  }};
+  Blueprint root{cfg};
+
+  root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
+    auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
+        0_mm, kBeamPipeRadius, 100_mm);
+    auto beampipe = std::make_unique<Acts::TrackingVolume>(
+        Acts::Transform3::Identity(), std::move(beampipeBounds), "Beampipe");
+
+    detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
+      MaterialSlab beamPipeMaterial(makeBeryllium(), kBeamPipeThickness);
+      bpMat.configureFace(
+          OuterCylinder,
+          std::make_shared<HomogeneousSurfaceMaterial>(beamPipeMaterial));
+      bpMat.addStaticVolume(std::move(beampipe));
+    });
+
+    MaterialSlab lProperties(makeSilicon(), 1.5_mm);
+
+    auto layerMaterialPtr =
+        std::make_shared<HomogeneousSurfaceMaterial>(lProperties);
+
+    for (std::size_t ilp = 0; ilp < kLayerRadii.size(); ++ilp) {
+      std::vector<Surface*> layerSurfaces =
+          surfacesCylinder(detectorStore, kModuleHalfX[ilp], kModuleHalfY[ilp],
+                           kModuleThickness[ilp], kModuleTiltPhi[ilp],
+                           kLayerRadii[ilp], 2_mm, 5_mm, kLayerBinning[ilp]);
+
+      // Make a shared version out of it
+      std::vector<std::shared_ptr<Surface>> layerSurfacePtrs;
+      layerSurfacePtrs.reserve(layerSurfaces.size());
+      for (auto& sf : layerSurfaces) {
+        layerSurfacePtrs.push_back(sf->getSharedPtr());
+      }
+
+      // create the layer and store it
+      MutableProtoLayer protoLayer(geoContext, layerSurfaces);
+      protoLayer.envelope[AxisR] = {0.5, 0.5};
+
+      std::string layerName = "L" + std::to_string(ilp);
+      detector.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(OuterCylinder, layerMaterialPtr);
+        mat.addLayer(layerName, [&](auto& layer) {
+          layer.setProtoLayer(protoLayer);
+          layer.setLayerType(LayerType::Cylinder);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+
+          using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+
+          layer.setNavigationPolicyFactory(
+              Acts::NavigationPolicyFactory::make()
+                  .add<Acts::TryAllNavigationPolicy>(
+                      Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+                  .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
+                      .layerType = SrfArrayNavPol::LayerType::Cylinder,
+                      .bins = kLayerBinning[ilp]})
+                  .asUniquePtr());
+        });
+      });
+
+    }  // loop over layers
+  });
+
+  BlueprintOptions opts;
+  return root.construct(opts, geoContext);
+}
+
+std::shared_ptr<const TrackingGeometry>
+CylindricalTrackingGeometry::operator()() {
+  if (gen3) {
+    return buildGen3();
+  } else {
+    return buildGen1();
+  }
 }
 }  // namespace Acts::Test

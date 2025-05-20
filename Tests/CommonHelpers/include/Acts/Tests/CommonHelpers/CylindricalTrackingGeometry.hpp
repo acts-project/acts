@@ -42,11 +42,28 @@
 namespace Acts::Test {
 
 struct CylindricalTrackingGeometry {
+  constexpr static double kBeamPipeRadius = 19. * Acts::UnitConstants::mm;
+  constexpr static double kBeamPipeHalfLengthZ =
+      1000. * Acts::UnitConstants::mm;
+  constexpr static double kBeamPipeThickness = 0.8 * Acts::UnitConstants::mm;
+
+  inline static const std::vector<double> kLayerRadii = {32., 72., 116., 172.};
+  inline static const std::vector<std::pair<int, int>> kLayerBinning = {
+      {16, 14}, {32, 14}, {52, 14}, {78, 14}};
+  inline static const std::vector<double> kModuleTiltPhi = {0.145, 0.145, 0.145,
+                                                            0.145};
+  inline static const std::vector<double> kModuleHalfX = {8.4, 8.4, 8.4, 8.4};
+  inline static const std::vector<double> kModuleHalfY = {36., 36., 36., 36.};
+  inline static const std::vector<double> kModuleThickness = {0.15, 0.15, 0.15,
+                                                              0.15};
+
   std::reference_wrapper<const GeometryContext> geoContext;
+  bool gen3 = false;
 
   /// Only allowed constructor with reference wrapper
-  explicit CylindricalTrackingGeometry(const GeometryContext& gctx)
-      : geoContext(gctx) {}
+  explicit CylindricalTrackingGeometry(const GeometryContext& gctx,
+                                       bool gen3 = false)
+      : geoContext(gctx), gen3(gen3) {}
 
   using DetectorStore = std::vector<std::unique_ptr<const DetectorElementStub>>;
 
@@ -67,10 +84,12 @@ struct CylindricalTrackingGeometry {
   /// @param nPhi The number of phi modules
   ///
   /// @return A vector of Surfaces
-  std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
-      double moduleHalfY, double moduleThickness, double moduleTilt,
-      double ringRadius, double ringZ, double zStagger, int nPhi);
+  std::vector<Surface*> surfacesRing(DetectorStore& detStore,
+                                     double moduleHalfXminY,
+                                     double moduleHalfXmaxY, double moduleHalfY,
+                                     double moduleThickness, double moduleTilt,
+                                     double ringRadius, double ringZ,
+                                     double zStagger, int nPhi);
 
   /// Generator of surfaces for a cylindrical layer
   ///
@@ -85,7 +104,7 @@ struct CylindricalTrackingGeometry {
   /// @param binningSchema The number of bins in phi/z
   ///
   /// @return A vector of Surfaces
-  std::vector<const Surface*> surfacesCylinder(
+  std::vector<Surface*> surfacesCylinder(
       DetectorStore& detStore, double moduleHalfX, double moduleHalfY,
       double moduleThickness, double moduleTiltPhi, double layerRadius,
       double radialStagger, double longitudinalOverlap,
@@ -99,6 +118,10 @@ struct CylindricalTrackingGeometry {
 
   // @brief Call operator for the creation method of the tracking geometry
   std::shared_ptr<const TrackingGeometry> operator()();
+
+ private:
+  std::shared_ptr<const TrackingGeometry> buildGen1();
+  std::shared_ptr<const TrackingGeometry> buildGen3();
 };
 
 }  // namespace Acts::Test
