@@ -9,6 +9,7 @@
 #include "ActsExamples/GeoModelMuonMockupBuilder/GeoModelMuonMockupBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -46,7 +47,7 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   // Add the station nodes as static cylidner nodes
   for (const auto& str : m_cfg.stationNames) {
     auto node =
-        buildBarrelNode(m_cfg.boundingBoxes, m_cfg.sensitiveSurfaces, str);
+        buildBarrelNode(m_cfg.boundingBoxes, m_cfg.sensitiveSurfaces, str, *m_cfg.volumeBoundFactory);
     cyl.addChild(std::move(node));
   }
 
@@ -58,10 +59,25 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 GeoModelMuonMockupBuilder::buildBarrelNode(
     const GeoModelVolumeFPVsVec& boundingBoxes,
-    const SensitiveSurfaces& sensitiveSurfaces, const std::string& name) const {
+    const SensitiveSurfaces& sensitiveSurfaces, const std::string& name,
+    Acts::VolumeBoundFactory& boundFactory) const {
   // Create a vector to hold the chambers
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
-  volChambers.reserve(m_cfg.nSectors);
+  /** Assume a station paradigm. MDT multilayers and complementary strip detectors are 
+   *  residing under a common parent node representing a muon station envelope. Group
+   *  the passed boxes under by their parent */
+  std::map<PVConstLink, GeoModelVolumeFPVsVec> commonStations{};
+  for (const auto& box : boundingBoxes) {
+    auto parent = std::get<2>(box)->getParent();
+    if (!parent) {
+      THROW_EXCEPTION("No parent found for "<<name);
+    }
+    commonStations[parent].push_back(box);
+  }
+  for (const auto& [parentPhysVol, childrenTrkVols]: commonStations) {
+
+  }
+  /*
   for (std::size_t sector = 0; sector < m_cfg.nSectors; sector++) {
     // ACTS_DEBUG("Barrel name: " << name << " sector: " << sector);
     // Find the bounding box for the given chamber name and sector
@@ -89,16 +105,16 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     // print the names of the bounding boxes
 
     // Construct the chamber from the multilayer volumes
-    Acts::Volume vol1 = std::get<0>(*it_first);
-    Acts::Volume vol2 = std::get<0>(*it_second);
+    auto& vol1 = std::get<0>(*it_first);
+    auto& vol2 = std::get<0>(*it_second);
 
     // construct the tracking volumes from the multilayer volumes
     auto trVol1 = std::make_unique<Acts::TrackingVolume>(
-        vol1,
+        *vol1,
         "MultiLayer_" + name + "_" + std::to_string(sector + 1) + "_MDT1");
 
     auto trVol2 = std::make_unique<Acts::TrackingVolume>(
-        vol2,
+        *vol2,
         "MultiLayer_" + name + "_" + std::to_string(sector + 1) + "_MDT2");
 
     auto parent = std::get<2>(*it_first)->getParent();
@@ -107,10 +123,10 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       THROW_EXCEPTION("No parent found for "<<name <<" sector: " <<sector);
     }
 
-    // COnstruct the parent as the chamber tracking volume
+    // Construct the parent as the chamber tracking volume
 
     Acts::Volume parentVolume = Acts::GeoModel::convertVolume(
-        parent->getX(), *parent->getLogVol()->getShape());
+        parent->getX(), parent->getLogVol()->getShape());
 
     std::unique_ptr<Acts::TrackingVolume> chamberVolume =
         std::make_unique<Acts::TrackingVolume>(
@@ -149,12 +165,11 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
   }
 
   // create the cylinder bounds for the barrel cylinder node
-
-  double rmincyl = volChambers.front()->center().perp() -
+  const Acts::Vector3& cent{volChambers.front()->center()};
+  double rmincyl = Acts::fastHypot(cent.x(), cent.y()) -
                    volChambers.front()->volumeBounds().values()[0];
-  double rmaxcyl =
-      std::hypot(rmincyl + 2 * volChambers.front()->volumeBounds().values()[0],
-                 volChambers.front()->volumeBounds().values()[1]);
+  double rmaxcyl = Acts::fastHypot(rmincyl + 2 * volChambers.front()->volumeBounds().values()[0],
+                                   volChambers.front()->volumeBounds().values()[1]);
 
   // Create the barrel node with the attached cylinder volume
   auto barrelNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
@@ -171,7 +186,8 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
             std::move(chamber));
     barrelNode->addChild(std::move(chamberNode));
   }
+  */
 
-  return barrelNode;
+  return nullptr;
 }
 }  // namespace ActsExamples

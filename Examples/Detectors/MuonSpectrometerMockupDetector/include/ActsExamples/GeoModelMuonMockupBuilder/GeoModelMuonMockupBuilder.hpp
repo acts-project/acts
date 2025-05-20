@@ -16,15 +16,14 @@
 namespace ActsExamples {
 
 /// @brief Tracking Geometry Builder implementation to connect the GeoModel detector description with the
-///        translation to a tracking geometry for a mockup muon spectrometer
-///        detector
-///@note This is a mockup implementation of muon detector that uses the gen3 Acts geometry with a blueprint creation
+///        translation to a gen-3 tracking geometry for a mockup muon spectrometer. 
 
 class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
  public:
+  /** @brief Recycle the tuple of Volume, DetectorVolume, PVConstLink */
+  using GeoModelVolumeFPVTuple = Acts::GeoModelDetectorObjectFactory::GeoModelVolumeFPVTuple;
   using SensitiveSurfaces = std::vector<Acts::GeoModelSensitiveSurface>;
-  using GeoModelVolumeFPVsVec =
-      std::vector<Acts::GeoModelDetectorObjectFactory::GeoModelVolumeFPVTuple>;
+  using GeoModelVolumeFPVsVec = std::vector<GeoModelVolumeFPVTuple>;
 
   struct Config {
     /// The sensitive surfaces as a tuple of Detector Element and Surface
@@ -36,9 +35,8 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
 
     /// The station names to be built (e.g for barrel: BIL, BML etc)
     std::vector<std::string> stationNames = {};
-
-    /// The number of sectors in the barrel
-    std::size_t nSectors = 8;
+    /** @brief Pointer to the volume bound factory to share the bounds across several volumes */
+    std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory = std::make_shared<Acts::VolumeBoundFactory>();
   };
 
   GeoModelMuonMockupBuilder(const Config& cfg);
@@ -53,6 +51,7 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> buildBarrelNode(
       const GeoModelVolumeFPVsVec& boundingBoxes,
       const SensitiveSurfaces& sensitiveSurfaces,
-      const std::string& name) const;
+      const std::string& name,
+      Acts::VolumeBoundFactory& boundFactory) const;
 };
 }  // namespace ActsExamples
