@@ -9,8 +9,11 @@
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -19,6 +22,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <detray/geometry/shapes/annulus2D.hpp>
 #include <detray/geometry/shapes/concentric_cylinder2D.hpp>
@@ -31,8 +35,9 @@
 
 namespace Acts {
 
-DetrayPayloadConverter::DetrayPayloadConverter(const Config& config)
-    : m_cfg(config) {}
+DetrayPayloadConverter::DetrayPayloadConverter(
+    const Config& config, std::unique_ptr<const Logger> logger)
+    : m_cfg(config), m_logger(std::move(logger)) {}
 
 detray::io::transform_payload DetrayPayloadConverter::convertTransform(
     const Transform3& transform) {
@@ -195,12 +200,8 @@ detray::io::mask_payload DetrayPayloadConverter::convertMask(
   return payload;
 }
 
-namespace {
-
-detray::io::surface_payload convertSurfaceCommon(
-    const GeometryContext& gctx, const Surface& surface,
-    const DetrayPayloadConverter::Config::SensitiveStrategy&
-        sensitiveStrategy) {
+detray::io::surface_payload DetrayPayloadConverter::convertSurface(
+    const GeometryContext& gctx, const Surface& surface, bool portal) const {
   detray::io::surface_payload payload;
 
   payload.transform =
@@ -209,31 +210,20 @@ detray::io::surface_payload convertSurfaceCommon(
   payload.barcode = std::nullopt;
 
   bool isSensitive = false;
-  if (sensitiveStrategy ==
+  if (m_cfg.sensitiveStrategy ==
       DetrayPayloadConverter::Config::SensitiveStrategy::Identifier) {
     isSensitive = surface.geometryId().sensitive() > 0;
   } else {
     isSensitive = surface.associatedDetectorElement() != nullptr;
   }
-  payload.type = isSensitive ? detray::surface_id::e_sensitive
-                             : detray::surface_id::e_passive;
-  return payload;
-}
-}  // namespace
 
-detray::io::surface_payload DetrayPayloadConverter::convertSurface(
-    const GeometryContext& gctx, const Surface& surface) const {
-  detray::io::surface_payload payload =
-      convertSurfaceCommon(gctx, surface, m_cfg.sensitiveStrategy);
-  payload.mask = convertMask(surface.bounds(), false);
-  return payload;
-}
-
-detray::io::surface_payload DetrayPayloadConverter::convertPortal(
-    const GeometryContext& gctx, const Portal& portal) const {
-  detray::io::surface_payload payload =
-      convertSurfaceCommon(gctx, portal.surface(), m_cfg.sensitiveStrategy);
-  payload.mask = convertMask(portal.surface().bounds(), true);
+  if (portal) {
+    payload.type = detray::surface_id::e_portal;
+  } else {
+    payload.type = isSensitive ? detray::surface_id::e_sensitive
+                               : detray::surface_id::e_passive;
+  }
+  payload.mask = convertMask(surface.bounds(), portal);
   return payload;
 }
 
@@ -262,6 +252,131 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
       payload.type = e_unknown;
       break;
   }
+  return payload;
+}
+
+void DetrayPayloadConverter::handlePortalLink(
+    const GeometryContext& gctx, const TrackingVolume& volume,
+    detray::io::volume_payload& volPayload,
+    std ::function<std::size_t(const TrackingVolume*)> volumeLookup,
+    const PortalLinkBase& link) const {
+  auto handle = [&](const TrivialPortalLink& trivial) {
+    ACTS_VERBOSE("Converting trivial portal link registered to volume "
+                 << volume.volumeName());
+    if (&trivial.volume() == &volume) {
+      ACTS_VERBOSE("~> points at this volume (" << volume.volumeName()
+                                                << ") => skpping");
+      return;
+    }
+
+    ACTS_VERBOSE("~> points at different volume ("
+                 << trivial.volume().volumeName()
+                 << ") => adding link to this volume (" << volume.volumeName()
+                 << ")");
+
+    // add the surface (including mask first)
+    auto& srfPayload = volPayload.surfaces.emplace_back(
+        convertSurface(gctx, trivial.surface(), true));
+    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+
+    // lookup the target volume index (we already converted this)
+    ACTS_VERBOSE("Target volume index for " << trivial.volume().volumeName()
+                                            << ": "
+                                            << volumeLookup(&trivial.volume()));
+    auto targetVolumeIndex = volumeLookup(&trivial.volume());
+    srfPayload.mask.volume_link.link = targetVolumeIndex;
+  };
+
+  if (auto* trivial = dynamic_cast<const TrivialPortalLink*>(&link);
+      trivial != nullptr) {
+    handle(*trivial);
+  } else if (auto* composite = dynamic_cast<const CompositePortalLink*>(&link);
+             composite != nullptr) {
+    ACTS_VERBOSE("Converting composite portal link with "
+                 << composite->links().size() << " sub-links");
+    for (const auto& subLink : composite->links()) {
+      const auto* subTrivial = dynamic_cast<const TrivialPortalLink*>(&subLink);
+
+      if (subTrivial == nullptr) {
+        throw std::runtime_error(
+            "Composite portal link contains non-trivial portal links");
+      } else {
+        handle(*subTrivial);
+      }
+    }
+  } else if (auto* grid = dynamic_cast<const GridPortalLink*>(&link);
+             grid != nullptr) {
+    ACTS_VERBOSE("Converting grid portal link with "
+                 << grid->artifactPortalLinks().size() << " link artifacts");
+    for (const auto& artifact : grid->artifactPortalLinks()) {
+      handle(artifact);
+    }
+  } else {
+    throw std::runtime_error(
+        "Unknown portal link type, detray cannot handle this");
+  }
+}
+
+detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
+    const GeometryContext& gctx, const TrackingGeometry& geometry) const {
+  ACTS_INFO("Converting tracking geometry to detray format");
+
+  if (geometry.geometryVersion() != TrackingGeometry::GeometryVersion::Gen3) {
+    ACTS_WARNING(
+        "Only Gen3 tracking geometries are supported. Gen1 geometries will "
+        "give wrong results");
+  }
+
+  detray::io::detector_payload payload;
+  std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
+
+  auto lookup = [&volumeIds](const TrackingVolume* v) {
+    return volumeIds.at(v);
+  };
+
+  geometry.apply([&](const TrackingVolume& volume) {
+    auto& volPayload = payload.volumes.emplace_back(convertVolume(volume));
+    volPayload.index.link = payload.volumes.size() - 1;
+    volumeIds[&volume] = volPayload.index.link;
+
+    for (auto& surface : volume.surfaces()) {
+      auto& srfPayload =
+          volPayload.surfaces.emplace_back(convertSurface(gctx, surface));
+      srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+      srfPayload.mask.volume_link.link = volPayload.index.link;
+    }
+  });
+
+  // Run again over volumes, can lookup volume index from pointer now
+  geometry.apply([&](const TrackingVolume& volume) {
+    auto& volPayload = payload.volumes.at(volumeIds.at(&volume));
+
+    for (const auto& portal : volume.portals()) {
+      // hard-requirement: all portal links must decompose to trivial portal
+      // links!
+
+      for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
+        const auto* link = portal.getLink(dir);
+
+        if (link != nullptr) {
+          handlePortalLink(gctx, volume, volPayload, lookup, *link);
+        }
+      }
+    }
+
+    ACTS_DEBUG("Volume " << volume.volumeName() << " has "
+                         << volPayload.surfaces.size() << " surfaces");
+    std::size_t nPortals =
+        std::ranges::count_if(volPayload.surfaces, [](const auto& srfPayload) {
+          return srfPayload.mask.volume_link.link !=
+                 std::numeric_limits<std::size_t>::max();
+        });
+    ACTS_DEBUG("-> portals:        " << nPortals);
+    ACTS_DEBUG("-> other surfaces: " << volPayload.surfaces.size() - nPortals);
+  });
+
+  ACTS_DEBUG("Collected " << payload.volumes.size() << " volumes");
+
   return payload;
 }
 
