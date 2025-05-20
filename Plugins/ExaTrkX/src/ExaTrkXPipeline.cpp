@@ -74,7 +74,9 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
     hook(tensors);
 
-    timing->classifierTimes.clear();
+    if (timing != nullptr) {
+      timing->classifierTimes.clear();
+    }
 
     for (const auto &edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();

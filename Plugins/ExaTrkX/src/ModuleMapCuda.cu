@@ -277,7 +277,8 @@ PipelineTensors ModuleMapCuda::operator()(
   auto edgeIndex =
       Tensor<std::int64_t>::Create({2, edgeData.nEdges}, execContext);
   thrust::transform(thrust::cuda::par.on(stream), edgeData.cudaEdgePtr,
-                    edgeData.cudaEdgePtr + edgeData.nEdges, edgeIndex.data(),
+                    edgeData.cudaEdgePtr + 2 * edgeData.nEdges,
+                    edgeIndex.data(),
                     [] __device__(int i) -> std::int64_t { return i; });
   ACTS_CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
   //ACTS_VERBOSE("edge index:\n" << edgeIndex.index({Slice(), Slice(0, 10)}));

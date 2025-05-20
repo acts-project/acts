@@ -59,8 +59,8 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
                                 : static_cast<RTF>(tensors.edgeScores->clone(
                                       {Acts::Device::Cpu(), {}}));
 
-  assert(edgeTensor.shape()[0] == 2);
-  assert(edgeTensor.shape()[1] == edgeWeightTensor.shape()[0]);
+  assert(edgeTensor.shape().at(0) == 2);
+  assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
 
   const auto numSpacepoints = spacepointIDs.size();
   const auto numEdges = scoreTensor.shape().at(1);

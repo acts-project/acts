@@ -107,9 +107,17 @@ std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
 template <typename T>
 Tensor<T> torchToActsTensor(const at::Tensor &tensor,
                             const ExecutionContext &execContext) {
+  assert(tensor.is_contiguous());
+  assert(tensor.dim() == 1 || tensor.dim() == 2);
+  assert(tensor.dtype() == TorchTypeMap<T>::type);
+
   std::array<std::size_t, 2> shape{};
   shape[0] = tensor.size(0);
-  shape[1] = tensor.size(1);
+  if (tensor.dim() == 2) {
+    shape[1] = tensor.size(1);
+  } else {
+    shape[1] = 1;
+  }
   auto actsTensor = Acts::Tensor<T>::Create(shape, execContext);
   // Create a non owning torch tensor and copy the data
   auto tmpTensor =

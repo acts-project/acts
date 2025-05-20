@@ -19,8 +19,8 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
     const ExecutionContext& execContext) {
   ACTS_VERBOSE("Start CUDA track building");
-  if (!tensors.edgeIndex.device().isCuda() ||
-      tensors.edgeScores.value().device().isCuda()) {
+  if (!(tensors.edgeIndex.device().isCuda() &&
+        tensors.edgeScores.value().device().isCuda())) {
     throw std::runtime_error(
         "CudaTrackBuilding expects tensors to be on CUDA!");
   }
@@ -44,7 +44,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   };
 
   if (m_cfg.doJunctionRemoval) {
-    assert(tensor.scoreTensor->shape().at(0) ==
+    assert(tensors.edgeScores->shape().at(0) ==
            tensors.edgeIndex.shape().at(1));
     auto cudaScorePtr = tensors.edgeScores->data();
 
