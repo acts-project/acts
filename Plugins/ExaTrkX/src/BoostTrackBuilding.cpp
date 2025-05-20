@@ -46,18 +46,20 @@ namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
-    const ExecutionContext& /*execContext*/) {
+    const ExecutionContext& execContext) {
   ACTS_DEBUG("Start track building");
   using RTF = const Tensor<float>&;
   using RTI = const Tensor<std::int64_t>&;
-  const auto& edgeTensor = tensors.edgeIndex.device().isCpu()
-                               ? static_cast<RTI>(tensors.edgeIndex)
-                               : static_cast<RTI>(tensors.edgeIndex.clone(
-                                     {Acts::Device::Cpu(), {}}));
-  const auto& scoreTensor = tensors.edgeScores->device().isCpu()
-                                ? static_cast<RTF>(*tensors.edgeScores)
-                                : static_cast<RTF>(tensors.edgeScores->clone(
-                                      {Acts::Device::Cpu(), {}}));
+  const auto& edgeTensor =
+      tensors.edgeIndex.device().isCpu()
+          ? static_cast<RTI>(tensors.edgeIndex)
+          : static_cast<RTI>(tensors.edgeIndex.clone(
+                {Acts::Device::Cpu(), execContext.stream}));
+  const auto& scoreTensor =
+      tensors.edgeScores->device().isCpu()
+          ? static_cast<RTF>(*tensors.edgeScores)
+          : static_cast<RTF>(tensors.edgeScores->clone(
+                {Acts::Device::Cpu(), execContext.stream}));
 
   assert(edgeTensor.shape().at(0) == 2);
   assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
