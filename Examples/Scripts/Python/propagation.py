@@ -64,7 +64,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     )
 
     s.addWriter(
-        acts.examples.RootPropagationStepyWriter(
+        acts.examples.RootPropagationStepsWriter(
             level=acts.logging.INFO,
             collection="propagation_summary",
             filePath=outputDir + "/propagation_steps.root",
