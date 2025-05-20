@@ -18,9 +18,21 @@
 
 namespace Acts::FastJet {
 
+/// Default jet definition: Anti-kt with a radius of 0.4
+const fastjet::JetDefinition DefaultJetDefinition =
+    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
+
 template <typename TrackContainer>
 class TrackJetSequence {
  public:
+  /// Factory function to create a sequence of track jets
+  ///
+  /// @param tracks the input tracks
+  /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
+  static TrackJetSequence<TrackContainer> create(
+      TrackContainer& tracks,
+      fastjet::JetDefinition jetDef = DefaultJetDefinition);
+
   /// Get all the track jets passing the pT & eta cuts
   ///
   /// @param ptMin the minimum jet pT in GeV
@@ -40,7 +52,8 @@ class TrackJetSequence {
   std::vector<typename TrackContainer::TrackProxy> tracksInJet(
       const fastjet::PseudoJet& jet, std::optional<float> coreR = {});
 
-  /// Main constructor, but using the "makeTrackJets" function is recommended
+ private:
+  /// Main constructor. Users should call "TrackJetSequence::create" instead
   ///
   /// @param clusterSeq the fastjet::ClusterSequence object
   /// @param inputTracks the input tracks that make up the sequence
@@ -48,23 +61,9 @@ class TrackJetSequence {
                    TrackContainer& inputTracks)
       : m_clusterSeq{std::move(clusterSeq)}, m_inputTracks{inputTracks} {}
 
- private:
   fastjet::ClusterSequence m_clusterSeq;
   TrackContainer& m_inputTracks;
 };
-
-/// Default jet definition: Anti-kt with a radius of 0.4
-const fastjet::JetDefinition DefaultJetDefinition =
-    fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
-
-/// Create a sequence of track jets
-///
-/// @param tracks the input tracks
-/// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
-template <typename TrackContainer>
-TrackJetSequence<TrackContainer> makeTrackJets(
-    TrackContainer& tracks,
-    fastjet::JetDefinition jetDef = DefaultJetDefinition);
 
 }  // namespace Acts::FastJet
 

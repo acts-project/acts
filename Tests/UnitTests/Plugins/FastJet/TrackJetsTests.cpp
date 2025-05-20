@@ -57,7 +57,8 @@ BOOST_AUTO_TEST_CASE(SingleTrack) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0));
 
-  Acts::FastJet::TrackJetSequence jetSeq = Acts::FastJet::makeTrackJets(tracks);
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence<TrackContainer>::create(tracks);
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 1);
@@ -74,7 +75,8 @@ BOOST_AUTO_TEST_CASE(TwoTracksTwoJets) {
   tracks.insert(Track(100, 0, 0.0));
   tracks.insert(Track(100, 0, M_PI));
 
-  Acts::FastJet::TrackJetSequence jetSeq = Acts::FastJet::makeTrackJets(tracks);
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence<TrackContainer>::create(tracks);
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 2);
@@ -96,7 +98,8 @@ BOOST_AUTO_TEST_CASE(TwoTracksOneJet) {
   tracks.insert(Track(100, 0, 0.0));
   tracks.insert(Track(100, 0, 0.2));
 
-  Acts::FastJet::TrackJetSequence jetSeq = Acts::FastJet::makeTrackJets(tracks);
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence<TrackContainer>::create(tracks);
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_CHECK_EQUAL(jets.size(), 1);
@@ -118,7 +121,8 @@ BOOST_AUTO_TEST_CASE(TracksInJetCore) {
   tracks.insert(Track(10, 0.2, 0));
   tracks.insert(Track(10, -0.2, 0));
 
-  Acts::FastJet::TrackJetSequence jetSeq = Acts::FastJet::makeTrackJets(tracks);
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence<TrackContainer>::create(tracks);
   std::vector<fastjet::PseudoJet> jets = jetSeq.jets();
 
   BOOST_REQUIRE_EQUAL(jets.size(), 1);

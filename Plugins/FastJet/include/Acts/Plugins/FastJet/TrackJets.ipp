@@ -9,8 +9,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 
+namespace Acts::FastJet {
+
 template <typename TrackContainer>
-Acts::FastJet::TrackJetSequence<TrackContainer> Acts::FastJet::makeTrackJets(
+TrackJetSequence<TrackContainer> TrackJetSequence<TrackContainer>::create(
     TrackContainer& tracks, fastjet::JetDefinition jetDef) {
   std::vector<fastjet::PseudoJet> inputs;
 
@@ -34,17 +36,16 @@ Acts::FastJet::TrackJetSequence<TrackContainer> Acts::FastJet::makeTrackJets(
 }
 
 template <typename TrackContainer>
-std::vector<fastjet::PseudoJet>
-Acts::FastJet::TrackJetSequence<TrackContainer>::jets(float ptMin,
-                                                      float etaMax) {
+std::vector<fastjet::PseudoJet> TrackJetSequence<TrackContainer>::jets(
+    float ptMin, float etaMax) {
   fastjet::Selector sel_eta = fastjet::SelectorAbsEtaMax(etaMax);
   return sel_eta(m_clusterSeq.inclusive_jets(ptMin));
 }
 
 template <typename TrackContainer>
 std::vector<typename TrackContainer::TrackProxy>
-Acts::FastJet::TrackJetSequence<TrackContainer>::tracksInJet(
-    const fastjet::PseudoJet& jet, std::optional<float> coreR) {
+TrackJetSequence<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
+                                              std::optional<float> coreR) {
   fastjet::Selector sel = fastjet::SelectorIdentity();
   if (coreR.has_value()) {
     sel = fastjet::SelectorCircle(coreR.value());
@@ -58,3 +59,5 @@ Acts::FastJet::TrackJetSequence<TrackContainer>::tracksInJet(
 
   return tracks;
 }
+
+}  // namespace Acts::FastJet
