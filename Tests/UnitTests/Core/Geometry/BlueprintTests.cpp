@@ -346,6 +346,76 @@ BOOST_AUTO_TEST_CASE(Confined) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ConfinedWithShared) {
+  Transform3 base{Transform3::Identity()};
+
+  constexpr double rMin = 100_mm;
+  constexpr double rMax = 350_mm;
+  constexpr double hlZ = 100_mm;
+
+  auto sharedBounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer("PixelWrapper", AxisDirection::AxisZ, [&](auto& wrap) {
+
+        wrap.addStaticVolume(
+            base * Translation3{Vector3{0, 0, -750_mm}},
+            sharedBounds,
+            "PixelNeg1");
+
+        wrap.addStaticVolume(
+            base * Translation3{Vector3{0, 0, -200_mm}},
+            sharedBounds,
+            "PixelNeg2");
+
+        wrap.addStaticVolume(
+            base * Translation3{Vector3{0, 0, 200_mm}},
+            sharedBounds,
+            "PixelPos1");
+
+        wrap.addStaticVolume(
+            base * Translation3{Vector3{0, 0, 975_mm}},
+            sharedBounds,
+            "PixelPos2");
+      });
+  auto trackingGeometry = root->construct({}, gctx, *logger);
+  // overall dimensions are the wrapper volume + envelope
+  auto lookup = nameLookup(*trackingGeometry);
+  auto worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(lookup("World").volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 98_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 370_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ), 982.5_mm);
+  // 4 outer portals and 4 inner
+  BOOST_CHECK_EQUAL(lookup("World").portals().size(), 8);
+  BOOST_CHECK_EQUAL(lookup("World").volumes().size(), 4);
+ 
+  constexpr std::array<double, 4> expHalfL{187.5_mm, 237.5_mm, 293.75_mm, 243.75_mm};
+  const std::array<std::string, 4> volNames{"PixelNeg1", "PixelNeg2", "PixelPos1", "PixelPos2"};
+  for (std::size_t v = 0 ; v< 4; ++v) {
+    const auto& testMe{lookup(volNames[v])};
+    auto actCyl = dynamic_cast<const CylinderVolumeBounds&>(testMe.volumeBounds());
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMinR), 100_mm);
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMaxR), 350_mm);
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eHalfLengthZ), expHalfL[v]);
+    BOOST_CHECK_EQUAL(testMe.portals().size(), 4);
+    if (v+1 == 4){
+        break;
+    }
+    const auto& nextVol= lookup(volNames[(v+1)]);
+    const Acts::Vector3 outside = testMe.transform().translation() +  
+                                Acts::Vector3{150_mm, 0., actCyl.get(CylinderVolumeBounds::eHalfLengthZ) - 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(outside), false);
+    const Acts::Vector3 inside = testMe.transform().translation() +  
+                                Acts::Vector3{150_mm, 0., actCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(inside), true);
+  }
+}
+
+
 BOOST_AUTO_TEST_CASE(DiscLayer) {
   double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
