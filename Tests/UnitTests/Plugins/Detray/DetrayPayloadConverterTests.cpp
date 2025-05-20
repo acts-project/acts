@@ -38,8 +38,14 @@
 #include <memory>
 #include <numbers>
 
+#include <detray/io/backend/geometry_reader.hpp>
+#include <detray/io/backend/material_map_reader.hpp>
+#include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/payloads.hpp>
+#include <detray/utils/consistency_checker.hpp>
+#include <vecmem/memory/host_memory_resource.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
@@ -332,10 +338,10 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
   {
     DetrayPayloadConverter::Config cfg;
     DetrayPayloadConverter converter(cfg);
-    auto payload = converter.convertPortal(gctx, *portal);
+    auto payload = converter.convertSurface(gctx, portal->surface(), true);
 
     // Portal should always be passive
-    BOOST_CHECK(payload.type == detray::surface_id::e_passive);
+    BOOST_CHECK(payload.type == detray::surface_id::e_portal);
 
     // Check transform is preserved
     CHECK_CLOSE_ABS(payload.transform.tr[0], 1., 1e-10);
@@ -443,8 +449,82 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   GeometryContext gctx;
 
-  CylindricalTrackingGeometry cGeometry(gctx);
+  CylindricalTrackingGeometry cGeometry(gctx, true);
   auto tGeometry = cGeometry();
+
+  vecmem::host_memory_resource mr;
+
+  DetrayPayloadConverter::Config cfg;
+  auto logger = getDefaultLogger("Cnv", Logging::DEBUG);
+  DetrayPayloadConverter converter(cfg, std::move(logger));
+  detray::io::detector_payload payload =
+      converter.convertTrackingGeometry(gctx, *tGeometry);
+
+  using detector_t =
+      detray::detector<detray::default_metadata<detray::array<double>>>;
+
+  detector_t::name_map names = {{0u, "Detector"}};
+
+  // build detector
+  detray::detector_builder<detector_t::metadata> detectorBuilder{};
+  // (1) geometry
+  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder, names,
+                                                        payload);
+
+  // @TODO: Implement material!
+
+#if 0
+
+  // (2a) homogeneous material
+  if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
+    if (options.convertMaterial) {
+      detray::io::detector_homogeneous_material_payload materialSlabsPayload =
+          DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
+              cCache, detector, logger());
+      detray::io::homogeneous_material_reader::from_payload<detector_t>(
+          detectorBuilder, names, std::move(materialSlabsPayload));
+    }
+  }
+
+  // (2b) material grids
+  if constexpr (detray::concepts::has_material_maps<detector_t>) {
+    if (options.convertMaterial) {
+      detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                         detray::io::material_id>
+          materialGridsPayload =
+              DetrayMaterialConverter::convertGridSurfaceMaterial(
+                  cCache, detector, logger());
+      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
+          from_payload<detector_t>(detectorBuilder, names,
+                                   std::move(materialGridsPayload));
+    }
+  }
+
+  // (3) surface grids
+  if (options.convertSurfaceGrids) {
+    detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
+        surfaceGridsPayload =
+            DetraySurfaceGridsConverter::convertSurfaceGrids(detector);
+
+    // Capacity 0 (dynamic bin size) and dimension 2 (2D grids)
+    detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                    std::integral_constant<std::size_t, 0>,
+                                    std::integral_constant<std::size_t, 2>>::
+        template from_payload<detector_t>(detectorBuilder, names,
+                                          std::move(surfaceGridsPayload));
+  }
+
+#endif
+
+  detector_t detrayDetector(detectorBuilder.build(mr));
+
+  // Checks and print
+  detray::detail::check_consistency(detrayDetector);
+
+  // // Check payload size
+  // BOOST_CHECK_EQUAL(payload.volumes.size(), 1);
+  // BOOST_CHECK_EQUAL(payload.volumes[0].type, detray::volume_id::e_cylinder);
+  // BOOST_CHECK_EQUAL(payload.volumes[0].name, "CylinderVolume");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
