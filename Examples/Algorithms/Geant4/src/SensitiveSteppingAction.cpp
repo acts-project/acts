@@ -155,8 +155,9 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
     throw std::runtime_error("No volume found, terminate simulation");
   }
   std::string volumeName = volume->GetName();
-  ACTS_VERBOSE("Check whether volume "<<volumeName<<" is sensitive");
-  if (!m_cfg.stepLogging && volumeName.find(mappingPrefix) == std::string::npos) {
+  ACTS_VERBOSE("Check whether volume " << volumeName << " is sensitive");
+  if (!m_cfg.stepLogging &&
+      volumeName.find(mappingPrefix) == std::string::npos) {
     return;
   }
 

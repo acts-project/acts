@@ -14,9 +14,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-
+#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>

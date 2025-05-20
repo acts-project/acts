@@ -28,7 +28,8 @@
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
-    const Transform3& absTransform, SurfaceBoundFactory& boundFactory, bool sensitive) const {
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+    bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
@@ -64,7 +65,8 @@ Acts::detail::GeoPolygonConverter::operator()(
     double halfXnegY = unitLength * halfLengths[0];
     double halfXposY = unitLength * halfLengths[1];
     double halfY = unitLength * halfLengths[2];
-    auto trapBounds = boundFactory.makeBounds<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
+    auto trapBounds = boundFactory.makeBounds<Acts::TrapezoidBounds>(
+        halfXnegY, halfXposY, halfY);
     if (!sensitive) {
       auto surface = Surface::makeShared<PlaneSurface>(transform, trapBounds);
       return std::make_tuple(nullptr, surface);

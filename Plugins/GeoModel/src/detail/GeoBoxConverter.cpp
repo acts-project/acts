@@ -56,7 +56,8 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   // Create the surface bounds
   double halfX = unitLength * halfLengths[xIndex];
   double halfY = unitLength * halfLengths[yIndex];
-  auto rectangleBounds = boundFactory.makeBounds<Acts::RectangleBounds>(halfX, halfY);
+  auto rectangleBounds =
+      boundFactory.makeBounds<Acts::RectangleBounds>(halfX, halfY);
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, rectangleBounds);

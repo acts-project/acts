@@ -27,14 +27,15 @@ class Surface;
 namespace ActsExamples::Geant4 {
 
 /** @brief G4 user stepping action to record the step of a particle through the
- *         the G4 volumes. The information is dumped in the `ActsFatras::Hit` format
- *         containing the 4-momentum before & after the pre-step, the particle's
- *         barcode & pdgId as well as the GeometryIdentifer from the associated Acts::Surface
- *         provided by an external translation of the geometry to the Acts::TrackingGeometry.
- *         Using the configuration object, the action can be configured to record the steps 
- *         of primary / secondary (un)charged particles. By default, only steps in volumes
- *         that are marked by `SensitiveSurfaceMapper` as sensitive are recorded, but 
- *         the `SensitiveSteppingAction` may also record every single G4 step. */
+ *         the G4 volumes. The information is dumped in the `ActsFatras::Hit`
+ * format containing the 4-momentum before & after the pre-step, the particle's
+ *         barcode & pdgId as well as the GeometryIdentifer from the associated
+ * Acts::Surface provided by an external translation of the geometry to the
+ * Acts::TrackingGeometry. Using the configuration object, the action can be
+ * configured to record the steps of primary / secondary (un)charged particles.
+ * By default, only steps in volumes that are marked by `SensitiveSurfaceMapper`
+ * as sensitive are recorded, but the `SensitiveSteppingAction` may also record
+ * every single G4 step. */
 class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
@@ -47,7 +48,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     /** @brief Record the particles produced in the primary interactions */
     bool primary = true;
-    /** @brief Record secondary particles produced by the traversing 
+    /** @brief Record secondary particles produced by the traversing
      *         primary particles */
     bool secondary = true;
     /** @brief Record every single step made by the particles. Otherwise,
@@ -73,7 +74,8 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// Set the multimap that correlates G4VPhysicalVolumes to Acts::Surfaces
   ///
   /// @param surfaceMapping the multimap of physical volumes to surfaces
-  using VolumeToSurfAssocMap_t = SensitiveSurfaceMapper::State::VolumeToSurfAssocMap_t;
+  using VolumeToSurfAssocMap_t =
+      SensitiveSurfaceMapper::State::VolumeToSurfAssocMap_t;
   void assignSurfaceMapping(const VolumeToSurfAssocMap_t& surfaceMapping) {
     m_surfaceMapping = surfaceMapping;
   }

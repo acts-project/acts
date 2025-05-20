@@ -33,8 +33,9 @@ class G4VUserDetectorConstruction;
 namespace ActsExamples {
 
 /** @brief Baseline class to represent a complete experimental setup. The Detector
- *         is constructed by an external geometry plugin (e.g. DD4Hep, GeoModel) and
- *         holds the tracking geometry representation & the full Geant4 geometry description. */
+ *         is constructed by an external geometry plugin (e.g. DD4Hep, GeoModel)
+ * and holds the tracking geometry representation & the full Geant4 geometry
+ * description. */
 class Detector {
  public:
   /** @brief Standard constructor taking a logger object */

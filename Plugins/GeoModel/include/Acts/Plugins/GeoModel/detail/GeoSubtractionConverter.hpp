@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
@@ -31,7 +31,6 @@ struct GeoSubtractionConverter {
   Result<GeoModelSensitiveSurface> operator()(
       [[maybe_unused]] const PVConstLink& geoPV,
       const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
-      SurfaceBoundFactory& boundFactory,
-      [[maybe_unused]] bool sensitive) const;
+      SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const;
 };
 }  // namespace Acts::detail

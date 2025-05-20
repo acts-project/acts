@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
@@ -31,22 +31,22 @@ class IGeoShapeConverter {
   virtual ~IGeoShapeConverter() = default;
 
   /** @brief Convert a GeoShape into a sensitive surface with associated
-    *         GeoModelDetectorElement
-    *  @param geoFPV The physical volume to convert
-    *  @param transform: Placement of the constructed detector element
-    *  @param boundFactory: Reference to the bound factory to share equivalent bounds
-    *                       across multiple surfaces
-    *  @return The detector element and surface  */
+   *         GeoModelDetectorElement
+   *  @param geoFPV The physical volume to convert
+   *  @param transform: Placement of the constructed detector element
+   *  @param boundFactory: Reference to the bound factory to share equivalent bounds
+   *                       across multiple surfaces
+   *  @return The detector element and surface  */
   virtual Result<GeoModelSensitiveSurface> toSensitiveSurface(
       PVConstLink geoPV, const Transform3& transform,
       SurfaceBoundFactory& boundFactory) const = 0;
 
-    /** @brief Convert a GeoShape into a passive surface
-     *  @param geoFPV The physical volume to convert
-     *  @param transform: Placement of the constructed detector element
-     *  @param boundFactory: Reference to the bound factory to share equivalent bounds
-     *                       across multiple surfaces
-     *  @return The detector element and surface  */
+  /** @brief Convert a GeoShape into a passive surface
+   *  @param geoFPV The physical volume to convert
+   *  @param transform: Placement of the constructed detector element
+   *  @param boundFactory: Reference to the bound factory to share equivalent bounds
+   *                       across multiple surfaces
+   *  @return The detector element and surface  */
   virtual Result<std::shared_ptr<Surface>> toPassiveSurface(
       PVConstLink geoPV, const Transform3& transform,
       SurfaceBoundFactory& boundFactory) const = 0;

@@ -11,6 +11,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/BoundFactory.hpp"
+
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoTube.h>
@@ -28,7 +29,8 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
       const GeoShape* geoShape = logVol->getShape();
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
-        return Converter{}(geoPV, *concreteShape, transform, boundFactory, true);
+        return Converter{}(geoPV, *concreteShape, transform, boundFactory,
+                           true);
       }
       return Result<GeoModelSensitiveSurface>::failure(
           GeoModelConversionError::WrongShapeForConverter);
@@ -48,7 +50,8 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
         // Conversion function call with sensitive = false
-        auto res = Converter{}(geoPV, *concreteShape, transform, boundFactory, false);
+        auto res =
+            Converter{}(geoPV, *concreteShape, transform, boundFactory, false);
         if (!res.ok()) {
           return res.error();
         }

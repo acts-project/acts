@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
 
   PVConstLink physYZ{make_intrusive<GeoFullPhysVol>(logYZ)};
 
-  auto converted =
-      Acts::GeoTrdConverter{}.toSensitiveSurface(physYZ, idTransform, boundFactory);
+  auto converted = Acts::GeoTrdConverter{}.toSensitiveSurface(
+      physYZ, idTransform, boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -77,7 +77,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   auto logYZs = make_intrusive<GeoLogVol>("LogVolumeYZs", trapYZs, material);
   auto fphysYZs = make_intrusive<GeoFullPhysVol>(logYZs);
 
-  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysYZs, idTransform, boundFactory);
+  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysYZs, idTransform,
+                                                         boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -111,7 +112,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   auto logXZ = make_intrusive<GeoLogVol>("LogVolumeXZ", trapXZ, material);
   auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
-  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysXZ, idTransform, boundFactory);
+  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(fphysXZ, idTransform,
+                                                         boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -147,7 +149,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
 
   PVConstLink physXZs{make_intrusive<GeoFullPhysVol>(logXZs)};
 
-  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(physXZs, idTransform, boundFactory);
+  converted = Acts::GeoTrdConverter{}.toSensitiveSurface(physXZs, idTransform,
+                                                         boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -178,12 +181,13 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
 
   // Double - trazoid -> throw exception
   auto trapDouble = make_intrusive<GeoTrd>(50, 80, 50, 80, 60);
-  auto logDouble = make_intrusive<GeoLogVol>("LogVolumeDouble", trapDouble, material);
+  auto logDouble =
+      make_intrusive<GeoLogVol>("LogVolumeDouble", trapDouble, material);
   auto fphysDouble = make_intrusive<GeoFullPhysVol>(logDouble);
 
-  BOOST_CHECK_THROW(
-      Acts::GeoTrdConverter{}.toSensitiveSurface(fphysDouble, idTransform, boundFactory),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::GeoTrdConverter{}.toSensitiveSurface(
+                        fphysDouble, idTransform, boundFactory),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

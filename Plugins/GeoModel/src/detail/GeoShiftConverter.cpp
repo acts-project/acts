@@ -68,7 +68,8 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeShift& geoShift,
-    const Transform3& absTransform, SurfaceBoundFactory& boundFactory, bool sensitive) const {
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+    bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
       geoPV, geoShift, absTransform, boundFactory, sensitive);
 
