@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
@@ -28,6 +29,7 @@ class SurfaceBounds;
 class Surface;
 class Portal;
 class TrackingVolume;
+class PortalLinkBase;
 
 class DetrayPayloadConverter {
  public:
@@ -51,16 +53,29 @@ class DetrayPayloadConverter {
                                               bool forPortal);
 
   detray::io::surface_payload convertSurface(const GeometryContext& gctx,
-                                             const Surface& surface) const;
-
-  detray::io::surface_payload convertPortal(const GeometryContext& gctx,
-                                            const Portal& portal) const;
+                                             const Surface& surface,
+                                             bool portal = false) const;
 
   detray::io::volume_payload convertVolume(const TrackingVolume& volume) const;
 
-  explicit DetrayPayloadConverter(const Config& config);
+  detray::io::detector_payload convertTrackingGeometry(
+      const GeometryContext& gctx, const TrackingGeometry& geometry) const;
+
+  explicit DetrayPayloadConverter(const Config& config,
+                                  std::unique_ptr<const Logger> logger =
+                                      getDefaultLogger("DetrayPayloadConverter",
+                                                       Logging::INFO));
 
  private:
+  void handlePortalLink(
+      const GeometryContext& gctx, const TrackingVolume& volume,
+      detray::io::volume_payload& volPayload,
+      std ::function<std::size_t(const TrackingVolume*)> volumeLookup,
+      const PortalLinkBase& link) const;
+
   Config m_cfg;
+
+  const Logger& logger() const { return *m_logger; }
+  std::unique_ptr<const Logger> m_logger;
 };
 }  // namespace Acts
