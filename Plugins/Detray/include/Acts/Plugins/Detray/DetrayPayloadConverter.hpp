@@ -73,6 +73,10 @@ class DetrayPayloadConverter {
       std ::function<std::size_t(const TrackingVolume*)> volumeLookup,
       const PortalLinkBase& link) const;
 
+  void makeEndOfWorld(const GeometryContext& gctx,
+                      detray::io::volume_payload& volPayload,
+                      const Surface& surface) const;
+
   Config m_cfg;
 
   const Logger& logger() const { return *m_logger; }
