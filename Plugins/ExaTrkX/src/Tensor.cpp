@@ -23,11 +23,11 @@ TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
                                    const ExecutionContext &execContext)
     : m_device(execContext.device) {
   if (execContext.device.type == Acts::Device::Type::eCPU) {
-    auto ptr = std::malloc(nbytes);
+    void *ptr = new std::byte[nbytes];
     if (ptr == nullptr) {
       throw std::bad_alloc{};
     }
-    m_ptr = Ptr(ptr, [](void *p) { std::free(p); });
+    m_ptr = Ptr(ptr, [](void *p) { delete[] static_cast<std::byte *>(p); });
   } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
     assert(execContext.stream.has_value());
