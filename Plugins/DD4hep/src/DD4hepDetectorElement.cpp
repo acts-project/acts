@@ -28,9 +28,10 @@ const Acts::Transform3& Acts::DD4hepDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
   // Treating non-empty context => contextual aligmnment present
   if (gctx.hasValue()) {
-    const ContextType& dd4hepCtx = gctx.get<ContextType>();
+    const ContextType* dd4hepCtx = gctx.maybeGet<ContextType>();
     // Check if a contextual transform is available for this detector element
-    auto trfPtr = dd4hepCtx.contextualTransform(*this);
+    auto trfPtr = (dd4hepCtx != nullptr) ? dd4hepCtx->contextualTransform(*this)
+                                         : nullptr;
     if (trfPtr != nullptr) {
       return *trfPtr;
     }
