@@ -43,6 +43,7 @@ components:
 - [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 - [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
+- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
