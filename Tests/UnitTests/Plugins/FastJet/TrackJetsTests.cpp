@@ -152,3 +152,20 @@ BOOST_AUTO_TEST_CASE(TracksInJetCore) {
   BOOST_CHECK(std::find(trks.begin(), trks.end(), tracks.getTrack(4)) ==
               trks.end());
 }
+
+BOOST_AUTO_TEST_CASE(EmptyTrackContainer) {
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence::create(
+          std::vector<fastjet::PseudoJet>());
+  BOOST_CHECK_EQUAL(jetSeq.jets().size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(InvalidCoreRadius) {
+  TrackContainer tracks;
+  tracks.insert(Track(100, 0, 0));
+  Acts::FastJet::InputTracks inputTracks(tracks);
+  Acts::FastJet::TrackJetSequence jetSeq =
+      Acts::FastJet::TrackJetSequence::create(inputTracks.fourMomenta());
+  BOOST_CHECK_THROW(inputTracks.tracksInJet(jetSeq.jets()[0], -1.0),
+                    std::invalid_argument);
+}

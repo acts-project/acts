@@ -29,7 +29,10 @@ InputTracks<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
                                          std::optional<float> coreR) {
   fastjet::Selector sel = fastjet::SelectorIdentity();
   if (coreR.has_value()) {
-    sel = fastjet::SelectorCircle(coreR.value());
+    if (*coreR < 0) {
+      throw std::invalid_argument("coreR must be positive!");
+    }
+    sel = fastjet::SelectorCircle(*coreR);
     sel.set_reference(jet);
   }
 
