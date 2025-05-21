@@ -38,8 +38,10 @@ set_property(
 
 mark_as_advanced(FastJet_FOUND FastJet_INCLUDE_DIR FastJet_LIBRARY)
 
-if(FastJet_FOUND)
+if(NOT FastJet_FIND_QUIETLY)
+  if(FastJet_FOUND)
     message(STATUS "Found FastJet ${FastJet_VERSION} at ${FastJet_LIBRARY}")
-else()
+  else()
     message(FATAL_ERROR "FastJet not found")
+  endif()
 endif()
