@@ -90,6 +90,13 @@ BOOST_AUTO_TEST_CASE(DD4hepGeometryContext) {
   const Acts::Transform3* transform1 =
       geometryContext.contextualTransform(detElem1);
   BOOST_CHECK(transform1 == nullptr);
+
+  // Test an u-connected delegate
+  Acts::DD4hepGeometryContext::Alignment unconnectedDelegate;
+  Acts::DD4hepGeometryContext unconnectedContext(unconnectedDelegate);
+
+  BOOST_CHECK(unconnectedContext.contextualTransform(detElem0) == nullptr);
+  BOOST_CHECK(unconnectedContext.contextualTransform(detElem1) == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
