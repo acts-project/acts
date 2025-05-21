@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
 
   // test error case
   BOOST_CHECK_THROW(factory.convertFpv("Trd", errPhysTrd, errCache, gContext),
-                    std::runtime_error);
+                    std::invalid_argument);
   factory.convertFpv("Trd", physTrd, gmCache, gContext);
 
   BOOST_CHECK(gmCache.volumeBoxFPVs.size() > 0);
