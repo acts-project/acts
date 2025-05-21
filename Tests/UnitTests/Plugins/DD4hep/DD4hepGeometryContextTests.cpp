@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(DD4hepGeometryContext) {
   detElem1.m_surface = cylinder1;
 
   // These delegates are created by the framework eventually that reads
-  // aligment information from some sort of database and releates it to
-  // intevals of validity.
+  // alignment information from some sort of database and releates it to
+  // intervals of validity.
   Acts::DD4hepAlignmentStore alignmentStore(transformStore);
 
   Acts::DD4hepGeometryContext::Alignment alignmentDelegate;

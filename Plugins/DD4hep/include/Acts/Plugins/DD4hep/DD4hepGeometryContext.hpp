@@ -26,8 +26,7 @@ class DD4hepDetectorElement;
 class DD4hepGeometryContext {
  public:
   /// @brief Definition of an alignment delegate
-  using Alignment =
-      Delegate<const Transform3*(const DD4hepDetectorElement&)>;
+  using Alignment = Delegate<const Transform3*(const DD4hepDetectorElement&)>;
 
   /// Disconnected geometry context
   DD4hepGeometryContext() {}

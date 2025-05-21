@@ -35,7 +35,7 @@ class ITransformStore {
       const Surface& surface) const = 0;
 };
 
-/// One possible implementation with a simple unordered map that relates a 
+/// One possible implementation with a simple unordered map that relates a
 /// surface via its geometry identifier to a transform within the store
 ///
 /// To use this store, the GeometryContext of the corresponding geometry must
@@ -49,8 +49,7 @@ class TransformStoreGeometryId : public ITransformStore {
       : m_identifiedTransforms(std::move(transformMap)) {}
 
   /// @copydoc ITransformStore::contextualTransform
-  const Transform3* contextualTransform(
-      const Surface& surface) const {
+  const Transform3* contextualTransform(const Surface& surface) const {
     auto it = m_identifiedTransforms.find(surface.geometryId());
     if (it != m_identifiedTransforms.end()) {
       return &(it->second);
@@ -59,9 +58,8 @@ class TransformStoreGeometryId : public ITransformStore {
   }
 
  private:
-  /// The geometry id map 
-  std::unordered_map<GeometryIdentifier, Transform3>
-      m_identifiedTransforms;
+  /// The geometry id map
+  std::unordered_map<GeometryIdentifier, Transform3> m_identifiedTransforms;
 };
 
 }  // namespace Acts
