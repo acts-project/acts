@@ -446,6 +446,55 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
+  // These tests check the conversion to the payload objects, the full test
+  auto materialSlab12345 =
+      Acts::MaterialSlab(Acts::Material::fromMolarDensity(1, 2, 3, 4, 5), 1.);
+
+  auto materialSlab678910 =
+      Acts::MaterialSlab(Acts::Material::fromMolarDensity(6, 7, 8, 9, 10), 2.);
+
+  auto materialSlab54321 =
+      Acts::MaterialSlab(Acts::Material::fromMolarDensity(5, 4, 3, 2, 1), 3.);
+
+  auto materialSlab109876 =
+      Acts::MaterialSlab(Acts::Material::fromMolarDensity(10, 9, 8, 7, 6), 4.);
+
+  auto logger = Acts::getDefaultLogger("DetrayMaterialConverterTests",
+                                       Acts::Logging::INFO);
+
+  DetrayPayloadConverter::Config cfg;
+  DetrayPayloadConverter converter(cfg, std::move(logger));
+
+  // Convert the material slab
+  detray::io::material_slab_payload payload =
+      converter.convertMaterialSlab(materialSlab12345);
+
+  // Material type should be set to slab
+  BOOST_CHECK(payload.type ==
+              detray::io::material_slab_payload::mat_type::slab);
+  // Thickness should be set to one
+  CHECK_CLOSE_ABS(payload.thickness, 1.,
+                  std::numeric_limits<double>::epsilon());
+  // Index in collection not set at this simple conversion
+  BOOST_CHECK(!payload.index_in_coll.has_value());
+  // Material parameters in detray are (x0, l0, ar, z, mass_density,
+  // molar_density, solid/liquid/etc. flag ... ignored currently)
+  CHECK_CLOSE_ABS(payload.mat.params[0u], 1.,
+                  std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.mat.params[1u], 2.,
+                  std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.mat.params[2u], 3.,
+                  std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.mat.params[3u], 4.,
+                  std::numeric_limits<double>::epsilon());
+  BOOST_CHECK_NE(payload.mat.params[4u], payload.mat.params[5u]);
+  CHECK_CLOSE_ABS(payload.mat.params[5u], 5.,
+                  std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.mat.params[6u], 0.,
+                  std::numeric_limits<double>::epsilon());
+}
+
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   GeometryContext gctx;
 

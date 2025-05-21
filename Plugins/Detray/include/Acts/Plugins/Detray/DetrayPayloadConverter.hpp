@@ -19,6 +19,8 @@ struct transform_payload;
 struct mask_payload;
 struct surface_payload;
 struct volume_payload;
+struct material_slab_payload;
+struct material_volume_payload;
 }  // namespace detray::io
 
 namespace Acts {
@@ -30,6 +32,7 @@ class Surface;
 class Portal;
 class TrackingVolume;
 class PortalLinkBase;
+class MaterialSlab;
 
 class DetrayPayloadConverter {
  public:
@@ -58,6 +61,9 @@ class DetrayPayloadConverter {
 
   detray::io::volume_payload convertVolume(const TrackingVolume& volume) const;
 
+  detray::io::material_slab_payload convertMaterialSlab(
+      const MaterialSlab& slab) const;
+
   detray::io::detector_payload convertTrackingGeometry(
       const GeometryContext& gctx, const TrackingGeometry& geometry) const;
 
@@ -82,6 +88,10 @@ class DetrayPayloadConverter {
       detray::io::volume_payload& volPayload,
       const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
       const Portal& portal) const;
+
+  detray::io::material_volume_payload convertHomogeneousSurfaceMaterial(
+      const TrackingVolume& volume,
+      const detray::io::volume_payload& volPayload) const;
 
   Config m_cfg;
 
