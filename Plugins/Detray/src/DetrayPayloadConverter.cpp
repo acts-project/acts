@@ -367,6 +367,19 @@ void DetrayPayloadConverter::handlePortal(
   }
 }
 
+detray::io::material_slab_payload DetrayPayloadConverter::convertMaterialSlab(
+    const MaterialSlab& slab) const {
+  detray::io::material_slab_payload payload;
+  // Fill the material parameters and the thickness
+  const auto& material = slab.material();
+  payload.thickness = slab.thickness();
+  payload.mat = detray::io::material_payload{
+      {material.X0(), material.L0(), material.Ar(), material.Z(),
+       material.massDensity(), material.molarDensity(), 0.}};
+  payload.type = detray::io::material_id::slab;
+  return payload;
+}
+
 detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     const GeometryContext& gctx, const TrackingGeometry& geometry) const {
   ACTS_INFO("Converting tracking geometry to detray format");
