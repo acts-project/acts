@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(SingleTrack) {
 BOOST_AUTO_TEST_CASE(TwoTracksTwoJets) {
   TrackContainer tracks;
   tracks.insert(Track(100, 0, 0.0));
-  tracks.insert(Track(100, 0, M_PI));
+  tracks.insert(Track(100, 0, std::numbers::pi));
 
   Acts::FastJet::TrackJetSequence jetSeq =
       Acts::FastJet::TrackJetSequence<TrackContainer>::create(tracks);
