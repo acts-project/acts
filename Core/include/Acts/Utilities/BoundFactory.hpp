@@ -60,7 +60,7 @@ class BoundFactory {
   }
   /** @brief Factory method to construct new bounds from the passed arguments
    *  @tparam BoundsImpl_t: Explicit template specification of the bounds to construct
-   *  @param argsList: List of defining bound parameters
+   *  @param args: List of defining bound parameters
    *  @return A pointer to the newly constructed bounds or to an already existing
    *          equivalent bound object */
   template <typename BoundsImpl_t, class... argList>
@@ -90,6 +90,10 @@ class BoundFactory {
       }
       const std::vector<double> avalues{a->values()};
       const std::vector<double> bvalues{b->values()};
+      /** In case of polygon shaped bounds, the vectors may differ */
+      if (avalues.size() != bvalues.size()) {
+         return avalues.size() < bvalues.size();
+      }
       /** Loop over the defining parameters of the two bounds and compare them
        * pairwise. If a difference is spotted return the evaluation of the < of
        * the pair */
