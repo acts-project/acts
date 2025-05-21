@@ -77,6 +77,12 @@ class DetrayPayloadConverter {
                       detray::io::volume_payload& volPayload,
                       const Surface& surface) const;
 
+  void handlePortal(
+      const GeometryContext& gctx, const TrackingVolume& volume,
+      detray::io::volume_payload& volPayload,
+      const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+      const Portal& portal) const;
+
   Config m_cfg;
 
   const Logger& logger() const { return *m_logger; }
