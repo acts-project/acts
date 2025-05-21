@@ -18,16 +18,6 @@
 
 namespace ActsExamples {
 
-// Concept for the Tracking GeometryBuilder
-template <typename T>
-concept TrackingGeometryBuilderConcept =
-    std::derived_from<T, Acts::ITrackingGeometryBuilder> &&
-    requires(const T& t, const Acts::GeometryContext& gctx) {
-      {
-        t.trackingGeometry(gctx)
-      } -> std::same_as<std::unique_ptr<const Acts::TrackingGeometry>>;
-    };
-
 /** @brief Detector implementation to connect the GeoModel detector description with the
  *         translation to the G4 geometry and with the tracking geometry. */
 struct GeoModelDetector : public Detector {
@@ -45,17 +35,17 @@ struct GeoModelDetector : public Detector {
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 
-  template <TrackingGeometryBuilderConcept T>
-  std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
-      const Acts::GeometryContext& gctx, T& builder) {
-    m_trackingGeometry = builder.trackingGeometry(gctx);
-    return std::move(m_trackingGeometry);
+  std::shared_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
+      const Acts::GeometryContext& gctx,
+      Acts::ITrackingGeometryBuilder& builder) {
+    if (!m_trackingGeometry) {
+      m_trackingGeometry = builder.trackingGeometry(gctx);
+    }
+    return m_trackingGeometry;
   }
 
  private:
   Config m_cfg{};
-
-  std::unique_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
 };
 
 }  // namespace ActsExamples

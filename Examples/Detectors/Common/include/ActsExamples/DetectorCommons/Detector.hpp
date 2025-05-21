@@ -43,7 +43,8 @@ class Detector {
   virtual ~Detector();
   /** @brief Returns the reference to the empty unaligned geometry context */
   virtual const Acts::GeometryContext& nominalGeometryContext() const;
-
+  /** @brief Returns the valid pointer to the tracking geometry.
+   *         Throws an exception if the pointer is invalid */
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry()
       const;
   virtual std::shared_ptr<Acts::Experimental::Detector> gen2Geometry() const;
