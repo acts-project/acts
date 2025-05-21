@@ -6,10 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/Seeding/SeedFinder.hpp"
+// clang-format on
+
 #include <algorithm>
 #include <cmath>
-#include <numeric>
-#include <type_traits>
 
 namespace Acts {
 

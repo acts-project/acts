@@ -8,7 +8,10 @@
 
 #pragma once
 
+// clang-format off
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+// clang-format on
+
 #include "Acts/EventData/TrackStateType.hpp"
 
 #include <unordered_map>

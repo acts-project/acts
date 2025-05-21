@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <variant>

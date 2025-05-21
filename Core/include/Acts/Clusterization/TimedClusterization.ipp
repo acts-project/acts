@@ -6,6 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/Clusterization/TimedClusterization.hpp"
+// clang-format on
+
 namespace Acts::Ccl {
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>

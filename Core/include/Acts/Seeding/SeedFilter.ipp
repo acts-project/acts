@@ -6,10 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/EventData/Seed.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
+// clang-format on
+
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <algorithm>
-#include <numeric>
 #include <utility>
 
 namespace Acts {

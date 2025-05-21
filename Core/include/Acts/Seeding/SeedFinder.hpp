@@ -8,25 +8,19 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointMutableData.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
-#include <array>
-#include <limits>
-#include <list>
-#include <map>
 #include <memory>
 #include <ranges>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>

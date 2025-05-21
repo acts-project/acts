@@ -6,7 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/Seeding/SeedFinderUtils.hpp"
+// clang-format on
+
+#include "Acts/Utilities/HashedString.hpp"
+
 namespace Acts {
+
 template <typename external_spacepoint_t, typename callable_t>
 inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                                       const external_spacepoint_t& sp,

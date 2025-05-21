@@ -8,7 +8,10 @@
 
 #pragma once
 
+// clang-format off
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
+// clang-format on
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"

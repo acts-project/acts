@@ -6,9 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// AtlasSeedFinder.ipp Acts project
-///////////////////////////////////////////////////////////////////
+#pragma once
+
+// clang-format off
+#include "Acts/Plugins/Legacy/Seeding/AtlasSeedFinder.hpp"
+// clang-format on
 
 #include <algorithm>
 #include <numbers>

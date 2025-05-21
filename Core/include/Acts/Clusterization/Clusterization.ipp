@@ -6,6 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/Clusterization/Clusterization.hpp"
+// clang-format on
+
 #include <algorithm>
 #include <array>
 #include <vector>

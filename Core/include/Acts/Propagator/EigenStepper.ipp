@@ -6,13 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
+#include "Acts/Propagator/EigenStepper.hpp"
+// clang-format on
+
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-
-#include <limits>
 
 template <typename E>
 Acts::EigenStepper<E>::EigenStepper(

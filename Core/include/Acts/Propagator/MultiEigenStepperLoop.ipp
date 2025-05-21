@@ -6,7 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// clang-format off
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+// clang-format on
+
 #include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 

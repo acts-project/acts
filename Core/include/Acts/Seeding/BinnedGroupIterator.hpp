@@ -8,17 +8,16 @@
 
 #pragma once
 
-#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
-#include <memory>
 #include <tuple>
 
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
 template <typename grid_t>
 class BinnedGroup;
 
