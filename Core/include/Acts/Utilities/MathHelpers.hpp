@@ -43,7 +43,7 @@ struct sincos {
 /// @param N: Upper limit of the sum
 template<typename T,
         typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
-constexpr T sumUp (const T N) {
+constexpr T prefixSum(const T N) {
     return N *(N +1) / 2;
 } 
 
