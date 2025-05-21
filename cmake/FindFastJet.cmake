@@ -28,6 +28,8 @@ find_package_handle_standard_args(
 )
 
 add_library(FastJet SHARED IMPORTED)
+add_library(FastJet::FastJet ALIAS FastJet)
+
 set_property(TARGET FastJet PROPERTY IMPORTED_LOCATION ${FastJet_LIBRARY})
 set_property(
     TARGET FastJet
