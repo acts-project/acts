@@ -17,16 +17,9 @@ TrackJetSequence<TrackContainer> TrackJetSequence<TrackContainer>::create(
   std::vector<fastjet::PseudoJet> inputs;
 
   for (std::size_t i = 0; i < tracks.size(); i++) {
-    typename TrackContainer::ConstTrackProxy track = tracks.getTrack(i);
-    Acts::Vector3 p = track.momentum();
-    float m = track.particleHypothesis().mass();
-
-    float px = p[Acts::eMom0];
-    float py = p[Acts::eMom1];
-    float pz = p[Acts::eMom2];
-    float e = std::sqrt(m * m + px * px + py * py + pz * pz);
-
-    inputs.emplace_back(px, py, pz, e);
+    Acts::Vector4 p = tracks.getTrack(i).fourMomentum();
+    inputs.emplace_back(p[Acts::eMom0], p[Acts::eMom1], p[Acts::eMom2],
+                        p[Acts::eEnergy]);
     inputs.back().set_user_index(i);
   }
 

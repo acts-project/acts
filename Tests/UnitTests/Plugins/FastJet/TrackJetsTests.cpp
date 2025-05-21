@@ -12,25 +12,32 @@
 
 class ParticleHypothesis {
  public:
-  float mass() { return 139.57061 * Acts::UnitConstants::MeV; }
 };
 
 class Track {
  public:
+  static constexpr float mass = 139.57061 * Acts::UnitConstants::MeV;
+
   Track(float pt, float eta, float phi) {
-    m_momentum[0] = pt * std::cos(phi);
-    m_momentum[1] = pt * std::sin(phi);
-    m_momentum[2] = pt * std::sinh(eta);
+    Acts::Vector3 p3 = Acts::Vector3::Zero();
+    p3[0] = pt * std::cos(phi);
+    p3[1] = pt * std::sin(phi);
+    p3[2] = pt * std::sinh(eta);
+    float e = std::sqrt(mass * mass + p3.squaredNorm());
+    m_fourMom[0] = p3[0];
+    m_fourMom[1] = p3[1];
+    m_fourMom[2] = p3[2];
+    m_fourMom[3] = e;
   }
-  Acts::Vector3 momentum() const { return m_momentum; }
-  ParticleHypothesis particleHypothesis() const { return ParticleHypothesis(); }
+
+  Acts::Vector4 fourMomentum() const { return m_fourMom; }
 
  private:
-  Acts::Vector3 m_momentum;
+  Acts::Vector4 m_fourMom;
 };
 
 bool operator==(Track const& lhs, Track const& rhs) {
-  return lhs.momentum() == rhs.momentum();
+  return lhs.fourMomentum() == rhs.fourMomentum();
 }
 
 class TrackContainer {
@@ -67,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SingleTrack) {
   BOOST_CHECK_CLOSE(jets[0].pt(), 100, 1e-3);
   BOOST_CHECK_CLOSE(jets[0].eta(), 0, 1e-3);
   BOOST_CHECK_CLOSE(jets[0].phi(), 0, 1e-3);
-  BOOST_CHECK_CLOSE(jets[0].m(), ParticleHypothesis().mass(), 1);
+  BOOST_CHECK_CLOSE(jets[0].m(), Track::mass, 1);
 }
 
 BOOST_AUTO_TEST_CASE(TwoTracksTwoJets) {
