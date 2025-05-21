@@ -9,7 +9,7 @@
 #pragma once
 
 // clang-format off
-#include "Acts/Plugins/Hashing/HashingTracking.hpp"
+#include "Acts/Plugins/Hashing/HashingTraining.hpp"
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
