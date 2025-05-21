@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Propagator/EigenStepper.hpp"
-// clang-format on
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"

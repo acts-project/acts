@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Utilities/GridBinFinder.hpp"
-// clang-format on
 
 #include <type_traits>
 

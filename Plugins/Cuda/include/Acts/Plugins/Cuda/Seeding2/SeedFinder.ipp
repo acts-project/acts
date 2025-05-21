@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
-// clang-format on
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/CountDublets.hpp"

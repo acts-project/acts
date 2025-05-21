@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/AtlasSeedFinder.hpp"
-// clang-format on
 
 #include <algorithm>
 #include <numbers>

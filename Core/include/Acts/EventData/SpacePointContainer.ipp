@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/EventData/SpacePointContainer.hpp"
-// clang-format on
 
 #include "Acts/Utilities/HashedString.hpp"
 

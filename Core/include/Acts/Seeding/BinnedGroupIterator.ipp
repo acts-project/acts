@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/BinnedGroupIterator.hpp"
-// clang-format on
 
 template <typename grid_t>
 Acts::BinnedGroupIterator<grid_t>::BinnedGroupIterator(

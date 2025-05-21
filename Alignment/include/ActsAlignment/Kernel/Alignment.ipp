@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "ActsAlignment/Kernel/Alignment.hpp"
-// clang-format on
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"

@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/EventData/SpacePointData.hpp"
-// clang-format on
 
 namespace Acts {
 

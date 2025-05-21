@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Utilities/Frustum.hpp"
-// clang-format on
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 

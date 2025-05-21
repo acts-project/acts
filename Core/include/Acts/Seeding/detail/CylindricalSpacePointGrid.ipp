@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
-// clang-format on
 
 #include <concepts>
 #include <numbers>

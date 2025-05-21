@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-// clang-format on
 
 #include "Acts/Utilities/HashedString.hpp"
 

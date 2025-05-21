@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-// clang-format on
 
 #include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"

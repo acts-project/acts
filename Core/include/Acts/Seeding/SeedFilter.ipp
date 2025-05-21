@@ -8,11 +8,9 @@
 
 #pragma once
 
-// clang-format off
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-// clang-format on
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <algorithm>

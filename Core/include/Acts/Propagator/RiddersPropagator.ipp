@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Propagator/RiddersPropagator.hpp"
-// clang-format on
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 

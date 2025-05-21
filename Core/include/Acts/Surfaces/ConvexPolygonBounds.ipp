@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-// clang-format on
 
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"

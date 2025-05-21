@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Utilities/Ray.hpp"
-// clang-format on
 
 template <typename value_t, std::size_t DIM>
 Acts::Ray<value_t, DIM>::Ray(const VertexType& origin, const VertexType& dir)

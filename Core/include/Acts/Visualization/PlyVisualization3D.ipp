@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Visualization/PlyVisualization3D.hpp"
-// clang-format on
 
 #include <fstream>
 

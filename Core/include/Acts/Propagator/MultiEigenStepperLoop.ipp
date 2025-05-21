@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-// clang-format on
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Utilities/Logger.hpp"

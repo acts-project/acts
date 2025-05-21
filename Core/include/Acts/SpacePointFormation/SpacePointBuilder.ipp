@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
-// clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 

@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
-// clang-format on
 
 #include <limits>
 

@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
-// clang-format on
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -23,6 +21,7 @@
 #include <type_traits>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
     const external_spacepoint_t &low) const -> typename tree_t::range_t {

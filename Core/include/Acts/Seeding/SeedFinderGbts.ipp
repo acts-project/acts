@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/SeedFinderGbts.hpp"
-// clang-format on
 
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 

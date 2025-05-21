@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/BinnedGroup.hpp"
-// clang-format on
 
 #include <numeric>
 

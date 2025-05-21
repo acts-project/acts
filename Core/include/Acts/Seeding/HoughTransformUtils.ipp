@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Seeding/HoughTransformUtils.hpp"
-// clang-format on
 
 #include <algorithm>
 #include <tuple>

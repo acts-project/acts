@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
-// clang-format on
 
 namespace Acts {
 

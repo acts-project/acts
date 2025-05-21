@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/EventData/MultiTrajectory.hpp"
-// clang-format on
 
 #include <type_traits>
 

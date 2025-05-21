@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
-// clang-format on
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 

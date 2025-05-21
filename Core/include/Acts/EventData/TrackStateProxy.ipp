@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/EventData/TrackStateProxy.hpp"
-// clang-format on
 
 namespace Acts {
 

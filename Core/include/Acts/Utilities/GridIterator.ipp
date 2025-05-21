@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Utilities/GridIterator.hpp"
-// clang-format on
 
 #include <numeric>
 

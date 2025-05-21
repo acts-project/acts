@@ -8,9 +8,7 @@
 
 #pragma once
 
-// clang-format off
 #include "Acts/Clusterization/Clusterization.hpp"
-// clang-format on
 
 #include <algorithm>
 #include <array>
