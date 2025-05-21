@@ -258,7 +258,7 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
 void DetrayPayloadConverter::handlePortalLink(
     const GeometryContext& gctx, const TrackingVolume& volume,
     detray::io::volume_payload& volPayload,
-    std ::function<std::size_t(const TrackingVolume*)> volumeLookup,
+    std::function<std::size_t(const TrackingVolume*)> volumeLookup,
     const PortalLinkBase& link) const {
   auto handle = [&](const TrivialPortalLink& trivial) {
     ACTS_VERBOSE("Converting trivial portal link registered to volume "
@@ -329,6 +329,44 @@ void DetrayPayloadConverter::makeEndOfWorld(
   srfPayload.mask.volume_link.link = std::numeric_limits<std::size_t>::max();
 }
 
+void DetrayPayloadConverter::handlePortal(
+    const GeometryContext& gctx, const TrackingVolume& volume,
+    detray::io::volume_payload& volPayload,
+    const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+    const Portal& portal) const {
+  auto* lAlong = portal.getLink(Direction::AlongNormal());
+  auto* lOpposite = portal.getLink(Direction::OppositeNormal());
+
+  if (lAlong == nullptr && lOpposite == nullptr) {
+    // Sanity check: this shouldn't happen
+    throw std::runtime_error("Portal link is not symmetric");
+  }
+
+  if (lAlong != nullptr) {
+    handlePortalLink(gctx, volume, volPayload, volumeLookup, *lAlong);
+  } else {
+    // can't both be nullptr
+    assert(lOpposite != nullptr);
+    makeEndOfWorld(gctx, volPayload, lOpposite->surface());
+  }
+
+  if (lOpposite != nullptr) {
+    handlePortalLink(gctx, volume, volPayload, volumeLookup, *lOpposite);
+  } else {
+    // can't both be nullptr
+    assert(lAlong != nullptr);
+    makeEndOfWorld(gctx, volPayload, lAlong->surface());
+  }
+
+  for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
+    const auto* link = portal.getLink(dir);
+
+    if (link != nullptr) {
+      handlePortalLink(gctx, volume, volPayload, volumeLookup, *link);
+    }
+  }
+}
+
 detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     const GeometryContext& gctx, const TrackingGeometry& geometry) const {
   ACTS_INFO("Converting tracking geometry to detray format");
@@ -364,40 +402,7 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
     auto& volPayload = payload.volumes.at(volumeIds.at(&volume));
 
     for (const auto& portal : volume.portals()) {
-      // hard-requirement: all portal links must decompose to trivial portal
-      // links!
-
-      auto* lAlong = portal.getLink(Direction::AlongNormal());
-      auto* lOpposite = portal.getLink(Direction::OppositeNormal());
-
-      if (lAlong == nullptr && lOpposite == nullptr) {
-        // Sanity check: this shouldn't happen
-        throw std::runtime_error("Portal link is not symmetric");
-      }
-
-      if (lAlong != nullptr) {
-        handlePortalLink(gctx, volume, volPayload, lookup, *lAlong);
-      } else {
-        // can't both be nullptr
-        assert(lOpposite != nullptr);
-        makeEndOfWorld(gctx, volPayload, lOpposite->surface());
-      }
-
-      if (lOpposite != nullptr) {
-        handlePortalLink(gctx, volume, volPayload, lookup, *lOpposite);
-      } else {
-        // can't both be nullptr
-        assert(lAlong != nullptr);
-        makeEndOfWorld(gctx, volPayload, lAlong->surface());
-      }
-
-      for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
-        const auto* link = portal.getLink(dir);
-
-        if (link != nullptr) {
-          handlePortalLink(gctx, volume, volPayload, lookup, *link);
-        }
-      }
+      handlePortal(gctx, volume, volPayload, lookup, portal);
     }
 
     ACTS_DEBUG("Volume " << volume.volumeName() << " has "
