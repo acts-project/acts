@@ -32,12 +32,16 @@ class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
-/// Base class for detector instances
+/** @brief Baseline class to represent a complete experimental setup. The Detector
+ *         is constructed by an external geometry plugin (e.g. DD4Hep, GeoModel)
+ * and holds the tracking geometry representation & the full Geant4 geometry
+ * description. */
 class Detector {
  public:
+  /** @brief Standard constructor taking a logger object */
   explicit Detector(std::unique_ptr<const Acts::Logger> logger);
   virtual ~Detector();
-
+  /** @brief Returns the reference to the empty unaligned geometry context */
   virtual const Acts::GeometryContext& nominalGeometryContext() const;
 
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry()

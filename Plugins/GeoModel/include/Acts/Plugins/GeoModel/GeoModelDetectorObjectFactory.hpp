@@ -13,6 +13,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <GeoModelHelpers/getChildNodesWithTrf.h>
@@ -23,9 +24,16 @@ class GeoShape;
 struct GeoModelTree;
 class Surface;
 namespace Acts {
+/** @brief Factory class to convert GeoModel objects into Acts volumes. Currently,  */
 class GeoModelDetectorObjectFactory {
  public:
-  using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
+  /** @brief abrivation of the smart pointer to a full physical volume */
+  using FPVConstLink = GeoIntrusivePtr<const GeoVFullPhysVol>;
+  /** @brief Tuple describing the shared ptr to a Volume which will be turned into a TrackingVolume,
+   *          a Gen-2 volume and the pointer to the full physical volume */
+  using GeoModelVolumeFPVTuple =
+      std::tuple<std::shared_ptr<Volume>,
+                 std::shared_ptr<Experimental::DetectorVolume>, FPVConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -49,8 +57,16 @@ class GeoModelDetectorObjectFactory {
   struct Cache {
     // The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-    // The created representation of bounding box
-    std::vector<GeoModelBoundingBox> boundingBoxes;
+    /** @brief Pointer to the surface bound factory  */
+    std::shared_ptr<SurfaceBoundFactory> surfBoundFactory =
+        std::make_shared<SurfaceBoundFactory>();
+    /** @brief Pointer to the volume bound factory */
+    std::shared_ptr<VolumeBoundFactory> volumeBoundFactory =
+        std::make_shared<VolumeBoundFactory>();
+
+    // The created representation of bounding boxes  and the corresponding Full
+    // Physical Volumes
+    std::vector<GeoModelVolumeFPVTuple> volumeBoxFPVs{};
   };
 
   explicit GeoModelDetectorObjectFactory(
@@ -58,22 +74,51 @@ class GeoModelDetectorObjectFactory {
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "GeoModelDetectorObjectFactory", Acts::Logging::WARNING));
 
+  /** @brief Run the translation from the GeoModelTree to the (sensitive) surfaces.
+   *  @param cache: Cache object which will contain the surfaces & box volume bounds
+   *  @param gctx: Instance to an geometry context in order to build the envelope volumes
+   *  @param geoModelTree: Configured instance of the GeoModelTree to run the construction on
+   *  @param options: Options configuring which volumes / materials shall be converted to surfaces */
   void construct(Cache& cache, const GeometryContext& gctx,
                  const GeoModelTree& geoModelTree, const Options& options);
 
-  void convertSensitive(const PVConstLink& geoPV,
-                        const Acts::Transform3& transform,
-                        std::vector<GeoModelSensitiveSurface>& sensitives);
-
-  std::vector<GeoChildNodeWithTrf> findAllSubVolumes(const PVConstLink& vol);
-
-  bool convertBox(std::string name);
-  bool matches(const std::string& name, const PVConstLink& physvol);
-
-  void convertFpv(const std::string& name, GeoFullPhysVol* fpv, Cache& cache,
-                  const GeometryContext& gctx);
+  /** @brief Convert a full physical volume (and the appropriate children) into sensitive surfaces
+   *  @param name: Published name of the full physical volume in the GeoModelTree
+   *  @param fpv: Pointer to the full physical volume to convert
+   *  @param cache: Output cache object in which the constructed surfaces are saved
+   *  @param gctx: Instance to an geometry context in order to build the envelope volumes */
+  void convertFpv(const std::string& name, const FPVConstLink& fpv,
+                  Cache& cache, const GeometryContext& gctx);
 
  private:
+  /** @brief Convert the GeoPhysVol into a sensitive Acts::Surface.
+   *  @param geoPV: Pointer to the GeoPhysVol to convert
+   *  @param transform: Placement of the resulting surface in the world
+   *  @param boundFactory: Reference to the BoundFactory to avoid duplicated bounds
+   *                       across similar surfaces
+   * @param sensitives: Output vector into which the new converted surface is pushed */
+  void convertSensitive(const PVConstLink& geoPV,
+                        const Acts::Transform3& transform,
+                        SurfaceBoundFactory& boundFactory,
+                        std::vector<GeoModelSensitiveSurface>& sensitives);
+  /** @brief Find all sub volumes of a passed volume that are
+   *         good for sensitive detector conversion
+   *  @param vol: Pointer to the GeoPhysVol to search through
+   *  @return A vector of GeoChildNodeWithTrf containing the information about the
+   *          volumes to convert and their placement w.r.t. the passed volume */
+  std::vector<GeoChildNodeWithTrf> findAllSubVolumes(
+      const PVConstLink& vol) const;
+  /** @brief Checks whether the volume name satisfies the user-defined tokens and/or
+   *         the material of physical volume does it.
+   *  @param name: Name of the physical volume to test. Usually, it's the GeoNameTag or
+   *               the published GeoFullPhysVol entry
+   *  @param physvol: Reference to the PhysicalVolume to additionally check material compatibility */
+  bool matches(const std::string& name, const PVConstLink& physvol) const;
+  /** @brief Returns whether the name of the published full physical volume is on the list
+   *         to also convert the volume to an envelope volume
+   *  @param name: Name of the published full physical volume */
+  bool convertBox(const std::string& name) const;
+
   std::unique_ptr<const Logger> m_logger;
   Config m_cfg;
 
