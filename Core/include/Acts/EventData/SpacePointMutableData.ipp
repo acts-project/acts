@@ -13,6 +13,7 @@
 // clang-format on
 
 #include <cassert>
+#include <limits>
 
 namespace Acts {
 

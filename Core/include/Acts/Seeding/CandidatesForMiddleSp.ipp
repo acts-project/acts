@@ -12,6 +12,8 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 // clang-format on
 
+#include <limits>
+
 namespace Acts {
 
 template <SatisfyCandidateConcept external_space_point_t>
