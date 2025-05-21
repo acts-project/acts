@@ -91,7 +91,7 @@ const char* trapezoid_xml =
 namespace Acts {
 // Mockup delegate
 struct DD4hepAlignmentStore {
-  DD4hepAlignmentStore(Acts::TransformStoreGeometryId transformStore)
+  explicit DD4hepAlignmentStore(Acts::TransformStoreGeometryId transformStore)
       : m_transformStore(std::move(transformStore)) {}
 
   Acts::TransformStoreGeometryId m_transformStore;

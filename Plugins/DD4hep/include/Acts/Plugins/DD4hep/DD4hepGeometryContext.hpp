@@ -29,12 +29,12 @@ class DD4hepGeometryContext {
   using Alignment = Delegate<const Transform3*(const DD4hepDetectorElement&)>;
 
   /// Disconnected geometry context
-  DD4hepGeometryContext() {}
+  DD4hepGeometryContext() = default;
 
   /// Explicit constructor from an alignment delegate
   /// @param alignment the alignment delegate representing this
   explicit DD4hepGeometryContext(Alignment alignment)
-      : m_alignment(std::move(alignment)) {}
+      : m_alignment(alignment) {}
 
   /// Check if a contextual transform is available for this detector element
   ///

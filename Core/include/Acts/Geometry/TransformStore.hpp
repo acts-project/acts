@@ -44,12 +44,12 @@ class TransformStoreGeometryId : public ITransformStore {
  public:
   /// Constructor from an unordered map of geometry ids and transforms
   /// @param transformMap the map of geometry ids and transforms
-  TransformStoreGeometryId(
+  explicit TransformStoreGeometryId(
       std::unordered_map<GeometryIdentifier, Acts::Transform3> transformMap)
       : m_identifiedTransforms(std::move(transformMap)) {}
 
   /// @copydoc ITransformStore::contextualTransform
-  const Transform3* contextualTransform(const Surface& surface) const {
+  const Transform3* contextualTransform(const Surface& surface) const override {
     auto it = m_identifiedTransforms.find(surface.geometryId());
     if (it != m_identifiedTransforms.end()) {
       return &(it->second);
