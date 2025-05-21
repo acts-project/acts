@@ -43,15 +43,15 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       {60, -50}, {153, 0}, {123, 50}, {-123, 50}, {-153, 0}};
   double poly_z = 2;
 
-  auto trap = new GeoSimplePolygonBrep(poly_z);
+  auto trap = make_intrusive<GeoSimplePolygonBrep>(poly_z);
   for (const auto& tVert : trapVerts) {
     trap->addVertex(tVert[0], tVert[1]);
   }
-  auto poly = new GeoSimplePolygonBrep(poly_z);
+  auto poly = make_intrusive<GeoSimplePolygonBrep>(poly_z);
   for (const auto& pVert : polyVerts) {
     poly->addVertex(pVert[0], pVert[1]);
   }
-  auto err = new GeoSimplePolygonBrep(poly_z);
+  auto err = make_intrusive<GeoSimplePolygonBrep>(poly_z);
   for (const auto& eVert : errVerts) {
     err->addVertex(eVert[0], eVert[1]);
   }
