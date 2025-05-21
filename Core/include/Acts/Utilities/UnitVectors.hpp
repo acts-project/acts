@@ -58,8 +58,8 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
 /// @brief Construct a normalized direction vector from the tangents of the
 ///        x-axis to the z-axis and of the y-axis to the z-axis
 ///
-/// @param tanAlpha: Tangent of the x-axis to the z-axis
-/// @param tanBeta: Tangent of the y-axis to the z-axis
+/// @param tanAlpha Tangent of the x-axis to the z-axis
+/// @param tanBeta Tangent of the y-axis to the z-axis
 template <typename T>
 inline Eigen::Matrix<T, 3, 1> makeDirectionFromAxisTangents(T tanAlpha,
                                                             T tanBeta) {
