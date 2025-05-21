@@ -75,7 +75,7 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
  * `SensitiveSteppingAction`. In the next step, the global position of the
  * volume or of the boundary vertices is used to query the tracking geometry for
  * candidate Acts::Surfaces. In case of multiple candidates, the closest one is
- * choosen. The surface's geometry identifier is later used to associate the
+ * chosen. The surface's geometry identifier is later used to associate the
  * recorded G4 hits to the surfaces.
  *
  *         The constructed pair of G4PhysicalVolume* and Surface* is then

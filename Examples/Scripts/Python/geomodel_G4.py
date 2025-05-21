@@ -10,6 +10,7 @@ from acts import (
 from acts import geomodel as gm
 from acts import examples
 
+
 def runGeant4(
     detector,
     trackingGeometry,
@@ -50,10 +51,16 @@ def main():
     from argparse import ArgumentParser
 
     u = acts.UnitConstants
- 
+
     parser = ArgumentParser()
-    parser.add_argument("-i", "--input", type=str, default="/eos/user/c/cimuonsw/GeometryFiles/MockUp.db", help="Input SQL file")
-    parser.add_argument("--outDir", default="./", help="Output" )
+    parser.add_argument(
+        "-i",
+        "--input",
+        type=str,
+        default="/eos/user/c/cimuonsw/GeometryFiles/MockUp.db",
+        help="Input SQL file",
+    )
+    parser.add_argument("--outDir", default="./", help="Output")
 
     args = parser.parse_args()
 
@@ -63,7 +70,10 @@ def main():
     # Read the geometry model from the database
     gmTree = gm.readFromDb(args.input)
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
-    gmFactoryConfig.nameList = ["RpcGasGap", "MDTDriftGas", ]
+    gmFactoryConfig.nameList = [
+        "RpcGasGap",
+        "MDTDriftGas",
+    ]
     gmFactoryConfig.convertSubVolumes = True
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -73,7 +83,6 @@ def main():
     gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
-    
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
     detector = gm.GeoModelDetector(gmDetectorCfg)

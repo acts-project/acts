@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
-  auto  material = make_intrusive<GeoMaterial>("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
 
   // BOX object
   double hlX = 200, hlY = 100, hlZ = 2;
   auto shapeA = make_intrusive<GeoBox>(hlX, hlY, hlZ);
   // Trapezoid object
-  auto shapeB = make_intrusive<GeoTrd>(2, 2, 50, 80, 60) ;
+  auto shapeB = make_intrusive<GeoTrd>(2, 2, 50, 80, 60);
 
   // create subtraction
   auto geoSub = make_intrusive<GeoShapeSubtraction>(shapeA, shapeB);

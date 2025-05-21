@@ -32,8 +32,8 @@ class GeoModelDetectorObjectFactory {
   /** @brief Tuple describing the shared ptr to a Volume which will be turned into a TrackingVolume,
    *          a Gen-2 volume and the pointer to the full physical volume */
   using GeoModelVolumeFPVTuple =
-      std::tuple<std::shared_ptr<Volume>, std::shared_ptr<Experimental::DetectorVolume>,
-      FPVConstLink>;
+      std::tuple<std::shared_ptr<Volume>,
+                 std::shared_ptr<Experimental::DetectorVolume>, FPVConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -82,7 +82,7 @@ class GeoModelDetectorObjectFactory {
   void construct(Cache& cache, const GeometryContext& gctx,
                  const GeoModelTree& geoModelTree, const Options& options);
 
-  /** @brief Convert a full physical volume (and the appropiate children) into sensitive surfaces
+  /** @brief Convert a full physical volume (and the appropriate children) into sensitive surfaces
    *  @param name: Published name of the full physical volume in the GeoModelTree
    *  @param fpv: Pointer to the full physical volume to convert
    *  @param cache: Output cache object in which the constructed surfaces are saved

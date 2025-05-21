@@ -160,7 +160,7 @@ def main():
         unboundSurfaces = [item for item in gmSurfaces if item not in gmBoxSurfaces]
         viewCfg = acts.ViewConfig()
         viewCfg.quarterSegments = 720
-        viewCfg.color = acts.Color(75,220,100)
+        viewCfg.color = acts.Color(75, 220, 100)
         acts.examples.writeVolumesSurfacesObj(
             unboundSurfaces,
             gmBoxes,

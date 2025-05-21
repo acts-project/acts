@@ -92,7 +92,7 @@ class BoundFactory {
       const std::vector<double> bvalues{b->values()};
       /** In case of polygon shaped bounds, the vectors may differ */
       if (avalues.size() != bvalues.size()) {
-         return avalues.size() < bvalues.size();
+        return avalues.size() < bvalues.size();
       }
       /** Loop over the defining parameters of the two bounds and compare them
        * pairwise. If a difference is spotted return the evaluation of the < of
