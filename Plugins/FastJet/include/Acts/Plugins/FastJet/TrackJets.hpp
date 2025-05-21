@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 
 #include <optional>
@@ -23,25 +24,15 @@ const fastjet::JetDefinition DefaultJetDefinition =
     fastjet::JetDefinition(fastjet::antikt_algorithm, 0.4);
 
 template <typename TrackContainer>
-class TrackJetSequence {
+class InputTracks {
  public:
-  /// Factory function to create a sequence of track jets
-  ///
-  /// @param tracks the input tracks
-  /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
-  static TrackJetSequence<TrackContainer> create(
-      TrackContainer& tracks,
-      fastjet::JetDefinition jetDef = DefaultJetDefinition);
+  /// Constructor; saves a reference to the container
+  /// @param tracks the TrackContainer
+  InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
 
-  /// Get all the track jets passing the pT & eta cuts
-  ///
-  /// @param ptMin the minimum jet pT in GeV
-  /// @param etaMax the maximum jet absolute eta
-  ///
-  /// @return a vector of fastjet::PseudoJet objects
-  std::vector<fastjet::PseudoJet> jets(float ptMin = 20 *
-                                                     Acts::UnitConstants::GeV,
-                                       float etaMax = 2.5);
+  /// Get vector for 4-momenta from the track collection
+  /// @return vector of fastjet::PseudoJet, one per track
+  std::vector<fastjet::PseudoJet> fourMomenta() const;
 
   /// Get the tracks making up a track-jet
   ///
@@ -53,16 +44,43 @@ class TrackJetSequence {
       const fastjet::PseudoJet& jet, std::optional<float> coreR = {});
 
  private:
+  TrackContainer& m_tracks;
+};
+
+class TrackJetSequence {
+ public:
+  /// Factory function to create a sequence of track jets
+  ///
+  /// @param tracks the input tracks
+  /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
+  static TrackJetSequence create(
+      std::vector<fastjet::PseudoJet>& fourMomenta,
+      fastjet::JetDefinition jetDef = DefaultJetDefinition);
+
+  static TrackJetSequence create(
+      std::vector<fastjet::PseudoJet>&& fourMomenta,
+      fastjet::JetDefinition jetDef = DefaultJetDefinition) {
+    return create(fourMomenta, jetDef);
+  }
+
+  /// Get all the track jets passing the pT & eta cuts
+  ///
+  /// @param ptMin the minimum jet pT in GeV
+  /// @param etaMax the maximum jet absolute eta
+  ///
+  /// @return a vector of fastjet::PseudoJet objects
+  std::vector<fastjet::PseudoJet> jets(float ptMin = 20 *
+                                                     Acts::UnitConstants::GeV,
+                                       float etaMax = 2.5);
+
+ private:
   /// Main constructor. Users should call "TrackJetSequence::create" instead
   ///
   /// @param clusterSeq the fastjet::ClusterSequence object
-  /// @param inputTracks the input tracks that make up the sequence
-  TrackJetSequence(fastjet::ClusterSequence clusterSeq,
-                   TrackContainer& inputTracks)
-      : m_clusterSeq{std::move(clusterSeq)}, m_inputTracks{inputTracks} {}
+  TrackJetSequence(fastjet::ClusterSequence clusterSeq)
+      : m_clusterSeq{std::move(clusterSeq)} {}
 
   fastjet::ClusterSequence m_clusterSeq;
-  TrackContainer& m_inputTracks;
 };
 
 }  // namespace Acts::FastJet

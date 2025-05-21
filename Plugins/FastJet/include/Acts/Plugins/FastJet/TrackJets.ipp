@@ -7,38 +7,26 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 
 namespace Acts::FastJet {
 
 template <typename TrackContainer>
-TrackJetSequence<TrackContainer> TrackJetSequence<TrackContainer>::create(
-    TrackContainer& tracks, fastjet::JetDefinition jetDef) {
+std::vector<fastjet::PseudoJet> InputTracks<TrackContainer>::fourMomenta()
+    const {
   std::vector<fastjet::PseudoJet> inputs;
-
-  for (std::size_t i = 0; i < tracks.size(); i++) {
-    Acts::Vector4 p = tracks.getTrack(i).fourMomentum();
+  for (std::size_t i = 0; i < m_tracks.size(); i++) {
+    Acts::Vector4 p = m_tracks.getTrack(i).fourMomentum();
     inputs.emplace_back(p[Acts::eMom0], p[Acts::eMom1], p[Acts::eMom2],
                         p[Acts::eEnergy]);
     inputs.back().set_user_index(i);
   }
-
-  fastjet::ClusterSequence cs(inputs, jetDef);
-
-  return TrackJetSequence(std::move(cs), tracks);
-}
-
-template <typename TrackContainer>
-std::vector<fastjet::PseudoJet> TrackJetSequence<TrackContainer>::jets(
-    float ptMin, float etaMax) {
-  fastjet::Selector sel_eta = fastjet::SelectorAbsEtaMax(etaMax);
-  return sel_eta(m_clusterSeq.inclusive_jets(ptMin));
+  return inputs;
 }
 
 template <typename TrackContainer>
 std::vector<typename TrackContainer::TrackProxy>
-TrackJetSequence<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
-                                              std::optional<float> coreR) {
+InputTracks<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
+                                         std::optional<float> coreR) {
   fastjet::Selector sel = fastjet::SelectorIdentity();
   if (coreR.has_value()) {
     sel = fastjet::SelectorCircle(coreR.value());
@@ -47,7 +35,7 @@ TrackJetSequence<TrackContainer>::tracksInJet(const fastjet::PseudoJet& jet,
 
   std::vector<typename TrackContainer::TrackProxy> tracks;
   for (fastjet::PseudoJet& cst : sel(jet.constituents())) {
-    tracks.push_back(m_inputTracks.getTrack(cst.user_index()));
+    tracks.push_back(m_tracks.getTrack(cst.user_index()));
   }
 
   return tracks;
