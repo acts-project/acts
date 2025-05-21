@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
+    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -285,9 +285,6 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
-    adaptiveHoughTransformConfig: Optional[
-        acts.examples.AdaptiveHoughTransformSeeder.Config
-    ] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -420,19 +417,6 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
-        elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
-            logger.info("Using Hough Transform seeding")
-            adaptiveHoughTransformConfig = (
-                adaptiveHoughTransformConfig
-                or acts.examples.AdaptiveHoughTransformSeeder.Config()
-            )
-            adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
-            adaptiveHoughTransformConfig.outputSeeds = "seeds"
-            adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
-            seeds = addAdaptiveHoughTransformSeeding(
-                s, adaptiveHoughTransformConfig, logLevel=logLevel
-            )
         elif seedingAlgorithm == SeedingAlgorithm.Gbts:
             logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
@@ -1112,23 +1096,6 @@ def addHoughTransformSeeding(
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
-    sequence.addAlgorithm(ht)
-    # potentially HT can be extended to also produce seeds, but it is not implemented yet
-    # configuration option (outputSeeds) exists
-    return ht.config.outputSeeds
-
-
-def addAdaptiveHoughTransformSeeding(
-    sequence: acts.examples.Sequencer,
-    config: acts.examples.AdaptiveHoughTransformSeeder.Config,
-    logLevel: acts.logging.Level = None,
-):
-    """
-    Configures AdaptiveHoughTransform (AHT) for seeding, instead of extra proxy config objects it takes
-    directly the AHT example algorithm config.
-    """
-    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-    ht = acts.examples.AdaptiveHoughTransformSeeder(config=config, level=logLevel)
     sequence.addAlgorithm(ht)
     # potentially HT can be extended to also produce seeds, but it is not implemented yet
     # configuration option (outputSeeds) exists

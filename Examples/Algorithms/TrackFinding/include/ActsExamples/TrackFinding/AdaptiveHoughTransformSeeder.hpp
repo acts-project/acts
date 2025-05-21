@@ -95,8 +95,8 @@ class AccumulatorSection {
   inline bool isLineInside(float a, float b) const {
     const float yB = std::fma(a, m_xBegin, b);
     const float yE = std::fma(a, (m_xBegin + m_xSize), b);
-    return (a > 0 ) ? yB < m_yBegin + m_ySize && yE > m_yBegin
-                    : yB > m_yBegin && yE < m_yBegin + m_ySize;
+    return (a > 0) ? yB < m_yBegin + m_ySize && yE > m_yBegin
+                   : yB > m_yBegin && yE < m_yBegin + m_ySize;
   }
 
   /// @brief check if the lines cross inside the section
@@ -121,7 +121,6 @@ class AccumulatorSection {
     return false;
   }
 
-
   // counter clock wise distance from upper left corner
   // a and b are line parameters y = ax + b
   float distCC(float a, float b) const;
@@ -134,6 +133,7 @@ class AccumulatorSection {
   double xBegin() const { return m_xBegin; }
   double yBegin() const { return m_yBegin; }
   unsigned divisionLevel() const { return m_divisionLevel; }
+
  private:
   double m_xSize = 0;
   double m_ySize = 0;
@@ -163,25 +163,27 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::string outputProtoTracks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    float phiWrap = 0.1;  // wrap size around angle domain limits (min pT dependent)
+    float phiWrap =
+        0.1;  // wrap size around angle domain limits (min pT dependent)
     float qOverPtMin = 1.0;  // min q/pt, -1/1 GeV
 
     float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the
                                      // algorithm should not go beyond (in GeV)
     float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm
                                  // should not go beyond
-    float zRange = 200;  // range in z
-    float cotThetaRange = 10;  // range in cotTheta
+    float zRange = 200;          // range in z
+    float cotThetaRange = 10;    // range in cotTheta
 
-    float zMinBinSize = 5;  // minimal size of z bin that the algorithm should 
-                             // not go beyond when exploring zvertex-cot(theta) space space
+    float zMinBinSize =
+        5;  // minimal size of z bin that the algorithm should
+            // not go beyond when exploring zvertex-cot(theta) space space
     float cotThetaMinBinSize = 0.2;  // minimal size of cot(theta) bin that
                                      // the algorithm should not go beyond
     unsigned threshold =
         8;  // number of lines passing section for it to be still considered
-    bool doSecondPhase =
-        true;  // do the second pass in z-cot(theta) space to find less solutions
-    bool deduplicate = true;  // when adding solutions try avoiding duplicates
+    bool doSecondPhase = true;  // do the second pass in z-cot(theta) space to
+                                // find less solutions
+    bool deduplicate = true;    // when adding solutions try avoiding duplicates
 
     double inverseA =
         1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
@@ -190,7 +192,6 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                        // units of GeV / (c*mm*e)
   };
 
-
   // information that is needed for each measurement
   struct PreprocessedMeasurement {
     /// Construct the measurement
@@ -198,7 +199,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// @param phiAngle azimuthal angle of the SP
     /// @param zpos z position of the SP
     /// @param l link to space point
-    PreprocessedMeasurement(double inverseR, double phiAngle, double zpos, Acts::SourceLink l)
+    PreprocessedMeasurement(double inverseR, double phiAngle, double zpos,
+                            Acts::SourceLink l)
         : invr(inverseR), phi(phiAngle), z(zpos), link(std::move(l)) {}
     double invr;
     double phi;
@@ -206,38 +208,55 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     Acts::SourceLink link;
   };
 
-  template<typename M=PreprocessedMeasurement>
+  template <typename M = PreprocessedMeasurement>
   struct AHTExplorationOptions {
-    float xMinBinSize = 1;  // minimum bin size in x direction, beyond that value the sections are not split 
-    float yMinBinSize = 1;  // minimum bin size in y direction, beyond that value the sections are not split
-    using LineParamFunctors = std::pair<std::function<float(const M&)>,
-                                      std::function<float(const M&)>>;
-    LineParamFunctors lineParamFunctors;  // pair of functions needed to obtain linear function ax+b parameters, first for a, second for b 
+    float xMinBinSize = 1;  // minimum bin size in x direction, beyond that
+                            // value the sections are not split
+    float yMinBinSize = 1;  // minimum bin size in y direction, beyond that
+                            // value the sections are not split
+    using LineParamFunctors = std::pair<std::function<float(const M &)>,
+                                        std::function<float(const M &)>>;
+    LineParamFunctors lineParamFunctors;  // pair of functions needed to obtain
+                                          // linear function ax+b parameters,
+                                          // first for a, second for b
 
-    enum Decision{
+    enum Decision {
       Discard,  // the section is not to be explored further
-      Accept,  // the section should be accepted as solution without further exploration
-      Drill,  // the section should be expred further by splitting according to binning definition (split into 4 or 2 left-right or top-bottom)
-      Explode, // the section should be source of 5 subsections as in drill & one in the center (unimplemented)
-      Custom // the custom functor should be used to create subsections (unimplemented)
+      Accept,   // the section should be accepted as solution without further
+                // exploration
+      Drill,  // the section should be expred further by splitting according to
+              // binning definition (split into 4 or 2 left-right or top-bottom)
+      Explode,  // the section should be source of 5 subsections as in drill &
+                // one in the center (unimplemented)
+      Custom    // the custom functor should be used to create subsections
+                // (unimplemented)
     };
 
-    using DecisionFunctor = std::function<Decision(const AccumulatorSection &section, const std::vector<PreprocessedMeasurement> &measurements)>;
-    DecisionFunctor decisionFunctor;  // function deciding if the Accumulator section should be, discarded, split further (and how), or is a solution 
+    using DecisionFunctor = std::function<Decision(
+        const AccumulatorSection &section,
+        const std::vector<PreprocessedMeasurement> &measurements)>;
+    DecisionFunctor decisionFunctor;  // function deciding if the Accumulator
+                                      // section should be, discarded, split
+                                      // further (and how), or is a solution
   };
 
-  template<typename M>
-  void exploreParametersSpace(std::stack<AccumulatorSection> & sectionsStack,
-              const std::vector<M> &measurements, const AHTExplorationOptions<M>& opt, 
-              std::vector<AccumulatorSection>& results) const {
+  template <typename M>
+  void exploreParametersSpace(std::stack<AccumulatorSection> &sectionsStack,
+                              const std::vector<M> &measurements,
+                              const AHTExplorationOptions<M> &opt,
+                              std::vector<AccumulatorSection> &results) const {
     using Decision = AHTExplorationOptions<M>::Decision;
     while (!sectionsStack.empty()) {
       ACTS_VERBOSE("Stack size " << sectionsStack.size());
-      AccumulatorSection& thisSection = sectionsStack.top();
+      AccumulatorSection &thisSection = sectionsStack.top();
       Decision whatNext = opt.decisionFunctor(thisSection, measurements);
-      ACTS_VERBOSE("top section " << thisSection.count() << " section " << thisSection.xBegin() << " - " << thisSection.xBegin()+thisSection.xSize()
-                << " " << thisSection.yBegin() << " - " << thisSection.yBegin()+thisSection.ySize()
-                << " nlines: " << thisSection.count() << " div: " << thisSection.divisionLevel() << " decision " << whatNext);
+      ACTS_VERBOSE("top section "
+                   << thisSection.count() << " section " << thisSection.xBegin()
+                   << " - " << thisSection.xBegin() + thisSection.xSize() << " "
+                   << thisSection.yBegin() << " - "
+                   << thisSection.yBegin() + thisSection.ySize()
+                   << " nlines: " << thisSection.count() << " div: "
+                   << thisSection.divisionLevel() << " decision " << whatNext);
 
       if (whatNext == Decision::Discard) {
         sectionsStack.pop();
@@ -264,13 +283,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
           divisions.push_back(thisSection.left());
           divisions.push_back(thisSection.right());
         }
-        sectionsStack.pop(); // discard the section that was just split
-        for ( AccumulatorSection& d : divisions ) {
+        sectionsStack.pop();  // discard the section that was just split
+        for (AccumulatorSection &d : divisions) {
           std::vector<unsigned> selectedIndices;
           for (unsigned index : d.indices()) {
             const PreprocessedMeasurement &m = measurements[index];
-            if( d.isLineInside(opt.lineParamFunctors.first(m),
-                               opt.lineParamFunctors.second(m)) ) {
+            if (d.isLineInside(opt.lineParamFunctors.first(m),
+                               opt.lineParamFunctors.second(m))) {
               selectedIndices.push_back(index);
             }
           }
@@ -278,16 +297,15 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
           sectionsStack.push(std::move(d));
         }
       }
-    } 
+    }
   }
-  
+
   /// @brief  add solution to the solutions vector
   /// depending on options it may eliminate trivial duplicates
   /// @param s - the solution to be potentially added
   /// @param solutions - the output solutions set
   void addSolution(AccumulatorSection &&s,
-    std::vector<AccumulatorSection> &output) const;
-
+                   std::vector<AccumulatorSection> &output) const;
 
   /// Construct the seeding algorithm.
   ///
@@ -330,23 +348,27 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       std::vector<AccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-   void processStackHeadZCotTheta(
-        std::stack<AccumulatorSection> &sections,
-        std::vector<AccumulatorSection> &solutions,
-        const std::vector<PreprocessedMeasurement> &measurements) const;
-  
+  void processStackHeadZCotTheta(
+      std::stack<AccumulatorSection> &sections,
+      std::vector<AccumulatorSection> &solutions,
+      const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  using LineParamFunctors = std::pair<std::function<float(const PreprocessedMeasurement&)>,
-                                      std::function<float(const PreprocessedMeasurement&)>>;
+  using LineParamFunctors =
+      std::pair<std::function<float(const PreprocessedMeasurement &)>,
+                std::function<float(const PreprocessedMeasurement &)>>;
 
   LineParamFunctors m_qOverPtPhiLineParams = {
-      [this](const PreprocessedMeasurement &m) { return m.invr * config().inverseA; },
-      [this](const PreprocessedMeasurement &m) { return -m.invr * m.phi * config().inverseA; }};
+      [this](const PreprocessedMeasurement &m) {
+        return m.invr * config().inverseA;
+      },
+      [this](const PreprocessedMeasurement &m) {
+        return -m.invr * m.phi * config().inverseA;
+      }};
 
   LineParamFunctors m_zCotThetaLineParams = {
       [this](const PreprocessedMeasurement &m) { return -m.invr; },
       [this](const PreprocessedMeasurement &m) { return m.z * m.invr; }};
-   
+
   /// @brief check if lines intersect in the section
   /// modifies the section leaving only indices of measurements that do so
   /// @param section - the section to check
@@ -355,10 +377,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param threshold - the number of lines in the section should be at minimum
   bool passIntersectionsCheck(
       const AccumulatorSection &section,
-      const std::vector<PreprocessedMeasurement> &measurements, 
-      const LineParamFunctors& lineParamsAccessor, 
+      const std::vector<PreprocessedMeasurement> &measurements,
+      const LineParamFunctors &lineParamsAccessor,
       const unsigned threshold) const;
-
 };
 
 }  // namespace ActsExamples

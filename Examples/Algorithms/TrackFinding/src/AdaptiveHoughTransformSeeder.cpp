@@ -121,28 +121,28 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   std::vector<PreprocessedMeasurement> measurements;
   for (const auto &isp : m_inputSpacePoints) {
     const auto &spContainer = (*isp)(ctx);
-    ACTS_VERBOSE("Inserting " << spContainer.size() << " space points from "
+    ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (const SimSpacePoint &sp : spContainer) {
       const double phi = std::atan2(sp.y(), sp.x());
       const double invr = 1.0 / sp.r();
       measurements.push_back(PreprocessedMeasurement(
-          invr, phi,
-          sp.z(), Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
-      // wrap phi by duplicating some seeds    
-      if (phi < -std::numbers::pi + config().phiWrap*std::numbers::pi)  {
+          invr, phi, sp.z(),
+          Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+      // wrap phi by duplicating some seeds
+      if (phi < -std::numbers::pi + config().phiWrap * std::numbers::pi) {
         measurements.push_back(PreprocessedMeasurement(
-          invr, phi+2*std::numbers::pi,
-          sp.z(), Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+            invr, phi + 2 * std::numbers::pi, sp.z(),
+            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
       }
-      if ( phi > std::numbers::pi - config().phiWrap*std::numbers::pi)  {
+      if (phi > std::numbers::pi - config().phiWrap * std::numbers::pi) {
         measurements.push_back(PreprocessedMeasurement(
-          invr, phi-2*std::numbers::pi,
-          sp.z(), Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+            invr, phi - 2 * std::numbers::pi, sp.z(),
+            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
       }
     }
   }
-  ACTS_VERBOSE("Collected " << measurements.size() << " space points");
+  ACTS_DEBUG("Collected " << measurements.size() << " space points");
 
   // prepare initial stack
   // will become more complicated with slicing
@@ -160,11 +160,11 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   std::vector<AccumulatorSection> solutions;
   processStackHeadQOverPtPhi(sectionsStack, solutions, measurements);
 
-
-  if ( config().doSecondPhase ) {
-    for ( auto& s : solutions) {
-      sectionsStack.push( AccumulatorSection(2.*config().zRange, 2.*config().cotThetaRange, 
-        -config().zRange, -config().cotThetaRange, s.divisionLevel(), s.indices()));
+  if (config().doSecondPhase) {
+    for (auto &s : solutions) {
+      sectionsStack.push(AccumulatorSection(
+          2. * config().zRange, 2. * config().cotThetaRange, -config().zRange,
+          -config().cotThetaRange, s.divisionLevel(), s.indices()));
     }
     solutions.clear();
     processStackHeadZCotTheta(sectionsStack, solutions, measurements);
@@ -177,38 +177,43 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   ProtoTrackContainer protoTracks;
   protoTracks.reserve(solutions.size());
   ACTS_VERBOSE("Number of solutions " << solutions.size());
-  size_t seedIndex = 0;
+  std::size_t seedIndex = 0;
   for (const AccumulatorSection &s : solutions) {
     unsigned spIndex = 0;
     std::array<const SimSpacePoint *, 3> sp = {nullptr, nullptr, nullptr};
     std::vector<unsigned> sortedIndices = s.indices();
-    std::sort(sortedIndices.begin(), sortedIndices.end(), [&measurements](unsigned i1, unsigned i2){
-      auto& m1 = measurements[i1];
-      auto& m2 = measurements[i2];
-      return m1.invr > m2.invr;
-    });
+    std::sort(sortedIndices.begin(), sortedIndices.end(),
+              [&measurements](unsigned i1, unsigned i2) {
+                auto &m1 = measurements[i1];
+                auto &m2 = measurements[i2];
+                return m1.invr > m2.invr;
+              });
 
     for (unsigned sidx : sortedIndices) {
-      const PreprocessedMeasurement& m = measurements[sidx];
+      const PreprocessedMeasurement &m = measurements[sidx];
       sp[spIndex] = m.link.get<const SimSpacePoint *>();
-      if (spIndex == 0 || std::abs(sp[spIndex]->r() - sp[spIndex-1]->r()) > 5.*Acts::UnitConstants::mm ) {
-          spIndex++;
-      } 
-      if ( spIndex >= sp.size() ) 
+      if (spIndex == 0 || std::abs(sp[spIndex]->r() - sp[spIndex - 1]->r()) >
+                              5. * Acts::UnitConstants::mm) {
+        spIndex++;
+      }
+      if (spIndex >= sp.size())
         break;
     }
 
-    if ( sp[2] == nullptr ) {
+    if (sp[2] == nullptr) {
       ACTS_VERBOSE("this solution has less than 3 SP, ignoring");
-      continue;      
+      continue;
     }
 
-    float cotThetaEstimate = (sp[2]->z() - sp[0]->z()) / (sp[2]->r() - sp[0]->r());
-    float cotThetaEstimate01 = (sp[1]->z() - sp[0]->z()) / (sp[1]->r() - sp[0]->r());
-    float cotThetaEstimate12 = (sp[2]->z() - sp[1]->z()) / (sp[2]->r() - sp[1]->r());
-    if ( std::abs(cotThetaEstimate01 - cotThetaEstimate12) > 0.1 ) {
+    float cotThetaEstimate =
+        (sp[2]->z() - sp[0]->z()) / (sp[2]->r() - sp[0]->r());
+    float cotThetaEstimate01 =
+        (sp[1]->z() - sp[0]->z()) / (sp[1]->r() - sp[0]->r());
+    float cotThetaEstimate12 =
+        (sp[2]->z() - sp[1]->z()) / (sp[2]->r() - sp[1]->r());
+    if (std::abs(cotThetaEstimate01 - cotThetaEstimate12) > 0.1) {
       ACTS_VERBOSE("Large difference in cotTheta " << cotThetaEstimate01 << " "
-                  << cotThetaEstimate12);
+                                                   << cotThetaEstimate12);
       continue;
     }
     seeds.emplace_back(*sp[0], *sp[1], *sp[2]);
@@ -216,11 +221,12 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     seeds.back().setVertexZ(z);
 
     ACTS_VERBOSE(seedIndex << ": solution x: " << s.xBegin() << " " << s.xSize()
-                              << " y: " << s.yBegin() << " " << s.ySize()
-                              << " nlines: " << s.count() 
-                              << " vertex z: " << z 
-                              << " r0,1,2: " << sp[0]->r() << " " << sp[1]->r() << " " << sp[2]->r()
-                              << " cot,01,12 " << cotThetaEstimate << " " << cotThetaEstimate01 << " " << cotThetaEstimate12);
+                           << " y: " << s.yBegin() << " " << s.ySize()
+                           << " nlines: " << s.count() << " vertex z: " << z
+                           << " r0,1,2: " << sp[0]->r() << " " << sp[1]->r()
+                           << " " << sp[2]->r() << " cot,01,12 "
+                           << cotThetaEstimate << " " << cotThetaEstimate01
+                           << " " << cotThetaEstimate12);
 
     // for the time the quality is fixed
     // in the future we can use section count for instance
@@ -240,55 +246,85 @@ void AdaptiveHoughTransformSeeder::processStackHeadQOverPtPhi(
   AHTExplorationOptions opt;
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
-  // opt.threshold = config().threshold;
   opt.lineParamFunctors = m_qOverPtPhiLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg, &opt, this](const AccumulatorSection& section, const std::vector<PreprocessedMeasurement>& ) {
+  opt.decisionFunctor = [&m_cfg = m_cfg, &opt, this](
+                            const AccumulatorSection &section,
+                            const std::vector<PreprocessedMeasurement> &mes) {
     if (section.count() < m_cfg.threshold) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
     }
-    if (section.count() >= m_cfg.threshold
-        && section.xSize() <= m_cfg.phiMinBinSize 
-        && section.ySize() <= m_cfg.qOverPtMinBinSize) {
+    if (!passIntersectionsCheck(section, mes, m_qOverPtPhiLineParams,
+                                m_cfg.threshold + 1)) {
+      return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
+    }
+
+    // count lines skipping first pixel layers, only when we are deep enough
+    if (section.count() < 2 * m_cfg.threshold) {
+      std::size_t countNoPix = 0;
+      for (unsigned i : section.indices()) {
+        const PreprocessedMeasurement &m = mes[i];
+        if (m.invr < 1. / 300.)
+          countNoPix++;
+      }
+      // this threshold could be made configurable as well
+      if (countNoPix < m_cfg.threshold - 2) {
+        return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
+      }
+    }
+    if (section.count() >= m_cfg.threshold &&
+        section.xSize() <= m_cfg.phiMinBinSize &&
+        section.ySize() <= m_cfg.qOverPtMinBinSize) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Accept;
     }
     return AHTExplorationOptions<PreprocessedMeasurement>::Drill;
   };
 
   exploreParametersSpace(sections, measurements, opt, solutions);
-  const unsigned nl = std::accumulate(solutions.begin(), solutions.end(), 0, [](unsigned sum, const AccumulatorSection& s){ return sum+s.count(); } );
-  ACTS_DEBUG("Phi - qOverPt scan finds " << solutions.size() << " included measurements " << nl);
+  const unsigned nl =
+      std::accumulate(solutions.begin(), solutions.end(), 0,
+                      [](unsigned sum, const AccumulatorSection &s) {
+                        return sum + s.count();
+                      });
+  ACTS_DEBUG("Phi - qOverPt scan finds " << solutions.size()
+                                         << " included measurements " << nl);
 }
 
 void AdaptiveHoughTransformSeeder::processStackHeadZCotTheta(
     std::stack<AccumulatorSection> &sections,
     std::vector<AccumulatorSection> &solutions,
-  const std::vector<PreprocessedMeasurement> &measurements) const {
-
+    const std::vector<PreprocessedMeasurement> &measurements) const {
   AHTExplorationOptions opt;
   opt.xMinBinSize = config().zMinBinSize;
   opt.yMinBinSize = config().cotThetaMinBinSize;
   opt.lineParamFunctors = m_zCotThetaLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg](const AccumulatorSection& section, const std::vector<PreprocessedMeasurement>&) {
+  opt.decisionFunctor = [&m_cfg = m_cfg](
+                            const AccumulatorSection &section,
+                            const std::vector<PreprocessedMeasurement> &) {
     if (section.count() < m_cfg.threshold) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
     }
-    if (section.count() >= m_cfg.threshold
-        && section.xSize() <= m_cfg.zMinBinSize 
-        && section.ySize() <= m_cfg.cotThetaMinBinSize) {
+    if (section.count() >= m_cfg.threshold &&
+        section.xSize() <= m_cfg.zMinBinSize &&
+        section.ySize() <= m_cfg.cotThetaMinBinSize) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Accept;
     }
     return AHTExplorationOptions<PreprocessedMeasurement>::Drill;
   };
 
   exploreParametersSpace(sections, measurements, opt, solutions);
-  const unsigned nl = std::accumulate(solutions.begin(), solutions.end(), 0, [](unsigned sum, const AccumulatorSection& s){ return sum+s.count(); } );
-  ACTS_DEBUG("Z - cotTheta scan finds " << solutions.size() << " included measurements " << nl );
+  const unsigned nl =
+      std::accumulate(solutions.begin(), solutions.end(), 0,
+                      [](unsigned sum, const AccumulatorSection &s) {
+                        return sum + s.count();
+                      });
+  ACTS_DEBUG("Z - cotTheta scan finds " << solutions.size()
+                                        << " included measurements " << nl);
 }
 
 bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
     const AccumulatorSection &section,
-    const std::vector<PreprocessedMeasurement> &measurements, 
-    const LineParamFunctors& lineParams, unsigned threshold  ) const {
+    const std::vector<PreprocessedMeasurement> &measurements,
+    const LineParamFunctors &lineParams, unsigned threshold) const {
   unsigned inside = 0;
   for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
     const auto &m1 = measurements[section.indices()[idx1]];
@@ -298,7 +334,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
       const auto &m2 = measurements[section.indices()[idx2]];
       const double a2 = lineParams.first(m2);
       const double b2 = lineParams.second(m2);
-      if ( section.isCrossingInside(a1, b1, a2, b2)) {
+      if (section.isCrossingInside(a1, b1, a2, b2)) {
         inside++;
         if (inside >= threshold) {
           return true;
@@ -310,27 +346,28 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
   return inside >= threshold;
 }
 
-
 void AdaptiveHoughTransformSeeder::addSolution(
     AccumulatorSection &&s, std::vector<AccumulatorSection> &output) const {
   if (config().deduplicate) {
     std::size_t i = output.size() > 10 ? output.size() - 10 : 0;
     for (; i < std::size(output); ++i) {
       // compare first 4 measurements
-      const size_t firstMeasurementsToCompare = 4;
-      if ( std::equal(output[i].indices().begin(), output[i].indices().begin()+firstMeasurementsToCompare, 
-           s.indices().begin(), s.indices().begin()+firstMeasurementsToCompare) ) {
-
-      // if (output[i].indices() == s.indices()) {
+      const std::size_t firstMeasurementsToCompare = 4;
+      if (std::equal(output[i].indices().begin(),
+                     output[i].indices().begin() + firstMeasurementsToCompare,
+                     s.indices().begin(),
+                     s.indices().begin() + firstMeasurementsToCompare)) {
         ACTS_VERBOSE(
             "There is a nearby duplicate solution. Skipping this one.");
         return;
       }
     }
   }
-  ACTS_VERBOSE("solution section " << s.count() << " section " << s.xBegin() << " - " << s.xBegin()+s.xSize()
-  << " " << s.yBegin() << " - " << s.yBegin()+s.ySize()
-  << " nlines: " << s.count() << " div: " << s.divisionLevel() );
+  ACTS_VERBOSE("solution section "
+               << s.count() << " section " << s.xBegin() << " - "
+               << s.xBegin() + s.xSize() << " " << s.yBegin() << " - "
+               << s.yBegin() + s.ySize() << " nlines: " << s.count()
+               << " div: " << s.divisionLevel());
 
   output.push_back(std::move(s));
 }
