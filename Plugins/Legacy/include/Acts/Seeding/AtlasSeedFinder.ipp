@@ -9,7 +9,7 @@
 #pragma once
 
 // clang-format off
-#include "Acts/Plugins/Legacy/Seeding/AtlasSeedFinder.hpp"
+#include "Acts/Seeding/AtlasSeedFinder.hpp"
 // clang-format on
 
 #include <algorithm>
