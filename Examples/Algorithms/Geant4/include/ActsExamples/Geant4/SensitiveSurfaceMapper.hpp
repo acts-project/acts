@@ -27,13 +27,14 @@ class Surface;
 
 namespace ActsExamples::Geant4 {
 
-/** @brief Interface class to query sensitive surfaces from the TrackingGeometry based on the
- *         external global position. It serves  the `SensitiveSurfaceMapper` to
- * map the Acts::Surfaces to the G4PhysicalVolumes. Based on the global position
- * of the G4PhyicalVolume or on the position of the volume bound vertices, the
- * tracking geometry is queried to provide the candidate sensitive surfaces. Due
- * to the concurrent TrackingGeometry schemes currently in use, concrete
- * implementations need to follow */
+///   @brief Interface class to query sensitive surfaces from the TrackingGeometry based on the
+///          external global position. It serves  the `SensitiveSurfaceMapper`
+///          to
+///  map the Acts::Surfaces to the G4PhysicalVolumes. Based on the global
+///  position of the G4PhyicalVolume or on the position of the volume bound
+///  vertices, the tracking geometry is queried to provide the candidate
+///  sensitive surfaces. Due to the concurrent TrackingGeometry schemes
+///  currently in use, concrete implementations need to follow
 struct SensitiveCandidatesBase {
   /// Get the sensitive surfaces for a given position
   ///
@@ -67,23 +68,26 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
   std::vector<const Acts::Surface*> queryAll() const override;
 };
 
-/** @brief The SensitiveSurfaceMapper connects the Geant 4 geometry with the Acts::TrackingGeometry.
- *         The Geant 4 geometry tree is traversed and logical volumes where
- * either its name or the name of the volume's material satisfies the
- * user-configured tokens, the name of the associated physical volume is
- * prepended with the `mappingPrefix` to mark the volume as sensitive for the
- * `SensitiveSteppingAction`. In the next step, the global position of the
- * volume or of the boundary vertices is used to query the tracking geometry for
- * candidate Acts::Surfaces. In case of multiple candidates, the closest one is
- * chosen. The surface's geometry identifier is later used to associate the
- * recorded G4 hits to the surfaces.
- *
- *         The constructed pair of G4PhysicalVolume* and Surface* is then
- * inserted into the connection map. */
+///   @brief The SensitiveSurfaceMapper connects the Geant 4 geometry with the Acts::TrackingGeometry.
+///          The Geant 4 geometry tree is traversed and logical volumes where
+///  either its name or the name of the volume's material satisfies the
+///  user-configured tokens, the name of the associated physical volume is
+///  prepended with the `mappingPrefix` to mark the volume as sensitive for the
+///  `SensitiveSteppingAction`. In the next step, the global position of the
+///  volume or of the boundary vertices is used to query the tracking geometry
+///  for candidate Acts::Surfaces. In case of multiple candidates, the closest
+///  one is chosen. The surface's geometry identifier is later used to associate
+///  the recorded G4 hits to the surfaces.
+///
+///  The constructed pair of G4PhysicalVolume* and Surface* is then
+///  inserted into the connection map.
 class SensitiveSurfaceMapper {
  public:
   /// This prefix is used to indicate a sensitive volume that is matched
   constexpr static std::string_view mappingPrefix = "ActsSensitive#";
+  /// @brief Abrivation of the association between G4 volumes and surfaces
+  using VolumeToSurfAssocMap_t =
+      std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>;
 
   /// Configuration struct for the surface mapper
   struct Config {
@@ -102,9 +106,6 @@ class SensitiveSurfaceMapper {
   struct State {
     /// The map of G4 physical volumes to the mapped surfaces (can be many as
     /// there can be replicas)
-    using VolumeToSurfAssocMap_t =
-        std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>;
-
     VolumeToSurfAssocMap_t g4VolumeToSurfaces{};
 
     /// Record of the missing volumes
