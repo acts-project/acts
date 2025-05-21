@@ -33,7 +33,7 @@
 BOOST_AUTO_TEST_SUITE(GeoModelPoyVol)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
-  auto al = new GeoMaterial("Aluminium", 1.0);
+  auto al = make_intrusive<GeoMaterial>("Aluminium", 1.0);
 
   std::vector<std::vector<double>> trapVerts = {
       {-103, -50}, {103, -50}, {183, 50}, {-183, 50}};
@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto logPoly = make_intrusive<GeoLogVol>("LogPoly", poly, al);
   auto logErr = make_intrusive<GeoLogVol>("LogErr", err, al);
 
-  auto physTrap = new GeoFullPhysVol(logTrap);
-  auto physPoly = new GeoFullPhysVol(logPoly);
-  auto physErr = new GeoFullPhysVol(logErr);
+  auto physTrap = make_intrusive<GeoFullPhysVol>(logTrap);
+  auto physPoly = make_intrusive<GeoFullPhysVol>(logPoly);
+  auto physErr = make_intrusive<GeoFullPhysVol>(logErr);
   // create pars for conversion
   Acts::GeoModelDetectorObjectFactory::Config gmConfig;
   Acts::GeometryContext gContext;

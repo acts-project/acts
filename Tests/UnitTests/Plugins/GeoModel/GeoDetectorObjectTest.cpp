@@ -89,8 +89,8 @@ struct GeoGeometry {
 };
 GeoGeometry constructGeoModel() {
   // define materials
-  GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
-  GeoIntrusivePtr<GeoMaterial> al(new GeoMaterial("Aluminium", 1.0));
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
+  auto al = make_intrusive<GeoMaterial>("Aluminium", 1.0);
 
   // define dimensions
   GeoDims geoDims;
