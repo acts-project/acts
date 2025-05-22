@@ -1,7 +1,6 @@
 add_library(
     ActsPluginExaTrkX
     SHARED
-    src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
     src/DummyEdgeClassifier.cpp
     src/GNNTrackFitterCPU.cpp
@@ -16,7 +15,6 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         ActsPluginExaTrkX
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
-    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
@@ -27,6 +25,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:-g
             --generate-line-info
+            --expt-relaxed-constexpr
             --extended-lambda>
     )
     target_compile_options(
@@ -51,7 +50,7 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
         PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
     )
 
-    target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
+    #target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
         find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
@@ -106,6 +105,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     target_sources(
         ActsPluginExaTrkX
         PRIVATE src/TorchEdgeClassifier.cpp src/TorchMetricLearning.cpp
+        src/buildEdges.cpp
         #    src/TorchTruthGraphMetricsHook.cpp
         #src/TorchGraphStoreHook.cpp
     )

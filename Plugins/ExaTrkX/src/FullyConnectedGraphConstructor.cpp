@@ -11,7 +11,6 @@
 #endif
 
 #include <Acts/Plugins/ExaTrkX/FullyConnectedGraphConstructor.hpp>
-#include <Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp>
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
 #include <cuda_runtime.h>

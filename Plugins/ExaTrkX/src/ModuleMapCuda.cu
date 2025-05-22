@@ -10,7 +10,6 @@
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/ModuleMapUtils.cuh"
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
 #include <CUDA_graph_creator>
 #include <CUDA_module_map_doublet>
@@ -26,8 +25,6 @@
 #include <thrust/transform_scan.h>
 
 using Clock = std::chrono::high_resolution_clock;
-
-using namespace torch::indexing;
 
 namespace {
 
