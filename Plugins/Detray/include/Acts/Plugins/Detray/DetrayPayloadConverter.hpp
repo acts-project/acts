@@ -68,6 +68,10 @@ class DetrayPayloadConverter {
   detray::io::material_slab_payload convertMaterialSlab(
       const MaterialSlab& slab) const;
 
+  detray::io::material_volume_payload convertHomogeneousSurfaceMaterial(
+      const TrackingVolume& volume,
+      const detray::io::volume_payload& volPayload) const;
+
   struct Payloads {
     // Unique pointers used to be able to forward declare the type
     std::unique_ptr<detray::io::detector_payload> detector;
@@ -99,10 +103,6 @@ class DetrayPayloadConverter {
       detray::io::volume_payload& volPayload,
       const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
       const Portal& portal) const;
-
-  detray::io::material_volume_payload convertHomogeneousSurfaceMaterial(
-      const TrackingVolume& volume,
-      const detray::io::volume_payload& volPayload) const;
 
   Config m_cfg;
 
