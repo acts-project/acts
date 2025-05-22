@@ -593,4 +593,67 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // BOOST_CHECK_EQUAL(payload.volumes[0].name, "CylinderVolume");
 }
 
+BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversionTests) {
+  GeometryContext gctx;
+
+  // Create a transform
+  Transform3 transform = Transform3::Identity();
+  transform.pretranslate(Vector3(1., 2., 3.));
+
+  // Create a volume with some surfaces that have material
+  auto cvlBounds = std::make_shared<CylinderVolumeBounds>(5., 10., 10.);
+  auto volume =
+      std::make_shared<TrackingVolume>(transform, cvlBounds, "TestVolume");
+
+  // Create a surface with material
+  auto bounds = std::make_shared<RectangleBounds>(5., 10.);
+  auto surface = Surface::makeShared<PlaneSurface>(transform, bounds);
+
+  // Create material
+  Material mat = Material::fromMassDensity(1.0, 2.0, 3.0, 4.0, 5.0);
+  MaterialSlab slab(mat, 1.5);  // thickness of 1.5
+  auto surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  surface->assignSurfaceMaterial(surfaceMaterial);
+
+  // Add surface to volume
+  volume->addSurface(surface);
+
+  // Create volume payload first (needed for material conversion)
+  DetrayPayloadConverter::Config cfg;
+  DetrayPayloadConverter converter(cfg);
+  auto volPayload = converter.convertVolume(*volume);
+  volPayload.index.link = 0;  // Set index for testing
+
+  // Add surface to volume payload
+  auto& srfPayload = volPayload.surfaces.emplace_back(
+      converter.convertSurface(gctx, *surface));
+  srfPayload.index_in_coll = 0;
+
+  // Convert material
+  auto matPayload =
+      converter.convertHomogeneousSurfaceMaterial(*volume, volPayload);
+
+  // Check volume link
+  BOOST_CHECK_EQUAL(matPayload.volume_link.link, volPayload.index.link);
+
+  // Check material slabs
+  BOOST_CHECK_EQUAL(matPayload.mat_slabs.size(), 1u);
+  const auto& slabPayload = matPayload.mat_slabs.front();
+
+  // Check material parameters
+  CHECK_CLOSE_ABS(slabPayload.mat.params[0], mat.X0(), 1e-10);  // X0
+  CHECK_CLOSE_ABS(slabPayload.mat.params[1], mat.L0(), 1e-10);  // L0
+  CHECK_CLOSE_ABS(slabPayload.mat.params[2], mat.Ar(), 1e-10);  // Ar
+  CHECK_CLOSE_ABS(slabPayload.mat.params[3], mat.Z(), 1e-10);   // Z
+  CHECK_CLOSE_ABS(slabPayload.mat.params[4], mat.massDensity(),
+                  1e-10);  // mass density
+  CHECK_CLOSE_ABS(slabPayload.mat.params[5], mat.molarDensity(),
+                  1e-10);  // molar density
+  CHECK_CLOSE_ABS(slabPayload.thickness, slab.thickness(), 1e-10);  // thickness
+
+  // Check surface link
+  BOOST_CHECK_EQUAL(slabPayload.surface.link, 0u);
+  BOOST_CHECK_EQUAL(slabPayload.index_in_coll.value(), 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
