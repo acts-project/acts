@@ -152,11 +152,6 @@ inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Transform3& TGeoDetectorElement::transform(
-    const GeometryContext& /*gctx*/) const {
-  return m_transform;
-}
-
 inline const Surface& TGeoDetectorElement::surface() const {
   return (*m_surface);
 }

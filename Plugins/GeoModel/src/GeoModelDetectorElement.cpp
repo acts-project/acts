@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 
+#include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <utility>
@@ -23,7 +24,13 @@ Acts::GeoModelDetectorElement::GeoModelDetectorElement(
       m_thickness(thickness) {}
 
 const Acts::Transform3& Acts::GeoModelDetectorElement::transform(
-    const GeometryContext& /*gctx*/) const {
+    const GeometryContext& gctx) const {
+  // This uses the contextual transform mechanism based on the proposed
+  // DetectorElementBase::AlignmentContext infrastructure
+  const Acts::Transform3* aTransform = Acts::contextualTransform(gctx, *this);
+  if (aTransform != nullptr) {
+    return *aTransform;
+  }
   return m_surfaceTransform;
 }
 

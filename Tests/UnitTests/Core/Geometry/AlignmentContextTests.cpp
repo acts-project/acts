@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -29,6 +30,9 @@ using namespace Acts::UnitLiterals;
 namespace Acts::Test {
 
 /// @class AlignmentContext
+///
+/// This showcases a custom implementation of an AlignmentContext with a paylaod
+/// that contains different transforms.
 struct AlignmentContext {
   /// We have 2 different transforms
   std::shared_ptr<const std::array<Transform3, 2>> alignmentStore = nullptr;
@@ -48,8 +52,11 @@ struct AlignmentContext {
 
 /// @class AlignableDetectorElement
 ///
-/// This is a lightweight type of detector element,
-/// it simply implements the base class.
+/// This showcases two different use-cases:
+///
+/// 1. A custom implementation of a DetectorElemnt that is aligned with
+///   the AlignmentContext as defined above
+/// 2. The implementation of a alignment using the AlignmentDelegate
 class AlignableDetectorElement : public DetectorElementBase {
  public:
   // Deleted default constructor
@@ -100,10 +107,17 @@ class AlignableDetectorElement : public DetectorElementBase {
 
 inline const Transform3& AlignableDetectorElement::transform(
     const GeometryContext& gctx) const {
-  auto alignContext = gctx.get<AlignmentContext>();
-  if (alignContext.alignmentStore != nullptr &&
-      alignContext.alignmentIndex < 2) {
-    return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
+  // Showcase A: custom implementation of the alignment context
+  const AlignmentContext* alignContext = gctx.maybeGet<AlignmentContext>();
+  if (alignContext != nullptr && alignContext->alignmentStore != nullptr &&
+      alignContext->alignmentIndex < 2) {
+    return (*(alignContext->alignmentStore))[alignContext->alignmentIndex];
+  }
+  // Showcase B: use the AlignmentDelegate
+  const Transform3* aTransform =
+      contextualTransform(gctx, *this);  // from AlignmentDelegate
+  if (aTransform != nullptr) {
+    return *aTransform;
   }
   return (*m_elementTransform);
 }
@@ -208,6 +222,45 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
       alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum)
           .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
+}
+
+/// Unit test for creating compliant/non-compliant Surface object
+BOOST_AUTO_TEST_CASE(AlignmentDelegateTests) {
+  Transform3 nominalTransform = Transform3::Identity();
+  nominalTransform.translation() = Vector3(0., 0., 1.);
+
+  Transform3 alignedTransform = Transform3::Identity();
+  alignedTransform.translation() = Vector3(0., 0., -1.);
+
+  // The detector element at nominal position
+  AlignableDetectorElement alignedElement(
+      std::make_shared<const Transform3>(nominalTransform),
+      std::make_shared<const RectangleBounds>(100_cm, 100_cm), 1_mm);
+
+  GeometryContext nominalContext;
+
+  BOOST_CHECK(alignedElement.surface()
+                  .transform(nominalContext)
+                  .isApprox(nominalTransform));
+
+  // Mockup struct for the delegate
+  struct AlignedTransform {
+    Transform3 data = Transform3::Identity();
+
+    const Transform3* provide([[maybe_unused]] const Surface& surface) const {
+      return &data;
+    }
+  };
+
+  AlignedTransform aTransform(alignedTransform);
+  // Create and connect the delegate, and finally the GeometryContext
+  AlignmentDelegate alignmentDelegate;
+  alignmentDelegate.connect<&AlignedTransform::provide>(&aTransform);
+  GeometryContext alignedContext(alignmentDelegate);
+
+  BOOST_CHECK(alignedElement.surface()
+                  .transform(alignedContext)
+                  .isApprox(alignedTransform));
 }
 
 }  // namespace Acts::Test

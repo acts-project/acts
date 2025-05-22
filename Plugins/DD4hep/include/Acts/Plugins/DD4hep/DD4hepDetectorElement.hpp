@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -43,7 +42,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   using DD4hepVolumeID = dd4hep::DDSegmentation::VolumeID;
 
   /// Broadcast the context type
-  using ContextType = DD4hepGeometryContext;
+  using ContextType = GeometryContext;
 
   /// Define a string based store
   using Store = std::map<std::string,
@@ -84,11 +83,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
       std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
-
-  /// Return local to global transform associated with this identifier
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& transform(const GeometryContext& gctx) const override;
 
   // Give access to the DD4hep detector element
   const dd4hep::DetElement& sourceElement() const { return m_detElement; }

@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -37,6 +38,52 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 
   const Acts::Surface& surface = elementXY->surface();
   BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Plane);
+}
+
+BOOST_AUTO_TEST_CASE(GeoModelDetectorElementAlignment) {
+  auto material = new GeoMaterial("Material", 1.0);
+  // Let's create a GeoFullPhysVol object
+
+  // (BOX object)
+  auto boxXY = new GeoBox(100, 200, 2);
+  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
+  auto fphysXY = new GeoFullPhysVol(logXY);
+  auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
+
+  PVConstLink physXY{fphysXY};
+  auto detElement =
+      Acts::GeoModelDetectorElement::createDetectorElement<Acts::PlaneSurface>(
+          physXY, rBounds, Acts::Transform3::Identity(), 2.0);
+
+  auto alignedTransform = Acts::Transform3::Identity();
+  alignedTransform.pretranslate(Acts::Vector3(1., 2., 3.));
+
+  // Test nominal alignment context
+  Acts::GeometryContext nominalContext;
+  BOOST_CHECK(detElement->surface()
+                  .transform(nominalContext)
+                  .isApprox(Acts::Transform3::Identity()));
+
+  // Test aligned context via AlignmentDelegate
+  // Mockup struct for the delegate
+  struct AlignedTransform {
+    Acts::Transform3 data = Acts::Transform3::Identity();
+
+    const Acts::Transform3* provide(
+        [[maybe_unused]] const Acts::Surface& surface) const {
+      return &data;
+    }
+  };
+
+  AlignedTransform aTransform(alignedTransform);
+  // Create and connect the delegate, and finally the GeometryContext
+  Acts::AlignmentDelegate alignmentDelegate;
+  alignmentDelegate.connect<&AlignedTransform::provide>(&aTransform);
+  Acts::GeometryContext alignedContext(alignmentDelegate);
+
+  BOOST_CHECK(detElement->surface()
+                  .transform(alignedContext)
+                  .isApprox(alignedTransform));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
