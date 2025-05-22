@@ -16,6 +16,7 @@
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -176,8 +177,7 @@ SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter>(m_cfg.seedFilterConfig);
   m_seedFinder =
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
