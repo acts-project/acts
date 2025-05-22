@@ -35,19 +35,17 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
-  GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
 
   // BOX object
   double hlX = 200, hlY = 100, hlZ = 2;
-  GeoIntrusivePtr<GeoBox> shapeA(new GeoBox(hlX, hlY, hlZ));
+  auto shapeA = make_intrusive<GeoBox>(hlX, hlY, hlZ);
   // Trapezoid object
-  GeoIntrusivePtr<GeoTrd> shapeB(new GeoTrd(2, 2, 50, 80, 60));
+  auto shapeB = make_intrusive<GeoTrd>(2, 2, 50, 80, 60);
 
   // create subtraction
-  GeoIntrusivePtr<GeoShapeSubtraction> geoSub(
-      new GeoShapeSubtraction(shapeA, shapeB));
-  GeoIntrusivePtr<GeoLogVol> logSub(
-      new GeoLogVol("LogVolume", geoSub, material));
+  auto geoSub = make_intrusive<GeoShapeSubtraction>(shapeA, shapeB);
+  auto logSub = make_intrusive<GeoLogVol>("LogVolume", geoSub, material);
   auto fphysSub = make_intrusive<GeoFullPhysVol>(logSub);
 
   // create pars for conversion
