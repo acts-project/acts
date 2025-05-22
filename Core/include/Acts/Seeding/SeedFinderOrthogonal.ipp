@@ -695,12 +695,15 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    */
   for (auto sp : spacePoints) {
     typename tree_t::coordinate_t point;
-
     point[DimPhi] = sp.phi();
     point[DimR] = sp.radius();
     point[DimZ] = sp.z();
 
-    points.emplace_back(point, sp.index());
+    typename tree_t::pair_t pair;
+    pair.first = point;
+    pair.second = sp.index();
+
+    points.push_back(pair);
   }
 
   ACTS_VERBOSE("Created k-d tree populated with " << points.size()
@@ -749,7 +752,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
-    internalSpacePoints.addSpacePoint(SourceLink(p), p.x(), p.y(), p.z());
+    internalSpacePoints.addSpacePoint(SourceLink(&p), p.x(), p.y(), p.z());
   }
   ACTS_VERBOSE(rRangeSPExtent);
 
