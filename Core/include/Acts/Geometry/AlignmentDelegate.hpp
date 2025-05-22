@@ -17,29 +17,30 @@
 
 namespace Acts {
 
-  class Surface;
-  class DetectorElementBase;
+class Surface;
+class DetectorElementBase;
 
-  /// A possible implementation of an alignment context via the surface
-  using AlignmentDelegate = Delegate<const Transform3*(const Surface&)>;
+/// A possible implementation of an alignment context via the surface
+using AlignmentDelegate = Delegate<const Transform3*(const Surface&)>;
 
-  /// A possible implementation of using a simple delegate driven
-  /// alignmnet infrastructure
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param detElement is the detector element
-  ///
-  /// Client code that wants to use this proposed alginment context can
-  /// call this metod from the `transform(const GeometryContext&)` method
-  ///
-  /// It unpacks the GeometryContext to check if it contains an AlignmentContext
-  /// and then calls the included delegate. If no transform is found, a nullptr
-  /// is returned.
-  ///
-  /// Client code that implements its on alignmnet context can savely ignore this
-  /// method and simply overwrite the `transform(const GeometryContext&)` method
-  ///
-  /// @return a pointer to the transform if found, otherwise nullptr
-  const Transform3* contextualTransform(const GeometryContext& gctx, const DetectorElementBase& detElement);
+/// A possible implementation of using a simple delegate driven
+/// alignment infrastructure
+///
+/// @param gctx The current geometry context object, e.g. alignment
+/// @param detElement is the detector element
+///
+/// Client code that wants to use this proposed alignment context can
+/// call this method from the `transform(const GeometryContext&)` method
+///
+/// It unpacks the GeometryContext to check if it contains an AlignmentContext
+/// and then calls the included delegate. If no transform is found, a nullptr
+/// is returned.
+///
+/// Client code that implements its on alignment context can safely ignore this
+/// method and simply overwrite the `transform(const GeometryContext&)` method
+///
+/// @return a pointer to the transform if found, otherwise nullptr
+const Transform3* contextualTransform(const GeometryContext& gctx,
+                                      const DetectorElementBase& detElement);
 
-} // namespace Acts
+}  // namespace Acts

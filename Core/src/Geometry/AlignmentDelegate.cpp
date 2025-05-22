@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/AlignmentDelegate.hpp"
+
 #include "Acts/Geometry/DetectorElementBase.hpp"
 
 #include <iostream>
