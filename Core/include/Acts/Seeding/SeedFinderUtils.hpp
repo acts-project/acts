@@ -37,7 +37,8 @@ LinCircle transformCoordinates(SpacePointMutableData& spacePointsMutable,
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///
-/// @param mutableData Container for mutable variables used in the seeding
+/// @param[in] spacePoints The container for the spacepoints.
+/// @param[in,out] spacePointsMutable Container for mutable variables used in the seeding
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.

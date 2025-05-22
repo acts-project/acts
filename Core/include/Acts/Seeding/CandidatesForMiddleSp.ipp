@@ -200,7 +200,7 @@ inline void CandidatesForMiddleSp::bubbleup(std::vector<std::size_t>& indices,
 }
 
 inline std::vector<TripletCandidate> CandidatesForMiddleSp::storage(
-    const InternalSpacePointContainer& spacepoints) {
+    const InternalSpacePointContainer& spacePoints) {
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
   std::vector<TripletCandidate> output(m_nHigh + m_nLow);
@@ -231,7 +231,7 @@ inline std::vector<TripletCandidate> CandidatesForMiddleSp::storage(
     }
 
     // Both have entries, get the minimum
-    if (descendingByQuality(spacepoints, m_storage[m_indicesLow[0]],
+    if (descendingByQuality(spacePoints, m_storage[m_indicesLow[0]],
                             m_storage[m_indicesHigh[0]])) {
       output[outIdx--] = std::move(m_storage[m_indicesHigh[0]]);
       pop(m_indicesHigh, m_nHigh);
@@ -247,7 +247,7 @@ inline std::vector<TripletCandidate> CandidatesForMiddleSp::storage(
 }
 
 inline bool CandidatesForMiddleSp::descendingByQuality(
-    const InternalSpacePointContainer& spacepoints, const TripletCandidate& i1,
+    const InternalSpacePointContainer& spacePoints, const TripletCandidate& i1,
     const TripletCandidate& i2) {
   if (i1.weight != i2.weight) {
     return i1.weight > i2.weight;
@@ -256,13 +256,13 @@ inline bool CandidatesForMiddleSp::descendingByQuality(
   // This is for the case when the weights from different seeds
   // are same. This makes cpu & cuda results same
 
-  auto bottomL1 = spacepoints.at(i1.bottom);
-  auto middleL1 = spacepoints.at(i1.middle);
-  auto topL1 = spacepoints.at(i1.top);
+  auto bottomL1 = spacePoints.at(i1.bottom);
+  auto middleL1 = spacePoints.at(i1.middle);
+  auto topL1 = spacePoints.at(i1.top);
 
-  auto bottomL2 = spacepoints.at(i2.bottom);
-  auto middleL2 = spacepoints.at(i2.middle);
-  auto topL2 = spacepoints.at(i2.top);
+  auto bottomL2 = spacePoints.at(i2.bottom);
+  auto middleL2 = spacePoints.at(i2.middle);
+  auto topL2 = spacePoints.at(i2.top);
 
   float seed1_sum = 0.;
   float seed2_sum = 0.;
@@ -279,9 +279,9 @@ inline bool CandidatesForMiddleSp::descendingByQuality(
 }
 
 inline bool CandidatesForMiddleSp::ascendingByQuality(
-    const InternalSpacePointContainer& spacepoints, const TripletCandidate& i1,
+    const InternalSpacePointContainer& spacePoints, const TripletCandidate& i1,
     const TripletCandidate& i2) {
-  return !descendingByQuality(spacepoints, i1, i2);
+  return !descendingByQuality(spacePoints, i1, i2);
 }
 
 inline std::size_t CandidatesForMiddleSp::nLowQualityCandidates() const {

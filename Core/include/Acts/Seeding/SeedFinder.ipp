@@ -231,7 +231,7 @@ inline void
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     const SeedFinderOptions& options,
     const InternalSpacePointContainer& spacePoints,
-    SpacePointMutableData& mutableData,
+    SpacePointMutableData& spacePointsMutable,
     boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>&
         otherSPsNeighbours,
     ConstInternalSpacePointProxy mediumSP, std::vector<LinCircle>& linCircleVec,
@@ -382,8 +382,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
-        mutableData.setDeltaR(otherSP.index(),
-                              std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        spacePointsMutable.setDeltaR(otherSP.index(),
+                                     std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP.index());
         continue;
       }
@@ -438,8 +438,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
-        mutableData.setDeltaR(otherSP.index(),
-                              std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        spacePointsMutable.setDeltaR(otherSP.index(),
+                                     std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.emplace_back(otherSP.index());
         continue;
       }
@@ -487,8 +487,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // fill output vectors
       linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                 yNewFrame);
-      mutableData.setDeltaR(otherSP.index(),
-                            std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+      spacePointsMutable.setDeltaR(otherSP.index(),
+                                   std::sqrt(deltaR2 + (deltaZ * deltaZ)));
       outVec.emplace_back(otherSP.index());
     }
   }

@@ -42,7 +42,9 @@ class SeedFilter final {
 
   /// Create Seeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
-  /// @param mutableData Container for mutable variables used in the seeding
+  ///
+  /// @param spacePoints Container for the space points
+  /// @param spacePointsMutable Container for mutable variables used in the seeding
   /// @param bottomSP fixed bottom space point
   /// @param middleSP fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
@@ -52,7 +54,7 @@ class SeedFilter final {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   void filterSeeds_2SpFixed(const InternalSpacePointContainer& spacePoints,
-                            const SpacePointMutableData& mutableData,
+                            const SpacePointMutableData& spacePointsMutable,
                             ConstInternalSpacePointProxy bottomSP,
                             ConstInternalSpacePointProxy middleSP,
                             const std::vector<std::size_t>& topSpVec,
@@ -62,25 +64,28 @@ class SeedFilter final {
                             CandidatesForMiddleSp& candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param mutableData Container for mutable variables used in the seeding
+  ///
+  /// @param spacePoints Container for the space points
+  /// @param spacePointsMutable Container for mutable variables used in the seeding
   /// @param candidates_collector collection of seed candidates
   /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
   template <typename external_spacepoint_t, typename collection_t>
   void filterSeeds_1SpFixed(const InternalSpacePointContainer& spacePoints,
-                            SpacePointMutableData& mutableData,
+                            SpacePointMutableData& spacePointsMutable,
                             CandidatesForMiddleSp& candidates_collector,
                             collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param mutableData Container for mutable variables used in the seeding
+  /// @param spacePoints Container for the space points
+  /// @param spacePointsMutable Container for mutable variables used in the seeding
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
   template <typename external_spacepoint_t, typename collection_t>
   void filterSeeds_1SpFixed(const InternalSpacePointContainer& spacePoints,
-                            SpacePointMutableData& mutableData,
+                            SpacePointMutableData& spacePointsMutable,
                             std::vector<TripletCandidate>& candidates,
                             const std::size_t numQualitySeeds,
                             collection_t& outputCollection) const;

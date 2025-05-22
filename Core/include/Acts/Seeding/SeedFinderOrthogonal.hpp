@@ -187,13 +187,13 @@ class SeedFinderOrthogonal {
    * iterator.
    *
    * @param options frequently changing configuration (like beam position)
+   * @param spacePoints The input spacepoints from which to create seeds.
    * @param spacePointsMutable Container for mutable variables used in the seeding
    * @param middle The (singular) middle spacepoint.
-   * @param bottom The (vector of) candidate bottom spacepoints.
-   * @param top The (vector of) candidate top spacepoints.
+   * @param bottoms The (vector of) candidate bottom spacepoints.
+   * @param tops The (vector of) candidate top spacepoints.
    * @param seedFilterState  holds quantities used in seed filter
-   * @param candidates_collector The container to write the resulting
-   * seed candidates to.
+   * @param candidatesCollector The container to write the resulting seed candidates to.
    */
   void filterCandidates(const SeedFinderOptions &options,
                         const InternalSpacePointContainer &spacePoints,
@@ -202,16 +202,16 @@ class SeedFinderOrthogonal {
                         const std::vector<SpacePointIndex> &bottoms,
                         const std::vector<SpacePointIndex> &tops,
                         SeedFilterState seedFilterState,
-                        CandidatesForMiddleSp &candidates_collector) const;
+                        CandidatesForMiddleSp &candidatesCollector) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
    *
-   * @param options frequently changing configuration (like beam position)
-   * @param spacePointsMutable Container for mutable variables used in the seeding
-   * @tparam NDims Number of dimensions for our spatial embedding (probably 3).
    * @tparam output_container_t Type of the output container.
    *
+   * @param options frequently changing configuration (like beam position)
+   * @param spacePoints The input spacepoints from which to create seeds.
+   * @param spacePointsMutable Container for mutable variables used in the seeding
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
    * @param middle_p The middle spacepoint to find seeds for.

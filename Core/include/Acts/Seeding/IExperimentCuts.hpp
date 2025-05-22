@@ -43,6 +43,7 @@ class IExperimentCuts {
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
+  /// @param spacePoints container for the space points
   /// @return vector of seed candidates that pass the cut
   virtual std::vector<TripletCandidate> cutPerMiddleSP(
       std::vector<TripletCandidate> seedCandidates,

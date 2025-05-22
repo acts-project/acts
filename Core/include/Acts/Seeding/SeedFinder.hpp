@@ -145,9 +145,10 @@ class SeedFinder {
 
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
+  ///
   /// @param options frequently changing configuration (like beam position)
-  /// @param grid spacepoint grid
-  /// @param mutableData Container for mutable variables used in the seeding
+  /// @param spacePoints The input spacepoints from which to create seeds.
+  /// @param spacePointsMutable Container for mutable variables used in the seeding
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed
   /// @param linCircleVec vector containing inner or outer SP parameters after reference frame transformation to the u-v space
@@ -162,7 +163,7 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       const InternalSpacePointContainer& spacePoints,
-      Acts::SpacePointMutableData& mutableData,
+      Acts::SpacePointMutableData& spacePointsMutable,
       boost::container::small_vector<
           Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
       ConstInternalSpacePointProxy mediumSP,
@@ -172,13 +173,15 @@ class SeedFinder {
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param SpM space point candidate to be used as middle SP in a seed
+  ///
+  /// @param spacePoints The input spacepoints from which to create seeds.
+  /// @param spM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
   template <Acts::DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(const InternalSpacePointContainer& spacePoints,
-                        ConstInternalSpacePointProxy SpM,
+                        ConstInternalSpacePointProxy spM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

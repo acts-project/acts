@@ -52,7 +52,7 @@ class CandidatesForMiddleSp {
   /// elements with higher quality first
   /// @returns Vector of triplet candidates
   std::vector<TripletCandidate> storage(
-      const InternalSpacePointContainer& spacepoints);
+      const InternalSpacePointContainer& spacePoints);
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -74,14 +74,14 @@ class CandidatesForMiddleSp {
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
   static bool descendingByQuality(
-      const InternalSpacePointContainer& spacepoints,
+      const InternalSpacePointContainer& spacePoints,
       const TripletCandidate& i1, const TripletCandidate& i2);
 
   /// @brief A function for sorting the triplet candidates from lower to higher quality
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
-  static bool ascendingByQuality(const InternalSpacePointContainer& spacepoints,
+  static bool ascendingByQuality(const InternalSpacePointContainer& spacePoints,
                                  const TripletCandidate& i1,
                                  const TripletCandidate& i2);
 
