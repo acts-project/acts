@@ -163,7 +163,7 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       const InternalSpacePointContainer& spacePoints,
-      Acts::SpacePointMutableData& spacePointsMutable,
+      SpacePointMutableData& spacePointsMutable,
       boost::container::small_vector<
           Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
       ConstInternalSpacePointProxy mediumSP,

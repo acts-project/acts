@@ -21,7 +21,7 @@ inline SeedFilter::SeedFilter(const SeedFilterConfig& config,
 }
 
 inline SeedFilter::SeedFilter(const SeedFilterConfig& config,
-                              std::unique_ptr<const Acts::Logger> logger,
+                              std::unique_ptr<const Logger> logger,
                               IExperimentCuts* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
@@ -32,7 +32,7 @@ inline SeedFilter::SeedFilter(const SeedFilterConfig& config,
 
 inline void SeedFilter::filterSeeds_2SpFixed(
     const InternalSpacePointContainer& spacePoints,
-    const Acts::SpacePointMutableData& spacePointsMutable,
+    const SpacePointMutableData& spacePointsMutable,
     ConstInternalSpacePointProxy bottomSP,
     ConstInternalSpacePointProxy middleSP,
     const std::vector<std::size_t>& topSpVec,
@@ -238,7 +238,7 @@ inline void SeedFilter::filterSeeds_2SpFixed(
 template <typename external_spacepoint_t, typename collection_t>
 void SeedFilter::filterSeeds_1SpFixed(
     const InternalSpacePointContainer& spacePoints,
-    Acts::SpacePointMutableData& spacePointsMutable,
+    SpacePointMutableData& spacePointsMutable,
     CandidatesForMiddleSp& candidates_collector,
     collection_t& outputCollection) const {
   // retrieve all candidates
@@ -254,7 +254,7 @@ void SeedFilter::filterSeeds_1SpFixed(
 template <typename external_spacepoint_t, typename collection_t>
 void SeedFilter::filterSeeds_1SpFixed(
     const InternalSpacePointContainer& spacePoints,
-    Acts::SpacePointMutableData& spacePointsMutable,
+    SpacePointMutableData& spacePointsMutable,
     std::vector<TripletCandidate>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
@@ -296,7 +296,7 @@ void SeedFilter::filterSeeds_1SpFixed(
     spacePointsMutable.setQuality(medium, bestSeedQuality);
     spacePointsMutable.setQuality(top, bestSeedQuality);
 
-    Acts::Seed<external_spacepoint_t> seed{
+    Seed<external_spacepoint_t> seed{
         *spacePoints.at(bottom)
              .sourceLinks()[0]
              .template get<const external_spacepoint_t*>(),
@@ -312,7 +312,7 @@ void SeedFilter::filterSeeds_1SpFixed(
     ACTS_VERBOSE("Adding seed: [b=" << bottom << ", m=" << medium << ", t="
                                     << top << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
-    Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
+    detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
     ++numTotalSeeds;
   }
 
