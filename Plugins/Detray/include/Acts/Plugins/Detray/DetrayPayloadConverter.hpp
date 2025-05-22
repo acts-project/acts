@@ -21,6 +21,7 @@ struct surface_payload;
 struct volume_payload;
 struct material_slab_payload;
 struct material_volume_payload;
+struct detector_homogeneous_material_payload;
 }  // namespace detray::io
 
 namespace Acts {
@@ -46,6 +47,9 @@ class DetrayPayloadConverter {
       DetectorElement
     };
     SensitiveStrategy sensitiveStrategy = SensitiveStrategy::Identifier;
+
+    /// Detray MUST have beampipe volume at index 0
+    const TrackingVolume* beampipeVolume = nullptr;
   };
 
   static detray::io::transform_payload convertTransform(
@@ -64,8 +68,15 @@ class DetrayPayloadConverter {
   detray::io::material_slab_payload convertMaterialSlab(
       const MaterialSlab& slab) const;
 
-  detray::io::detector_payload convertTrackingGeometry(
-      const GeometryContext& gctx, const TrackingGeometry& geometry) const;
+  struct Payloads {
+    // Unique pointers used to be able to forward declare the type
+    std::unique_ptr<detray::io::detector_payload> detector;
+    std::unique_ptr<detray::io::detector_homogeneous_material_payload>
+        homogeneousMaterial;
+  };
+
+  Payloads convertTrackingGeometry(const GeometryContext& gctx,
+                                   const TrackingGeometry& geometry) const;
 
   explicit DetrayPayloadConverter(const Config& config,
                                   std::unique_ptr<const Logger> logger =
@@ -76,7 +87,7 @@ class DetrayPayloadConverter {
   void handlePortalLink(
       const GeometryContext& gctx, const TrackingVolume& volume,
       detray::io::volume_payload& volPayload,
-      std ::function<std::size_t(const TrackingVolume*)> volumeLookup,
+      const std ::function<std::size_t(const TrackingVolume*)>& volumeLookup,
       const PortalLinkBase& link) const;
 
   void makeEndOfWorld(const GeometryContext& gctx,
