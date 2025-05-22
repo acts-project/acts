@@ -15,6 +15,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -258,38 +260,13 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
 void DetrayPayloadConverter::handlePortalLink(
     const GeometryContext& gctx, const TrackingVolume& volume,
     detray::io::volume_payload& volPayload,
-    std::function<std::size_t(const TrackingVolume*)> volumeLookup,
+    const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
     const PortalLinkBase& link) const {
-  auto handle = [&](const TrivialPortalLink& trivial) {
-    ACTS_VERBOSE("Converting trivial portal link registered to volume "
-                 << volume.volumeName());
-    if (&trivial.volume() == &volume) {
-      ACTS_VERBOSE("~> points at this volume (" << volume.volumeName()
-                                                << ") => skpping");
-      return;
-    }
-
-    ACTS_VERBOSE("~> points at different volume ("
-                 << trivial.volume().volumeName()
-                 << ") => adding link to this volume (" << volume.volumeName()
-                 << ")");
-
-    // add the surface (including mask first)
-    auto& srfPayload = volPayload.surfaces.emplace_back(
-        convertSurface(gctx, trivial.surface(), true));
-    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-
-    // lookup the target volume index (we already converted this)
-    ACTS_VERBOSE("Target volume index for " << trivial.volume().volumeName()
-                                            << ": "
-                                            << volumeLookup(&trivial.volume()));
-    auto targetVolumeIndex = volumeLookup(&trivial.volume());
-    srfPayload.mask.volume_link.link = targetVolumeIndex;
-  };
+  std::vector<const TrivialPortalLink*> trivials;
 
   if (auto* trivial = dynamic_cast<const TrivialPortalLink*>(&link);
       trivial != nullptr) {
-    handle(*trivial);
+    trivials.push_back(trivial);
   } else if (auto* composite = dynamic_cast<const CompositePortalLink*>(&link);
              composite != nullptr) {
     ACTS_VERBOSE("Converting composite portal link with "
@@ -301,7 +278,7 @@ void DetrayPayloadConverter::handlePortalLink(
         throw std::runtime_error(
             "Composite portal link contains non-trivial portal links");
       } else {
-        handle(*subTrivial);
+        trivials.push_back(subTrivial);
       }
     }
   } else if (auto* grid = dynamic_cast<const GridPortalLink*>(&link);
@@ -309,11 +286,50 @@ void DetrayPayloadConverter::handlePortalLink(
     ACTS_VERBOSE("Converting grid portal link with "
                  << grid->artifactPortalLinks().size() << " link artifacts");
     for (const auto& artifact : grid->artifactPortalLinks()) {
-      handle(artifact);
+      trivials.push_back(&artifact);
     }
   } else {
     throw std::runtime_error(
         "Unknown portal link type, detray cannot handle this");
+  }
+
+  // If ANY of the trivials point at the current volume, we don't handle this
+  // portal link at all, otherwise we would get a self-referencing volume link
+
+  if (std::ranges::any_of(
+          trivials, [&](const auto* t) { return &t->volume() == &volume; })) {
+    ACTS_VERBOSE("At least one trivial link points at this volume ("
+                 << volume.volumeName() << ") => skipping");
+    return;
+  }
+
+  for (const auto* trivial : trivials) {
+    ACTS_VERBOSE("Converting trivial portal link registered to volume "
+                 << volume.volumeName());
+    ACTS_VERBOSE(
+        "Portal link surface is: " << trivial->surface().toStream(gctx));
+    if (&trivial->volume() == &volume) {
+      ACTS_VERBOSE("~> points at this volume (" << volume.volumeName()
+                                                << ") => skipping");
+      return;
+    }
+
+    ACTS_VERBOSE("~> points at different volume ("
+                 << trivial->volume().volumeName()
+                 << ") => adding link to this volume (" << volume.volumeName()
+                 << ")");
+
+    // add the surface (including mask first)
+    auto& srfPayload = volPayload.surfaces.emplace_back(
+        convertSurface(gctx, trivial->surface(), true));
+    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+
+    // lookup the target volume index (we already converted this)
+    ACTS_VERBOSE("Target volume index for "
+                 << trivial->volume().volumeName() << ": "
+                 << volumeLookup(&trivial->volume()));
+    auto targetVolumeIndex = volumeLookup(&trivial->volume());
+    srfPayload.mask.volume_link.link = targetVolumeIndex;
   }
 }
 
@@ -357,14 +373,6 @@ void DetrayPayloadConverter::handlePortal(
     assert(lAlong != nullptr);
     makeEndOfWorld(gctx, volPayload, lAlong->surface());
   }
-
-  for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
-    const auto* link = portal.getLink(dir);
-
-    if (link != nullptr) {
-      handlePortalLink(gctx, volume, volPayload, volumeLookup, *link);
-    }
-  }
 }
 
 detray::io::material_slab_payload DetrayPayloadConverter::convertMaterialSlab(
@@ -380,7 +388,76 @@ detray::io::material_slab_payload DetrayPayloadConverter::convertMaterialSlab(
   return payload;
 }
 
-detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
+detray::io::material_volume_payload
+DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
+    const TrackingVolume& volume,
+    const detray::io::volume_payload& volPayload) const {
+  detray::io::material_volume_payload payload;
+
+  // (Hopefully) Temporarily: add empty material slabs for surfaces without
+  // material
+
+  for (const auto& srfPayload : volPayload.surfaces) {
+    auto& slabPayload = payload.mat_slabs.emplace_back(
+        convertMaterialSlab(MaterialSlab::Vacuum(0.f)));
+    slabPayload.mat.params[0] = 42;
+    slabPayload.mat.params[1] = 42;
+    slabPayload.thickness = 5;
+    slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
+    slabPayload.surface.link = srfPayload.index_in_coll.value();
+  }
+
+  payload.volume_link = volPayload.index;
+
+  auto handle = [&](const Surface& surface) {
+    if (surface.surfaceMaterial() == nullptr) {
+      return;
+    }
+
+    const auto* material = dynamic_cast<const HomogeneousSurfaceMaterial*>(
+        surface.surfaceMaterial());
+
+    if (material == nullptr) {
+      return;
+    }
+
+    // find surface index in volume
+    auto srfIt =
+        std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload) {
+          return srfPayload.source == surface.geometryId().value();
+        });
+
+    if (srfIt == volPayload.surfaces.end()) {
+      ACTS_ERROR("Surface " << surface.geometryId().value()
+                            << " not found in volume " << volume.volumeName()
+                            << ". This is a bug in the conversion.");
+      throw std::runtime_error("Surface not found in volume");
+    }
+
+    auto srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
+
+    auto& slabPayload = payload.mat_slabs.at(srfIdx);
+
+    // add material slab to payload
+    slabPayload = convertMaterialSlab(material->materialSlab());
+    // Temp: redundant, but keep for now
+    slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
+    slabPayload.surface.link = srfIdx;
+  };
+
+  for (const auto& surface : volume.surfaces()) {
+    handle(surface);
+  }
+
+  for (const auto& portal : volume.portals()) {
+    handle(portal.surface());
+  }
+
+  return payload;
+}
+
+DetrayPayloadConverter::Payloads
+DetrayPayloadConverter::convertTrackingGeometry(
     const GeometryContext& gctx, const TrackingGeometry& geometry) const {
   ACTS_INFO("Converting tracking geometry to detray format");
 
@@ -390,7 +467,19 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
         "give wrong results");
   }
 
-  detray::io::detector_payload payload;
+  if (m_cfg.beampipeVolume == nullptr) {
+    throw std::runtime_error("Beampipe volume not set");
+  }
+
+  Payloads payloads;
+  payloads.detector = std::make_unique<detray::io::detector_payload>();
+  payloads.homogeneousMaterial =
+      std::make_unique<detray::io::detector_homogeneous_material_payload>();
+
+  detray::io::detector_payload& detPayload = *payloads.detector;
+  detray::io::detector_homogeneous_material_payload& dthmPayload =
+      *payloads.homogeneousMaterial;
+
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
 
   auto lookup = [&volumeIds](const TrackingVolume* v) {
@@ -398,8 +487,8 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
   };
 
   geometry.apply([&](const TrackingVolume& volume) {
-    auto& volPayload = payload.volumes.emplace_back(convertVolume(volume));
-    volPayload.index.link = payload.volumes.size() - 1;
+    auto& volPayload = detPayload.volumes.emplace_back(convertVolume(volume));
+    volPayload.index.link = detPayload.volumes.size() - 1;
     volumeIds[&volume] = volPayload.index.link;
 
     for (auto& surface : volume.surfaces()) {
@@ -412,7 +501,7 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
 
   // Run again over volumes, can lookup volume index from pointer now
   geometry.apply([&](const TrackingVolume& volume) {
-    auto& volPayload = payload.volumes.at(volumeIds.at(&volume));
+    auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
 
     for (const auto& portal : volume.portals()) {
       handlePortal(gctx, volume, volPayload, lookup, portal);
@@ -427,11 +516,49 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
         });
     ACTS_DEBUG("-> portals:        " << nPortals);
     ACTS_DEBUG("-> other surfaces: " << volPayload.surfaces.size() - nPortals);
+
+    // Portals have produced surfaces and are added in volume payload, handle
+    // material now
+
+    auto& homogeneousMaterial = dthmPayload.volumes.emplace_back(
+        convertHomogeneousSurfaceMaterial(volume, volPayload));
+
+    ACTS_DEBUG("Volume " << volume.volumeName() << " has "
+                         << homogeneousMaterial.mat_slabs.size()
+                         << " material slabs");
   });
 
-  ACTS_DEBUG("Collected " << payload.volumes.size() << " volumes");
+  // HACK: Beampipe MUST have index 0
+  // Find beampipe volume by name
+  std::size_t beampipeIdx = volumeIds.at(m_cfg.beampipeVolume);
+  ACTS_DEBUG("Beampipe volume (" << m_cfg.beampipeVolume->volumeName()
+                                 << ") index: " << beampipeIdx);
+  ACTS_DEBUG("Volume at index 0 is " << detPayload.volumes.at(0).name);
 
-  return payload;
+  // Swap beampipe volume to index 0
+  std::swap(detPayload.volumes.at(0), detPayload.volumes.at(beampipeIdx));
+
+  for (auto& vol : detPayload.volumes) {
+    for (auto& srf : vol.surfaces) {
+      if (srf.mask.volume_link.link == beampipeIdx) {
+        srf.mask.volume_link.link = 0;
+      } else if (srf.mask.volume_link.link == 0) {
+        srf.mask.volume_link.link = beampipeIdx;
+      }
+    }
+  }
+
+  for (auto& mat : dthmPayload.volumes) {
+    if (mat.volume_link.link == beampipeIdx) {
+      mat.volume_link.link = 0;
+    } else if (mat.volume_link.link == 0) {
+      mat.volume_link.link = beampipeIdx;
+    }
+  }
+
+  ACTS_DEBUG("Collected " << detPayload.volumes.size() << " volumes");
+
+  return payloads;
 }
 
 }  // namespace Acts
