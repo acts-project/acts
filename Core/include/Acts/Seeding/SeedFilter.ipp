@@ -299,13 +299,13 @@ void SeedFilter::filterSeeds_1SpFixed(
     Acts::Seed<external_spacepoint_t> seed{
         *spacePoints.at(bottom)
              .sourceLinks()[0]
-             .get<const external_spacepoint_t*>(),
+             .template get<const external_spacepoint_t*>(),
         *spacePoints.at(medium)
              .sourceLinks()[0]
-             .get<const external_spacepoint_t*>(),
+             .template get<const external_spacepoint_t*>(),
         *spacePoints.at(top)
              .sourceLinks()[0]
-             .get<const external_spacepoint_t*>()};
+             .template get<const external_spacepoint_t*>()};
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
