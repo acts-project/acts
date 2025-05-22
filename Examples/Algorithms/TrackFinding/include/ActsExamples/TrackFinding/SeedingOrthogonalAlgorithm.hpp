@@ -13,7 +13,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -23,12 +22,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Construct track seeds from space points.
 class SeedingOrthogonalAlgorithm final : public IAlgorithm {
@@ -57,7 +54,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedingOrthogonalAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  SeedingOrthogonalAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

@@ -7,13 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 
 namespace Acts {
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
-    const external_spacepoint_t &low) const -> typename tree_t::range_t {
+    ConstInternalSpacePointProxy low) const -> typename tree_t::range_t {
   float colMin = m_config.collisionRegionMin;
   float colMax = m_config.collisionRegionMax;
   float pL = low.phi();
@@ -86,7 +87,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
-    const external_spacepoint_t &high) const -> typename tree_t::range_t {
+    ConstInternalSpacePointProxy high) const -> typename tree_t::range_t {
   float pM = high.phi();
   float rM = high.radius();
   float zM = high.z();
@@ -149,8 +150,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 
 template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
-    const SeedFinderOptions &options, const external_spacepoint_t &low,
-    const external_spacepoint_t &high, bool isMiddleInverted) const {
+    const SeedFinderOptions &options, ConstInternalSpacePointProxy low,
+    ConstInternalSpacePointProxy high, bool isMiddleInverted) const {
   float rL = low.radius();
   float rH = high.radius();
 
@@ -250,10 +251,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     const SeedFinderOptions &options,
     const InternalSpacePointContainer &spacePoints,
     SpacePointMutableData &spacePointsMutable,
-    const external_spacepoint_t &middle,
-    const std::vector<const external_spacepoint_t *> &bottom,
-    const std::vector<const external_spacepoint_t *> &top,
-    SeedFilterState seedFilterState,
+    ConstInternalSpacePointProxy middle,
+    const std::vector<SpacePointIndex> &bottoms,
+    const std::vector<SpacePointIndex> &tops, SeedFilterState seedFilterState,
     CandidatesForMiddleSp &candidates_collector) const {
   float rM = middle.radius();
   float zM = middle.z();
@@ -276,53 +276,55 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // set max bottom radius for seed confirmation
     seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
     // continue if number of top SPs is smaller than minimum
-    if (top.size() < seedFilterState.nTopSeedConf) {
+    if (tops.size() < seedFilterState.nTopSeedConf) {
       return;
     }
   }
 
-  std::vector<const external_spacepoint_t *> top_valid;
+  std::vector<SpacePointIndex> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;
 
   // contains parameters required to calculate circle with linear equation
   // ...for bottom-middle
-  std::vector<LinCircle> linCircleBottom;
+  std::vector<LinCircle> linCircleBottoms;
   // ...for middle-top
-  std::vector<LinCircle> linCircleTop;
+  std::vector<LinCircle> linCircleTops;
 
   // transform coordinates
-  transformCoordinates(spacePointsMutable, bottom, middle, true,
-                       linCircleBottom);
-  transformCoordinates(spacePointsMutable, top, middle, false, linCircleTop);
+  transformCoordinates(spacePoints, spacePointsMutable, bottoms, middle, true,
+                       linCircleBottoms);
+  transformCoordinates(spacePoints, spacePointsMutable, tops, middle, false,
+                       linCircleTops);
 
   // sort: make index vector
-  std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
+  std::vector<std::size_t> sorted_bottoms(linCircleBottoms.size());
   for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
     sorted_bottoms[i] = i;
   }
 
-  std::vector<std::size_t> sorted_tops(linCircleTop.size());
+  std::vector<std::size_t> sorted_tops(linCircleTops.size());
   for (std::size_t i(0); i < sorted_tops.size(); ++i) {
     sorted_tops[i] = i;
   }
 
   std::ranges::sort(sorted_bottoms, {},
-                    [&linCircleBottom](const std::size_t s) {
-                      return linCircleBottom[s].cotTheta;
+                    [&linCircleBottoms](const std::size_t s) {
+                      return linCircleBottoms[s].cotTheta;
                     });
 
-  std::ranges::sort(sorted_tops, {}, [&linCircleTop](const std::size_t s) {
-    return linCircleTop[s].cotTheta;
+  std::ranges::sort(sorted_tops, {}, [&linCircleTops](const std::size_t s) {
+    return linCircleTops[s].cotTheta;
   });
 
   std::vector<float> tanMT;
-  tanMT.reserve(top.size());
+  tanMT.reserve(tops.size());
 
-  std::size_t numTopSP = top.size();
+  std::size_t numTopSP = tops.size();
   for (std::size_t t = 0; t < numTopSP; t++) {
-    tanMT.push_back(
-        std::atan2(top[t]->radius() - middle.radius(), top[t]->z() - zM));
+    auto top = spacePoints.at(tops[t]);
+
+    tanMT.push_back(std::atan2(top.radius() - middle.radius(), top.z() - zM));
   }
 
   std::size_t t0 = 0;
@@ -333,7 +335,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       break;
     }
 
-    auto lb = linCircleBottom[b];
+    auto bottom = spacePoints.at(bottoms[b]);
+    auto lb = linCircleBottoms[b];
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
@@ -354,7 +357,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
-        bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
+        bottom.radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
     if (m_config.seedConfirmation &&
@@ -367,11 +370,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     curvatures.clear();
     impactParameters.clear();
 
-    float tanLM = std::atan2(rM - bottom[b]->radius(), zM - bottom[b]->z());
+    float tanLM = std::atan2(rM - bottom.radius(), zM - bottom.z());
 
     for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
-      auto lt = linCircleTop[t];
+      auto lt = linCircleTops[t];
 
       if (std::abs(tanLM - tanMT[t]) > 0.005) {
         continue;
@@ -451,7 +454,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       float Im = std::abs((A - B * rM) * rM);
 
       if (Im <= m_config.impactMax) {
-        top_valid.push_back(top[t]);
+        top_valid.push_back(tops[t]);
         // inverse diameter is signed depending on if the curvature is
         // positive/negative in phi
         curvatures.push_back(B / std::sqrt(S2));
@@ -467,8 +470,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     seedFilterState.zOrigin = zM - rM * lb.cotTheta;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
-        spacePoints, spacePointsMutable, *bottom[b], middle, top_valid,
-        curvatures, impactParameters, seedFilterState, candidates_collector);
+        spacePoints, spacePointsMutable, bottom, middle, top_valid, curvatures,
+        impactParameters, seedFilterState, candidates_collector);
 
   }  // loop on bottoms
 }
@@ -476,11 +479,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const SeedFinderOptions &options, SpacePointMutableData &spacePointsMutable,
-    const tree_t &tree, output_container_t &out_cont,
+    const SeedFinderOptions &options,
+    const InternalSpacePointContainer &spacePoints,
+    SpacePointMutableData &spacePointsMutable, const tree_t &tree,
+    output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
-  const external_spacepoint_t &middle = *middle_p.second;
+  auto middle = spacePoints.at(middle_p.second);
 
   /*
    * Prepare four output vectors for seed candidates:
@@ -492,8 +497,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */
-  std::vector<const external_spacepoint_t *> bottom_lh_v, bottom_hl_v, top_lh_v,
-      top_hl_v;
+  std::vector<SpacePointIndex> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
 
   /*
    * Storage for seed candidates
@@ -571,14 +575,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(top_lh_r,
-                               [this, &options, &middle, &top_lh_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &top) {
-                                 if (validTuple(options, *top, middle, true)) {
-                                   top_lh_v.push_back(top);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        top_lh_r, [this, &options, middle, &top_lh_v, &spacePoints](
+                      const typename tree_t::coordinate_t &,
+                      const typename tree_t::value_t &top) {
+          if (validTuple(options, spacePoints.at(top), middle, true)) {
+            top_lh_v.push_back(top);
+          }
+        });
   }
 
   /*
@@ -586,14 +590,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(top_hl_r,
-                               [this, &options, &middle, &top_hl_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &top) {
-                                 if (validTuple(options, middle, *top, false)) {
-                                   top_hl_v.push_back(top);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        top_hl_r, [this, &options, middle, &top_hl_v, &spacePoints](
+                      const typename tree_t::coordinate_t &,
+                      const typename tree_t::value_t &top) {
+          if (validTuple(options, middle, spacePoints.at(top), false)) {
+            top_hl_v.push_back(top);
+          }
+        });
   }
 
   // apply cut on the number of top SP if seedConfirmation is true
@@ -629,10 +633,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if (!top_lh_v.empty() && search_bot_lh) {
     tree.rangeSearchMapDiscard(
-        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+        bottom_lh_r, [this, &options, middle, &bottom_lh_v, &spacePoints](
                          const typename tree_t::coordinate_t &,
                          const typename tree_t::value_t &bottom) {
-          if (validTuple(options, *bottom, middle, false)) {
+          if (validTuple(options, spacePoints.at(bottom), middle, false)) {
             bottom_lh_v.push_back(bottom);
           }
         });
@@ -643,10 +647,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if (!top_hl_v.empty() && search_bot_hl) {
     tree.rangeSearchMapDiscard(
-        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+        bottom_hl_r, [this, &options, middle, &bottom_hl_v, &spacePoints](
                          const typename tree_t::coordinate_t &,
                          const typename tree_t::value_t &bottom) {
-          if (validTuple(options, middle, *bottom, true)) {
+          if (validTuple(options, middle, spacePoints.at(bottom), true)) {
             bottom_hl_v.push_back(bottom);
           }
         });
@@ -656,30 +660,31 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(options, spacePointsMutable, middle, bottom_lh_v, top_lh_v,
-                     seedFilterState, candidates_collector);
+    filterCandidates(options, spacePoints, spacePointsMutable, middle,
+                     bottom_lh_v, top_lh_v, seedFilterState,
+                     candidates_collector);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(options, spacePointsMutable, middle, bottom_hl_v, top_hl_v,
-                     seedFilterState, candidates_collector);
+    filterCandidates(options, spacePoints, spacePointsMutable, middle,
+                     bottom_hl_v, top_hl_v, seedFilterState,
+                     candidates_collector);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    m_config.seedFilter->filterSeeds_1SpFixed(spacePointsMutable,
-                                              candidates_collector, out_cont);
+    m_config.seedFilter->template filterSeeds_1SpFixed<external_spacepoint_t>(
+        spacePoints, spacePointsMutable, candidates_collector, out_cont);
   }
 }
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
-    const std::vector<const external_spacepoint_t *> &spacePoints) const
-    -> tree_t {
+    const InternalSpacePointContainer &spacePoints) const -> tree_t {
   std::vector<typename tree_t::pair_t> points;
   points.reserve(spacePoints.size());
 
@@ -688,14 +693,14 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    * linearly pass to the k-d tree constructor. That constructor will take
    * care of sorting the pairs and splitting the space.
    */
-  for (const external_spacepoint_t *sp : spacePoints) {
+  for (auto sp : spacePoints) {
     typename tree_t::coordinate_t point;
 
-    point[DimPhi] = sp->phi();
-    point[DimR] = sp->radius();
-    point[DimZ] = sp->z();
+    point[DimPhi] = sp.phi();
+    point[DimR] = sp.radius();
+    point[DimZ] = sp.z();
 
-    points.emplace_back(point, sp);
+    points.emplace_back(point, sp.index());
   }
 
   ACTS_VERBOSE("Created k-d tree populated with " << points.size()
@@ -734,8 +739,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    */
   ACTS_VERBOSE("Running on " << spacePoints.size() << " input space points");
   Extent rRangeSPExtent;
-  std::vector<const external_spacepoint_t *> internal_sps;
-  internal_sps.reserve(spacePoints.size());
+
+  InternalSpacePointContainer internalSpacePoints;
+  internalSpacePoints.reserve(spacePoints.size());
 
   SpacePointMutableData spacePointsMutable;
   spacePointsMutable.resize(spacePoints.size());
@@ -743,7 +749,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
-    internal_sps.push_back(&p);
+    internalSpacePoints.addSpacePoint(SourceLink(p), p.x(), p.y(), p.z());
   }
   ACTS_VERBOSE(rRangeSPExtent);
 
@@ -758,13 +764,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * Construct the k-d tree from these points. Note that this not consume or
    * take ownership of the points.
    */
-  tree_t tree = createTree(internal_sps);
+  tree_t tree = createTree(internalSpacePoints);
   /*
    * Run the seeding algorithm by iterating over all the points in the tree
    * and seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
-    const external_spacepoint_t &middle = *middle_p.second;
+    auto middle = spacePoints.at(middle_p.second);
     auto rM = middle.radius();
 
     /*
@@ -791,7 +797,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       continue;
     }
 
-    processFromMiddleSP(options, spacePointsMutable, tree, out_cont, middle_p);
+    processFromMiddleSP(options, internalSpacePoints, spacePointsMutable, tree,
+                        out_cont, middle_p);
   }
 }
 

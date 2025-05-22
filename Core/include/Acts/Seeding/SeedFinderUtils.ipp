@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/InternalSpacePointContainer.hpp"
 namespace Acts {
-template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
-                                      const external_spacepoint_t& sp,
-                                      const external_spacepoint_t& spM,
+
+template <typename callable_t>
+inline LinCircle transformCoordinates(SpacePointMutableData& spacePointsMutable,
+                                      ConstInternalSpacePointProxy sp,
+                                      ConstInternalSpacePointProxy spM,
                                       bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
@@ -46,16 +48,16 @@ inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                     (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
                    iDeltaR2;
 
-  mutableData.setDeltaR(sp.index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+  spacePointsMutable.setDeltaR(sp.index(),
+                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
-template <typename external_spacepoint_t>
-inline void transformCoordinates(
-    Acts::SpacePointMutableData& mutableData,
-    const std::vector<const external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) {
+inline void transformCoordinates(const InternalSpacePointContainer& spacePoints,
+                                 SpacePointMutableData& spacePointsMutable,
+                                 const std::vector<SpacePointIndex>& vec,
+                                 ConstInternalSpacePointProxy spM, bool bottom,
+                                 std::vector<LinCircle>& linCircleVec) {
   const float xM = spM.x();
   const float yM = spM.y();
   const float zM = spM.z();
@@ -72,13 +74,13 @@ inline void transformCoordinates(
   int bottomFactor = bottom ? -1 : 1;
 
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
-    const external_spacepoint_t* sp = vec[idx];
+    ConstInternalSpacePointProxy sp = spacePoints.at(vec[idx]);
 
-    const float xSP = sp->x();
-    const float ySP = sp->y();
-    const float zSP = sp->z();
-    const float varianceRSP = sp->varianceR();
-    const float varianceZSP = sp->varianceZ();
+    const float xSP = sp.x();
+    const float ySP = sp.y();
+    const float zSP = sp.z();
+    const float varianceRSP = sp.varianceR();
+    const float varianceZSP = sp.varianceZ();
 
     const float deltaX = xSP - xM;
     const float deltaY = ySP - yM;
@@ -117,22 +119,23 @@ inline void transformCoordinates(
     linCircleVec[idx].V = V;
     linCircleVec[idx].x = xNewFrame;
     linCircleVec[idx].y = yNewFrame;
-    mutableData.setDeltaR(sp->index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+    spacePointsMutable.setDeltaR(sp.index(),
+                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
 }
 
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
+    const SeedFinderConfig<external_spacepoint_t>& m_config,
     ConstInternalSpacePointProxy sp, const double* spacepointPosition,
     double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  using namespace Acts::HashedStringLiteral;
-  const Acts::Vector3& topStripVector = sp.topStripVector();
-  const Acts::Vector3& bottomStripVector = sp.bottomStripVector();
-  const Acts::Vector3& stripCenterDistance = sp.stripCenterDistance();
+  using namespace HashedStringLiteral;
+  const Vector3& topStripVector = sp.topStripVector();
+  const Vector3& bottomStripVector = sp.bottomStripVector();
+  const Vector3& stripCenterDistance = sp.stripCenterDistance();
 
   const double xTopStripVector = topStripVector[0];
   const double yTopStripVector = topStripVector[1];
@@ -180,7 +183,7 @@ inline bool xyzCoordinateCheck(
   // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3& topStripCenterPosition = sp.topStripCenterPosition();
+  const Vector3& topStripCenterPosition = sp.topStripCenterPosition();
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
