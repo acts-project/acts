@@ -749,7 +749,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
-    internalSpacePoints.addSpacePoint(SourceLink(&p), p.x(), p.y(), p.z());
+    internalSpacePoints.addSpacePoint(SourceLink(&p), p.x(), p.y(), p.z(),
+                                      p.varianceR(), p.varianceZ());
   }
   ACTS_VERBOSE(rRangeSPExtent);
 
