@@ -43,6 +43,8 @@
 #include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
 #include <detray/io/frontend/payloads.hpp>
+#include <detray/plugins/svgtools/illustrator.hpp>
+#include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/consistency_checker.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -504,10 +506,16 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   vecmem::host_memory_resource mr;
 
   DetrayPayloadConverter::Config cfg;
-  auto logger = getDefaultLogger("Cnv", Logging::DEBUG);
+
+  tGeometry->apply([&cfg](const TrackingVolume& volume) {
+    if (volume.volumeName() == "Beampipe") {
+      cfg.beampipeVolume = &volume;
+    }
+  });
+
+  auto logger = getDefaultLogger("Cnv", Logging::VERBOSE);
   DetrayPayloadConverter converter(cfg, std::move(logger));
-  detray::io::detector_payload payload =
-      converter.convertTrackingGeometry(gctx, *tGeometry);
+  auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
   using detector_t =
       detray::detector<detray::default_metadata<detray::array<double>>>;
@@ -518,23 +526,12 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   detray::detector_builder<detector_t::metadata> detectorBuilder{};
   // (1) geometry
   detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder, names,
-                                                        payload);
+                                                        *payloads.detector);
 
-  // @TODO: Implement material!
+  detray::io::homogeneous_material_reader::from_payload<detector_t>(
+      detectorBuilder, names, *payloads.homogeneousMaterial);
 
 #if 0
-
-  // (2a) homogeneous material
-  if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
-    if (options.convertMaterial) {
-      detray::io::detector_homogeneous_material_payload materialSlabsPayload =
-          DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-              cCache, detector, logger());
-      detray::io::homogeneous_material_reader::from_payload<detector_t>(
-          detectorBuilder, names, std::move(materialSlabsPayload));
-    }
-  }
-
   // (2b) material grids
   if constexpr (detray::concepts::has_material_maps<detector_t>) {
     if (options.convertMaterial) {
@@ -569,6 +566,26 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
+
+  detray::svgtools::illustrator illustrator(detrayDetector, names);
+  illustrator.hide_eta_lines(true);
+  illustrator.show_info(true);
+
+  illustrator.draw_detector(actsvg::views::z_r{});
+  const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
+  actsvg::style::stroke stroke_black = actsvg::style::stroke();
+  auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
+                                        stroke_black, "z", "r");
+  detray::svgtools::write_svg("test_svgtools_detector_zr", {
+                                                               zr_axis,
+                                                               svg_zr,
+                                                           });
+
+  auto writer_cfg = detray::io::detector_writer_config{}
+                        .format(detray::io::format::json)
+                        .replace_files(true);
+
+  detray::io::write_detector(detrayDetector, names, writer_cfg);
 
   // // Check payload size
   // BOOST_CHECK_EQUAL(payload.volumes.size(), 1);
