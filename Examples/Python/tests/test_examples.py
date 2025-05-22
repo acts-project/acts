@@ -696,7 +696,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     odd_dir = getOpenDataDetectorDirectory()
     config = acts.MaterialMapJsonConverter.Config()
-    mdecorator = acts.JsonMaterialDecorator(
+    materialDecorator = acts.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
@@ -704,7 +704,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as detector:
+    with getOpenDataDetector(materialDecorator) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
@@ -741,7 +741,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -776,7 +776,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        materialDecorator=acts.IMaterialDecorator.fromFile(geo_map)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -815,7 +815,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
