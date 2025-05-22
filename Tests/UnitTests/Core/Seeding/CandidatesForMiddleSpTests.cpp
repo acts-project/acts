@@ -37,13 +37,14 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
 
 BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   InternalSpacePointContainer spacePoints;
+  spacePoints.makeSpacePoint(SourceLink(0));
 
   CandidatesForMiddleSp container;
   container.setMaxElements(std::numeric_limits<std::size_t>::max(),
                            std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 0);
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
-  for (int i(0); i < 20; ++i) {
+  for (std::size_t i = 0; i < 20; ++i) {
     container.push(0, 0, 0, 1, 2.1, false);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 20);
@@ -60,20 +61,20 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 
   // push low quality
-  for (int i(0); i < 2; ++i) {
+  for (std::size_t i = 0; i < 2; ++i) {
     container.push(0, 0, 0, i, 2.1, false);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 2);
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 
-  for (int i(0); i < 7; ++i) {
+  for (std::size_t i = 0; i < 7; ++i) {
     container.push(0, 0, 0, 2.01, 2.15, false);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 5);
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 
   // push high quality
-  for (int i(0); i < 5; ++i) {
+  for (std::size_t i = 0; i < 5; ++i) {
     container.push(0, 0, 0, 0.5f + i, 2.1, true);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 5);
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 
   // check elements are sorted
-  for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
+  for (std::size_t i = 0; i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight >= storagedValues[i + 1].weight);
   }
 
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
     return CandidatesForMiddleSp::ascendingByQuality(spacePoints, i1, i2);
   });
   // check values are sorted properly
-  for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
+  for (std::size_t i = 0; i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight <= storagedValues[i + 1].weight);
   }
 
@@ -104,14 +105,14 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
     return CandidatesForMiddleSp::descendingByQuality(spacePoints, i1, i2);
   });
   // check values are sorted properly
-  for (std::size_t i(0); i < storagedValues.size() - 1; ++i) {
+  for (std::size_t i = 0; i < storagedValues.size() - 1; ++i) {
     BOOST_CHECK(storagedValues[i].weight >= storagedValues[i + 1].weight);
   }
   // push again and check size
-  for (int i(0); i < 7; ++i) {
+  for (std::size_t i = 0; i < 7; ++i) {
     container.push(0, 0, 0, i, 2.15, false);
   }
-  for (int i(0); i < 7; ++i) {
+  for (std::size_t i = 0; i < 7; ++i) {
     container.push(0, 0, 0, i, 2.15, true);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 5);
