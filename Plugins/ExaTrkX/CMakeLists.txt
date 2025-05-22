@@ -1,7 +1,6 @@
 add_library(
     ActsPluginExaTrkX
     SHARED
-    src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
@@ -40,7 +39,10 @@ endif()
 if(ACTS_EXATRKX_ENABLE_TORCH)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE src/TorchEdgeClassifier.cpp src/TorchMetricLearning.cpp
+        PRIVATE
+            src/TorchEdgeClassifier.cpp
+            src/TorchMetricLearning.cpp
+            src/buildEdges.cpp
         #    src/TorchTruthGraphMetricsHook.cpp
         #src/TorchGraphStoreHook.cpp
     )
@@ -83,6 +85,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:-g
             --generate-line-info
+            --expt-relaxed-constexpr
             --extended-lambda>
     )
     target_compile_definitions(
