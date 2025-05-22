@@ -15,7 +15,6 @@
 namespace Acts {
 
 /// @brief A description of a triplet candidate.
-/// @tparam external_space_point_t  The external spacepoint type.
 struct TripletCandidate {
   /// @brief Default Constructor
   TripletCandidate() = default;
@@ -70,6 +69,7 @@ class CandidatesForMiddleSp {
   void clear();
 
   /// @brief A function for sorting the triplet candidates from higher to lower quality
+  /// @param spacePoints The input spacepoints from which to create seeds.
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
@@ -78,6 +78,7 @@ class CandidatesForMiddleSp {
       const TripletCandidate& i1, const TripletCandidate& i2);
 
   /// @brief A function for sorting the triplet candidates from lower to higher quality
+  /// @param spacePoints The input spacepoints from which to create seeds.
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
