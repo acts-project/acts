@@ -245,7 +245,7 @@ class InternalSpacePointContainer {
   IndexType addSpacePoint(SourceLink sourceLink, float x, float y, float z,
                           float phi, float radius, float varianceR,
                           float varianceZ) {
-    m_entries.emplace_back(m_sourceLinks.size(), static_cast<std::size_t>(1));
+    m_entries.emplace_back<std::size_t, std::size_t>(m_sourceLinks.size(), 1);
     m_xyz.push_back(x);
     m_xyz.push_back(y);
     m_xyz.push_back(z);

@@ -699,7 +699,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
     point[DimR] = sp.radius();
     point[DimZ] = sp.z();
 
-    points.emplace_back(point, static_cast<SpacePointIndex>(sp.index()));
+    points.emplace_back<typename tree_t::coordinate_t, SpacePointIndex>(
+        std::move(point), sp.index());
   }
 
   ACTS_VERBOSE("Created k-d tree populated with " << points.size()
