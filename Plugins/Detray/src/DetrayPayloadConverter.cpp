@@ -398,11 +398,9 @@ DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
   // material
 
   for (const auto& srfPayload : volPayload.surfaces) {
+    auto mat = Material::fromMassDensity(42, 42, 0.1, 0.1, 0.1);
     auto& slabPayload = payload.mat_slabs.emplace_back(
-        convertMaterialSlab(MaterialSlab::Vacuum(0.f)));
-    slabPayload.mat.params[0] = 42;
-    slabPayload.mat.params[1] = 42;
-    slabPayload.thickness = 5;
+        convertMaterialSlab(MaterialSlab(mat, 0.1)));
     slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
     slabPayload.surface.link = srfPayload.index_in_coll.value();
   }
