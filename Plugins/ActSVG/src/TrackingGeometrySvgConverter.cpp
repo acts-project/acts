@@ -222,6 +222,9 @@ struct Visitor : TrackingGeometryVisitor {
   }
 
   void visitPortal(const Portal& portal) override {
+    // Include portal surface itself
+    visitSurface(portal.surface());
+
     auto pIt = std::ranges::find_if(
         portals, [&](const auto& p) { return p.first == &portal; });
 
