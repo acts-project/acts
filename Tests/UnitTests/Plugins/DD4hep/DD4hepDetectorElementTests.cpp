@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TransformStore.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -87,6 +88,24 @@ const char* trapezoid_xml =
         </detector>
     </detectors>
 )"""";
+
+namespace Acts {
+// Mockup delegate
+struct DD4hepAlignmentStore {
+  explicit DD4hepAlignmentStore(Acts::TransformStoreGeometryId transformStore)
+      : m_transformStore(std::move(transformStore)) {}
+
+  Acts::TransformStoreGeometryId m_transformStore;
+  /// Return the contextual transform for a given surface (from detector
+  /// element)
+  /// @param detElem the dd4hep detector element
+  /// @return a Transform3 pointer if found, otherwise nullptr
+  const Acts::Transform3* call(const DD4hepDetectorElement& detElem) const {
+    // Mockup implementation
+    return m_transformStore.contextualTransform(detElem.surface());
+  }
+};
+}  // namespace Acts
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
