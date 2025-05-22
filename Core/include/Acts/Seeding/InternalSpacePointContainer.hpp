@@ -368,6 +368,11 @@ class InternalSpacePointContainer {
   struct Entry {
     std::size_t sourceLinkOffset{};
     std::size_t sourceLinkCount{};
+
+    Entry() = default;
+    Entry(std::size_t sourceLinkOffset_, std::size_t sourceLinkCount_)
+        : sourceLinkOffset(sourceLinkOffset_),
+          sourceLinkCount(sourceLinkCount_) {}
   };
 
   std::vector<Entry> m_entries;
