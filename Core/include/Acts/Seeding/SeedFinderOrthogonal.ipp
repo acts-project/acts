@@ -751,10 +751,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
     auto newSp = internalSpacePoints.makeSpacePoint(
         SourceLink(&p), p.x(), p.y(), p.z(), p.varianceR(), p.varianceZ());
-    newSp.topStripVector() = p.topStripVector();
-    newSp.topStripCenterPosition() = p.topStripCenterPosition();
-    newSp.bottomStripVector() = p.bottomStripVector();
-    newSp.stripCenterDistance() = p.stripCenterDistance();
+    if (p.hasDynamicVariables()) {
+      newSp.topStripVector() = p.topStripVector();
+      newSp.bottomStripVector() = p.bottomStripVector();
+      newSp.stripCenterDistance() = p.stripCenterDistance();
+      newSp.topStripCenterPosition() = p.topStripCenterPosition();
+    }
   }
   ACTS_VERBOSE(rRangeSPExtent);
 

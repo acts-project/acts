@@ -246,9 +246,9 @@ class InternalSpacePointContainer {
     m_sourceLinks.reserve(size);
 
     m_topStripVectors.reserve(size);
-    m_topStripCenterPositions.reserve(size);
     m_bottomStripVectors.reserve(size);
     m_stripCenterDistances.reserve(size);
+    m_topStripCenterPositions.reserve(size);
   }
   void clear() {
     m_entries.clear();
@@ -258,9 +258,9 @@ class InternalSpacePointContainer {
     m_sourceLinks.clear();
 
     m_topStripVectors.clear();
-    m_topStripCenterPositions.clear();
     m_bottomStripVectors.clear();
     m_stripCenterDistances.clear();
+    m_topStripCenterPositions.clear();
   }
 
   void setBeamPos(const Vector2 &beamPos) { m_beamPos = beamPos; }
@@ -295,9 +295,9 @@ class InternalSpacePointContainer {
     m_sourceLinks.emplace_back(std::move(sourceLink));
 
     m_topStripVectors.emplace_back(Vector3::Zero());
-    m_topStripCenterPositions.emplace_back(Vector3::Zero());
     m_bottomStripVectors.emplace_back(Vector3::Zero());
     m_stripCenterDistances.emplace_back(Vector3::Zero());
+    m_topStripCenterPositions.emplace_back(Vector3::Zero());
 
     return size() - 1;
   }
@@ -337,14 +337,14 @@ class InternalSpacePointContainer {
   float &varianceZ(IndexType index) { return m_varianceRZ[index * 2 + 1]; }
 
   Vector3 &topStripVector(IndexType index) { return m_topStripVectors[index]; }
-  Vector3 &topStripCenterPosition(IndexType index) {
-    return m_topStripCenterPositions[index];
-  }
   Vector3 &bottomStripVector(IndexType index) {
     return m_bottomStripVectors[index];
   }
   Vector3 &stripCenterDistance(IndexType index) {
     return m_stripCenterDistances[index];
+  }
+  Vector3 &topStripCenterPosition(IndexType index) {
+    return m_topStripCenterPositions[index];
   }
 
   const Vector2 &beamPos() const { return m_beamPos; }
@@ -374,14 +374,14 @@ class InternalSpacePointContainer {
   const Vector3 &topStripVector(IndexType index) const {
     return m_topStripVectors[index];
   }
-  const Vector3 &topStripCenterPosition(IndexType index) const {
-    return m_topStripCenterPositions[index];
-  }
   const Vector3 &bottomStripVector(IndexType index) const {
     return m_bottomStripVectors[index];
   }
   const Vector3 &stripCenterDistance(IndexType index) const {
     return m_stripCenterDistances[index];
+  }
+  const Vector3 &topStripCenterPosition(IndexType index) const {
+    return m_topStripCenterPositions[index];
   }
 
   template <bool read_only>
@@ -451,9 +451,9 @@ class InternalSpacePointContainer {
   std::vector<SourceLink> m_sourceLinks;
 
   std::vector<Vector3> m_topStripVectors;
-  std::vector<Vector3> m_topStripCenterPositions;
   std::vector<Vector3> m_bottomStripVectors;
   std::vector<Vector3> m_stripCenterDistances;
+  std::vector<Vector3> m_topStripCenterPositions;
 };
 
 }  // namespace Acts

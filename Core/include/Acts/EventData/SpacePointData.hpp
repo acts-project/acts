@@ -66,6 +66,7 @@ class SpacePointData {
 
   ///
   bool hasDynamicVariable() const;
+  bool hasDynamicVariables(const std::size_t idx) const;
 
   const Acts::Vector3& topStripVector(const std::size_t idx) const;
   const Acts::Vector3& bottomStripVector(const std::size_t idx) const;

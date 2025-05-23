@@ -54,10 +54,12 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       auto newSp = state.spacePoints.makeSpacePoint(
           SourceLink(sp), sp->x(), sp->y(), sp->z(), sp->phi(), sp->radius(),
           sp->varianceR(), sp->varianceZ());
-      newSp.topStripVector() = sp->topStripVector();
-      newSp.topStripCenterPosition() = sp->topStripCenterPosition();
-      newSp.bottomStripVector() = sp->bottomStripVector();
-      newSp.stripCenterDistance() = sp->stripCenterDistance();
+      if (sp->hasDynamicVariables()) {
+        newSp.topStripVector() = sp->topStripVector();
+        newSp.bottomStripVector() = sp->bottomStripVector();
+        newSp.stripCenterDistance() = sp->stripCenterDistance();
+        newSp.topStripCenterPosition() = sp->topStripCenterPosition();
+      }
     }
     std::size_t end = state.spacePoints.size();
     return {begin, end};
