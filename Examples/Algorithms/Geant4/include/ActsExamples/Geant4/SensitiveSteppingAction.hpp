@@ -44,18 +44,18 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   struct Config {
     std::shared_ptr<EventStore> eventStore;
 
-    /** @brief Record charged particles */
+    /// @brief Record charged particles
     bool charged = true;
-    /** @brief Record neutral particles */
+    /// @brief Record neutral particles
     bool neutral = false;
-    /** @brief Record the particles produced in the primary interactions */
+    /// @brief Record the particles produced in the primary interactions
     bool primary = true;
-    /** @brief Record secondary particles produced by the traversing
-     *         primary particles */
+    /// @brief Record secondary particles produced by the traversing
+    ///        primary particles
     bool secondary = true;
-    /** @brief Record every single step made by the particles. Otherwise,
-     *         steps in volumes where the G4VPhysicalVolume's name has the
-     *         SensitiveSurfaceMapper::mappingPrefix prepended */
+    /// @brief Record every single step made by the particles. Otherwise,
+    ///        steps in volumes where the G4VPhysicalVolume's name has the
+    ///        SensitiveSurfaceMapper::mappingPrefix prepended
     bool stepLogging = false;
   };
 
