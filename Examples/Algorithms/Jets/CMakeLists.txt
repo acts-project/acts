@@ -1,16 +1,16 @@
-add_library(ActsExamplesTrackJets SHARED src/TruthJetAlgorithm.cpp)
+add_library(ActsExamplesJets SHARED src/TruthJetAlgorithm.cpp)
 target_include_directories(
-    ActsExamplesTrackJets
+    ActsExamplesJets
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(
-    ActsExamplesTrackJets
+    ActsExamplesJets
     PUBLIC ActsCore ActsPluginFastJet ActsExamplesFramework
 )
 
-acts_compile_headers(ActsExamplesTrackJets GLOB "include/**/*.hpp")
+acts_compile_headers(ActsExamplesJets GLOB "include/**/*.hpp")
 
 install(
-    TARGETS ActsExamplesTrackJets
+    TARGETS ActsExamplesJets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

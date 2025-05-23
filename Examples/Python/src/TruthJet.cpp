@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/TrackJets/TruthJetAlgorithm.hpp"
+#include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 
 #include <cstddef>
 #include <memory>

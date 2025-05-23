@@ -259,7 +259,7 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_FASTJET)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackJets)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
     target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
