@@ -1,7 +1,7 @@
 # Geometry alignment and misalignment
 
 :::{note}
-This section does not describe the process of *aligning* the detector, by the use of a track based alignment algorithms. It only decribes how the contextual alignment is handled within the geometry description itself.
+This section does not describe the process of *aligning* the detector, by the use of a track based alignment algorithms. It only describes how the contextual alignment is handled within the geometry description itself.
 :::
 
 Real life experiments often suffer from imperfections that have to be taken into account in order to achieve highest quality track reconstruction output. One of those imperfections is the fact that the actual detector elements might not be at the exactt location as they are thought to be, often as a result of installation uncertainty or the movement of detector components in time, e.g. through thermal expansion and contraction effects. The actual positioning of the detection elements is thus contextual data, i.e. it depends on the current (sometimes time-dependent) context.
@@ -96,4 +96,4 @@ The unpacking of the {class}`Acts::GeometryContext` object is hereby happing in 
 
 ## Examples and showcases
 
-The unit test `ActsUnitTestAlignmentContext` located in `Tests/UnitTests/Core/Geometry/AlignmentContextTests.cpp` showcases and tests both implementation, the extension of a detector element with a dedicated context class as shown above, and the usage of the generic `AlignmentDelegate` mechanism. They can, in fact, exist side by side wihtout interference, as demonstrated.
+The unit test `ActsUnitTestAlignmentContext` located in `Tests/UnitTests/Core/Geometry/AlignmentContextTests.cpp` showcases and tests both implementation, the extension of a detector element with a dedicated context class as shown above, and the usage of the generic `AlignmentDelegate` mechanism. They can, in fact, exist side by side without interference, as demonstrated.

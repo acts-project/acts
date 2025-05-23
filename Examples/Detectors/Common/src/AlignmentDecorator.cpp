@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
+
 #include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Geometry/TransformStore.hpp"
 

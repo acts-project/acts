@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Geometry/TransformStore.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "Acts/Geometry/TransformStore.hpp"
 
 #include <array>
 #include <memory>
@@ -42,10 +42,10 @@ class AlignmentDecorator : public IContextDecorator {
   ///
   /// @param cfg Configuration struct
   /// @param logger The logging framework
-  explicit AlignmentDecorator(
-      const Config& cfg,
-      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "AlignmentDecorator", Acts::Logging::INFO));
+  explicit AlignmentDecorator(const Config& cfg,
+                              std::unique_ptr<const Acts::Logger> logger =
+                                  Acts::getDefaultLogger("AlignmentDecorator",
+                                                         Acts::Logging::INFO));
 
   /// Virtual destructor
   ~AlignmentDecorator() override = default;
