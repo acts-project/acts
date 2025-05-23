@@ -211,11 +211,9 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of identifiers of the hits for this cell
-  std::unordered_set<identifier_t> hitIds(std::size_t xBin,
+  std::span<const identifier_t,std::dynamic_extent> hitIds(std::size_t xBin,
                                           std::size_t yBin) const {
-    const auto hits_span = m_houghHist.atLocalBins({xBin, yBin}).getHits();
-
-    return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
+    return m_houghHist.atLocalBins({xBin, yBin}).getHits();
   }
   /// @brief access the (weighted) number of hits in one cell of the histogram from bin's coordinates
   /// @param xBin: bin index in the first coordinate

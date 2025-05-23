@@ -162,7 +162,9 @@ Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
     if (passThreshold(plane, xy[0], xy[1])) {
       // write out a maximum
       Maximum max;
-      max.hitIdentifiers = plane.hitIds(xy[0], xy[1]);
+      auto hitIds = plane.hitIds(xy[0], xy[1]); 
+      max.hitIdentifiers.insert(std::make_move_iterator(hitIds.begin()),
+                                    std::make_move_iterator(hitIds.end()));
       maxima.push_back(max);
     }
   }
@@ -325,9 +327,10 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     // loop over cells in the island and get the weighted mean position.
     // Also collect all hit identifiers in the island and the maximum
     // extent (within the count threshold!) of the island
+    std::vector<identifier_t> allHits; 
     for (auto& [xBin, yBin] : solution) {
       auto hidIds = plane.hitIds(xBin, yBin);
-      maximum.hitIdentifiers.insert(std::make_move_iterator(hidIds.begin()),
+      allHits.insert(allHits.end(),std::make_move_iterator(hidIds.begin()),
                                     std::make_move_iterator(hidIds.end()));
       CoordType xHit =
           binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xBin);
@@ -350,6 +353,8 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
         ymin = yHit;
       }
     }
+    maximum.hitIdentifiers.insert(std::make_move_iterator(allHits.begin()),
+                                    std::make_move_iterator(allHits.end())); 
     // calculate mean position
     maximum.x = max_x / pos_den;
     maximum.y = max_y / pos_den;
