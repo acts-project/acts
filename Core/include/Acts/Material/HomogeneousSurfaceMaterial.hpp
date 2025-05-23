@@ -95,6 +95,9 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @return Reference to the output stream for chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
+      const detray::io::volume_payload& volume) const override;
+
  private:
   /// The five different MaterialSlab
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();

@@ -162,10 +162,18 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
+namespace detail {
+// This exists so I can push the definition into a cpp file
+class IGridSurfaceMaterialBase : public ISurfaceMaterial {
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
+      const detray::io::volume_payload& volume) const override;
+};
+}  // namespace detail
+
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public ISurfaceMaterial {
+class IGridSurfaceMaterial : public detail::IGridSurfaceMaterialBase {
  public:
   /// @brief Accessor to the grid interface
   /// @return Reference to the grid interface

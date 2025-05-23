@@ -102,6 +102,9 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
+      const detray::io::volume_payload& volume) const override;
+
  private:
   /// A binning description
   BinningType m_binning;

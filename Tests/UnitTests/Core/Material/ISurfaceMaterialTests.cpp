@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Geometry/DetrayNotAvailableException.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
@@ -39,6 +40,10 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   };
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
+
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override {
+    throw DetrayNotAvailableException();
+  }
 };
 
 BOOST_AUTO_TEST_SUITE(MaterialSuite)
