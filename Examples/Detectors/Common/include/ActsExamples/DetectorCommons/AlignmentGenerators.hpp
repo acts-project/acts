@@ -59,10 +59,10 @@ struct PerpendicularScale {
   /// @param trackingGeometry The tracking geometry
   /// @param selection The selection of elements to be shifted via GeometryIdentifier
   /// @param iexpansion The radial expansion factor
-  PerpendicularScale(
-      const Acts::GeometryContext& gctx,
-      const Acts::TrackingGeometry& trackingGeometry,
-      const std::vector<Acts::GeometryIdentifier>& selection, double iexpansion);
+  PerpendicularScale(const Acts::GeometryContext& gctx,
+                     const Acts::TrackingGeometry& trackingGeometry,
+                     const std::vector<Acts::GeometryIdentifier>& selection,
+                     double iexpansion);
 
   // The expansion to be applied
   double expansion = 1.0;

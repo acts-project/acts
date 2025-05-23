@@ -84,15 +84,16 @@ ActsExamples::PerpendicularScale::PerpendicularScale(
   // Loop over the selected elements and store the nominal transforms
 }
 
-std::shared_ptr<Acts::ITransformStore> ActsExamples::PerpendicularScale::
-    operator()() {
+std::shared_ptr<Acts::ITransformStore>
+ActsExamples::PerpendicularScale::operator()() {
   // Create the transform store
   auto contextualTransforms = nominalTransforms;
   std::for_each(contextualTransforms.begin(), contextualTransforms.end(),
                 [this](auto& itrf) {
                   // Apply the radial expansion to the transform
                   itrf.second.translation()[0] *= expansion;
-                  itrf.second.translation()[1] *= expansion;});
+                  itrf.second.translation()[1] *= expansion;
+                });
 
   return std::make_shared<Acts::TransformStoreGeometryId>(contextualTransforms);
 }

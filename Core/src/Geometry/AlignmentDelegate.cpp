@@ -22,13 +22,11 @@ const Acts::Transform3* Acts::contextualTransform(
       if (!alignment->connected()) {
         return nullptr;  // No alignment available
       }
+      // Check if a contextual transform is available for this detector element
+      return (alignment->connected()) ? (*alignment)(detElement.surface())
+                                      : nullptr;
     }
-    // Check if a contextual transform is available for this detector element
-    auto aTransform = (alignment != nullptr && alignment->connected())
-                          ? (*alignment)(detElement.surface())
-                          : nullptr;
-    return aTransform;  // If nullptr - caller needs to handle this
   }
-  // Empty context, return nullptr - caller needs to handle this
+  // Return nullptr - caller needs to handle this
   return nullptr;
 }
