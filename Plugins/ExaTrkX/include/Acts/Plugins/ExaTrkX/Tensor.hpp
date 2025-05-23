@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Concepts.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -61,9 +63,10 @@ namespace detail {
 using TensorDeleter = std::function<void(void *)>;
 using TensorPtr = std::unique_ptr<void, TensorDeleter>;
 
-TensorPtr createTensor(std::size_t nbytes, const ExecutionContext &ctx);
-TensorPtr cloneTensor(const TensorPtr &ptrFrom, std::size_t nbytes,
-                      Acts::Device devFrom, const ExecutionContext &ctxTo);
+TensorPtr createTensorMemory(std::size_t nbytes, const ExecutionContext &ctx);
+TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
+                            Acts::Device devFrom,
+                            const ExecutionContext &ctxTo);
 
 }  // namespace detail
 
@@ -71,14 +74,14 @@ TensorPtr cloneTensor(const TensorPtr &ptrFrom, std::size_t nbytes,
 /// type. It is move-only, and only possible to create via static factory
 /// functions to ensure lifetime management.
 /// This on purpose does not implement operations such as clone/to-host/to-cuda
-template <typename T>
+template <Acts::Concepts::arithmetic T>
 class Tensor {
  public:
   using Shape = std::array<std::size_t, 2>;
 
   static Tensor Create(Shape shape, const ExecutionContext &execContext) {
-    auto ptr =
-        detail::createTensor(shape[0] * shape[1] * sizeof(T), execContext);
+    auto ptr = detail::createTensorMemory(shape[0] * shape[1] * sizeof(T),
+                                          execContext);
     return Tensor(shape, std::move(ptr), execContext);
   }
 
@@ -87,7 +90,7 @@ class Tensor {
   /// @note This is a always a deep copy, even if the source and destination are the
   /// same device
   Tensor clone(const ExecutionContext &to) const {
-    auto clonedPtr = detail::cloneTensor(m_ptr, nbytes(), m_device, to);
+    auto clonedPtr = detail::cloneTensorMemory(m_ptr, nbytes(), m_device, to);
     return Tensor(std::move(clonedPtr), m_shape, to);
   }
 
