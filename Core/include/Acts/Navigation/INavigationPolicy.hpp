@@ -65,6 +65,8 @@ class INavigationPolicy {
     visitor(*this);
   }
 
+  // virtual void toDetrayPayload();
+
  protected:
   /// Internal helper function for derived classes that conform to the concept
   /// and have a conventional `updateState` method. Mainly used to save some
