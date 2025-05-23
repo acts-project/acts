@@ -51,9 +51,13 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       [&](std::size_t gridIndex) -> std::pair<std::size_t, std::size_t> {
     std::size_t begin = state.spacePoints.size();
     for (const external_spacepoint_t* sp : grid.at(gridIndex)) {
-      state.spacePoints.addSpacePoint(SourceLink(sp), sp->x(), sp->y(), sp->z(),
-                                      sp->phi(), sp->radius(), sp->varianceR(),
-                                      sp->varianceZ());
+      auto newSp = state.spacePoints.makeSpacePoint(
+          SourceLink(sp), sp->x(), sp->y(), sp->z(), sp->phi(), sp->radius(),
+          sp->varianceR(), sp->varianceZ());
+      newSp.topStripVector() = sp->topStripVector();
+      newSp.topStripCenterPosition() = sp->topStripCenterPosition();
+      newSp.bottomStripVector() = sp->bottomStripVector();
+      newSp.stripCenterDistance() = sp->stripCenterDistance();
     }
     std::size_t end = state.spacePoints.size();
     return {begin, end};

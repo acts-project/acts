@@ -88,6 +88,8 @@ class SeedFinder {
         topNeighbours{};
   };
 
+  SeedFinder() = default;
+
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
   /// @param logger the ACTS logger
@@ -95,19 +97,6 @@ class SeedFinder {
       const Acts::SeedFinderConfig<external_spacepoint_t>& config,
       std::unique_ptr<const Acts::Logger> logger =
           getDefaultLogger("Finder", Logging::Level::INFO));
-  SeedFinder(SeedFinder<external_spacepoint_t, grid_t, platform_t>&&) noexcept =
-      default;
-  SeedFinder& operator=(SeedFinder<external_spacepoint_t, grid_t,
-                                   platform_t>&&) noexcept = default;
-  ~SeedFinder() = default;
-  /**    @name Disallow default instantiation, copy, assignment */
-  //@{
-  SeedFinder() = default;
-  SeedFinder(const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) =
-      delete;
-  SeedFinder<external_spacepoint_t, grid_t, platform_t>& operator=(
-      const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) = delete;
-  //@}
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
