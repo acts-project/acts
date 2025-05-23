@@ -72,6 +72,12 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
 }
 
 template <typename container_t, template <typename> class holder_t>
+bool SpacePointContainer<container_t, holder_t>::hasDynamicVariables(
+    const std::size_t n) const {
+  return m_data.hasDynamicVariables(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
 const Acts::Vector3& SpacePointContainer<container_t, holder_t>::topStripVector(
     const std::size_t n) const {
   return m_data.topStripVector(n);

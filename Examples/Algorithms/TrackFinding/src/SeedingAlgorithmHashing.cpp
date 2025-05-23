@@ -10,43 +10,59 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <cmath>
 #include <csignal>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
-    ActsExamples::SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SeedingAlgorithmHashing", lvl),
-      m_cfg(std::move(cfg)) {
+namespace {
+
+// Custom seed comparison function
+template <typename external_spacepoint_t>
+struct SeedComparison {
+  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
+                  const Acts::Seed<external_spacepoint_t>& seed2) const {
+    const auto& sp1 = seed1.sp();
+    const auto& sp2 = seed2.sp();
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->z() != sp2[i]->z()) {
+        return sp1[i]->z() < sp2[i]->z();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->x() != sp2[i]->x()) {
+        return sp1[i]->x() < sp2[i]->x();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->y() != sp2[i]->y()) {
+        return sp1[i]->y() < sp2[i]->y();
+      }
+    }
+
+    return false;
+  }
+};
+
+}  // namespace
+
+SeedingAlgorithmHashing::SeedingAlgorithmHashing(
+    SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("SeedingAlgorithmHashing", lvl), m_cfg(std::move(cfg)) {
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -180,8 +196,7 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter>(m_cfg.seedFilterConfig);
   m_seedFinder =
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
@@ -194,7 +209,7 @@ ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
           m_cfg.hashingTrainingConfig);
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
+ProcessCode SeedingAlgorithmHashing::execute(
     const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Start of SeedingAlgorithmHashing execute");
   using SpacePointPtrVector = std::vector<const SimSpacePoint*>;
@@ -245,25 +260,21 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   }
 
   using value_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
   // Create the set with custom comparison function
-  static thread_local std::set<ActsExamples::SimSeed,
-                               SeedComparison<SimSpacePoint>>
-      seedsSet;
+  static thread_local std::set<SimSeed, SeedComparison<SimSpacePoint>> seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
   state.spacePointMutableData.resize(maxNSpacePoints);
 
   for (SpacePointPtrVector& bucket : bucketsPtrs) {
     std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;
-    state.spacePointMutableData.clear();
-    state.spacePointMutableData.resize(maxNSpacePoints);
 
     // Prepare interface SpacePoint backend-ACTS
-    ActsExamples::SpacePointContainer<SpacePointPtrVector> container(bucket);
+    SpacePointContainer<SpacePointPtrVector> container(bucket);
     // Prepare Acts API
     Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
         spContainer(spConfig, spOptions, container);
@@ -320,7 +331,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
       const SimSpacePoint* middle = sps[1]->externalSpacePoint();
       const SimSpacePoint* top = sps[2]->externalSpacePoint();
 
-      ActsExamples::SimSeed toAdd(*bottom, *middle, *top);
+      SimSeed toAdd(*bottom, *middle, *top);
       toAdd.setVertexZ(seed.z());
       toAdd.setQuality(seed.seedQuality());
 
@@ -329,9 +340,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   }
 
   // convert the set to a simseed collection
-  ActsExamples::SimSeedContainer seeds;
+  SimSeedContainer seeds;
   seeds.reserve(seedsSet.size());
-  for (const ActsExamples::SimSeed& seed : seedsSet) {
+  for (const SimSeed& seed : seedsSet) {
     seeds.push_back(seed);
   }
 
@@ -350,5 +361,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmHashing::execute(
   m_outputBuckets(ctx, std::vector<SimSpacePointContainer>{buckets});
 
   ACTS_DEBUG("End of SeedingAlgorithmHashing execute");
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

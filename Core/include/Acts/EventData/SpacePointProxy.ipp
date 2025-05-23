@@ -61,6 +61,11 @@ float SpacePointProxy<container_t>::varianceZ() const {
 }
 
 template <typename container_t>
+bool SpacePointProxy<container_t>::hasDynamicVariables() const {
+  return container().hasDynamicVariables(m_index);
+}
+
+template <typename container_t>
 const Acts::Vector3& SpacePointProxy<container_t>::topStripVector() const {
   return container().topStripVector(m_index);
 }

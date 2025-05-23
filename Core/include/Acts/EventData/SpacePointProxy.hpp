@@ -41,6 +41,8 @@ class SpacePointProxy {
   float varianceR() const;
   float varianceZ() const;
 
+  bool hasDynamicVariables() const;
+
   const Acts::Vector3& topStripVector() const;
   const Acts::Vector3& bottomStripVector() const;
   const Acts::Vector3& stripCenterDistance() const;

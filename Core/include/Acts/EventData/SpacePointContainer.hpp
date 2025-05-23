@@ -146,6 +146,8 @@ class SpacePointContainer {
   float varianceR(const std::size_t n) const;
   float varianceZ(const std::size_t n) const;
 
+  bool hasDynamicVariables(const std::size_t n) const;
+
   const Acts::Vector3& topStripVector(const std::size_t n) const;
   const Acts::Vector3& bottomStripVector(const std::size_t n) const;
   const Acts::Vector3& stripCenterDistance(const std::size_t n) const;
