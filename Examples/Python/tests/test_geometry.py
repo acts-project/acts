@@ -1,7 +1,7 @@
 import pytest
 import acts
 import functools
-from acts.examples import GenericDetector, AlignedDetector
+from acts.examples import GenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
 
@@ -9,7 +9,7 @@ from helpers import dd4hepEnabled
 
 
 @pytest.mark.parametrize(
-    "detectorFactory,aligned,nobj",
+    "detectorFactory,nobj",
     [
         (GenericDetector, True, 450),
         pytest.param(
@@ -22,26 +22,10 @@ from helpers import dd4hepEnabled
                 pytest.mark.odd,
             ],
         ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.Internal
-            ),
-            False,
-            450,
-        ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.External
-            ),
-            False,
-            450,
-        ),
     ],
     ids=[
         "generic",
         "odd",
-        "aligned-internal",
-        "aligned-external",
     ],
 )
 @pytest.mark.slow
