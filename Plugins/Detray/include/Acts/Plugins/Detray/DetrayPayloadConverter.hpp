@@ -9,20 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-
-namespace detray::io {
-struct detector_payload;
-struct transform_payload;
-struct mask_payload;
-struct surface_payload;
-struct volume_payload;
-struct material_slab_payload;
-struct material_volume_payload;
-struct detector_homogeneous_material_payload;
-}  // namespace detray::io
 
 namespace Acts {
 
@@ -34,6 +24,7 @@ class Portal;
 class TrackingVolume;
 class PortalLinkBase;
 class MaterialSlab;
+class ISurfaceMaterial;
 
 class DetrayPayloadConverter {
  public:
@@ -65,13 +56,6 @@ class DetrayPayloadConverter {
 
   detray::io::volume_payload convertVolume(const TrackingVolume& volume) const;
 
-  detray::io::material_slab_payload convertMaterialSlab(
-      const MaterialSlab& slab) const;
-
-  detray::io::material_volume_payload convertHomogeneousSurfaceMaterial(
-      const TrackingVolume& volume,
-      const detray::io::volume_payload& volPayload) const;
-
   struct Payloads {
     // Unique pointers used to be able to forward declare the type
     std::unique_ptr<detray::io::detector_payload> detector;
@@ -86,6 +70,12 @@ class DetrayPayloadConverter {
                                   std::unique_ptr<const Logger> logger =
                                       getDefaultLogger("DetrayPayloadConverter",
                                                        Logging::INFO));
+
+  std::pair<std::vector<detray::io::grid_payload<
+                detray::io::material_slab_payload, detray::io::material_id>>,
+            detray::io::material_volume_payload>
+  convertMaterial(const TrackingVolume& volume,
+                  detray::io::volume_payload& volPayload) const;
 
  private:
   void handlePortalLink(
