@@ -65,11 +65,18 @@ ActsExamples::GlobalShift::GlobalShift(
 
 std::shared_ptr<Acts::ITransformStore> ActsExamples::GlobalShift::operator()(
     std::function<double()>& rng) {
+  return operator()(rng, nominalTransforms);
+}
+
+std::shared_ptr<Acts::ITransformStore> ActsExamples::GlobalShift::operator()(
+    std::function<double()>& rng,
+    const std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>&
+        inputTransforms) {
   // Randomize it if necessary
   double scale = rng();
   Acts::Translation3 translation = Acts::Translation3(shift * scale);
   // Apply the scale to the shift
-  auto contextualTransforms = nominalTransforms;
+  auto contextualTransforms = inputTransforms;
   std::ranges::for_each(contextualTransforms, [&translation](auto& itrf) {
     itrf.second = itrf.second * translation;
   });
@@ -85,10 +92,18 @@ ActsExamples::PerpendicularScale::PerpendicularScale(
 
 std::shared_ptr<Acts::ITransformStore>
 ActsExamples::PerpendicularScale::operator()(std::function<double()>& rng) {
+  return operator()(rng, nominalTransforms);
+}
+
+std::shared_ptr<Acts::ITransformStore>
+ActsExamples::PerpendicularScale::operator()(
+    std::function<double()>& rng,
+    const std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>&
+        inputTransforms) {
   // Randomize it if necessary
   double scale = rng();
   // Create the transform store
-  auto contextualTransforms = nominalTransforms;
+  auto contextualTransforms = inputTransforms;
   std::ranges::for_each(contextualTransforms, [this, &scale](auto& itrf) {
     // Apply the radial expansion to the transform
     itrf.second.translation()[0] *= (scale * expansion);

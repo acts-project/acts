@@ -55,6 +55,14 @@ struct GlobalShift {
   /// @param rng The random number generator
   std::shared_ptr<Acts::ITransformStore> operator()(
       std::function<double()>& rng);
+
+  /// The call operator to generate the transform store, working in chain mode
+  /// @param rng The random number generator
+  /// @param inputTransforms The input transforms to be modified
+  std::shared_ptr<Acts::ITransformStore> operator()(
+      std::function<double()>& rng,
+      const std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>&
+          inputTransforms);
 };
 
 /// @brief A simple alignment generator for the geometry to apply a radial expansion
@@ -82,6 +90,14 @@ struct PerpendicularScale {
   /// The call operator to generate the transform store
   std::shared_ptr<Acts::ITransformStore> operator()(
       std::function<double()>& rng);
+
+  /// The call operator to generate the transform store, working in chain mode
+  /// @param rng The random number generator
+  /// @param inputTransforms The input transforms to be modified
+  std::shared_ptr<Acts::ITransformStore> operator()(
+      std::function<double()>& rng,
+      const std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>&
+          inputTransforms);
 };
 
 }  // namespace ActsExamples
