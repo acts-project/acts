@@ -1,0 +1,78 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+class ITransformStore;
+}  // namespace Acts
+
+namespace ActsExamples {
+
+/// @brief A simple alignment generator for the geometry to apply a global shift
+struct GlobalShift {
+  /// @brief The configuration struct
+  GlobalShift() = default;
+
+  // Constructor with arguments
+  /// @param gctx The geometry context - for the nominal transforms
+  /// @param trackingGeometry The tracking geometry
+  /// @param selection The selection of elements to be shifted via GeometryIdentifier
+  /// @param shift The shift vector
+  GlobalShift(const Acts::GeometryContext& gctx,
+              const Acts::TrackingGeometry& trackingGeometry,
+              const std::vector<Acts::GeometryIdentifier>& selection,
+              const Acts::Vector3& shift);
+
+  // The shift to be applied
+  Acts::Translation3 shift = Acts::Translation3(Acts::Vector3::Zero());
+
+  /// Internal storage - the nominal transforms of the selected elements
+  std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
+      nominalTransforms;
+
+  /// The call operator to generate the transform store
+  std::shared_ptr<Acts::ITransformStore> operator()();
+};
+
+/// @brief A simple alignment generator for the geometry to apply a radial expansion
+struct PerpendicularScale {
+  /// @brief The configuration struct
+  PerpendicularScale() = default;
+
+  // Constructor with arguments
+  /// @param gctx The geometry context - for the nominal transforms
+  /// @param trackingGeometry The tracking geometry
+  /// @param selection The selection of elements to be shifted via GeometryIdentifier
+  /// @param expansion The radial expansion factor
+  PerpendicularScale(
+      const Acts::GeometryContext& gctx,
+      const Acts::TrackingGeometry& trackingGeometry,
+      const std::vector<Acts::GeometryIdentifier>& selection, double expansion);
+
+  // The expansion to be applied
+  double expansion = 1.0;
+
+  /// Internal storage - the nominal transforms of the selected elements
+  std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
+      nominalTransforms;
+
+  /// The call operator to generate the transform store
+  std::shared_ptr<Acts::ITransformStore> operator()();
+};
+
+}  // namespace ActsExamples

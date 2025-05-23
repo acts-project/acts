@@ -34,7 +34,7 @@ class MyDetectorElement : public Acts::DetectorElementBase {
         };
 
         /// Override: unpack the alignment context
-        /// @param gctx the geometry context, will be unpacked if possbile
+        /// @param gctx the geometry context, will be unpacked if possible
         const Acts::Transform3D& transform(const Acts::GeometryContext& gctx) const override;
 
     private:
@@ -91,7 +91,7 @@ const Transform3& Geant4DetectorElement::transform(
 }
 ```
 
-The unpacking of the {class}`Acts::GeometryContext` object is hereby happing in the `contextualTransform` helper function.
+The unpacking of the {class}`Acts::GeometryContext` object is hereby happening in the `contextualTransform` helper function.
 
 ```mermaid
 sequenceDiagram

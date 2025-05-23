@@ -2,6 +2,7 @@ add_library(
     ActsExamplesDetectorsCommon
     SHARED
     src/AlignmentDecorator.cpp
+    src/AlignmentGenerators.cpp
     src/Detector.cpp
 )
 target_include_directories(
