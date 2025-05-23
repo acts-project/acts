@@ -73,7 +73,7 @@ class SeedFinder {
     std::vector<float> impactParameters{};
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp candidates_collector{};
+    CandidatesForMiddleSp candidatesCollector{};
 
     // managing doublet candidates
     boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>

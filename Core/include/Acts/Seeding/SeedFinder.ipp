@@ -47,8 +47,14 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   state.spacePoints.clear();
   state.spacePointsMutable.clear();
 
+  std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
+      gridMapping;
   auto copyFromGrid =
       [&](std::size_t gridIndex) -> std::pair<std::size_t, std::size_t> {
+    if (auto it = gridMapping.find(gridIndex); it != gridMapping.end()) {
+      return it->second;
+    }
+
     std::size_t begin = state.spacePoints.size();
     for (const external_spacepoint_t* sp : grid.at(gridIndex)) {
       auto newSp = state.spacePoints.makeSpacePoint(
@@ -62,7 +68,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       }
     }
     std::size_t end = state.spacePoints.size();
-    return {begin, end};
+    return gridMapping[gridIndex] = {begin, end};
   };
 
   // This is used for seed filtering later
@@ -71,8 +77,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   const std::size_t max_num_quality_seeds_per_spm =
       m_config.seedFilter->getConfig().maxQualitySeedsPerSpMConf;
 
-  state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
-                                            max_num_quality_seeds_per_spm);
+  state.candidatesCollector.setMaxElements(max_num_seeds_per_spm,
+                                           max_num_quality_seeds_per_spm);
 
   // If there are no bottom or top bins, just return and waste no time
   if (bottomSPsIdx.size() == 0 || topSPsIdx.size() == 0) {
@@ -86,7 +92,6 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   if (middleSPs.empty()) {
     return;
   }
-  auto middleSpRange = copyFromGrid(middleSPsIdx);
 
   // neighbours
   // clear previous results
@@ -109,6 +114,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   if (state.bottomNeighbours.size() == 0) {
     return;
   }
+
+  auto middleSpRange = copyFromGrid(middleSPsIdx);
 
   // tops
   for (const std::size_t idx : topSPsIdx) {
@@ -222,6 +229,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
                                 << " bottoms and " << state.compatTopSP.size()
                                 << " tops for middle candidate indexed "
                                 << middleSpIndex);
+
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
       filterCandidates<DetectorMeasurementInfo::eDetailed>(
@@ -232,7 +240,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
 
     m_config.seedFilter->template filterSeeds_1SpFixed<external_spacepoint_t>(
-        state.spacePoints, state.spacePointsMutable, state.candidates_collector,
+        state.spacePoints, state.spacePointsMutable, state.candidatesCollector,
         outputCollection);
 
   }  // loop on mediums
@@ -531,14 +539,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   std::size_t numTopSP = state.compatTopSP.size();
 
   // sort: make index vector
-  std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
-  for (std::size_t i = 0; i < sorted_bottoms.size(); ++i) {
-    sorted_bottoms[i] = i;
+  std::vector<std::size_t> sortedBottoms(state.linCircleBottom.size());
+  for (std::size_t i = 0; i < sortedBottoms.size(); ++i) {
+    sortedBottoms[i] = i;
   }
 
-  std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
-  for (std::size_t i = 0; i < sorted_tops.size(); ++i) {
-    sorted_tops[i] = i;
+  std::vector<std::size_t> sortedTops(state.linCircleTop.size());
+  for (std::size_t i = 0; i < sortedTops.size(); ++i) {
+    sortedTops[i] = i;
   }
 
   if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
@@ -547,14 +555,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       cotThetaBottom[i] = state.linCircleBottom[i].cotTheta;
     }
     std::ranges::sort(
-        sorted_bottoms, {},
+        sortedBottoms, {},
         [&cotThetaBottom](const std::size_t s) { return cotThetaBottom[s]; });
 
     std::vector<float> cotThetaTop(state.linCircleTop.size());
     for (std::size_t i = 0; i < state.linCircleTop.size(); ++i) {
       cotThetaTop[i] = state.linCircleTop[i].cotTheta;
     }
-    std::ranges::sort(sorted_tops, {}, [&cotThetaTop](const std::size_t s) {
+    std::ranges::sort(sortedTops, {}, [&cotThetaTop](const std::size_t s) {
       return cotThetaTop[s];
     });
   }
@@ -567,9 +575,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   std::size_t t0 = 0;
 
   // clear previous results and then loop on bottoms and tops
-  state.candidates_collector.clear();
+  state.candidatesCollector.clear();
 
-  for (const std::size_t b : sorted_bottoms) {
+  for (const std::size_t b : sortedBottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -622,12 +630,12 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       minCompatibleTopSPs = 1;
     }
     if (m_config.seedConfirmation &&
-        state.candidates_collector.nHighQualityCandidates()) {
+        state.candidatesCollector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
     for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
-      const std::size_t t = sorted_tops[index_t];
+      const std::size_t t = sortedTops[index_t];
 
       auto lt = state.linCircleTop[t];
 
@@ -869,7 +877,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.spacePoints, state.spacePointsMutable,
         spacePoints.at(state.compatBottomSP[b]), spM, state.topSpVec,
         state.curvatures, state.impactParameters, seedFilterState,
-        state.candidates_collector);
+        state.candidatesCollector);
   }  // loop on bottoms
 }
 
