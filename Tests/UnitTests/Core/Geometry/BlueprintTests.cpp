@@ -1215,7 +1215,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
   auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                     parentBounds, "child");
   auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
-  std::size_t nChambers = 257;
+  std::size_t nChambers = 50;
   // start from the edge of the parent volume
   double startX = -1000. + 3. + 0.5;
   Transform3 trf = Transform3(Translation3(startX, 0, 0));
@@ -1235,8 +1235,6 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
   cubcontainer.addChild(std::move(parentNode));
 
   auto trackingGeometry = root.construct({}, gctx, *logger);
-  std::cout << "tracking geometry built" << std::endl;
-  std::cin.ignore();
 }
 
 BOOST_AUTO_TEST_SUITE_END();

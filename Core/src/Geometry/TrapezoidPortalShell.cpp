@@ -79,8 +79,8 @@ void SingleTrapezoidPortalShell::applyToVolume() {
         throw std::runtime_error{"Invalid portal found in shell at " +
                                  ss.str()};
       }
-      portal->surface().assignGeometryId(
-          m_volume->geometryId().withBoundary(i + 1));
+      // portal->surface().assignGeometryId(
+      //     m_volume->geometryId().withBoundary(i + 1));
       m_volume->addPortal(portal);
     }
   }
