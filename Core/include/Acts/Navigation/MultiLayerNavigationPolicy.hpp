@@ -84,9 +84,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     ACTS_VERBOSE(
         "MultiLayerNavigationPolicy Candidates initialization for volume"
         << m_volume.volumeName());
-    const Transform3& transform = m_volume.transform();
-    const Acts::Vector3 locPosition = transform.inverse() * args.position;
-    const Acts::Vector3 locDirection = transform.linear() * args.direction;
+    const Transform3& itransform = m_volume.transform().inverse();
+    const Acts::Vector3 locPosition = itransform * args.position;
+    const Acts::Vector3 locDirection = itransform * args.direction;
 
     std::vector<Vector2> path = generatePath(locPosition, locDirection);
 
@@ -102,7 +102,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     }
 
     // remove duplicated candidates
-    resolveDuplicates(surfCandidates);
+
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
                  << surfCandidates.size() << " candidates");
 
@@ -128,6 +128,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
 
     auto maxXIndex = m_indexedGrid.grid.numLocalBins()[0];
     auto maxYIndex = m_indexedGrid.grid.numLocalBins()[1];
+    Vector3 unitDir = direction.normalized();
 
     for (std::size_t i = 0; i < maxYIndex; i++) {
       auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
@@ -135,8 +136,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
 
       auto intersection = detail::IntersectionHelper2D::intersectSegment(
           Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]),
-          Vector2(startPosition.x(), startPosition.y()),
-          Vector2(direction.x(), direction.y()));
+          startPosition.template block<2, 1>(0, 0),
+          unitDir.template block<2, 1>(0, 0));
       if (!intersection.isValid()) {
         continue;
       }
@@ -144,16 +145,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
       path.push_back(intersection.position());
     }
     return path;
-  }
-  /// Resolve duplicate on surface candidates
-  /// @param surfaces is the surface candidates to check and resolve for duplicates
-  void resolveDuplicates(std::vector<const Acts::Surface*>& surfaces) const {
-    // sorting the surfaces according to their memory address
-    std::ranges::sort(surfaces,
-                      [](const Surface* a, const Surface* b) { return a < b; });
-
-    surfaces.erase(std::unique(surfaces.begin(), surfaces.end()),
-                   surfaces.end());
   }
 
  private:
