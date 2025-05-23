@@ -10,27 +10,46 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <cmath>
 #include <csignal>
 
 namespace ActsExamples {
+
+namespace {
+
+// Custom seed comparison function
+template <typename external_spacepoint_t>
+struct SeedComparison {
+  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
+                  const Acts::Seed<external_spacepoint_t>& seed2) const {
+    const auto& sp1 = seed1.sp();
+    const auto& sp2 = seed2.sp();
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->z() != sp2[i]->z()) {
+        return sp1[i]->z() < sp2[i]->z();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->x() != sp2[i]->x()) {
+        return sp1[i]->x() < sp2[i]->x();
+      }
+    }
+
+    for (std::size_t i = 0; i < sp1.size(); ++i) {
+      if (sp1[i]->y() != sp2[i]->y()) {
+        return sp1[i]->y() < sp2[i]->y();
+      }
+    }
+
+    return false;
+  }
+};
+
+}  // namespace
 
 SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
@@ -249,6 +268,7 @@ ProcessCode SeedingAlgorithmHashing::execute(
   static thread_local std::set<SimSeed, SeedComparison<SimSpacePoint>> seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
+  state.spacePointMutableData.resize(maxNSpacePoints);
 
   for (SpacePointPtrVector& bucket : bucketsPtrs) {
     std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;
