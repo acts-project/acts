@@ -182,14 +182,16 @@ void addTrackFinding(Context& ctx) {
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
                                 "TrackParamsLookupEstimation", refLayers, bins,

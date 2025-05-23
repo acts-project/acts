@@ -19,7 +19,7 @@ FetchContent_Declare(frnncontent SYSTEM ${ACTS_FRNN_SOURCE})
 # we have to implement the populate step manually
 FetchContent_GetProperties(frnncontent)
 if(NOT frnncontent_POPULATED)
-    FetchContent_Populate(frnncontent)
+    FetchContent_MakeAvailable(frnncontent)
     configure_file(
         CMakeLists.txt.in
         "${frnncontent_SOURCE_DIR}/CMakeLists.txt"
