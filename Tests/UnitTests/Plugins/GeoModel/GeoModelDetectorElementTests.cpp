@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementAlignment) {
   // (BOX object)
   auto boxXY = new GeoBox(100, 200, 2);
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto fphysXY = new GeoFullPhysVol(logXY);
+  auto fphysXY =  make_intrusive<GeoFullPhysVol>(logXY);
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
 
   PVConstLink physXY{fphysXY};
