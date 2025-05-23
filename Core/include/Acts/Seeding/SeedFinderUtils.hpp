@@ -9,9 +9,10 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointMutableData.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 
 namespace Acts {
+
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
   LinCircle() = default;
@@ -28,7 +29,7 @@ struct LinCircle {
 };
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
+LinCircle transformCoordinates(SpacePointMutableData& mutableData,
                                const external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
@@ -44,7 +45,7 @@ LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
-void transformCoordinates(Acts::SpacePointMutableData& mutableData,
+void transformCoordinates(SpacePointMutableData& mutableData,
                           const std::vector<const external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec);
@@ -53,16 +54,15 @@ void transformCoordinates(Acts::SpacePointMutableData& mutableData,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
+/// @param[in] toleranceParam Tolerance parameter used to check the compatibility of space-point coordinates in xyz.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
-bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
-    double* outputCoordinates);
+bool xyzCoordinateCheck(const external_spacepoint_t& sp,
+                        const double* spacepointPosition, double toleranceParam,
+                        double* outputCoordinates);
 
 }  // namespace Acts
 
