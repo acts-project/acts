@@ -16,7 +16,8 @@ namespace bc = boost::container;
 namespace {
 
 template <typename T>
-Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor) {
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
+                  std::size_t dims) {
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
   if constexpr (std::is_same_v<T, float>) {
@@ -29,8 +30,8 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor) {
   }
 
   bc::static_vector<std::int64_t, 2> shape;
-  for (auto size : tensor.shape()) {
-    shape.push_back(size);
+  for (auto i = 0ul; i < dims; ++i) {
+    shape.push_back(tensor.shape().at(i));
   }
   return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
                                   shape.data(), shape.size(), onnxType);
@@ -124,19 +125,19 @@ PipelineTensors OnnxEdgeClassifier::operator()(
 
   // Node tensor
   // ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures, 2));
   inputNames.push_back(m_inputNames.at(0).c_str());
 
   // Edge tensor
   // ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex, 2));
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
   std::optional<Acts::Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
     // ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
-    inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
+    inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures, 2));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
 
@@ -145,7 +146,10 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
                                             execContext);
   std::vector<Ort::Value> outputTensors;
-  outputTensors.push_back(toOnnx(memoryInfo, scores));
+  outputTensors.push_back(toOnnx(memoryInfo, scores,
+                                 m_model->GetOutputTypeInfo(0)
+                                     .GetTensorTypeAndShapeInfo()
+                                     .GetDimensionsCount()));
   std::vector<const char *> outputNames{m_outputName.c_str()};
 
   ACTS_DEBUG("Run model");
