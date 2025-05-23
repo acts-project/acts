@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElementAlginment) {
     }
   };
 
-  AlignedTransform aTransform(alignedTransform);
+  AlignedTransform aTransform{alignedTransform};
   // Create and connect the delegate, and finally the GeometryContext
   Acts::AlignmentDelegate alignmentDelegate;
   alignmentDelegate.connect<&AlignedTransform::provide>(&aTransform);

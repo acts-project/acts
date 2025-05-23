@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementAlignment) {
     }
   };
 
-  AlignedTransform aTransform(alignedTransform);
+  AlignedTransform aTransform{alignedTransform};
   // Create and connect the delegate, and finally the GeometryContext
   Acts::AlignmentDelegate alignmentDelegate;
   alignmentDelegate.connect<&AlignedTransform::provide>(&aTransform);
