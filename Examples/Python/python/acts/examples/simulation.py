@@ -857,8 +857,8 @@ def addTruthJetAlg(
     config: TruthJetConfig,
     loglevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    import acts.examples.TruthJetAlgorithm
-
+    from acts.examples import TruthJetAlgorithm
+    
     customLogLevel = acts.examples.defaultLogging(s, loglevel)
     truthJetAlg = acts.examples.TruthJetAlgorithm(
         **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
