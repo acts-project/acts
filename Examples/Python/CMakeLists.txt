@@ -258,6 +258,13 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_FASTJET)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
+    target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
+endif()
+
 if(ACTS_BUILD_EXAMPLES_HASHING)
     target_link_libraries(ActsPythonBindings PUBLIC ActsPluginHashing)
     target_sources(ActsPythonBindings PRIVATE src/Hashing.cpp)
