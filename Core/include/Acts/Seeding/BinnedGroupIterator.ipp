@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Binned SP Group Iterator
+#include "Acts/Seeding/BinnedGroupIterator.hpp"
 
 template <typename grid_t>
 Acts::BinnedGroupIterator<grid_t>::BinnedGroupIterator(

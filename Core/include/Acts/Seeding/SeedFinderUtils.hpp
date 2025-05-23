@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
+
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
   LinCircle() = default;

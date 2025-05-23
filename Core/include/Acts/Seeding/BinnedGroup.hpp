@@ -10,10 +10,7 @@
 
 #include "Acts/Seeding/BinnedGroupIterator.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
-#include "Acts/Utilities/Holders.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace Acts {

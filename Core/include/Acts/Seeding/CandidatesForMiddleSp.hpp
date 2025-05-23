@@ -8,16 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace Acts {
+
 /// @brief A description of a triplet candidate.
 /// @tparam external_space_point_t  The external spacepoint type.
 template <typename external_space_point_t>

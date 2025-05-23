@@ -6,12 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 
-#include <bitset>
-#include <cstdint>
 #include <type_traits>
-#include <vector>
 
 #include <Eigen/Core>
 

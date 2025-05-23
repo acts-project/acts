@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
@@ -92,4 +89,4 @@ class SpacePointBuilder {
 
 }  // namespace Acts
 
-#include "Acts/SpacePointFormation/detail/SpacePointBuilder.ipp"
+#include "Acts/SpacePointFormation/SpacePointBuilder.ipp"

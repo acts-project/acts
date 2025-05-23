@@ -13,10 +13,9 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
-#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Iterator.hpp"
 
-#include <any>
 #include <vector>
 
 namespace Acts {

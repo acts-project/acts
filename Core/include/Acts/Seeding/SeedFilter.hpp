@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
@@ -16,12 +15,10 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <mutex>
-#include <queue>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
+
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;

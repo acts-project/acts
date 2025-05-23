@@ -16,11 +16,13 @@
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -28,10 +30,6 @@
 
 #include <cmath>
 #include <csignal>
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 ActsExamples::SeedingAlgorithmHashing::SeedingAlgorithmHashing(
     ActsExamples::SeedingAlgorithmHashing::Config cfg, Acts::Logging::Level lvl)
