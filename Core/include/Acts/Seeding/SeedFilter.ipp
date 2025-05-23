@@ -8,12 +8,8 @@
 
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
-#include <algorithm>
-#include <numeric>
-#include <utility>
-
 namespace Acts {
-// constructor
+
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
     const SeedFilterConfig& config,
@@ -27,7 +23,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 
 template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
-    const SeedFilterConfig& config, std::unique_ptr<const Acts::Logger> logger,
+    const SeedFilterConfig& config, std::unique_ptr<const Logger> logger,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
     : m_cfg(config), m_logger(std::move(logger)), m_experimentCuts(expCuts) {
   if (!config.isInInternalUnits) {
@@ -41,14 +37,13 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
-    const Acts::SpacePointMutableData& mutableData,
+    const SpacePointMutableData& mutableData,
     const external_spacepoint_t& bottomSP,
     const external_spacepoint_t& middleSP,
     const std::vector<const external_spacepoint_t*>& topSpVec,
     const std::vector<float>& invHelixDiameterVec,
-    const std::vector<float>& impactParametersVec,
-    SeedFilterState& seedFilterState,
-    CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector)
+    const std::vector<float>& impactParametersVec, State& state,
+    CandidatesForMiddleSp<const external_spacepoint_t>& candidatesCollector)
     const {
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -61,16 +56,15 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
             : m_cfg.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
-    seedFilterState.nTopSeedConf =
-        bottomSP.radius() > seedConfRange.rMaxSeedConf
-            ? seedConfRange.nTopForLargeR
-            : seedConfRange.nTopForSmallR;
+    state.nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
+                             ? seedConfRange.nTopForLargeR
+                             : seedConfRange.nTopForSmallR;
   }
 
   std::size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
   float weightMax = std::numeric_limits<float>::lowest();
-  float zOrigin = seedFilterState.zOrigin;
+  float zOrigin = state.zOrigin;
 
   // initialize original index locations
   std::vector<std::size_t> topSPIndexVec(topSpVec.size());
@@ -178,10 +172,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf =
-          compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
+      int deltaSeedConf = compatibleSeedR.size() + 1 - state.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (candidates_collector.nHighQualityCandidates() != 0 &&
+          (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
         continue;
       }
@@ -212,8 +205,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // Internally, "push" will also check the max number of quality seeds
         // for a middle sp.
         // If this is reached, we remove the seed with the lowest weight.
-        candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
-                                  weight, zOrigin, true);
+        candidatesCollector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
+                                 weight, zOrigin, true);
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
@@ -225,19 +218,19 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // if we have not yet reached our max number of seeds we add the new seed
       // to outCont
 
-      candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
-                                weight, zOrigin, false);
+      candidatesCollector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
+                               weight, zOrigin, false);
     }
   }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation && maxWeightSeed &&
-      candidates_collector.nHighQualityCandidates() == 0) {
+      candidatesCollector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
-    candidates_collector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
-                              weightMax, zOrigin, false);
+    candidatesCollector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
+                             weightMax, zOrigin, false);
   }
 }
 
@@ -246,14 +239,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    Acts::SpacePointMutableData& mutableData,
-    CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
+    SpacePointMutableData& mutableData,
+    CandidatesForMiddleSp<const external_spacepoint_t>& candidatesCollector,
     collection_t& outputCollection) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
-  std::size_t numQualitySeeds = candidates_collector.nHighQualityCandidates();
-  auto extended_collection = candidates_collector.storage();
+  std::size_t numQualitySeeds = candidatesCollector.nHighQualityCandidates();
+  auto extended_collection = candidatesCollector.storage();
   filterSeeds_1SpFixed(mutableData, extended_collection, numQualitySeeds,
                        outputCollection);
 }
@@ -261,7 +254,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 template <typename external_spacepoint_t>
 template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    Acts::SpacePointMutableData& mutableData,
+    SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp<
         const external_spacepoint_t>::value_type>& candidates,
     const std::size_t numQualitySeeds, collection_t& outputCollection) const {
@@ -303,7 +296,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(medium->index(), bestSeedQuality);
     mutableData.setQuality(top->index(), bestSeedQuality);
 
-    Acts::Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
+    Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
     seed.setVertexZ(zOrigin);
     seed.setQuality(bestSeedQuality);
 
@@ -311,7 +304,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                                     << medium->index() << ", t=" << top->index()
                                     << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
-    Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
+    detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
     ++numTotalSeeds;
   }
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
