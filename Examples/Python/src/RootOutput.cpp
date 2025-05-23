@@ -175,8 +175,9 @@ void addRootOutput(Context& ctx) {
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSpacepointWriter, mex,
-                             "RootSpacepointWriter", inputSpacepoints, filePath,
-                             fileMode, treeName);
+                             "RootSpacepointWriter", inputSpacepoints,
+                             inputMeasurementParticlesMap, filePath, fileMode,
+                             treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
