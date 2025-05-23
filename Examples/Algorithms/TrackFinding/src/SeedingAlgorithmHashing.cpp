@@ -268,7 +268,9 @@ ProcessCode SeedingAlgorithmHashing::execute(
   static thread_local std::set<SimSeed, SeedComparison<SimSpacePoint>> seedsSet;
   seedsSet.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointMutableData.resize(maxNSpacePoints);
+  state.gridMapping.clear();
+  state.spacePoints.clear();
+  state.spacePointsMutable.clear();
 
   for (SpacePointPtrVector& bucket : bucketsPtrs) {
     std::set<seed_type, SeedComparison<value_type>> seedsSetForBucket;

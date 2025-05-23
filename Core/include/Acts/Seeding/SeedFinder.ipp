@@ -44,14 +44,10 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
   }
 
-  state.spacePoints.clear();
-  state.spacePointsMutable.clear();
-
-  std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
-      gridMapping;
   auto copyFromGrid =
       [&](std::size_t gridIndex) -> std::pair<std::size_t, std::size_t> {
-    if (auto it = gridMapping.find(gridIndex); it != gridMapping.end()) {
+    if (auto it = state.gridMapping.find(gridIndex);
+        it != state.gridMapping.end()) {
       return it->second;
     }
 
@@ -68,7 +64,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       }
     }
     std::size_t end = state.spacePoints.size();
-    return gridMapping[gridIndex] = {begin, end};
+    return state.gridMapping[gridIndex] = {begin, end};
   };
 
   // This is used for seed filtering later
@@ -134,13 +130,6 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   }
 
   state.spacePointsMutable.resize(state.spacePoints.size());
-  for (auto sp : state.spacePoints) {
-    auto esp = sp.sourceLinks()[0].template get<const external_spacepoint_t*>();
-    state.spacePointsMutable.setQuality(
-        sp.index(), state.spacePointMutableData.quality(esp->index()));
-    state.spacePointsMutable.setDeltaR(
-        sp.index(), state.spacePointMutableData.deltaR(esp->index()));
-  }
 
   // we compute this here since all middle space point candidates belong to the
   // same z-bin
@@ -242,16 +231,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->template filterSeeds_1SpFixed<external_spacepoint_t>(
         state.spacePoints, state.spacePointsMutable, state.candidatesCollector,
         outputCollection);
-
   }  // loop on mediums
-
-  for (auto sp : state.spacePoints) {
-    auto esp = sp.sourceLinks()[0].template get<const external_spacepoint_t*>();
-    state.spacePointMutableData.setQuality(
-        esp->index(), state.spacePointsMutable.quality(sp.index()));
-    state.spacePointMutableData.setDeltaR(
-        esp->index(), state.spacePointsMutable.deltaR(sp.index()));
-  }
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
