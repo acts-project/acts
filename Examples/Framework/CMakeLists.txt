@@ -6,6 +6,8 @@ add_library(
     ActsExamplesFramework
     SHARED
     src/EventData/MuonSpacePoint.cpp
+    src/EventData/MuonSPLayerSplitter.cpp
+    src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/ScalingCalibrator.cpp
