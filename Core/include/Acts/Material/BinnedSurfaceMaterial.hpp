@@ -101,6 +101,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
 
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
+      const detray::io::volume_payload& volume) const override;
+
  private:
   /// The helper for the bin finding
   BinUtility m_binUtility;
