@@ -45,7 +45,7 @@ TensorPtr createTensorMemory(std::size_t nbytes,
 
 TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
                             Device devFrom, const ExecutionContext &to) {
-  auto clone = createTensor(nbytes, to);
+  auto clone = createTensorMemory(nbytes, to);
   if (devFrom.isCpu() && to.device.isCpu()) {
     std::memcpy(clone.get(), ptr.get(), nbytes);
   } else {
