@@ -58,6 +58,7 @@ void addUtilities(Context& ctx);
 
 void addRootInput(Context& ctx);
 void addRootOutput(Context& ctx);
+void addRootDetector(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
@@ -149,4 +150,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addRootInput(ctx);
   addRootOutput(ctx);
+  addRootDetector(ctx);
 }

@@ -87,7 +87,7 @@ if(ACTS_BUILD_EXAMPLES_ROOT)
     target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoRoot)
     target_sources(
         ActsPythonBindings
-        PRIVATE src/RootInput.cpp src/RootOutput.cpp
+        PRIVATE src/RootInput.cpp src/RootOutput.cpp src/RootDetector.cpp
     )
 else()
     target_sources(ActsPythonBindings PRIVATE src/RootStub.cpp)
