@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <memory>
 #include <string>
@@ -25,24 +26,36 @@ class Surface;
 
 namespace ActsExamples::Geant4 {
 
-/// The G4SteppingAction that is called for every step in
-/// the simulation process.
-///
-/// It checks whether a sensitive volume is present (via string tag)
-/// and records (if necessary) the hit.
+///   @brief G4 user stepping action to record the step of a particle through the
+///          the G4 volumes. The information is dumped in the `ActsFatras::Hit`
+///  format containing the 4-momentum before & after the pre-step, the
+///  particle's
+///          barcode & pdgId as well as the GeometryIdentifer from the
+///          associated
+///  Acts::Surface provided by an external translation of the geometry to the
+///  Acts::TrackingGeometry. Using the configuration object, the action can be
+///  configured to record the steps of primary / secondary (un)charged
+///  particles. By default, only steps in volumes that are marked by
+///  `SensitiveSurfaceMapper` as sensitive are recorded, but the
+///  `SensitiveSteppingAction` may also record every single G4 step.
 class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
     std::shared_ptr<EventStore> eventStore;
 
-    /// Selection for hit recording
+    /// @brief Record charged particles
     bool charged = true;
+    /// @brief Record neutral particles
     bool neutral = false;
+    /// @brief Record the particles produced in the primary interactions
     bool primary = true;
+    /// @brief Record secondary particles produced by the traversing
+    ///        primary particles
     bool secondary = true;
-
-    /// step logging mode
+    /// @brief Record every single step made by the particles. Otherwise,
+    ///        steps in volumes where the G4VPhysicalVolume's name has the
+    ///        SensitiveSurfaceMapper::mappingPrefix prepended
     bool stepLogging = false;
   };
 
@@ -63,9 +76,8 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// Set the multimap that correlates G4VPhysicalVolumes to Acts::Surfaces
   ///
   /// @param surfaceMapping the multimap of physical volumes to surfaces
-  void assignSurfaceMapping(
-      const std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>&
-          surfaceMapping) {
+  using VolumeToSurfAssocMap_t = SensitiveSurfaceMapper::VolumeToSurfAssocMap_t;
+  void assignSurfaceMapping(const VolumeToSurfAssocMap_t& surfaceMapping) {
     m_surfaceMapping = surfaceMapping;
   }
 
@@ -82,8 +94,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>
-      m_surfaceMapping;
+  VolumeToSurfAssocMap_t m_surfaceMapping{};
 };
 
 }  // namespace ActsExamples::Geant4
