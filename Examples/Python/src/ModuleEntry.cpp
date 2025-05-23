@@ -53,6 +53,7 @@ void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addTruthJet(Context& ctx);
+void addTrackToTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilities(Context& ctx);
@@ -129,6 +130,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTrackFitting(ctx);
   addTrackFinding(ctx);
   addTruthJet(ctx);
+  addTrackToTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addUtilities(ctx);
