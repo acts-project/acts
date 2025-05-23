@@ -26,7 +26,7 @@ Acts::GeoModelDetectorElement::GeoModelDetectorElement(
 const Acts::Transform3& Acts::GeoModelDetectorElement::transform(
     const GeometryContext& gctx) const {
   // This uses the contextual transform mechanism based on the proposed
-  // DetectorElementBase::AlignmentContext infrastructure
+  // AlignmentDelegate infastructure
   const Acts::Transform3* aTransform = Acts::contextualTransform(gctx, *this);
   if (aTransform != nullptr) {
     return *aTransform;

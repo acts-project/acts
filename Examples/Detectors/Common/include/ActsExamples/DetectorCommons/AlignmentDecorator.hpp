@@ -8,51 +8,47 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
-#include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "Acts/Geometry/TransformStore.hpp"
 
-#include <cstddef>
+#include <array>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <unordered_map>
+#include <tuple>
 #include <vector>
-
-namespace Acts {
-class TrackingGeometry;
-}
 
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// @brief A mockup service that rotates the modules in a
-/// simple tracking geometry
+/// @brief A simple alignment decorator for the  geometry
+/// showcasing an IOV based alignment possibility
 ///
-/// It acts on the PayloadDetectorElement, i.e. the
-/// geometry context carries the full transform store (payload)
-class ExternalAlignmentDecorator : public AlignmentDecorator {
+class AlignmentDecorator : public IContextDecorator {
  public:
-  /// @brief nested configuration struct
-  struct Config : public AlignmentDecorator::Config {
-    /// The trackng geometry
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  /// @brief Nested configuration struct
+  struct Config {
+    /// The alignment store map higher bound IOV (i.e. event number)
+    std::vector<std::tuple<std::array<std::size_t, 2u>,
+                           std::shared_ptr<Acts::ITransformStore>>>
+        alignmentStores;
+    /// The nominal alignment store (before first bound, after last bound)
+    std::shared_ptr<Acts::ITransformStore> nominalStore = nullptr;
   };
 
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param logger The logging framework
-  explicit ExternalAlignmentDecorator(
+  explicit AlignmentDecorator(
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "ExternalAlignmentDecorator", Acts::Logging::INFO));
+          "AlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
-  ~ExternalAlignmentDecorator() override = default;
+  ~AlignmentDecorator() override = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event
@@ -69,28 +65,10 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
  private:
   Config m_cfg;                                  ///< the configuration class
   std::unique_ptr<const Acts::Logger> m_logger;  ///!< the logging instance
-  std::string m_name = "ExternalAlignmentDecorator";
-
-  /// Map of nominal transforms
-  std::vector<Acts::Transform3> m_nominalStore;
-
-  std::unordered_map<
-      unsigned int,
-      std::shared_ptr<ExternallyAlignedDetectorElement::AlignmentStore>>
-      m_activeIovs;
-
-  std::mutex m_iovMutex;
-
-  std::size_t m_eventsSeen{0};
+  const std::string m_name = "AlignmentDecorator";
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Populate the nominal transforms
-  /// this parses the TrackingGeometry and fills the nominal store
-  ///
-  /// @param tGeometry the tracking geometry
-  void parseGeometry(const Acts::TrackingGeometry& tGeometry);
 };
 
 }  // namespace ActsExamples
