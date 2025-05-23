@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -29,6 +30,10 @@ struct AlgorithmContext;
 class AlignmentDecorator : public IContextDecorator {
  public:
   /// @brief Nested configuration struct
+  ///
+  /// It can either be loaded with a transform store()s e.g. through I/O
+  /// or with alignment generators that create the transform stores on the fly
+  /// to demosntrate time dependent alignment,
   struct Config {
     /// The alignment store map higher bound IOV (i.e. event number)
     std::vector<std::tuple<std::array<std::size_t, 2u>,
@@ -36,6 +41,10 @@ class AlignmentDecorator : public IContextDecorator {
         alignmentStores;
     /// The nominal alignment store (before first bound, after last bound)
     std::shared_ptr<Acts::ITransformStore> nominalStore = nullptr;
+
+    /// Create a nominal alignment on the fly
+    std::function<std::shared_ptr<Acts::ITransformStore>()> alignmentGemerator =
+        nullptr;
   };
 
   /// Constructor

@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElementConstruction) {
       g4DetElement.transform(tContext).isApprox(rSurface->transform(tContext)));
 }
 
-BOOST_AUTO_TEST_CASE(Geant4DetectorElementAlginment) {
+BOOST_AUTO_TEST_CASE(Geant4DetectorElementAlignment) {
   // G4 phys volume
   auto g4physVol = std::make_shared<G4VPhysicalVolume>();
 

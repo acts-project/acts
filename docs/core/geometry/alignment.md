@@ -82,7 +82,7 @@ the detector element extensions based on `DD4hep` (via `TGeo`), `GeoModel` and `
 const Transform3& Geant4DetectorElement::transform(
     const GeometryContext& gctx) const {
   // This uses the contextual transform mechanism based on the proposed
-  // AlignmentDelegate infastructure
+  // AlignmentDelegate infrastructure
   const Acts::Transform3* aTransform = Acts::contextualTransform(gctx, *this);
   if (aTransform != nullptr) {
     return *aTransform;
@@ -92,6 +92,24 @@ const Transform3& Geant4DetectorElement::transform(
 ```
 
 The unpacking of the {class}`Acts::GeometryContext` object is hereby happing in the `contextualTransform` helper function.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant GeometryContext
+    participant DetectorElement
+    participant AlignmentDelegate
+
+    Client->>DetectorElement: request transform(GeometryContext)
+    DetectorElement->>GeometryContext: check for AlignmentDelegate
+    alt Delegate connected
+        GeometryContext->>AlignmentDelegate: get transform(Surface)
+        AlignmentDelegate-->>DetectorElement: return Transform3*
+        DetectorElement-->>Client: return contextual transform
+    else No delegate
+        DetectorElement-->>Client: return nominal transform
+    end
+```
 
 
 ## Examples and showcases

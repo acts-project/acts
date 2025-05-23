@@ -8,6 +8,7 @@
 
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
+#include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
@@ -49,8 +50,12 @@ GenericDetectorElement::GenericDetectorElement(
 
 const Acts::Transform3& GenericDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
-  //
-
+  // This uses the contextual transform mechanism based on the proposed
+  // AlignmentDelegate infrastructure
+  const Acts::Transform3* aTransform = Acts::contextualTransform(gctx, *this);
+  if (aTransform != nullptr) {
+    return *aTransform;
+  }
   return *m_elementTransform;
 }
 
