@@ -9,6 +9,7 @@
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -114,3 +115,15 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 }
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement() = default;
+
+const Acts::Transform3& Acts::TGeoDetectorElement::transform(
+    const GeometryContext& gctx) const {
+  // This uses the contextual transform mechanism based on the proposed
+  // DetectorElementBase::AlignmentContext infrastructure
+  const Acts::Transform3* aTransform = Acts::contextualTransform(gctx, *this);
+  if (aTransform != nullptr) {
+    return *aTransform;
+  }
+  // Return the nominal transform
+  return m_transform;
+}
