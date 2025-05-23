@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(AlignmentDelegateTests) {
     }
   };
 
-  AlignedTransform aTransform(alignedTransform);
+  AlignedTransform aTransform{alignedTransform};
   // Create and connect the delegate, and finally the GeometryContext
   AlignmentDelegate alignmentDelegate;
   alignmentDelegate.connect<&AlignedTransform::provide>(&aTransform);
