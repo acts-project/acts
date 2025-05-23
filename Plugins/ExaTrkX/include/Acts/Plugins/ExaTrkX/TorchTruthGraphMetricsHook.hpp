@@ -25,8 +25,7 @@ class TorchTruthGraphMetricsHook : public ExaTrkXHook {
                              std::unique_ptr<const Acts::Logger> l);
   ~TorchTruthGraphMetricsHook() override {}
 
-  void operator()(const std::any &, const std::any &edges,
-                  const std::any &) const override;
+  void operator()(const PipelineTensors &tensors) const override;
 };
 
 }  // namespace Acts

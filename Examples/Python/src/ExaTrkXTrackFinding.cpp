@@ -14,7 +14,6 @@
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
@@ -172,18 +171,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto cls =
         py::class_<Acts::ExaTrkXHook, std::shared_ptr<Acts::ExaTrkXHook>>(
             mex, "ExaTrkXHook");
-  }
-
-  {
-    using Class = Acts::TorchTruthGraphMetricsHook;
-
-    auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
-                   mex, "TorchTruthGraphMetricsHook")
-                   .def(py::init([](const std::vector<std::int64_t> &g,
-                                    Logging::Level lvl) {
-                     return std::make_shared<Class>(
-                         g, getDefaultLogger("PipelineHook", lvl));
-                   }));
   }
 
   {
