@@ -52,8 +52,9 @@ class SeedFinder {
 
  public:
   struct SeedingState {
-    std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
-        gridMapping;
+    // Mutable variables for Space points used in the seeding
+    SpacePointMutableData spacePointMutableData{};
+
     InternalSpacePointContainer spacePoints{};
     SpacePointMutableData spacePointsMutable{};
 
