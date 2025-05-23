@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 
+#include <ranges>
+
 namespace {
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> selectTransforms(
@@ -59,19 +61,18 @@ ActsExamples::GlobalShift::GlobalShift(
     const std::vector<Acts::GeometryIdentifier>& selection,
     const Acts::Vector3& ishift)
     : shift(ishift),
-      nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {
-  // Loop over the selected elements and store the nominal transforms
-}
+      nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {}
 
-std::shared_ptr<Acts::ITransformStore> ActsExamples::GlobalShift::operator()() {
-  // Create the transform store
+std::shared_ptr<Acts::ITransformStore> ActsExamples::GlobalShift::operator()(
+    std::function<double()>& rng) {
+  // Randomize it if necessary
+  double scale = rng();
+  Acts::Translation3 translation = Acts::Translation3(shift * scale);
+  // Apply the scale to the shift
   auto contextualTransforms = nominalTransforms;
-  std::for_each(contextualTransforms.begin(), contextualTransforms.end(),
-                [this](auto& itrf) {
-                  // Apply the shift to the transform
-                  itrf.second = itrf.second * shift;
-                });
-
+  std::ranges::for_each(contextualTransforms, [&translation](auto& itrf) {
+    itrf.second = itrf.second * translation;
+  });
   return std::make_shared<Acts::TransformStoreGeometryId>(contextualTransforms);
 }
 
@@ -80,20 +81,19 @@ ActsExamples::PerpendicularScale::PerpendicularScale(
     const Acts::TrackingGeometry& trackingGeometry,
     const std::vector<Acts::GeometryIdentifier>& selection, double iexpansion)
     : expansion(iexpansion),
-      nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {
-  // Loop over the selected elements and store the nominal transforms
-}
+      nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {}
 
 std::shared_ptr<Acts::ITransformStore>
-ActsExamples::PerpendicularScale::operator()() {
+ActsExamples::PerpendicularScale::operator()(std::function<double()>& rng) {
+  // Randomize it if necessary
+  double scale = rng();
   // Create the transform store
   auto contextualTransforms = nominalTransforms;
-  std::for_each(contextualTransforms.begin(), contextualTransforms.end(),
-                [this](auto& itrf) {
-                  // Apply the radial expansion to the transform
-                  itrf.second.translation()[0] *= expansion;
-                  itrf.second.translation()[1] *= expansion;
-                });
+  std::ranges::for_each(contextualTransforms, [this, &scale](auto& itrf) {
+    // Apply the radial expansion to the transform
+    itrf.second.translation()[0] *= (scale * expansion);
+    itrf.second.translation()[1] *= (scale * expansion);
+  });
 
   return std::make_shared<Acts::TransformStoreGeometryId>(contextualTransforms);
 }

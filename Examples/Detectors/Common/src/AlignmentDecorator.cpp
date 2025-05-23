@@ -11,6 +11,8 @@
 #include "Acts/Geometry/AlignmentDelegate.hpp"
 #include "Acts/Geometry/TransformStore.hpp"
 
+#include <ranges>
+
 ActsExamples::AlignmentDecorator::AlignmentDecorator(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
@@ -20,12 +22,12 @@ ActsExamples::AlignmentDecorator::AlignmentDecorator(
         "decorator!");
   }
   // Sort on leading IOV
-  std::sort(m_cfg.alignmentStores.begin(), m_cfg.alignmentStores.end(),
-            [](const auto& lhs, const auto& rhs) {
-              const auto& [lhsIov, lhsStore] = lhs;
-              const auto& [rhsIov, rhsStore] = rhs;
-              return lhsIov[0u] < rhsIov[0u];
-            });
+  std::ranges::sort(m_cfg.alignmentStores,
+                    [](const auto& lhs, const auto& rhs) {
+                      const auto& [lhsIov, lhsStore] = lhs;
+                      const auto& [rhsIov, rhsStore] = rhs;
+                      return lhsIov[0u] < rhsIov[0u];
+                    });
   // Check for overlapping IOVs
   for (const auto [istore, iovStore] : Acts::enumerate(m_cfg.alignmentStores)) {
     if (istore > 0) {
@@ -47,12 +49,11 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
 
   // Start with the current alignment store
   auto currentStore = m_cfg.nominalStore;
-  auto matchedStore =
-      std::find_if(m_cfg.alignmentStores.begin(), m_cfg.alignmentStores.end(),
-                   [eventNumber](const auto& iovStore) {
-                     const auto& [iov, store] = iovStore;
-                     return iov[0] >= eventNumber && eventNumber <= iov[1];
-                   });
+  auto matchedStore = std::ranges::find_if(
+      m_cfg.alignmentStores, [eventNumber](const auto& iovStore) {
+        const auto& [iov, store] = iovStore;
+        return iov[0] >= eventNumber && eventNumber <= iov[1];
+      });
   if (matchedStore != m_cfg.alignmentStores.end()) {
     const auto& [iov, store] = *matchedStore;
     ACTS_VERBOSE("Found alignment store for event number " +

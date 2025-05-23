@@ -42,9 +42,11 @@ class AlignmentDecorator : public IContextDecorator {
     /// The nominal alignment store (before first bound, after last bound)
     std::shared_ptr<Acts::ITransformStore> nominalStore = nullptr;
 
-    /// Create a nominal alignment on the fly
-    std::function<std::shared_ptr<Acts::ITransformStore>()> alignmentGemerator =
-        nullptr;
+    /// Create a nominal alignment on the fly, it receives a caller function
+    /// that could provide random numbers
+    std::function<std::shared_ptr<Acts::ITransformStore>(
+        std::function<double()>&)>
+        alignmentGemerator = nullptr;
   };
 
   /// Constructor

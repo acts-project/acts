@@ -23,6 +23,12 @@ class ITransformStore;
 
 namespace ActsExamples {
 
+struct NoRandom {
+  /// @brief A no random number generator
+  /// @return 1.0
+  double operator()() const { return 1.0; }
+};
+
 /// @brief A simple alignment generator for the geometry to apply a global shift
 struct GlobalShift {
   /// @brief The configuration struct
@@ -39,14 +45,16 @@ struct GlobalShift {
               const Acts::Vector3& ishift);
 
   // The shift to be applied
-  Acts::Translation3 shift = Acts::Translation3(Acts::Vector3::Zero());
+  Acts::Vector3 shift = Acts::Vector3::Zero();
 
   /// Internal storage - the nominal transforms of the selected elements
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
       nominalTransforms;
 
   /// The call operator to generate the transform store
-  std::shared_ptr<Acts::ITransformStore> operator()();
+  /// @param rng The random number generator
+  std::shared_ptr<Acts::ITransformStore> operator()(
+      std::function<double()>& rng);
 };
 
 /// @brief A simple alignment generator for the geometry to apply a radial expansion
@@ -72,7 +80,8 @@ struct PerpendicularScale {
       nominalTransforms;
 
   /// The call operator to generate the transform store
-  std::shared_ptr<Acts::ITransformStore> operator()();
+  std::shared_ptr<Acts::ITransformStore> operator()(
+      std::function<double()>& rng);
 };
 
 }  // namespace ActsExamples
