@@ -82,10 +82,8 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
-  std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (device.is_cuda()) {
     device_guard.emplace(device.index());
-    streamGuard.emplace(execContext.stream.value());
   }
 #endif
 

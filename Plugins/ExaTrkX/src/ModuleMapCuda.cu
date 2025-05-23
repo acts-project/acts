@@ -137,11 +137,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
 
   // Get stream if available, otherwise use default stream
   cudaStream_t stream = cudaStreamLegacy;
-  std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (execContext.stream) {
     ACTS_DEBUG("Got stream " << *execContext.stream);
-    stream = execContext.stream->stream();
-    streamGuard.emplace(*execContext.stream);
+    stream = execContext.stream.value();
   }
 
   /////////////////////////
