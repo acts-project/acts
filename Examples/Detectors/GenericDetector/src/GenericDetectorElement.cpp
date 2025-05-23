@@ -48,7 +48,9 @@ GenericDetectorElement::GenericDetectorElement(
 }
 
 const Acts::Transform3& GenericDetectorElement::transform(
-    const Acts::GeometryContext& /*gctx*/) const {
+    const Acts::GeometryContext& gctx) const {
+  //
+
   return *m_elementTransform;
 }
 

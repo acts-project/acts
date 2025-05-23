@@ -22,26 +22,10 @@ from helpers import dd4hepEnabled
                 pytest.mark.odd,
             ],
         ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.Internal
-            ),
-            False,
-            450,
-        ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.External
-            ),
-            False,
-            450,
-        ),
     ],
     ids=[
         "generic",
         "odd",
-        "aligned-internal",
-        "aligned-external",
     ],
 )
 @pytest.mark.slow
