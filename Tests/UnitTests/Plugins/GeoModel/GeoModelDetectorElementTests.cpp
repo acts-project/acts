@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementAlignment) {
   // Let's create a GeoFullPhysVol object
 
   // (BOX object)
-  auto boxXY = new GeoBox(100, 200, 2);
+  auto boxXY =  make_intrusive<GeoBox>(100, 200, 2);
   auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
   auto fphysXY =  make_intrusive<GeoFullPhysVol>(logXY);
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
