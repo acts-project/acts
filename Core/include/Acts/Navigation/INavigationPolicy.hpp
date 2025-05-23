@@ -56,6 +56,8 @@ class INavigationPolicy {
   /// @param delegate The delegate to connect to
   virtual void connect(NavigationDelegate& delegate) const = 0;
 
+  // virtual void toDetrayPayload();
+
  protected:
   /// Internal helper function for derived classes that conform to the concept
   /// and have a conventional `updateState` method. Mainly used to save some

@@ -11,11 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -375,72 +377,201 @@ void DetrayPayloadConverter::handlePortal(
   }
 }
 
-detray::io::material_slab_payload DetrayPayloadConverter::convertMaterialSlab(
-    const MaterialSlab& slab) const {
-  detray::io::material_slab_payload payload;
-  // Fill the material parameters and the thickness
-  const auto& material = slab.material();
-  payload.thickness = slab.thickness();
-  payload.mat = detray::io::material_payload{
-      {material.X0(), material.L0(), material.Ar(), material.Z(),
-       material.massDensity(), material.molarDensity(), 0.}};
-  payload.type = detray::io::material_id::slab;
-  return payload;
-}
+namespace {
+std::size_t findSurfaceInVolume(const detray::io::volume_payload& volPayload,
+                                const Surface& surface, const Logger& logger) {
+  auto srfIt =
+      std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload) {
+        return srfPayload.source == surface.geometryId().value();
+      });
 
-detray::io::material_volume_payload
-DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
-    const TrackingVolume& volume,
-    const detray::io::volume_payload& volPayload) const {
-  detray::io::material_volume_payload payload;
-
-  // (Hopefully) Temporarily: add empty material slabs for surfaces without
-  // material
-
-  for (const auto& srfPayload : volPayload.surfaces) {
-    auto mat = Material::fromMassDensity(42, 42, 0.1, 0.1, 0.1);
-    auto& slabPayload = payload.mat_slabs.emplace_back(
-        convertMaterialSlab(MaterialSlab(mat, 0.1)));
-    slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
-    slabPayload.surface.link = srfPayload.index_in_coll.value();
+  if (srfIt == volPayload.surfaces.end()) {
+    ACTS_ERROR("Surface " << surface.geometryId().value()
+                          << " not found in volume " << volPayload.name
+                          << ". This is a bug in the conversion.");
+    throw std::runtime_error("Surface not found in volume");
   }
 
-  payload.volume_link = volPayload.index;
+  return std::distance(volPayload.surfaces.begin(), srfIt);
+}
+
+constexpr static detray::io::material_slab_payload s_dummyMaterialSlab{
+    .type = detray::io::material_id::slab,
+    .index_in_coll = std::numeric_limits<std::size_t>::max(),
+    .thickness = 42,
+    .mat = {42, 42, 42, 42, 42, 42, 42},
+};
+
+}  // namespace
+
+// detray::io::material_volume_payload
+// DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
+//     const TrackingVolume& volume,
+//     const detray::io::volume_payload& volPayload) const {
+//   detray::io::material_volume_payload payload;
+
+// #if 0
+//   // @FIXME: Temporarily: add random material slabs for surfaces without
+//   // material
+//   for (const auto& srfPayload : volPayload.surfaces) {
+//     auto& slabPayload = payload.mat_slabs.emplace_back();
+//     slabPayload.thickness = 42;
+//     slabPayload.mat = {42, 42, 42, 42, 42, 42, 42};
+//     slabPayload.type = detray::io::material_id::slab;
+//     slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
+//     slabPayload.surface.link = srfPayload.index_in_coll.value();
+//   }
+
+//   payload.volume_link = volPayload.index;
+
+//   auto handle = [&](const Surface& surface) {
+//     if (surface.surfaceMaterial() == nullptr) {
+//       return;
+//     }
+
+//     const auto* material = dynamic_cast<const HomogeneousSurfaceMaterial*>(
+//         surface.surfaceMaterial());
+
+//     if (material == nullptr) {
+//       return;
+//     }
+
+//     // find surface index in volume
+//     auto srfIt =
+//         std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload)
+//         {
+//           return srfPayload.source == surface.geometryId().value();
+//         });
+
+//     if (srfIt == volPayload.surfaces.end()) {
+//       ACTS_ERROR("Surface " << surface.geometryId().value()
+//                             << " not found in volume " << volume.volumeName()
+//                             << ". This is a bug in the conversion.");
+//       throw std::runtime_error("Surface not found in volume");
+//     }
+
+//     auto srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
+
+//     auto& slabPayload = payload.mat_slabs.at(srfIdx);
+
+//     // add material slab to payload
+//     slabPayload = convertMaterialSlab(material->materialSlab());
+//     // Temp: redundant, but keep for now
+//     slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
+//     slabPayload.surface.link = srfIdx;
+//   };
+
+//   for (const auto& surface : volume.surfaces()) {
+//     handle(surface);
+//   }
+
+//   for (const auto& portal : volume.portals()) {
+//     handle(portal.surface());
+//   }
+
+// #endif
+//   return payload;
+// }
+
+// std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
+//                                      detray::io::material_id>>
+// DetrayPayloadConverter::convertGridSurfaceMaterial(
+//     const TrackingVolume& volume,
+//     const detray::io::volume_payload& volPayload) const {
+//   std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
+//                                        detray::io::material_id>>
+//       payload;
+
+//   auto handle = [&](const Surface& surface) {
+//     if (surface.surfaceMaterial() == nullptr) {
+//       return;
+//     }
+
+//     // auto up = surface.surfaceMaterial()->toDetrayPayload();
+//     // auto& matPayload = payload.emplace_back(std::move(*up));
+//     // matPayload.owner_link.link =
+//     //     findSurfaceInVolume(volPayload, surface, *m_logger);
+//   };
+
+//   for (const auto& surface : volume.surfaces()) {
+//     handle(surface);
+//   }
+
+//   for (const auto& portal : volume.portals()) {
+//     handle(portal.surface());
+//   }
+
+//   return payload;
+// }
+
+std::pair<std::vector<detray::io::grid_payload<
+              detray::io::material_slab_payload, detray::io::material_id>>,
+          detray::io::material_volume_payload>
+DetrayPayloadConverter::convertMaterial(
+    const TrackingVolume& volume,
+    detray::io::volume_payload& volPayload) const {
+  ACTS_DEBUG("Converting material for volume " << volume.volumeName());
+  std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
+                                       detray::io::material_id>>
+      grids;
+  detray::io::material_volume_payload homogeneous;
 
   auto handle = [&](const Surface& surface) {
     if (surface.surfaceMaterial() == nullptr) {
       return;
     }
 
-    const auto* material = dynamic_cast<const HomogeneousSurfaceMaterial*>(
-        surface.surfaceMaterial());
-
-    if (material == nullptr) {
-      return;
-    }
-
-    // find surface index in volume
     auto srfIt =
-        std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload) {
-          return srfPayload.source == surface.geometryId().value();
+        std::ranges::find_if(volPayload.surfaces, [&](const auto& srf) {
+          return srf.source == surface.geometryId().value();
         });
 
     if (srfIt == volPayload.surfaces.end()) {
-      ACTS_ERROR("Surface " << surface.geometryId().value()
-                            << " not found in volume " << volume.volumeName()
-                            << ". This is a bug in the conversion.");
       throw std::runtime_error("Surface not found in volume");
     }
 
-    auto srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
+    std::size_t srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
 
-    auto& slabPayload = payload.mat_slabs.at(srfIdx);
+    const auto& srfPayload = *srfIt;
 
-    // add material slab to payload
-    slabPayload = convertMaterialSlab(material->materialSlab());
-    // Temp: redundant, but keep for now
-    slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
-    slabPayload.surface.link = srfIdx;
+    auto detrayMaterial =
+        surface.surfaceMaterial()->toDetrayPayload(volPayload);
+
+    if (detrayMaterial == nullptr) {
+      ACTS_VERBOSE("Surface " << surface.geometryId().value()
+                              << " has no material");
+      // have NO material, but we need to add dummy material into the
+      // homogeneous collection
+      ACTS_WARNING(
+          "Adding dummy material slab to homogeneous collection (detray "
+          "hack)");
+      auto& slabPayload =
+          homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
+      slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
+      slabPayload.surface.link = srfIdx;
+    } else {
+      auto handleHomogeneous =
+          [&](const detray::io::material_slab_payload& slab) {
+            ACTS_VERBOSE("Surface " << surface.geometryId()
+                                    << " has homogeneous material");
+
+            homogeneous.mat_slabs.emplace_back(slab);
+            homogeneous.mat_slabs.back().index_in_coll =
+                homogeneous.mat_slabs.size() - 1;
+            homogeneous.mat_slabs.back().surface.link = srfIdx;
+          };
+
+      auto handleGrid =
+          [&](const detray::io::grid_payload<detray::io::material_slab_payload,
+                                             detray::io::material_id>& grid) {
+            ACTS_VERBOSE("Surface " << surface.geometryId()
+                                    << " has grid material");
+            grids.emplace_back(grid);
+            grids.back().owner_link.link = srfIdx;
+          };
+
+      std::visit(overloaded{handleHomogeneous, handleGrid}, *detrayMaterial);
+    }
   };
 
   for (const auto& surface : volume.surfaces()) {
@@ -451,7 +582,7 @@ DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
     handle(portal.surface());
   }
 
-  return payload;
+  return {grids, homogeneous};
 }
 
 DetrayPayloadConverter::Payloads
@@ -518,12 +649,13 @@ DetrayPayloadConverter::convertTrackingGeometry(
     // Portals have produced surfaces and are added in volume payload, handle
     // material now
 
-    auto& homogeneousMaterial = dthmPayload.volumes.emplace_back(
-        convertHomogeneousSurfaceMaterial(volume, volPayload));
+    auto [grids, homogeneous] = convertMaterial(volume, volPayload);
 
     ACTS_DEBUG("Volume " << volume.volumeName() << " has "
-                         << homogeneousMaterial.mat_slabs.size()
-                         << " material slabs");
+                         << homogeneous.mat_slabs.size() << " material slabs");
+
+    ACTS_DEBUG("Volume " << volume.volumeName() << " has " << grids.size()
+                         << " grids");
   });
 
   // HACK: Beampipe MUST have index 0

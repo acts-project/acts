@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvgGen3) {
   Acts::Svg::toFile({objects}, "utest_geometry_gen3_xy.svg");
 
   objects = Acts::Svg::drawTrackingGeometry(tgContext, *tGeometry,
-                                            actsvg::views::z_r{});
+                                            actsvg::views::z_r{}, true, true);
   Acts::Svg::toFile({objects}, "utest_geometry_gen3_zr.svg");
 }
 
