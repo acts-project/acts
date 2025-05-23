@@ -19,22 +19,22 @@ namespace Acts {
 
 namespace detail {
 
-TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
-                                   const ExecutionContext &execContext)
-    : m_device(execContext.device) {
+TensorPtr createTensorMemory(std::size_t nbytes,
+                             const ExecutionContext &execContext) {
   if (execContext.device.type == Acts::Device::Type::eCPU) {
     void *ptr = new std::byte[nbytes];
     if (ptr == nullptr) {
       throw std::bad_alloc{};
     }
-    m_ptr = Ptr(ptr, [](void *p) { delete[] static_cast<std::byte *>(p); });
+    return TensorPtr(ptr,
+                     [](void *p) { delete[] static_cast<std::byte *>(p); });
   } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
     assert(execContext.stream.has_value());
     auto stream = *execContext.stream;
     void *ptr{};
     ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
-    m_ptr = Ptr(
+    return TensorPtr(
         ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
 #else
     throw std::runtime_error(
@@ -43,22 +43,22 @@ TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
   }
 }
 
-TensorMemoryImpl TensorMemoryImpl::clone(std::size_t nbytes,
-                                         const ExecutionContext &to) const {
-  auto clone = TensorMemoryImpl(nbytes, to);
-  if (m_device.isCpu() && to.device.isCpu()) {
-    std::memcpy(clone.data(), m_ptr.get(), nbytes);
+TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
+                            Device devFrom, const ExecutionContext &to) {
+  auto clone = createTensor(nbytes, to);
+  if (devFrom.isCpu() && to.device.isCpu()) {
+    std::memcpy(clone.get(), ptr.get(), nbytes);
   } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
     assert(to.stream.has_value());
-    if (m_device.isCuda() && to.device.isCuda()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr.get(), nbytes,
+    if (devFrom.isCuda() && to.device.isCuda()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
                                       cudaMemcpyDeviceToDevice, *to.stream));
-    } else if (m_device.isCpu() && to.device.isCuda()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr.get(), nbytes,
+    } else if (devFrom.isCpu() && to.device.isCuda()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
                                       cudaMemcpyHostToDevice, *to.stream));
-    } else if (m_device.isCuda() && to.device.isCpu()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.data(), m_ptr.get(), nbytes,
+    } else if (devFrom.isCuda() && to.device.isCpu()) {
+      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
                                       cudaMemcpyDeviceToHost, *to.stream));
     }
 #else
