@@ -127,6 +127,13 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   }
 
   state.spacePointsMutable.resize(state.spacePoints.size());
+  for (auto sp : state.spacePoints) {
+    auto esp = sp.sourceLinks()[0].template get<const external_spacepoint_t*>();
+    state.spacePointsMutable.setQuality(
+        sp.index(), state.spacePointMutableData.quality(esp->index()));
+    state.spacePointsMutable.setDeltaR(
+        sp.index(), state.spacePointMutableData.deltaR(esp->index()));
+  }
 
   // we compute this here since all middle space point candidates belong to the
   // same z-bin
@@ -229,6 +236,14 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
         outputCollection);
 
   }  // loop on mediums
+
+  for (auto sp : state.spacePoints) {
+    auto esp = sp.sourceLinks()[0].template get<const external_spacepoint_t*>();
+    state.spacePointMutableData.setQuality(
+        esp->index(), state.spacePointsMutable.quality(sp.index()));
+    state.spacePointMutableData.setDeltaR(
+        esp->index(), state.spacePointsMutable.deltaR(sp.index()));
+  }
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>

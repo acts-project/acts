@@ -8,26 +8,20 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointMutableData.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSpacePointContainer.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
-#include <array>
-#include <limits>
-#include <list>
-#include <map>
 #include <memory>
 #include <ranges>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -41,8 +35,8 @@ concept GridBinCollection =
 
 template <typename collection_t, typename external_t, std::size_t N = 3ul>
 concept CollectionStoresSeedsTo =
-    requires(collection_t coll, Acts::Seed<external_t, N> seed) {
-      Acts::detail::pushBackOrInsertAtEnd(coll, seed);
+    requires(collection_t coll, Seed<external_t, N> seed) {
+      detail::pushBackOrInsertAtEnd(coll, seed);
     };
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
@@ -58,8 +52,10 @@ class SeedFinder {
 
  public:
   struct SeedingState {
-    InternalSpacePointContainer spacePoints;
     // Mutable variables for Space points used in the seeding
+    SpacePointMutableData spacePointMutableData{};
+
+    InternalSpacePointContainer spacePoints{};
     SpacePointMutableData spacePointsMutable{};
 
     // bottom space point
@@ -80,11 +76,9 @@ class SeedFinder {
     CandidatesForMiddleSp candidates_collector{};
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour,
-                                   Acts::detail::ipow(3, grid_t::DIM)>
+    boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>
         bottomNeighbours{};
-    boost::container::small_vector<Acts::Neighbour,
-                                   Acts::detail::ipow(3, grid_t::DIM)>
+    boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>
         topNeighbours{};
   };
 
@@ -93,10 +87,9 @@ class SeedFinder {
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
   /// @param logger the ACTS logger
-  explicit SeedFinder(
-      const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-      std::unique_ptr<const Acts::Logger> logger =
-          getDefaultLogger("Finder", Logging::Level::INFO));
+  explicit SeedFinder(const SeedFinderConfig<external_spacepoint_t>& config,
+                      std::unique_ptr<const Logger> logger =
+                          getDefaultLogger("Finder", Logging::Level::INFO));
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
@@ -110,16 +103,15 @@ class SeedFinder {
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  template <typename container_t, Acts::GridBinCollection sp_range_t>
-    requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
-                                           3ul>
-  void createSeedsForGroup(const Acts::SeedFinderOptions& options,
+  template <typename container_t, GridBinCollection sp_range_t>
+    requires CollectionStoresSeedsTo<container_t, external_spacepoint_t, 3ul>
+  void createSeedsForGroup(const SeedFinderOptions& options,
                            SeedingState& state, const grid_t& grid,
                            container_t& outputCollection,
                            const sp_range_t& bottomSPs,
                            const std::size_t middleSPs,
                            const sp_range_t& topSPs,
-                           const Acts::Range1D<float>& rMiddleSPRange) const;
+                           const Range1D<float>& rMiddleSPRange) const;
 
  private:
   /// Given a middle space point candidate, get the proper radius validity range
@@ -130,7 +122,7 @@ class SeedFinder {
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const external_spacepoint_t& spM,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
+      const Range1D<float>& rMiddleSPRange) const;
 
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
@@ -148,13 +140,13 @@ class SeedFinder {
   /// @param uIP2 square of uIP
   /// @param cosPhiM ratio between middle SP x position and radius
   /// @param sinPhiM ratio between middle SP y position and radius
-  template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
+  template <SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options,
+      const SeedFinderOptions& options,
       const InternalSpacePointContainer& spacePoints,
       SpacePointMutableData& spacePointsMutable,
-      boost::container::small_vector<
-          Neighbour, Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+      boost::container::small_vector<Neighbour, detail::ipow(3, grid_t::DIM)>&
+          otherSPsNeighbours,
       ConstInternalSpacePointProxy mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
@@ -168,18 +160,18 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
-  template <Acts::DetectorMeasurementInfo detailedMeasurement>
+  template <DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(const InternalSpacePointContainer& spacePoints,
                         ConstInternalSpacePointProxy spM,
-                        const Acts::SeedFinderOptions& options,
+                        const SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
 
  private:
   const Logger& logger() const { return *m_logger; }
 
-  Acts::SeedFinderConfig<external_spacepoint_t> m_config;
-  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
+  SeedFinderConfig<external_spacepoint_t> m_config;
+  std::unique_ptr<const Logger> m_logger{nullptr};
 };
 
 }  // namespace Acts
