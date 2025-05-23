@@ -48,7 +48,8 @@ namespace Acts::detail {
 
 Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
     const PVConstLink &geoPV, const GeoShapeUnion &geoUnion,
-    const Transform3 &absTransform, bool sensitive) const {
+    const Transform3 &absTransform, SurfaceBoundFactory &boundFactory,
+    bool sensitive) const {
   const auto shiftA = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpA());
   const auto shiftB = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpB());
 
@@ -56,13 +57,13 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
     return GeoModelConversionError::WrongShapeForConverter;
   }
 
-  auto shiftARes =
-      detail::GeoShiftConverter{}(geoPV, *shiftA, absTransform, sensitive);
+  auto shiftARes = detail::GeoShiftConverter{}(geoPV, *shiftA, absTransform,
+                                               boundFactory, sensitive);
   if (!shiftARes.ok()) {
     return shiftARes.error();
   }
-  auto shiftBRes =
-      detail::GeoShiftConverter{}(geoPV, *shiftB, absTransform, sensitive);
+  auto shiftBRes = detail::GeoShiftConverter{}(geoPV, *shiftB, absTransform,
+                                               boundFactory, sensitive);
   if (!shiftBRes.ok()) {
     return shiftBRes.error();
   }
@@ -127,7 +128,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   auto hlxpy = boundsB.values()[TrapezoidBounds::eHalfLengthXnegY];
 
   auto trapezoidBounds =
-      std::make_shared<TrapezoidBounds>(hlxpy, hlxny, halfLengthY);
+      boundFactory.makeBounds<TrapezoidBounds>(hlxpy, hlxny, halfLengthY);
 
   // Create transform from the transform of surfaceA and translate it in y
   // direction using the half length

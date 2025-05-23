@@ -28,7 +28,8 @@
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
-    const Transform3& absTransform, bool sensitive) const {
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+    bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
@@ -64,8 +65,8 @@ Acts::detail::GeoPolygonConverter::operator()(
     double halfXnegY = unitLength * halfLengths[0];
     double halfXposY = unitLength * halfLengths[1];
     double halfY = unitLength * halfLengths[2];
-    auto trapBounds =
-        std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
+    auto trapBounds = boundFactory.makeBounds<Acts::TrapezoidBounds>(
+        halfXnegY, halfXposY, halfY);
     if (!sensitive) {
       auto surface = Surface::makeShared<PlaneSurface>(transform, trapBounds);
       return std::make_tuple(nullptr, surface);
@@ -101,7 +102,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double halfYnegX = unitLength * halfLengths[3];
     double halfYposX = unitLength * halfLengths[4];
 
-    auto diamondBounds = std::make_shared<Acts::DiamondBounds>(
+    auto diamondBounds = boundFactory.makeBounds<Acts::DiamondBounds>(
         halfXnegY, halfXzeroY, halfXposY, halfYnegX, halfYposX);
     if (!sensitive) {
       auto surface =

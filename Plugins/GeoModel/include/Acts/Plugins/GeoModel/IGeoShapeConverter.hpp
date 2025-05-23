@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -23,27 +24,32 @@ class Surface;
 
 /// @class IGeoShapeConverter
 ///
-/// Interface for the conversion of GeoShapes to Acts surfaces or volumes
+/// Interface for the conversion of GeoShapes to Acts surfaces
 class IGeoShapeConverter {
  public:
-  /// Virtual destructor
+  /// @brief Virtual destructor
   virtual ~IGeoShapeConverter() = default;
 
-  /// @brief Convert a GeoShape to a detector element and surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
+  /// @brief Convert a GeoShape into a sensitive surface with associated
+  ///        GeoModelDetectorElement
+  /// @param geoFPV The physical volume to convert
+  /// @param transform: Placement of the constructed detector element
+  /// @param boundFactory: Reference to the bound factory to share equivalent bounds
+  ///                      across multiple surfaces
   /// @return The detector element and surface
   virtual Result<GeoModelSensitiveSurface> toSensitiveSurface(
-      PVConstLink geoPV, const Transform3& transform) const = 0;
+      PVConstLink geoPV, const Transform3& transform,
+      SurfaceBoundFactory& boundFactory) const = 0;
 
-  /// @brief Convert a GeoShape to a detector element and passive surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
-  /// @return The representing surface
+  /// @brief Convert a GeoShape into a passive surface
+  /// @param geoFPV The physical volume to convert
+  /// @param transform: Placement of the constructed detector element
+  /// @param boundFactory: Reference to the bound factory to share equivalent bounds
+  ///                      across multiple surfaces
+  /// @return The detector element and surface
   virtual Result<std::shared_ptr<Surface>> toPassiveSurface(
-      PVConstLink geoPV, const Transform3& transform) const = 0;
+      PVConstLink geoPV, const Transform3& transform,
+      SurfaceBoundFactory& boundFactory) const = 0;
 };
 
 }  // namespace Acts
