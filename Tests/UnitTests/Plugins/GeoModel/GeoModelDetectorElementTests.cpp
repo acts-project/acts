@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 }
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementAlignment) {
-  auto material = new GeoMaterial("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
 
   // (BOX object)
