@@ -57,8 +57,8 @@ ActsExamples::GlobalShift::GlobalShift(
     const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometry& trackingGeometry,
     const std::vector<Acts::GeometryIdentifier>& selection,
-    const Acts::Vector3& shift)
-    : shift(shift),
+    const Acts::Vector3& ishift)
+    : shift(ishift),
       nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {
   // Loop over the selected elements and store the nominal transforms
 }
@@ -78,8 +78,8 @@ std::shared_ptr<Acts::ITransformStore> ActsExamples::GlobalShift::operator()() {
 ActsExamples::PerpendicularScale::PerpendicularScale(
     const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometry& trackingGeometry,
-    const std::vector<Acts::GeometryIdentifier>& selection, double expansion)
-    : expansion(expansion),
+    const std::vector<Acts::GeometryIdentifier>& selection, double iexpansion)
+    : expansion(iexpansion),
       nominalTransforms(selectTransforms(gctx, trackingGeometry, selection)) {
   // Loop over the selected elements and store the nominal transforms
 }

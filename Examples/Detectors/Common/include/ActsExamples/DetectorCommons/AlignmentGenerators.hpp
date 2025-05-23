@@ -32,11 +32,11 @@ struct GlobalShift {
   /// @param gctx The geometry context - for the nominal transforms
   /// @param trackingGeometry The tracking geometry
   /// @param selection The selection of elements to be shifted via GeometryIdentifier
-  /// @param shift The shift vector
+  /// @param ishift The shift vector
   GlobalShift(const Acts::GeometryContext& gctx,
               const Acts::TrackingGeometry& trackingGeometry,
               const std::vector<Acts::GeometryIdentifier>& selection,
-              const Acts::Vector3& shift);
+              const Acts::Vector3& ishift);
 
   // The shift to be applied
   Acts::Translation3 shift = Acts::Translation3(Acts::Vector3::Zero());
@@ -58,11 +58,11 @@ struct PerpendicularScale {
   /// @param gctx The geometry context - for the nominal transforms
   /// @param trackingGeometry The tracking geometry
   /// @param selection The selection of elements to be shifted via GeometryIdentifier
-  /// @param expansion The radial expansion factor
+  /// @param iexpansion The radial expansion factor
   PerpendicularScale(
       const Acts::GeometryContext& gctx,
       const Acts::TrackingGeometry& trackingGeometry,
-      const std::vector<Acts::GeometryIdentifier>& selection, double expansion);
+      const std::vector<Acts::GeometryIdentifier>& selection, double iexpansion);
 
   // The expansion to be applied
   double expansion = 1.0;
