@@ -206,6 +206,8 @@ BOOST_AUTO_TEST_CASE(Static) {
   BOOST_CHECK_EQUAL(countVolumes(*tGeometry), 2);
 
   auto lookup = nameLookup(*tGeometry);
+  BOOST_CHECK_EQUAL(lookup("child").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
   auto actCyl =
       dynamic_cast<const CylinderVolumeBounds&>(lookup("child").volumeBounds());
   // Size as given
@@ -213,6 +215,8 @@ BOOST_AUTO_TEST_CASE(Static) {
   BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
   BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
 
+  BOOST_CHECK_EQUAL(lookup("World").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
   auto worldCyl =
       dynamic_cast<const CylinderVolumeBounds&>(lookup("World").volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 9_mm);
@@ -251,6 +255,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
   BOOST_CHECK_EQUAL(countVolumes(*tGeometry), 6);
 
   auto lookup = nameLookup(*tGeometry);
+  BOOST_CHECK_EQUAL(lookup("World").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
   auto worldCyl =
       dynamic_cast<const CylinderVolumeBounds&>(lookup("World").volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 8_mm);
@@ -260,16 +266,20 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
   BOOST_CHECK_EQUAL(lookup("World").portals().size(), 8);
 
   for (std::size_t i = 0; i < 3; i++) {
-    auto actCyl = dynamic_cast<const CylinderVolumeBounds&>(
-        lookup("child" + std::to_string(i)).volumeBounds());
+    const auto& vol{lookup("child" + std::to_string(i))};
+    BOOST_CHECK_EQUAL(vol.volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+    auto actCyl = dynamic_cast<const CylinderVolumeBounds&>(vol.volumeBounds());
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMinR), 10_mm);
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
   }
 
   for (std::size_t i = 0; i < 2; i++) {
-    auto gapCyl = dynamic_cast<const CylinderVolumeBounds&>(
-        lookup("Container::Gap" + std::to_string(i + 1)).volumeBounds());
+    const auto& vol{lookup("Container::Gap" + std::to_string(i + 1))};
+    BOOST_CHECK_EQUAL(vol.volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+    auto gapCyl = dynamic_cast<const CylinderVolumeBounds&>(vol.volumeBounds());
     BOOST_CHECK_EQUAL(gapCyl.get(CylinderVolumeBounds::eMinR), 10_mm);
     BOOST_CHECK_EQUAL(gapCyl.get(CylinderVolumeBounds::eMaxR), 20_mm);
     BOOST_CHECK_EQUAL(gapCyl.get(CylinderVolumeBounds::eHalfLengthZ), 6_mm);
@@ -316,6 +326,9 @@ BOOST_AUTO_TEST_CASE(Confined) {
 
   // overall dimensions are the wrapper volume + envelope
   auto lookup = nameLookup(*trackingGeometry);
+
+  BOOST_CHECK_EQUAL(lookup("World").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
   auto worldCyl =
       dynamic_cast<const CylinderVolumeBounds&>(lookup("World").volumeBounds());
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 48_mm);
@@ -325,6 +338,9 @@ BOOST_AUTO_TEST_CASE(Confined) {
   // 4 outer portals and 4 inner
   BOOST_CHECK_EQUAL(lookup("World").portals().size(), 8);
   BOOST_CHECK_EQUAL(lookup("World").volumes().size(), 1);
+
+  BOOST_CHECK_EQUAL(lookup("PixelWrapper").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
 
   auto wrapperCyl = dynamic_cast<const CylinderVolumeBounds&>(
       lookup("PixelWrapper").volumeBounds());
@@ -337,12 +353,89 @@ BOOST_AUTO_TEST_CASE(Confined) {
 
   for (const auto& name :
        {"PixelNeg1", "PixelNeg2", "PixelPos1", "PixelPos2"}) {
+    BOOST_CHECK_EQUAL(lookup(name).volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
     auto actCyl =
         dynamic_cast<const CylinderVolumeBounds&>(lookup(name).volumeBounds());
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMinR), 100_mm);
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMaxR), 350_mm);
     BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eHalfLengthZ), 100_mm);
     BOOST_CHECK_EQUAL(lookup(name).portals().size(), 4);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ConfinedWithShared) {
+  Transform3 base{Transform3::Identity()};
+
+  constexpr double rMin = 100_mm;
+  constexpr double rMax = 350_mm;
+  constexpr double hlZ = 100_mm;
+
+  auto sharedBounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addCylinderContainer(
+      "PixelWrapper", AxisDirection::AxisZ, [&](auto& wrap) {
+        wrap.addStaticVolume(base * Translation3{Vector3{0, 0, -750_mm}},
+                             sharedBounds, "PixelNeg1");
+
+        wrap.addStaticVolume(base * Translation3{Vector3{0, 0, -200_mm}},
+                             sharedBounds, "PixelNeg2");
+
+        wrap.addStaticVolume(base * Translation3{Vector3{0, 0, 200_mm}},
+                             sharedBounds, "PixelPos1");
+
+        wrap.addStaticVolume(base * Translation3{Vector3{0, 0, 975_mm}},
+                             sharedBounds, "PixelPos2");
+      });
+  auto trackingGeometry = root->construct({}, gctx, *logger);
+  // overall dimensions are the wrapper volume + envelope
+  auto lookup = nameLookup(*trackingGeometry);
+  BOOST_CHECK_EQUAL(lookup("World").volumeBounds().type(),
+                    VolumeBounds::BoundsType::eCylinder);
+  auto worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(lookup("World").volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 98_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 370_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ), 982.5_mm);
+  // 4 outer portals and 4 inner
+  BOOST_CHECK_EQUAL(lookup("World").portals().size(), 8);
+  BOOST_CHECK_EQUAL(lookup("World").volumes().size(), 4);
+
+  constexpr std::array<double, 4> expHalfL{187.5_mm, 237.5_mm, 293.75_mm,
+                                           243.75_mm};
+  const std::array<std::string, 4> volNames{"PixelNeg1", "PixelNeg2",
+                                            "PixelPos1", "PixelPos2"};
+  for (std::size_t v = 0; v < 4; ++v) {
+    const auto& testMe{lookup(volNames[v])};
+    BOOST_CHECK_EQUAL(testMe.volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+    BOOST_CHECK_EQUAL(testMe.volumeBoundsPtr() != sharedBounds, true);
+
+    auto actCyl =
+        dynamic_cast<const CylinderVolumeBounds&>(testMe.volumeBounds());
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMinR), 100_mm);
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eMaxR), 350_mm);
+    BOOST_CHECK_EQUAL(actCyl.get(CylinderVolumeBounds::eHalfLengthZ),
+                      expHalfL[v]);
+    BOOST_CHECK_EQUAL(testMe.portals().size(), 4);
+    if (v + 1 == 4) {
+      break;
+    }
+    const auto& nextVol = lookup(volNames[(v + 1)]);
+    const Acts::Vector3 outside =
+        testMe.transform().translation() +
+        Acts::Vector3{150_mm, 0.,
+                      actCyl.get(CylinderVolumeBounds::eHalfLengthZ) - 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(outside), false);
+    const Acts::Vector3 inside =
+        testMe.transform().translation() +
+        Acts::Vector3{150_mm, 0.,
+                      actCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 0.5_mm};
+    BOOST_CHECK_EQUAL(nextVol.inside(inside), true);
   }
 }
 
@@ -376,42 +469,61 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     surfaces.push_back(element->surface().getSharedPtr());
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Disc)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {0.1_mm, 0.1_mm},
-            .r = {1_mm, 1_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 346.25353003_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+
+    BOOST_CHECK_EQUAL(lookup("Layer0").volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR),
+                      346.25353003_mm, 1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayer) {
@@ -449,43 +561,62 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
     }
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {10_mm, 10_mm},
-            .r = {20_mm, 10_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+
+    BOOST_CHECK_EQUAL(lookup("Layer0").volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Material) {
@@ -522,7 +653,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                             .at(static_cast<std::size_t>(NegativeDisc))
                             .surface()
                             .surfaceMaterial();
-  BOOST_CHECK_NE(negDisc, nullptr);
+  BOOST_REQUIRE_NE(negDisc, nullptr);
   const auto& negDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*negDisc);
   // Check positive disc material
@@ -530,7 +661,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                             .at(static_cast<std::size_t>(PositiveDisc))
                             .surface()
                             .surfaceMaterial();
-  BOOST_CHECK_NE(posDisc, nullptr);
+  BOOST_REQUIRE_NE(posDisc, nullptr);
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
 
@@ -544,7 +675,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                              .at(static_cast<std::size_t>(OuterCylinder))
                              .surface()
                              .surfaceMaterial();
-  BOOST_CHECK_NE(outerCyl, nullptr);
+  BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
   BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
@@ -694,7 +825,7 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   // Check that material is attached to all faces
   for (std::size_t i = 0; i < child.portals().size(); i++) {
     const auto* material = child.portals().at(i).surface().surfaceMaterial();
-    BOOST_CHECK_NE(material, nullptr);
+    BOOST_REQUIRE_NE(material, nullptr);
 
     const auto& gridMaterial =
         dynamic_cast<const ProtoGridSurfaceMaterial&>(*material);
@@ -983,6 +1114,10 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
 
     auto trackingGeometry = root.construct({}, gctx, *logger);
     auto lookup = nameLookup(*trackingGeometry);
+
+    BOOST_CHECK_EQUAL(lookup("Layer0").volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+
     auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
         lookup("Layer0").volumeBounds());
 
@@ -1050,6 +1185,9 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
 
     auto trackingGeometry = root.construct({}, gctx, *logger);
     auto lookup = nameLookup(*trackingGeometry);
+    BOOST_CHECK_EQUAL(lookup("Layer0").volumeBounds().type(),
+                      VolumeBounds::BoundsType::eCylinder);
+
     auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
         lookup("Layer0").volumeBounds());
 

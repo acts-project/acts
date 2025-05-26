@@ -2,7 +2,23 @@ add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
-    target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+    )
+endif()
+
+if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
+    )
+
+    target_link_libraries(
+        ActsPluginExaTrkX
+        PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
+    )
+    target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
@@ -61,7 +77,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
-        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
+        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
     )
     target_compile_options(
         ActsPluginExaTrkX

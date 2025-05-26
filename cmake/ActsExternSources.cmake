@@ -1,5 +1,5 @@
 set(ACTS_ACTSVG_SOURCE
-    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=8073a371465ce2edef3bfdba5eae900e17ee61ae21766111ad1834e29250f304"
+    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=75944cbc4444d3099764f19f6fa5fbf9f2b81e3ac776b5874746add74a7cd0f8"
     CACHE STRING
     "Source to take ACTSVG from"
 )

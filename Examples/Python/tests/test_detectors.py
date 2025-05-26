@@ -174,7 +174,7 @@ def test_coordinate_converter(trk_geo):
         digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),

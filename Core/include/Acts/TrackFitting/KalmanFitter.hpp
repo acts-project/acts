@@ -1211,6 +1211,8 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
+    kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
+    kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 

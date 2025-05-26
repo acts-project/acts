@@ -29,6 +29,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -68,7 +69,8 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
-                       volumeLogLevel, buildProto, materialDecorator);
+                       volumeLogLevel, buildProto, materialDecorator,
+                       graphvizFile);
   }
 
   {
