@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-// Constructor
 Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
     const Config& config, std::unique_ptr<const Acts::Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
