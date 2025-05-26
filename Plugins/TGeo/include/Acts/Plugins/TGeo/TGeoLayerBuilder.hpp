@@ -113,7 +113,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::shared_ptr<const ITGeoDetectorElementSplitter>
         detectorElementSplitter = nullptr;
     /// Factory for creating detector elements based on TGeoNodes
-    ElementFactory elementFactory = defaultElementFactory;
+    ElementFactory detectorElementFactory = defaultElementFactory;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// ProtoLayer helper

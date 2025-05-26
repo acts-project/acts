@@ -89,11 +89,12 @@ std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
 Geant4Detector::buildGeant4Volumes(const Config& cfg,
                                    const Acts::Logger& logger) {
   // Generate the surface cache
+  Acts::Geant4DetectorSurfaceFactory::Config g4SurfaceConfig;
   Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
   G4Transform3D g4ToWorld;
 
-  Acts::Geant4DetectorSurfaceFactory{}.construct(
-      g4SurfaceCache, g4ToWorld, *cfg.g4World, cfg.g4SurfaceOptions);
+  Acts::Geant4DetectorSurfaceFactory(g4SurfaceConfig)
+      .construct(g4SurfaceCache, g4ToWorld, *cfg.g4World, cfg.g4SurfaceOptions);
 
   ACTS_INFO("Found " << g4SurfaceCache.matchedG4Volumes
                      << " matching  Geant4 Physical volumes.");
