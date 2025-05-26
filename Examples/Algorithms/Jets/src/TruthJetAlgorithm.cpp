@@ -14,12 +14,12 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <ostream>
+#include <stdexcept>
+
 #include <fastjet/ClusterSequence.hh>
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
-
-#include <ostream>
-#include <stdexcept>
 
 namespace ActsExamples {
 
