@@ -16,9 +16,7 @@
 namespace Acts {
 
 /// @class MultiWireVolumeBuilder
-
-///@brief A class to build multiwire tracking volumes (e.g wire chambers)
-
+/// @brief A class to build multiwire tracking volumes (e.g wire chambers)
 class MultiWireVolumeBuilder {
  public:
   /// Configuration Struct
