@@ -384,7 +384,6 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   }};
   Blueprint root{cfg};
 
-
   root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
     auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
         0_mm, kBeamPipeRadius, kBeamPipeHalfLengthZ);
