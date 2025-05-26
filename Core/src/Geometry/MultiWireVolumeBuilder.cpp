@@ -19,7 +19,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
+Acts::Experimental::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
     const Config& config, std::unique_ptr<const Acts::Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
   if (m_config.mlSurfaces.empty()) {
@@ -31,7 +31,8 @@ Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   }
 }
 
-std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
+std::unique_ptr<Acts::TrackingVolume>
+Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
     Acts::GeometryContext& gctx) const {
   // Create the tracking volume
 
@@ -84,7 +85,7 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
       axisA, axisB);
 
   // The indexed grid to be filled from the navigation policy
-  Acts::Experimental::IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
+  IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
       std::move(grid),
       {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()});
 
@@ -101,15 +102,14 @@ std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(
   // Configure the navigation policy with the binning for the grid for the
   // sensitive surfaces
 
-  MultiLayerNavigationPolicy<decltype(indexedGrid)>::Config navConfig;
+  MultiLayerNavigationPolicy::Config navConfig;
   navConfig.binExpansion = {expansionA, expansionB};
   navConfig.axis = {protoAxisA, protoAxisB};
 
   std::unique_ptr<NavigationPolicyFactory> factory =
       NavigationPolicyFactory::make()
           .add<TryAllNavigationPolicy>(tryAllConfig)
-          .add<MultiLayerNavigationPolicy<decltype(indexedGrid)>>(navConfig,
-                                                                  indexedGrid)
+          .add<MultiLayerNavigationPolicy>(navConfig, indexedGrid)
           .asUniquePtr();
 
   auto policyBase = factory->build(gctx, *trackingVolume, *m_logger);

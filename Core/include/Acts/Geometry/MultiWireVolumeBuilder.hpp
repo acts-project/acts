@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @class MultiWireVolumeBuilder
 /// @brief A class to build multiwire tracking volumes (e.g wire chambers)
@@ -61,4 +61,4 @@ class MultiWireVolumeBuilder {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

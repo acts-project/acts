@@ -18,24 +18,19 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-namespace Acts {
-
-/// Concept for the indexed grid type
-template <typename T>
-concept IndexGridConcept = requires(T igrid) {
-  typename T::grid_type;
-  // grid must be of that type
-  { igrid.grid } -> std::same_as<typename T::grid_type&>;
-  // transform must be Transform3
-  { igrid.transform } -> std::same_as<Transform3&>;
-};
+namespace Acts::Experimental {
 
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
 /// the grid.
-template <IndexGridConcept indexed_grid>
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
+  using gridType =
+      Grid<std::vector<std::size_t>,
+           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
+  using indexedUpdatorType = IndexedSurfacesNavigation<gridType>;
+
   struct Config {
     // The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
@@ -55,7 +50,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   explicit MultiLayerNavigationPolicy(const GeometryContext& gctx,
                                       const TrackingVolume& volume,
                                       const Logger& logger, Config config,
-                                      indexed_grid grid)
+                                      indexedUpdatorType grid)
       : m_volume(volume), m_indexedGrid(grid) {
     ACTS_VERBOSE("Constructing MultiLayerNavigationPolicy for volume "
                  << m_volume.volumeName());
@@ -69,8 +64,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
       surfaces.push_back(surface.getSharedPtr());
     }
 
-    Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    Acts::Experimental::detail::IndexedGridFiller filler{config.binExpansion};
+    Experimental::detail::CenterReferenceGenerator rGenerator;
+    Experimental::detail::IndexedGridFiller filler{config.binExpansion};
     filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
   }
 
@@ -84,9 +79,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     ACTS_VERBOSE(
         "MultiLayerNavigationPolicy Candidates initialization for volume"
         << m_volume.volumeName());
-    const Transform3& itransform = m_volume.transform().inverse();
-    const Acts::Vector3 locPosition = itransform * args.position;
-    const Acts::Vector3 locDirection = itransform * args.direction;
+    const Transform3& itransform = m_volume.itransform();
+    const Vector3 locPosition = itransform * args.position;
+    const Vector3 locDirection = itransform * args.direction;
 
     std::vector<Vector2> path = generatePath(locPosition, locDirection);
 
@@ -134,7 +129,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
       auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
       auto v2 = m_indexedGrid.grid.upperRightBinEdge({maxXIndex, i + 1});
 
-      auto intersection = detail::IntersectionHelper2D::intersectSegment(
+      auto intersection = Acts::detail::IntersectionHelper2D::intersectSegment(
           Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]),
           startPosition.template block<2, 1>(0, 0),
           unitDir.template block<2, 1>(0, 0));
@@ -152,17 +147,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
-  indexed_grid m_indexedGrid;
+  indexedUpdatorType m_indexedGrid;
 };
 
-// Make alias for the static assert check for the Navigation Policy
-using gridType =
-    Grid<std::vector<std::size_t>,
-         Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
-         Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
-using indexedUpdatorType = Experimental::IndexedSurfacesNavigation<gridType>;
+static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
 
-static_assert(
-    NavigationPolicyConcept<MultiLayerNavigationPolicy<indexedUpdatorType>>);
-
-}  // namespace Acts
+}  // namespace Acts::Experimental
