@@ -124,8 +124,6 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
-  c10::cuda::CUDAStreamGuard(execContext.stream.value());
-
   auto nodeFeatures =
       std::any_cast<torch::Tensor>(inNodeFeatures).to(torchDevice);
 
@@ -168,7 +166,7 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
 
   t2 = std::chrono::high_resolution_clock::now();
 
-  auto stream = execContext.stream.value().stream();
+  auto stream = execContext.stream.value();
   auto status = context->enqueueV3(stream);
   if (!status) {
     throw std::runtime_error("Failed to execute TensorRT model");
