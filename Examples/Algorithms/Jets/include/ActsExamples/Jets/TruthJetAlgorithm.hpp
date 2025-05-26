@@ -16,9 +16,9 @@
 
 #include <string>
 
-#include <fastjet/ClusterSequence.hh>
-#include <fastjet/JetDefinition.hh>
-#include <fastjet/PseudoJet.hh>
+namespace fastjet {
+class PseudoJet;
+}
 
 namespace ActsExamples {
 struct AlgorithmContext;
