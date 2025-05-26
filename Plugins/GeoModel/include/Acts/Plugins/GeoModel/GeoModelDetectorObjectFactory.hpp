@@ -23,7 +23,9 @@
 class GeoShape;
 struct GeoModelTree;
 class Surface;
+
 namespace Acts {
+
 /// @brief Factory class to convert GeoModel objects into Acts volumes and surfaces. The surface conversion
 ///        process constructs surfaces from GeoTrd, GeoBox, GeoTube,
 ///        GeoSimplePolygonBrep volume shapes with transforms being in the

@@ -14,6 +14,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
 #include "GeoModelKernel/throwExcept.h"
+
 namespace ActsExamples {
 
 GeoModelDetector::GeoModelDetector(const Config& cfg)

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -17,6 +18,7 @@
 #include <set>
 #include <type_traits>
 #include <vector>
+
 namespace Acts {
 ///   @brief Factory helper class to construct volume or surface bounds where the constructed bounds
 ///          are cached inside the factory and if the same bound parameters are
