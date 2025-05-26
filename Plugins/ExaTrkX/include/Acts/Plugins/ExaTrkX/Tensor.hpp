@@ -91,7 +91,7 @@ class Tensor {
   /// same device
   Tensor clone(const ExecutionContext &to) const {
     auto clonedPtr = detail::cloneTensorMemory(m_ptr, nbytes(), m_device, to);
-    return Tensor(std::move(clonedPtr), m_shape, to);
+    return Tensor(m_shape, std::move(clonedPtr), to);
   }
 
   /// Get the non-const data pointer
