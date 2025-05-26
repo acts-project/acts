@@ -107,7 +107,13 @@ ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
   ACTS_DEBUG("thread=" << threadId << ", next_event=" << m_nextEvent
                        << " waiting for semaphore");
   m_waiting++;
-  m_queueSemaphore.try_acquire_for(std::chrono::seconds(10));
+  std::chrono::seconds timeout{10};
+  if (!m_queueSemaphore.try_acquire_for(timeout)) {
+    ACTS_ERROR("thread=" << threadId << ", next_event=" << m_nextEvent
+                         << " failed to acquire semaphore after "
+                         << timeout.count() << "s");
+    return ProcessCode::ABORT;
+  }
   m_waiting--;
   ACTS_DEBUG("thread=" << threadId << ", next_event=" << m_nextEvent
                        << " have semaphore");
