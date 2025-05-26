@@ -23,20 +23,3 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
           detElement.nominal().worldTransformation(), axes, scalor,
           std::move(material)),
       m_detElement(detElement) {}
-
-const Acts::Transform3& Acts::DD4hepDetectorElement::transform(
-    const Acts::GeometryContext& gctx) const {
-  // Treating non-empty context => contextual alignment present
-  if (gctx.hasValue()) {
-    const ContextType* dd4hepCtx =
-        gctx.maybeGet<DD4hepDetectorElement::ContextType>();
-    // Check if a contextual transform is available for this detector element
-    auto trfPtr = (dd4hepCtx != nullptr) ? dd4hepCtx->contextualTransform(*this)
-                                         : nullptr;
-    if (trfPtr != nullptr) {
-      return *trfPtr;
-    }
-  }
-  // Empty context, return nominal transform
-  return TGeoDetectorElement::transform(gctx);
-}

@@ -43,7 +43,6 @@ if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
         DD4hepCylindricalDetector
         DD4hepDetectorElement
         DD4hepDiscLayerStructure
-        DD4hepGeometryContext
     )
     foreach(_test ${dd4hep_tests})
         add_unittest(${_test} ${_test}Tests.cpp)

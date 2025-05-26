@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TransformStore.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -286,29 +285,6 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   CHECK_CLOSE_ABS(boundValues[1u], -450., 1e-10);
   CHECK_CLOSE_ABS(boundValues[2u], 50, 1e-10);
   CHECK_CLOSE_ABS(boundValues[3u], 450, 1e-10);
-
-  // Test with DD4hep contextual transform
-  Acts::Transform3 contextualTransform =
-      Acts::Transform3::Identity() * Acts::Translation3(11., 21., 31.);
-  Acts::TransformStoreGeometryId transformStore(
-      {{surface.geometryId(), contextualTransform}});
-
-  Acts::DD4hepAlignmentStore alignmentStore(transformStore);
-
-  Acts::DD4hepGeometryContext::Alignment alignmentDelegate;
-  alignmentDelegate.connect<&Acts::DD4hepAlignmentStore::call>(&alignmentStore);
-
-  // Create the geometry context
-  Acts::DD4hepGeometryContext dd4HepAlignedContext(alignmentDelegate);
-
-  Acts::GeometryContext alignedContext(dd4HepAlignedContext);
-  Acts::GeometryContext nominalContext = tContext;
-
-  const Acts::Transform3& nominalTransform = surface.transform(nominalContext);
-  const Acts::Transform3& alignedTransform = surface.transform(alignedContext);
-
-  BOOST_CHECK(alignedTransform.isApprox(contextualTransform));
-  BOOST_CHECK(nominalTransform.isApprox(sTransform));
 
   // memory cleanup
   lcdd->destroyInstance();
