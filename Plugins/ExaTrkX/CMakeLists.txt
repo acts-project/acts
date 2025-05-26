@@ -1,10 +1,16 @@
-add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
+add_library(
+    ActsPluginExaTrkX
+    SHARED
+    src/buildEdges.cpp
+    src/ExaTrkXPipeline.cpp
+    src/Tensor.cpp
+)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
 endif()
 
