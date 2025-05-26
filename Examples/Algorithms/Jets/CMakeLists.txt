@@ -10,7 +10,4 @@ target_link_libraries(
 
 acts_compile_headers(ActsExamplesJets GLOB "include/**/*.hpp")
 
-install(
-    TARGETS ActsExamplesJets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+install(TARGETS ActsExamplesJets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
