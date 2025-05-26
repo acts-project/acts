@@ -42,10 +42,9 @@ class Surface;
 class DD4hepLayerBuilder : public ILayerBuilder {
  public:
   /// DD4hepDetectorElement construction factory
-  using DD4hepDetectorElementFactory =
-      std::function<std::shared_ptr<DD4hepDetectorElement>(
-          const dd4hep::DetElement&, const std::string&, double, bool,
-          std::shared_ptr<const ISurfaceMaterial>)>;
+  using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
+      const dd4hep::DetElement&, const std::string&, double, bool,
+      std::shared_ptr<const ISurfaceMaterial>)>;
 
   /// @struct Config
   /// nested configuration struct for steering of the layer builder
@@ -77,7 +76,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     /// will not be set
     std::vector<dd4hep::DetElement> positiveLayers;
     /// The factory to create the DD4hepDetectorElement
-    DD4hepDetectorElementFactory detectorElementFactory =
+    ElementFactory detectorElementFactory =
         [](const dd4hep::DetElement& detElement, const std::string& detAxis,
            double thickness, bool isDisc,
            std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
