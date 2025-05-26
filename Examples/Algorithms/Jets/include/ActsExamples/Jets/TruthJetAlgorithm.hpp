@@ -38,7 +38,7 @@ class TruthJetAlgorithm : public IAlgorithm {
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-  ProcessCode finalize() const;
+  ProcessCode finalize() override;
 
   const Config& config() const { return m_cfg; }
 
