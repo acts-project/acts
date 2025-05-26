@@ -60,6 +60,7 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
     /// The value depends on the number of core and therefore the worst-case
     /// distance between the *current* and the next event we can write to write
     /// in order.
+    /// @note If @c writeEventsInOrder is false, this value is ignored.
     unsigned long maxEventsPending = 128;
   };
 
