@@ -23,8 +23,7 @@ class PseudoJet;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Print all particles.
-class TruthJetAlgorithm : public IAlgorithm {
+class TruthJetAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input particles collection.
