@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Concepts.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -15,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ostream>
 
@@ -57,50 +60,29 @@ struct ExecutionContext {
 
 namespace detail {
 
-/// This class implements the memory management for the Acts::Tensor
-class TensorMemoryImpl {
- public:
-  using Deleter = std::function<void(void *)>;
+using TensorDeleter = std::function<void(void *)>;
+using TensorPtr = std::unique_ptr<void, TensorDeleter>;
 
-  TensorMemoryImpl(std::size_t nbytes, const ExecutionContext &execContext);
+TensorPtr createTensorMemory(std::size_t nbytes, const ExecutionContext &ctx);
+TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
+                            Acts::Device devFrom,
+                            const ExecutionContext &ctxTo);
 
-  TensorMemoryImpl(const TensorMemoryImpl &) = delete;
-  TensorMemoryImpl(TensorMemoryImpl &&) noexcept;
-
-  TensorMemoryImpl &operator=(const TensorMemoryImpl &) = delete;
-  TensorMemoryImpl &operator=(TensorMemoryImpl &&) noexcept;
-
-  ~TensorMemoryImpl();
-
-  TensorMemoryImpl clone(std::size_t nbytes, const ExecutionContext &to) const;
-
-  void *data() { return m_ptr; }
-  const void *data() const { return m_ptr; }
-
-  Acts::Device device() const { return m_device; }
-
- private:
-  void moveConstruct(TensorMemoryImpl &&) noexcept;
-
-  void *m_ptr{};
-  Deleter m_deleter;
-  Acts::Device m_device{};
-};
 }  // namespace detail
 
 /// This is a very small, limited class that models a 2D tensor of arbitrary
 /// type. It is move-only, and only possible to create via static factory
 /// functions to ensure lifetime management.
 /// This on purpose does not implement operations such as clone/to-host/to-cuda
-template <typename T>
+template <Acts::Concepts::arithmetic T>
 class Tensor {
  public:
   using Shape = std::array<std::size_t, 2>;
 
   static Tensor Create(Shape shape, const ExecutionContext &execContext) {
-    detail::TensorMemoryImpl memory(shape[0] * shape[1] * sizeof(T),
-                                    execContext);
-    return Tensor(std::move(memory), shape);
+    auto ptr = detail::createTensorMemory(shape[0] * shape[1] * sizeof(T),
+                                          execContext);
+    return Tensor(shape, std::move(ptr), execContext);
   }
 
   /// Clone the tensor, copying the data to the new device
@@ -108,15 +90,15 @@ class Tensor {
   /// @note This is a always a deep copy, even if the source and destination are the
   /// same device
   Tensor clone(const ExecutionContext &to) const {
-    auto clonedMemory = m_memory.clone(nbytes(), to);
-    return Tensor(std::move(clonedMemory), m_shape);
+    auto clonedPtr = detail::cloneTensorMemory(m_ptr, nbytes(), m_device, to);
+    return Tensor(m_shape, std::move(clonedPtr), to);
   }
 
   /// Get the non-const data pointer
-  T *data() { return static_cast<T *>(m_memory.data()); }
+  T *data() { return static_cast<T *>(m_ptr.get()); }
 
   /// Get the const data pointer
-  const T *data() const { return static_cast<const T *>(m_memory.data()); }
+  const T *data() const { return static_cast<const T *>(m_ptr.get()); }
 
   /// Get the shape of the tensor
   Shape shape() const { return m_shape; }
@@ -128,14 +110,15 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Acts::Device device() const { return m_memory.device(); }
+  Acts::Device device() const { return m_device; }
 
  private:
-  Tensor(detail::TensorMemoryImpl memory, Shape shape)
-      : m_shape(shape), m_memory(std::move(memory)) {}
+  Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
+      : m_shape(shape), m_ptr(std::move(ptr)), m_device(ctx.device) {}
 
   Shape m_shape{};
-  detail::TensorMemoryImpl m_memory;
+  detail::TensorPtr m_ptr;
+  Device m_device{};
 };
 
 /// Element-wise sigmoid function for float cpu tensors
