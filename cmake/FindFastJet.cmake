@@ -9,7 +9,9 @@ find_path(
     fastjet/version.hh
     DOC "The FastJet include directory"
 )
-
+if(${FastJet_INCLUDE_DIR} STREQUAL "FastJet_INCLUDE_DIR-NOTFOUND")
+    message(FATAL_ERROR "FastJet include directory not found")
+endif()
 file(READ "${FastJet_INCLUDE_DIR}/fastjet/config_auto.h" FastJet_VERSION_FILE)
 string(
     REGEX MATCH
