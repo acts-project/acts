@@ -673,6 +673,10 @@ void visitLayer(const Acts::Layer& layer, TrackingGeometryVisitor& visitor) {
 void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   visitor.visitVolume(*this);
 
+  for (const auto& volume : volumes()) {
+    volume.apply(visitor);
+  }
+
   // Visit the boundary surfaces
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(*bs);
@@ -701,10 +705,6 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   for (const auto& surface : surfaces()) {
     visitor.visitSurface(surface);
   }
-
-  for (const auto& volume : volumes()) {
-    volume.apply(visitor);
-  }
 }
 
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
@@ -719,6 +719,10 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
     visitor.visitSurface(
         const_cast<RegularSurface&>(bs->surfaceRepresentation()));
+  }
+
+  for (auto& volume : volumes()) {
+    volume.apply(visitor);
   }
 
   for (auto& portal : portals()) {
@@ -762,10 +766,6 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
 
   for (auto& surface : surfaces()) {
     visitor.visitSurface(surface);
-  }
-
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
   }
 }
 
