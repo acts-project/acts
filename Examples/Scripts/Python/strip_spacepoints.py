@@ -115,7 +115,7 @@ def createStripSpacepoints(
             level=acts.logging.INFO,
             inputSpacepoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath="strip_spacepoints.root",
+            filePath=str(outputDir / "strip_spacepoints.root"),
         )
     )
 

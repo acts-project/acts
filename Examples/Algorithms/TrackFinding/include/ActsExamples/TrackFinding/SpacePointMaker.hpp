@@ -79,6 +79,8 @@ class SpacePointMaker final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void initializeStripPartners();
+
   Config m_cfg;
 
   std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>

@@ -1367,3 +1367,29 @@ def test_geometry_visitor(trk_geo):
     assert visitor.num_layers == 111
     assert visitor.num_volumes == 18
     assert visitor.num_portals == 0
+
+
+@pytest.mark.odd
+def test_strip_spacepoints(trk_geo, field, tmp_path, assert_root_hash):
+    from strip_spacepoints import createStripSpacepoints
+
+    s = Sequencer(events=20, numThreads=-1)
+
+    config_path = Path(__file__).parent.parent.parent.parent / "Examples" / "Configs"
+
+    geo_selection = config_path / "odd-strip-spacepoint-selection.json"
+    digi_config_file = config_path / "odd-digi-smearing-config.json"
+
+    createStripSpacepoints(
+        trackingGeometry=trk_geo,
+        field=field,
+        digiConfigFile=digi_config_file,
+        geoSelection=geo_selection,
+        outputDir=tmp_path,
+        s=s,
+    ).run()
+
+    root_file = "strip_spacepoints.root"
+    rfp = tmp_path / root_file
+
+    assert_root_hash(root_file, rfp)

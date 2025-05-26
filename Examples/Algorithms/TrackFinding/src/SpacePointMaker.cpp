@@ -116,83 +116,89 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
       spBuilderConfig, spConstructor,
       Acts::getDefaultLogger("SpacePointBuilder", lvl));
 
-  // Build strip partner map, i.e., which modules are stereo partners
-  // Use a default geometry context here to access the center coordinates of
-  // modules As a heuristic we assume that the stereo partners are the modules
-  // which have the shortest mutual distance
+  if (!m_cfg.stripGeometrySelection.empty()) {
+    initializeStripPartners();
+  }
+}
+
+void ActsExamples::SpacePointMaker::initializeStripPartners() {
+  // We need to use a default geometry context here to access the center
+  // coordinates of modules.
   Acts::GeometryContext gctx;
 
-  if (!m_cfg.stripGeometrySelection.empty()) {
-    ACTS_INFO("Build map of strip stereo partners");
-    std::vector<const Acts::Surface*> allSensitivesVector;
-    m_cfg.trackingGeometry->visitSurfaces(
-        [&](const auto surface) { allSensitivesVector.push_back(surface); },
-        true);
-    std::ranges::sort(allSensitivesVector, detail::CompareGeometryId{},
-                      detail::GeometryIdGetter{});
-    GeometryIdMultiset<const Acts::Surface*> allSensitives(
-        allSensitivesVector.begin(), allSensitivesVector.end());
+  // Build strip partner map, i.e., which modules are stereo partners
+  // As a heuristic we assume that the stereo partners are the modules
+  // which have the shortest mutual distance
+  ACTS_INFO("Build map of strip stereo partners");
 
-    for (auto selector : m_cfg.stripGeometrySelection) {
-      // Apply volume/layer range
-      auto rangeLayer =
-          selectLowestNonZeroGeometryObject(allSensitives, selector);
+  std::vector<const Acts::Surface*> allSensitivesVector;
+  m_cfg.trackingGeometry->visitSurfaces(
+      [&](const auto surface) { allSensitivesVector.push_back(surface); },
+      true);
+  std::ranges::sort(allSensitivesVector, detail::CompareGeometryId{},
+                    detail::GeometryIdGetter{});
+  GeometryIdMultiset<const Acts::Surface*> allSensitives(
+      allSensitivesVector.begin(), allSensitivesVector.end());
 
-      // Apply selector on extra if extra != 0
-      auto range = rangeLayer | std::views::filter([&](auto srf) {
-                     return srf->geometryId().extra() != 0
-                                ? srf->geometryId().extra() == selector.extra()
-                                : true;
-                   });
+  for (auto selector : m_cfg.stripGeometrySelection) {
+    // Apply volume/layer range
+    auto rangeLayer =
+        selectLowestNonZeroGeometryObject(allSensitives, selector);
 
-      const auto sizeBefore = m_stripPartner.size();
-      const std::size_t nSurfaces = std::distance(range.begin(), range.end());
+    // Apply selector on extra if extra != 0
+    auto range = rangeLayer | std::views::filter([&](auto srf) {
+                   return srf->geometryId().extra() != 0
+                              ? srf->geometryId().extra() == selector.extra()
+                              : true;
+                 });
 
-      if (nSurfaces < 2) {
-        ACTS_WARNING("Less then 2 elements for selector " << selector);
+    const auto sizeBefore = m_stripPartner.size();
+    const std::size_t nSurfaces = std::distance(range.begin(), range.end());
+
+    if (nSurfaces < 2) {
+      ACTS_WARNING("Less then 2 elements for selector " << selector);
+      continue;
+    }
+    ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector
+                        << "|ex=" << selector.extra());
+
+    // Very dumb all-to-all search
+    for (auto mod1 : range) {
+      if (m_stripPartner.contains(mod1->geometryId())) {
         continue;
       }
-      ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector
-                          << "|ex=" << selector.extra());
 
-      // Very dumb all-to-all search
-      for (auto mod1 : range) {
-        if (m_stripPartner.contains(mod1->geometryId())) {
+      const Acts::Surface* partner = nullptr;
+      double minDist = std::numeric_limits<double>::max();
+
+      for (auto mod2 : range) {
+        if (mod1 == mod2) {
           continue;
         }
-
-        const Acts::Surface* partner = nullptr;
-        double minDist = std::numeric_limits<double>::max();
-
-        for (auto mod2 : range) {
-          if (mod1 == mod2) {
-            continue;
-          }
-          auto c1 = mod1->center(gctx);
-          auto c2 = mod2->center(gctx);
-          if (minDist > (c1 - c2).norm()) {
-            minDist = (c1 - c2).norm();
-            partner = mod2;
-          }
-        }
-
-        ACTS_VERBOSE("Found stereo pair: " << mod1->geometryId() << " <-> "
-                                           << partner->geometryId());
-        ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
-                          << partner->center(gctx).transpose());
-        auto [it1, success1] =
-            m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
-        auto [it2, success2] =
-            m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
-        if (!success1 || !success2) {
-          throw std::runtime_error("error inserting in map");
+        auto c1 = mod1->center(gctx);
+        auto c2 = mod2->center(gctx);
+        if (minDist > (c1 - c2).norm()) {
+          minDist = (c1 - c2).norm();
+          partner = mod2;
         }
       }
 
-      auto sizeAfter = m_stripPartner.size();
-      if (sizeAfter - sizeBefore < nSurfaces) {
-        ACTS_WARNING("Did not find a stereo partner for all surfaces");
+      ACTS_VERBOSE("Found stereo pair: " << mod1->geometryId() << " <-> "
+                                         << partner->geometryId());
+      ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
+                        << partner->center(gctx).transpose());
+      auto [it1, success1] =
+          m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
+      auto [it2, success2] =
+          m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
+      if (!success1 || !success2) {
+        throw std::runtime_error("error inserting in map");
       }
+    }
+
+    auto sizeAfter = m_stripPartner.size();
+    if (sizeAfter - sizeBefore < nSurfaces) {
+      ACTS_WARNING("Did not find a stereo partner for all surfaces");
     }
   }
 }
