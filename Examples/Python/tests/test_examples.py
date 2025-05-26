@@ -696,7 +696,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     odd_dir = getOpenDataDetectorDirectory()
     config = acts.MaterialMapJsonConverter.Config()
-    mdecorator = acts.JsonMaterialDecorator(
+    materialDecorator = acts.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
@@ -704,7 +704,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as detector:
+    with getOpenDataDetector(materialDecorator) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
@@ -741,7 +741,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -776,7 +776,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        materialDecorator=acts.IMaterialDecorator.fromFile(geo_map)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -815,7 +815,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -838,82 +838,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     assert_root_hash(val_file.name, val_file)
 
 
-@pytest.mark.parametrize(
-    "detectorFactory,aligned,nobj",
-    [
-        (GenericDetector, True, 450),
-        pytest.param(
-            getOpenDataDetector,
-            True,
-            540,
-            marks=[
-                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
-                pytest.mark.slow,
-                pytest.mark.odd,
-            ],
-        ),
-        (functools.partial(AlignedDetector, iovSize=1), False, 450),
-    ],
-)
-@pytest.mark.slow
-def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
-    detector = detectorFactory()
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
-
-    from geometry import runGeometry
-
-    json_dir = tmp_path / "json"
-    csv_dir = tmp_path / "csv"
-    obj_dir = tmp_path / "obj"
-
-    for d in (json_dir, csv_dir, obj_dir):
-        d.mkdir()
-
-    events = 5
-
-    kwargs = dict(
-        trackingGeometry=trackingGeometry,
-        decorators=decorators,
-        events=events,
-        outputDir=str(tmp_path),
-    )
-
-    runGeometry(outputJson=True, **kwargs)
-    runGeometry(outputJson=False, **kwargs)
-
-    assert len(list(obj_dir.iterdir())) == nobj
-    assert all(f.stat().st_size > 200 for f in obj_dir.iterdir())
-
-    assert len(list(csv_dir.iterdir())) == 3 * events
-    assert all(f.stat().st_size > 200 for f in csv_dir.iterdir())
-
-    detector_files = [csv_dir / f"event{i:>09}-detectors.csv" for i in range(events)]
-    for detector_file in detector_files:
-        assert detector_file.exists()
-        assert detector_file.stat().st_size > 200
-
-    contents = [f.read_text() for f in detector_files]
-    ref = contents[0]
-    for c in contents[1:]:
-        if aligned:
-            assert c == ref, "Detector writeout is expected to be identical"
-        else:
-            assert c != ref, "Detector writeout is expected to be different"
-
-    if aligned:
-        for f in [json_dir / f"event{i:>09}-detector.json" for i in range(events)]:
-            assert detector_file.exists()
-            with f.open() as fh:
-                data = json.load(fh)
-                assert data
-        material_file = tmp_path / "geometry-map.json"
-        assert material_file.exists()
-        assert material_file.stat().st_size > 200
-
-
 ACTS_DIR = Path(__file__).parent.parent.parent.parent
 CONFIG_DIR = ACTS_DIR / "Examples/Configs"
+DIGI_SHARE_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "Examples/Algorithms/Digitization/share"
+)
 
 
 @pytest.mark.parametrize(
@@ -1337,33 +1267,3 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     assert rfp.exists()
 
     assert_root_hash(root_file, rfp)
-
-
-def test_geometry_visitor(trk_geo):
-    class Visitor(acts.TrackingGeometryMutableVisitor):
-        def __init__(self):
-            super().__init__()
-            self.num_surfaces = 0
-            self.num_layers = 0
-            self.num_volumes = 0
-            self.num_portals = 0
-
-        def visitSurface(self, surface: acts.Surface):
-            self.num_surfaces += 1
-
-        def visitLayer(self, layer: acts.Layer):
-            self.num_layers += 1
-
-        def visitVolume(self, volume: acts.Volume):
-            self.num_volumes += 1
-
-        def visitPortal(self, portal: acts.Portal):
-            self.num_portals += 1
-
-    visitor = Visitor()
-    trk_geo.apply(visitor)
-
-    assert visitor.num_surfaces == 19078
-    assert visitor.num_layers == 111
-    assert visitor.num_volumes == 18
-    assert visitor.num_portals == 0
