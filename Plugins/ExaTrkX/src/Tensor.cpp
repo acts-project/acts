@@ -13,38 +13,27 @@
 #endif
 
 #include <cstring>
-#include <iostream>
 #include <numeric>
 
 namespace Acts {
 
 namespace detail {
 
-static thread_local int s_debugId = 0;
-
 TensorMemoryImpl::TensorMemoryImpl(std::size_t nbytes,
                                    const ExecutionContext &execContext)
     : m_device(execContext.device) {
-  auto id = s_debugId;
-  s_debugId++;
-  std::cout << "create Tensor with id " << id << " on " << execContext.device
-            << std::endl;
   if (execContext.device.type == Acts::Device::Type::eCPU) {
     m_ptr = std::malloc(nbytes);
     if (m_ptr == nullptr) {
       throw std::bad_alloc{};
     }
-    m_deleter = [id](void *p) {
-      std::cout << "destroy tensor on CPU with id " << id << std::endl;
-      std::free(p);
-    };
+    m_deleter = [](void *p) { std::free(p); };
   } else {
 #ifdef ACTS_EXATRKX_WITH_CUDA
     assert(execContext.stream.has_value());
     auto stream = *execContext.stream;
     ACTS_CUDA_CHECK(cudaMallocAsync(&m_ptr, nbytes, stream));
-    m_deleter = [stream, id](void *p) {
-      std::cout << "destroy tensor on CUDA with id " << id << std::endl;
+    m_deleter = [stream](void *p) {
       ACTS_CUDA_CHECK(cudaFreeAsync(p, stream));
     };
 #else
