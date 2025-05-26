@@ -24,6 +24,7 @@
 namespace Acts {
 
 class IGrid;
+class TrivialPortalLink;
 
 template <typename... Axes>
   requires(sizeof...(Axes) <= 2)
@@ -43,10 +44,13 @@ class GridPortalLink : public PortalLinkBase {
   /// @param surface The surface
   /// @param direction The binning direction
   GridPortalLink(std::shared_ptr<RegularSurface> surface,
-                 AxisDirection direction)
-      : PortalLinkBase(std::move(surface)), m_direction(direction) {}
+                 AxisDirection direction);
 
  public:
+  /// Override the destructor so we can get away with forward declaration of
+  /// `TrivialPortalLink`
+  ~GridPortalLink() override;
+
   /// Factory function for a one-dimensional grid portal link, which allows
   /// using template deduction to figure out the right type
   /// @tparam axis_t The axis type
@@ -353,6 +357,9 @@ class GridPortalLink : public PortalLinkBase {
   /// @param os The output stream
   void printContents(std::ostream& os) const;
 
+  std::span<const TrivialPortalLink> artifactPortalLinks() const;
+  void setArtifactPortalLinks(std::vector<TrivialPortalLink> links);
+
  protected:
   /// Helper function to check consistency for grid on a cylinder surface
   /// @param cyl The cylinder surface
@@ -407,6 +414,10 @@ class GridPortalLink : public PortalLinkBase {
 
  private:
   AxisDirection m_direction;
+
+  /// Stores the trivial portal links that were used to build this grid portal
+  /// link, if any
+  std::vector<TrivialPortalLink> m_artifactPortalLinks;
 };
 
 /// Concrete class deriving from @c GridPortalLink that boxes a concrete grid for lookup.
