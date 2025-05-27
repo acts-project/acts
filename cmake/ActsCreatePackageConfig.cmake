@@ -26,6 +26,13 @@ install(
     DESTINATION ${install_package_config_dir}
 )
 
+# install third party FindXXX.cmake files
+file(GLOB_RECURSE _pckg_find_files "${CMAKE_CURRENT_LIST_DIR}/Find*.cmake")
+install(
+    FILES ${_pckg_find_files}
+    DESTINATION ${install_package_config_dir}/Modules
+)
+
 # install target configs for all available components
 foreach(_component ${_components})
     install(
