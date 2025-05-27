@@ -14,10 +14,9 @@
 
 namespace Acts {
 
-#define STUB_METHOD(type)                                       \
-  std::unique_ptr<DetraySurfaceMaterial> type::toDetrayPayload( \
-      const detray::io::volume_payload& /*volume*/) const {     \
-    throw DetrayNotAvailableException();                        \
+#define STUB_METHOD(type)                                                \
+  std::unique_ptr<DetraySurfaceMaterial> type::toDetrayPayload() const { \
+    throw DetrayNotAvailableException();                                 \
   }
 
 // In STUB mode: all material related methods throw an exception to indicate
