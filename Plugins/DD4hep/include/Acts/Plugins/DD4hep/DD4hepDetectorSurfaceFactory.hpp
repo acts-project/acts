@@ -35,6 +35,7 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
+class ISurfaceMaterial;
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
@@ -63,7 +64,7 @@ class DD4hepDetectorSurfaceFactory {
     ElementFactory detectorElementFactory =
         [](const dd4hep::DetElement& detElem, const std::string& axes,
            double scalor, bool isDisc,
-           std::shared_ptr<const ISurfaceMaterial> material) {
+           const std::shared_ptr<const ISurfaceMaterial>& material) {
           return std::make_shared<DD4hepDetectorElement>(detElem, axes, scalor,
                                                          isDisc, material);
         };

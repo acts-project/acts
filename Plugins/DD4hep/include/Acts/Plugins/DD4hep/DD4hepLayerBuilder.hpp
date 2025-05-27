@@ -31,6 +31,7 @@ namespace Acts {
 class LayerCreator;
 class Logger;
 class Surface;
+class ISurfaceMaterial;
 
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
@@ -79,7 +80,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     ElementFactory detectorElementFactory =
         [](const dd4hep::DetElement& detElement, const std::string& detAxis,
            double thickness, bool isDisc,
-           std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
+           const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterial) {
           return std::make_shared<DD4hepDetectorElement>(
               detElement, detAxis, thickness, isDisc, surfaceMaterial);
         };

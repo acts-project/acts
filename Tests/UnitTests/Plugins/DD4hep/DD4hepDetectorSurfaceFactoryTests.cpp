@@ -28,9 +28,11 @@
 #include "XML/Utilities.h"
 #include "XMLFragments.hpp"
 
+namespace {
 Acts::GeometryContext tContext;
 Acts::Test::CylindricalTrackingGeometry cGeometry =
     Acts::Test::CylindricalTrackingGeometry(tContext);
+}  // namespace
 
 const char* beampipe_head_xml =
     R""""(
@@ -335,7 +337,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
   auto extendedFactory =
       [](const dd4hep::DetElement& detElem, const std::string& axes,
          double scalor, bool isDisc,
-         std::shared_ptr<const Acts::ISurfaceMaterial> material)
+         const std::shared_ptr<const Acts::ISurfaceMaterial>& material)
       -> std::shared_ptr<Acts::DD4hepDetectorElement> {
     return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
                                                      isDisc, material);
