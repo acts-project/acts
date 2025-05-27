@@ -481,6 +481,10 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   detray::io::homogeneous_material_reader::from_payload<detector_t>(
       detectorBuilder, names, *payloads.homogeneousMaterial);
 
+  detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
+      from_payload<detector_t>(detectorBuilder, names,
+                               std::move(*payloads.materialGrids));
+
 #if 0
   // (2b) material grids
   if constexpr (detray::concepts::has_material_maps<detector_t>) {

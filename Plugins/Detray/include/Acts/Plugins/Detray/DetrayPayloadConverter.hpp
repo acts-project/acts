@@ -59,8 +59,13 @@ class DetrayPayloadConverter {
   struct Payloads {
     // Unique pointers used to be able to forward declare the type
     std::unique_ptr<detray::io::detector_payload> detector;
+
     std::unique_ptr<detray::io::detector_homogeneous_material_payload>
         homogeneousMaterial;
+
+    std::unique_ptr<detray::io::detector_grids_payload<
+        detray::io::material_slab_payload, detray::io::material_id>>
+        materialGrids;
   };
 
   Payloads convertTrackingGeometry(const GeometryContext& gctx,
@@ -74,24 +79,30 @@ class DetrayPayloadConverter {
   std::pair<std::vector<detray::io::grid_payload<
                 detray::io::material_slab_payload, detray::io::material_id>>,
             detray::io::material_volume_payload>
-  convertMaterial(const TrackingVolume& volume,
-                  detray::io::volume_payload& volPayload) const;
+  convertMaterial(
+      const TrackingVolume& volume,
+
+      const std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
+      detray::io::volume_payload& volPayload) const;
 
  private:
   void handlePortalLink(
       const GeometryContext& gctx, const TrackingVolume& volume,
       detray::io::volume_payload& volPayload,
       const std ::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
       const PortalLinkBase& link) const;
 
-  void makeEndOfWorld(const GeometryContext& gctx,
-                      detray::io::volume_payload& volPayload,
-                      const Surface& surface) const;
+  void makeEndOfWorld(
+      const GeometryContext& gctx, detray::io::volume_payload& volPayload,
+      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
+      const Surface& surface) const;
 
   void handlePortal(
       const GeometryContext& gctx, const TrackingVolume& volume,
       detray::io::volume_payload& volPayload,
       const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+      std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
       const Portal& portal) const;
 
   Config m_cfg;

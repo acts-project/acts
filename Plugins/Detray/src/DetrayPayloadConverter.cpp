@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
+#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
@@ -259,11 +260,9 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
   return payload;
 }
 
-void DetrayPayloadConverter::handlePortalLink(
-    const GeometryContext& gctx, const TrackingVolume& volume,
-    detray::io::volume_payload& volPayload,
-    const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
-    const PortalLinkBase& link) const {
+namespace {
+std::vector<const TrivialPortalLink*> decomposeToTrivials(
+    const PortalLinkBase& link, const Logger& logger) {
   std::vector<const TrivialPortalLink*> trivials;
 
   if (auto* trivial = dynamic_cast<const TrivialPortalLink*>(&link);
@@ -294,6 +293,19 @@ void DetrayPayloadConverter::handlePortalLink(
     throw std::runtime_error(
         "Unknown portal link type, detray cannot handle this");
   }
+
+  return trivials;
+}
+}  // namespace
+
+void DetrayPayloadConverter::handlePortalLink(
+    const GeometryContext& gctx, const TrackingVolume& volume,
+    detray::io::volume_payload& volPayload,
+    const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+    std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
+    const PortalLinkBase& link) const {
+  std::vector<const TrivialPortalLink*> trivials =
+      decomposeToTrivials(link, logger());
 
   // If ANY of the trivials point at the current volume, we don't handle this
   // portal link at all, otherwise we would get a self-referencing volume link
@@ -330,13 +342,15 @@ void DetrayPayloadConverter::handlePortalLink(
     ACTS_VERBOSE("Target volume index for "
                  << trivial->volume().volumeName() << ": "
                  << volumeLookup(&trivial->volume()));
-    auto targetVolumeIndex = volumeLookup(&trivial->volume());
+    std::size_t targetVolumeIndex = volumeLookup(&trivial->volume());
     srfPayload.mask.volume_link.link = targetVolumeIndex;
+    surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
   }
 }
 
 void DetrayPayloadConverter::makeEndOfWorld(
     const GeometryContext& gctx, detray::io::volume_payload& volPayload,
+    std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
     const Surface& surface) const {
   ACTS_VERBOSE("Adding end of world surface");
   auto& srfPayload =
@@ -345,12 +359,15 @@ void DetrayPayloadConverter::makeEndOfWorld(
 
   // Marker for end of world is MAX
   srfPayload.mask.volume_link.link = std::numeric_limits<std::size_t>::max();
+
+  surfaceIndices[&surface] = srfPayload.index_in_coll.value();
 }
 
 void DetrayPayloadConverter::handlePortal(
     const GeometryContext& gctx, const TrackingVolume& volume,
     detray::io::volume_payload& volPayload,
     const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
+    std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
     const Portal& portal) const {
   auto* lAlong = portal.getLink(Direction::AlongNormal());
   auto* lOpposite = portal.getLink(Direction::OppositeNormal());
@@ -361,35 +378,34 @@ void DetrayPayloadConverter::handlePortal(
   }
 
   if (lAlong != nullptr) {
-    handlePortalLink(gctx, volume, volPayload, volumeLookup, *lAlong);
+    handlePortalLink(gctx, volume, volPayload, volumeLookup, surfaceIndices,
+                     *lAlong);
   } else {
     // can't both be nullptr
     assert(lOpposite != nullptr);
-    makeEndOfWorld(gctx, volPayload, lOpposite->surface());
+    makeEndOfWorld(gctx, volPayload, surfaceIndices, lOpposite->surface());
   }
 
   if (lOpposite != nullptr) {
-    handlePortalLink(gctx, volume, volPayload, volumeLookup, *lOpposite);
+    handlePortalLink(gctx, volume, volPayload, volumeLookup, surfaceIndices,
+                     *lOpposite);
   } else {
     // can't both be nullptr
     assert(lAlong != nullptr);
-    makeEndOfWorld(gctx, volPayload, lAlong->surface());
+    makeEndOfWorld(gctx, volPayload, surfaceIndices, lAlong->surface());
   }
 }
 
 namespace {
-std::size_t findSurfaceInVolume(const detray::io::volume_payload& volPayload,
-                                const Surface& surface, const Logger& logger) {
+std::optional<std::size_t> findSurfaceInVolume(
+    const detray::io::volume_payload& volPayload, const Surface& surface) {
   auto srfIt =
       std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload) {
         return srfPayload.source == surface.geometryId().value();
       });
 
   if (srfIt == volPayload.surfaces.end()) {
-    ACTS_ERROR("Surface " << surface.geometryId().value()
-                          << " not found in volume " << volPayload.name
-                          << ". This is a bug in the conversion.");
-    throw std::runtime_error("Surface not found in volume");
+    return std::nullopt;
   }
 
   return std::distance(volPayload.surfaces.begin(), srfIt);
@@ -404,181 +420,151 @@ constexpr static detray::io::material_slab_payload s_dummyMaterialSlab{
 
 }  // namespace
 
-// detray::io::material_volume_payload
-// DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
-//     const TrackingVolume& volume,
-//     const detray::io::volume_payload& volPayload) const {
-//   detray::io::material_volume_payload payload;
-
-// #if 0
-//   // @FIXME: Temporarily: add random material slabs for surfaces without
-//   // material
-//   for (const auto& srfPayload : volPayload.surfaces) {
-//     auto& slabPayload = payload.mat_slabs.emplace_back();
-//     slabPayload.thickness = 42;
-//     slabPayload.mat = {42, 42, 42, 42, 42, 42, 42};
-//     slabPayload.type = detray::io::material_id::slab;
-//     slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
-//     slabPayload.surface.link = srfPayload.index_in_coll.value();
-//   }
-
-//   payload.volume_link = volPayload.index;
-
-//   auto handle = [&](const Surface& surface) {
-//     if (surface.surfaceMaterial() == nullptr) {
-//       return;
-//     }
-
-//     const auto* material = dynamic_cast<const HomogeneousSurfaceMaterial*>(
-//         surface.surfaceMaterial());
-
-//     if (material == nullptr) {
-//       return;
-//     }
-
-//     // find surface index in volume
-//     auto srfIt =
-//         std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload)
-//         {
-//           return srfPayload.source == surface.geometryId().value();
-//         });
-
-//     if (srfIt == volPayload.surfaces.end()) {
-//       ACTS_ERROR("Surface " << surface.geometryId().value()
-//                             << " not found in volume " << volume.volumeName()
-//                             << ". This is a bug in the conversion.");
-//       throw std::runtime_error("Surface not found in volume");
-//     }
-
-//     auto srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
-
-//     auto& slabPayload = payload.mat_slabs.at(srfIdx);
-
-//     // add material slab to payload
-//     slabPayload = convertMaterialSlab(material->materialSlab());
-//     // Temp: redundant, but keep for now
-//     slabPayload.index_in_coll = payload.mat_slabs.size() - 1;
-//     slabPayload.surface.link = srfIdx;
-//   };
-
-//   for (const auto& surface : volume.surfaces()) {
-//     handle(surface);
-//   }
-
-//   for (const auto& portal : volume.portals()) {
-//     handle(portal.surface());
-//   }
-
-// #endif
-//   return payload;
-// }
-
-// std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
-//                                      detray::io::material_id>>
-// DetrayPayloadConverter::convertGridSurfaceMaterial(
-//     const TrackingVolume& volume,
-//     const detray::io::volume_payload& volPayload) const {
-//   std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
-//                                        detray::io::material_id>>
-//       payload;
-
-//   auto handle = [&](const Surface& surface) {
-//     if (surface.surfaceMaterial() == nullptr) {
-//       return;
-//     }
-
-//     // auto up = surface.surfaceMaterial()->toDetrayPayload();
-//     // auto& matPayload = payload.emplace_back(std::move(*up));
-//     // matPayload.owner_link.link =
-//     //     findSurfaceInVolume(volPayload, surface, *m_logger);
-//   };
-
-//   for (const auto& surface : volume.surfaces()) {
-//     handle(surface);
-//   }
-
-//   for (const auto& portal : volume.portals()) {
-//     handle(portal.surface());
-//   }
-
-//   return payload;
-// }
-
 std::pair<std::vector<detray::io::grid_payload<
               detray::io::material_slab_payload, detray::io::material_id>>,
           detray::io::material_volume_payload>
 DetrayPayloadConverter::convertMaterial(
     const TrackingVolume& volume,
+    const std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
     detray::io::volume_payload& volPayload) const {
   ACTS_DEBUG("Converting material for volume " << volume.volumeName());
   std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
                                        detray::io::material_id>>
       grids;
   detray::io::material_volume_payload homogeneous;
+  homogeneous.volume_link.link = volPayload.index.link;
 
-  auto handle = [&](const Surface& surface) {
-    if (surface.surfaceMaterial() == nullptr) {
-      return;
-    }
+  ACTS_WARNING(
+      "Adding dummy material slabs to homogeneous collection (detray "
+      "hack)");
+  for (const auto& surface : volPayload.surfaces) {
+    auto& slabPayload = homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
+    slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
+    slabPayload.surface.link = surface.index_in_coll.value();
+  }
 
-    auto srfIt =
-        std::ranges::find_if(volPayload.surfaces, [&](const auto& srf) {
-          return srf.source == surface.geometryId().value();
-        });
+  auto assignMaterial = [&](DetraySurfaceMaterial& detrayMaterial,
+                            std::size_t srfIdx) {
+    auto handleHomogeneous =
+        [&](const detray::io::material_slab_payload& slab) {
+          // ACTS_DEBUG("Assigning homogeneous material slab to surface "
+          //            << srfIdx);
+          homogeneous.mat_slabs.emplace_back(slab);
+          homogeneous.mat_slabs.back().index_in_coll =
+              homogeneous.mat_slabs.size() - 1;
+          homogeneous.mat_slabs.back().surface.link = srfIdx;
+        };
 
-    if (srfIt == volPayload.surfaces.end()) {
+    auto handleGrid =
+        [&](const detray::io::grid_payload<detray::io::material_slab_payload,
+                                           detray::io::material_id>& grid) {
+          ACTS_DEBUG("Assigning grid material to surface " << srfIdx);
+          grids.emplace_back(grid);
+          grids.back().owner_link.link = srfIdx;
+        };
+
+    std::visit(overloaded{handleHomogeneous, handleGrid}, detrayMaterial);
+  };
+
+  auto printSurfaceInfo = [&](DetraySurfaceMaterial& detrayMaterial,
+                              const Surface& surface) {
+    auto handleHomogeneous = [&](const detray::io::material_slab_payload&) {
+      ACTS_VERBOSE("Surface " << surface.geometryId()
+                              << " has homogeneous material");
+    };
+
+    auto handleGrid =
+        [&](const detray::io::grid_payload<detray::io::material_slab_payload,
+                                           detray::io::material_id>&) {
+          ACTS_VERBOSE("Surface " << surface.geometryId()
+                                  << " has grid material");
+        };
+    std::visit(overloaded{handleHomogeneous, handleGrid}, detrayMaterial);
+  };
+
+  for (const auto& surface : volume.surfaces()) {
+    auto srfIt = surfaceIndices.find(&surface);
+
+    if (srfIt == surfaceIndices.end()) {
+      ACTS_ERROR("Surface " << surface.geometryId().value()
+                            << " not found in volume " << volPayload.name
+                            << ". This is a bug in the conversion.");
       throw std::runtime_error("Surface not found in volume");
     }
 
-    std::size_t srfIdx = std::distance(volPayload.surfaces.begin(), srfIt);
+    std::size_t srfIdx = srfIt->second;
 
-    const auto& srfPayload = *srfIt;
+    if (surface.surfaceMaterial() == nullptr) {
+      continue;
+    }
 
     auto detrayMaterial = surface.surfaceMaterial()->toDetrayPayload();
 
     if (detrayMaterial == nullptr) {
-      ACTS_VERBOSE("Surface " << surface.geometryId().value()
-                              << " has no material");
-      // have NO material, but we need to add dummy material into the
-      // homogeneous collection
-      ACTS_WARNING(
-          "Adding dummy material slab to homogeneous collection (detray "
-          "hack)");
-      auto& slabPayload =
-          homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
-      slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
-      slabPayload.surface.link = srfIdx;
-    } else {
-      auto handleHomogeneous =
-          [&](const detray::io::material_slab_payload& slab) {
-            ACTS_VERBOSE("Surface " << surface.geometryId()
-                                    << " has homogeneous material");
-
-            homogeneous.mat_slabs.emplace_back(slab);
-            homogeneous.mat_slabs.back().index_in_coll =
-                homogeneous.mat_slabs.size() - 1;
-            homogeneous.mat_slabs.back().surface.link = srfIdx;
-          };
-
-      auto handleGrid =
-          [&](const detray::io::grid_payload<detray::io::material_slab_payload,
-                                             detray::io::material_id>& grid) {
-            ACTS_VERBOSE("Surface " << surface.geometryId()
-                                    << " has grid material");
-            grids.emplace_back(grid);
-            grids.back().owner_link.link = srfIdx;
-          };
-
-      std::visit(overloaded{handleHomogeneous, handleGrid}, *detrayMaterial);
+      continue;
     }
-  };
 
-  for (const auto& surface : volume.surfaces()) {
-    handle(surface);
+    printSurfaceInfo(*detrayMaterial, surface);
+
+    assignMaterial(*detrayMaterial, srfIdx);
   }
 
+  // Portals need special treatment: we have decomposed them to their trivial
+  // portal links, and only registered a subset to them as well. We again need
+  // to decompose here, and only look for the portals that are actually found in
+  // the volume payload
   for (const auto& portal : volume.portals()) {
-    handle(portal.surface());
+    // First check, if the combined portal surface has material assigned at all,
+    // if not there's nothing to do
+    if (portal.surface().surfaceMaterial() == nullptr) {
+      continue;
+    }
+
+    auto detrayMaterial = portal.surface().surfaceMaterial()->toDetrayPayload();
+
+    // Portal surface material reports it does not apply to detray, skip
+    if (detrayMaterial == nullptr) {
+      continue;
+    }
+
+    printSurfaceInfo(*detrayMaterial, portal.surface());
+
+    // Have valid detray material, now we need to find the surfaces that are
+    // actually there in detray
+
+    for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
+      const auto* link = portal.getLink(dir);
+
+      if (link == nullptr) {
+        continue;
+      }
+
+      std::vector<const TrivialPortalLink*> trivials =
+          decomposeToTrivials(*link, logger());
+
+      // ACTS_DEBUG("Portal link in volume " << volPayload.name << " has
+      // produced "
+      //                                     << trivials.size() << " trivials");
+      for (const auto* trivial : trivials) {
+        auto srfIt = surfaceIndices.find(&trivial->surface());
+
+        if (srfIt == surfaceIndices.end()) {
+          // This trivial was not converted, skip
+          continue;
+        }
+
+        std::size_t srfIdx = srfIt->second;
+
+        // ACTS_DEBUG("Trivial portal link in volume "
+        //            << volPayload.name << " has surface "
+        //            << trivial->surface().geometryId() << " detray idx "
+        //            << srfIdx);
+
+        // Assign (a copy of) the detray material to the surface payload
+        // associated with this trivial
+        assignMaterial(*detrayMaterial, srfIdx);
+      }
+    }
   }
 
   return {grids, homogeneous};
@@ -603,10 +589,15 @@ DetrayPayloadConverter::convertTrackingGeometry(
   payloads.detector = std::make_unique<detray::io::detector_payload>();
   payloads.homogeneousMaterial =
       std::make_unique<detray::io::detector_homogeneous_material_payload>();
+  payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
+      detray::io::material_slab_payload, detray::io::material_id>>();
 
   detray::io::detector_payload& detPayload = *payloads.detector;
   detray::io::detector_homogeneous_material_payload& dthmPayload =
       *payloads.homogeneousMaterial;
+  detray::io::detector_grids_payload<detray::io::material_slab_payload,
+                                     detray::io::material_id>& materialGrids =
+      *payloads.materialGrids;
 
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
 
@@ -614,47 +605,87 @@ DetrayPayloadConverter::convertTrackingGeometry(
     return volumeIds.at(v);
   };
 
+  std::unordered_map<const TrackingVolume*,
+                     std::unordered_map<const Surface*, std::size_t>>
+      volumeSurfaceIndices;
+
   geometry.apply([&](const TrackingVolume& volume) {
     auto& volPayload = detPayload.volumes.emplace_back(convertVolume(volume));
     volPayload.index.link = detPayload.volumes.size() - 1;
     volumeIds[&volume] = volPayload.index.link;
+
+    ACTS_DEBUG("Volume " << volume.volumeName() << " has index "
+                         << volPayload.index.link);
+
+    auto& surfaceIndices = volumeSurfaceIndices[&volume];
 
     for (auto& surface : volume.surfaces()) {
       auto& srfPayload =
           volPayload.surfaces.emplace_back(convertSurface(gctx, surface));
       srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
       srfPayload.mask.volume_link.link = volPayload.index.link;
+      surfaceIndices[&surface] = srfPayload.index_in_coll.value();
     }
   });
 
   // Run again over volumes, can lookup volume index from pointer now
   geometry.apply([&](const TrackingVolume& volume) {
     auto& volPayload = detPayload.volumes.at(volumeIds.at(&volume));
+    auto& surfaceIndices = volumeSurfaceIndices[&volume];
 
     for (const auto& portal : volume.portals()) {
-      handlePortal(gctx, volume, volPayload, lookup, portal);
+      handlePortal(gctx, volume, volPayload, lookup, surfaceIndices, portal);
     }
 
-    ACTS_DEBUG("Volume " << volume.volumeName() << " has "
-                         << volPayload.surfaces.size() << " surfaces");
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (idx: " << volPayload.index.link << ") has "
+                         << volPayload.surfaces.size() << " total surfaces");
+
     std::size_t nPortals =
         std::ranges::count_if(volPayload.surfaces, [](const auto& srfPayload) {
-          return srfPayload.mask.volume_link.link !=
-                 std::numeric_limits<std::size_t>::max();
+          return srfPayload.type == detray::surface_id::e_portal;
         });
     ACTS_DEBUG("-> portals:        " << nPortals);
-    ACTS_DEBUG("-> other surfaces: " << volPayload.surfaces.size() - nPortals);
+    std::size_t nSensitives =
+        std::ranges::count_if(volPayload.surfaces, [](const auto& srfPayload) {
+          return srfPayload.type == detray::surface_id::e_sensitive;
+        });
+    ACTS_DEBUG("-> sensitives:     " << nSensitives);
+    ACTS_DEBUG("-> other surfaces: " << volPayload.surfaces.size() - nPortals -
+                                            nSensitives);
+
+    for (const auto& [surface, idx] : surfaceIndices) {
+      ACTS_VERBOSE("Surface " << surface->geometryId() << " (&: " << surface
+                              << ") has index " << idx);
+    }
 
     // Portals have produced surfaces and are added in volume payload, handle
     // material now
 
-    auto [grids, homogeneous] = convertMaterial(volume, volPayload);
+    auto [grids, homogeneous] =
+        convertMaterial(volume, surfaceIndices, volPayload);
 
-    ACTS_DEBUG("Volume " << volume.volumeName() << " has "
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (idx: " << volPayload.index.link << ") has "
                          << homogeneous.mat_slabs.size() << " material slabs");
 
-    ACTS_DEBUG("Volume " << volume.volumeName() << " has " << grids.size()
-                         << " grids");
+    if (!homogeneous.mat_slabs.empty()) {
+      // Only add if it's not empty (it might be)
+      // NOTE: Currently, it'll always be populated by at least the homogeneous
+      // NOTE: Volume association is internal to
+      // `detray::io::material_volume_payload`
+      dthmPayload.volumes.emplace_back(std::move(homogeneous));
+    }
+
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (idx: " << volPayload.index.link << ") has "
+                         << grids.size() << " grids");
+    if (!grids.empty()) {
+      // Only add if we have grids
+      // NOTE: Volume association is EXTERNAL, i.e. we need to fill a map keyed
+      // by the volume index
+      materialGrids.grids[volPayload.index.link] = std::move(grids);
+    }
   });
 
   // HACK: Beampipe MUST have index 0
@@ -683,6 +714,32 @@ DetrayPayloadConverter::convertTrackingGeometry(
     } else if (mat.volume_link.link == 0) {
       mat.volume_link.link = beampipeIdx;
     }
+  }
+
+  auto beampipeGridIt = materialGrids.grids.find(beampipeIdx);
+  auto worldGridIt = materialGrids.grids.find(0);
+
+  if (beampipeGridIt != materialGrids.grids.end() &&
+      worldGridIt != materialGrids.grids.end()) {
+    // BOTH world and beampipe have grid specifiers: swap them
+    ACTS_DEBUG("Swapping beampipe and world grid specifiers");
+    // auto beampipeGrid = std::move(beampipeGridIt->second);
+    // materialGrids.grids.erase(beampipeGridIt);
+    // auto worldGrid = std::move(worldGridIt->second);
+    // materialGrids.grids.erase(worldGridIt);
+    // materialGrids.grids[0] = std::move(beampipeGrid);
+    // materialGrids.grids[beampipeIdx] = std::move(worldGrid);
+    std::swap(beampipeGridIt->second, worldGridIt->second);
+  } else if (beampipeGridIt != materialGrids.grids.end()) {
+    // ONLY beampipe has grid specifier: move it to world
+    ACTS_DEBUG("Moving beampipe grid specifier to world");
+    materialGrids.grids[0] = std::move(beampipeGridIt->second);
+    materialGrids.grids.erase(beampipeGridIt);
+  } else if (worldGridIt != materialGrids.grids.end()) {
+    // ONLY world has grid specifier: move it to beampipe
+    ACTS_DEBUG("Moving world grid specifier to beampipe");
+    materialGrids.grids[beampipeIdx] = std::move(worldGridIt->second);
+    materialGrids.grids.erase(worldGridIt);
   }
 
   ACTS_DEBUG("Collected " << detPayload.volumes.size() << " volumes");
