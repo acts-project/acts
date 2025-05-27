@@ -1,7 +1,7 @@
 add_library(
     ActsExamplesDetectorGeant4
     SHARED
-    src/AlignedGeant4DetectorElmement.cpp
+    src/AlignedGeant4DetectorElement.cpp
     src/Geant4Detector.cpp
     src/GdmlDetectorConstruction.cpp
     src/GdmlDetector.cpp
