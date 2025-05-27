@@ -13,14 +13,12 @@
 #include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
 #include "Acts/Plugins/Hashing/HashingTraining.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
@@ -28,46 +26,12 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-// Custom seed comparison function
-template <typename external_spacepoint_t>
-struct SeedComparison {
-  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
-                  const Acts::Seed<external_spacepoint_t>& seed2) const {
-    const auto& sp1 = seed1.sp();
-    const auto& sp2 = seed2.sp();
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->z() != sp2[i]->z()) {
-        return sp1[i]->z() < sp2[i]->z();
-      }
-    }
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->x() != sp2[i]->x()) {
-        return sp1[i]->x() < sp2[i]->x();
-      }
-    }
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->y() != sp2[i]->y()) {
-        return sp1[i]->y() < sp2[i]->y();
-      }
-    }
-
-    return false;
-  }
-};
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Construct track seeds from space points.
 class SeedingAlgorithmHashing final : public IAlgorithm {

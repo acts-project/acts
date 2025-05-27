@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/HashedString.hpp"
-
-#include <any>
-#include <limits>
 #include <vector>
 
 namespace Acts {
@@ -40,6 +35,8 @@ class SpacePointMutableData {
 
   /// @brief Destructor
   ~SpacePointMutableData() = default;
+
+  std::size_t size() const { return m_quality.size(); }
 
   /// @brief Getters
   float quality(const std::size_t idx) const;

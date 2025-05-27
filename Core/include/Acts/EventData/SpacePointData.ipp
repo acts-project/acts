@@ -87,6 +87,10 @@ inline bool SpacePointData::hasDynamicVariable() const {
   return !m_topStripVector.empty();
 }
 
+inline bool SpacePointData::hasDynamicVariables(const std::size_t idx) const {
+  return idx < m_topStripVector.size();
+}
+
 inline const Acts::Vector3& SpacePointData::topStripVector(
     const std::size_t idx) const {
   assert(idx < m_topStripVector.size());

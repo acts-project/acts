@@ -39,9 +39,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
-  m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig, logger().cloneWithSuffix("SeedFilter"));
+  m_cfg.seedFinderConfig.seedFilter = std::make_unique<Acts::SeedFilter>(
+      m_cfg.seedFilterConfig, logger().cloneWithSuffix("SeedFilter"));
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
