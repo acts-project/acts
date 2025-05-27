@@ -43,6 +43,7 @@ class Geant4DetectorSurfaceFactory {
   /// Nested configuration struct that holds
   /// global lifetime configuration
   struct Config {
+    /// @cond
     /// The detector element factory with default implementation
     ElementFactory detectorElementFactory =
         [](std::shared_ptr<Surface> surface, const G4VPhysicalVolume& g4physVol,
@@ -50,6 +51,7 @@ class Geant4DetectorSurfaceFactory {
           return std::make_shared<Geant4DetectorElement>(
               std::move(surface), g4physVol, toGlobal, thickness);
         };
+    /// @endcond
   };
 
   // Collect the sensitive surfaces
