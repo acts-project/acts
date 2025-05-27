@@ -8,11 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
 
 #include <cassert>
-
-#include <torch/torch.h>
 
 void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
                         std::vector<std::int64_t> &testGraph,
