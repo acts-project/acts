@@ -4,8 +4,8 @@ add_library(
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
-    src/TorchTruthGraphMetricsHook.cpp
-    src/TorchGraphStoreHook.cpp
+    src/TruthGraphMetricsHook.cpp
+    src/GraphStoreHook.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
