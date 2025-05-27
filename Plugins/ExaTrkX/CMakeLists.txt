@@ -4,6 +4,8 @@ add_library(
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
+    src/TorchTruthGraphMetricsHook.cpp
+    src/TorchGraphStoreHook.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -43,8 +45,6 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
             src/TorchEdgeClassifier.cpp
             src/TorchMetricLearning.cpp
             src/buildEdges.cpp
-        #    src/TorchTruthGraphMetricsHook.cpp
-        #src/TorchGraphStoreHook.cpp
     )
 endif()
 

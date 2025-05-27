@@ -8,26 +8,31 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
-
-#include <torch/torch.h>
-
-Acts::TorchGraphStoreHook::TorchGraphStoreHook() {
+Acts::GraphStoreHook::GraphStoreHook() {
   m_storedGraph = std::make_unique<Graph>();
 }
 
-void Acts::TorchGraphStoreHook::operator()(const std::any&,
-                                           const std::any& edges,
-                                           const std::any& weights) const {
-  if (not weights.has_value()) {
+Acts::GraphStoreHook::~GraphStoreHook() = default;
+
+void Acts::GraphStoreHook::operator()(const PipelineTensors &tensors,
+                                      const ExecutionContext &execCtx) const {
+  auto edgeIndexTensor =
+      tensors.edgeIndex.clone({Device::Cpu(), execCtx.stream});
+
+  // We need to transpose the edges here for the right memory layout
+  m_storedGraph->first.reserve(edgeIndexTensor.size());
+  for (auto i = 0ul; i < edgeIndexTensor.shape().at(1); ++i) {
+    m_storedGraph->first.push_back(*(edgeIndexTensor.data() + i));
+    m_storedGraph->first.push_back(
+        *(edgeIndexTensor.data() + edgeIndexTensor.shape().at(1) + i));
+  }
+
+  if (!tensors.edgeScores.has_value()) {
     return;
   }
 
-  m_storedGraph->first = detail::tensor2DToVector<std::int64_t>(
-      std::any_cast<torch::Tensor>(edges).t());
+  auto scoreTensor = tensors.edgeScores->clone({Device::Cpu(), execCtx.stream});
 
-  auto cpuWeights = std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
   m_storedGraph->second =
-      std::vector<float>(cpuWeights.data_ptr<float>(),
-                         cpuWeights.data_ptr<float>() + cpuWeights.numel());
+      std::vector(scoreTensor.data(), scoreTensor.data() + scoreTensor.size());
 }

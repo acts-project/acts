@@ -9,12 +9,10 @@
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-class TorchGraphStoreHook : public ExaTrkXHook {
+class GraphStoreHook : public ExaTrkXHook {
  public:
   using Graph = std::pair<std::vector<std::int64_t>, std::vector<float>>;
 
@@ -22,10 +20,11 @@ class TorchGraphStoreHook : public ExaTrkXHook {
   std::unique_ptr<Graph> m_storedGraph;
 
  public:
-  TorchGraphStoreHook();
-  ~TorchGraphStoreHook() override {}
+  GraphStoreHook();
+  ~GraphStoreHook() override;
 
-  void operator()(const PipelineTensors &tensors) const override;
+  void operator()(const PipelineTensors &tensors,
+                  const ExecutionContext &execCtx) const override;
 
   const Graph &storedGraph() const { return *m_storedGraph; }
 };

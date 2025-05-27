@@ -46,39 +46,35 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
 
 }  // namespace
 
-Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
+Acts::TruthGraphMetricsHook::TruthGraphMetricsHook(
     const std::vector<std::int64_t>& truthGraph,
     std::unique_ptr<const Acts::Logger> l)
     : m_logger(std::move(l)) {
   m_truthGraphCantor = cantorize(truthGraph, logger());
 }
 
-void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
-                                                  const std::any& edges,
-                                                  const std::any&) const {
-  auto edgeIndexTensor =
-      std::any_cast<torch::Tensor>(edges).to(torch::kCPU).contiguous();
-  ACTS_VERBOSE("edge index tensor: " << detail::TensorDetails{edgeIndexTensor});
+Acts::TruthGraphMetricsHook::~TruthGraphMetricsHook() = default;
 
-  const auto numEdges = edgeIndexTensor.size(1);
+void Acts::TruthGraphMetricsHook::operator()(
+    const PipelineTensors& tensors, const ExecutionContext& execCtx) const {
+  auto edgeIndexTensor =
+      tensors.edgeIndex.clone({Device::Cpu(), execCtx.stream});
+
+  const auto numEdges = edgeIndexTensor.shape().at(1);
   if (numEdges == 0) {
     ACTS_WARNING("no edges, cannot compute metrics");
     return;
   }
-  ACTS_VERBOSE("Edge index slice:\n"
-               << edgeIndexTensor.index(
-                      {Slice(0, 2), Slice(0, std::min(numEdges, 10l))}));
 
   // We need to transpose the edges here for the right memory layout
-  const auto edgeIndex =
-      Acts::detail::tensor2DToVector<std::int64_t>(edgeIndexTensor.t().clone());
+  std::vector<std::int64_t> edgeIndexTransposed;
+  edgeIndexTransposed.reserve(edgeIndexTensor.size());
+  for (auto i = 0ul; i < numEdges; ++i) {
+    edgeIndexTransposed.push_back(*(edgeIndexTensor.data() + i));
+    edgeIndexTransposed.push_back(*(edgeIndexTensor.data() + numEdges + i));
+  }
 
-  ACTS_VERBOSE("Edge vector:\n"
-               << (detail::RangePrinter{
-                      edgeIndex.begin(),
-                      edgeIndex.begin() + std::min(numEdges, 10l)}));
-
-  auto predGraphCantor = cantorize(edgeIndex, logger());
+  auto predGraphCantor = cantorize(edgeIndexTransposed, logger());
 
   // Calculate intersection
   std::vector<Acts::detail::CantorEdge<std::int64_t>> intersection;
