@@ -86,7 +86,7 @@ Not complete yet
 :::{doxygenclass} Acts::TryAllNavigationPolicy
 :::
 
-:::{doxygenclass} Acts::MultiLayerNavigationPolicy
+:::{doxygenclass} Acts::Experimental::MultiLayerNavigationPolicy
 :::
 
 :::{doxygenstruct} Acts::ProtoLayer
