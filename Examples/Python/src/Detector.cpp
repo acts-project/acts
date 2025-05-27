@@ -90,7 +90,7 @@ void addDetector(Context& ctx) {
                  mex, "TGeoDetector")
                  .def(py::init<const TGeoDetector::Config&>());
 
-    mex.def("AlginedTGeoDetector", []() {
+    mex.def("AlignedTGeoDetector", []() {
       TGeoDetector::Config cfg;
       cfg.detectorElementFactory = alignedTGeoDetectorElementFactory;
       return std::make_shared<TGeoDetector>(cfg);

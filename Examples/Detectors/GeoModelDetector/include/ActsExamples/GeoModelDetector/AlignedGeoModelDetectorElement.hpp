@@ -21,7 +21,7 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsExamples {
-/// Define the aligned DD4hep detector element and factory type
+/// Define the aligned GeoModel detector element and factory type
 using AlignedGeoModelDetectorElement =
     ActsExamples::Aligned<Acts::GeoModelDetectorElement>;
 
