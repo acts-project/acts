@@ -75,6 +75,10 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
 
+  // Return the nominal local to global transform associated with this detector
+  /// element
+  const Acts::Transform3& nominalTransform() const;
+
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
 
@@ -100,5 +104,13 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
+
+/// The default factory for the GenericDetectorElement in contrast to a
+/// contextual one for the AlignmentGenericDetectorElement
+std::shared_ptr<GenericDetectorElement> defaultGenericDetectorElementFactory(
+    GenericDetectorElement::Identifier identifier,
+    std::shared_ptr<const Acts::Transform3> transform,
+    std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
 }  // namespace ActsExamples

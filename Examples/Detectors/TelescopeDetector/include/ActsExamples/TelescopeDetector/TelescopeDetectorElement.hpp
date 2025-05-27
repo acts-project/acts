@@ -84,10 +84,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
       const Acts::GeometryContext& gctx) const final;
 
   /// Return the nominal local to global transform
-  ///
-  /// @note the geometry context will hereby be ignored
-  const Acts::Transform3& nominalTransform(
-      const Acts::GeometryContext& gctx) const;
+  const Acts::Transform3& nominalTransform() const;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -136,11 +133,11 @@ inline const Acts::Transform3& TelescopeDetectorElement::transform(
     return (*m_alignedTransforms[alignContext.iov].get());
   }
   // Return the standard transform if not found
-  return nominalTransform(gctx);
+  return nominalTransform();
 }
 
-inline const Acts::Transform3& TelescopeDetectorElement::nominalTransform(
-    const Acts::GeometryContext& /*gctx*/) const {
+inline const Acts::Transform3& TelescopeDetectorElement::nominalTransform()
+    const {
   return *m_elementTransform;
 }
 

@@ -38,22 +38,23 @@ struct ProtoLayerSurfaces {
   std::size_t bins1;
 };
 
-/// @class ProtoLayerCreatorT
+/// @class ProtoLayerCreator
 ///
-/// The ProtoLayerCreatorT is the first setp in creating a geometry
+/// The ProtoLayerCreator is the first setp in creating a geometry
 /// from code input, it creates the ProtoLayer and returns the
 /// created detector elements for the DetectorStore emulation
 class ProtoLayerCreator {
  public:
   using DetectorElementFactory =
       std::function<std::shared_ptr<GenericDetectorElement>(
+          GenericDetectorElement::Identifier identifier,
           std::shared_ptr<const Acts::Transform3>,
           std::shared_ptr<const Acts::PlanarBounds>, double,
           std::shared_ptr<const Acts::ISurfaceMaterial>)>;
 
   /// @struct Config
   ///
-  /// Nested configuration struct for the ProtoLayerCreatorT
+  /// Nested configuration struct for the ProtoLayerCreator
   struct Config {
     /// a single parameter for the approach surface envelope
     double approachSurfaceEnvelope = 0.5;
@@ -119,7 +120,8 @@ class ProtoLayerCreator {
     /// that the lifetime of the detector element is managed by the creator.
     /// It's also responsible for creating the identifiers for the detector
     /// elements.
-    DetectorElementFactory detectorElementFactory;
+    DetectorElementFactory detectorElementFactory =
+        defaultGenericDetectorElementFactory;
   };
 
   /// Constructor

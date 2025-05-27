@@ -52,6 +52,10 @@ const Acts::Transform3& GenericDetectorElement::transform(
   return *m_elementTransform;
 }
 
+const Acts::Transform3& GenericDetectorElement::nominalTransform() const {
+  return *m_elementTransform;
+}
+
 const Acts::Surface& GenericDetectorElement::surface() const {
   return *m_elementSurface;
 }
@@ -66,6 +70,16 @@ double GenericDetectorElement::thickness() const {
 
 GenericDetectorElement::Identifier GenericDetectorElement::identifier() const {
   return m_elementIdentifier;
+}
+
+std::shared_ptr<GenericDetectorElement> defaultGenericDetectorElementFactory(
+    GenericDetectorElement::Identifier identifier,
+    std::shared_ptr<const Acts::Transform3> transform,
+    std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  return std::make_shared<GenericDetectorElement>(
+      std::move(identifier), std::move(transform), std::move(pBounds),
+      thickness, std::move(material));
 }
 
 }  // namespace ActsExamples

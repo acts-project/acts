@@ -107,7 +107,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
             mutableModuleTransform);
         // create the module
         auto moduleElement = m_cfg.detectorElementFactory(
-            moduleTransform, moduleBounds, moduleThickness, moduleMaterialPtr);
+            GenericDetectorElement::Identifier(sVector.size()), moduleTransform,
+            moduleBounds, moduleThickness, moduleMaterialPtr);
 
         // register the surface
         sVector.push_back(moduleElement->surface().getSharedPtr());
@@ -132,9 +133,10 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
           moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
               mutableModuleTransform);
           // create the backseide moulde
-          auto bsModuleElement =
-              m_cfg.detectorElementFactory(moduleTransform, moduleBounds,
-                                           moduleThickness, moduleMaterialPtr);
+          auto bsModuleElement = m_cfg.detectorElementFactory(
+              GenericDetectorElement::Identifier(sVector.size()),
+              moduleTransform, moduleBounds, moduleThickness,
+              moduleMaterialPtr);
         }
       }
 
@@ -257,9 +259,10 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
                   Acts::Translation3(moduleCenter) * moduleRotation);
 
           // create the module
-          auto moduleElement =
-              m_cfg.detectorElementFactory(moduleTransform, moduleBounds,
-                                           moduleThickness, moduleMaterialPtr);
+          auto moduleElement = m_cfg.detectorElementFactory(
+              GenericDetectorElement::Identifier(esVector.size()),
+              moduleTransform, moduleBounds, moduleThickness,
+              moduleMaterialPtr);
 
           // now deal with the potential backside
           if (!m_cfg.posnegModuleBacksideGap.empty()) {
@@ -283,6 +286,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
                 mutableModuleTransform);
             // everything is set for the next module
             auto bsModuleElement = m_cfg.detectorElementFactory(
+                GenericDetectorElement::Identifier(esVector.size()),
                 moduleTransform, moduleBounds, moduleThickness,
                 moduleMaterialPtr);
           }

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
@@ -36,6 +37,9 @@ class GenericDetector : public Detector {
     bool buildProto = false;
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
     std::optional<std::filesystem::path> graphvizFile;
+
+    Generic::ProtoLayerCreator::DetectorElementFactory detectorElementFactory =
+        defaultGenericDetectorElementFactory;
   };
 
   explicit GenericDetector(const Config& cfg);
@@ -44,9 +48,7 @@ class GenericDetector : public Detector {
   struct NoBuildTag {};
   explicit GenericDetector(const Config& cfg, NoBuildTag /*tag*/);
 
-  void buildTrackingGeometry(
-      const Generic::ProtoLayerCreator::DetectorElementFactory&
-          detectorElementFactory);
+  void buildTrackingGeometry();
 
  private:
   Config m_cfg;

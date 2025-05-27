@@ -1,6 +1,7 @@
 add_library(
     ActsExamplesDetectorTGeo
     SHARED
+    src/AlignedTGeoDetectorElement.cpp
     src/TGeoDetector.cpp
     src/TGeoITkModuleSplitter.cpp
 )

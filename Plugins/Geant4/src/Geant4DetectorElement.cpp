@@ -30,6 +30,10 @@ const Transform3& Geant4DetectorElement::transform(
   return m_toGlobal;
 }
 
+const Transform3& Geant4DetectorElement::nominalTransform() const {
+  return m_toGlobal;
+}
+
 const Surface& Geant4DetectorElement::surface() const {
   return *m_surface;
 }

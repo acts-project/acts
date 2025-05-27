@@ -75,6 +75,9 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& transform(const GeometryContext& gctx) const override;
 
+  /// Return the nominal - non-contextual transform
+  const Transform3& nominalTransform() const;
+
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 

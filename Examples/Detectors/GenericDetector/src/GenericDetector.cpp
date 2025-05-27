@@ -330,36 +330,21 @@ GenericDetector::GenericDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {
   m_nominalGeometryContext = Acts::GeometryContext();
-  auto detectorElementFactory =
-      [this](std::shared_ptr<const Acts::Transform3> transform,
-             std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
-             std::shared_ptr<const Acts::ISurfaceMaterial> material)
-      -> std::shared_ptr<GenericDetectorElement> {
-    auto id =
-        static_cast<GenericDetectorElement::Identifier>(m_detectorStore.size());
-    auto detElem = std::make_shared<GenericDetectorElement>(
-        id, std::move(transform), std::move(bounds), thickness,
-        std::move(material));
-    m_detectorStore.push_back(detElem);
-    return detElem;
-  };
-  buildTrackingGeometry(detectorElementFactory);
+  buildTrackingGeometry();
 }
 
 GenericDetector::GenericDetector(const Config& cfg, NoBuildTag /*tag*/)
     : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {}
 
-void GenericDetector::buildTrackingGeometry(
-    const Generic::ProtoLayerCreator::DetectorElementFactory&
-        detectorElementFactory) {
+void GenericDetector::buildTrackingGeometry() {
   ACTS_INFO("Building tracking geometry");
   if (m_trackingGeometry != nullptr) {
     throw std::runtime_error("Tracking geometry already built");
   }
 
   Generic::GenericDetectorBuilder::Config cfg;
-  cfg.detectorElementFactory = detectorElementFactory;
+  cfg.detectorElementFactory = m_cfg.detectorElementFactory;
   cfg.protoMaterial = m_cfg.buildProto;
   cfg.layerLogLevel = m_cfg.layerLogLevel;
   cfg.buildLevel = m_cfg.buildLevel;

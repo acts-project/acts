@@ -1,6 +1,7 @@
 add_library(
     ActsExamplesDetectorGeneric
     SHARED
+    src/AlignedGenericDetectorElement.cpp
     src/GenericDetector.cpp
     src/GenericDetectorElement.cpp
     src/LayerBuilder.cpp

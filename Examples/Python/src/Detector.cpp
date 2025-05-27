@@ -13,10 +13,10 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/TGeoDetector/AlignedTGeoDetectorElement.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -86,27 +86,15 @@ void addDetector(Context& ctx) {
   }
 
   {
-    auto d =
-        py::class_<AlignedDetector, Detector, std::shared_ptr<AlignedDetector>>(
-            mex, "AlignedDetector")
-            .def(py::init<const AlignedDetector::Config&>());
-
-    auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
-                 d, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, seed, iovSize, flushSize, doGarbageCollection,
-                       sigmaInPlane, sigmaOutPlane, sigmaInRot, sigmaOutRot,
-                       firstIovNominal, decoratorLogLevel, mode);
-
-    py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
-        .value("Internal", AlignedDetector::Config::Mode::Internal)
-        .value("External", AlignedDetector::Config::Mode::External);
-  }
-
-  {
     auto d = py::class_<TGeoDetector, Detector, std::shared_ptr<TGeoDetector>>(
                  mex, "TGeoDetector")
                  .def(py::init<const TGeoDetector::Config&>());
+
+    mex.def("AlginedTGeoDetector", []() {
+      TGeoDetector::Config cfg;
+      cfg.detectorElementFactory = alignedTGeoDetectorElementFactory;
+      return std::make_shared<TGeoDetector>(cfg);
+    });
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())
