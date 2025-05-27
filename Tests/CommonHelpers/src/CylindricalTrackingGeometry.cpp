@@ -11,8 +11,10 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -147,8 +149,7 @@ std::vector<Vector3> CylindricalTrackingGeometry::modulePositionsCylinder(
   return mPositions;
 }
 
-std::shared_ptr<const TrackingGeometry>
-CylindricalTrackingGeometry::buildGen1() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
   using namespace Acts::UnitLiterals;
 
   Logging::Level surfaceLLevel = Logging::INFO;
@@ -264,16 +265,35 @@ CylindricalTrackingGeometry::buildGen1() {
       geoContext, {beamPipeVolume, pVolume});
 
   // create and return the geometry
-  return std::make_shared<const TrackingGeometry>(detectorVolume);
+  return std::make_shared<TrackingGeometry>(detectorVolume);
 }
 
-std::shared_ptr<const TrackingGeometry>
-CylindricalTrackingGeometry::buildGen3() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
   using namespace Acts::Experimental;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using enum Acts::AxisDirection;
   using LayerType = LayerBlueprintNode::LayerType;
+
+  MaterialSlab lProperties(makeSilicon(), 1.5_mm);
+
+  // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
+  std::vector<float> binEdges = {
+      0., 5.,
+      179.48552,  // empirical maximum radius
+  };
+  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
+                              Acts::AxisDirection::AxisR);
+  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                                 Acts::BinningOption::closed,
+                                 Acts::AxisDirection::AxisPhi);
+
+  std::vector<Acts::MaterialSlab> materialSlabs0 = {lProperties, lProperties};
+  std::vector<Acts::MaterialSlab> materialSlabs1 = {lProperties, lProperties};
+
+  auto binnedMaterial = std::make_shared<Acts::BinnedSurfaceMaterial>(
+      binUtility, std::vector{materialSlabs0, materialSlabs1}, 0.,
+      Acts::MappingType::Default);
 
   Blueprint::Config cfg;
   cfg.envelope = Acts::ExtentEnvelope{{
@@ -282,7 +302,11 @@ CylindricalTrackingGeometry::buildGen3() {
   }};
   Blueprint root{cfg};
 
-  root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
+  auto& barrelMat = root.addMaterial("BarrelMaterial");
+  barrelMat.configureFace(PositiveDisc, binnedMaterial);
+  barrelMat.configureFace(NegativeDisc, binnedMaterial);
+
+  barrelMat.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
     auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
         0_mm, kBeamPipeRadius, 100_mm);
     auto beampipe = std::make_unique<Acts::TrackingVolume>(
@@ -347,8 +371,7 @@ CylindricalTrackingGeometry::buildGen3() {
   return root.construct(opts, geoContext);
 }
 
-std::shared_ptr<const TrackingGeometry>
-CylindricalTrackingGeometry::operator()() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()() {
   if (gen3) {
     return buildGen3();
   } else {

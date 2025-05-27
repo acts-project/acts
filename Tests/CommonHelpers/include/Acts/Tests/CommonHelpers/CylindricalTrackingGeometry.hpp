@@ -117,11 +117,11 @@ struct CylindricalTrackingGeometry {
       const std::pair<int, int>& binningSchema);
 
   // @brief Call operator for the creation method of the tracking geometry
-  std::shared_ptr<const TrackingGeometry> operator()();
+  std::shared_ptr<TrackingGeometry> operator()();
 
  private:
-  std::shared_ptr<const TrackingGeometry> buildGen1();
-  std::shared_ptr<const TrackingGeometry> buildGen3();
+  std::shared_ptr<TrackingGeometry> buildGen1();
+  std::shared_ptr<TrackingGeometry> buildGen3();
 };
 
 }  // namespace Acts::Test
