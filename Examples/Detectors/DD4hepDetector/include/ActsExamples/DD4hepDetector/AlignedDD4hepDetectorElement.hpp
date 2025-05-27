@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "ActsExamples/DetectorCommons/AlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Aligned.hpp"
 
 #include <memory>
 #include <string>
@@ -22,7 +22,7 @@ class ISurfaceMaterial;
 namespace ActsExamples {
 /// Define the aligned DD4hep detector element and factory type
 using AlignedDD4hepDetectorElement =
-    ActsExamples::AlignedDetectorElement<Acts::DD4hepDetectorElement>;
+    ActsExamples::Aligned<Acts::DD4hepDetectorElement>;
 
 /// Factory function to create an aligned DD4hep detector element
 /// It forwards the arguments to the DD4hepDetectorElement constructor

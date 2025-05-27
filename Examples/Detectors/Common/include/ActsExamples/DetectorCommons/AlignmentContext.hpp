@@ -16,7 +16,6 @@
 
 namespace ActsExamples {
 
-
 /// @brief Base class for alignment stores which can retrieve contextual
 /// transforms from specific surfaces.
 ///
@@ -36,7 +35,6 @@ class IAlignmentStore {
       const Acts::Surface& surface) const = 0;
 };
 
-
 /// A simple struct holidng a store raw pointer, ownership should not be in the
 /// Context as the store may expand lifetime beyond a context scope
 struct AlignmentContext {
@@ -49,16 +47,18 @@ struct AlignmentContext {
 ///
 /// To use this store, the GeometryContext of the corresponding geometry must
 /// be decorated with such a store and equipped to use it.
-class GeoIdAlignmentStore: public IAlignmentStore {
+class GeoIdAlignmentStore : public IAlignmentStore {
  public:
   /// Constructor from an unordered map of geometry ids and transforms
   /// @param transformMap the map of geometry ids and transforms
   explicit GeoIdAlignmentStore(
-      std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> transformMap)
+      std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
+          transformMap)
       : m_transformMap(std::move(transformMap)) {}
 
   /// @copydoc ITransformStore::contextualTransform
-  const Acts::Transform3* contextualTransform(const Acts::Surface& surface) const override {
+  const Acts::Transform3* contextualTransform(
+      const Acts::Surface& surface) const override {
     auto it = m_transformMap.find(surface.geometryId());
     if (it != m_transformMap.end()) {
       return &(it->second);
@@ -72,4 +72,3 @@ class GeoIdAlignmentStore: public IAlignmentStore {
 };
 
 }  // namespace ActsExamples
-

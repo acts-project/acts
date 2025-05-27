@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "ActsExamples/DetectorCommons/AlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Aligned.hpp"
 
 #include <memory>
 
@@ -23,7 +23,7 @@ class Surface;
 namespace ActsExamples {
 /// Define the aligned DD4hep detector element and factory type
 using AlignedGeant4DetectorElement =
-    ActsExamples::AlignedDetectorElement<Acts::Geant4DetectorElement>;
+    ActsExamples::Aligned<Acts::Geant4DetectorElement>;
 
 /// Factory function to create an aligned Geant4 detector element
 /// It forwards the arguments to the Geant4DetectorElement constructor

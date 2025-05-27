@@ -19,9 +19,9 @@ namespace ActsExamples {
 /// for different detectors and can be used with the same alignment
 /// showcase infrastructure.
 template <typename DetectorElement>
-class AlignedDetectorElement : public DetectorElement {
+class Aligned : public DetectorElement {
  public:
-  /// Using the constructor from the base classs
+  /// Using the constructor from the base class
   using DetectorElement::DetectorElement;
 
   /// An alignment aware transform call
@@ -40,7 +40,7 @@ class AlignedDetectorElement : public DetectorElement {
         }
       }
     }
-    // If no alignment context is availalble, return the nominal transform
+    // If no alignment context is available, return the nominal transform
     return DetectorElement::nominalTransform();
   }
 };

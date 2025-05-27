@@ -9,19 +9,19 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsExamples/DetectorCommons/AlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Aligned.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
 namespace Acts {
-    class PlanarBounds;
-    class ISurfaceMaterial;
-} // namespace Acts
+class PlanarBounds;
+class ISurfaceMaterial;
+}  // namespace Acts
 
 namespace ActsExamples {
 
 /// Define the aligned generic detector element and factory type
 using AlignedGenericDetectorElement =
-    ActsExamples::AlignedDetectorElement<ActsExamples::GenericDetectorElement>;
+    ActsExamples::Aligned<ActsExamples::GenericDetectorElement>;
 
 /// Factory function to create an aligned generic detector element
 std::shared_ptr<AlignedGenericDetectorElement>

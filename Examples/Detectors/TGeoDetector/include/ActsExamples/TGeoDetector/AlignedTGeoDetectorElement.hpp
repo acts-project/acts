@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "ActsExamples/DetectorCommons/AlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Aligned.hpp"
 
 #include <memory>
 #include <string>
@@ -25,12 +25,13 @@ class ISurfaceMaterial;
 namespace ActsExamples {
 /// Define the aligned TGeo detector element and factory type
 using AlignedTGeoDetectorElement =
-    ActsExamples::AlignedDetectorElement<Acts::TGeoDetectorElement>;
+    ActsExamples::Aligned<Acts::TGeoDetectorElement>;
 
 /// @brief The factory for creating an aligned TGeo detector element
-std::shared_ptr<AlignedTGeoDetectorElement> alignedTGeoDetectorElementFactory(const Acts::TGeoDetectorElement::Identifier& identifier,
-       const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
-       const std::string& axes, double scalor,
-       std::shared_ptr<const Acts::ISurfaceMaterial> material);
+std::shared_ptr<AlignedTGeoDetectorElement> alignedTGeoDetectorElementFactory(
+    const Acts::TGeoDetectorElement::Identifier& identifier,
+    const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
+    const std::string& axes, double scalor,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
 }  // namespace ActsExamples

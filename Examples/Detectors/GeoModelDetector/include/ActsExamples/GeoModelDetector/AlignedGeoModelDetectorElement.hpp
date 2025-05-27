@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "ActsExamples/DetectorCommons/AlignedDetectorElement.hpp"
+#include "ActsExamples/DetectorCommons/Aligned.hpp"
 
 #include <memory>
 
@@ -23,7 +23,7 @@ class Surface;
 namespace ActsExamples {
 /// Define the aligned DD4hep detector element and factory type
 using AlignedGeoModelDetectorElement =
-    ActsExamples::AlignedDetectorElement<Acts::GeoModelDetectorElement>;
+    ActsExamples::Aligned<Acts::GeoModelDetectorElement>;
 
 /// Factory function to create an aligned GeoModel detector element
 /// It forwards the arguments to the GeoModelDetectorElement constructor

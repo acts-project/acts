@@ -9,7 +9,7 @@ from helpers import dd4hepEnabled
 
 
 @pytest.mark.parametrize(
-    "detectorFactory,aligned,nobj",
+    "detectorFactory,nobj",
     [
         (GenericDetector, True, 450),
         pytest.param(
@@ -22,30 +22,14 @@ from helpers import dd4hepEnabled
                 pytest.mark.odd,
             ],
         ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.Internal
-            ),
-            False,
-            450,
-        ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.External
-            ),
-            False,
-            450,
-        ),
     ],
     ids=[
         "generic",
         "odd",
-        "aligned-internal",
-        "aligned-external",
     ],
 )
 @pytest.mark.slow
-def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
+def test_geometry_example(detectorFactory, nobj, tmp_path):
     detector = detectorFactory()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
