@@ -6,16 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
-
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
+#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
 
 #include <algorithm>
-
-#include <torch/torch.h>
-
-using namespace torch::indexing;
 
 namespace {
 
