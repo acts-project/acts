@@ -34,9 +34,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   struct Config {
     // The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
-
-    // The proto axis for the grid creation
-    std::vector<DirectedProtoAxis> axis = {};
   };
 
   /// Main constructor, which expects the grid and will fill it with the
@@ -49,9 +46,10 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// @param grid The grid that will be filled with the surfaces
   explicit MultiLayerNavigationPolicy(const GeometryContext& gctx,
                                       const TrackingVolume& volume,
-                                      const Logger& logger, Config config,
+                                      const Logger& logger,
+                                      const Config& config,
                                       indexedUpdatorType grid)
-      : m_volume(volume), m_indexedGrid(grid) {
+      : m_volume(volume), m_indexedGrid(std::move(grid)) {
     ACTS_VERBOSE("Constructing MultiLayerNavigationPolicy for volume "
                  << m_volume.volumeName());
 
@@ -95,8 +93,6 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
       std::ranges::transform(indices, std::back_inserter(surfCandidates),
                              [&](const auto& i) { return &surfaces[i]; });
     }
-
-    // remove duplicated candidates
 
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
                  << surfCandidates.size() << " candidates");

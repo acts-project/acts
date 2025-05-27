@@ -104,7 +104,6 @@ Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
 
   MultiLayerNavigationPolicy::Config navConfig;
   navConfig.binExpansion = {expansionA, expansionB};
-  navConfig.axis = {protoAxisA, protoAxisB};
 
   std::unique_ptr<NavigationPolicyFactory> factory =
       NavigationPolicyFactory::make()
