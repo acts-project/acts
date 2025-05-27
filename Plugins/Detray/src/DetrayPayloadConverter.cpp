@@ -534,8 +534,7 @@ DetrayPayloadConverter::convertMaterial(
 
     const auto& srfPayload = *srfIt;
 
-    auto detrayMaterial =
-        surface.surfaceMaterial()->toDetrayPayload(volPayload);
+    auto detrayMaterial = surface.surfaceMaterial()->toDetrayPayload();
 
     if (detrayMaterial == nullptr) {
       ACTS_VERBOSE("Surface " << surface.geometryId().value()

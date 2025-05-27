@@ -165,8 +165,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
 namespace detail {
 // This exists so I can push the definition into a cpp file
 class IGridSurfaceMaterialBase : public ISurfaceMaterial {
-  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
-      const detray::io::volume_payload& volume) const override;
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override;
 };
 }  // namespace detail
 

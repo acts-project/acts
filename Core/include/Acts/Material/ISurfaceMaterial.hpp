@@ -121,8 +121,7 @@ class ISurfaceMaterial {
   /// @return Reference to the output stream for chaining
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 
-  virtual std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload(
-      const detray::io::volume_payload& volume) const = 0;
+  virtual std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const = 0;
 
   /// @brief output into a string
   ///
