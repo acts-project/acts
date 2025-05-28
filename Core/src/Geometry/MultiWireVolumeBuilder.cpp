@@ -19,8 +19,11 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-Acts::Experimental::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
-    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+
+namespace Acts::Experimental {
+
+  MultiWireVolumeBuilder::MultiWireVolumeBuilder(
+    const Config& config, std::unique_ptr<const Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
   if (m_config.mlSurfaces.empty()) {
     throw std::invalid_argument(
@@ -31,9 +34,9 @@ Acts::Experimental::MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   }
 }
 
-std::unique_ptr<Acts::TrackingVolume>
-Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
-    Acts::GeometryContext& gctx) const {
+std::unique_ptr<TrackingVolume>
+MultiWireVolumeBuilder::buildVolume(
+    GeometryContext& gctx) const {
   // Create the tracking volume
 
   ACTS_VERBOSE("Building a tracking volume with name "
@@ -48,8 +51,8 @@ Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
         "MultiWireVolumeBuilder: Invalid bounds - trapezoidal needed");
   }
 
-  std::unique_ptr<Acts::TrackingVolume> trackingVolume =
-      std::make_unique<Acts::TrackingVolume>(m_config.transform, bounds,
+  std::unique_ptr<TrackingVolume> trackingVolume =
+      std::make_unique<TrackingVolume>(m_config.transform, bounds,
                                              m_config.name);
 
   SingleTrapezoidPortalShell portalShell(*trackingVolume);
@@ -67,21 +70,21 @@ Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
   const auto& iaxisA = protoAxisA.getAxis();
   const auto& iaxisB = protoAxisB.getAxis();
   // Binning needs to be equidistant
-  if (iaxisA.getType() != Acts::AxisType::Equidistant ||
-      iaxisB.getType() != Acts::AxisType::Equidistant) {
+  if (iaxisA.getType() != AxisType::Equidistant ||
+      iaxisB.getType() != AxisType::Equidistant) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need to be equidistant");
   }
 
-  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axisA(
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisA(
       iaxisA.getBinEdges().front(), iaxisA.getBinEdges().back(),
       iaxisA.getNBins());
 
-  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axisB(
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisB(
       iaxisB.getBinEdges().front(), iaxisB.getBinEdges().back(),
       iaxisB.getNBins());
 
-  Acts::Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(
+  Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(
       axisA, axisB);
 
   // The indexed grid to be filled from the navigation policy
@@ -92,11 +95,11 @@ Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
   // Use TryAll Navigation Policy for the portals and acceleration structure
   // with indexed surfaces for the sensitives
 
-  Acts::TryAllNavigationPolicy::Config tryAllConfig;
+  TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
   tryAllConfig.sensitives = false;
 
-  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume, *m_logger,
+  TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume, *m_logger,
                                             tryAllConfig);
 
   // Configure the navigation policy with the binning for the grid for the
@@ -117,3 +120,5 @@ Acts::Experimental::MultiWireVolumeBuilder::buildVolume(
 
   return trackingVolume;
 }
+
+}  // namespace Acts::Experimental
