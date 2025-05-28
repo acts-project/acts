@@ -19,6 +19,10 @@ namespace Acts {
 class ISurfaceMaterial;
 }  // namespace Acts
 
+namespace dd4hep {
+class DetElement;
+}  // namespace dd4hep
+
 namespace ActsExamples {
 /// Define the aligned DD4hep detector element and factory type
 using AlignedDD4hepDetectorElement =

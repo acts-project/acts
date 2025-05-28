@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
@@ -20,6 +21,11 @@
 #include <vector>
 
 class G4VPhysicalVolume;
+
+namespace Acts {
+class Surface;
+class Geant4DetectorElement;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -37,6 +43,14 @@ struct Geant4Detector : public Detector {
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
+    /// The detector element factory
+    Acts::Geant4DetectorSurfaceFactory::ElementFactory detectorElementFactory =
+        [](std::shared_ptr<Acts::Surface> surface,
+           const G4VPhysicalVolume& g4physVol, const Acts::Transform3& toGlobal,
+           double thickness) {
+          return std::make_shared<Acts::Geant4DetectorElement>(
+              std::move(surface), g4physVol, toGlobal, thickness);
+        };
     /// Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };

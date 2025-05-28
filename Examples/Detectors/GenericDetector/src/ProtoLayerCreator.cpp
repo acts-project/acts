@@ -110,7 +110,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
             GenericDetectorElement::Identifier(sVector.size()), moduleTransform,
             moduleBounds, moduleThickness, moduleMaterialPtr);
 
-        // register the surface
+        // Register the surface
         sVector.push_back(moduleElement->surface().getSharedPtr());
         // IF double modules exist
         // and the backside one (if configured to do so)
@@ -137,6 +137,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
               GenericDetectorElement::Identifier(sVector.size()),
               moduleTransform, moduleBounds, moduleThickness,
               moduleMaterialPtr);
+          // Register the backside module surface
+          sVector.push_back(bsModuleElement->surface().getSharedPtr());
         }
       }
 
@@ -263,6 +265,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
               GenericDetectorElement::Identifier(esVector.size()),
               moduleTransform, moduleBounds, moduleThickness,
               moduleMaterialPtr);
+          // Register the surface
+          esVector.push_back(moduleElement->surface().getSharedPtr());
 
           // now deal with the potential backside
           if (!m_cfg.posnegModuleBacksideGap.empty()) {
@@ -289,9 +293,9 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
                 GenericDetectorElement::Identifier(esVector.size()),
                 moduleTransform, moduleBounds, moduleThickness,
                 moduleMaterialPtr);
+            // Register the backside module surface
+            esVector.push_back(bsModuleElement->surface().getSharedPtr());
           }
-          // create the surface
-          esVector.push_back(moduleElement->surface().getSharedPtr());
         }
         // counter of rings
         ++ipnR;

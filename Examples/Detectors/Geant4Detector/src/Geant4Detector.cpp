@@ -90,6 +90,7 @@ Geant4Detector::buildGeant4Volumes(const Config& cfg,
                                    const Acts::Logger& logger) {
   // Generate the surface cache
   Acts::Geant4DetectorSurfaceFactory::Config g4SurfaceConfig;
+  g4SurfaceConfig.detectorElementFactory = cfg.detectorElementFactory;
   Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
   G4Transform3D g4ToWorld;
 
