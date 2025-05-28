@@ -75,6 +75,7 @@ target_link_libraries(
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE CUDA::cudart)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
