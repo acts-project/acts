@@ -65,7 +65,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdges = scoreTensor.shape().at(1);
+  const auto numEdges = scoreTensor.shape().at(0);
 
   if (numEdges == 0) {
     ACTS_WARNING("No edges remained after edge classification");
