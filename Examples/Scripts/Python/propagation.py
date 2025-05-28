@@ -85,7 +85,6 @@ if "__main__" == __name__:
     ## Generic detector: Default
     detector = GenericDetector(materialDecorator=matDeco)
 
-
     ## Alternative: DD4hep detector
     # detector = getOpenDataDetector()
     # trackingGeometry = detector.trackingGeometry()
