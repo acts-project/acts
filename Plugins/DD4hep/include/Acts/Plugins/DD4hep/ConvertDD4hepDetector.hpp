@@ -152,6 +152,9 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 ///       attached to each other, this default thickness is needed. In this
 ///       way, the layer will be thin (with space to the next layer), but
 ///       the material will have the 'real' thickness.
+/// @param detectorElementFactory Factory function to create Acts::DD4hepDetectorElement
+/// or derived classes
+///
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to
