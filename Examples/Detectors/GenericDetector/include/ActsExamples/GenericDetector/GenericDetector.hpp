@@ -48,7 +48,6 @@ class GenericDetector : public Detector {
       const Generic::ProtoLayerCreator::DetectorElementFactory&
           detectorElementFactory);
 
- private:
   Config m_cfg;
 };
 
