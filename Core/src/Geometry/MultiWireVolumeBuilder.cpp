@@ -19,10 +19,9 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-
 namespace Acts::Experimental {
 
-  MultiWireVolumeBuilder::MultiWireVolumeBuilder(
+MultiWireVolumeBuilder::MultiWireVolumeBuilder(
     const Config& config, std::unique_ptr<const Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
   if (m_config.mlSurfaces.empty()) {
@@ -34,8 +33,7 @@ namespace Acts::Experimental {
   }
 }
 
-std::unique_ptr<TrackingVolume>
-MultiWireVolumeBuilder::buildVolume(
+std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
     GeometryContext& gctx) const {
   // Create the tracking volume
 
@@ -53,7 +51,7 @@ MultiWireVolumeBuilder::buildVolume(
 
   std::unique_ptr<TrackingVolume> trackingVolume =
       std::make_unique<TrackingVolume>(m_config.transform, bounds,
-                                             m_config.name);
+                                       m_config.name);
 
   SingleTrapezoidPortalShell portalShell(*trackingVolume);
   portalShell.applyToVolume();
@@ -84,8 +82,8 @@ MultiWireVolumeBuilder::buildVolume(
       iaxisB.getBinEdges().front(), iaxisB.getBinEdges().back(),
       iaxisB.getNBins());
 
-  Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(
-      axisA, axisB);
+  Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(axisA,
+                                                                        axisB);
 
   // The indexed grid to be filled from the navigation policy
   IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
@@ -100,7 +98,7 @@ MultiWireVolumeBuilder::buildVolume(
   tryAllConfig.sensitives = false;
 
   TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume, *m_logger,
-                                            tryAllConfig);
+                                      tryAllConfig);
 
   // Configure the navigation policy with the binning for the grid for the
   // sensitive surfaces
