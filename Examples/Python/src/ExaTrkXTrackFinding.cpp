@@ -9,6 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
@@ -100,9 +101,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, mex,
-                                moduleMapPath, rScale, phiScale, zScale,
-                                gpuDevice, gpuBlocks, moreParallel);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
+      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
