@@ -1,4 +1,9 @@
-add_library(ActsExamplesDetectorGeoModel SHARED src/GeoModelDetector.cpp)
+add_library(
+    ActsExamplesDetectorGeoModel
+    SHARED
+    src/GeoModelDetector.cpp
+    src/AlignedGeoModelDetectorElement.cpp
+)
 
 target_include_directories(
     ActsExamplesDetectorGeoModel
