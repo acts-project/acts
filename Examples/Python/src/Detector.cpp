@@ -15,6 +15,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/AlignedGenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/AlignedTGeoDetectorElement.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -70,7 +71,16 @@ void addDetector(Context& ctx) {
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
                        volumeLogLevel, buildProto, materialDecorator,
-                       graphvizFile);
+                       detectorElementFactory, graphvizFile);
+
+    mex.def("alignedGenericDetectorElementFactory",
+            &alignedGenericDetectorElementFactory);
+
+    mex.def("AlignedGenericDetector", []() {
+      GenericDetector::Config cfg;
+      cfg.detectorElementFactory = alignedGenericDetectorElementFactory;
+      return std::make_shared<GenericDetector>(cfg);
+    });
   }
 
   {

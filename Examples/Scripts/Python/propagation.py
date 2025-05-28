@@ -3,7 +3,7 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector, AlignedDetector
+from acts.examples import GenericDetector, AlignedGenericDetector
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -86,16 +86,16 @@ if "__main__" == __name__:
     detector = GenericDetector(materialDecorator=matDeco)
 
     ## Alternative: Aligned detector in a couple of modes
-    # detector = AlignedDetector(
+    # detector = AlignedGenericDetector(
     #     decoratorLogLevel=acts.logging.INFO,
     #     # These parameters need to be tuned so that GC doesn't break
     #     # with multiple threads
     #     iovSize=10,
     #     flushSize=10,
     #     # External alignment store
-    #     mode=AlignedDetector.Config.Mode.External,
+    #     mode=AlignedGenericDetector.Config.Mode.External,
     #     # OR: Internal alignment storage
-    #     # mode=AlignedDetector.Config.Mode.Internal,
+    #     # mode=AlignedGenericDetector.Config.Mode.Internal,
     # )
 
     ## Alternative: DD4hep detector

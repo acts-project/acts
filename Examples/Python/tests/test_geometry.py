@@ -1,7 +1,7 @@
 import pytest
 import acts
 import functools
-from acts.examples import GenericDetector, AlignedDetector
+from acts.examples import GenericDetector, AlignedGenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
 

@@ -68,7 +68,7 @@ def test_odd():
 
 
 def test_aligned_detector():
-    detector = acts.examples.AlignedDetector()
+    detector = acts.examples.AlignedGenericDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 

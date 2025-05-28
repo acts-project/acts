@@ -89,7 +89,7 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector = AlignedDetector()
+    # detector = AlignedGenericDetector()
     # detector = GenericDetector()
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()

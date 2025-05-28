@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 
 #include <memory>
 #include <string>

@@ -104,7 +104,9 @@ def getOpenDataDetector(
         alignmentDecorator=alignmentDecorator,
     )
     if alignmentDecorator is not None:
-        dd4hepConfig.detectorElementFactory = acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+        dd4hepConfig.detectorElementFactory = (
+            acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+        )
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

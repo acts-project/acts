@@ -20,12 +20,12 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
 /// TEST
-#include "AlignedDD4hepDetectorElement.hpp"
-
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "AlignedDD4hepDetectorElement.hpp"
 
 class TGeoNode;
 
@@ -88,7 +88,7 @@ class DD4hepDetector : public Detector {
 
     /// Detector element factory
     Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-    Acts::DD4hepLayerBuilder::defaultDetectorElementFactory;
+        Acts::DD4hepLayerBuilder::defaultDetectorElementFactory;
   };
 
   explicit DD4hepDetector(const Config& cfg);

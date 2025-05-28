@@ -11,7 +11,7 @@
 std::shared_ptr<ActsExamples::AlignedGenericDetectorElement>
 ActsExamples::alignedGenericDetectorElementFactory(
     GenericDetectorElement::Identifier identifier,
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Acts::Transform3& transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<AlignedGenericDetectorElement>(

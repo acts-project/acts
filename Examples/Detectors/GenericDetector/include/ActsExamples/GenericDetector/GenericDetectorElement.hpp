@@ -47,8 +47,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(
-      const Identifier identifier,
-      std::shared_ptr<const Acts::Transform3> transform,
+      const Identifier identifier, const Acts::Transform3& transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
@@ -61,8 +60,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(
-      const Identifier identifier,
-      std::shared_ptr<const Acts::Transform3> transform,
+      const Identifier identifier, const Acts::Transform3& transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
@@ -95,7 +93,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   // The element identifier
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
-  std::shared_ptr<const Acts::Transform3> m_elementTransform;
+  const Acts::Transform3 m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<Acts::Surface> m_elementSurface;
   /// the element thickness
@@ -109,7 +107,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
 /// contextual one for the AlignmentGenericDetectorElement
 std::shared_ptr<GenericDetectorElement> defaultGenericDetectorElementFactory(
     GenericDetectorElement::Identifier identifier,
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Acts::Transform3& transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
