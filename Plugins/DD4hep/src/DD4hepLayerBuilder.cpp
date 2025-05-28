@@ -427,3 +427,12 @@ Acts::Transform3 Acts::DD4hepLayerBuilder::convertTransform(
                     translation[1] * UnitConstants::cm,
                     translation[2] * UnitConstants::cm));
 }
+
+std::shared_ptr<Acts::DD4hepDetectorElement>
+Acts::DD4hepLayerBuilder::defaultDetectorElementFactory(
+    const dd4hep::DetElement& detElement, const std::string& detAxis,
+    double thickness, bool isDisc,
+    std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial) {
+  return std::make_shared<DD4hepDetectorElement>(
+      detElement, detAxis, thickness, isDisc, std::move(surfaceMaterial));
+}

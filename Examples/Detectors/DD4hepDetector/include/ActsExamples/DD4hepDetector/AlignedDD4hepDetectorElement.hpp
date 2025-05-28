@@ -11,13 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 
 #include <memory>
 #include <string>
-
-namespace Acts {
-class ISurfaceMaterial;
-}  // namespace Acts
 
 namespace dd4hep {
 class DetElement;

@@ -19,6 +19,9 @@
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
+/// TEST
+#include "AlignedDD4hepDetectorElement.hpp"
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -85,12 +88,7 @@ class DD4hepDetector : public Detector {
 
     /// Detector element factory
     Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-        [](const dd4hep::DetElement& detElement, const std::string& detAxis,
-           double thickness, bool isDisc,
-           std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial) {
-          return std::make_shared<Acts::DD4hepDetectorElement>(
-              detElement, detAxis, thickness, isDisc, surfaceMaterial);
-        };
+    Acts::DD4hepLayerBuilder::defaultDetectorElementFactory;
   };
 
   explicit DD4hepDetector(const Config& cfg);
