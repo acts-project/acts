@@ -14,9 +14,9 @@
 #include <vector>
 
 namespace ActsExamples {
-
+// TODO: Capitalize enum names for consistency
 enum jetlabel { unknown = -99, ljet = 0, cjet = 4, bjet = 5 };
-
+// TODO: Remove hadronlabel
 enum hadronlabel {
   Hadron = 1,
   BBbarMesonPart = 2,

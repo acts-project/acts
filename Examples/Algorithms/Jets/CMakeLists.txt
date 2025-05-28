@@ -1,8 +1,9 @@
-add_library(ActsExamplesJets 
-    SHARED 
+add_library(
+    ActsExamplesJets
+    SHARED
     src/TruthJetAlgorithm.cpp
-    src/TrackToTruthJetAlgorithm.cpp)
-
+    src/TrackToTruthJetAlgorithm.cpp
+)
 target_include_directories(
     ActsExamplesJets
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

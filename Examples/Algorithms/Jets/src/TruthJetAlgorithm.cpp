@@ -79,7 +79,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
     // Get the jet classification label later here! For now, we use "unknown"
     ActsExamples::jetlabel label = ActsExamples::unknown;
-
+    
     Acts::Vector4 jetFourMomentum(jets[i].px(), jets[i].py(), jets[i].pz(),
                                   jets[i].e());
 
