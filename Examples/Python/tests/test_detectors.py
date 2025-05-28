@@ -67,20 +67,6 @@ def test_odd():
         assert count_surfaces(trackingGeometry) == 18824
 
 
-def test_aligned_detector():
-    detector = acts.examples.AlignedDetector()
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
-
-    assert detector is not None
-    assert trackingGeometry is not None
-    assert decorators is not None
-
-    assert count_surfaces(trackingGeometry) == 18728
-
-
-import itertools
-
 
 def test_tgeo_config_triplet(monkeypatch):
     from acts.examples import TGeoDetector, Interval

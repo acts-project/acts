@@ -1,5 +1,4 @@
 add_subdirectory(Common)
-add_subdirectory(ContextualDetector)
 add_subdirectory_if(DD4hepDetector ACTS_BUILD_EXAMPLES_DD4HEP)
 add_subdirectory(GenericDetector)
 add_subdirectory_if(Geant4Detector ACTS_BUILD_EXAMPLES_GEANT4)
