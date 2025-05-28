@@ -99,7 +99,6 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
-    target_link_libraries(ActsPluginExaTrkX PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(
