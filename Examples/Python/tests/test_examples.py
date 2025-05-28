@@ -258,7 +258,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     seq = Sequencer(events=10, numThreads=1)
 
-    root_files = [
+    koot_files = [
         (
             "estimatedparams.root",
             "estimatedparams",
@@ -1300,7 +1300,10 @@ def test_geometry_visitor(trk_geo):
 
 
 @pytest.mark.odd
-def test_strip_spacepoints(trk_geo, field, tmp_path, assert_root_hash):
+def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+    if detector_config.name == "generic":
+        pytest.skip("No strip spacepoint formation for the generic detector currently")
+
     from strip_spacepoints import createStripSpacepoints
 
     s = Sequencer(events=20, numThreads=-1)
@@ -1310,14 +1313,15 @@ def test_strip_spacepoints(trk_geo, field, tmp_path, assert_root_hash):
     geo_selection = config_path / "odd-strip-spacepoint-selection.json"
     digi_config_file = config_path / "odd-digi-smearing-config.json"
 
-    createStripSpacepoints(
-        trackingGeometry=trk_geo,
-        field=field,
-        digiConfigFile=digi_config_file,
-        geoSelection=geo_selection,
-        outputDir=tmp_path,
-        s=s,
-    ).run()
+    with detector_config.detector:
+        createStripSpacepoints(
+            trackingGeometry=detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=digi_config_file,
+            geoSelection=geo_selection,
+            outputDir=tmp_path,
+            s=s,
+        ).run()
 
     root_file = "strip_spacepoints.root"
     rfp = tmp_path / root_file

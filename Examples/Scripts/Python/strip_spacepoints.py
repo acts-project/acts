@@ -100,7 +100,7 @@ def createStripSpacepoints(
     # Create strip selection of ODD:
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
-            level=acts.logging.VERBOSE,
+            level=acts.logging.DEBUG,
             trackingGeometry=trackingGeometry,
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",

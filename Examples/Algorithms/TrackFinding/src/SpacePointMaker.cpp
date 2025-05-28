@@ -122,6 +122,11 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
 }
 
 void ActsExamples::SpacePointMaker::initializeStripPartners() {
+  ACTS_INFO("Strip space point geometry selection:");
+  for (const auto& geoId : m_cfg.stripGeometrySelection) {
+    ACTS_INFO("  " << geoId);
+  }
+
   // We need to use a default geometry context here to access the center
   // coordinates of modules.
   Acts::GeometryContext gctx;
@@ -129,8 +134,6 @@ void ActsExamples::SpacePointMaker::initializeStripPartners() {
   // Build strip partner map, i.e., which modules are stereo partners
   // As a heuristic we assume that the stereo partners are the modules
   // which have the shortest mutual distance
-  ACTS_INFO("Build map of strip stereo partners");
-
   std::vector<const Acts::Surface*> allSensitivesVector;
   m_cfg.trackingGeometry->visitSurfaces(
       [&](const auto surface) { allSensitivesVector.push_back(surface); },
@@ -156,11 +159,11 @@ void ActsExamples::SpacePointMaker::initializeStripPartners() {
     const std::size_t nSurfaces = std::distance(range.begin(), range.end());
 
     if (nSurfaces < 2) {
-      ACTS_WARNING("Less then 2 elements for selector " << selector);
+      ACTS_WARNING("Only " << nSurfaces << " surfaces for selector " << selector
+                           << ", skip");
       continue;
     }
-    ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector
-                        << "|ex=" << selector.extra());
+    ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector);
 
     // Very dumb all-to-all search
     for (auto mod1 : range) {
