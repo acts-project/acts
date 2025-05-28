@@ -75,7 +75,6 @@ target_link_libraries(
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_link_libraries(ActsPluginExaTrkX PRIVATE CUDA::cudart)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
@@ -93,7 +92,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         ActsPluginExaTrkX
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginExaTrkX PRIVATE CUDA::cudart)
+    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::cudart)
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
