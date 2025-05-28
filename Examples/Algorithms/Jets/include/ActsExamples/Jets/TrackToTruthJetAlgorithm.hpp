@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TrackJet.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -47,9 +49,10 @@ class TrackToTruthJetAlgorithm : public IAlgorithm {
 
  private:
   Config m_cfg;
-  ReadDataHandle<ConstTrackContainer> m_inputTracks {this, "inputTracks"};
-  ReadDataHandle<std::vector<fastjet::PseudoJet>> m_inputJets {this, "inputJets"};
-  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputTrackJets {this, "outputTrackJets"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
+  ReadDataHandle<TrackJetContainer> m_inputJets{this,
+                                                              "inputJets"};
+  WriteDataHandle<TrackJetContainer> m_outputTrackJets{this, "outputTrackJets"};
 };
 
 }  // namespace ActsExamples

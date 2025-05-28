@@ -20,7 +20,7 @@
 namespace ActsExamples {
 
 TrackToTruthJetAlgorithm::TrackToTruthJetAlgorithm(const Config& cfg,
-                                     Acts::Logging::Level lvl)
+                                                   Acts::Logging::Level lvl)
     : IAlgorithm("TrackToTruthJetAlgorithm", lvl), m_cfg(cfg) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Input tracks are not configured");
@@ -35,57 +35,70 @@ TrackToTruthJetAlgorithm::TrackToTruthJetAlgorithm(const Config& cfg,
 
 ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-    ACTS_INFO("Executing track to truth jet matching algorithm");
+  ACTS_INFO("Executing track to truth jet matching algorithm");
 
-    const auto& tracks = m_inputTracks(ctx);
-    const auto& jets = m_inputJets(ctx);
-    ACTS_DEBUG("TrackToTruthJetAlg - Number of tracks: " << tracks.size());
-    ACTS_DEBUG("TrackToTruthJetAlg - Number of jets: " << jets.size());
+  const auto& tracks = m_inputTracks(ctx);
+  TrackJetContainer jets; 
+  jets = m_inputJets(ctx);
 
-    for(const auto& track: tracks) {
+  ACTS_DEBUG("TrackToTruthJetAlg - Number of tracks: " << tracks.size());
+  ACTS_DEBUG("TrackToTruthJetAlg - Number of jets: " << jets.size());
 
-        double minDeltaR = m_cfg.maxDeltaR;
-        int closestJetIndex = -1;
+  for (const auto& track : tracks) {
+    double minDeltaR = m_cfg.maxDeltaR;
+    int closestJetIndex = -1;
 
-        double trackEnergy = sqrt(track.absoluteMomentum()*track.absoluteMomentum()); // need to add mass here!
-        
-        ACTS_DEBUG("Track index: " << track.index() << ", momentum: " << track.momentum().x() << ", " << track.momentum().y() << ", " << track.momentum().z() << ", energy: " << trackEnergy);
-        
-        // Create a fastjet::PseudoJet object for the track
-        fastjet::PseudoJet trackJet(track.momentum().x(), track.momentum().y(), track.momentum().z(), trackEnergy);
-        trackJet.set_user_index(track.index());
+    double trackEnergy =
+        sqrt(track.absoluteMomentum() *
+             track.absoluteMomentum());  // need to add mass here!
 
-        // Loop over the jets to find the closest one
-        for (size_t i = 0; i < jets.size(); ++i) {
-            const auto& jet = jets[i];
+    ACTS_DEBUG("Track index: "
+               << track.index() << ", momentum: " << track.momentum().x()
+               << ", " << track.momentum().y() << ", " << track.momentum().z()
+               << ", energy: " << trackEnergy);
 
-            ACTS_DEBUG("Jet index: " << i << ", momentum: " << jet.px() << ", " << jet.py() << ", " << jet.pz() << ", energy: " << jet.e());
+    // Create a fastjet::PseudoJet object for the track
+    fastjet::PseudoJet trackJet(track.momentum().x(), track.momentum().y(),
+                                track.momentum().z(), trackEnergy);
+    trackJet.set_user_index(track.index());
 
-            if (trackJet.delta_R(jet) < minDeltaR) {
-                minDeltaR = trackJet.delta_R(jet);
-                closestJetIndex = i;
-            }
+    // Loop over the jets to find the closest one
+    for (std::size_t i = 0; i < jets.size(); ++i) {
+      const auto& jet = jets[i];
 
-            ACTS_DEBUG("Track " << track.index() << " delta R to jet " << i << ": " << trackJet.delta_R(jet));
+      // Create a fastjet::PseudoJet object for the jet
+      fastjet::PseudoJet jetPseudo(jet.getFourMomentum()(0),
+                                   jet.getFourMomentum()(1),
+                                   jet.getFourMomentum()(2),
+                                   jet.getFourMomentum()(3));
 
-        } // loop over jets
+      // TODO: instead pseudo jet use directly eta phi from trackjet 
+      if (trackJet.delta_R(jetPseudo) < minDeltaR) {
+        minDeltaR = trackJet.delta_R(jetPseudo);
+        closestJetIndex = i;
+      }
 
-        // Properties of the closest jet
-        if (closestJetIndex != -1) {
-            const auto& closestJet = jets[closestJetIndex];
-            ACTS_DEBUG("Closest jet index: " << closestJetIndex << ", delta R: " << minDeltaR);
-            ACTS_DEBUG("Closest jet momentum: " << closestJet.px() << ", " << closestJet.py() << ", " << closestJet.pz() << ", energy: " << closestJet.e());
-        } else {
-            ACTS_DEBUG("No jet found within delta R: " << m_cfg.maxDeltaR);
-        }
-    } // loop over tracks
-    
+      ACTS_DEBUG("Track " << track.index() << " delta R to jet " << i << ": "
+                          << trackJet.delta_R(jetPseudo));
+
+    }  // loop over jets
+
+    // Properties of the closest jet
+    if (closestJetIndex != -1) {
+      ACTS_DEBUG("Adding track " << track.index() << " to jet " << closestJetIndex );
+      jets[closestJetIndex].addTrack(track.index());
+
+    } else {
+      ACTS_DEBUG("No jet found within delta R: " << m_cfg.maxDeltaR);
+    }
+
+  }  // loop over tracks
 
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode ActsExamples::TrackToTruthJetAlgorithm::finalize() const {
-  ACTS_INFO("Executing track to truth jet matching algorithm");
+  ACTS_INFO("Finalizing track to truth jet matching algorithm");
   return ProcessCode::SUCCESS;
 }
 
