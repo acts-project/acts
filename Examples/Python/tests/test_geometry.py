@@ -9,7 +9,7 @@ from helpers import dd4hepEnabled
 
 
 @pytest.mark.parametrize(
-    "detectorFactory,aligned,nobj",
+    "detectorFactory,nobj",
     [
         (functools.partial(GenericDetector, gen3=False), True, 450),
         pytest.param(
