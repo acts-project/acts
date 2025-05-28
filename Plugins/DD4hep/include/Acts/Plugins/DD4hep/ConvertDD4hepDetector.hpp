@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -90,6 +91,8 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
 /// @param geometryIdentifierHook Hook to apply to surfaces during geometry closure.
+/// @param detectorElementFactory Factory function to create Acts::DD4hepDetectorElement
+/// or derived classes
 ///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
@@ -111,7 +114,9 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const GeometryContext& gctx = GeometryContext(),
     std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
     std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
-        std::make_shared<GeometryIdentifierHook>());
+        std::make_shared<GeometryIdentifierHook>(),
+    Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+        Acts::DD4hepLayerBuilder::defaultDetectorElementFactory);
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///
@@ -156,7 +161,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
-    double defaultLayerThickness = UnitConstants::fm);
+    double defaultLayerThickness = UnitConstants::fm,
+    DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+        DD4hepLayerBuilder::defaultDetectorElementFactory);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
