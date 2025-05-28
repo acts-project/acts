@@ -128,10 +128,11 @@ def run_ckf_tracking(label, seeding):
                 1 * u.mm,
                 1 * u.degree,
                 1 * u.degree,
-                0.1 * u.e / u.GeV,
+                0 * u.e / u.GeV,
                 1 * u.ns,
             ],
-            initialSigmaPtRel=0.01,
+            initialSigmaQoverPt=0.1 * u.e / u.GeV,
+            initialSigmaPtRel=0.1,
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared

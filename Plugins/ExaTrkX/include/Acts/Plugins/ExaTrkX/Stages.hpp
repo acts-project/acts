@@ -8,9 +8,12 @@
 
 #pragma once
 
+#include <Acts/Plugins/ExaTrkX/Tensor.hpp>
+
 #include <any>
 #include <cstdint>
 #include <exception>
+#include <optional>
 #include <vector>
 
 #include <c10/cuda/CUDAStream.h>
@@ -20,17 +23,6 @@ namespace Acts {
 
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
-
-/// Capture the context of the execution
-struct ExecutionContext {
-  torch::Device device{torch::kCPU};
-  std::optional<c10::cuda::CUDAStream> stream;
-};
-
-// TODO maybe replace std::any with some kind of variant<unique_ptr<torch>,
-// unique_ptr<onnx>>?
-// TODO maybe replace input for GraphConstructionBase with some kind of
-// boost::multi_array / Eigen::Array
 
 class GraphConstructionBase {
  public:
@@ -48,8 +40,6 @@ class GraphConstructionBase {
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) = 0;
 
-  virtual torch::Device device() const = 0;
-
   virtual ~GraphConstructionBase() = default;
 };
 
@@ -66,8 +56,6 @@ class EdgeClassificationBase {
   virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
       std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
       const ExecutionContext &execContext = {}) = 0;
-
-  virtual torch::Device device() const = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -87,8 +75,6 @@ class TrackBuildingBase {
       std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) = 0;
-
-  virtual torch::Device device() const = 0;
 
   virtual ~TrackBuildingBase() = default;
 };

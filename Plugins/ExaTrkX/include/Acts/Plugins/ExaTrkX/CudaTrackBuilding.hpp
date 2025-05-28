@@ -20,24 +20,22 @@ namespace Acts {
 class CudaTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   struct Config {
-    // nothing yet
+    bool useOneBlockImplementation = true;
+    bool doJunctionRemoval = false;
   };
 
   CudaTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
-      : m_cfg(cfg),
-        m_logger(std::move(logger)),
-        m_device(torch::Device(torch::kCUDA)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edge_weights,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
-  torch::Device device() const override { return m_device; };
+  const Config &config() const { return m_cfg; }
 
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-  torch::Device m_device;
   const auto &logger() const { return *m_logger; }
 };
 

@@ -48,6 +48,7 @@ class ExaTrkXPipeline {
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacepointIDs,
+                                    Acts::Device device,
                                     const ExaTrkXHook &hook = {},
                                     ExaTrkXTiming *timing = nullptr) const;
 

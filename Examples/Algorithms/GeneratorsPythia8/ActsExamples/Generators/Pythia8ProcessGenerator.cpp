@@ -56,10 +56,8 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
 };
 
 struct Pythia8GeneratorImpl {
-#if defined(_HAS_HEPMC3)
   std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
   std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
-#endif
   std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
 };
 
@@ -109,13 +107,13 @@ Pythia8Generator::~Pythia8Generator() {
     m_impl->m_hepMC3Writer->close();
   }
 
-  ACTS_INFO("Pythia8Generator produced "
-            << m_impl->m_pythia8RndmEngine->statistics.numUniformRandomNumbers
-            << " uniform random numbers");
-  ACTS_INFO("                 first = "
-            << m_impl->m_pythia8RndmEngine->statistics.first);
-  ACTS_INFO("                  last = "
-            << m_impl->m_pythia8RndmEngine->statistics.last);
+  ACTS_DEBUG("Pythia8Generator produced "
+             << m_impl->m_pythia8RndmEngine->statistics.numUniformRandomNumbers
+             << " uniform random numbers");
+  ACTS_DEBUG("                 first = "
+             << m_impl->m_pythia8RndmEngine->statistics.first);
+  ACTS_DEBUG("                  last = "
+             << m_impl->m_pythia8RndmEngine->statistics.last);
 }
 
 std::shared_ptr<HepMC3::GenEvent> Pythia8Generator::operator()(

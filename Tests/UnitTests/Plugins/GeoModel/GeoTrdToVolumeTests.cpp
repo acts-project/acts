@@ -30,16 +30,16 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
-  auto material = new GeoMaterial("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
   double geoHlX1 = 2, geoHlX2 = 2, geoHlY1 = 50, geoHlY2 = 80, geoHlZ = 60;
-  auto trd = new GeoTrd(geoHlX1, geoHlX1, geoHlY1, geoHlY2, geoHlZ);
-  auto logTrd = new GeoLogVol("Trd", trd, material);
+  auto trd = make_intrusive<GeoTrd>(geoHlX1, geoHlX1, geoHlY1, geoHlY2, geoHlZ);
+  auto logTrd = make_intrusive<GeoLogVol>("Trd", trd, material);
   auto physTrd = make_intrusive<GeoFullPhysVol>(logTrd);
 
   // this should produce an error while converting
-  auto errTrd = new GeoTrd(2, 3, 25, 40, 30);
-  auto errLogTrd = new GeoLogVol("Trd", errTrd, material);
+  auto errTrd = make_intrusive<GeoTrd>(2, 3, 25, 40, 30);
+  auto errLogTrd = make_intrusive<GeoLogVol>("Trd", errTrd, material);
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
 
   // create pars for conversion
