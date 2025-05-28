@@ -35,6 +35,8 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
 
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  TrackJetContainer outputJets;
+
   const auto& truthParticles = m_inputTruthParticles(ctx);
 
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
@@ -57,15 +59,50 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     particleIndex++;
   }
   ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
+
   // Run the jet clustering
   fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
+
   // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
   ACTS_DEBUG("Number of clustered jets: " << jets.size());
-  // Store the jets in the output data handle
-  m_outputJets(ctx, std::move(jets));
 
+  // Prepare jets for the storage - conversion of jets to custom track jet class
+  // (and later add here the jet classification)
+
+  for (unsigned int i = 0; i < jets.size(); i++) {
+    // Get information on the jet constituents
+    std::vector<fastjet::PseudoJet> jetConstituents = jets[i].constituents();
+    std::vector<int> constituentIndices;
+    constituentIndices.reserve(jetConstituents.size());
+
+    // Get the jet classification label later here! For now, we use "unknown"
+    ActsExamples::jetlabel label = ActsExamples::unknown;
+
+    Acts::Vector4 jetFourMomentum(jets[i].px(), jets[i].py(), jets[i].pz(),
+                                  jets[i].e());
+
+    // Initialize the (track) jet with 4-momentum and jet label
+    ActsExamples::TrackJet storedJet(jetFourMomentum, label);
+
+    // Add the jet constituents to the (track)jet
+    for (unsigned int j = 0; j < jetConstituents.size(); j++) {
+      // Get the index of the constituent in the original input pseudo jets
+      constituentIndices.push_back(jetConstituents[j].user_index());
+    }
+
+    storedJet.setConstituents(constituentIndices);
+
+    outputJets.push_back(storedJet);
+    ACTS_DEBUG("Stored jet " << i << " with 4-momentum: " << jetFourMomentum(0)
+                             << ", " << jetFourMomentum(1) << ", "
+                             << jetFourMomentum(2) << ", " << jetFourMomentum(3)
+                             << " and " << constituentIndices.size()
+                             << " constituents.");
+  }
+
+  m_outputJets(ctx, std::move(outputJets));
   return ProcessCode::SUCCESS;
 }
 
