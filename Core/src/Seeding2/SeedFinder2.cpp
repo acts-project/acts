@@ -50,9 +50,9 @@ SeedFinder2::DerivedConfig SeedFinder2::Config::derive() const {
 
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  result.highland = 13.6 * std::sqrt(radLengthPerSeed) *
-                    (1 + 0.038 * std::log(radLengthPerSeed));
-  const float maxScatteringAngle = result.highland / minPt;
+  result.highland = 13.6 * std::sqrt(result.radLengthPerSeed) *
+                    (1 + 0.038 * std::log(result.radLengthPerSeed));
+  const float maxScatteringAngle = result.highland / result.minPt;
   result.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
 
   return result;
@@ -230,6 +230,7 @@ void SeedFinder2::createSeeds(
                  << " tops for middle candidate indexed " << spM.index());
 
     // filter candidates
+    state.candidatesCollector.clear();
     if (m_cfg.useDetailedDoubleMeasurementInfo) {
       filterCandidates<DetectorMeasurementInfo::eDetailed>(options, state,
                                                            spacePoints, spM);
@@ -493,7 +494,7 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
   const float varianceRM = spM.varianceR();
   const float varianceZM = spM.varianceZ();
 
-  std::size_t numTopSP = state.compatibleTopSp.size();
+  std::size_t numTopSp = state.compatibleTopSp.size();
 
   // sort: make index vector
   std::vector<std::size_t> sortedBottoms(state.compatibleBottomSp.size());
@@ -517,18 +518,15 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
   }
 
   // Reserve enough space, in case current capacity is too little
-  state.topSpVec.reserve(numTopSP);
-  state.curvatures.reserve(numTopSP);
-  state.impactParameters.reserve(numTopSP);
+  state.topSpVec.reserve(numTopSp);
+  state.curvatures.reserve(numTopSp);
+  state.impactParameters.reserve(numTopSp);
 
   std::size_t t0 = 0;
 
-  // clear previous results and then loop on bottoms and tops
-  state.candidatesCollector.clear();
-
   for (const std::size_t b : sortedBottoms) {
     // break if we reached the last top SP
-    if (t0 == numTopSP) {
+    if (t0 >= numTopSp) {
       break;
     }
 
@@ -584,7 +582,7 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
       minCompatibleTopSPs++;
     }
 
-    for (std::size_t indexSortedTop = t0; indexSortedTop < numTopSP;
+    for (std::size_t indexSortedTop = t0; indexSortedTop < numTopSp;
          ++indexSortedTop) {
       const std::size_t t = sortedTops[indexSortedTop];
 
