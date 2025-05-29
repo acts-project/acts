@@ -216,6 +216,7 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   std::vector<std::vector<Acts::SpacePointIndex2>> topSpGroups;
 
   Acts::SpacePointContainer2 orderedSpacePoints;
+  orderedSpacePoints.reserve(coreSpacePoints.size());
   std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
       gridMapping;
   auto copyFromGrid = [&](std::size_t gridIndex,
