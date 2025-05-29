@@ -215,21 +215,40 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   std::vector<Acts::SpacePointIndex2> middleSpGroup;
   std::vector<std::vector<Acts::SpacePointIndex2>> topSpGroups;
 
+  Acts::SpacePointContainer2 orderedSpacePoints;
+  std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
+      gridMapping;
+  auto copyFromGrid = [&](std::size_t gridIndex,
+                          std::vector<Acts::SpacePointIndex2>& indices) {
+    if (auto it = gridMapping.find(gridIndex); it != gridMapping.end()) {
+      return;
+    }
+
+    for (const Acts::SpacePointIndex2 spi :
+         spacePointsGrouping.grid().at(gridIndex)) {
+      auto sp = coreSpacePoints.at(spi);
+      auto newSp = orderedSpacePoints.makeSpacePoint(
+          sp.sourceLinks()[0], sp.x(), sp.y(), sp.z(), sp.phi(), sp.radius(),
+          sp.varianceR(), sp.varianceZ());
+      indices.push_back(newSp.index());
+    }
+  };
+
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     ACTS_VERBOSE("Process middle " << middle);
 
     bottomSpGroups.clear();
     for (const auto b : bottom) {
-      bottomSpGroups.push_back(spacePointsGrouping.grid().at(b));
+      copyFromGrid(b, bottomSpGroups.emplace_back());
     }
     middleSpGroup.clear();
-    middleSpGroup = spacePointsGrouping.grid().at(middle);
+    copyFromGrid(middle, middleSpGroup);
     topSpGroups.clear();
     for (const auto t : top) {
-      topSpGroups.push_back(spacePointsGrouping.grid().at(t));
+      copyFromGrid(t, topSpGroups.emplace_back());
     }
 
-    m_seedFinder->createSeeds(derivedOptions, state, coreSpacePoints,
+    m_seedFinder->createSeeds(derivedOptions, state, orderedSpacePoints,
                               bottomSpGroups, middleSpGroup, topSpGroups,
                               seeds);
   }
@@ -243,13 +262,13 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   seedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {
     auto sps = seed.spacePointIndices();
-    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
+    seedContainerForStorage.emplace_back(*orderedSpacePoints.at(sps[0])
                                               .sourceLinks()[0]
                                               .get<const SimSpacePoint*>(),
-                                         *coreSpacePoints.at(sps[1])
+                                         *orderedSpacePoints.at(sps[1])
                                               .sourceLinks()[0]
                                               .get<const SimSpacePoint*>(),
-                                         *coreSpacePoints.at(sps[2])
+                                         *orderedSpacePoints.at(sps[2])
                                               .sourceLinks()[0]
                                               .get<const SimSpacePoint*>());
     seedContainerForStorage.back().setVertexZ(seed.vertexZ());
