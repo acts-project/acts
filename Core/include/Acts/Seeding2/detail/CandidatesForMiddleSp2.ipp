@@ -8,8 +8,6 @@
 
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
-#include <iostream>
-
 namespace Acts {
 
 inline void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
@@ -70,8 +68,6 @@ inline void CandidatesForMiddleSp2::clear() {
 inline bool CandidatesForMiddleSp2::push(std::size_t spB, std::size_t spM,
                                          std::size_t spT, float weight,
                                          float zOrigin, bool isQuality) {
-  std::cout << "spB: " << spB << " spM: " << spM << " spT: " << spT
-            << " weight: " << weight << std::endl;
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
