@@ -219,11 +219,16 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
       gridMapping;
   auto copyFromGrid = [&](std::size_t gridIndex,
-                          std::vector<Acts::SpacePointIndex2>& indices) {
+                          std::vector<Acts::SpacePointIndex2>& indices)
+      -> std::pair<std::size_t, std::size_t> {
     if (auto it = gridMapping.find(gridIndex); it != gridMapping.end()) {
-      return;
+      for (std::size_t i = it->second.first; i < it->second.second; ++i) {
+        indices.push_back(i);
+      }
+      return it->second;
     }
 
+    std::size_t begin = orderedSpacePoints.size();
     for (const Acts::SpacePointIndex2 spi :
          spacePointsGrouping.grid().at(gridIndex)) {
       auto sp = coreSpacePoints.at(spi);
@@ -232,6 +237,9 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
           sp.varianceR(), sp.varianceZ());
       indices.push_back(newSp.index());
     }
+    std::size_t end = orderedSpacePoints.size();
+
+    return gridMapping[gridIndex] = {begin, end};
   };
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
