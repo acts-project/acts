@@ -21,6 +21,7 @@
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingAlgorithm2.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -110,6 +111,48 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::CylindricalSpacePointGrid2::Config;
+    auto c = py::class_<Config>(m, "SpacePointGrid2Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(c, minPt, rMax, zMax, zMin, phiMin, phiMax, deltaRMax,
+                       cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
+                       impactMax, zBinEdges, bFieldInZ);
+    patchKwargsConstructor(c);
+  }
+  {
+    using Config = Acts::SeedFilter2::Config;
+    auto c = py::class_<Config>(m, "SeedFilter2Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor,
+                       zOriginWeightFactor, compatSeedWeight, deltaRMin,
+                       maxSeedsPerSpM, compatSeedLimit, useDeltaRorTopRadius,
+                       seedWeightIncrement, numSeedIncrement);
+    patchKwargsConstructor(c);
+  }
+  {
+    using Config = Acts::SeedFinder2::Config;
+    auto c = py::class_<Config>(m, "SeedFinder2Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(
+        c, minPt, cotThetaMax, deltaRMin, deltaRMax, deltaRMinBottomSP,
+        deltaRMaxBottomSP, deltaRMinTopSP, deltaRMaxTopSP, impactMax,
+        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
+        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
+        radLengthPerSeed, zAlign, rAlign, sigmaError, maxBlockSize,
+        nTrplPerSpBLimit, nAvgTrplPerSpBLimit, deltaZMax, zBinEdges,
+        interactionPointCut, zBinsCustomLooping, useVariableMiddleSPRange,
+        deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
+        rMinMiddle, rMaxMiddle, binSizeR, seedConfirmation,
+        centralSeedConfirmationRange, forwardSeedConfirmationRange,
+        useDetailedDoubleMeasurementInfo);
+    patchKwargsConstructor(c);
+  }
+  {
+    using Options = Acts::SeedFinder2::Options;
+    auto c = py::class_<Options>(m, "SeedFinder2Options").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
+    patchKwargsConstructor(c);
+  }
+
+  {
     using Config = Acts::Experimental::SeedFinderGbtsConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedFinderGbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, sigmaScattering, highland, maxScatteringAngle2,
@@ -150,6 +193,12 @@ void addTrackFinding(Context& ctx) {
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingAlgorithm2, mex, "SeedingAlgorithm2",
+      inputSpacePoints, outputSeeds, finderConfig, finderOptions, filterConfig,
+      gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
+      numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,

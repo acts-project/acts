@@ -19,6 +19,7 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
 template <typename grid_t>
 class BinnedGroup;
 
