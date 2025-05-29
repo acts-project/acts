@@ -15,6 +15,60 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
+namespace {
+
+SpacePointIndex2 lowerBound(const SpacePointContainer2& spacePoints,
+                            const SpacePointIndexRange2& range,
+                            float lowerBound) {
+  /// If there are no elements in the bin, we simply set the iterator to begin()
+  /// and return. In this case begin() == end() so we run on nothing
+  if (range.first == range.second) {
+    return range.first;
+  }
+
+  /// First check that the first element is not already above the lower bound
+  /// If so, avoid any computation and set the iterator to begin()
+  if (spacePoints.at(range.first).radius() > lowerBound) {
+    return range.first;
+  }
+  /// In case the last element is below the lower bound, that means that there
+  /// can't be any element in that collection that can be considered a valuable
+  /// candidate.
+  /// Set the iterator to end() so that we do not run on this collection
+  else if (spacePoints.at(range.second - 1).radius() < lowerBound) {
+    return range.second;
+  }
+
+  /// Cannot decide a priori. We need to find the first element such that it's
+  /// radius is > lower bound. We use a binary search in this case
+
+  // custom binary search which was observed to be faster than
+  // `std::lower_bound` see https://github.com/acts-project/acts/pull/3095
+  std::size_t start = range.first;
+  std::size_t stop = range.second;
+  while (start <= stop) {
+    std::size_t mid = (start + stop) / 2;
+    if (spacePoints.at(mid).radius() == lowerBound) {
+      return mid;
+    } else if (spacePoints.at(mid).radius() > lowerBound) {
+      if (mid > 0 && spacePoints.at(mid - 1).radius() < lowerBound) {
+        return mid;
+      }
+      stop = mid - 1;
+    } else {
+      if (mid + 1 < (range.second - range.first) &&
+          spacePoints.at(mid + 1).radius() > lowerBound) {
+        return mid + 1;
+      }
+      start = mid + 1;
+    }
+  }  // while loop
+
+  return range.second;
+}
+
+}  // namespace
+
 SeedFinder2::DerivedConfig SeedFinder2::Config::derive() const {
   DerivedConfig result;
 
@@ -134,11 +188,16 @@ void SeedFinder2::createSeeds(
     SeedContainer2& outputSeeds) const {
   state.bottomSpGroupOffets.clear();
   for (const auto& group : bottomSpGroups) {
-    state.bottomSpGroupOffets.push_back(group.first);
+    state.bottomSpGroupOffets.push_back(
+        lowerBound(spacePoints, group,
+                   spacePoints.at(middleSpGroup.first).radius() -
+                       m_cfg.deltaRMaxBottomSP));
   }
   state.topSpGroupOffets.clear();
   for (const auto& group : topSpGroups) {
-    state.topSpGroupOffets.push_back(group.first);
+    state.topSpGroupOffets.push_back(lowerBound(
+        spacePoints, group,
+        spacePoints.at(middleSpGroup.first).radius() + m_cfg.deltaRMinTopSP));
   }
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
