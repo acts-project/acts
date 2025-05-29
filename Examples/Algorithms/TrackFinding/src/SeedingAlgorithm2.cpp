@@ -206,8 +206,8 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
           m_cfg.finderConfig.deltaRMiddleMaxSPRange};
 
   // run the seeding
-  static thread_local Acts::SeedContainer2 seeds;
-  static thread_local Acts::SeedFinder2::State state;
+  Acts::SeedContainer2 seeds;
+  Acts::SeedFinder2::State state;
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
 
