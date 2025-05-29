@@ -128,21 +128,25 @@ std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
 void SeedFinder2::createSeeds(
     const DerivedOptions& options, State& state,
     const SpacePointContainer2& spacePoints,
-    const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
-    const std::vector<SpacePointIndex2>& middleSpGroup,
-    const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
+    const std::vector<SpacePointIndexRange2>& bottomSpGroups,
+    const SpacePointIndexRange2& middleSpGroup,
+    const std::vector<SpacePointIndexRange2>& topSpGroups,
     SeedContainer2& outputSeeds) const {
   state.bottomSpGroupOffets.clear();
-  state.bottomSpGroupOffets.resize(bottomSpGroups.size(), 0);
+  for (const auto& group : bottomSpGroups) {
+    state.bottomSpGroupOffets.push_back(group.first);
+  }
   state.topSpGroupOffets.clear();
-  state.topSpGroupOffets.resize(topSpGroups.size(), 0);
+  for (const auto& group : topSpGroups) {
+    state.topSpGroupOffets.push_back(group.first);
+  }
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
   state.candidatesCollector.setMaxElements(m_cfg.maxSeedsPerSpMConf,
                                            m_cfg.maxQualitySeedsPerSpMConf);
 
-  if (middleSpGroup.empty()) {
+  if (middleSpGroup.first == middleSpGroup.second) {
     ACTS_VERBOSE("No middle space points, skipping");
     return;
   }
@@ -150,13 +154,14 @@ void SeedFinder2::createSeeds(
   // we compute this here since all middle space point candidates belong to
   // the same z-bin
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-      retrieveRadiusRangeForMiddle(spacePoints.at(middleSpGroup.front()),
+      retrieveRadiusRangeForMiddle(spacePoints.at(middleSpGroup.first),
                                    options.rMiddleSpRange);
   ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                << "]");
 
-  for (SpacePointIndex2 middleSpIndex : middleSpGroup) {
+  for (SpacePointIndex2 middleSpIndex = middleSpGroup.first;
+       middleSpIndex != middleSpGroup.second; ++middleSpIndex) {
     auto spM = spacePoints.at(middleSpIndex);
 
     const float rM = spM.radius();
@@ -256,7 +261,7 @@ void SeedFinder2::createCompatibleDoublets(
     const DerivedOptions& options, const DubletCuts& cuts,
     const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp,
-    const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
+    const std::vector<SpacePointIndexRange2>& candidateSpGroups,
     std::vector<std::size_t>& candidateSpGroupOffsets,
     std::vector<SpacePointIndex2>& compatibleSp,
     std::vector<LinCircle>& linCircles) const {
@@ -288,8 +293,8 @@ void SeedFinder2::createCompatibleDoublets(
 
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
-    for (auto& i = groupOffset; i < candidateSpGroup.size(); ++i) {
-      ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
+    for (auto& i = groupOffset; i != candidateSpGroup.second; ++i) {
+      ConstSpacePointProxy2 otherSp = spacePoints.at(i);
       if constexpr (candidateType == SpacePointCandidateType::eBottom) {
         // if r-distance is too big, try next SP in bin
         if (rM - otherSp.radius() <= cuts.deltaRMax) {
@@ -303,8 +308,8 @@ void SeedFinder2::createCompatibleDoublets(
       }
     }
 
-    for (auto i = groupOffset; i < candidateSpGroup.size(); ++i) {
-      ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
+    for (auto i = groupOffset; i != candidateSpGroup.second; ++i) {
+      ConstSpacePointProxy2 otherSp = spacePoints.at(i);
 
       if constexpr (isBottomCandidate) {
         deltaR = rM - otherSp.radius();
