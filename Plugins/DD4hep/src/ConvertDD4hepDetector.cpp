@@ -63,7 +63,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const IMaterialDecorator> matDecorator,
     std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook,
-    DD4hepLayerBuilder::ElementFactory detectorElementFactory) {
+    const DD4hepLayerBuilder::ElementFactory& detectorElementFactory) {
   // create local logger for conversion
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
@@ -154,7 +154,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector, const Logger& logger, BinningType bTypePhi,
     BinningType bTypeR, BinningType bTypeZ, double layerEnvelopeR,
     double layerEnvelopeZ, double defaultLayerThickness,
-    DD4hepLayerBuilder::ElementFactory detectorElementFactory) {
+    const DD4hepLayerBuilder::ElementFactory& detectorElementFactory) {
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(logger);
   // create local logger for conversion

@@ -115,7 +115,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
     std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<GeometryIdentifierHook>(),
-    Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+    const Acts::DD4hepLayerBuilder::ElementFactory& detectorElementFactory =
         Acts::DD4hepLayerBuilder::defaultDetectorElementFactory);
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
@@ -165,7 +165,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
     double defaultLayerThickness = UnitConstants::fm,
-    DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+    const DD4hepLayerBuilder::ElementFactory& detectorElementFactory =
         DD4hepLayerBuilder::defaultDetectorElementFactory);
 
 /// Helper method internally used to create a default
