@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/SeedingAlgorithm2.hpp"
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData2/SeedContainer2.hpp"
 #include "Acts/EventData2/SpacePointContainer2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -172,7 +173,7 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (m_spacePointSelector(sp)) {
-      auto newSp = coreSpacePoints.makeSpacePoint(sp.sourceLinks()[0], sp.x(),
+      auto newSp = coreSpacePoints.makeSpacePoint(Acts::SourceLink(&sp), sp.x(),
                                                   sp.y(), sp.z());
       newSp.varianceR() = sp.varianceR();
       newSp.varianceZ() = sp.varianceZ();
@@ -236,7 +237,25 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
+  // we have seeds of proxies
+  // convert them to seed of external space points
   SimSeedContainer seedContainerForStorage;
+  seedContainerForStorage.reserve(seeds.size());
+  for (const auto& seed : seeds) {
+    auto sps = seed.spacePointIndices();
+    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint*>(),
+                                         *coreSpacePoints.at(sps[1])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint*>(),
+                                         *coreSpacePoints.at(sps[2])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint*>());
+    seedContainerForStorage.back().setVertexZ(seed.vertexZ());
+    seedContainerForStorage.back().setQuality(seed.quality());
+  }
+
   m_outputSeeds(ctx, std::move(seedContainerForStorage));
   return ProcessCode::SUCCESS;
 }
