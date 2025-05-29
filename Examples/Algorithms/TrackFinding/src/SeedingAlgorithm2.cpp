@@ -166,7 +166,7 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
 }
 
 ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
-  SimSpacePointContainer spacePoints = m_inputSpacePoints(ctx);
+  const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints;
   coreSpacePoints.reserve(spacePoints.size());
