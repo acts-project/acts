@@ -15,7 +15,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
@@ -23,7 +22,6 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -35,7 +33,6 @@ class GridBinFinder;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Construct track seeds from space points.
 class SeedingAlgorithm final : public IAlgorithm {
