@@ -13,5 +13,5 @@ ActsExamples::alignedGeoModelDetectorElementFactory(
     PVConstLink geoPhysVol, std::shared_ptr<Acts::Surface> surface,
     const Acts::Transform3& sfTransform, double thickness) {
   return std::make_shared<AlignedGeoModelDetectorElement>(
-      geoPhysVol, std::move(surface), sfTransform, thickness);
+      std::move(geoPhysVol), std::move(surface), sfTransform, thickness);
 }
