@@ -46,7 +46,8 @@ SeedFilter2::SeedFilter2(const DerivedConfig& config,
 
 void SeedFilter2::filter2SpFixed(
     const Options& options, State& state,
-    const SpacePointContainer2& spacePoints, SpacePointIndex2 bottomSp,
+    const SpacePointContainer2& spacePoints,
+    const SpacePointColumn2<float>& rColumn, SpacePointIndex2 bottomSp,
     SpacePointIndex2 middleSp, const std::vector<SpacePointIndex2>& topSpVec,
     const std::vector<float>& invHelixDiameterVec,
     const std::vector<float>& impactParametersVec, float zOrigin,
@@ -91,7 +92,7 @@ void SeedFilter2::filter2SpFixed(
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
     assert(!m_cfg.useDeltaRorTopRadius && "TODO not implemented");
-    float currentTopR = spT.radius();
+    float currentTopR = spT.extra(rColumn);
     float impact = impactParametersVec[topSpIndex];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
@@ -106,7 +107,7 @@ void SeedFilter2::filter2SpFixed(
       auto otherSpT = spacePoints.at(topSpVec[compatibletopSpIndex]);
 
       assert(!m_cfg.useDeltaRorTopRadius && "TODO not implemented");
-      float otherTopR = otherSpT.radius();
+      float otherTopR = otherSpT.extra(rColumn);
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibletopSpIndex] < lowerLimitCurv) {
@@ -170,7 +171,7 @@ void SeedFilter2::filter2SpFixed(
         continue;
       }
       bool seedRangeCuts =
-          spB.radius() < options.seedConfRange.seedConfMinBottomRadius ||
+          spB.extra(rColumn) < options.seedConfRange.seedConfMinBottomRadius ||
           std::abs(zOrigin) > options.seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts && deltaSeedConf == 0 &&
           impact > options.seedConfRange.minImpactSeedConf) {

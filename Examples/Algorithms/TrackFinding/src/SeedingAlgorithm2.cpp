@@ -169,26 +169,33 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints;
+  auto& rColumn = coreSpacePoints.createExtraColumn<float>("r");
+  auto& phiColumn = coreSpacePoints.createExtraColumn<float>("phi");
+  auto& varianceRColumn = coreSpacePoints.createExtraColumn<float>("varianceR");
+  auto& varianceZColumn = coreSpacePoints.createExtraColumn<float>("varianceZ");
   coreSpacePoints.reserve(spacePoints.size());
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (m_spacePointSelector(sp)) {
-      auto newSp = coreSpacePoints.makeSpacePoint(Acts::SourceLink(&sp), sp.x(),
-                                                  sp.y(), sp.z());
-      newSp.varianceR() = sp.varianceR();
-      newSp.varianceZ() = sp.varianceZ();
+      auto newSp = coreSpacePoints.createSpacePoint(Acts::SourceLink(&sp),
+                                                    sp.x(), sp.y(), sp.z());
+      newSp.extra(rColumn) = sp.r();
+      newSp.extra(phiColumn) = std::atan2(sp.y(), sp.x());
+      newSp.extra(varianceRColumn) = sp.varianceR();
+      newSp.extra(varianceZColumn) = sp.varianceZ();
     }
   }
 
   Acts::CylindricalSpacePointGrid2 grid(m_cfg.gridConfig.derive(),
                                         logger().cloneWithSuffix("Grid"));
 
-  grid.fill(coreSpacePoints);
+  grid.fill(coreSpacePoints, phiColumn, rColumn);
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies
   // with a sorting in the radius
-  const Acts::Range1D<float> rRange = grid.computeRadiusRange(coreSpacePoints);
+  const Acts::Range1D<float> rRange =
+      grid.computeRadiusRange(coreSpacePoints, rColumn);
 
   std::array<std::vector<std::size_t>, 3ul> navigation;
   navigation[1ul] = m_cfg.finderConfig.zBinsCustomLooping;
@@ -229,9 +236,9 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
       topSpGroups.push_back(spacePointsGrouping.grid().at(t));
     }
 
-    m_seedFinder->createSeeds(derivedOptions, state, coreSpacePoints,
-                              bottomSpGroups, middleSpGroup, topSpGroups,
-                              seeds);
+    m_seedFinder->createSeeds(
+        derivedOptions, state, coreSpacePoints, rColumn, &varianceRColumn,
+        &varianceZColumn, bottomSpGroups, middleSpGroup, topSpGroups, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

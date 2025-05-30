@@ -267,6 +267,9 @@ class SeedFinder2 {
   void createSeeds(
       const DerivedOptions& options, State& state,
       const SpacePointContainer2& spacePoints,
+      const SpacePointColumn2<float>& rColumn,
+      const SpacePointColumn2<float>* varianceRColumn,
+      const SpacePointColumn2<float>* varianceZColumn,
       const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
       const std::vector<SpacePointIndex2>& middleSpGroup,
       const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
@@ -288,7 +291,8 @@ class SeedFinder2 {
     float sinPhiM;
   };
 
-  DubletCuts deriveDubletCuts(const ConstSpacePointProxy2& spM) const;
+  DubletCuts deriveDubletCuts(const ConstSpacePointProxy2& spM,
+                              const SpacePointColumn2<float>& rColumn) const;
 
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const ConstSpacePointProxy2& spM,
@@ -298,6 +302,9 @@ class SeedFinder2 {
   void createCompatibleDoublets(
       const DerivedOptions& options, const DubletCuts& cuts,
       const SpacePointContainer2& spacePoints,
+      const SpacePointColumn2<float>& rColumn,
+      const SpacePointColumn2<float>* varianceRColumn,
+      const SpacePointColumn2<float>* varianceZColumn,
       const ConstSpacePointProxy2& middleSp,
       const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
       std::vector<std::size_t>& candidateSpGroupOffsets,
@@ -305,15 +312,27 @@ class SeedFinder2 {
       std::vector<LinCircle>& linCircles) const;
 
   template <DetectorMeasurementInfo detailedMeasurement>
-  void filterCandidates(const DerivedOptions& options, State& state,
-                        const SpacePointContainer2& spacePoints,
-                        const ConstSpacePointProxy2& spM) const;
+  void filterCandidates(
+      const DerivedOptions& options, State& state,
+      const SpacePointContainer2& spacePoints,
+      const SpacePointColumn2<float>& rColumn,
+      const SpacePointColumn2<float>* varianceRColumn,
+      const SpacePointColumn2<float>* varianceZColumn,
+      const SpacePointColumn2<Acts::Vector3>* topStripVectorColumn,
+      const SpacePointColumn2<Acts::Vector3>* bottomStripVectorColumn,
+      const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
+      const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
+      const ConstSpacePointProxy2& spM) const;
 
   /// check the compatibility of SPs coordinates in xyz assuming the
   /// Bottom-Middle direction with the strip measurement details
-  bool xyzCoordinateCheck(const ConstSpacePointProxy2& sp,
-                          const double* spacepointPosition,
-                          double* outputCoordinates) const;
+  bool xyzCoordinateCheck(
+      const ConstSpacePointProxy2& sp,
+      const SpacePointColumn2<Acts::Vector3>& topStripVectorColumn,
+      const SpacePointColumn2<Acts::Vector3>& bottomStripVectorColumn,
+      const SpacePointColumn2<Acts::Vector3>& stripCenterDistanceColumn,
+      const SpacePointColumn2<Acts::Vector3>& topStripCenterPositionColumn,
+      const double* spacepointPosition, double* outputCoordinates) const;
 
  private:
   const Logger& logger() const { return *m_logger; }

@@ -89,8 +89,9 @@ SeedFinder2::SeedFinder2(const DerivedConfig& config,
     : m_cfg(config), m_logger(std::move(logger)) {}
 
 SeedFinder2::DubletCuts SeedFinder2::deriveDubletCuts(
-    const ConstSpacePointProxy2& spM) const {
-  const float rM = spM.radius();
+    const ConstSpacePointProxy2& spM,
+    const SpacePointColumn2<float>& rColumn) const {
+  const float rM = spM.extra(rColumn);
   const float uIP = -1. / rM;
   const float cosPhiM = -spM.x() * uIP;
   const float sinPhiM = -spM.y() * uIP;
@@ -128,6 +129,9 @@ std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
 void SeedFinder2::createSeeds(
     const DerivedOptions& options, State& state,
     const SpacePointContainer2& spacePoints,
+    const SpacePointColumn2<float>& rColumn,
+    const SpacePointColumn2<float>* varianceRColumn,
+    const SpacePointColumn2<float>* varianceZColumn,
     const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
     const std::vector<SpacePointIndex2>& middleSpGroup,
     const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
@@ -159,7 +163,7 @@ void SeedFinder2::createSeeds(
   for (SpacePointIndex2 middleSpIndex : middleSpGroup) {
     auto spM = spacePoints.at(middleSpIndex);
 
-    const float rM = spM.radius();
+    const float rM = spM.extra(rColumn);
     const float zM = spM.z();
 
     // check if spM is outside our radial region of interest
@@ -171,14 +175,15 @@ void SeedFinder2::createSeeds(
       break;
     }
 
-    const DubletCuts dubletCuts = deriveDubletCuts(spM);
+    const DubletCuts dubletCuts = deriveDubletCuts(spM, rColumn);
 
     // Iterate over middle-top dublets
     state.compatibleTopSp.clear();
     state.linCirclesTop.clear();
     createCompatibleDoublets<SpacePointCandidateType::eTop>(
-        options, dubletCuts, spacePoints, spM, topSpGroups,
-        state.topSpGroupOffets, state.compatibleTopSp, state.linCirclesTop);
+        options, dubletCuts, spacePoints, rColumn, varianceRColumn,
+        varianceZColumn, spM, topSpGroups, state.topSpGroupOffets,
+        state.compatibleTopSp, state.linCirclesTop);
 
     // no top SP found -> try next spM
     if (state.compatibleTopSp.empty()) {
@@ -214,9 +219,9 @@ void SeedFinder2::createSeeds(
     state.compatibleBottomSp.clear();
     state.linCirclesBottom.clear();
     createCompatibleDoublets<SpacePointCandidateType::eBottom>(
-        options, dubletCuts, spacePoints, spM, bottomSpGroups,
-        state.bottomSpGroupOffets, state.compatibleBottomSp,
-        state.linCirclesBottom);
+        options, dubletCuts, spacePoints, rColumn, varianceRColumn,
+        varianceZColumn, spM, bottomSpGroups, state.bottomSpGroupOffets,
+        state.compatibleBottomSp, state.linCirclesBottom);
 
     // no bottom SP found -> try next spM
     if (state.compatibleBottomSp.empty()) {
@@ -232,11 +237,13 @@ void SeedFinder2::createSeeds(
     // filter candidates
     state.candidatesCollector.clear();
     if (m_cfg.useDetailedDoubleMeasurementInfo) {
-      filterCandidates<DetectorMeasurementInfo::eDetailed>(options, state,
-                                                           spacePoints, spM);
+      filterCandidates<DetectorMeasurementInfo::eDetailed>(
+          options, state, spacePoints, rColumn, varianceRColumn,
+          varianceZColumn, nullptr, nullptr, nullptr, nullptr, spM);
     } else {
-      filterCandidates<DetectorMeasurementInfo::eDefault>(options, state,
-                                                          spacePoints, spM);
+      filterCandidates<DetectorMeasurementInfo::eDefault>(
+          options, state, spacePoints, rColumn, varianceRColumn,
+          varianceZColumn, nullptr, nullptr, nullptr, nullptr, spM);
     }
 
     // retrieve all candidates
@@ -255,6 +262,9 @@ template <SeedFinder2::SpacePointCandidateType candidateType>
 void SeedFinder2::createCompatibleDoublets(
     const DerivedOptions& options, const DubletCuts& cuts,
     const SpacePointContainer2& spacePoints,
+    const SpacePointColumn2<float>& rColumn,
+    const SpacePointColumn2<float>* varianceRColumn,
+    const SpacePointColumn2<float>* varianceZColumn,
     const ConstSpacePointProxy2& middleSp,
     const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
     std::vector<std::size_t>& candidateSpGroupOffsets,
@@ -268,9 +278,7 @@ void SeedFinder2::createCompatibleDoublets(
   const float xM = middleSp.x();
   const float yM = middleSp.y();
   const float zM = middleSp.z();
-  const float rM = middleSp.radius();
-  const float varianceRM = middleSp.varianceR();
-  const float varianceZM = middleSp.varianceZ();
+  const float rM = middleSp.extra(rColumn);
 
   float vIPAbs = 0;
   if (m_cfg.interactionPointCut) {
@@ -280,6 +288,23 @@ void SeedFinder2::createCompatibleDoublets(
 
   float deltaR = 0.;
   float deltaZ = 0.;
+
+  auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
+                            float iDeltaR2, float cotTheta) {
+    // TOD use some reasonable defaults
+
+    float varianceZM =
+        varianceZColumn != nullptr ? middleSp.extra(*varianceZColumn) : 0;
+    float varianceZO =
+        varianceZColumn != nullptr ? otherSp.extra(*varianceZColumn) : 0;
+    float varianceRM =
+        varianceRColumn != nullptr ? middleSp.extra(*varianceRColumn) : 0;
+    float varianceRO =
+        varianceRColumn != nullptr ? otherSp.extra(*varianceRColumn) : 0;
+
+    return iDeltaR2 * ((varianceZM + varianceZO) +
+                       (cotTheta * cotTheta) * (varianceRM + varianceRO));
+  };
 
   for (std::size_t groupIndex = 0; groupIndex < candidateSpGroups.size();
        ++groupIndex) {
@@ -292,12 +317,12 @@ void SeedFinder2::createCompatibleDoublets(
       ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
       if constexpr (candidateType == SpacePointCandidateType::eBottom) {
         // if r-distance is too big, try next SP in bin
-        if (rM - otherSp.radius() <= cuts.deltaRMax) {
+        if (rM - otherSp.extra(rColumn) <= cuts.deltaRMax) {
           break;
         }
       } else {
         // if r-distance is too small, try next SP in bin
-        if (otherSp.radius() - rM >= cuts.deltaRMin) {
+        if (otherSp.extra(rColumn) - rM >= cuts.deltaRMin) {
           break;
         }
       }
@@ -307,14 +332,14 @@ void SeedFinder2::createCompatibleDoublets(
       ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
 
       if constexpr (isBottomCandidate) {
-        deltaR = rM - otherSp.radius();
+        deltaR = rM - otherSp.extra(rColumn);
 
         // if r-distance is too small, try next SP in bin
         if (deltaR < cuts.deltaRMin) {
           break;
         }
       } else {
-        deltaR = otherSp.radius() - rM;
+        deltaR = otherSp.extra(rColumn) - rM;
 
         // if r-distance is too big, try next SP in bin
         if (deltaR > cuts.deltaRMax) {
@@ -372,9 +397,7 @@ void SeedFinder2::createCompatibleDoublets(
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
-        const float er = iDeltaR2 * ((varianceZM + otherSp.varianceZ()) +
-                                     (cotTheta * cotTheta) *
-                                         (varianceRM + otherSp.varianceR()));
+        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
         // fill output vectors
         compatibleSp.emplace_back(otherSp.index());
@@ -420,15 +443,12 @@ void SeedFinder2::createCompatibleDoublets(
         // discard bottom-middle dublets in a certain (r, eta) region according
         // to detector specific cuts
         if constexpr (isBottomCandidate) {
-          if (!m_cfg.experimentCuts(otherSp.radius(), cotTheta)) {
+          if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
             continue;
           }
         }
 
-        const float er =
-            ((varianceZM + otherSp.varianceZ()) +
-             (cotTheta * cotTheta) * (varianceRM + otherSp.varianceR())) *
-            iDeltaR2;
+        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
         // fill output vectors
         compatibleSp.emplace_back(otherSp.index());
@@ -467,14 +487,12 @@ void SeedFinder2::createCompatibleDoublets(
       // discard bottom-middle dublets in a certain (r, eta) region according
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
-        if (!m_cfg.experimentCuts(otherSp.radius(), cotTheta)) {
+        if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
           continue;
         }
       }
 
-      const float er = iDeltaR2 * ((varianceZM + otherSp.varianceZ()) +
-                                   (cotTheta * cotTheta) *
-                                       (varianceRM + otherSp.varianceR()));
+      const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
       // fill output vectors
       compatibleSp.emplace_back(otherSp.index());
@@ -485,14 +503,24 @@ void SeedFinder2::createCompatibleDoublets(
 }
 
 template <SeedFinder2::DetectorMeasurementInfo detailedMeasurement>
-void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
-                                   const SpacePointContainer2& spacePoints,
-                                   const ConstSpacePointProxy2& spM) const {
-  const float rM = spM.radius();
+void SeedFinder2::filterCandidates(
+    const DerivedOptions& options, State& state,
+    const SpacePointContainer2& spacePoints,
+    const SpacePointColumn2<float>& rColumn,
+    const SpacePointColumn2<float>* varianceRColumn,
+    const SpacePointColumn2<float>* varianceZColumn,
+    const SpacePointColumn2<Acts::Vector3>* topStripVectorColumn,
+    const SpacePointColumn2<Acts::Vector3>* bottomStripVectorColumn,
+    const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
+    const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
+    const ConstSpacePointProxy2& spM) const {
+  const float rM = spM.extra(rColumn);
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
-  const float varianceRM = spM.varianceR();
-  const float varianceZM = spM.varianceZ();
+  const float varianceRM =
+      varianceRColumn != nullptr ? spM.extra(*varianceRColumn) : 0;
+  const float varianceZM =
+      varianceZColumn != nullptr ? spM.extra(*varianceZColumn) : 0;
 
   std::size_t numTopSp = state.compatibleTopSp.size();
 
@@ -574,7 +602,7 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
     if (!m_cfg.seedConfirmation ||
-        spB.radius() > state.filterOptions.seedConfRange.rMaxSeedConf) {
+        spB.extra(rColumn) > state.filterOptions.seedConfRange.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
     if (m_cfg.seedConfirmation &&
@@ -623,7 +651,10 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
             zPositionMiddle};
 
-        if (!xyzCoordinateCheck(spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(
+                spM, *topStripVectorColumn, *bottomStripVectorColumn,
+                *stripCenterDistanceColumn, *topStripCenterPositionColumn,
+                positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -637,7 +668,10 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
             zPositionMiddle};
 
         double rBTransf[3];
-        if (!xyzCoordinateCheck(spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(
+                spB, *topStripVectorColumn, *bottomStripVectorColumn,
+                *stripCenterDistanceColumn, *topStripCenterPositionColumn,
+                positionBottom, rBTransf)) {
           continue;
         }
 
@@ -650,7 +684,10 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
             zPositionMiddle};
 
         double rTTransf[3];
-        if (!xyzCoordinateCheck(spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(
+                spT, *topStripVectorColumn, *bottomStripVectorColumn,
+                *stripCenterDistanceColumn, *topStripCenterPositionColumn,
+                positionTop, rTTransf)) {
           continue;
         }
 
@@ -821,18 +858,22 @@ void SeedFinder2::filterCandidates(const DerivedOptions& options, State& state,
 
     float zOrigin = spM.z() - rM * lb.cotTheta;
     m_cfg.seedFilter->filter2SpFixed(
-        state.filterOptions, state.filterState, spacePoints, spB.index(),
-        spM.index(), state.topSpVec, state.curvatures, state.impactParameters,
-        zOrigin, state.candidatesCollector);
+        state.filterOptions, state.filterState, spacePoints, rColumn,
+        spB.index(), spM.index(), state.topSpVec, state.curvatures,
+        state.impactParameters, zOrigin, state.candidatesCollector);
   }  // loop on bottoms
 }
 
-bool SeedFinder2::xyzCoordinateCheck(const ConstSpacePointProxy2& sp,
-                                     const double* spacepointPosition,
-                                     double* outputCoordinates) const {
-  const Vector3& topStripVector = sp.topStripVector();
-  const Vector3& bottomStripVector = sp.bottomStripVector();
-  const Vector3& stripCenterDistance = sp.stripCenterDistance();
+bool SeedFinder2::xyzCoordinateCheck(
+    const ConstSpacePointProxy2& sp,
+    const SpacePointColumn2<Acts::Vector3>& topStripVectorColumn,
+    const SpacePointColumn2<Acts::Vector3>& bottomStripVectorColumn,
+    const SpacePointColumn2<Acts::Vector3>& stripCenterDistanceColumn,
+    const SpacePointColumn2<Acts::Vector3>& topStripCenterPositionColumn,
+    const double* spacepointPosition, double* outputCoordinates) const {
+  const Vector3& topStripVector = sp.extra(topStripVectorColumn);
+  const Vector3& bottomStripVector = sp.extra(bottomStripVectorColumn);
+  const Vector3& stripCenterDistance = sp.extra(stripCenterDistanceColumn);
 
   const double xTopStripVector = topStripVector[0];
   const double yTopStripVector = topStripVector[1];
@@ -880,7 +921,8 @@ bool SeedFinder2::xyzCoordinateCheck(const ConstSpacePointProxy2& sp,
   // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Vector3& topStripCenterPosition = sp.topStripCenterPosition();
+  const Vector3& topStripCenterPosition =
+      sp.extra(topStripCenterPositionColumn);
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips

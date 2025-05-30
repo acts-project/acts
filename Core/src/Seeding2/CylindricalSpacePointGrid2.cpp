@@ -194,27 +194,33 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
 }
 
 void CylindricalSpacePointGrid2::extend(
-    const SpacePointContainer2::ConstRange& spacePoints) {
+    const SpacePointContainer2::ConstRange& spacePoints,
+    const SpacePointColumn2<float>& phiColumn,
+    const SpacePointColumn2<float>& rColumn) {
   ACTS_VERBOSE("Inserting " << spacePoints.size()
                             << " space points to the grid");
 
   for (const auto& sp : spacePoints) {
-    insert(sp);
+    insert(sp, phiColumn, rColumn);
   }
 }
 
-void CylindricalSpacePointGrid2::fill(const SpacePointContainer2& spacePoints) {
-  extend(spacePoints.range({0, spacePoints.size()}));
-  sort(spacePoints);
+void CylindricalSpacePointGrid2::fill(const SpacePointContainer2& spacePoints,
+                                      const SpacePointColumn2<float>& phiColumn,
+                                      const SpacePointColumn2<float>& rColumn) {
+  extend(spacePoints.range({0, spacePoints.size()}), phiColumn, rColumn);
+  sort(spacePoints, rColumn);
 }
 
-void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints) {
+void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints,
+                                      const SpacePointColumn2<float>& rColumn) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t binIndex : m_rBinsIndex) {
     auto& rbin = grid().atPosition(binIndex);
-    std::ranges::sort(
-        rbin, {}, [&](const auto& sp) { return spacePoints.at(sp).radius(); });
+    std::ranges::sort(rbin, {}, [&](const auto& sp) {
+      return spacePoints.at(sp).extra(rColumn);
+    });
   }
 
   m_usedBinIndex.assign(grid().size(), false);
@@ -225,7 +231,8 @@ void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints) {
 }
 
 Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
-    const SpacePointContainer2& spacePoints) const {
+    const SpacePointContainer2& spacePoints,
+    const SpacePointColumn2<float>& rColumn) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
   for (const auto& coll : grid()) {
@@ -234,8 +241,8 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
     }
     auto first = spacePoints.at(coll.front());
     auto last = spacePoints.at(coll.back());
-    minRange = std::min(first.radius(), minRange);
-    maxRange = std::max(last.radius(), maxRange);
+    minRange = std::min(first.extra(rColumn), minRange);
+    maxRange = std::max(last.extra(rColumn), maxRange);
   }
   return {minRange, maxRange};
 }
