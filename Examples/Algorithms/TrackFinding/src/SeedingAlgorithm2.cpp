@@ -211,17 +211,21 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
 
-  std::vector<Acts::SpacePointIndexRange2> bottomSpGroups;
-  Acts::SpacePointIndexRange2 middleSpGroup;
-  std::vector<Acts::SpacePointIndexRange2> topSpGroups;
+  std::vector<std::vector<Acts::SpacePointIndex2>> bottomSpGroups;
+  std::vector<Acts::SpacePointIndex2> middleSpGroup;
+  std::vector<std::vector<Acts::SpacePointIndex2>> topSpGroups;
 
   Acts::SpacePointContainer2 orderedSpacePoints;
   orderedSpacePoints.reserve(coreSpacePoints.size());
   std::unordered_map<std::size_t, std::pair<std::size_t, std::size_t>>
       gridMapping;
-  auto copyFromGrid =
-      [&](std::size_t gridIndex) -> std::pair<std::size_t, std::size_t> {
+  auto copyFromGrid = [&](std::size_t gridIndex,
+                          std::vector<Acts::SpacePointIndex2>& indices)
+      -> std::pair<std::size_t, std::size_t> {
     if (auto it = gridMapping.find(gridIndex); it != gridMapping.end()) {
+      for (std::size_t i = it->second.first; i < it->second.second; ++i) {
+        indices.push_back(i);
+      }
       return it->second;
     }
 
@@ -229,9 +233,10 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
     for (const Acts::SpacePointIndex2 spi :
          spacePointsGrouping.grid().at(gridIndex)) {
       auto sp = coreSpacePoints.at(spi);
-      orderedSpacePoints.makeSpacePoint(sp.sourceLinks()[0], sp.x(), sp.y(),
-                                        sp.z(), sp.phi(), sp.radius(),
-                                        sp.varianceR(), sp.varianceZ());
+      auto newSp = orderedSpacePoints.makeSpacePoint(
+          sp.sourceLinks()[0], sp.x(), sp.y(), sp.z(), sp.phi(), sp.radius(),
+          sp.varianceR(), sp.varianceZ());
+      indices.push_back(newSp.index());
     }
     std::size_t end = orderedSpacePoints.size();
 
@@ -243,12 +248,13 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
 
     bottomSpGroups.clear();
     for (const auto b : bottom) {
-      bottomSpGroups.emplace_back(copyFromGrid(b));
+      copyFromGrid(b, bottomSpGroups.emplace_back());
     }
-    middleSpGroup = copyFromGrid(middle);
+    middleSpGroup.clear();
+    copyFromGrid(middle, middleSpGroup);
     topSpGroups.clear();
     for (const auto t : top) {
-      topSpGroups.emplace_back(copyFromGrid(t));
+      copyFromGrid(t, topSpGroups.emplace_back());
     }
 
     m_seedFinder->createSeeds(derivedOptions, state, orderedSpacePoints,

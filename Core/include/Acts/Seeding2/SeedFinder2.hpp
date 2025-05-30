@@ -264,12 +264,13 @@ class SeedFinder2 {
 
   const DerivedConfig& config() const { return m_cfg; }
 
-  void createSeeds(const DerivedOptions& options, State& state,
-                   const SpacePointContainer2& spacePoints,
-                   const std::vector<SpacePointIndexRange2>& bottomSpGroups,
-                   const SpacePointIndexRange2& middleSpGroup,
-                   const std::vector<SpacePointIndexRange2>& topSpGroups,
-                   SeedContainer2& outputSeeds) const;
+  void createSeeds(
+      const DerivedOptions& options, State& state,
+      const SpacePointContainer2& spacePoints,
+      const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
+      const std::vector<SpacePointIndex2>& middleSpGroup,
+      const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
+      SeedContainer2& outputSeeds) const;
 
  private:
   struct DubletCuts {
@@ -298,7 +299,7 @@ class SeedFinder2 {
       const DerivedOptions& options, const DubletCuts& cuts,
       const SpacePointContainer2& spacePoints,
       const ConstSpacePointProxy2& middleSp,
-      const std::vector<SpacePointIndexRange2>& candidateSpGroups,
+      const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
       std::vector<std::size_t>& candidateSpGroupOffsets,
       std::vector<SpacePointIndex2>& compatibleSp,
       std::vector<LinCircle>& linCircles) const;
