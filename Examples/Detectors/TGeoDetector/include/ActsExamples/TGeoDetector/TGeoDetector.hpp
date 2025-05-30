@@ -46,7 +46,7 @@ class TGeoDetector : public Detector {
 
     double unitScalor = 1.0;
 
-    Acts::TGeoLayerBuilder::ElementFactory elementFactory =
+    Acts::TGeoLayerBuilder::ElementFactory detectorElementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
     /// Optional geometry identifier hook to be used during closure
