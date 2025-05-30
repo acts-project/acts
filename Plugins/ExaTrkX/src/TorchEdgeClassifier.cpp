@@ -74,6 +74,11 @@ PipelineTensors TorchEdgeClassifier::operator()(
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Start edge classification, use " << device);
+
+  if (tensors.edgeIndex.size() == 0) {
+    throw NoEdgesError{};
+  }
+
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
@@ -86,30 +91,15 @@ PipelineTensors TorchEdgeClassifier::operator()(
   }
 #endif
 
-  auto nodeFeatures =
-      torch::from_blob(tensors.nodeFeatures.data(),
-                       {static_cast<long>(tensors.nodeFeatures.shape()[0]),
-                        static_cast<long>(tensors.nodeFeatures.shape()[1])},
-                       device);
-  auto edgeIndex =
-      torch::from_blob(tensors.edgeIndex.data(),
-                       {static_cast<long>(tensors.edgeIndex.shape()[0]),
-                        static_cast<long>(tensors.edgeIndex.shape()[1])},
-                       device);
+  auto nodeFeatures = detail::actsToNonOwningTorchTensor(tensors.nodeFeatures);
+  ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
 
-  if (edgeIndex.numel() == 0) {
-    throw NoEdgesError{};
-  }
-
-  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
+  auto edgeIndex = detail::actsToNonOwningTorchTensor(tensors.edgeIndex)
+      ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
-    edgeFeatures =
-        torch::from_blob(tensors.edgeFeatures->data(),
-                         {static_cast<long>(tensors.edgeFeatures->shape()[0]),
-                          static_cast<long>(tensors.edgeFeatures->shape()[1])},
-                         device);
+    edgeFeatures = detail::actsToNonOwningTorchTensor(*tenors.edgeFeatures);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
   t1 = std::chrono::high_resolution_clock::now();
