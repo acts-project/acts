@@ -102,7 +102,6 @@ PipelineTensors TorchEdgeClassifier::operator()(
     edgeFeatures = detail::actsToNonOwningTorchTensor(*tensors.edgeFeatures);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
-  t1 = std::chrono::high_resolution_clock::now();
 
   torch::Tensor output;
 
@@ -128,6 +127,8 @@ PipelineTensors TorchEdgeClassifier::operator()(
       inputTensors.push_back(*edgeFeatures);
     }
 
+    t1 = std::chrono::high_resolution_clock::now();
+
     if (m_cfg.nChunks > 1) {
       std::vector<at::Tensor> results;
       results.reserve(m_cfg.nChunks);
@@ -144,12 +145,10 @@ PipelineTensors TorchEdgeClassifier::operator()(
       output = torch::cat(results);
     } else {
       inputTensors[1] = edgeIndexTmp;
-
-      t2 = std::chrono::high_resolution_clock::now();
       output = m_model->forward(inputTensors).toTensor().to(torch::kFloat32);
-      t3 = std::chrono::high_resolution_clock::now();
       output.squeeze_();
     }
+    t2 = std::chrono::high_resolution_clock::now();
   }
 
   ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
@@ -173,15 +172,14 @@ PipelineTensors TorchEdgeClassifier::operator()(
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
-  t4 = std::chrono::high_resolution_clock::now();
+  t3 = std::chrono::high_resolution_clock::now();
 
   auto milliseconds = [](const auto& a, const auto& b) {
     return std::chrono::duration<double, std::milli>(b - a).count();
   };
-  ACTS_DEBUG("Time anycast, device guard:  " << milliseconds(t0, t1));
-  ACTS_DEBUG("Time jit::IValue creation:   " << milliseconds(t1, t2));
-  ACTS_DEBUG("Time model forward:          " << milliseconds(t2, t3));
-  ACTS_DEBUG("Time sigmoid and cut:        " << milliseconds(t3, t4));
+  ACTS_DEBUG("Time preparation:    " << milliseconds(t0, t1));
+  ACTS_DEBUG("Time inference:      " << milliseconds(t1, t2));
+  ACTS_DEBUG("Time postprocessing: " << milliseconds(t2, t3));
 
   // Don't propagate edge features right now since they are not needed by any
   // track building algorithm
