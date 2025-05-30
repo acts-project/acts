@@ -94,8 +94,8 @@ PipelineTensors TorchEdgeClassifier::operator()(
   auto nodeFeatures = detail::actsToNonOwningTorchTensor(tensors.nodeFeatures);
   ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
 
-  auto edgeIndex = detail::actsToNonOwningTorchTensor(tensors.edgeIndex)
-      ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
+  auto edgeIndex = detail::actsToNonOwningTorchTensor(tensors.edgeIndex);
+  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
