@@ -12,10 +12,9 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
 
-#include <GeoModelKernel/GeoFullPhysVol.h>
-
 #include <memory>
 
+#include <GeoModelKernel/GeoFullPhysVol.h>
 
 namespace Acts {
 class Surface;
