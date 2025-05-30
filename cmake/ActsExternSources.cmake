@@ -6,7 +6,7 @@ set(ACTS_ACTSVG_SOURCE
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=6032279e8fc8bdb48d39c4ac19ffe561bcc53576e36f71ee2ed3ed75835f1af9"
     CACHE STRING
     "Source to take VECMEM from"
 )
