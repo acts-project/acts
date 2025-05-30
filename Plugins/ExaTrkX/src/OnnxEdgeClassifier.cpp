@@ -30,7 +30,9 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor) {
 
   bc::static_vector<std::int64_t, 2> shape;
   for (auto size : tensor.shape()) {
-    shape.push_back(size);
+    if (size > 1) {
+      shape.push_back(size);
+    }
   }
   return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
                                   shape.data(), shape.size(), onnxType);
