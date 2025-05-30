@@ -15,6 +15,7 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
+import acts.examples.hepmc3
 from acts.examples.odd import getOpenDataDetector
 
 try:

@@ -89,8 +89,8 @@ struct GeoGeometry {
 };
 GeoGeometry constructGeoModel() {
   // define materials
-  GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
-  GeoIntrusivePtr<GeoMaterial> al(new GeoMaterial("Aluminium", 1.0));
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
+  auto al = make_intrusive<GeoMaterial>("Aluminium", 1.0);
 
   // define dimensions
   GeoDims geoDims;
@@ -106,29 +106,27 @@ GeoGeometry constructGeoModel() {
       std::abs(geoDims.trapVerts[0][1] - geoDims.trapVerts[2][1]) / 2};
 
   // create shapes
-  GeoIntrusivePtr<GeoBox> boxXY(
-      new GeoBox(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]));
-  GeoIntrusivePtr<GeoTube> tube(
-      new GeoTube(geoDims.tube[0], geoDims.tube[1], geoDims.tube[2]));
-  GeoIntrusivePtr<GeoBox> ssurface(
-      new GeoBox(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]));
-  GeoIntrusivePtr<GeoTrd> trd(new GeoTrd(
-      1, 1, geoDims.trapHls[0], geoDims.trapHls[1], geoDims.trapHls[2]));
+  auto boxXY =
+      make_intrusive<GeoBox>(geoDims.boxO[0], geoDims.boxO[1], geoDims.boxO[2]);
+  auto tube = make_intrusive<GeoTube>(geoDims.tube[0], geoDims.tube[1],
+                                      geoDims.tube[2]);
+  auto ssurface =
+      make_intrusive<GeoBox>(geoDims.boxI[0], geoDims.boxI[1], geoDims.boxI[2]);
+  auto trd = make_intrusive<GeoTrd>(1, 1, geoDims.trapHls[0],
+                                    geoDims.trapHls[1], geoDims.trapHls[2]);
 
   // create logvols
-  GeoIntrusivePtr<GeoLogVol> logXY(
-      new GeoLogVol("LogVolumeXY", boxXY, material));
-  GeoIntrusivePtr<GeoLogVol> logTube(new GeoLogVol("LogTube", tube, al));
-  GeoIntrusivePtr<GeoLogVol> logSurface(
-      new GeoLogVol("LogSurface", ssurface, al));
-  GeoIntrusivePtr<GeoLogVol> logTrd(new GeoLogVol("LogTrd", trd, al));
+  auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
+  auto logTube = make_intrusive<GeoLogVol>("LogTube", tube, al);
+  auto logSurface = make_intrusive<GeoLogVol>("LogSurface", ssurface, al);
+  auto logTrd = make_intrusive<GeoLogVol>("LogTrd", trd, al);
 
   // create physvols
   std::vector<GeoIntrusivePtr<GeoFullPhysVol>> fpvs;
-  fpvs.push_back(new GeoFullPhysVol(logXY));
-  fpvs.push_back(new GeoFullPhysVol(logTube));
-  fpvs.push_back(new GeoFullPhysVol(logSurface));
-  fpvs.push_back(new GeoFullPhysVol(logTrd));
+  fpvs.push_back(make_intrusive<GeoFullPhysVol>(logXY));
+  fpvs.push_back(make_intrusive<GeoFullPhysVol>(logTube));
+  fpvs.push_back(make_intrusive<GeoFullPhysVol>(logSurface));
+  fpvs.push_back(make_intrusive<GeoFullPhysVol>(logTrd));
   GeoGeometry ret;
   ret.fpvs = fpvs;
   ret.dim = geoDims;
