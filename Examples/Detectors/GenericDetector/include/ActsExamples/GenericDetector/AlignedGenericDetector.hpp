@@ -19,7 +19,7 @@ using AlignedGenericDetectorElement = Aligned<GenericDetectorElement>;
 class AlignedGenericDetector : public GenericDetector {
  public:
   using Config = GenericDetector::Config;
-  AlignedGenericDetector(const Config& cfg);
+  explicit AlignedGenericDetector(const Config& cfg);
 };
 
 }  // namespace ActsExamples
