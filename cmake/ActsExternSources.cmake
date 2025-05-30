@@ -13,7 +13,7 @@ set(ACTS_VECMEM_SOURCE
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_ALGEBRAPLUGINS_SOURCE
-    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=0170f22e1a75493b86464f27991117bc2c5a9d52554c75786e321d4c591990e7"
+    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=c2081b399b7f4e004bebd5bf8250ed9596b113002fe445bca7fdac24d2c5932c"
     CACHE STRING
     "Source to take ALGEBRAPLUGINS from"
 )
