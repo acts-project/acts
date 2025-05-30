@@ -166,8 +166,6 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   sigmoid(scores, execContext.stream);
 
   ACTS_VERBOSE("Size after classifier: " << scores.shape()[0]);
-  //ACTS_VERBOSE("Slice of classified output:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
   printCudaMemInfo(logger());
 
   auto [newScores, newEdgeIndex] =
