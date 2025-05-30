@@ -106,7 +106,7 @@ std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
 
 template <typename T>
 torch::Tensor actsToNonOwningTorchTensor(Acts::Tensor<T> &tensor) {
-  const auto device = tensor.device().type() == Acts::Device::Type::eCUDA
+  const auto device = tensor.device().type == Acts::Device::Type::eCUDA
                           ? torch::Device(torch::kCUDA, tensor.device().index)
                           : torch::kCPU;
   return torch::from_blob(

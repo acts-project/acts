@@ -99,7 +99,7 @@ PipelineTensors TorchEdgeClassifier::operator()(
 
   std::optional<torch::Tensor> edgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
-    edgeFeatures = detail::actsToNonOwningTorchTensor(*tenors.edgeFeatures);
+    edgeFeatures = detail::actsToNonOwningTorchTensor(*tensors.edgeFeatures);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
   t1 = std::chrono::high_resolution_clock::now();
