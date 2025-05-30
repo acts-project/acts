@@ -715,8 +715,6 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
 }
 
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
-  visitor.visitVolume(*this);
-
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
@@ -774,6 +772,7 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   for (auto& volume : volumes()) {
     volume.apply(visitor);
   }
+  visitor.visitVolume(*this);
 }
 
 }  // namespace Acts
