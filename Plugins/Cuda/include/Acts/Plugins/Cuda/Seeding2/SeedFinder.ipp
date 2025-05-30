@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
 
 // CUDA plugin include(s).
