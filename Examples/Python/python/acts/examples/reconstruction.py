@@ -1313,6 +1313,7 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
+    reverseFilteringCovarianceScaling: float = 1.0,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
@@ -1326,6 +1327,7 @@ def addKalmanTracks(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
         "chi2Cut": float("inf"),
@@ -1387,6 +1389,7 @@ def addTruthTrackingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
+        "reverseFilteringCovarianceScaling": 100.0,
         "level": customLogLevel(),
     }
 
