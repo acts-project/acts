@@ -23,7 +23,6 @@ class TruthGraphMetricsHook : public ExaTrkXHook {
  public:
   TruthGraphMetricsHook(const std::vector<std::int64_t> &truthGraph,
                         std::unique_ptr<const Acts::Logger> l);
-  ~TruthGraphMetricsHook() override;
 
   void operator()(const PipelineTensors &tensors,
                   const ExecutionContext &execCtx) const override;

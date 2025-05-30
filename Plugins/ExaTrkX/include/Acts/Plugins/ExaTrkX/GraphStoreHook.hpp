@@ -21,7 +21,6 @@ class GraphStoreHook : public ExaTrkXHook {
 
  public:
   GraphStoreHook();
-  ~GraphStoreHook() override;
 
   void operator()(const PipelineTensors &tensors,
                   const ExecutionContext &execCtx) const override;

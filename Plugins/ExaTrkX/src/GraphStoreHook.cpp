@@ -12,8 +12,6 @@ Acts::GraphStoreHook::GraphStoreHook() {
   m_storedGraph = std::make_unique<Graph>();
 }
 
-Acts::GraphStoreHook::~GraphStoreHook() = default;
-
 void Acts::GraphStoreHook::operator()(const PipelineTensors &tensors,
                                       const ExecutionContext &execCtx) const {
   auto edgeIndexTensor =

@@ -123,19 +123,16 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   bc::static_vector<const char *, 3> inputNames;
 
   // Node tensor
-  // ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
   inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
 
   // Edge tensor
-  // ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
   inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
   std::optional<Acts::Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
-    // ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
     inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
@@ -153,13 +150,6 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   m_model->Run(options, inputNames.data(), inputTensors.data(),
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
-
-  //ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-
-  // ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
-  //ACTS_VERBOSE("Slice of classified output:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
   sigmoid(scores, execContext.stream);
   auto [newScores, newEdgeIndex] =

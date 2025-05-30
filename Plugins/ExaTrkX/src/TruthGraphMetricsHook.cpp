@@ -46,8 +46,6 @@ Acts::TruthGraphMetricsHook::TruthGraphMetricsHook(
   m_truthGraphCantor = cantorize(truthGraph, logger());
 }
 
-Acts::TruthGraphMetricsHook::~TruthGraphMetricsHook() = default;
-
 void Acts::TruthGraphMetricsHook::operator()(
     const PipelineTensors& tensors, const ExecutionContext& execCtx) const {
   auto edgeIndexTensor =

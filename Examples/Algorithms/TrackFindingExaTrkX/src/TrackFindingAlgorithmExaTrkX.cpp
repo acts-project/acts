@@ -33,8 +33,6 @@ namespace {
 struct LoopHook : public Acts::ExaTrkXHook {
   std::vector<std::unique_ptr<Acts::ExaTrkXHook>> hooks;
 
-  ~LoopHook() override = default;
-
   void operator()(const Acts::PipelineTensors& tensors,
                   const Acts::ExecutionContext& execCtx) const override {
     for (const auto& hook : hooks) {
@@ -222,12 +220,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
-  /*if (m_outputGraph.isInitialized()) {
+  if (m_outputGraph.isInitialized()) {
     auto graph = graphStoreHook->storedGraph();
     std::transform(graph.first.begin(), graph.first.end(), graph.first.begin(),
                    [&](const auto& a) -> std::int64_t { return idxs.at(a); });
     m_outputGraph(ctx, {graph.first, graph.second});
-  }*/
+  }
 
   auto t3 = Clock::now();
 
