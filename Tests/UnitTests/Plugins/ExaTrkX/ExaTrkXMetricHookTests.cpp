@@ -25,9 +25,9 @@ void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
       {2, numTestEdges}, {Acts::Device::Cpu(), {}});
 
   // Transpose the input vector into the tensor
-  for (auto i = 0ul; i < testGraph.size(); i += 2) {
-    *(edgeIndexTensor.data() + i) = testGraph.at(i);
-    *(edgeIndexTensor.data() + numTestEdges + i) = testGraph.at(i + 1);
+  for (auto i = 0ul; i < numTestEdges; ++i) {
+    *(edgeIndexTensor.data() + i) = testGraph.at(2 * i);
+    *(edgeIndexTensor.data() + numTestEdges + i) = testGraph.at(2 * i + 1);
   }
 
   Acts::PipelineTensors tensors{
