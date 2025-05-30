@@ -114,3 +114,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 }
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement() = default;
+
+const Acts::Transform3& Acts::TGeoDetectorElement::nominalTransform() const {
+  return m_transform;
+}

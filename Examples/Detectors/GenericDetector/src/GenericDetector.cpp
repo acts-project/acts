@@ -745,15 +745,14 @@ GenericDetector::GenericDetector(const Config& cfg)
       m_cfg(cfg) {
   m_nominalGeometryContext = Acts::GeometryContext();
   auto detectorElementFactory =
-      [this](std::shared_ptr<const Acts::Transform3> transform,
+      [this](const Acts::Transform3& transform,
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
              std::shared_ptr<const Acts::ISurfaceMaterial> material)
       -> std::shared_ptr<GenericDetectorElement> {
     auto id =
         static_cast<GenericDetectorElement::Identifier>(m_detectorStore.size());
     auto detElem = std::make_shared<GenericDetectorElement>(
-        id, std::move(transform), std::move(bounds), thickness,
-        std::move(material));
+        id, transform, std::move(bounds), thickness, std::move(material));
     m_detectorStore.push_back(detElem);
     return detElem;
   };
