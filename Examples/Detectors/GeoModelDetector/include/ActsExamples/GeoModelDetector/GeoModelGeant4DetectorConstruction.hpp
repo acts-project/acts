@@ -34,9 +34,9 @@ class GeoModelGeant4DetectorConstruction final
 
  private:
   /// The GeoModel tree
-  Acts::GeoModelTree m_geoModelTree;
+  Acts::GeoModelTree m_geoModelTree{};
   /// Construction options
-  Geant4ConstructionOptions m_options;
+  Geant4ConstructionOptions m_options{};
   /// The world volume
   G4VPhysicalVolume* m_g4World = nullptr;
 };

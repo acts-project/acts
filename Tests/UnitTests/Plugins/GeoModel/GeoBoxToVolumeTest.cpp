@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Box", physBox, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeBox =
-      gmCache.boundingBoxes[0];
+  BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
+  const auto& volumeBox = std::get<1>(gmCache.volumeBoxFPVs[0]);
   const auto* bounds =
       dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
   std::vector<double> convHls = bounds->values();

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -31,6 +32,7 @@ struct GeoBoxConverter {
   Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoBox& geoBox,
                                               const Transform3& absTransform,
+                                              SurfaceBoundFactory& boundFactory,
                                               bool sensitive) const;
 };
 

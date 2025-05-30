@@ -20,7 +20,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
-#include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoPhysVol.h>
 #include <GeoModelKernel/GeoShape.h>
@@ -31,7 +30,7 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoSubtractionConverter::operator()(
     [[maybe_unused]] const PVConstLink& geoPV,
     const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
-    [[maybe_unused]] bool sensitive) const {
+    SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const {
   const GeoShape* shapeA = geoSub.getOpA();
   int shapeId = shapeA->typeID();
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
@@ -46,7 +45,8 @@ Acts::detail::GeoSubtractionConverter::operator()(
   PVConstLink pvA = make_intrusive<GeoPhysVol>(logA);
 
   // recursively call the the converter
-  auto converted = converter->toSensitiveSurface(pvA, absTransform);
+  auto converted =
+      converter->toSensitiveSurface(pvA, absTransform, boundFactory);
   if (converted.ok()) {
     return converted.value();
   } else {
