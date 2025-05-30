@@ -112,8 +112,8 @@ torch::Tensor actsToNonOwningTorchTensor(Acts::Tensor<T> &tensor) {
           : torch::kCPU;
   return torch::from_blob(
       tensor.data(),
-      {static_cast<long>(tensors.nodeFeatures.shape().at(0)),
-       static_cast<long>(tensors.nodeFeatures.shape().at(1))},
+      {static_cast<long>(tensor.shape().at(0)),
+       static_cast<long>(tensor.shape().at(1))},
       torch::TensorOptions{}.device(device).dtype(TorchTypeMap<T>::type));
 }
 
