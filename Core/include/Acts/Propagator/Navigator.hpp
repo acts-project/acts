@@ -23,6 +23,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
+#include <map>
 #include <optional>
 #include <sstream>
 #include <string>

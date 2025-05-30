@@ -16,16 +16,12 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
-#include <iostream>
-#include <list>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 class SeedFinderOrthogonal {
  public:

@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <ostream>
+
+#include <Eigen/Dense>
 
 namespace Acts {
 

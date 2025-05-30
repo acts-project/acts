@@ -6,6 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Visualization/PlyVisualization3D.hpp"
+
+#include <fstream>
+
+namespace Acts {
+
 template <typename T>
 void PlyVisualization3D<T>::vertex(const Vector3& vtx, Color color) {
   m_vertices.emplace_back(vtx.template cast<ValueType>(), color);
@@ -101,3 +109,5 @@ void PlyVisualization3D<T>::clear() {
   m_faces.clear();
   m_edges.clear();
 }
+
+}  // namespace Acts

@@ -12,9 +12,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
-#include <array>
 #include <filesystem>
-#include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -70,8 +68,8 @@ class PlyVisualization3D : public IVisualization3D {
   std::vector<std::pair<std::pair<std::size_t, std::size_t>, Color>> m_edges;
 };
 
-#ifndef DOXYGEN
-#include "detail/PlyVisualization3D.ipp"
-#endif
-
 }  // namespace Acts
+
+#ifndef DOXYGEN
+#include "PlyVisualization3D.ipp"
+#endif

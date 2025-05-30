@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/HashedString.hpp"
-
-#include <any>
-#include <limits>
 #include <vector>
 
 namespace Acts {
