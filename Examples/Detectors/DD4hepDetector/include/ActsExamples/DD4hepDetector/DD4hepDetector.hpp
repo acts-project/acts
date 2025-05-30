@@ -16,16 +16,14 @@
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
-/// TEST
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "AlignedDD4hepDetectorElement.hpp"
 
 class TGeoNode;
 

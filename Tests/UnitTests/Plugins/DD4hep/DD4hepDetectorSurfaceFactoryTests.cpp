@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   lcdd->destroyInstance();
 }
 
-BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
+BOOST_AUTO_TEST_CASE(ConvertSensitivesExtended) {
   auto lcdd = &(dd4hep::Detector::getInstance());
   lcdd->fromCompact("CylindricalDetectorTestSF.xml");
   lcdd->volumeManager();

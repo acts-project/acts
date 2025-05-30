@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   obj.write("RotatedSurface.obj");
 }
 
-BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
+BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_element_overwrite) {
   // Usually one would use this to extend the Geant4DetectorElement
   // for a speicif alignment behavior and overwrite the transform() method.
   //
