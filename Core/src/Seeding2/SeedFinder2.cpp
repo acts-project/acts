@@ -313,7 +313,7 @@ void SeedFinder2::createCompatibleDoublets(
 
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
-    for (auto& i = groupOffset; i < candidateSpGroup.size(); ++i) {
+    for (std::size_t& i = groupOffset; i < candidateSpGroup.size(); ++i) {
       ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
       if constexpr (candidateType == SpacePointCandidateType::eBottom) {
         // if r-distance is too big, try next SP in bin
@@ -328,7 +328,7 @@ void SeedFinder2::createCompatibleDoublets(
       }
     }
 
-    for (auto i = groupOffset; i < candidateSpGroup.size(); ++i) {
+    for (std::size_t i = groupOffset; i < candidateSpGroup.size(); ++i) {
       ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
 
       if constexpr (isBottomCandidate) {
@@ -359,7 +359,7 @@ void SeedFinder2::createCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
-      if (zOriginTimesDeltaR < m_cfg.collisionRegionMin * deltaR ||
+      if (zOriginTimesDeltaR < m_cfg.collisionRegionMin * deltaR |
           zOriginTimesDeltaR > m_cfg.collisionRegionMax * deltaR) {
         continue;
       }
@@ -372,12 +372,12 @@ void SeedFinder2::createCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (deltaZ > m_cfg.cotThetaMax * deltaR ||
+        if (deltaZ > m_cfg.cotThetaMax * deltaR |
             deltaZ < -m_cfg.cotThetaMax * deltaR) {
           continue;
         }
         // if z-distance between SPs is within max and min values
-        if (deltaZ > m_cfg.deltaZMax || deltaZ < -m_cfg.deltaZMax) {
+        if (deltaZ > m_cfg.deltaZMax | deltaZ < -m_cfg.deltaZMax) {
           continue;
         }
 
@@ -432,7 +432,7 @@ void SeedFinder2::createCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (deltaZ > m_cfg.cotThetaMax * deltaR ||
+        if (deltaZ > m_cfg.cotThetaMax * deltaR |
             deltaZ < -m_cfg.cotThetaMax * deltaR) {
           continue;
         }
@@ -476,7 +476,7 @@ void SeedFinder2::createCompatibleDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (deltaZ > m_cfg.cotThetaMax * deltaR ||
+      if (deltaZ > m_cfg.cotThetaMax * deltaR |
           deltaZ < -m_cfg.cotThetaMax * deltaR) {
         continue;
       }
