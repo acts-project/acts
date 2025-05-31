@@ -205,8 +205,7 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     std::vector<TripletCandidate2>& output) {
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
-  output.clear();
-  output.reserve(m_nHigh + m_nLow);
+  output.resize(m_nHigh + m_nLow);
   std::size_t outIdx = output.size() - 1;
 
   // rely on the fact that m_indices* are both min heap trees
