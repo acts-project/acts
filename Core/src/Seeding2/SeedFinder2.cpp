@@ -11,6 +11,8 @@
 #include "Acts/EventData2/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/SeedFilter2.hpp"
 
+#include <numeric>
+
 namespace Acts {
 
 using namespace UnitLiterals;
@@ -359,8 +361,13 @@ void SeedFinder2::createCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
-      if (zOriginTimesDeltaR < m_cfg.collisionRegionMin * deltaR |
-          zOriginTimesDeltaR > m_cfg.collisionRegionMax * deltaR) {
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
+      if (zOriginTimesDeltaR<m_cfg.collisionRegionMin * deltaR |
+                             zOriginTimesDeltaR>
+              m_cfg.collisionRegionMax *
+          deltaR) {
         continue;
       }
 
@@ -372,11 +379,17 @@ void SeedFinder2::createCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
         if (deltaZ > m_cfg.cotThetaMax * deltaR |
             deltaZ < -m_cfg.cotThetaMax * deltaR) {
           continue;
         }
         // if z-distance between SPs is within max and min values
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
         if (deltaZ > m_cfg.deltaZMax | deltaZ < -m_cfg.deltaZMax) {
           continue;
         }
@@ -432,6 +445,9 @@ void SeedFinder2::createCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
         if (deltaZ > m_cfg.cotThetaMax * deltaR |
             deltaZ < -m_cfg.cotThetaMax * deltaR) {
           continue;
@@ -476,6 +492,9 @@ void SeedFinder2::createCompatibleDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
       if (deltaZ > m_cfg.cotThetaMax * deltaR |
           deltaZ < -m_cfg.cotThetaMax * deltaR) {
         continue;
@@ -524,24 +543,31 @@ void SeedFinder2::filterCandidates(
 
   std::size_t numTopSp = state.compatibleTopSp.size();
 
-  // sort: make index vector
-  std::vector<std::size_t> sortedBottoms(state.compatibleBottomSp.size());
-  for (std::size_t i = 0; i < sortedBottoms.size(); ++i) {
-    sortedBottoms[i] = i;
-  }
+  // make index vectors for sorting
+  state.sortedBottoms.resize(state.compatibleBottomSp.size());
+  std::iota(state.sortedBottoms.begin(), state.sortedBottoms.end(), 0);
 
-  std::vector<std::size_t> sortedTops(state.compatibleTopSp.size());
-  for (std::size_t i = 0; i < sortedTops.size(); ++i) {
-    sortedTops[i] = i;
-  }
+  state.sortedTops.resize(state.compatibleTopSp.size());
+  std::iota(state.sortedTops.begin(), state.sortedTops.end(), 0);
 
   if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
-    std::ranges::sort(sortedBottoms, {}, [&state](const std::size_t s) {
-      return state.linCirclesBottom[s].cotTheta;
+    // sorting becomes less expensive when we copy the cotTheta values into
+    // their own arrays due to more optimal usage of the cache
+
+    state.linCircleCotThetaBottom.resize(state.compatibleBottomSp.size());
+    std::transform(state.linCirclesBottom.begin(), state.linCirclesBottom.end(),
+                   state.linCircleCotThetaBottom.begin(),
+                   [](const LinCircle& lc) { return lc.cotTheta; });
+    std::ranges::sort(state.sortedBottoms, {}, [&state](const std::size_t s) {
+      return state.linCircleCotThetaBottom[s];
     });
 
-    std::ranges::sort(sortedTops, {}, [&state](const std::size_t s) {
-      return state.linCirclesTop[s].cotTheta;
+    state.linCircleCotThetaTop.resize(state.compatibleTopSp.size());
+    std::transform(state.linCirclesTop.begin(), state.linCirclesTop.end(),
+                   state.linCircleCotThetaTop.begin(),
+                   [](const LinCircle& lc) { return lc.cotTheta; });
+    std::ranges::sort(state.sortedTops, {}, [&state](const std::size_t s) {
+      return state.linCircleCotThetaTop[s];
     });
   }
 
@@ -552,7 +578,7 @@ void SeedFinder2::filterCandidates(
 
   std::size_t t0 = 0;
 
-  for (const std::size_t b : sortedBottoms) {
+  for (const std::size_t b : state.sortedBottoms) {
     // break if we reached the last top SP
     if (t0 >= numTopSp) {
       break;
@@ -612,7 +638,7 @@ void SeedFinder2::filterCandidates(
 
     for (std::size_t indexSortedTop = t0; indexSortedTop < numTopSp;
          ++indexSortedTop) {
-      const std::size_t t = sortedTops[indexSortedTop];
+      const std::size_t t = state.sortedTops[indexSortedTop];
 
       auto spT = spacePoints.at(state.compatibleTopSp[t]);
 

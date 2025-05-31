@@ -35,9 +35,9 @@ class SpacePointColumn2 {
   using ValueType = T;
   using ContainerType = std::vector<ValueType>;
 
-  T &at(IndexType index) { return m_data.at(index); }
+  T &at(IndexType index) { return m_data[index]; }
 
-  const T &at(IndexType index) const { return m_data.at(index); }
+  const T &at(IndexType index) const { return m_data[index]; }
 
  private:
   ContainerType m_data;
