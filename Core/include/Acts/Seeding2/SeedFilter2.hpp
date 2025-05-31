@@ -76,6 +76,9 @@ class SeedFilter2 final {
   struct DerivedConfig : public Config {};
 
   struct State {
+    std::vector<std::uint32_t> topSpIndexVec;
+    std::vector<float> compatibleSeedR;
+
     std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
   };
 
