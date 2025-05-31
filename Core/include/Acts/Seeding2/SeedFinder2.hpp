@@ -260,6 +260,7 @@ class SeedFinder2 {
     std::vector<float> impactParameters;
 
     CandidatesForMiddleSp2 candidatesCollector;
+    std::vector<TripletCandidate2> sortedCandidates;
 
     SeedFilter2::Options filterOptions;
     SeedFilter2::State filterState;

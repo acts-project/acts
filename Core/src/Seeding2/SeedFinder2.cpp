@@ -145,8 +145,8 @@ void SeedFinder2::createSeeds(
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
-  state.candidatesCollector.setMaxElements(m_cfg.maxSeedsPerSpMConf,
-                                           m_cfg.maxQualitySeedsPerSpMConf);
+  state.candidatesCollector.reserve(m_cfg.maxSeedsPerSpMConf,
+                                    m_cfg.maxQualitySeedsPerSpMConf);
 
   if (middleSpGroup.empty()) {
     ACTS_VERBOSE("No middle space points, skipping");
@@ -253,10 +253,11 @@ void SeedFinder2::createSeeds(
     // higher weights first
     const std::size_t numQualitySeeds =
         state.candidatesCollector.nHighQualityCandidates();
-    auto sortedCandidates = state.candidatesCollector.storage(spacePoints);
+    state.candidatesCollector.toSortedCandidates(spacePoints,
+                                                 state.sortedCandidates);
     m_cfg.seedFilter->filter1SpFixed(state.filterOptions, state.filterState,
-                                     std::move(sortedCandidates),
-                                     numQualitySeeds, outputSeeds);
+                                     state.sortedCandidates, numQualitySeeds,
+                                     outputSeeds);
   }  // loop on middle space points
 }
 

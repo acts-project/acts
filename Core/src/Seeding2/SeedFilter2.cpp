@@ -228,11 +228,11 @@ void SeedFilter2::filter2SpFixed(
 }
 
 void SeedFilter2::filter1SpFixed(const Options& options, State& state,
-                                 std::vector<TripletCandidate2> candidates,
+                                 std::vector<TripletCandidate2>& candidates,
                                  std::size_t numQualitySeeds,
                                  SeedContainer2& outputCollection) const {
   if (m_cfg.experimentCuts != nullptr) {
-    candidates = m_cfg.experimentCuts->cutPerMiddleSp(std::move(candidates));
+    m_cfg.experimentCuts->cutPerMiddleSp(candidates);
   }
 
   unsigned int maxSeeds = candidates.size();

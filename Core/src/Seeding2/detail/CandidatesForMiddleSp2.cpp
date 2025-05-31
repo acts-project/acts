@@ -10,8 +10,7 @@
 
 namespace Acts {
 
-inline void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
-                                                   std::size_t nHigh) {
+void CandidatesForMiddleSp2::reserve(std::size_t nLow, std::size_t nHigh) {
   m_maxSizeHigh = nHigh;
   m_maxSizeLow = nLow;
 
@@ -28,8 +27,8 @@ inline void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
   m_indicesLow.reserve(nLow);
 }
 
-inline void CandidatesForMiddleSp2::pop(std::vector<std::size_t>& indices,
-                                        std::size_t& currentSize) {
+void CandidatesForMiddleSp2::pop(std::vector<std::size_t>& indices,
+                                 std::size_t& currentSize) {
   // Remove the candidate with the lowest weight in the collection
   // By construction, this element is always the first element in the
   // collection.
@@ -41,20 +40,20 @@ inline void CandidatesForMiddleSp2::pop(std::vector<std::size_t>& indices,
   bubbledw(indices, 0, --currentSize);
 }
 
-inline bool CandidatesForMiddleSp2::exists(const std::size_t n,
-                                           const std::size_t maxSize) const {
+bool CandidatesForMiddleSp2::exists(const std::size_t n,
+                                    const std::size_t maxSize) const {
   // If the element exists, its index is lower than the current number
   // of stored elements
   return n < maxSize;
 }
 
-inline float CandidatesForMiddleSp2::weight(
-    const std::vector<std::size_t>& indices, std::size_t n) const {
+float CandidatesForMiddleSp2::weight(const std::vector<std::size_t>& indices,
+                                     std::size_t n) const {
   // Get the weight of the n-th element
   return m_storage[indices[n]].weight;
 }
 
-inline void CandidatesForMiddleSp2::clear() {
+void CandidatesForMiddleSp2::clear() {
   // do not clear max size, this is set only once
   // reset to 0 the number of stored elements
   m_nHigh = 0;
@@ -65,9 +64,9 @@ inline void CandidatesForMiddleSp2::clear() {
   m_indicesLow.clear();
 }
 
-inline bool CandidatesForMiddleSp2::push(std::size_t spB, std::size_t spM,
-                                         std::size_t spT, float weight,
-                                         float zOrigin, bool isQuality) {
+bool CandidatesForMiddleSp2::push(std::size_t spB, std::size_t spM,
+                                  std::size_t spT, float weight, float zOrigin,
+                                  bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
@@ -78,11 +77,11 @@ inline bool CandidatesForMiddleSp2::push(std::size_t spB, std::size_t spM,
               zOrigin, isQuality);
 }
 
-inline bool CandidatesForMiddleSp2::push(std::vector<std::size_t>& indices,
-                                         std::size_t& n, const std::size_t nMax,
-                                         std::size_t spB, std::size_t spM,
-                                         std::size_t spT, float weight,
-                                         float zOrigin, bool isQuality) {
+bool CandidatesForMiddleSp2::push(std::vector<std::size_t>& indices,
+                                  std::size_t& n, const std::size_t nMax,
+                                  std::size_t spB, std::size_t spM,
+                                  std::size_t spT, float weight, float zOrigin,
+                                  bool isQuality) {
   // If we do not want to store candidates, returns
   if (nMax == 0) {
     return false;
@@ -109,9 +108,10 @@ inline bool CandidatesForMiddleSp2::push(std::vector<std::size_t>& indices,
   return true;
 }
 
-inline void CandidatesForMiddleSp2::addToCollection(
-    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t nMax,
-    const TripletCandidate2& element) {
+void CandidatesForMiddleSp2::addToCollection(std::vector<std::size_t>& indices,
+                                             std::size_t& n,
+                                             const std::size_t nMax,
+                                             const TripletCandidate2& element) {
   // adds elements to the end of the collection
   if (indices.size() == nMax) {
     m_storage[indices[n]] = element;
@@ -123,9 +123,8 @@ inline void CandidatesForMiddleSp2::addToCollection(
   bubbleup(indices, n++);
 }
 
-inline void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
-                                             std::size_t n,
-                                             std::size_t actualSize) {
+void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
+                                      std::size_t n, std::size_t actualSize) {
   while (n < actualSize) {
     // The collection of indexes are sorted as min heap trees
     // left child : 2 * n + 1
@@ -180,8 +179,8 @@ inline void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
   }  // while loop
 }
 
-inline void CandidatesForMiddleSp2::bubbleup(std::vector<std::size_t>& indices,
-                                             std::size_t n) {
+void CandidatesForMiddleSp2::bubbleup(std::vector<std::size_t>& indices,
+                                      std::size_t n) {
   while (n != 0) {
     // The collection of indexes are sorted as min heap trees
     // parent: (n - 1) / 2;
@@ -201,11 +200,13 @@ inline void CandidatesForMiddleSp2::bubbleup(std::vector<std::size_t>& indices,
   }
 }
 
-inline std::vector<TripletCandidate2> CandidatesForMiddleSp2::storage(
-    const SpacePointContainer2& spacePoints) {
+void CandidatesForMiddleSp2::toSortedCandidates(
+    const SpacePointContainer2& spacePoints,
+    std::vector<TripletCandidate2>& output) {
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
-  std::vector<TripletCandidate2> output(m_nHigh + m_nLow);
+  output.clear();
+  output.reserve(m_nHigh + m_nLow);
   std::size_t outIdx = output.size() - 1;
 
   // rely on the fact that m_indices* are both min heap trees
@@ -241,14 +242,12 @@ inline std::vector<TripletCandidate2> CandidatesForMiddleSp2::storage(
       output[outIdx--] = m_storage[m_indicesLow[0]];
       pop(m_indicesLow, m_nLow);
     }
-
   }  // while loop
 
   clear();
-  return output;
 }
 
-inline bool CandidatesForMiddleSp2::descendingByQuality(
+bool CandidatesForMiddleSp2::descendingByQuality(
     const SpacePointContainer2& spacePoints, const TripletCandidate2& i1,
     const TripletCandidate2& i2) {
   if (i1.weight != i2.weight) {
@@ -280,17 +279,17 @@ inline bool CandidatesForMiddleSp2::descendingByQuality(
   return seed1_sum > seed2_sum;
 }
 
-inline bool CandidatesForMiddleSp2::ascendingByQuality(
+bool CandidatesForMiddleSp2::ascendingByQuality(
     const SpacePointContainer2& spacePoints, const TripletCandidate2& i1,
     const TripletCandidate2& i2) {
   return !descendingByQuality(spacePoints, i1, i2);
 }
 
-inline std::size_t CandidatesForMiddleSp2::nLowQualityCandidates() const {
+std::size_t CandidatesForMiddleSp2::nLowQualityCandidates() const {
   return m_nLow;
 }
 
-inline std::size_t CandidatesForMiddleSp2::nHighQualityCandidates() const {
+std::size_t CandidatesForMiddleSp2::nHighQualityCandidates() const {
   return m_nHigh;
 }
 
