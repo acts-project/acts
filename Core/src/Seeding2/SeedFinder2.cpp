@@ -138,13 +138,13 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
                               std::vector<SpacePointIndex2>& topSps,
                               SeedContainer2& outputSeeds) const {
   std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
-    return spacePoints.at(index).extra(rColumn);
+    return -spacePoints.at(index).z();
   });
   std::ranges::sort(middleSps, {}, [&](SpacePointIndex2 index) {
     return spacePoints.at(index).extra(rColumn);
   });
   std::ranges::sort(topSps, {}, [&](SpacePointIndex2 index) {
-    return spacePoints.at(index).extra(rColumn);
+    return spacePoints.at(index).z();
   });
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
@@ -166,21 +166,6 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
   ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                << "]");
-
-  state.bottomSpOffset =
-      std::ranges::lower_bound(
-          bottomSps, firstMiddleSp.extra(rColumn) - m_cfg.deltaRMaxBottomSP, {},
-          [&](SpacePointIndex2 index) {
-            return spacePoints.at(index).extra(rColumn);
-          }) -
-      bottomSps.begin();
-  state.topSpOffset =
-      std::ranges::lower_bound(
-          topSps, firstMiddleSp.extra(rColumn) + m_cfg.deltaRMinTopSP, {},
-          [&](SpacePointIndex2 index) {
-            return spacePoints.at(index).extra(rColumn);
-          }) -
-      topSps.begin();
 
   for (SpacePointIndex2 middleSpIndex : middleSps) {
     auto spM = spacePoints.at(middleSpIndex);
@@ -331,41 +316,17 @@ void SeedFinder2::createCompatibleDoublets(
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
   };
 
-  // find the first SP inside the radius region of interest and update
-  // the iterator so we don't need to look at the other SPs again
-  for (std::size_t& i = candidateSpOffset; i < candidateSps.size(); ++i) {
-    ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSps[i]);
-
-    if constexpr (isBottomCandidate) {
-      // if r-distance is too big, we are done
-      if (rM - otherSp.extra(rColumn) <= cuts.deltaRMax) {
-        break;
-      }
-    } else {
-      // if r-distance is too small, we are done
-      if (otherSp.extra(rColumn) - rM >= cuts.deltaRMin) {
-        break;
-      }
-    }
-  }
-
-  for (std::size_t i = candidateSpOffset; i < candidateSps.size(); ++i) {
-    ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSps[i]);
+  for (SpacePointIndex2 otherSpIndex : candidateSps) {
+    ConstSpacePointProxy2 otherSp = spacePoints.at(otherSpIndex);
 
     if constexpr (isBottomCandidate) {
       deltaR = rM - otherSp.extra(rColumn);
-
-      // if r-distance is too small, we are done
-      if (deltaR < cuts.deltaRMin) {
-        break;
-      }
     } else {
       deltaR = otherSp.extra(rColumn) - rM;
+    }
 
-      // if r-distance is too big, we are done
-      if (deltaR > cuts.deltaRMax) {
-        break;
-      }
+    if (deltaR < cuts.deltaRMin | deltaR > cuts.deltaRMax) {
+      continue;
     }
 
     if constexpr (isBottomCandidate) {
@@ -383,10 +344,8 @@ void SeedFinder2::createCompatibleDoublets(
     //
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
-    if (zOriginTimesDeltaR<m_cfg.collisionRegionMin * deltaR |
-                           zOriginTimesDeltaR>
-            m_cfg.collisionRegionMax *
-        deltaR) {
+    if (zOriginTimesDeltaR < m_cfg.collisionRegionMin * deltaR |
+        zOriginTimesDeltaR > m_cfg.collisionRegionMax * deltaR) {
       continue;
     }
 
@@ -869,7 +828,7 @@ void SeedFinder2::filterCandidates(
         if constexpr (isDetailedMeasurement) {
           continue;
         }
-        if (cotThetaB - cotThetaT < 0) {
+        if (cotThetaB < cotThetaT) {
           break;
         }
         t0 = indexSortedTop;
