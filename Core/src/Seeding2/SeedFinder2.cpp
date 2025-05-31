@@ -128,41 +128,61 @@ std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
 
-void SeedFinder2::createSeeds(
-    const DerivedOptions& options, State& state,
-    const SpacePointContainer2& spacePoints,
-    const SpacePointColumn2<float>& rColumn,
-    const SpacePointColumn2<float>* varianceRColumn,
-    const SpacePointColumn2<float>* varianceZColumn,
-    const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
-    const std::vector<SpacePointIndex2>& middleSpGroup,
-    const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
-    SeedContainer2& outputSeeds) const {
-  state.bottomSpGroupOffets.clear();
-  state.bottomSpGroupOffets.resize(bottomSpGroups.size(), 0);
-  state.topSpGroupOffets.clear();
-  state.topSpGroupOffets.resize(topSpGroups.size(), 0);
+void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
+                              const SpacePointContainer2& spacePoints,
+                              const SpacePointColumn2<float>& rColumn,
+                              const SpacePointColumn2<float>* varianceRColumn,
+                              const SpacePointColumn2<float>* varianceZColumn,
+                              std::vector<SpacePointIndex2>& bottomSps,
+                              std::vector<SpacePointIndex2>& middleSps,
+                              std::vector<SpacePointIndex2>& topSps,
+                              SeedContainer2& outputSeeds) const {
+  std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
+    return spacePoints.at(index).extra(rColumn);
+  });
+  std::ranges::sort(middleSps, {}, [&](SpacePointIndex2 index) {
+    return spacePoints.at(index).extra(rColumn);
+  });
+  std::ranges::sort(topSps, {}, [&](SpacePointIndex2 index) {
+    return spacePoints.at(index).extra(rColumn);
+  });
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
   state.candidatesCollector.reserve(m_cfg.maxSeedsPerSpMConf,
                                     m_cfg.maxQualitySeedsPerSpMConf);
 
-  if (middleSpGroup.empty()) {
+  if (middleSps.empty()) {
     ACTS_VERBOSE("No middle space points, skipping");
     return;
   }
 
+  auto firstMiddleSp = spacePoints.at(middleSps.front());
+
   // we compute this here since all middle space point candidates belong to
   // the same z-bin
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-      retrieveRadiusRangeForMiddle(spacePoints.at(middleSpGroup.front()),
-                                   options.rMiddleSpRange);
+      retrieveRadiusRangeForMiddle(firstMiddleSp, options.rMiddleSpRange);
   ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                << "]");
 
-  for (SpacePointIndex2 middleSpIndex : middleSpGroup) {
+  state.bottomSpOffset =
+      std::ranges::lower_bound(
+          bottomSps, firstMiddleSp.extra(rColumn) - m_cfg.deltaRMaxBottomSP, {},
+          [&](SpacePointIndex2 index) {
+            return spacePoints.at(index).extra(rColumn);
+          }) -
+      bottomSps.begin();
+  state.topSpOffset =
+      std::ranges::lower_bound(
+          topSps, firstMiddleSp.extra(rColumn) + m_cfg.deltaRMinTopSP, {},
+          [&](SpacePointIndex2 index) {
+            return spacePoints.at(index).extra(rColumn);
+          }) -
+      topSps.begin();
+
+  for (SpacePointIndex2 middleSpIndex : middleSps) {
     auto spM = spacePoints.at(middleSpIndex);
 
     const float rM = spM.extra(rColumn);
@@ -184,8 +204,8 @@ void SeedFinder2::createSeeds(
     state.linCirclesTop.clear();
     createCompatibleDoublets<SpacePointCandidateType::eTop>(
         options, dubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, topSpGroups, state.topSpGroupOffets,
-        state.compatibleTopSp, state.linCirclesTop);
+        varianceZColumn, spM, topSps, state.topSpOffset, state.compatibleTopSp,
+        state.linCirclesTop);
 
     // no top SP found -> try next spM
     if (state.compatibleTopSp.empty()) {
@@ -225,7 +245,7 @@ void SeedFinder2::createSeeds(
     state.linCirclesBottom.clear();
     createCompatibleDoublets<SpacePointCandidateType::eBottom>(
         options, dubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, bottomSpGroups, state.bottomSpGroupOffets,
+        varianceZColumn, spM, bottomSps, state.bottomSpOffset,
         state.compatibleBottomSp, state.linCirclesBottom);
 
     // no bottom SP found -> try next spM
@@ -271,14 +291,14 @@ void SeedFinder2::createCompatibleDoublets(
     const SpacePointColumn2<float>* varianceRColumn,
     const SpacePointColumn2<float>* varianceZColumn,
     const ConstSpacePointProxy2& middleSp,
-    const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
-    std::vector<std::size_t>& candidateSpGroupOffsets,
-    std::vector<SpacePointIndex2>& compatibleSp,
+    const std::vector<SpacePointIndex2>& candidateSps,
+    std::size_t& candidateSpOffset, std::vector<SpacePointIndex2>& compatibleSp,
     std::vector<LinCircle>& linCircles) const {
   constexpr bool isBottomCandidate =
       candidate_type == SpacePointCandidateType::eBottom;
 
-  float impactMax = isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
+  const float impactMax =
+      isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
   const float xM = middleSp.x();
   const float yM = middleSp.y();
@@ -311,114 +331,85 @@ void SeedFinder2::createCompatibleDoublets(
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
   };
 
-  for (std::size_t groupIndex = 0; groupIndex < candidateSpGroups.size();
-       ++groupIndex) {
-    const auto& candidateSpGroup = candidateSpGroups[groupIndex];
-    std::size_t& groupOffset = candidateSpGroupOffsets[groupIndex];
+  // find the first SP inside the radius region of interest and update
+  // the iterator so we don't need to look at the other SPs again
+  for (std::size_t& i = candidateSpOffset; i < candidateSps.size(); ++i) {
+    ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSps[i]);
 
-    // find the first SP inside the radius region of interest and update
-    // the iterator so we don't need to look at the other SPs again
-    for (std::size_t& i = groupOffset; i < candidateSpGroup.size(); ++i) {
-      ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
-      if constexpr (isBottomCandidate) {
-        // if r-distance is too big, try next SP in bin
-        if (rM - otherSp.extra(rColumn) <= cuts.deltaRMax) {
-          break;
-        }
-      } else {
-        // if r-distance is too small, try next SP in bin
-        if (otherSp.extra(rColumn) - rM >= cuts.deltaRMin) {
-          break;
-        }
+    if constexpr (isBottomCandidate) {
+      // if r-distance is too big, we are done
+      if (rM - otherSp.extra(rColumn) <= cuts.deltaRMax) {
+        break;
+      }
+    } else {
+      // if r-distance is too small, we are done
+      if (otherSp.extra(rColumn) - rM >= cuts.deltaRMin) {
+        break;
+      }
+    }
+  }
+
+  for (std::size_t i = candidateSpOffset; i < candidateSps.size(); ++i) {
+    ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSps[i]);
+
+    if constexpr (isBottomCandidate) {
+      deltaR = rM - otherSp.extra(rColumn);
+
+      // if r-distance is too small, we are done
+      if (deltaR < cuts.deltaRMin) {
+        break;
+      }
+    } else {
+      deltaR = otherSp.extra(rColumn) - rM;
+
+      // if r-distance is too big, we are done
+      if (deltaR > cuts.deltaRMax) {
+        break;
       }
     }
 
-    for (std::size_t i = groupOffset; i < candidateSpGroup.size(); ++i) {
-      ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
+    if constexpr (isBottomCandidate) {
+      deltaZ = zM - otherSp.z();
+    } else {
+      deltaZ = otherSp.z() - zM;
+    }
 
-      if constexpr (isBottomCandidate) {
-        deltaR = rM - otherSp.extra(rColumn);
+    // the longitudinal impact parameter zOrigin is defined as (zM - rM *
+    // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
+    // point duplet but instead we calculate (zOrigin * deltaR) and multiply
+    // collisionRegion by deltaR to avoid divisions
+    const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
+    // check if duplet origin on z axis within collision region
+    //
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
+    if (zOriginTimesDeltaR<m_cfg.collisionRegionMin * deltaR |
+                           zOriginTimesDeltaR>
+            m_cfg.collisionRegionMax *
+        deltaR) {
+      continue;
+    }
 
-        // if r-distance is too small, try next SP in bin
-        if (deltaR < cuts.deltaRMin) {
-          break;
-        }
-      } else {
-        deltaR = otherSp.extra(rColumn) - rM;
-
-        // if r-distance is too big, try next SP in bin
-        if (deltaR > cuts.deltaRMax) {
-          break;
-        }
-      }
-
-      if constexpr (isBottomCandidate) {
-        deltaZ = zM - otherSp.z();
-      } else {
-        deltaZ = otherSp.z() - zM;
-      }
-
-      // the longitudinal impact parameter zOrigin is defined as (zM - rM *
-      // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
-      // point duplet but instead we calculate (zOrigin * deltaR) and multiply
-      // collisionRegion by deltaR to avoid divisions
-      const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
-      // check if duplet origin on z axis within collision region
+    // if interactionPointCut is false we apply z cuts before coordinate
+    // transformation to avoid unnecessary calculations. If
+    // interactionPointCut is true we apply the curvature cut first because it
+    // is more frequent but requires the coordinate transformation
+    if (!m_cfg.interactionPointCut) {
+      // check if duplet cotTheta is within the region of interest
+      // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+      // cotThetaMax by deltaR to avoid division
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if (zOriginTimesDeltaR<m_cfg.collisionRegionMin * deltaR |
-                             zOriginTimesDeltaR>
-              m_cfg.collisionRegionMax *
-          deltaR) {
+      if (deltaZ > m_cfg.cotThetaMax * deltaR |
+          deltaZ < -m_cfg.cotThetaMax * deltaR) {
         continue;
       }
-
-      // if interactionPointCut is false we apply z cuts before coordinate
-      // transformation to avoid unnecessary calculations. If
-      // interactionPointCut is true we apply the curvature cut first because it
-      // is more frequent but requires the coordinate transformation
-      if (!m_cfg.interactionPointCut) {
-        // check if duplet cotTheta is within the region of interest
-        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-        // cotThetaMax by deltaR to avoid division
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (deltaZ > m_cfg.cotThetaMax * deltaR |
-            deltaZ < -m_cfg.cotThetaMax * deltaR) {
-          continue;
-        }
-        // if z-distance between SPs is within max and min values
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (deltaZ > m_cfg.deltaZMax | deltaZ < -m_cfg.deltaZMax) {
-          continue;
-        }
-
-        // transform SP coordinates to the u-v reference frame
-        const float deltaX = otherSp.x() - xM;
-        const float deltaY = otherSp.y() - yM;
-
-        const float xNewFrame = deltaX * cuts.cosPhiM + deltaY * cuts.sinPhiM;
-        const float yNewFrame = deltaY * cuts.cosPhiM - deltaX * cuts.sinPhiM;
-
-        const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
-        const float iDeltaR2 = 1. / deltaR2;
-
-        const float uT = xNewFrame * iDeltaR2;
-        const float vT = yNewFrame * iDeltaR2;
-
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        const float cotTheta = deltaZ * iDeltaR;
-
-        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
-
-        // fill output vectors
-        compatibleSp.emplace_back(otherSp.index());
-        linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
-                                yNewFrame);
+      // if z-distance between SPs is within max and min values
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
+      if (deltaZ > m_cfg.deltaZMax | deltaZ < -m_cfg.deltaZMax) {
         continue;
       }
 
@@ -435,63 +426,41 @@ void SeedFinder2::createCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // We check the interaction point by evaluating the minimal distance
-      // between the origin and the straight line connecting the two points in
-      // the doublets. Using a geometric similarity, the Im is given by
-      // yNewFrame * rM / deltaR <= m_cfg.impactMax
-      // However, we make here an approximation of the impact parameter
-      // which is valid under the assumption yNewFrame / xNewFrame is small
-      // The correct computation would be:
-      // yNewFrame * yNewFrame * rM * rM <= m_cfg.impactMax *
-      // m_cfg.impactMax * deltaR2
-      if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-        // check if duplet cotTheta is within the region of interest
-        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-        // cotThetaMax by deltaR to avoid division
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (deltaZ > m_cfg.cotThetaMax * deltaR |
-            deltaZ < -m_cfg.cotThetaMax * deltaR) {
-          continue;
-        }
+      const float iDeltaR = std::sqrt(iDeltaR2);
+      const float cotTheta = deltaZ * iDeltaR;
 
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        const float cotTheta = deltaZ * iDeltaR;
+      const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
-        // discard bottom-middle dublets in a certain (r, eta) region according
-        // to detector specific cuts
-        if constexpr (isBottomCandidate) {
-          if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
-            continue;
-          }
-        }
+      // fill output vectors
+      compatibleSp.emplace_back(otherSp.index());
+      linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
+                              yNewFrame);
+      continue;
+    }
 
-        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+    // transform SP coordinates to the u-v reference frame
+    const float deltaX = otherSp.x() - xM;
+    const float deltaY = otherSp.y() - yM;
 
-        // fill output vectors
-        compatibleSp.emplace_back(otherSp.index());
-        linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
-                                yNewFrame);
-        continue;
-      }
+    const float xNewFrame = deltaX * cuts.cosPhiM + deltaY * cuts.sinPhiM;
+    const float yNewFrame = deltaY * cuts.cosPhiM - deltaX * cuts.sinPhiM;
 
-      // in the rotated frame the interaction point is positioned at x = -rM
-      // and y ~= impactParam
-      const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+    const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
+    const float iDeltaR2 = 1. / deltaR2;
 
-      // we can obtain aCoef as the slope dv/du of the linear function,
-      // estimated using du and dv between the two SP bCoef is obtained by
-      // inserting aCoef into the linear equation
-      const float aCoef = (vT - vIP) / (uT - cuts.uIP);
-      const float bCoef = vIP - aCoef * cuts.uIP;
-      // the distance of the straight line from the origin (radius of the
-      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-      if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-        continue;
-      }
+    const float uT = xNewFrame * iDeltaR2;
+    const float vT = yNewFrame * iDeltaR2;
 
+    // We check the interaction point by evaluating the minimal distance
+    // between the origin and the straight line connecting the two points in
+    // the doublets. Using a geometric similarity, the Im is given by
+    // yNewFrame * rM / deltaR <= m_cfg.impactMax
+    // However, we make here an approximation of the impact parameter
+    // which is valid under the assumption yNewFrame / xNewFrame is small
+    // The correct computation would be:
+    // yNewFrame * yNewFrame * rM * rM <= m_cfg.impactMax *
+    // m_cfg.impactMax * deltaR2
+    if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
@@ -520,7 +489,53 @@ void SeedFinder2::createCompatibleDoublets(
       compatibleSp.emplace_back(otherSp.index());
       linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
                               yNewFrame);
+      continue;
     }
+
+    // in the rotated frame the interaction point is positioned at x = -rM
+    // and y ~= impactParam
+    const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+
+    // we can obtain aCoef as the slope dv/du of the linear function,
+    // estimated using du and dv between the two SP bCoef is obtained by
+    // inserting aCoef into the linear equation
+    const float aCoef = (vT - vIP) / (uT - cuts.uIP);
+    const float bCoef = vIP - aCoef * cuts.uIP;
+    // the distance of the straight line from the origin (radius of the
+    // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+    // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+    if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+      continue;
+    }
+
+    // check if duplet cotTheta is within the region of interest
+    // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+    // cotThetaMax by deltaR to avoid division
+    //
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
+    if (deltaZ > m_cfg.cotThetaMax * deltaR |
+        deltaZ < -m_cfg.cotThetaMax * deltaR) {
+      continue;
+    }
+
+    const float iDeltaR = std::sqrt(iDeltaR2);
+    const float cotTheta = deltaZ * iDeltaR;
+
+    // discard bottom-middle dublets in a certain (r, eta) region according
+    // to detector specific cuts
+    if constexpr (isBottomCandidate) {
+      if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
+        continue;
+      }
+    }
+
+    const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+
+    // fill output vectors
+    compatibleSp.emplace_back(otherSp.index());
+    linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
+                            yNewFrame);
   }
 }
 
