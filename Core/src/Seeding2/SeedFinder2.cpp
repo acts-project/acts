@@ -196,8 +196,11 @@ void SeedFinder2::createSeeds(
     // apply cut on the number of top SP if seedConfirmation is true
     if (m_cfg.seedConfirmation) {
       // check if middle SP is in the central or forward region
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
       state.filterOptions.seedConfRange =
-          (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+          (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf |
            zM < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
               ? m_cfg.forwardSeedConfirmationRange
               : m_cfg.centralSeedConfirmationRange;
@@ -239,18 +242,17 @@ void SeedFinder2::createSeeds(
     // filter candidates
     state.candidatesCollector.clear();
     if (m_cfg.useDetailedDoubleMeasurementInfo) {
-      filterCandidates<DetectorMeasurementInfo::eDetailed>(
+      filterCandidates<MeasurementInfo::eDetailed>(
           options, state, spacePoints, rColumn, varianceRColumn,
           varianceZColumn, nullptr, nullptr, nullptr, nullptr, spM);
     } else {
-      filterCandidates<DetectorMeasurementInfo::eDefault>(
+      filterCandidates<MeasurementInfo::eDefault>(
           options, state, spacePoints, rColumn, varianceRColumn,
           varianceZColumn, nullptr, nullptr, nullptr, nullptr, spM);
     }
 
     // retrieve all candidates
-    // this collection is already sorted
-    // higher weights first
+    // this collection is already sorted, higher weights first
     const std::size_t numQualitySeeds =
         state.candidatesCollector.nHighQualityCandidates();
     state.candidatesCollector.toSortedCandidates(spacePoints,
@@ -261,7 +263,7 @@ void SeedFinder2::createSeeds(
   }  // loop on middle space points
 }
 
-template <SeedFinder2::SpacePointCandidateType candidateType>
+template <SeedFinder2::SpacePointCandidateType candidate_type>
 void SeedFinder2::createCompatibleDoublets(
     const DerivedOptions& options, const DubletCuts& cuts,
     const SpacePointContainer2& spacePoints,
@@ -274,7 +276,7 @@ void SeedFinder2::createCompatibleDoublets(
     std::vector<SpacePointIndex2>& compatibleSp,
     std::vector<LinCircle>& linCircles) const {
   constexpr bool isBottomCandidate =
-      candidateType == SpacePointCandidateType::eBottom;
+      candidate_type == SpacePointCandidateType::eBottom;
 
   float impactMax = isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
@@ -318,7 +320,7 @@ void SeedFinder2::createCompatibleDoublets(
     // the iterator so we don't need to look at the other SPs again
     for (std::size_t& i = groupOffset; i < candidateSpGroup.size(); ++i) {
       ConstSpacePointProxy2 otherSp = spacePoints.at(candidateSpGroup[i]);
-      if constexpr (candidateType == SpacePointCandidateType::eBottom) {
+      if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
         if (rM - otherSp.extra(rColumn) <= cuts.deltaRMax) {
           break;
@@ -522,7 +524,7 @@ void SeedFinder2::createCompatibleDoublets(
   }
 }
 
-template <SeedFinder2::DetectorMeasurementInfo detailedMeasurement>
+template <SeedFinder2::MeasurementInfo measurement_info>
 void SeedFinder2::filterCandidates(
     const DerivedOptions& options, State& state,
     const SpacePointContainer2& spacePoints,
@@ -534,6 +536,9 @@ void SeedFinder2::filterCandidates(
     const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
     const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
     const ConstSpacePointProxy2& spM) const {
+  constexpr bool isDetailedMeasurement =
+      measurement_info == MeasurementInfo::eDetailed;
+
   const float rM = spM.extra(rColumn);
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
@@ -551,7 +556,7 @@ void SeedFinder2::filterCandidates(
   state.sortedTops.resize(state.compatibleTopSp.size());
   std::iota(state.sortedTops.begin(), state.sortedTops.end(), 0);
 
-  if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
+  if constexpr (!isDetailedMeasurement) {
     // sorting becomes less expensive when we copy the cotTheta values into
     // their own arrays due to more optimal usage of the cache
 
@@ -619,7 +624,7 @@ void SeedFinder2::filterCandidates(
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
-    if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+    if constexpr (isDetailedMeasurement) {
       rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
       rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
     }
@@ -659,7 +664,7 @@ void SeedFinder2::filterCandidates(
       float iDeltaRB2 = 0.;
       float iDeltaRT2 = 0.;
 
-      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+      if constexpr (isDetailedMeasurement) {
         // protects against division by 0
         float dU = lt.U - Ub;
         if (dU == 0.) {
@@ -735,7 +740,7 @@ void SeedFinder2::filterCandidates(
 
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+      if constexpr (isDetailedMeasurement) {
         // use arithmetic average
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
@@ -764,8 +769,7 @@ void SeedFinder2::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        if constexpr (detailedMeasurement ==
-                      DetectorMeasurementInfo::eDetailed) {
+        if constexpr (isDetailedMeasurement) {
           continue;
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -777,7 +781,7 @@ void SeedFinder2::filterCandidates(
         continue;
       }
 
-      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+      if constexpr (isDetailedMeasurement) {
         rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
         double irMxy = 1 / rMxy;
         float Ax = rMTransf[0] * irMxy;
@@ -795,7 +799,7 @@ void SeedFinder2::filterCandidates(
       float B = 0;
       float B2 = 0;
 
-      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+      if constexpr (isDetailedMeasurement) {
         dU = ut - ub;
         // protects against division by 0
         if (dU == 0.) {
@@ -847,8 +851,7 @@ void SeedFinder2::filterCandidates(
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if constexpr (detailedMeasurement ==
-                      DetectorMeasurementInfo::eDetailed) {
+        if constexpr (isDetailedMeasurement) {
           continue;
         }
         if (cotThetaB - cotThetaT < 0) {
@@ -861,7 +864,7 @@ void SeedFinder2::filterCandidates(
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
       float Im = 0;
-      if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
+      if constexpr (isDetailedMeasurement) {
         Im = std::abs((A - B * rMxy) * rMxy);
       } else {
         Im = std::abs((A - B * rM) * rM);

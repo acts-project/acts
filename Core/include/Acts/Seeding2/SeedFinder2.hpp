@@ -28,7 +28,7 @@ namespace Acts {
 class SeedFinder2 {
  private:
   enum class SpacePointCandidateType { eBottom, eTop };
-  enum class DetectorMeasurementInfo { eDefault, eDetailed };
+  enum class MeasurementInfo { eDefault, eDetailed };
 
  public:
   struct DerivedConfig;
@@ -306,7 +306,7 @@ class SeedFinder2 {
       const ConstSpacePointProxy2& spM,
       const Range1D<float>& rMiddleSPRange) const;
 
-  template <SpacePointCandidateType candidateType>
+  template <SpacePointCandidateType candidate_type>
   void createCompatibleDoublets(
       const DerivedOptions& options, const DubletCuts& cuts,
       const SpacePointContainer2& spacePoints,
@@ -319,7 +319,7 @@ class SeedFinder2 {
       std::vector<SpacePointIndex2>& compatibleSp,
       std::vector<LinCircle>& linCircles) const;
 
-  template <DetectorMeasurementInfo detailedMeasurement>
+  template <MeasurementInfo measurement_info>
   void filterCandidates(
       const DerivedOptions& options, State& state,
       const SpacePointContainer2& spacePoints,
