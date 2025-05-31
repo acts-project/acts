@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -247,6 +248,12 @@ class SeedFinder2 {
     std::vector<LinCircle> linCirclesBottom;
     // ...for middle-top
     std::vector<LinCircle> linCirclesTop;
+
+    std::vector<std::uint32_t> sortedBottoms;
+    std::vector<std::uint32_t> sortedTops;
+
+    std::vector<float> linCircleCotThetaBottom;
+    std::vector<float> linCircleCotThetaTop;
 
     std::vector<SpacePointIndex2> topSpVec;
     std::vector<float> curvatures;
