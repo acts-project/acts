@@ -769,7 +769,7 @@ void SeedFinder2::filterCandidates(
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (cotThetaB - cotThetaT < 0) {
+        if (cotThetaB < cotThetaT) {
           break;
         }
         t0 = indexSortedTop + 1;
