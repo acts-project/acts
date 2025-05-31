@@ -238,8 +238,8 @@ class SeedFinder2 {
   };
 
   struct State {
-    std::vector<std::size_t> bottomSpGroupOffets;
-    std::vector<std::size_t> topSpGroupOffets;
+    std::size_t bottomSpOffset;
+    std::size_t topSpOffset;
 
     std::vector<SpacePointIndex2> compatibleBottomSp;
     std::vector<SpacePointIndex2> compatibleTopSp;
@@ -272,16 +272,15 @@ class SeedFinder2 {
 
   const DerivedConfig& config() const { return m_cfg; }
 
-  void createSeeds(
-      const DerivedOptions& options, State& state,
-      const SpacePointContainer2& spacePoints,
-      const SpacePointColumn2<float>& rColumn,
-      const SpacePointColumn2<float>* varianceRColumn,
-      const SpacePointColumn2<float>* varianceZColumn,
-      const std::vector<std::vector<SpacePointIndex2>>& bottomSpGroups,
-      const std::vector<SpacePointIndex2>& middleSpGroup,
-      const std::vector<std::vector<SpacePointIndex2>>& topSpGroups,
-      SeedContainer2& outputSeeds) const;
+  void createSeeds(const DerivedOptions& options, State& state,
+                   const SpacePointContainer2& spacePoints,
+                   const SpacePointColumn2<float>& rColumn,
+                   const SpacePointColumn2<float>* varianceRColumn,
+                   const SpacePointColumn2<float>* varianceZColumn,
+                   std::vector<SpacePointIndex2>& bottomSps,
+                   std::vector<SpacePointIndex2>& middleSps,
+                   std::vector<SpacePointIndex2>& topSps,
+                   SeedContainer2& outputSeeds) const;
 
  private:
   struct DubletCuts {
@@ -314,8 +313,8 @@ class SeedFinder2 {
       const SpacePointColumn2<float>* varianceRColumn,
       const SpacePointColumn2<float>* varianceZColumn,
       const ConstSpacePointProxy2& middleSp,
-      const std::vector<std::vector<SpacePointIndex2>>& candidateSpGroups,
-      std::vector<std::size_t>& candidateSpGroupOffsets,
+      const std::vector<SpacePointIndex2>& candidateSps,
+      std::size_t& candidateSpOffset,
       std::vector<SpacePointIndex2>& compatibleSp,
       std::vector<LinCircle>& linCircles) const;
 

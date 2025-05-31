@@ -218,27 +218,29 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
 
-  std::vector<std::vector<Acts::SpacePointIndex2>> bottomSpGroups;
-  std::vector<Acts::SpacePointIndex2> middleSpGroup;
-  std::vector<std::vector<Acts::SpacePointIndex2>> topSpGroups;
+  std::vector<Acts::SpacePointIndex2> bottomSp;
+  std::vector<Acts::SpacePointIndex2> middleSp;
+  std::vector<Acts::SpacePointIndex2> topSp;
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     ACTS_VERBOSE("Process middle " << middle);
 
-    bottomSpGroups.clear();
+    bottomSp.clear();
     for (const auto b : bottom) {
-      bottomSpGroups.push_back(spacePointsGrouping.grid().at(b));
+      bottomSp.insert(bottomSp.end(), spacePointsGrouping.grid().at(b).begin(),
+                      spacePointsGrouping.grid().at(b).end());
     }
-    middleSpGroup.clear();
-    middleSpGroup = spacePointsGrouping.grid().at(middle);
-    topSpGroups.clear();
+    middleSp.clear();
+    middleSp = spacePointsGrouping.grid().at(middle);
+    topSp.clear();
     for (const auto t : top) {
-      topSpGroups.push_back(spacePointsGrouping.grid().at(t));
+      topSp.insert(topSp.end(), spacePointsGrouping.grid().at(t).begin(),
+                   spacePointsGrouping.grid().at(t).end());
     }
 
-    m_seedFinder->createSeeds(
-        derivedOptions, state, coreSpacePoints, rColumn, &varianceRColumn,
-        &varianceZColumn, bottomSpGroups, middleSpGroup, topSpGroups, seeds);
+    m_seedFinder->createSeeds(derivedOptions, state, coreSpacePoints, rColumn,
+                              &varianceRColumn, &varianceZColumn, bottomSp,
+                              middleSp, topSp, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
