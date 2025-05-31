@@ -45,13 +45,18 @@ class CandidatesForMiddleSp2 {
   /// @brief Setting maximum number of candidates to keep
   /// @param nLow Maximum number of candidates in the low-quality collection
   /// @param nHigh Maximum number of candidates in the high-quality collection
-  void setMaxElements(std::size_t nLow, std::size_t nHigh);
+  void reserve(std::size_t nLow, std::size_t nHigh);
 
-  /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
-  /// elements with higher quality first
-  /// @returns Vector of triplet candidates
-  std::vector<TripletCandidate2> storage(
-      const SpacePointContainer2& spacePoints);
+  /// @brief Clear the internal storage
+  void clear();
+
+  /// @brief Retrieve the number of Low quality candidates
+  /// @returns The number of Low quality candidates
+  std::size_t nLowQualityCandidates() const;
+
+  /// @brief Retrieve the number of High quality candidates
+  /// @returns The number of High quality candidates
+  std::size_t nHighQualityCandidates() const;
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -65,9 +70,12 @@ class CandidatesForMiddleSp2 {
   bool push(SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
             float weight, float zOrigin, bool isQuality);
 
-  /// @brief Clear the internal storage
-  void clear();
+  /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
+  /// elements with higher quality first
+  void toSortedCandidates(const SpacePointContainer2& spacePoints,
+                          std::vector<TripletCandidate2>& output);
 
+ private:
   /// @brief A function for sorting the triplet candidates from higher to lower quality
   /// @param spacePoints The input spacepoints from which to create seeds.
   /// @param i1 First triplet candidate
@@ -86,15 +94,6 @@ class CandidatesForMiddleSp2 {
                                  const TripletCandidate2& i1,
                                  const TripletCandidate2& i2);
 
-  /// @brief Retrieve the number of Low quality candidates
-  /// @returns The number of Low quality candidates
-  std::size_t nLowQualityCandidates() const;
-
-  /// @brief Retrieve the number of High quality candidates
-  /// @returns The number of High quality candidates
-  std::size_t nHighQualityCandidates() const;
-
- private:
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
   /// @param indices The collection into which the candidate should be stored
@@ -190,5 +189,3 @@ class CandidatesForMiddleSp2 {
 };
 
 }  // namespace Acts
-
-#include "Acts/Seeding2/detail/CandidatesForMiddleSp2.ipp"

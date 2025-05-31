@@ -100,7 +100,7 @@ class SeedFilter2 final {
                       CandidatesForMiddleSp2& candidatesCollector) const;
 
   void filter1SpFixed(const Options& options, State& state,
-                      std::vector<TripletCandidate2> candidates,
+                      std::vector<TripletCandidate2>& candidates,
                       std::size_t numQualitySeeds,
                       SeedContainer2& outputCollection) const;
 
