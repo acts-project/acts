@@ -312,7 +312,7 @@ class SeedFinder2 {
       const ConstSpacePointProxy2& middleSp,
       const std::vector<SpacePointIndex2>& candidateSps,
       std::vector<SpacePointIndex2>& compatibleSp,
-      std::vector<LinCircle>& linCircles) const;
+      std::vector<LinCircle>& linCircles, std::vector<float>& cotThetas) const;
 
   template <MeasurementInfo measurement_info>
   void filterCandidates(
