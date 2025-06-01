@@ -189,7 +189,7 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
     state.linCirclesTop.clear();
     createCompatibleDoublets<SpacePointCandidateType::eTop>(
         options, dubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, topSps, state.topSpOffset, state.compatibleTopSp,
+        varianceZColumn, spM, topSps, state.compatibleTopSp,
         state.linCirclesTop);
 
     // no top SP found -> try next spM
@@ -230,8 +230,8 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
     state.linCirclesBottom.clear();
     createCompatibleDoublets<SpacePointCandidateType::eBottom>(
         options, dubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, bottomSps, state.bottomSpOffset,
-        state.compatibleBottomSp, state.linCirclesBottom);
+        varianceZColumn, spM, bottomSps, state.compatibleBottomSp,
+        state.linCirclesBottom);
 
     // no bottom SP found -> try next spM
     if (state.compatibleBottomSp.empty()) {
@@ -277,7 +277,7 @@ void SeedFinder2::createCompatibleDoublets(
     const SpacePointColumn2<float>* varianceZColumn,
     const ConstSpacePointProxy2& middleSp,
     const std::vector<SpacePointIndex2>& candidateSps,
-    std::size_t& candidateSpOffset, std::vector<SpacePointIndex2>& compatibleSp,
+    std::vector<SpacePointIndex2>& compatibleSp,
     std::vector<LinCircle>& linCircles) const {
   constexpr bool isBottomCandidate =
       candidate_type == SpacePointCandidateType::eBottom;

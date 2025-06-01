@@ -238,9 +238,6 @@ class SeedFinder2 {
   };
 
   struct State {
-    std::size_t bottomSpOffset;
-    std::size_t topSpOffset;
-
     std::vector<SpacePointIndex2> compatibleBottomSp;
     std::vector<SpacePointIndex2> compatibleTopSp;
     // contains parameters required to calculate circle with linear equation
@@ -314,7 +311,6 @@ class SeedFinder2 {
       const SpacePointColumn2<float>* varianceZColumn,
       const ConstSpacePointProxy2& middleSp,
       const std::vector<SpacePointIndex2>& candidateSps,
-      std::size_t& candidateSpOffset,
       std::vector<SpacePointIndex2>& compatibleSp,
       std::vector<LinCircle>& linCircles) const;
 
