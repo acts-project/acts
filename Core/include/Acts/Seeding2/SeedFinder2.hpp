@@ -259,7 +259,6 @@ class SeedFinder2 {
     CandidatesForMiddleSp2 candidatesCollector;
     std::vector<TripletCandidate2> sortedCandidates;
 
-    SeedFilter2::Options filterOptions;
     SeedFilter2::State filterState;
   };
 
@@ -303,21 +302,24 @@ class SeedFinder2 {
       const Range1D<float>& rMiddleSPRange) const;
 
   template <SpacePointCandidateType candidate_type>
-  void createCompatibleDoublets(
-      const DerivedOptions& options, const DoubletCuts& cuts,
-      const SpacePointContainer2& spacePoints,
-      const SpacePointColumn2<float>& rColumn,
-      const SpacePointColumn2<float>* varianceRColumn,
-      const SpacePointColumn2<float>* varianceZColumn,
-      const ConstSpacePointProxy2& middleSp,
-      const std::vector<SpacePointIndex2>& candidateSps,
-      std::vector<SpacePointIndex2>& compatibleSp,
-      std::vector<LinCircle>& linCircles, std::vector<float>& cotThetas) const;
+  static void createDoublets(const DerivedConfig& config,
+                             const DerivedOptions& options,
+                             const DoubletCuts& cuts,
+                             const SpacePointContainer2& spacePoints,
+                             const SpacePointColumn2<float>& rColumn,
+                             const SpacePointColumn2<float>* varianceRColumn,
+                             const SpacePointColumn2<float>* varianceZColumn,
+                             const ConstSpacePointProxy2& middleSp,
+                             const std::vector<SpacePointIndex2>& candidateSps,
+                             std::vector<SpacePointIndex2>& compatibleSp,
+                             std::vector<LinCircle>& linCircles,
+                             std::vector<float>& cotThetas);
 
   template <MeasurementInfo measurement_info>
-  void filterCandidates(
-      const DerivedOptions& options, State& state,
-      const SpacePointContainer2& spacePoints,
+  static void createTriplets(
+      const DerivedConfig& config, const DerivedOptions& options,
+      const SeedFilter2::Options& filterOptions,
+      SeedFilter2::State& filterState, const SpacePointContainer2& spacePoints,
       const SpacePointColumn2<float>& rColumn,
       const SpacePointColumn2<float>* varianceRColumn,
       const SpacePointColumn2<float>* varianceZColumn,
@@ -325,17 +327,28 @@ class SeedFinder2 {
       const SpacePointColumn2<Acts::Vector3>* bottomStripVectorColumn,
       const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
       const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
-      const ConstSpacePointProxy2& spM) const;
+      const ConstSpacePointProxy2& spM,
+      const std::vector<SpacePointIndex2>& bottomSps,
+      const std::vector<LinCircle>& bottomLinCircles,
+      const std::vector<float>& bottomCotThetas,
+      const std::vector<SpacePointIndex2>& topSps,
+      const std::vector<LinCircle>& topLinCircles,
+      const std::vector<float>& topCotThetas,
+      std::vector<std::uint32_t>& sortedBottoms,
+      std::vector<std::uint32_t>& sortedTops,
+      std::vector<SpacePointIndex2>& topSpVec, std::vector<float>& curvatures,
+      std::vector<float>& impactParameters,
+      CandidatesForMiddleSp2& candidatesCollector);
 
   /// check the compatibility of SPs coordinates in xyz assuming the
   /// Bottom-Middle direction with the strip measurement details
-  bool xyzCoordinateCheck(
-      const ConstSpacePointProxy2& sp,
+  static bool xyzCoordinateCheck(
+      double toleranceParam, const ConstSpacePointProxy2& sp,
       const SpacePointColumn2<Acts::Vector3>& topStripVectorColumn,
       const SpacePointColumn2<Acts::Vector3>& bottomStripVectorColumn,
       const SpacePointColumn2<Acts::Vector3>& stripCenterDistanceColumn,
       const SpacePointColumn2<Acts::Vector3>& topStripCenterPositionColumn,
-      const double* spacepointPosition, double* outputCoordinates) const;
+      const double* spacepointPosition, double* outputCoordinates);
 
  private:
   const Logger& logger() const { return *m_logger; }
