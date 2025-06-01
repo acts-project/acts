@@ -138,13 +138,13 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
                               std::vector<SpacePointIndex2>& topSps,
                               SeedContainer2& outputSeeds) const {
   std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
-    return -spacePoints.at(index).z();
+    return -spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
   });
   std::ranges::sort(middleSps, {}, [&](SpacePointIndex2 index) {
     return spacePoints.at(index).extra(rColumn);
   });
   std::ranges::sort(topSps, {}, [&](SpacePointIndex2 index) {
-    return spacePoints.at(index).z();
+    return spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
   });
 
   state.filterOptions.seedConfirmation = m_cfg.seedConfirmation;
@@ -325,7 +325,7 @@ void SeedFinder2::createCompatibleDoublets(
       deltaR = otherSp.extra(rColumn) - rM;
     }
 
-    if (deltaR < cuts.deltaRMin | deltaR > cuts.deltaRMax) {
+    if (deltaR<cuts.deltaRMin | deltaR> cuts.deltaRMax) {
       continue;
     }
 
@@ -344,8 +344,10 @@ void SeedFinder2::createCompatibleDoublets(
     //
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
-    if (zOriginTimesDeltaR < m_cfg.collisionRegionMin * deltaR |
-        zOriginTimesDeltaR > m_cfg.collisionRegionMax * deltaR) {
+    if (zOriginTimesDeltaR<m_cfg.collisionRegionMin * deltaR |
+                           zOriginTimesDeltaR>
+            m_cfg.collisionRegionMax *
+        deltaR) {
       continue;
     }
 
