@@ -20,7 +20,7 @@ markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.11.4
+pydantic==2.11.5
     # via -r CI/clang_tidy/requirements.in
 pydantic-core==2.33.2
     # via pydantic
@@ -43,7 +43,7 @@ typing-extensions==4.13.2
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via pydantic
 
 # The following packages are considered to be unsafe in a requirements file:
