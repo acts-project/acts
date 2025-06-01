@@ -187,10 +187,11 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
     // Iterate over middle-top doublets
     state.compatibleTopSp.clear();
     state.linCirclesTop.clear();
+    state.linCircleCotThetaTop.clear();
     createCompatibleDoublets<SpacePointCandidateType::eTop>(
         options, doubletCuts, spacePoints, rColumn, varianceRColumn,
         varianceZColumn, spM, topSps, state.compatibleTopSp,
-        state.linCirclesTop);
+        state.linCirclesTop, state.linCircleCotThetaTop);
 
     // no top SP found -> try next spM
     if (state.compatibleTopSp.empty()) {
@@ -228,10 +229,11 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
     // Iterate over middle-bottom doublets
     state.compatibleBottomSp.clear();
     state.linCirclesBottom.clear();
+    state.linCircleCotThetaBottom.clear();
     createCompatibleDoublets<SpacePointCandidateType::eBottom>(
         options, doubletCuts, spacePoints, rColumn, varianceRColumn,
         varianceZColumn, spM, bottomSps, state.compatibleBottomSp,
-        state.linCirclesBottom);
+        state.linCirclesBottom, state.linCircleCotThetaBottom);
 
     // no bottom SP found -> try next spM
     if (state.compatibleBottomSp.empty()) {
@@ -278,7 +280,7 @@ void SeedFinder2::createCompatibleDoublets(
     const ConstSpacePointProxy2& middleSp,
     const std::vector<SpacePointIndex2>& candidateSps,
     std::vector<SpacePointIndex2>& compatibleSp,
-    std::vector<LinCircle>& linCircles) const {
+    std::vector<LinCircle>& linCircles, std::vector<float>& cotThetas) const {
   constexpr bool isBottomCandidate =
       candidate_type == SpacePointCandidateType::eBottom;
 
@@ -396,6 +398,7 @@ void SeedFinder2::createCompatibleDoublets(
       compatibleSp.emplace_back(otherSp.index());
       linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
                               yNewFrame);
+      cotThetas.emplace_back(cotTheta);
       continue;
     }
 
@@ -536,18 +539,9 @@ void SeedFinder2::filterCandidates(
     // sorting becomes less expensive when we copy the cotTheta values into
     // their own arrays due to more optimal usage of the cache
 
-    state.linCircleCotThetaBottom.resize(state.compatibleBottomSp.size());
-    std::transform(state.linCirclesBottom.begin(), state.linCirclesBottom.end(),
-                   state.linCircleCotThetaBottom.begin(),
-                   [](const LinCircle& lc) { return lc.cotTheta; });
     std::ranges::sort(state.sortedBottoms, {}, [&state](const std::size_t s) {
       return state.linCircleCotThetaBottom[s];
     });
-
-    state.linCircleCotThetaTop.resize(state.compatibleTopSp.size());
-    std::transform(state.linCirclesTop.begin(), state.linCirclesTop.end(),
-                   state.linCircleCotThetaTop.begin(),
-                   [](const LinCircle& lc) { return lc.cotTheta; });
     std::ranges::sort(state.sortedTops, {}, [&state](const std::size_t s) {
       return state.linCircleCotThetaTop[s];
     });
