@@ -90,7 +90,7 @@ SeedFinder2::SeedFinder2(const DerivedConfig& config,
                          std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {}
 
-SeedFinder2::DubletCuts SeedFinder2::deriveDubletCuts(
+SeedFinder2::DoubletCuts SeedFinder2::deriveDoubletCuts(
     const ConstSpacePointProxy2& spM,
     const SpacePointColumn2<float>& rColumn) const {
   const float rM = spM.extra(rColumn);
@@ -182,13 +182,13 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
       break;
     }
 
-    const DubletCuts dubletCuts = deriveDubletCuts(spM, rColumn);
+    const DoubletCuts doubletCuts = deriveDoubletCuts(spM, rColumn);
 
-    // Iterate over middle-top dublets
+    // Iterate over middle-top doublets
     state.compatibleTopSp.clear();
     state.linCirclesTop.clear();
     createCompatibleDoublets<SpacePointCandidateType::eTop>(
-        options, dubletCuts, spacePoints, rColumn, varianceRColumn,
+        options, doubletCuts, spacePoints, rColumn, varianceRColumn,
         varianceZColumn, spM, topSps, state.compatibleTopSp,
         state.linCirclesTop);
 
@@ -225,11 +225,11 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
       }
     }
 
-    // Iterate over middle-bottom dublets
+    // Iterate over middle-bottom doublets
     state.compatibleBottomSp.clear();
     state.linCirclesBottom.clear();
     createCompatibleDoublets<SpacePointCandidateType::eBottom>(
-        options, dubletCuts, spacePoints, rColumn, varianceRColumn,
+        options, doubletCuts, spacePoints, rColumn, varianceRColumn,
         varianceZColumn, spM, bottomSps, state.compatibleBottomSp,
         state.linCirclesBottom);
 
@@ -270,7 +270,7 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
 
 template <SeedFinder2::SpacePointCandidateType candidate_type>
 void SeedFinder2::createCompatibleDoublets(
-    const DerivedOptions& options, const DubletCuts& cuts,
+    const DerivedOptions& options, const DoubletCuts& cuts,
     const SpacePointContainer2& spacePoints,
     const SpacePointColumn2<float>& rColumn,
     const SpacePointColumn2<float>* varianceRColumn,
@@ -436,7 +436,7 @@ void SeedFinder2::createCompatibleDoublets(
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
 
-      // discard bottom-middle dublets in a certain (r, eta) region according
+      // discard bottom-middle doublets in a certain (r, eta) region according
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
         if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
@@ -483,7 +483,7 @@ void SeedFinder2::createCompatibleDoublets(
     const float iDeltaR = std::sqrt(iDeltaR2);
     const float cotTheta = deltaZ * iDeltaR;
 
-    // discard bottom-middle dublets in a certain (r, eta) region according
+    // discard bottom-middle doublets in a certain (r, eta) region according
     // to detector specific cuts
     if constexpr (isBottomCandidate) {
       if (!m_cfg.experimentCuts(otherSp.extra(rColumn), cotTheta)) {

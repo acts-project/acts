@@ -280,10 +280,10 @@ class SeedFinder2 {
                    SeedContainer2& outputSeeds) const;
 
  private:
-  struct DubletCuts {
-    /// minimum allowed r-distance between dublet components
+  struct DoubletCuts {
+    /// minimum allowed r-distance between doublet components
     float deltaRMin;
-    /// maximum allowed r-distance between dublet components
+    /// maximum allowed r-distance between doublet components
     float deltaRMax;
     /// minus one over radius of middle SP
     float uIP;
@@ -295,8 +295,8 @@ class SeedFinder2 {
     float sinPhiM;
   };
 
-  DubletCuts deriveDubletCuts(const ConstSpacePointProxy2& spM,
-                              const SpacePointColumn2<float>& rColumn) const;
+  DoubletCuts deriveDoubletCuts(const ConstSpacePointProxy2& spM,
+                                const SpacePointColumn2<float>& rColumn) const;
 
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const ConstSpacePointProxy2& spM,
@@ -304,7 +304,7 @@ class SeedFinder2 {
 
   template <SpacePointCandidateType candidate_type>
   void createCompatibleDoublets(
-      const DerivedOptions& options, const DubletCuts& cuts,
+      const DerivedOptions& options, const DoubletCuts& cuts,
       const SpacePointContainer2& spacePoints,
       const SpacePointColumn2<float>& rColumn,
       const SpacePointColumn2<float>* varianceRColumn,
