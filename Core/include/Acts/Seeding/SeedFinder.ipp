@@ -6,6 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Seeding/SeedFinder.hpp"
+
+#include <algorithm>
+#include <cmath>
+
 namespace Acts {
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>

@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
