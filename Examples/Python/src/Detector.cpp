@@ -39,13 +39,6 @@ void addDetector(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
-        mex, "IContextDecorator")
-        .def("decorate", &IContextDecorator::decorate)
-        .def("name", &IContextDecorator::name);
-  }
-
-  {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
         .def("trackingGeometry", &Detector::trackingGeometry)
