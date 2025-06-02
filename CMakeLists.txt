@@ -76,7 +76,6 @@ option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGra
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
-option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
@@ -381,9 +380,6 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
     else()
         add_subdirectory(thirdparty/actsvg)
     endif()
-endif()
-if(ACTS_BUILD_PLUGIN_CUDA)
-    enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
