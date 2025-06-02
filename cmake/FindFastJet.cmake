@@ -16,7 +16,7 @@ string(
     ${FastJet_VERSION_FILE}
 )
 if(NOT CMAKE_MATCH_1)
-  message(FATAL_ERROR "Failed to extract FastJet version from config_auto.h")
+    message(FATAL_ERROR "Failed to extract FastJet version from config_auto.h")
 endif()
 
 set(FastJet_VERSION ${CMAKE_MATCH_1})
@@ -39,9 +39,9 @@ set_property(
 mark_as_advanced(FastJet_FOUND FastJet_INCLUDE_DIR FastJet_LIBRARY)
 
 if(NOT FastJet_FIND_QUIETLY)
-  if(FastJet_FOUND)
-    message(STATUS "Found FastJet ${FastJet_VERSION} at ${FastJet_LIBRARY}")
-  else()
-    message(FATAL_ERROR "FastJet not found")
-  endif()
+    if(FastJet_FOUND)
+        message(STATUS "Found FastJet ${FastJet_VERSION} at ${FastJet_LIBRARY}")
+    else()
+        message(FATAL_ERROR "FastJet not found")
+    endif()
 endif()
