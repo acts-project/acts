@@ -125,10 +125,12 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints;
-  auto& rColumn = coreSpacePoints.createExtraColumn<float>("r");
-  auto& phiColumn = coreSpacePoints.createExtraColumn<float>("phi");
-  auto& varianceRColumn = coreSpacePoints.createExtraColumn<float>("varianceR");
-  auto& varianceZColumn = coreSpacePoints.createExtraColumn<float>("varianceZ");
+  auto& rColumn = coreSpacePoints.createDenseExtraColumn<float>("r");
+  auto& phiColumn = coreSpacePoints.createDenseExtraColumn<float>("phi");
+  auto& varianceRColumn =
+      coreSpacePoints.createDenseExtraColumn<float>("varianceR");
+  auto& varianceZColumn =
+      coreSpacePoints.createDenseExtraColumn<float>("varianceZ");
   coreSpacePoints.reserve(spacePoints.size());
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
