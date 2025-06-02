@@ -1,10 +1,16 @@
-add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
+add_library(
+    ActsPluginExaTrkX
+    SHARED
+    src/buildEdges.cpp
+    src/ExaTrkXPipeline.cpp
+    src/Tensor.cpp
+)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
 endif()
 
@@ -99,12 +105,21 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
-
-    target_link_libraries(ActsPluginExaTrkX PRIVATE TorchScatter::TorchScatter)
-
-    # Should not discard TorchScatter even if its not needed at this point
-    # since we need the scatter_max operation in the torch script later
-    target_link_options(ActsPluginExaTrkX PUBLIC "-Wl,-no-as-needed")
+    find_package(TorchScatter QUIET)
+    if(NOT TARGET TorchScatter::TorchScatter)
+        message(
+            WARNING
+            "Torch scatter not found, models that rely on torch-scatter will not work"
+        )
+    else()
+        target_link_libraries(
+            ActsPluginExaTrkX
+            PRIVATE TorchScatter::TorchScatter
+        )
+        # Should not discard TorchScatter even if its not needed at this point
+        # since we need the scatter_max operation in the torch script later
+        target_link_options(ActsPluginExaTrkX PUBLIC "-Wl,-no-as-needed")
+    endif()
 endif()
 
 install(
