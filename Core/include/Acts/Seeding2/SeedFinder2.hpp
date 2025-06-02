@@ -25,6 +25,17 @@
 
 namespace Acts {
 
+/// @brief Triplet seeding algorithm front-end
+///
+/// This class implements the triplet seeding algorithm, which is typical
+/// procedure to find track seeds using space points in a cylindrical detector.
+/// It is designed to be fast, flexible, and configurable.
+///
+/// The algorithm works by first finding compatible doublets of space points,
+/// two space points that can be connected by a track coming from the
+/// interaction region, and then forming triplets by combinding these
+/// doublets at a common middle space point. The triplets are then filtered
+/// using a seed filter to produce a set of track seeds.
 class SeedFinder2 {
  private:
   enum class SpacePointCandidateType { eBottom, eTop };
@@ -199,10 +210,12 @@ class SeedFinder2 {
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
 
-    // Delegate to apply experiment specific cuts during doublet finding
+    /// Delegate to apply experiment specific cuts during doublet finding
     Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
         DelegateFuncTag<&noopExperimentCuts>{}};
 
+    /// Create a derived configuration object from the current configuration.
+    /// Computes derived quantities and changes to internal seeding units.
     DerivedConfig derive() const;
 
    private:
@@ -268,6 +281,19 @@ class SeedFinder2 {
 
   const DerivedConfig& config() const { return m_cfg; }
 
+  /// Create all possible seeds from bottom, middle, and top space points.
+  /// This function is the main entry point for the seeding algorithm.
+  ///
+  /// @param options frequently changing configuration (like beam position)
+  /// @param state State object to cache memory and results
+  /// @param spacePoints The container with space points
+  /// @param rColumn The column with r values of space points
+  /// @param varianceRColumn Optional column with r variance values
+  /// @param varianceZColumn Optional column with z variance values
+  /// @param bottomSps Group of space points to be used as innermost SP in a seed.
+  /// @param middleSps Group of space points to be used as middle SP in a seed.
+  /// @param topSps Group of space points to be used as outermost SP in a seed.
+  /// @param outputSeeds Output container for the seeds
   void createSeeds(const DerivedOptions& options, State& state,
                    const SpacePointContainer2& spacePoints,
                    const SpacePointColumn2<float>& rColumn,
@@ -297,10 +323,36 @@ class SeedFinder2 {
   DoubletCuts deriveDoubletCuts(const ConstSpacePointProxy2& spM,
                                 const SpacePointColumn2<float>& rColumn) const;
 
+  /// Get the proper radius validity range given a middle space point candidate.
+  /// In case the radius range changes according to the z-bin we need to
+  /// retrieve the proper range. We can do this computation only once, since all
+  /// the middle space point candidates belong to the same z-bin
+  /// @param spM space point candidate to be used as middle SP in a seed
+  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const ConstSpacePointProxy2& spM,
       const Range1D<float>& rMiddleSPRange) const;
 
+  /// Iterates over dublets and tests the compatibility by applying a series of
+  /// cuts that can be tested with only two SPs.
+  ///
+  /// @tparam candidate_type Type of space point candidate (e.g. Bottom or Top)
+  ///
+  /// @param config the configuration for the SeedFinder
+  /// @param options frequently changing configuration (like beam position)
+  /// @param cuts Doublet cuts that define the compatibility of space points
+  /// @param spacePoints The container with space points
+  /// @param rColumn The column with r values of space points
+  /// @param varianceRColumn Optional column with r variance values
+  /// @param varianceZColumn Optional column with z variance values
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param candidateSps Group of space points to be used as candidates for
+  /// middle SP in a seed.
+  /// @param compatibleSp Output vector of compatible space points
+  /// @param linCircles Output vector of LinCircle objects for the bottom-middle
+  /// doublets
+  /// @param cotThetas Output vector of cotTheta values for the bottom-middle
+  /// doublets
   template <SpacePointCandidateType candidate_type>
   static void createDoublets(const DerivedConfig& config,
                              const DerivedOptions& options,
@@ -315,6 +367,37 @@ class SeedFinder2 {
                              std::vector<LinCircle>& linCircles,
                              std::vector<float>& cotThetas);
 
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @tparam measurement_info Type of measurement information (e.g. Default or Detailed)
+  ///
+  /// @param config the configuration for the SeedFinder
+  /// @param options frequently changing configuration (like beam position)
+  /// @param filterOptions Options for the seed filter
+  /// @param filterState State object that holds memory used in SeedFilter
+  /// @param spacePoints The container with space points
+  /// @param rColumn The column with r values of space points
+  /// @param varianceRColumn Optional column with r variance values
+  /// @param varianceZColumn Optional column with z variance values
+  /// @param topStripVectorColumn Optional column with top strip vectors
+  /// @param bottomStripVectorColumn Optional column with bottom strip vectors
+  /// @param stripCenterDistanceColumn Optional column with strip center distances
+  /// @param topStripCenterPositionColumn Optional column with top strip center positions
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomSps Group of space points to be used as innermost SP in a seed.
+  /// @param bottomLinCircles Vector containing bottom-middle SP parameters after
+  /// reference frame transformation to the u-v space
+  /// @param bottomCotThetas Vector containing cotTheta values for the bottom-middle SPs
+  /// @param topSps Group of space points to be used as outermost SP in a seed.
+  /// @param topLinCircles Vector containing middle-top SP parameters after
+  /// reference frame transformation to the u-v space
+  /// @param topCotThetas Vector containing cotTheta values for the middle-top SPs
+  /// @param sortedBottoms Output vector of sorted bottom space points
+  /// @param sortedTops Output vector of sorted top space points
+  /// @param topSpVec Output vector of top space point indices
+  /// @param curvatures Output vector of curvature values for the triplets
+  /// @param impactParameters Output vector of impact parameter values for the triplets
+  /// @param candidatesCollector Collector for candidates for middle space points
   template <MeasurementInfo measurement_info>
   static void createTriplets(
       const DerivedConfig& config, const DerivedOptions& options,
@@ -323,10 +406,10 @@ class SeedFinder2 {
       const SpacePointColumn2<float>& rColumn,
       const SpacePointColumn2<float>* varianceRColumn,
       const SpacePointColumn2<float>* varianceZColumn,
-      const SpacePointColumn2<Acts::Vector3>* topStripVectorColumn,
-      const SpacePointColumn2<Acts::Vector3>* bottomStripVectorColumn,
-      const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
-      const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
+      const SpacePointColumn2<Vector3>* topStripVectorColumn,
+      const SpacePointColumn2<Vector3>* bottomStripVectorColumn,
+      const SpacePointColumn2<Vector3>* stripCenterDistanceColumn,
+      const SpacePointColumn2<Vector3>* topStripCenterPositionColumn,
       const ConstSpacePointProxy2& spM,
       const std::vector<SpacePointIndex2>& bottomSps,
       const std::vector<LinCircle>& bottomLinCircles,
@@ -340,14 +423,14 @@ class SeedFinder2 {
       std::vector<float>& impactParameters,
       CandidatesForMiddleSp2& candidatesCollector);
 
-  /// check the compatibility of SPs coordinates in xyz assuming the
+  /// Check the compatibility of SPs coordinates in xyz assuming the
   /// Bottom-Middle direction with the strip measurement details
   static bool xyzCoordinateCheck(
       double toleranceParam, const ConstSpacePointProxy2& sp,
-      const SpacePointColumn2<Acts::Vector3>& topStripVectorColumn,
-      const SpacePointColumn2<Acts::Vector3>& bottomStripVectorColumn,
-      const SpacePointColumn2<Acts::Vector3>& stripCenterDistanceColumn,
-      const SpacePointColumn2<Acts::Vector3>& topStripCenterPositionColumn,
+      const SpacePointColumn2<Vector3>& topStripVectorColumn,
+      const SpacePointColumn2<Vector3>& bottomStripVectorColumn,
+      const SpacePointColumn2<Vector3>& stripCenterDistanceColumn,
+      const SpacePointColumn2<Vector3>& topStripCenterPositionColumn,
       const double* spacepointPosition, double* outputCoordinates);
 
  private:

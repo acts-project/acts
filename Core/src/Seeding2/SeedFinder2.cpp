@@ -522,10 +522,10 @@ void SeedFinder2::createTriplets(
     const SpacePointColumn2<float>& rColumn,
     const SpacePointColumn2<float>* varianceRColumn,
     const SpacePointColumn2<float>* varianceZColumn,
-    const SpacePointColumn2<Acts::Vector3>* topStripVectorColumn,
-    const SpacePointColumn2<Acts::Vector3>* bottomStripVectorColumn,
-    const SpacePointColumn2<Acts::Vector3>* stripCenterDistanceColumn,
-    const SpacePointColumn2<Acts::Vector3>* topStripCenterPositionColumn,
+    const SpacePointColumn2<Vector3>* topStripVectorColumn,
+    const SpacePointColumn2<Vector3>* bottomStripVectorColumn,
+    const SpacePointColumn2<Vector3>* stripCenterDistanceColumn,
+    const SpacePointColumn2<Vector3>* topStripCenterPositionColumn,
     const ConstSpacePointProxy2& spM,
     const std::vector<SpacePointIndex2>& bottomSps,
     const std::vector<LinCircle>& bottomLinCircles,
@@ -887,10 +887,10 @@ void SeedFinder2::createTriplets(
 
 bool SeedFinder2::xyzCoordinateCheck(
     double toleranceParam, const ConstSpacePointProxy2& sp,
-    const SpacePointColumn2<Acts::Vector3>& topStripVectorColumn,
-    const SpacePointColumn2<Acts::Vector3>& bottomStripVectorColumn,
-    const SpacePointColumn2<Acts::Vector3>& stripCenterDistanceColumn,
-    const SpacePointColumn2<Acts::Vector3>& topStripCenterPositionColumn,
+    const SpacePointColumn2<Vector3>& topStripVectorColumn,
+    const SpacePointColumn2<Vector3>& bottomStripVectorColumn,
+    const SpacePointColumn2<Vector3>& stripCenterDistanceColumn,
+    const SpacePointColumn2<Vector3>& topStripCenterPositionColumn,
     const double* spacepointPosition, double* outputCoordinates) {
   const Vector3& topStripVector = sp.extra(topStripVectorColumn);
   const Vector3& bottomStripVector = sp.extra(bottomStripVectorColumn);
