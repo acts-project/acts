@@ -94,7 +94,7 @@ class SeedFilter2 final {
 
   void filter2SpFixed(const Options& options, State& state,
                       const SpacePointContainer2& spacePoints,
-                      const SpacePointColumn2<float>& rColumn,
+                      const SpacePointContainer2::DenseColumn<float>& rColumn,
                       SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
                       const std::vector<SpacePointIndex2>& topSpVec,
                       const std::vector<float>& invHelixDiameterVec,

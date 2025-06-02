@@ -28,27 +28,10 @@ class SpacePointProxy2;
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
 
-template <typename T>
-class SpacePointColumn2 {
- public:
-  using IndexType = SpacePointIndex2;
-  using ValueType = T;
-  using ContainerType = std::vector<ValueType>;
-
-  T &at(IndexType index) { return m_data[index]; }
-
-  const T &at(IndexType index) const { return m_data[index]; }
-
- private:
-  ContainerType m_data;
-
-  friend class SpacePointContainer2;
-};
-
 class SpacePointContainer2 {
  public:
   using IndexType = SpacePointIndex2;
-  using RangeType = SpacePointIndexRange2;
+  using IndexRangeType = SpacePointIndexRange2;
   using MutableProxyType = MutableSpacePointProxy2;
   using ConstProxyType = ConstSpacePointProxy2;
 
@@ -134,12 +117,29 @@ class SpacePointContainer2 {
   float z(IndexType index) const { return m_xyz[index * 3 + 2]; }
 
   template <typename T>
-  SpacePointColumn2<T> &createExtraColumn(const std::string &name) {
+  class DenseColumn {
+   public:
+    using IndexType = SpacePointIndex2;
+    using ValueType = T;
+    using ContainerType = std::vector<ValueType>;
+
+    T &at(IndexType index) { return m_data[index]; }
+
+    const T &at(IndexType index) const { return m_data[index]; }
+
+   private:
+    ContainerType m_data;
+
+    friend class SpacePointContainer2;
+  };
+
+  template <typename T>
+  DenseColumn<T> &createExtraColumn(const std::string &name) {
     auto it = m_extraColumns.find(name);
     if (it != m_extraColumns.end()) {
       throw std::runtime_error("Extra column already exists: " + name);
     }
-    auto holder = std::make_unique<ColumnHolder<T>>();
+    auto holder = std::make_unique<DenseColumnHolder<T>>();
     holder->resize(size());
     auto &result = holder->column;
     m_extraColumns[name] = std::move(holder);
@@ -147,21 +147,21 @@ class SpacePointContainer2 {
   }
 
   template <typename T>
-  SpacePointColumn2<T> &extraColumn(const std::string &name) {
+  DenseColumn<T> &extraColumn(const std::string &name) {
     auto it = m_extraColumns.find(name);
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<ColumnHolder<T> &>(*it->second);
+    auto holder = dynamic_cast<DenseColumnHolder<T> &>(*it->second);
     return holder.column;
   }
   template <typename T>
-  const SpacePointColumn2<T> &extraColumn(const std::string &name) const {
+  const DenseColumn<T> &extraColumn(const std::string &name) const {
     auto it = m_extraColumns.find(name);
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<const ColumnHolder<T> &>(*it->second);
+    auto holder = dynamic_cast<const DenseColumnHolder<T> &>(*it->second);
     return holder.column;
   }
 
@@ -219,7 +219,7 @@ class SpacePointContainer2 {
     using iterator = Iterator<read_only>;
     using const_iterator = Iterator<true>;
 
-    Range(ContainerType &container, const RangeType &range)
+    Range(ContainerType &container, const IndexRangeType &range)
         : m_container(&container), m_range(range) {}
 
     std::size_t size() const { return m_range.second - m_range.first; }
@@ -237,15 +237,15 @@ class SpacePointContainer2 {
 
    private:
     ContainerType *m_container{};
-    RangeType m_range{};
+    IndexRangeType m_range{};
   };
   using MutableRange = Range<false>;
   using ConstRange = Range<true>;
 
-  MutableRange range(const RangeType &range) {
+  MutableRange range(const IndexRangeType &range) {
     return MutableRange(*this, range);
   }
-  ConstRange range(const RangeType &range) const {
+  ConstRange range(const IndexRangeType &range) const {
     return ConstRange(*this, range);
   }
 
@@ -271,11 +271,11 @@ class SpacePointContainer2 {
     virtual void emplace_back() = 0;
   };
   template <typename T>
-  struct ColumnHolder final : public ColumnHolderBase {
-    SpacePointColumn2<T> column;
+  struct DenseColumnHolder final : public ColumnHolderBase {
+    DenseColumn<T> column;
 
     std::unique_ptr<ColumnHolderBase> copy() const final {
-      return std::make_unique<ColumnHolder<T>>(*this);
+      return std::make_unique<DenseColumnHolder<T>>(*this);
     }
 
     void reserve(std::size_t size) final { column.m_data.reserve(size); }
@@ -300,7 +300,6 @@ class SpacePointProxy2 {
   static constexpr bool ReadOnly = read_only;
 
   using IndexType = SpacePointIndex2;
-  using RangeType = SpacePointIndexRange2;
 
   using ContainerType = const_if_t<ReadOnly, SpacePointContainer2>;
 

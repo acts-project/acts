@@ -93,8 +93,8 @@ class CylindricalSpacePointGrid2 {
   void clear();
 
   void insert(const ConstSpacePointProxy2& sp,
-              const SpacePointColumn2<float>& phiColumn,
-              const SpacePointColumn2<float>& rColumn) {
+              const SpacePointContainer2::DenseColumn<float>& phiColumn,
+              const SpacePointContainer2::DenseColumn<float>& rColumn) {
     // fill rbins into grid
     Vector3 position(sp.extra(phiColumn), sp.z(), sp.extra(rColumn));
     if (!grid().isInside(position)) {
@@ -115,19 +115,19 @@ class CylindricalSpacePointGrid2 {
   }
 
   void extend(const SpacePointContainer2::ConstRange& spacePoints,
-              const SpacePointColumn2<float>& phiColumn,
-              const SpacePointColumn2<float>& rColumn);
+              const SpacePointContainer2::DenseColumn<float>& phiColumn,
+              const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   void fill(const SpacePointContainer2& spacePoints,
-            const SpacePointColumn2<float>& phiColumn,
-            const SpacePointColumn2<float>& rColumn);
+            const SpacePointContainer2::DenseColumn<float>& phiColumn,
+            const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   void sort(const SpacePointContainer2& spacePoints,
-            const SpacePointColumn2<float>& rColumn);
+            const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   Range1D<float> computeRadiusRange(
       const SpacePointContainer2& spacePoints,
-      const SpacePointColumn2<float>& rColumn) const;
+      const SpacePointContainer2::DenseColumn<float>& rColumn) const;
 
   GridType& grid() { return *m_grid; }
   const GridType& grid() const { return *m_grid; }

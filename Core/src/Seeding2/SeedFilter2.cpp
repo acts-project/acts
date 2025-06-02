@@ -49,8 +49,9 @@ SeedFilter2::SeedFilter2(const DerivedConfig& config,
 void SeedFilter2::filter2SpFixed(
     const Options& options, State& state,
     const SpacePointContainer2& spacePoints,
-    const SpacePointColumn2<float>& rColumn, SpacePointIndex2 bottomSp,
-    SpacePointIndex2 middleSp, const std::vector<SpacePointIndex2>& topSpVec,
+    const SpacePointContainer2::DenseColumn<float>& rColumn,
+    SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
+    const std::vector<SpacePointIndex2>& topSpVec,
     const std::vector<float>& invHelixDiameterVec,
     const std::vector<float>& impactParametersVec, float zOrigin,
     CandidatesForMiddleSp2& candidatesCollector) const {
