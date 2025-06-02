@@ -18,14 +18,15 @@ namespace Acts::GeoModel {
 // function converts GeoShape to Acts::Volume
 Volume convertVolume(const Transform3& trf, const GeoShape& shape);
 
-/// @brief Convert a GeoModel shape to a DetectorVolume
+/// @brief Convert a GeoModel shape to a pair of a Volume and DetectorVolume
 ///
 /// @param shape the GeoModel shape
 /// @param transform the transform to be applied
-/// @return the DetectorVolume
-std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
+/// @return the pair of Volume and DetectorVolume (for gen1/3 and gen2 use cases)
+std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>
+convertVolumeDetectorVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const GeoTrf::Transform3D& transform,
-    const std::vector<GeoModelSensitiveSurface>& sensitives);
+    const std::vector<std::shared_ptr<Surface>>& sensitives);
 
 }  // namespace Acts::GeoModel
