@@ -13,4 +13,5 @@ install(
     EXPORT ActsPluginFastJetTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# Add once fastjet plugin has headers
+# install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
