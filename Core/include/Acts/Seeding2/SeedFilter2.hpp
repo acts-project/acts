@@ -49,7 +49,7 @@ class SeedFilter2 final {
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
-    unsigned int maxSeedsPerSpM = 10;
+    unsigned int maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
     /// compatible space-point until we reach compatSeedLimit

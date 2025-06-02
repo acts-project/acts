@@ -25,26 +25,15 @@ SeedFinder2::DerivedConfig SeedFinder2::Config::derive() const {
   // TODO get rid of unit conversions
   {
     result.minPt /= 1_MeV;
-    result.deltaRMin /= 1_mm;
-    result.deltaRMax /= 1_mm;
-    result.binSizeR /= 1_mm;
     result.deltaRMinTopSP /= 1_mm;
     result.deltaRMaxTopSP /= 1_mm;
     result.deltaRMinBottomSP /= 1_mm;
     result.deltaRMaxBottomSP /= 1_mm;
-    result.deltaRMiddleMinSPRange /= 1_mm;
-    result.deltaRMiddleMaxSPRange /= 1_mm;
     result.impactMax /= 1_mm;
     result.maxPtScattering /= 1_MeV;
     result.collisionRegionMin /= 1_mm;
     result.collisionRegionMax /= 1_mm;
-    result.zMin /= 1_mm;
-    result.zMax /= 1_mm;
-    result.rMax /= 1_mm;
-    result.rMin /= 1_mm;
     result.deltaZMax /= 1_mm;
-    result.zAlign /= 1_mm;
-    result.rAlign /= 1_mm;
     result.toleranceParam /= 1_mm;
   }
 
@@ -87,11 +76,11 @@ SeedFinder2::DerivedOptions SeedFinder2::Options::derive(
 }
 
 SeedFinder2::SeedFinder2(const DerivedConfig& config,
-                         std::unique_ptr<const Logger> logger)
-    : m_cfg(config), m_logger(std::move(logger)) {}
+                         std::unique_ptr<const Logger> logger_)
+    : m_cfg(config), m_logger(std::move(logger_)) {}
 
-SeedFinder2::DoubletCuts SeedFinder2::deriveDoubletCuts(
-    const ConstSpacePointProxy2& spM,
+void SeedFinder2::deriveDoubletCuts(
+    DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
     const SpacePointColumn2<float>& rColumn) const {
   const float rM = spM.extra(rColumn);
   const float uIP = -1. / rM;
@@ -99,14 +88,10 @@ SeedFinder2::DoubletCuts SeedFinder2::deriveDoubletCuts(
   const float sinPhiM = -spM.y() * uIP;
   const float uIP2 = uIP * uIP;
 
-  return {
-      .deltaRMin = m_cfg.deltaRMinTopSP,
-      .deltaRMax = m_cfg.deltaRMaxTopSP,
-      .uIP = uIP,
-      .uIP2 = uIP2,
-      .cosPhiM = cosPhiM,
-      .sinPhiM = sinPhiM,
-  };
+  cuts.uIP = uIP;
+  cuts.uIP2 = uIP2;
+  cuts.cosPhiM = cosPhiM;
+  cuts.sinPhiM = sinPhiM;
 }
 
 std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
@@ -183,7 +168,10 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
       break;
     }
 
-    const DoubletCuts doubletCuts = deriveDoubletCuts(spM, rColumn);
+    DoubletCuts doubletCuts;
+    doubletCuts.deltaRMin = m_cfg.deltaRMinTopSP;
+    doubletCuts.deltaRMax = m_cfg.deltaRMaxTopSP;
+    deriveDoubletCuts(doubletCuts, spM, rColumn);
 
     // Iterate over middle-top doublets
     state.compatibleTopSp.clear();
@@ -226,6 +214,9 @@ void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
         continue;
       }
     }
+
+    doubletCuts.deltaRMin = m_cfg.deltaRMinBottomSP;
+    doubletCuts.deltaRMax = m_cfg.deltaRMaxBottomSP;
 
     // Iterate over middle-bottom doublets
     state.compatibleBottomSp.clear();

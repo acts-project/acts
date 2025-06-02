@@ -132,15 +132,12 @@ void addTrackFinding(Context& ctx) {
     using Config = Acts::SeedFinder2::Config;
     auto c = py::class_<Config>(m, "SeedFinder2Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(
-        c, minPt, cotThetaMax, deltaRMin, deltaRMax, deltaRMinBottomSP,
-        deltaRMaxBottomSP, deltaRMinTopSP, deltaRMaxTopSP, impactMax,
-        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
-        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
-        radLengthPerSeed, zAlign, rAlign, sigmaError, maxBlockSize,
-        nTrplPerSpBLimit, nAvgTrplPerSpBLimit, deltaZMax, zBinEdges,
-        interactionPointCut, zBinsCustomLooping, useVariableMiddleSPRange,
-        deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
-        rMinMiddle, rMaxMiddle, binSizeR, seedConfirmation,
+        c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
+        deltaRMinTopSP, deltaRMaxTopSP, impactMax, sigmaScattering,
+        maxPtScattering, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+        collisionRegionMin, collisionRegionMax, radLengthPerSeed, deltaZMax,
+        zBinEdges, interactionPointCut, useVariableMiddleSPRange,
+        rRangeMiddleSP, rMinMiddle, rMaxMiddle, seedConfirmation,
         centralSeedConfirmationRange, forwardSeedConfirmationRange,
         useDetailedDoubleMeasurementInfo);
     patchKwargsConstructor(c);

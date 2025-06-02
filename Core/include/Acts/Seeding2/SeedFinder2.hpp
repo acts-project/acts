@@ -50,26 +50,8 @@ class SeedFinder2 {
 
     // Seeding parameters used in the space-point grid creation and bin finding
 
-    // Geometry settings + detector ROI
-    // (r, z, phi) range for limiting location of all measurements and grid
-    // creation
-    float phiMin = -std::numbers::pi_v<float>;
-    float phiMax = std::numbers::pi_v<float>;
-    float zMin = -2800 * UnitConstants::mm;
-    float zMax = 2800 * UnitConstants::mm;
-    float rMax = 600 * UnitConstants::mm;
-    /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
-    /// which will make seeding very slow!
-    float rMin = 33 * UnitConstants::mm;
-
     /// Vector containing the z-bin edges for non equidistant binning in z
     std::vector<float> zBinEdges;
-
-    /// Order of z bins to loop over when searching for SPs
-    std::vector<std::size_t> zBinsCustomLooping;
-
-    /// Radial bin size used in space-point grid
-    float binSizeR = 1. * UnitConstants::mm;
 
     // Seeding parameters used to define the region of interest for middle
     // space-point
@@ -86,30 +68,17 @@ class SeedFinder2 {
     bool useVariableMiddleSPRange = false;
     /// Range defined in vector for each z bin
     std::vector<std::vector<float>> rRangeMiddleSP;
-    /// If useVariableMiddleSPRange is true, the radial range will be calculated
-    /// based on the maximum and minimum r values of the space-points in the
-    /// event and a deltaR (deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange)
-    float deltaRMiddleMinSPRange = 10. * UnitConstants::mm;
-    float deltaRMiddleMaxSPRange = 10. * UnitConstants::mm;
 
     // Seeding parameters used to define the cuts on space-point doublets
 
-    /// Minimum radial distance between two doublet components (prefer
-    /// deltaRMinTopSP and deltaRMinBottomSP to set separate values for outer
-    /// and inner space-points)
-    float deltaRMin = 5 * UnitConstants::mm;
-    /// Maximum radial distance between two doublet components (prefer
-    /// deltaRMaxTopSP and deltaRMacBottomSP to set separate values for outer
-    /// and inner space-points)
-    float deltaRMax = 270 * UnitConstants::mm;
     /// Minimum radial distance between middle-outer doublet components
-    float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
+    float deltaRMinTopSP = 5 * UnitConstants::mm;
     /// Maximum radial distance between middle-outer doublet components
-    float deltaRMaxTopSP = std::numeric_limits<float>::quiet_NaN();
+    float deltaRMaxTopSP = 270 * UnitConstants::mm;
     /// Minimum radial distance between inner-middle doublet components
-    float deltaRMinBottomSP = std::numeric_limits<float>::quiet_NaN();
+    float deltaRMinBottomSP = 5 * UnitConstants::mm;
     /// Maximum radial distance between inner-middle doublet components
-    float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
+    float deltaRMaxBottomSP = 270 * UnitConstants::mm;
 
     /// Maximum value of z-distance between space-points in doublet
     float deltaZMax =
@@ -165,8 +134,6 @@ class SeedFinder2 {
     SeedConfirmationRangeConfig centralSeedConfirmationRange;
     /// Contains parameters for forward seed confirmation
     SeedConfirmationRangeConfig forwardSeedConfirmationRange;
-    /// Maximum number (minus one) of accepted seeds per middle space-point
-    unsigned int maxSeedsPerSpM = 5;
 
     /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
     /// Seeds that are not confirmed as "high-quality" are only selected if no
@@ -181,23 +148,6 @@ class SeedFinder2 {
         std::numeric_limits<std::size_t>::max();
 
     // Other parameters
-
-    /// Alignment uncertainties, used for uncertainties in the
-    /// non-measurement-plane of the modules
-    /// which otherwise would be 0
-    /// will be added to spacepoint measurement uncertainties (and therefore
-    /// also multiplied by sigmaError)
-    /// FIXME: call align1 and align2
-    float zAlign = 0 * UnitConstants::mm;
-    float rAlign = 0 * UnitConstants::mm;
-    /// used for measurement (+alignment) uncertainties.
-    /// find seeds within 5sigma error ellipse
-    float sigmaError = 5;
-
-    /// only for Cuda plugin
-    int maxBlockSize = 1024;
-    int nTrplPerSpBLimit = 100;
-    int nAvgTrplPerSpBLimit = 2;
 
     /// Delegates for accessors to detailed information on double measurement
     /// that produced the space point. This is mainly referring to space points
@@ -307,21 +257,21 @@ class SeedFinder2 {
  private:
   struct DoubletCuts {
     /// minimum allowed r-distance between doublet components
-    float deltaRMin;
+    float deltaRMin{};
     /// maximum allowed r-distance between doublet components
-    float deltaRMax;
+    float deltaRMax{};
     /// minus one over radius of middle SP
-    float uIP;
+    float uIP{};
     /// square of uIP
-    float uIP2;
+    float uIP2{};
     /// ratio between middle SP x position and radius
-    float cosPhiM;
+    float cosPhiM{};
     /// ratio between middle SP y position and radius
-    float sinPhiM;
+    float sinPhiM{};
   };
 
-  DoubletCuts deriveDoubletCuts(const ConstSpacePointProxy2& spM,
-                                const SpacePointColumn2<float>& rColumn) const;
+  void deriveDoubletCuts(DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
+                         const SpacePointColumn2<float>& rColumn) const;
 
   /// Get the proper radius validity range given a middle space point candidate.
   /// In case the radius range changes according to the z-bin we need to

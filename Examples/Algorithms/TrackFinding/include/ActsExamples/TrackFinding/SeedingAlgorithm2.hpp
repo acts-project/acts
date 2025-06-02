@@ -41,6 +41,12 @@ class SeedingAlgorithm2 final : public IAlgorithm {
     Acts::SeedFinder2::Options finderOptions;
     Acts::SeedFilter2::Config filterConfig;
 
+    float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+    float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+
+    /// Order of z bins to loop over when searching for SPs
+    std::vector<std::size_t> zBinsCustomLooping;
+
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
 

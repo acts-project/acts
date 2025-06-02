@@ -841,10 +841,6 @@ def addStandardSeeding2(
 
     finderConfig = acts.SeedFinder2Config(
         **acts.examples.defaultKWArgs(
-            rMin=seedFinderConfigArg.r[0],
-            rMax=seedFinderConfigArg.r[1],
-            deltaRMin=seedFinderConfigArg.deltaR[0],
-            deltaRMax=seedFinderConfigArg.deltaR[1],
             deltaRMinTopSP=(
                 seedFinderConfigArg.deltaR[0]
                 if seedFinderConfigArg.deltaRTopSP[0] is None
@@ -869,9 +865,6 @@ def addStandardSeeding2(
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
-            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
@@ -884,7 +877,6 @@ def addStandardSeeding2(
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-            binSizeR=seedFinderConfigArg.binSizeR,
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
@@ -904,12 +896,6 @@ def addStandardSeeding2(
     )
     filterConfig = acts.SeedFilter2Config(
         **acts.examples.defaultKWArgs(
-            maxSeedsPerSpM=finderConfig.maxSeedsPerSpM,
-            deltaRMin=(
-                finderConfig.deltaRMin
-                if seedFilterConfigArg.deltaRMin is None
-                else seedFilterConfigArg.deltaRMin
-            ),
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
@@ -925,18 +911,10 @@ def addStandardSeeding2(
     gridConfig = acts.SpacePointGrid2Config(
         **acts.examples.defaultKWArgs(
             minPt=finderConfig.minPt,
-            rMax=(
-                finderConfig.rMax
-                if spacePointGridConfigArg.rMax is None
-                else spacePointGridConfigArg.rMax
-            ),
-            zMax=finderConfig.zMax,
-            zMin=finderConfig.zMin,
-            deltaRMax=(
-                finderConfig.deltaRMax
-                if spacePointGridConfigArg.deltaRMax is None
-                else spacePointGridConfigArg.deltaRMax
-            ),
+            rMax=spacePointGridConfigArg.rMax,
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            deltaRMax=spacePointGridConfigArg.deltaRMax,
             cotThetaMax=finderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
