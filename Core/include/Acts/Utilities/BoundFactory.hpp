@@ -80,7 +80,7 @@ class BoundFactory {
   ///          For a pair of two bound pointers, the struct defines the <
   ///          operator which is then exploited by a std::set to deduplicate
   ///          equivalent bounds.
-  struct BoundComparer {
+  struct BoundComparator {
    public:
     /// @brief Implementation of the comparison operator between two bound pointers
     /// @param a: First bound pointer in the comparison
