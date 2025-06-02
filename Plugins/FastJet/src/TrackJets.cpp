@@ -11,17 +11,15 @@
 namespace Acts::FastJet {
 
 TrackJetSequence TrackJetSequence::create(
-    std::vector<fastjet::PseudoJet>& inputs,
-    fastjet::JetDefinition jetDef) {
+    std::vector<fastjet::PseudoJet>& inputs, fastjet::JetDefinition jetDef) {
   fastjet::ClusterSequence cs(inputs, jetDef);
   return TrackJetSequence(std::move(cs));
 }
 
-std::vector<fastjet::PseudoJet> TrackJetSequence::jets(
-    float ptMin, float etaMax) {
+std::vector<fastjet::PseudoJet> TrackJetSequence::jets(float ptMin,
+                                                       float etaMax) {
   fastjet::Selector sel_eta = fastjet::SelectorAbsEtaMax(etaMax);
   return sel_eta(m_clusterSeq.inclusive_jets(ptMin));
 }
 
-
-}
+}  // namespace Acts::FastJet
