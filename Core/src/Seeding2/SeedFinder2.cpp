@@ -81,7 +81,7 @@ SeedFinder2::SeedFinder2(const DerivedConfig& config,
 
 void SeedFinder2::deriveDoubletCuts(
     DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
-    const SpacePointColumn2<float>& rColumn) const {
+    const SpacePointContainer2::DenseColumn<float>& rColumn) const {
   const float rM = spM.extra(rColumn);
   const float uIP = -1. / rM;
   const float cosPhiM = -spM.x() * uIP;
@@ -113,15 +113,15 @@ std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
 
-void SeedFinder2::createSeeds(const DerivedOptions& options, State& state,
-                              const SpacePointContainer2& spacePoints,
-                              const SpacePointColumn2<float>& rColumn,
-                              const SpacePointColumn2<float>* varianceRColumn,
-                              const SpacePointColumn2<float>* varianceZColumn,
-                              std::vector<SpacePointIndex2>& bottomSps,
-                              std::vector<SpacePointIndex2>& middleSps,
-                              std::vector<SpacePointIndex2>& topSps,
-                              SeedContainer2& outputSeeds) const {
+void SeedFinder2::createSeeds(
+    const DerivedOptions& options, State& state,
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<float>& rColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+    std::vector<SpacePointIndex2>& bottomSps,
+    std::vector<SpacePointIndex2>& middleSps,
+    std::vector<SpacePointIndex2>& topSps, SeedContainer2& outputSeeds) const {
   std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
     return -spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
   });
@@ -276,9 +276,9 @@ template <SeedFinder2::SpacePointCandidateType candidate_type>
 void SeedFinder2::createDoublets(
     const DerivedConfig& config, const DerivedOptions& options,
     const DoubletCuts& cuts, const SpacePointContainer2& spacePoints,
-    const SpacePointColumn2<float>& rColumn,
-    const SpacePointColumn2<float>* varianceRColumn,
-    const SpacePointColumn2<float>* varianceZColumn,
+    const SpacePointContainer2::DenseColumn<float>& rColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
     const ConstSpacePointProxy2& middleSp,
     const std::vector<SpacePointIndex2>& candidateSps,
     std::vector<SpacePointIndex2>& compatibleSp,
@@ -510,13 +510,14 @@ void SeedFinder2::createTriplets(
     const DerivedConfig& config, const DerivedOptions& options,
     const SeedFilter2::Options& filterOptions, SeedFilter2::State& filterState,
     const SpacePointContainer2& spacePoints,
-    const SpacePointColumn2<float>& rColumn,
-    const SpacePointColumn2<float>* varianceRColumn,
-    const SpacePointColumn2<float>* varianceZColumn,
-    const SpacePointColumn2<Vector3>* topStripVectorColumn,
-    const SpacePointColumn2<Vector3>* bottomStripVectorColumn,
-    const SpacePointColumn2<Vector3>* stripCenterDistanceColumn,
-    const SpacePointColumn2<Vector3>* topStripCenterPositionColumn,
+    const SpacePointContainer2::DenseColumn<float>& rColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>* topStripVectorColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>* bottomStripVectorColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>* stripCenterDistanceColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>*
+        topStripCenterPositionColumn,
     const ConstSpacePointProxy2& spM,
     const std::vector<SpacePointIndex2>& bottomSps,
     const std::vector<LinCircle>& bottomLinCircles,
@@ -878,10 +879,11 @@ void SeedFinder2::createTriplets(
 
 bool SeedFinder2::xyzCoordinateCheck(
     double toleranceParam, const ConstSpacePointProxy2& sp,
-    const SpacePointColumn2<Vector3>& topStripVectorColumn,
-    const SpacePointColumn2<Vector3>& bottomStripVectorColumn,
-    const SpacePointColumn2<Vector3>& stripCenterDistanceColumn,
-    const SpacePointColumn2<Vector3>& topStripCenterPositionColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>& topStripVectorColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>& bottomStripVectorColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>& stripCenterDistanceColumn,
+    const SpacePointContainer2::DenseColumn<Vector3>&
+        topStripCenterPositionColumn,
     const double* spacepointPosition, double* outputCoordinates) {
   const Vector3& topStripVector = sp.extra(topStripVectorColumn);
   const Vector3& bottomStripVector = sp.extra(bottomStripVectorColumn);

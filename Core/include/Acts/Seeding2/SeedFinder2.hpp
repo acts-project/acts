@@ -244,15 +244,15 @@ class SeedFinder2 {
   /// @param middleSps Group of space points to be used as middle SP in a seed.
   /// @param topSps Group of space points to be used as outermost SP in a seed.
   /// @param outputSeeds Output container for the seeds
-  void createSeeds(const DerivedOptions& options, State& state,
-                   const SpacePointContainer2& spacePoints,
-                   const SpacePointColumn2<float>& rColumn,
-                   const SpacePointColumn2<float>* varianceRColumn,
-                   const SpacePointColumn2<float>* varianceZColumn,
-                   std::vector<SpacePointIndex2>& bottomSps,
-                   std::vector<SpacePointIndex2>& middleSps,
-                   std::vector<SpacePointIndex2>& topSps,
-                   SeedContainer2& outputSeeds) const;
+  void createSeeds(
+      const DerivedOptions& options, State& state,
+      const SpacePointContainer2& spacePoints,
+      const SpacePointContainer2::DenseColumn<float>& rColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+      std::vector<SpacePointIndex2>& bottomSps,
+      std::vector<SpacePointIndex2>& middleSps,
+      std::vector<SpacePointIndex2>& topSps, SeedContainer2& outputSeeds) const;
 
  private:
   struct DoubletCuts {
@@ -270,8 +270,9 @@ class SeedFinder2 {
     float sinPhiM{};
   };
 
-  void deriveDoubletCuts(DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
-                         const SpacePointColumn2<float>& rColumn) const;
+  void deriveDoubletCuts(
+      DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
+      const SpacePointContainer2::DenseColumn<float>& rColumn) const;
 
   /// Get the proper radius validity range given a middle space point candidate.
   /// In case the radius range changes according to the z-bin we need to
@@ -304,18 +305,16 @@ class SeedFinder2 {
   /// @param cotThetas Output vector of cotTheta values for the bottom-middle
   /// doublets
   template <SpacePointCandidateType candidate_type>
-  static void createDoublets(const DerivedConfig& config,
-                             const DerivedOptions& options,
-                             const DoubletCuts& cuts,
-                             const SpacePointContainer2& spacePoints,
-                             const SpacePointColumn2<float>& rColumn,
-                             const SpacePointColumn2<float>* varianceRColumn,
-                             const SpacePointColumn2<float>* varianceZColumn,
-                             const ConstSpacePointProxy2& middleSp,
-                             const std::vector<SpacePointIndex2>& candidateSps,
-                             std::vector<SpacePointIndex2>& compatibleSp,
-                             std::vector<LinCircle>& linCircles,
-                             std::vector<float>& cotThetas);
+  static void createDoublets(
+      const DerivedConfig& config, const DerivedOptions& options,
+      const DoubletCuts& cuts, const SpacePointContainer2& spacePoints,
+      const SpacePointContainer2::DenseColumn<float>& rColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+      const ConstSpacePointProxy2& middleSp,
+      const std::vector<SpacePointIndex2>& candidateSps,
+      std::vector<SpacePointIndex2>& compatibleSp,
+      std::vector<LinCircle>& linCircles, std::vector<float>& cotThetas);
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
@@ -353,13 +352,15 @@ class SeedFinder2 {
       const DerivedConfig& config, const DerivedOptions& options,
       const SeedFilter2::Options& filterOptions,
       SeedFilter2::State& filterState, const SpacePointContainer2& spacePoints,
-      const SpacePointColumn2<float>& rColumn,
-      const SpacePointColumn2<float>* varianceRColumn,
-      const SpacePointColumn2<float>* varianceZColumn,
-      const SpacePointColumn2<Vector3>* topStripVectorColumn,
-      const SpacePointColumn2<Vector3>* bottomStripVectorColumn,
-      const SpacePointColumn2<Vector3>* stripCenterDistanceColumn,
-      const SpacePointColumn2<Vector3>* topStripCenterPositionColumn,
+      const SpacePointContainer2::DenseColumn<float>& rColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
+      const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>* topStripVectorColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>* bottomStripVectorColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>*
+          stripCenterDistanceColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>*
+          topStripCenterPositionColumn,
       const ConstSpacePointProxy2& spM,
       const std::vector<SpacePointIndex2>& bottomSps,
       const std::vector<LinCircle>& bottomLinCircles,
@@ -377,10 +378,12 @@ class SeedFinder2 {
   /// Bottom-Middle direction with the strip measurement details
   static bool xyzCoordinateCheck(
       double toleranceParam, const ConstSpacePointProxy2& sp,
-      const SpacePointColumn2<Vector3>& topStripVectorColumn,
-      const SpacePointColumn2<Vector3>& bottomStripVectorColumn,
-      const SpacePointColumn2<Vector3>& stripCenterDistanceColumn,
-      const SpacePointColumn2<Vector3>& topStripCenterPositionColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>& topStripVectorColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>& bottomStripVectorColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>&
+          stripCenterDistanceColumn,
+      const SpacePointContainer2::DenseColumn<Vector3>&
+          topStripCenterPositionColumn,
       const double* spacepointPosition, double* outputCoordinates);
 
  private:

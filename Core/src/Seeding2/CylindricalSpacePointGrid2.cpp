@@ -196,8 +196,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
 
 void CylindricalSpacePointGrid2::extend(
     const SpacePointContainer2::ConstRange& spacePoints,
-    const SpacePointColumn2<float>& phiColumn,
-    const SpacePointColumn2<float>& rColumn) {
+    const SpacePointContainer2::DenseColumn<float>& phiColumn,
+    const SpacePointContainer2::DenseColumn<float>& rColumn) {
   ACTS_VERBOSE("Inserting " << spacePoints.size()
                             << " space points to the grid");
 
@@ -206,15 +206,17 @@ void CylindricalSpacePointGrid2::extend(
   }
 }
 
-void CylindricalSpacePointGrid2::fill(const SpacePointContainer2& spacePoints,
-                                      const SpacePointColumn2<float>& phiColumn,
-                                      const SpacePointColumn2<float>& rColumn) {
+void CylindricalSpacePointGrid2::fill(
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<float>& phiColumn,
+    const SpacePointContainer2::DenseColumn<float>& rColumn) {
   extend(spacePoints.range({0, spacePoints.size()}), phiColumn, rColumn);
   sort(spacePoints, rColumn);
 }
 
-void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints,
-                                      const SpacePointColumn2<float>& rColumn) {
+void CylindricalSpacePointGrid2::sort(
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<float>& rColumn) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t binIndex : m_rBinsIndex) {
@@ -233,7 +235,7 @@ void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints,
 
 Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
     const SpacePointContainer2& spacePoints,
-    const SpacePointColumn2<float>& rColumn) const {
+    const SpacePointContainer2::DenseColumn<float>& rColumn) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
   for (const auto& coll : grid()) {
