@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 #include <any>
 #include <array>
@@ -23,13 +23,9 @@
 #include <utility>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
-
-template <typename T, class... Axes>
-class GridGlobalIterator;
-
-template <typename T, class... Axes>
-class GridLocalIterator;
 
 namespace detail {
 
@@ -152,9 +148,9 @@ class Grid final : public IGrid {
   /// index type using local bin indices along each axis
   using index_t = std::array<std::size_t, DIM>;
   /// global iterator type
-  using global_iterator_t = Acts::GridGlobalIterator<T, Axes...>;
+  using global_iterator_t = GridGlobalIterator<T, Axes...>;
   /// local iterator type
-  using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
+  using local_iterator_t = GridLocalIterator<T, Axes...>;
 
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
@@ -263,7 +259,7 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromLocalBins(localBins));
   }
 
-  /// @copydoc Acts::IGrid::atLocalBinsAny
+  /// @copydoc IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) const override {
     const_reference cref = atLocalBins(toIndexType(indices));
     return &cref;
@@ -281,7 +277,7 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromLocalBins(localBins));
   }
 
-  /// @copydoc Acts::IGrid::atLocalBinsAny
+  /// @copydoc IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) override {
     reference ref = atLocalBins(toIndexType(indices));
     return &ref;
@@ -309,7 +305,7 @@ class Grid final : public IGrid {
   /// @return number of axes spanning the grid
   std::size_t dimensions() const override { return DIM; }
 
-  /// @copydoc Acts::IGrid::valueType
+  /// @copydoc IGrid::valueType
   const std::type_info& valueType() const override { return typeid(T); }
 
   /// @brief get center position of bin with given local bin numbers
@@ -434,7 +430,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getLowerLeftBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc Acts::IGrid::lowerLeftBinEdgeAny
+  /// @copydoc IGrid::lowerLeftBinEdgeAny
   AnyPointType lowerLeftBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(lowerLeftBinEdge(toIndexType(indices)));
   }
@@ -450,7 +446,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getUpperRightBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc Acts::IGrid::upperRightBinEdgeAny
+  /// @copydoc IGrid::upperRightBinEdgeAny
   AnyPointType upperRightBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(upperRightBinEdge(toIndexType(indices)));
   }
@@ -467,7 +463,7 @@ class Grid final : public IGrid {
   /// @note Not including under- and overflow bins
   index_t numLocalBins() const { return detail::grid_helper::getNBins(m_axes); }
 
-  /// @copydoc Acts::IGrid::numLocalBinsAny
+  /// @copydoc IGrid::numLocalBinsAny
   AnyIndexType numLocalBinsAny() const override {
     return toAnyIndexType(numLocalBins());
   }

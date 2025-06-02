@@ -8,10 +8,11 @@
 
 #include <type_traits>
 
+namespace Acts {
+
 template <std::size_t DIM>
 template <typename first_value_t, typename... vals>
-void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
-                                          vals&&... others) {
+void GridBinFinder<DIM>::storeValue(first_value_t&& fv, vals&&... others) {
   constexpr std::size_t N = sizeof...(vals);
   static_assert(N < DIM);
   /// Check the fist value is reasonable
@@ -36,7 +37,7 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
 }
 
 template <std::size_t DIM>
-std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
+std::array<std::pair<int, int>, DIM> GridBinFinder<DIM>::getSizePerAxis(
     const std::array<std::size_t, DIM>& locPosition) const {
   std::array<std::pair<int, int>, DIM> output;
   for (std::size_t i(0ul); i < DIM; ++i) {
@@ -62,9 +63,9 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
 
 template <std::size_t DIM>
 template <typename stored_t, class... Axes>
-auto Acts::GridBinFinder<DIM>::findBins(
+auto GridBinFinder<DIM>::findBins(
     const std::array<std::size_t, DIM>& locPosition,
-    const Acts::Grid<stored_t, Axes...>& grid) const
+    const Grid<stored_t, Axes...>& grid) const
     -> boost::container::small_vector<std::size_t, dimCubed> {
   static_assert(sizeof...(Axes) == DIM);
   assert(isGridCompatible(grid));
@@ -75,8 +76,8 @@ auto Acts::GridBinFinder<DIM>::findBins(
 
 template <std::size_t DIM>
 template <typename stored_t, class... Axes>
-bool Acts::GridBinFinder<DIM>::isGridCompatible(
-    const Acts::Grid<stored_t, Axes...>& grid) const {
+bool GridBinFinder<DIM>::isGridCompatible(
+    const Grid<stored_t, Axes...>& grid) const {
   const std::array<std::size_t, DIM> nLocBins = grid.numLocalBins();
   for (std::size_t i(0ul); i < DIM; ++i) {
     std::size_t nBins = nLocBins[i];
@@ -97,3 +98,5 @@ bool Acts::GridBinFinder<DIM>::isGridCompatible(
   }
   return true;
 }
+
+}  // namespace Acts
