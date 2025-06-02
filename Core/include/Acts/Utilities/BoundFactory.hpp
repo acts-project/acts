@@ -20,11 +20,6 @@
 #include <vector>
 
 namespace Acts {
-///   @brief Factory helper class to construct volume or surface bounds where the constructed bounds
-///          are cached inside the factory and if the same bound parameters are
-///          requested at a later stage the factory automatically returns the
-///          cached bounds. This provides a simple sharing mechanism of the same
-///          bounds across multiple surfaces / volumes
 namespace detail {
 
 /// @brief Concept to define the minimal requirements on the bounds to apply the deduplication mechanism
@@ -38,6 +33,11 @@ concept ComparableBoundConcept = requires(const BoundsType_t& bounds) {
 };
 }  // namespace detail
 
+///   @brief Factory helper class to construct volume or surface bounds where the constructed bounds
+///          are cached inside the factory and if the same bound parameters are
+///          requested at a later stage the factory automatically returns the
+///          cached bounds. This provides a simple sharing mechanism of the same
+///          bounds across multiple surfaces / volumes
 template <detail::ComparableBoundConcept BoundsType_t>
 class BoundFactory {
  public:
@@ -70,7 +70,7 @@ class BoundFactory {
   std::shared_ptr<BoundsImpl_t> makeBounds(argList... args)
     requires(std::is_base_of_v<BoundsType_t, BoundsImpl_t>)
   {
-    return insert(std::make_shared<BoundsImpl_t>(std::forward(args)...));
+    return insert(std::make_shared<BoundsImpl_t>(args...));
   }
   /// @brief Returns the number of cached objects inside the bound factory
   std::size_t size() const { return m_boundSet.size(); }
@@ -106,7 +106,7 @@ class BoundFactory {
           [](double parA, double parB) { return parA < parB; });
     }
   };
-  std::set<std::shared_ptr<BoundsType_t>, BoundComparer> m_boundSet{};
+  std::set<std::shared_ptr<BoundsType_t>, BoundComparator> m_boundSet{};
 };
 
 /// @brief Abrivation for a factory to construct surface bounds

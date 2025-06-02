@@ -24,7 +24,9 @@ GeoModelDetector::GeoModelDetector(const Config& cfg)
     m_cfg.geoModelTree = Acts::GeoModelReader::readFromDb(m_cfg.path);
   }
   if (!m_cfg.geoModelTree.worldVolume) {
-    THROW_EXCEPTION("Failed to load geometry from '" << m_cfg.path << "'");
+    throw std::runtime_error(
+        "GeoModelDetector() - Failed to load geometry from '" + m_cfg.path +
+        "'");
   }
 }
 
