@@ -394,7 +394,7 @@ void SeedFinder2::createDoublets(
       const float xNewFrame = deltaX * cuts.cosPhiM + deltaY * cuts.sinPhiM;
       const float yNewFrame = deltaY * cuts.cosPhiM - deltaX * cuts.sinPhiM;
 
-      const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+      const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
       const float iDeltaR2 = 1. / deltaR2;
 
       const float uT = xNewFrame * iDeltaR2;
@@ -469,7 +469,7 @@ void SeedFinder2::createDoublets(
 
     // in the rotated frame the interaction point is positioned at x = -rM
     // and y ~= impactParam
-    const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+    const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
 
     // we can obtain aCoef as the slope dv/du of the linear function,
     // estimated using du and dv between the two SP bCoef is obtained by
@@ -479,7 +479,7 @@ void SeedFinder2::createDoublets(
     // the distance of the straight line from the origin (radius of the
     // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
     // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-    if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+    if ((bCoef * bCoef) * options.minHelixDiameter2 > 1 + aCoef * aCoef) {
       continue;
     }
 
@@ -591,7 +591,7 @@ void SeedFinder2::createTriplets(
     float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float iSinTheta2 = 1. + cotThetaB * cotThetaB;
     float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
@@ -758,7 +758,7 @@ void SeedFinder2::createTriplets(
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+      if (deltaCotTheta2 > error2 + scatteringInRegion2) {
         // skip top SPs based on cotTheta sorting when producing triplets
         if constexpr (isDetailedMeasurement) {
           continue;
@@ -841,7 +841,7 @@ void SeedFinder2::createTriplets(
       }
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+      if (deltaCotTheta2 > error2 + p2scatterSigma) {
         if constexpr (isDetailedMeasurement) {
           continue;
         }
@@ -917,8 +917,8 @@ bool SeedFinder2::xyzCoordinateCheck(
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
-  double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
-               stripCenterDistance[2] * d1[2]);
+  double s1 = stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
+              stripCenterDistance[2] * d1[2];
   if (std::abs(s1) > std::abs(bd1) * toleranceParam) {
     return false;
   }
@@ -933,8 +933,8 @@ bool SeedFinder2::xyzCoordinateCheck(
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
-  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-               stripCenterDistance[2] * d0[2]);
+  double s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+              stripCenterDistance[2] * d0[2];
   if (std::abs(s0) > std::abs(bd1) * toleranceParam) {
     return false;
   }
