@@ -11,6 +11,7 @@ pybind11_add_module(ActsPythonBindings
   src/ModuleEntry.cpp
   src/Framework.cpp
   src/Base.cpp
+  src/Alignment.cpp
   src/Detector.cpp
   src/Digitization.cpp
   src/Material.cpp
