@@ -70,7 +70,7 @@ class BoundFactory {
   std::shared_ptr<BoundsImpl_t> makeBounds(argList... args)
     requires(std::is_base_of_v<BoundsType_t, BoundsImpl_t>)
   {
-    return insert(std::make_shared<BoundsImpl_t>(args...));
+    return insert(std::make_shared<BoundsImpl_t>(std::forward(args)...));
   }
   /// @brief Returns the number of cached objects inside the bound factory
   std::size_t size() const { return m_boundSet.size(); }
