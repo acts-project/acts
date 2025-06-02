@@ -47,22 +47,6 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  if (m_cfg.gridConfig.rMax != m_cfg.finderConfig.rMax &&
-      m_cfg.allowSeparateRMax == false) {
-    throw std::invalid_argument(
-        "Inconsistent config rMax: using different values in gridConfig and "
-        "finderConfig. If values are intentional set allowSeparateRMax to "
-        "true");
-  }
-
-  if (m_cfg.filterConfig.deltaRMin != m_cfg.finderConfig.deltaRMin) {
-    throw std::invalid_argument("Inconsistent config deltaRMin");
-  }
-
-  if (m_cfg.gridConfig.deltaRMax != m_cfg.finderConfig.deltaRMax) {
-    throw std::invalid_argument("Inconsistent config deltaRMax");
-  }
-
   static_assert(std::numeric_limits<
                     decltype(m_cfg.finderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
                 "Value of deltaRMaxTopSP must support NaN values");
@@ -80,34 +64,6 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
       std::numeric_limits<
           decltype(m_cfg.finderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
       "Value of deltaRMinBottomSP must support NaN values");
-
-  if (std::isnan(m_cfg.finderConfig.deltaRMaxTopSP)) {
-    m_cfg.finderConfig.deltaRMaxTopSP = m_cfg.finderConfig.deltaRMax;
-  }
-
-  if (std::isnan(m_cfg.finderConfig.deltaRMinTopSP)) {
-    m_cfg.finderConfig.deltaRMinTopSP = m_cfg.finderConfig.deltaRMin;
-  }
-
-  if (std::isnan(m_cfg.finderConfig.deltaRMaxBottomSP)) {
-    m_cfg.finderConfig.deltaRMaxBottomSP = m_cfg.finderConfig.deltaRMax;
-  }
-
-  if (std::isnan(m_cfg.finderConfig.deltaRMinBottomSP)) {
-    m_cfg.finderConfig.deltaRMinBottomSP = m_cfg.finderConfig.deltaRMin;
-  }
-
-  if (m_cfg.gridConfig.zMin != m_cfg.finderConfig.zMin) {
-    throw std::invalid_argument("Inconsistent config zMin");
-  }
-
-  if (m_cfg.gridConfig.zMax != m_cfg.finderConfig.zMax) {
-    throw std::invalid_argument("Inconsistent config zMax");
-  }
-
-  if (m_cfg.filterConfig.maxSeedsPerSpM != m_cfg.finderConfig.maxSeedsPerSpM) {
-    throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
-  }
 
   if (m_cfg.gridConfig.cotThetaMax != m_cfg.finderConfig.cotThetaMax) {
     throw std::invalid_argument("Inconsistent config cotThetaMax");
@@ -132,11 +88,11 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (!m_cfg.finderConfig.zBinsCustomLooping.empty()) {
+  if (!m_cfg.zBinsCustomLooping.empty()) {
     // check that the bins required in the custom bin looping
     // are contained in the bins defined by the total number of edges
 
-    for (std::size_t i : m_cfg.finderConfig.zBinsCustomLooping) {
+    for (std::size_t i : m_cfg.zBinsCustomLooping) {
       if (i >= m_cfg.gridConfig.zBinEdges.size()) {
         throw std::invalid_argument(
             "Inconsistent config zBinsCustomLooping does not contain a subset "
@@ -198,7 +154,7 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
       grid.computeRadiusRange(coreSpacePoints, rColumn);
 
   std::array<std::vector<std::size_t>, 3ul> navigation;
-  navigation[1ul] = m_cfg.finderConfig.zBinsCustomLooping;
+  navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   auto spacePointsGrouping = std::move(grid).binnedGround(
       *m_bottomBinFinder, *m_topBinFinder, navigation);
@@ -207,10 +163,8 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
 
   /// variable middle SP radial region of interest
   finderOptions.rMiddleSpRange = {
-      std::floor(rRange.min() / 2) * 2 +
-          m_cfg.finderConfig.deltaRMiddleMinSPRange,
-      std::floor(rRange.max() / 2) * 2 -
-          m_cfg.finderConfig.deltaRMiddleMaxSPRange};
+      std::floor(rRange.min() / 2) * 2 + m_cfg.deltaRMiddleMinSPRange,
+      std::floor(rRange.max() / 2) * 2 - m_cfg.deltaRMiddleMaxSPRange};
 
   // run the seeding
   Acts::SeedContainer2 seeds;

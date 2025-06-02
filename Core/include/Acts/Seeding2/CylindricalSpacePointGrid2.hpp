@@ -37,44 +37,47 @@ class CylindricalSpacePointGrid2 {
   struct DerivedConfig;
 
   struct Config {
-    // minimum pT to be found by seedFinder
+    /// minimum pT to be found by seedFinder
     float minPt = 0 * UnitConstants::MeV;
-    // maximum extension of sensitive detector layer relevant for seeding as
-    // distance from x=y=0 (i.e. in r)
-    float rMax = 320 * UnitConstants::mm;
-    // maximum extension of sensitive detector layer relevant for seeding as
-    // distance from x=y=0 (i.e. in r)
+    /// minimum extension of sensitive detector layer relevant for seeding as
+    /// distance from x=y=0 (i.e. in r)
+    /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
+    /// which will make seeding very slow!
     float rMin = 0 * UnitConstants::mm;
-    // maximum extension of sensitive detector layer relevant for seeding in
-    // positive direction in z
-    float zMax = 0 * UnitConstants::mm;
-    // maximum extension of sensitive detector layer relevant for seeding in
-    // negative direction in z
-    float zMin = 0 * UnitConstants::mm;
-    // maximum distance in r from middle space point to bottom or top spacepoint
-    float deltaRMax = 0 * UnitConstants::mm;
-    // maximum forward direction expressed as cot(theta)
+    /// maximum extension of sensitive detector layer relevant for seeding as
+    /// distance from x=y=0 (i.e. in r)
+    float rMax = 600 * UnitConstants::mm;
+    /// minimum extension of sensitive detector layer relevant for seeding in
+    /// negative direction in z
+    float zMin = -2800 * UnitConstants::mm;
+    /// maximum extension of sensitive detector layer relevant for seeding in
+    /// positive direction in z
+    float zMax = 2800 * UnitConstants::mm;
+    /// maximum distance in r from middle space point to bottom or top
+    /// spacepoint
+    float deltaRMax = 270 * UnitConstants::mm;
+    /// maximum forward direction expressed as cot(theta)
     float cotThetaMax = 0;
-    // maximum impact parameter in mm
+    /// maximum impact parameter in mm
     float impactMax = 0 * UnitConstants::mm;
-    // minimum phi value for phiAxis construction
+    /// minimum phi value for phiAxis construction
     float phiMin = -std::numbers::pi_v<float>;
-    // maximum phi value for phiAxis construction
+    /// maximum phi value for phiAxis construction
     float phiMax = std::numbers::pi_v<float>;
-    // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-    // depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
-    // phiBinDeflectionCoverage is a multiplier for this number. If
-    // numPhiNeighbors (in the configuration of the BinFinders) is configured to
-    // return 1 neighbor on either side of the current phi-bin (and you want to
-    // cover the full phi-range of minPT), leave this at 1.
+    /// Multiplicator for the number of phi-bins. The minimum number of phi-bins
+    /// depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
+    /// phiBinDeflectionCoverage is a multiplier for this number. If
+    /// numPhiNeighbors (in the configuration of the BinFinders) is configured
+    /// to return 1 neighbor on either side of the current phi-bin (and you want
+    /// to cover the full phi-range of minPT), leave this at 1.
     int phiBinDeflectionCoverage = 1;
-    // maximum number of phi bins
+    /// maximum number of phi bins
     int maxPhiBins = 10000;
-    // enable non equidistant binning in z
+    /// enable non equidistant binning in z
     std::vector<float> zBinEdges{};
     std::vector<float> rBinEdges{};
 
-    // magnetic field
+    /// magnetic field
     float bFieldInZ = 0. * UnitConstants::T;
 
     DerivedConfig derive() const;

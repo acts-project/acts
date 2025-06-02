@@ -26,6 +26,7 @@ CylindricalSpacePointGrid2::Config::derive() const {
     result.zMax /= 1_mm;
     result.zMin /= 1_mm;
     result.deltaRMax /= 1_mm;
+    result.impactMax /= 1_mm;
 
     for (float& val : result.zBinEdges) {
       val /= 1_mm;
