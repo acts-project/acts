@@ -69,7 +69,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode ActsExamples::TruthJetAlgorithm::finalize() const {
+ProcessCode ActsExamples::TruthJetAlgorithm::finalize() {
   ACTS_INFO("Finalizing truth jet clustering");
   return ProcessCode::SUCCESS;
 }
