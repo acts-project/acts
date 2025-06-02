@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Utilities/BoundingBox.hpp"
+
 template <typename entity_t, typename value_t, std::size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
     const entity_t* entity, const VertexType& vmin, const VertexType& vmax)
