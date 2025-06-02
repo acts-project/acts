@@ -51,7 +51,7 @@ using Acts::Experimental::StaticBlueprintNode;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::INFO);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 GeometryContext gctx;
 
@@ -1213,7 +1213,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
       root.addCuboidContainer("CuboidContainer", AxisDirection::AxisX);
   auto parentBounds = std::make_shared<CuboidVolumeBounds>(1_m, 20_mm, 20_mm);
   auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
-                                                    parentBounds, "child");
+                                                    parentBounds, "parent");
+  parentVol->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(1));
   auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
   std::size_t nChambers = 50;
   // start from the edge of the parent volume
@@ -1228,6 +1229,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
 
     auto childVol = std::make_unique<TrackingVolume>(
         trf, tbounds, "child" + std::to_string(i));
+    childVol->assignGeometryId(
+        Acts::GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
     auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
     parentNode->addChild(std::move(childNode));
   }

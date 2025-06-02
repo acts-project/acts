@@ -63,41 +63,52 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
         volume.assignVolumeMaterial(volume.motherVolume()->volumeMaterialPtr());
       }
     }
-  }
 
-  void visitBoundarySurface(
-      BoundarySurfaceT<TrackingVolume>& boundary) override {
-    ACTS_DEBUG("BoundarySurface: " << boundary.surfaceRepresentation().name());
-    // get the intersection solution
-    auto& bSurface = boundary.surfaceRepresentation();
-    // create the boundary surface id
-    m_iboundary += 1;
-    auto boundaryID = GeometryIdentifier(m_volumeID).withBoundary(m_iboundary);
-    ACTS_VERBOSE("~> boundaryID: " << boundaryID);
-    // now assign to the boundary surface
-    auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
+    // assign the boundary surfaces Ids of this volume
+    for (auto& bSurface : volume.boundarySurfaces()) {
+      ACTS_DEBUG(
+          "~> boundary surface: " << bSurface->surfaceRepresentation().name());
+      // create the boundary surface id
+      m_iboundary += 1;
+      auto boundaryID =
+          GeometryIdentifier(m_volumeID).withBoundary(m_iboundary);
+      ACTS_VERBOSE("~> boundaryID: " << boundaryID);
+      // now assign to the boundary surface
+      auto& mutableBSurface =
+          *(const_cast<RegularSurface*>(&bSurface->surfaceRepresentation()));
 
-    // assign the boundary ID to the surface
-    ACTS_VERBOSE("~> assigning boundaryID: " << boundaryID);
-    mutableBSurface.assignGeometryId(boundaryID);
+      // assign the boundary ID to the surface
+      ACTS_VERBOSE("~> assigning boundaryID: " << boundaryID);
+      mutableBSurface.assignGeometryId(boundaryID);
 
-    // Assign material if you have a decorator
-    if (m_materialDecorator != nullptr) {
-      ACTS_VERBOSE("Decorating boundary surface " << bSurface.name()
-                                                  << " with material");
-      m_materialDecorator->decorate(mutableBSurface);
+      // Assign material if you have a decorator
+      if (m_materialDecorator != nullptr) {
+        ACTS_VERBOSE("Decorating boundary surface "
+                     << bSurface->surfaceRepresentation().name()
+                     << " with material");
+        m_materialDecorator->decorate(mutableBSurface);
+      }
     }
-  }
 
-  void visitLayer(Layer& layer) override {
-    ACTS_DEBUG("Close Layer");
-    // create the layer identification
-    m_ilayer += 1;
-    auto layerID = GeometryIdentifier(m_volumeID).withLayer(m_ilayer);
-    ACTS_VERBOSE("~> layerID: " << layerID);
+    // assign the layer Ids of this volume
+    if (volume.confinedLayers() != nullptr) {
+      ACTS_DEBUG("assigning layers ids in this volume");
 
-    // now close the geometry
-    layer.closeGeometry(m_materialDecorator, layerID, *m_hook, *m_logger);
+      // iterate over the layers and close them
+
+      for (const auto& layer : volume.confinedLayers()->arrayObjects()) {
+        ACTS_DEBUG("Close Layer");
+        // create the layer identification
+        m_ilayer += 1;
+        auto layerID = GeometryIdentifier(m_volumeID).withLayer(m_ilayer);
+        ACTS_VERBOSE("~> layerID: " << layerID);
+
+        // now close the geometry
+        Layer* mutableLayer = const_cast<Layer*>(layer.get());
+        mutableLayer->closeGeometry(m_materialDecorator, layerID, *m_hook,
+                                    *m_logger);
+      }
+    }
   }
 
   const Logger* m_logger;

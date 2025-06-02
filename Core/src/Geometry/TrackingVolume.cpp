@@ -718,7 +718,9 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
+
   // @TODO: Remove this when Gen1 is remoeved
+
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));

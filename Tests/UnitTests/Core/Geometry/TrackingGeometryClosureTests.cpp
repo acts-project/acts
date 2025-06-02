@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -33,6 +34,7 @@ namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
   /// we test a two-level hierarchy
@@ -95,7 +97,7 @@ TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
 
   // creating a TrackingGeometry
   // -> close the geometry, this should set the GeometryIdentifier
-  TrackingGeometry tGeometry(volume, nullptr, hook);
+  TrackingGeometry tGeometry(volume, nullptr, hook, *logger);
   return tGeometry;
 }
 
@@ -179,15 +181,15 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
   BOOST_CHECK_EQUAL(2ul, iioVolumes.size());
 
   // check the world
-  check_vol(*world, 1);
+  check_vol(*world, 5);
   // - check InnerVolume
-  check_vol(*ioVolumes[0], 2);
+  check_vol(*ioVolumes[0], 3);
   // -- check the InnerInnerVolume
-  check_vol(*iioVolumes[0], 3);
+  check_vol(*iioVolumes[0], 1);
   // -- check the InenerOuterVolume
-  check_vol(*iioVolumes[1], 4);
+  check_vol(*iioVolumes[1], 2);
   // - check the OuterVolume
-  check_vol(*ioVolumes[1], 5);
+  check_vol(*ioVolumes[1], 4);
 }
 
 template <typename Callable>
@@ -291,15 +293,15 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
   BOOST_CHECK_EQUAL(2ul, iioVolumes.size());
 
   // check the world
-  check_vol(*world, 1);
+  check_vol(*world, 5);
   // - check InnerVolume
-  check_vol(*ioVolumes[0], 2);
+  check_vol(*ioVolumes[0], 3);
   // -- check the InnerInnerVolume
-  check_vol(*iioVolumes[0], 3);
+  check_vol(*iioVolumes[0], 1);
   // -- check the InenerOuterVolume
-  check_vol(*iioVolumes[1], 4);
+  check_vol(*iioVolumes[1], 2);
   // - check the OuterVolume
-  check_vol(*ioVolumes[1], 5);
+  check_vol(*ioVolumes[1], 4);
 }
 
 BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {

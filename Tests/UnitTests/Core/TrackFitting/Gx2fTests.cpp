@@ -428,13 +428,13 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   ACTS_DEBUG("Create the measurements");
   const MeasurementResolutionMap resMap = {
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(2), resPixel},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(4), resStrip0},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(6), resStrip1},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(8), resPixel},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(10), resStrip0},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(12), resStrip1},
-      {Acts::GeometryIdentifier().withVolume(2).withLayer(14), resPixel},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(2), resPixel},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(4), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(6), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(8), resPixel},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(10), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(12), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(1).withLayer(14), resPixel},
   };
 
   using SimPropagator =

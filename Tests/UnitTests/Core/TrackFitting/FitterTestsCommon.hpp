@@ -144,11 +144,11 @@ struct FitterTester {
   MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
   MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
   MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().withVolume(2), resPixel},
-      {Acts::GeometryIdentifier().withVolume(3).withLayer(2), resStrip0},
-      {Acts::GeometryIdentifier().withVolume(3).withLayer(4), resStrip1},
-      {Acts::GeometryIdentifier().withVolume(3).withLayer(6), resStrip0},
-      {Acts::GeometryIdentifier().withVolume(3).withLayer(8), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(1), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(2), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(4), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(6), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(8), resStrip1},
   };
 
   // simulation propagator

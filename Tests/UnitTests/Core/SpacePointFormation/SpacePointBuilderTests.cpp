@@ -107,11 +107,11 @@ const MeasurementResolution resPixel = {MeasurementType::eLoc01,
 const MeasurementResolution resStrip = {MeasurementType::eLoc01,
                                         {100_um, 100_um}};
 const MeasurementResolutionMap resolutions = {
-    {GeometryIdentifier().withVolume(2), resPixel},
-    {GeometryIdentifier().withVolume(3).withLayer(2), resStrip},
-    {GeometryIdentifier().withVolume(3).withLayer(4), resStrip},
-    {GeometryIdentifier().withVolume(3).withLayer(6), resStrip},
-    {GeometryIdentifier().withVolume(3).withLayer(8), resStrip},
+    {GeometryIdentifier().withVolume(1), resPixel},
+    {GeometryIdentifier().withVolume(2).withLayer(2), resStrip},
+    {GeometryIdentifier().withVolume(2).withLayer(4), resStrip},
+    {GeometryIdentifier().withVolume(2).withLayer(6), resStrip},
+    {GeometryIdentifier().withVolume(2).withLayer(8), resStrip},
 };
 
 std::default_random_engine rng(42);
@@ -151,9 +151,9 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   for (auto& sl : sourceLinks) {
     const auto geoId = sl.m_geometryId;
     const auto volumeId = geoId.volume();
-    if (volumeId == 2) {  // pixel type detector
+    if (volumeId == 1) {  // pixel type detector
       singleHitSourceLinks.emplace_back(SourceLink{sl});
-    } else if (volumeId == 3) {  // strip type detector
+    } else if (volumeId == 2) {  // strip type detector
 
       const auto layerId = geoId.layer();
 
