@@ -11,7 +11,7 @@ find_path(
 file(READ "${FastJet_INCLUDE_DIR}/fastjet/config_auto.h" FastJet_VERSION_FILE)
 string(
     REGEX MATCH
-    "#define FASTJET_PACKAGE_VERSION  \"([0-9]+\.[0-9]+\.[0-9]+)\""
+    "#define[ \t]+FASTJET_PACKAGE_VERSION[ \t]+\"([0-9]+\.[0-9]+\.[0-9]+)\""
     _
     ${FastJet_VERSION_FILE}
 )
