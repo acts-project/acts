@@ -23,6 +23,7 @@
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 
+
 namespace ActsExamples {
 struct AlgorithmContext;
 
@@ -43,7 +44,7 @@ class TrackToTruthJetAlgorithm : public IAlgorithm {
   TrackToTruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-  ProcessCode finalize() const;
+  ProcessCode finalize() override;
 
   const Config& config() const { return m_cfg; }
 
@@ -53,6 +54,7 @@ class TrackToTruthJetAlgorithm : public IAlgorithm {
   ReadDataHandle<TrackJetContainer> m_inputJets{this,
                                                               "inputJets"};
   WriteDataHandle<TrackJetContainer> m_outputTrackJets{this, "outputTrackJets"};
+
 };
 
 }  // namespace ActsExamples

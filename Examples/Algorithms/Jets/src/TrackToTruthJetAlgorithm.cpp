@@ -97,7 +97,7 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode ActsExamples::TrackToTruthJetAlgorithm::finalize() const {
+ProcessCode ActsExamples::TrackToTruthJetAlgorithm::finalize() {
   ACTS_INFO("Finalizing track to truth jet matching algorithm");
   return ProcessCode::SUCCESS;
 }
