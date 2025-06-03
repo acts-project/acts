@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
 
 namespace Acts {
@@ -24,19 +28,17 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     const GeometryContext& gctx, const std::vector<SourceLink>& sourceLinks,
     const SpacePointBuilderOptions& opt,
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
-  const unsigned int num_slinks = sourceLinks.size();
-
   Acts::Vector3 gPos = Acts::Vector3::Zero();
   std::optional<double> gTime = std::nullopt;
   Acts::Vector2 gCov = Acts::Vector2::Zero();
   std::optional<double> gCovT = std::nullopt;
 
-  if (num_slinks == 1) {  // pixel SP formation
+  if (sourceLinks.size() == 1) {  // pixel SP formation
     auto slink = sourceLinks.at(0);
     auto [param, cov] = opt.paramCovAccessor(slink);
     std::tie(gPos, gTime, gCov, gCovT) = m_spUtility->globalCoords(
         gctx, slink, m_config.slSurfaceAccessor, param, cov);
-  } else if (num_slinks == 2) {  // strip SP formation
+  } else if (sourceLinks.size() == 2) {  // strip SP formation
 
     const auto& ends1 = opt.stripEndsPair.first;
     const auto& ends2 = opt.stripEndsPair.second;
@@ -98,7 +100,7 @@ void SpacePointBuilder<spacepoint_t>::makeSourceLinkPairs(
     return;
   }
   double minDistance = 0;
-  unsigned int closestIndex = 0;
+  std::size_t closestIndex = 0;
 
   for (unsigned int i = 0; i < slinksFront.size(); i++) {
     const auto& slinkFront = slinksFront[i];

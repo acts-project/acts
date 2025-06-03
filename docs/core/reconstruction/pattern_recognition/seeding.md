@@ -68,7 +68,7 @@ compatibility by applying a set of configurable cuts that can be tested with
 two SP only (pseudorapidity, origin along $z$-axis, distance in $r$ between SP,
 compatibility with interaction point).
 
-:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const grid_t &grid, container_t &outputCollection, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const SeedFinderOptions &options, SeedingState &state, const grid_t &grid, container_t &outputCollection, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Range1D<float> &rMiddleSPRange) const
 :::
 
 For all pairs passing the selection the triplets of bottom-middle-top SPs are formed.
@@ -224,7 +224,7 @@ which retains only the higher quality seeds. If this limit is exceeded, the algo
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointMutableData& , CandidatesForMiddleSp<const external_spacepoint_t>&, collection_t&) const
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (SpacePointMutableData& , CandidatesForMiddleSp<const external_spacepoint_t>&, collection_t&) const
 :outline:
 :::
 
