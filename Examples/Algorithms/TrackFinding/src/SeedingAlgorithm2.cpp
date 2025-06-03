@@ -114,11 +114,11 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
-  m_cfg.finderConfig.seedFilter = std::make_unique<Acts::SeedFilter2>(
+  m_cfg.finderConfig.seedFilter = std::make_unique<Acts::TripletSeedFilter2>(
       m_cfg.filterConfig.derive(), logger().cloneWithSuffix("SeedFilter2"));
 
-  m_seedFinder = Acts::SeedFinder2(m_cfg.finderConfig.derive(),
-                                   logger().cloneWithSuffix("SeedFinder2"));
+  m_seedFinder = Acts::TripletSeedFinder2(
+      m_cfg.finderConfig.derive(), logger().cloneWithSuffix("SeedFinder2"));
 }
 
 ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
@@ -161,7 +161,7 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
   auto spacePointsGrouping = std::move(grid).binnedGround(
       *m_bottomBinFinder, *m_topBinFinder, navigation);
 
-  Acts::SeedFinder2::Options finderOptions = m_cfg.finderOptions;
+  Acts::TripletSeedFinder2::Options finderOptions = m_cfg.finderOptions;
 
   /// variable middle SP radial region of interest
   finderOptions.rMiddleSpRange = {
@@ -170,7 +170,7 @@ ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
 
   // run the seeding
   Acts::SeedContainer2 seeds;
-  Acts::SeedFinder2::State state;
+  Acts::TripletSeedFinder2::State state;
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
 

@@ -22,7 +22,7 @@
 
 namespace Acts {
 
-class SeedFilter2 final {
+class TripletSeedFilter2 final {
  public:
   struct DerivedConfig;
 
@@ -88,9 +88,10 @@ class SeedFilter2 final {
     std::size_t nTopSeedConf = 0;
   };
 
-  explicit SeedFilter2(const DerivedConfig& config,
-                       std::unique_ptr<const Logger> logger = getDefaultLogger(
-                           "SeedFilter2", Logging::Level::INFO));
+  explicit TripletSeedFilter2(const DerivedConfig& config,
+                              std::unique_ptr<const Logger> logger =
+                                  getDefaultLogger("SeedFilter2",
+                                                   Logging::Level::INFO));
 
   void filter2SpFixed(const Options& options, State& state,
                       const SpacePointContainer2& spacePoints,

@@ -120,7 +120,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config = Acts::SeedFilter2::Config;
+    using Config = Acts::TripletSeedFilter2::Config;
     auto c = py::class_<Config>(m, "SeedFilter2Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor,
                        zOriginWeightFactor, compatSeedWeight, deltaRMin,
@@ -129,7 +129,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config = Acts::SeedFinder2::Config;
+    using Config = Acts::TripletSeedFinder2::Config;
     auto c = py::class_<Config>(m, "SeedFinder2Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(
         c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
@@ -143,7 +143,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Options = Acts::SeedFinder2::Options;
+    using Options = Acts::TripletSeedFinder2::Options;
     auto c = py::class_<Options>(m, "SeedFinder2Options").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
     patchKwargsConstructor(c);
