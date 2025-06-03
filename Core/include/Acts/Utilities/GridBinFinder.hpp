@@ -122,4 +122,5 @@ class GridBinFinder {
 };
 
 }  // namespace Acts
+
 #include "Acts/Utilities/GridBinFinder.ipp"

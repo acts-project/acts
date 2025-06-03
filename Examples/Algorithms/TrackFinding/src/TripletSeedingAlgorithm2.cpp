@@ -12,7 +12,6 @@
 #include "Acts/EventData2/SeedContainer2.hpp"
 #include "Acts/EventData2/SpacePointContainer2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
@@ -21,8 +20,6 @@
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
-
-using namespace Acts::HashedStringLiteral;
 
 namespace ActsExamples {
 
@@ -94,16 +91,17 @@ TripletSeedingAlgorithm2::TripletSeedingAlgorithm2(const Config& cfg,
     m_cfg.finderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
 
-  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
-      m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom, 0);
-  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
-      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
+  m_cfg.gridConfig.bottomBinFinder.emplace(m_cfg.numPhiNeighbors,
+                                           m_cfg.zBinNeighborsBottom, 0);
+  m_cfg.gridConfig.topBinFinder.emplace(m_cfg.numPhiNeighbors,
+                                        m_cfg.zBinNeighborsTop, 0);
+  m_cfg.gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   m_cfg.finderConfig.seedFilter = std::make_unique<Acts::TripletSeedFilter2>(
-      m_cfg.filterConfig.derive(), logger().cloneWithSuffix("SeedFilter2"));
+      m_cfg.filterConfig.derive(), logger().cloneWithSuffix("Filter"));
 
-  m_seedFinder = Acts::TripletSeedFinder2(
-      m_cfg.finderConfig.derive(), logger().cloneWithSuffix("SeedFinder2"));
+  m_seedFinder = Acts::TripletSeedFinder2(m_cfg.finderConfig.derive(),
+                                          logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode TripletSeedingAlgorithm2::execute(
@@ -141,12 +139,6 @@ ProcessCode TripletSeedingAlgorithm2::execute(
   const Acts::Range1D<float> rRange =
       grid.computeRadiusRange(coreSpacePoints, rColumn);
 
-  std::array<std::vector<std::size_t>, 3ul> navigation;
-  navigation[1ul] = m_cfg.zBinsCustomLooping;
-
-  auto spacePointsGrouping = std::move(grid).binnedGround(
-      *m_bottomBinFinder, *m_topBinFinder, navigation);
-
   Acts::TripletSeedFinder2::Options finderOptions = m_cfg.finderOptions;
 
   /// variable middle SP radial region of interest
@@ -164,20 +156,18 @@ ProcessCode TripletSeedingAlgorithm2::execute(
   std::vector<Acts::SpacePointIndex2> middleSp;
   std::vector<Acts::SpacePointIndex2> topSp;
 
-  for (const auto [bottom, middle, top] : spacePointsGrouping) {
+  for (const auto [bottom, middle, top] : grid.binnedGround()) {
     ACTS_VERBOSE("Process middle " << middle);
 
     bottomSp.clear();
     for (const auto b : bottom) {
-      bottomSp.insert(bottomSp.end(), spacePointsGrouping.grid().at(b).begin(),
-                      spacePointsGrouping.grid().at(b).end());
+      bottomSp.insert(bottomSp.end(), grid.at(b).begin(), grid.at(b).end());
     }
     middleSp.clear();
-    middleSp = spacePointsGrouping.grid().at(middle);
+    middleSp = grid.at(middle);
     topSp.clear();
     for (const auto t : top) {
-      topSp.insert(topSp.end(), spacePointsGrouping.grid().at(t).begin(),
-                   spacePointsGrouping.grid().at(t).end());
+      topSp.insert(topSp.end(), grid.at(t).begin(), grid.at(t).end());
     }
 
     m_seedFinder->createSeeds(derivedOptions, state, coreSpacePoints, rColumn,
