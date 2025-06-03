@@ -42,7 +42,8 @@ class IAlignmentStore {
   /// Visitor pattern to eventually generate an misalignment for demonstration
   /// purposes.
   /// @param visitor the visitor to be called with the store
-  virtual void visitStore(std::function<void(Acts::Transform3&)>& visitor) = 0;
+  virtual void visitStore(
+      const std::function<void(Acts::Transform3*)>& visitor) = 0;
 };
 
 /// A simple struct holding a store raw pointer, ownership should not be in the
@@ -82,9 +83,10 @@ class GeoIdAlignmentStore : public IAlignmentStore {
   }
 
   /// @copydoc ITransformStore::visitStore
-  void visitStore(std::function<void(Acts::Transform3&)>& visitor) override {
-    for (auto& [id, transform] : m_transformMap) {
-      visitor(transform);
+  void visitStore(
+      const std::function<void(Acts::Transform3*)>& visitor) override {
+    for (auto& [id, trf] : m_transformMap) {
+      visitor(&trf);
     }
   }
 

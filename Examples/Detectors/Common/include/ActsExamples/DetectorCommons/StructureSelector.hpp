@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace Acts {
-    class Surface;
+class Surface;
 }
 
 namespace ActsExamples {

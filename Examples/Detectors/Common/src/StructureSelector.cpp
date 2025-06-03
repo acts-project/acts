@@ -44,9 +44,9 @@ ActsExamples::StructureSelector::StructureSelector(
 std::vector<std::shared_ptr<const Acts::Surface>>
 ActsExamples::StructureSelector::selectSurfaces(
     const Acts::GeometryIdentifier& geoId) const {
-  auto selectedRange = selectLowestNonZeroGeometryObject(m_surfaceMultiSet, geoId);
-  return {selectedRange.begin(),
-          selectedRange.end()};
+  auto selectedRange =
+      selectLowestNonZeroGeometryObject(m_surfaceMultiSet, geoId);
+  return {selectedRange.begin(), selectedRange.end()};
 }
 
 std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>

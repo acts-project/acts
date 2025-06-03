@@ -63,7 +63,7 @@ class AlignmentDecorator : public IContextDecorator {
     std::size_t gcInterval =
         100u;  //!< The number of events to wait before garbage collection
 
-    std::vector<std::tuple<IOV, std::function<void(Acts::Transform3&)>>>
+    std::vector<std::tuple<IOV, std::function<void(Acts::Transform3*)>>>
         iovGenerators;  //!< Generators for alignment data, each with a validity
                         //!< interval
   };
@@ -94,7 +94,7 @@ class AlignmentDecorator : public IContextDecorator {
                     //!< interval and a counter of events passed since last in
                     //!< use
 
-  std::vector<std::tuple<IOV, std::function<void(Acts::Transform3&)>>>
+  std::vector<std::tuple<IOV, std::function<void(Acts::Transform3*)>>>
       m_iovGenerators;  //!< Generators for alignment data, each with a validity
                         //!< interval
 
