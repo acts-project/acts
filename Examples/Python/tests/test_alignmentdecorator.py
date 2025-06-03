@@ -4,7 +4,7 @@ from acts.examples import Sequencer
 from acts.examples import AlignmentDecorator
 
 
-def test_alignmentdecorator_io_mode():
+def test_alignmentdecorator_io_mode(capfd):
     """This tests the alignment decorator in IO mode,
     i.e. with a given pre-defined alignment store"""
 
@@ -30,12 +30,19 @@ def test_alignmentdecorator_io_mode():
 
     sequencer.addContextDecorator(alignDeco)
     sequencer.run()
+    if capfd is not None:
+        out, err = capfd.readouterr()
+        # Check that the alignment store is decorated for events 10 to 20
+        for event in range(10, 20):
+            assert (
+                f"Decorating AlgorithmContext with alignment store for event {event}"
+                in out
+            )
+        # Count that there is only one garbage collection call
+        assert out.count("Garbage collection: removing alignment store") == 1
 
 
-test_alignmentdecorator_io_mode()
-
-
-def test_alignmentdecorator_gen_mode():
+def test_alignmentdecorator_gen_mode(capfd):
     """This tests the alignment decorator in generative mode"""
     alignDecoConfig = AlignmentDecorator.Config()
 
@@ -70,6 +77,9 @@ def test_alignmentdecorator_gen_mode():
 
     sequencer.addContextDecorator(alignDeco)
     sequencer.run()
+    # Count that the alignment store is decorated 37 times
+    out, err = capfd.readouterr()
+    assert out.count("Decorating AlgorithmContext with alignment store") == 37
 
 
 test_alignmentdecorator_gen_mode()
