@@ -14,7 +14,7 @@ awkward-cpp==46
     # via awkward
 boost-histogram==1.5.2
     # via hist
-click==8.1.8
+click==8.2.1
     # via
     #   histoprint
     #   typer
@@ -24,9 +24,9 @@ cramjam==2.10.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.58.0
+fonttools==4.58.1
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2025.5.1
     # via
     #   awkward
     #   uproot
@@ -72,7 +72,7 @@ pandas==2.2.3
     # via -r Examples/Scripts/requirements.in
 pillow==11.2.1
     # via matplotlib
-pydantic==2.11.4
+pydantic==2.11.5
     # via -r Examples/Scripts/requirements.in
 pydantic-core==2.33.2
     # via pydantic
@@ -98,7 +98,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.15.4
+typer==0.16.0
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.13.2
     # via
@@ -106,7 +106,7 @@ typing-extensions==4.13.2
     #   pydantic-core
     #   typer
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via pydantic
 tzdata==2025.2
     # via pandas
