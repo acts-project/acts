@@ -13,14 +13,14 @@
 
 namespace Acts {
 
-/// @c IExperimentCuts2 can be used to increase or decrease seed weights
+/// @c IExperimentTripletSeedCuts2 can be used to increase or decrease seed weights
 /// based on the space points used in a seed. Seed weights are also
 /// influenced by the SeedFilter default implementation. This tool is also used
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
 /// seeds, there are two distinct methods.
-class IExperimentCuts2 {
+class IExperimentTripletSeedCuts2 {
  public:
-  virtual ~IExperimentCuts2() = default;
+  virtual ~IExperimentTripletSeedCuts2() = default;
 
   /// Returns seed weight bonus/malus depending on detector considerations.
   /// @param bottom bottom space point of the current seed

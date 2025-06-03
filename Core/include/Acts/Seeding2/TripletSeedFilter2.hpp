@@ -12,7 +12,6 @@
 #include "Acts/EventData2/SeedContainer2.hpp"
 #include "Acts/EventData2/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding2/IExperimentCuts2.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -22,6 +21,12 @@
 
 namespace Acts {
 
+class IExperimentTripletSeedCuts2;
+
+/// @brief Triplet seed filter used in the triplet seeding algorithm
+///
+/// Note that this algorithm is designed and tuned for cylindrical detectors and
+/// uses R-Z coordinates for the space points.
 class TripletSeedFilter2 final {
  public:
   struct DerivedConfig;
@@ -68,7 +73,7 @@ class TripletSeedFilter2 final {
     /// compatible SPs
     bool useDeltaRorTopRadius = false;
 
-    std::shared_ptr<IExperimentCuts2> experimentCuts;
+    std::shared_ptr<IExperimentTripletSeedCuts2> experimentCuts;
 
     DerivedConfig derive() const;
   };
@@ -90,7 +95,7 @@ class TripletSeedFilter2 final {
 
   explicit TripletSeedFilter2(const DerivedConfig& config,
                               std::unique_ptr<const Logger> logger =
-                                  getDefaultLogger("SeedFilter2",
+                                  getDefaultLogger("TripletSeedFilter2",
                                                    Logging::Level::INFO));
 
   void filter2SpFixed(const Options& options, State& state,
