@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
   auto dummyNodes =
       Acts::Tensor<float>::Create({spacepointIds.size(), 16}, execCtx);
   auto dummyWeights = Acts::Tensor<float>::Create({e0.size(), 1}, execCtx);
+  std::fill(dummyWeights.data(), dummyWeights.data() + dummyWeights.size(), 1.f);
 
   // Run Track building
   auto logger = Acts::getDefaultLogger("TestLogger", Acts::Logging::ERROR);
@@ -55,15 +56,18 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
 
   auto testTracks = trackBuilder({std::move(dummyNodes),
                                   std::move(edgeTensor),
-                                  std::move(dummyWeights),
-                                  {}},
+                                  std::nullopt,
+                                  std::move(dummyWeights)},
                                  spacepointIds);
 
+  BOOST_CHECK_EQUAL(testTracks.size(), refTracks.size());
+
   // Sort tracks, so we can find them
-  std::for_each(testTracks.begin(), testTracks.end(),
-                [](auto &t) { std::ranges::sort(t); });
-  std::for_each(refTracks.begin(), refTracks.end(),
-                [](auto &t) { std::ranges::sort(t); });
+  std::ranges::for_each(testTracks, [](auto &t) { std::ranges::sort(t); });
+  std::ranges::sort(testTracks, std::less{}, [](auto &t){ return t.at(0); });
+
+  std::ranges::for_each(refTracks, [](auto &t) { std::ranges::sort(t); });
+  std::ranges::sort(refTracks, std::less{}, [](auto &t){ return t.at(0); });
 
   // Check what we have here
   for (const auto &refTrack : refTracks) {
