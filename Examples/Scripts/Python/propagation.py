@@ -3,7 +3,7 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector
+from acts.examples import GenericDetector, StructureSelector, AlignmentDecorator
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -65,7 +65,7 @@ def runPropagation(
         )
     )
 
-    if sterileLogger:
+    if sterileLogger is False:
         s.addWriter(
             acts.examples.RootPropagationStepsWriter(
                 level=acts.logging.INFO,
@@ -83,14 +83,38 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetector(materialDecorator=matDeco)
+    # detector = GenericDetector(materialDecorator=matDeco)
 
     ## Alternative: DD4hep detector
     # detector = getOpenDataDetector()
     # trackingGeometry = detector.trackingGeometry()
 
+    ## Alternative: Misaligned DD4hep detector
+    detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
-    contextDecorators = detector.contextDecorators()
+    structureSelector = StructureSelector(trackingGeometry)
+    pixelBarrelID = acts.GeometryIdentifier(volume=17)
+    pixelBarrelTransforms = structureSelector.selectedTransforms(
+        acts.GeometryContext(), pixelBarrelID
+    )
+    alignDecoConfig = AlignmentDecorator.Config()
+    alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(
+        pixelBarrelTransforms
+    )
+
+    gRot = acts.examples.AlignmentGeneratorGlobalRotation()
+    gRot.axis = acts.Vector3(0.0, 0.0, 1.0)
+    gRot.angle = 0.05
+
+    alignDecoConfig.iovGenerators = [((0, 50), gRot)]
+    alignDecoConfig.garbageCollection = True
+    alignDecoConfig.gcInterval = 20
+
+    alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.VERBOSE)
+    contextDecorators = [alignDeco]
+
+    # trackingGeometry = detector.trackingGeometry()
+    # contextDecorators = detector.contextDecorators()
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
@@ -115,9 +139,10 @@ if "__main__" == __name__:
     os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
 
     runPropagation(
-        trackingGeometry,
-        field,
-        os.getcwd() + "/propagation",
+        trackingGeometry=trackingGeometry,
+        field=field,
+        outputDir=os.getcwd() + "/propagation",
+        s=None,
         decorators=contextDecorators,
-        sterileLogger=True,
+        sterileLogger=False,
     ).run()
