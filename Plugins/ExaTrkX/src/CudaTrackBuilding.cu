@@ -23,7 +23,6 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     std::any /*nodes*/, std::any edges, std::any weights,
     std::vector<int>& spacepointIDs, const ExecutionContext& execContext) {
   ACTS_VERBOSE("Start CUDA track building");
-  c10::cuda::CUDAStreamGuard guard(execContext.stream.value());
 
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCUDA);
   assert(edgeTensor.size(0) == 2);
@@ -36,7 +35,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     return {};
   }
 
-  auto stream = execContext.stream->stream();
+  auto stream = execContext.stream.value();
 
   auto cudaSrcPtr = edgeTensor.data_ptr<std::int64_t>();
   auto cudaTgtPtr = edgeTensor.data_ptr<std::int64_t>() + numEdges;
