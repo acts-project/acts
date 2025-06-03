@@ -20,7 +20,7 @@ set(ACTS_ALGEBRAPLUGINS_SOURCE
 mark_as_advanced(ACTS_ALGEBRAPLUGINS_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=c33d7707ee30ab5fa8df686a780600343760701023ac0b23355627e1f2f044de"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=e9cd0546c7bc9539f440273bbad303c97215ccd87403cedb4aa387a313938d57"
     CACHE STRING
     "Source to take COVFIE from"
 )
