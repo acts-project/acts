@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
-#include "Acts/Utilities/TransformRange.hpp" 
-#include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 namespace ActsExamples {
 
@@ -31,21 +31,22 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   using GeoModelVolumeFPVsVec = std::vector<GeoModelVolumeFPVTuple>;
 
   struct Config {
-    /// The names of the geomodel volumes to be converted
-    std::vector<std::string> sensitivesNames = {};
-
-    /// The geomodelTree to be used
-     Acts::GeoModelTree geoModel;
+    /// The converted GeoModel volume objects
+    GeoModelVolumeFPVsVec volumeBoxFPVs = {};
 
     /// The station names to be built (e.g for barrel: BIL, BML etc)
     std::vector<std::string> stationNames = {};
-    /** @brief Pointer to the volume bound factory to share the bounds across several volumes */
+
+    /// Pointer to the volume bound factory to share the bounds across several
+    /// volumes
     std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory =
         std::make_shared<Acts::VolumeBoundFactory>();
   };
 
-  GeoModelMuonMockupBuilder(const Config& cfg, std::unique_ptr<const Acts::Logger> logger =
-          Acts::getDefaultLogger("GeoModelMuonMockupBuilder", Acts::Logging::DEBUG));
+  GeoModelMuonMockupBuilder(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "GeoModelMuonMockupBuilder", Acts::Logging::DEBUG));
   ~GeoModelMuonMockupBuilder() = default;
 
   std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry(
@@ -63,6 +64,5 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
 
   /// logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
-
 };
 }  // namespace ActsExamples
