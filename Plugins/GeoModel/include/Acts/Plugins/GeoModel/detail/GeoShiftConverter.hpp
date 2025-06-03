@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <memory>
 #include <tuple>
@@ -30,6 +31,7 @@ struct GeoShiftConverter {
   Result<GeoModelSensitiveSurface> operator()(const PVConstLink& geoPV,
                                               const GeoShapeShift& geoShift,
                                               const Transform3& absTransform,
+                                              SurfaceBoundFactory& boundFactory,
                                               bool sensitive) const;
 };
 

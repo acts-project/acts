@@ -10,16 +10,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
 #include <array>
-#include <map>
-#include <optional>
-#include <set>
 #include <span>
 #include <unordered_set>
 
