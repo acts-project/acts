@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/SeedFilter2.hpp"
+#include "Acts/Seeding2/TripletSeedFilter2.hpp"
 
 #include <numeric>
 
@@ -28,7 +28,7 @@ float getBestSeedQuality(
 
 }  // namespace
 
-SeedFilter2::DerivedConfig SeedFilter2::Config::derive() const {
+TripletSeedFilter2::DerivedConfig TripletSeedFilter2::Config::derive() const {
   DerivedConfig result;
 
   static_cast<Config&>(result) = *this;
@@ -42,11 +42,11 @@ SeedFilter2::DerivedConfig SeedFilter2::Config::derive() const {
   return result;
 }
 
-SeedFilter2::SeedFilter2(const DerivedConfig& config,
-                         std::unique_ptr<const Logger> logger)
+TripletSeedFilter2::TripletSeedFilter2(const DerivedConfig& config,
+                                       std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {}
 
-void SeedFilter2::filter2SpFixed(
+void TripletSeedFilter2::filter2SpFixed(
     const Options& options, State& state,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -226,10 +226,10 @@ void SeedFilter2::filter2SpFixed(
   }
 }
 
-void SeedFilter2::filter1SpFixed(const Options& options, State& state,
-                                 std::vector<TripletCandidate2>& candidates,
-                                 std::size_t numQualitySeeds,
-                                 SeedContainer2& outputCollection) const {
+void TripletSeedFilter2::filter1SpFixed(
+    const Options& options, State& state,
+    std::vector<TripletCandidate2>& candidates, std::size_t numQualitySeeds,
+    SeedContainer2& outputCollection) const {
   if (m_cfg.experimentCuts != nullptr) {
     m_cfg.experimentCuts->cutPerMiddleSp(candidates);
   }

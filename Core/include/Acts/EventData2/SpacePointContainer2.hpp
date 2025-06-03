@@ -534,7 +534,7 @@ class SpacePointContainer2 {
 template <bool read_only>
 class SpacePointProxy2 {
  public:
-  /// Indicates whether this spacepoint proxy is read-only or if it can be
+  /// Indicates whether this spacepoint proxy is read-only or data can be
   /// modified
   static constexpr bool ReadOnly = read_only;
 

@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
-#include "Acts/Seeding2/SeedFilter2.hpp"
-#include "Acts/Seeding2/SeedFinder2.hpp"
+#include "Acts/Seeding2/TripletSeedFilter2.hpp"
+#include "Acts/Seeding2/TripletSeedFinder2.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -37,9 +37,9 @@ class SeedingAlgorithm2 final : public IAlgorithm {
 
     Acts::CylindricalSpacePointGrid2::Config gridConfig;
 
-    Acts::SeedFinder2::Config finderConfig;
-    Acts::SeedFinder2::Options finderOptions;
-    Acts::SeedFilter2::Config filterConfig;
+    Acts::TripletSeedFinder2::Config finderConfig;
+    Acts::TripletSeedFinder2::Options finderOptions;
+    Acts::TripletSeedFilter2::Config filterConfig;
 
     float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
     float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
@@ -80,7 +80,7 @@ class SeedingAlgorithm2 final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  std::optional<Acts::SeedFinder2> m_seedFinder;
+  std::optional<Acts::TripletSeedFinder2> m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
 

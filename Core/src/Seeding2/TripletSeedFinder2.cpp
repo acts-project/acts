@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/SeedFinder2.hpp"
+#include "Acts/Seeding2/TripletSeedFinder2.hpp"
 
 #include "Acts/EventData2/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/SeedFilter2.hpp"
+#include "Acts/Seeding2/TripletSeedFilter2.hpp"
 
 #include <numeric>
 
@@ -17,7 +17,7 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
-SeedFinder2::DerivedConfig SeedFinder2::Config::derive() const {
+TripletSeedFinder2::DerivedConfig TripletSeedFinder2::Config::derive() const {
   DerivedConfig result;
 
   static_cast<Config&>(result) = *this;
@@ -49,7 +49,7 @@ SeedFinder2::DerivedConfig SeedFinder2::Config::derive() const {
   return result;
 }
 
-SeedFinder2::DerivedOptions SeedFinder2::Options::derive(
+TripletSeedFinder2::DerivedOptions TripletSeedFinder2::Options::derive(
     const DerivedConfig& config) const {
   DerivedOptions result;
 
@@ -75,11 +75,11 @@ SeedFinder2::DerivedOptions SeedFinder2::Options::derive(
   return result;
 }
 
-SeedFinder2::SeedFinder2(const DerivedConfig& config,
-                         std::unique_ptr<const Logger> logger_)
+TripletSeedFinder2::TripletSeedFinder2(const DerivedConfig& config,
+                                       std::unique_ptr<const Logger> logger_)
     : m_cfg(config), m_logger(std::move(logger_)) {}
 
-void SeedFinder2::deriveDoubletCuts(
+void TripletSeedFinder2::deriveDoubletCuts(
     DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
     const SpacePointContainer2::DenseColumn<float>& rColumn) const {
   const float rM = spM.extra(rColumn);
@@ -94,7 +94,7 @@ void SeedFinder2::deriveDoubletCuts(
   cuts.sinPhiM = sinPhiM;
 }
 
-std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
+std::pair<float, float> TripletSeedFinder2::retrieveRadiusRangeForMiddle(
     const ConstSpacePointProxy2& spM,
     const Range1D<float>& rMiddleSpRange) const {
   if (m_cfg.useVariableMiddleSPRange) {
@@ -113,7 +113,7 @@ std::pair<float, float> SeedFinder2::retrieveRadiusRangeForMiddle(
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
 
-void SeedFinder2::createSeeds(
+void TripletSeedFinder2::createSeeds(
     const DerivedOptions& options, State& state,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -132,7 +132,7 @@ void SeedFinder2::createSeeds(
     return spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
   });
 
-  SeedFilter2::Options filterOptions;
+  TripletSeedFilter2::Options filterOptions;
   filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
   state.candidatesCollector.reserve(m_cfg.maxSeedsPerSpMConf,
@@ -272,8 +272,8 @@ void SeedFinder2::createSeeds(
   }  // loop on middle space points
 }
 
-template <SeedFinder2::SpacePointCandidateType candidate_type>
-void SeedFinder2::createDoublets(
+template <TripletSeedFinder2::SpacePointCandidateType candidate_type>
+void TripletSeedFinder2::createDoublets(
     const DerivedConfig& config, const DerivedOptions& options,
     const DoubletCuts& cuts, const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -505,10 +505,11 @@ void SeedFinder2::createDoublets(
   }
 }
 
-template <SeedFinder2::MeasurementInfo measurement_info>
-void SeedFinder2::createTriplets(
+template <TripletSeedFinder2::MeasurementInfo measurement_info>
+void TripletSeedFinder2::createTriplets(
     const DerivedConfig& config, const DerivedOptions& options,
-    const SeedFilter2::Options& filterOptions, SeedFilter2::State& filterState,
+    const TripletSeedFilter2::Options& filterOptions,
+    TripletSeedFilter2::State& filterState,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
     const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
@@ -877,7 +878,7 @@ void SeedFinder2::createTriplets(
   }  // loop on bottoms
 }
 
-bool SeedFinder2::xyzCoordinateCheck(
+bool TripletSeedFinder2::xyzCoordinateCheck(
     double toleranceParam, const ConstSpacePointProxy2& sp,
     const SpacePointContainer2::DenseColumn<Vector3>& topStripVectorColumn,
     const SpacePointContainer2::DenseColumn<Vector3>& bottomStripVectorColumn,

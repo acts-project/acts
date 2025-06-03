@@ -12,7 +12,7 @@
 #include "Acts/EventData2/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding2/SeedFilter2.hpp"
+#include "Acts/Seeding2/TripletSeedFilter2.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -36,7 +36,7 @@ namespace Acts {
 /// interaction region, and then forming triplets by combinding these
 /// doublets at a common middle space point. The triplets are then filtered
 /// using a seed filter to produce a set of track seeds.
-class SeedFinder2 {
+class TripletSeedFinder2 {
  private:
   enum class SpacePointCandidateType { eBottom, eTop };
   enum class MeasurementInfo { eDefault, eDetailed };
@@ -46,7 +46,7 @@ class SeedFinder2 {
   struct DerivedOptions;
 
   struct Config {
-    std::shared_ptr<SeedFilter2> seedFilter;
+    std::shared_ptr<TripletSeedFilter2> seedFilter;
 
     // Seeding parameters used in the space-point grid creation and bin finding
 
@@ -222,12 +222,13 @@ class SeedFinder2 {
     CandidatesForMiddleSp2 candidatesCollector;
     std::vector<TripletCandidate2> sortedCandidates;
 
-    SeedFilter2::State filterState;
+    TripletSeedFilter2::State filterState;
   };
 
-  explicit SeedFinder2(const DerivedConfig& config,
-                       std::unique_ptr<const Logger> logger = getDefaultLogger(
-                           "SeedFinder2", Logging::Level::INFO));
+  explicit TripletSeedFinder2(const DerivedConfig& config,
+                              std::unique_ptr<const Logger> logger =
+                                  getDefaultLogger("SeedFinder2",
+                                                   Logging::Level::INFO));
 
   const DerivedConfig& config() const { return m_cfg; }
 
@@ -350,8 +351,9 @@ class SeedFinder2 {
   template <MeasurementInfo measurement_info>
   static void createTriplets(
       const DerivedConfig& config, const DerivedOptions& options,
-      const SeedFilter2::Options& filterOptions,
-      SeedFilter2::State& filterState, const SpacePointContainer2& spacePoints,
+      const TripletSeedFilter2::Options& filterOptions,
+      TripletSeedFilter2::State& filterState,
+      const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn,
       const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
       const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
