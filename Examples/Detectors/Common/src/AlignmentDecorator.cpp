@@ -87,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
     ACTS_VERBOSE("No alignment store found for event "
                  << eventNumber << ", checking generators.");
     std::ranges::for_each(m_iovGenerators, [&](auto& iovGenerator) {
-      auto& [iov, generator] = iovGenerator;
+      const auto& [iov, generator] = iovGenerator;
       if (eventNumber >= iov[0] && eventNumber <= iov[1]) {
         auto alignmentStorePtr = m_cfg.nominalStore->clone();
         std::lock_guard<std::mutex> lock(m_iovMutex);
