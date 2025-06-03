@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -29,6 +30,7 @@ struct GeoPolygonConverter {
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(
       const PVConstLink& geoPV, const GeoSimplePolygonBrep& geoPolygon,
-      const Transform3& absTransform, bool sensitive) const;
+      const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+      bool sensitive) const;
 };
 }  // namespace Acts::detail
