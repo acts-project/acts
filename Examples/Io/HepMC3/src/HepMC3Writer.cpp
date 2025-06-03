@@ -26,6 +26,10 @@
 #include <HepMC3/WriterGZ.h>
 #endif
 
+#ifdef HEPMC3_ROOT_SUPPORT
+#include <HepMC3/WriterRootTree.h>
+#endif
+
 #include <boost/algorithm/string/join.hpp>
 
 namespace ActsExamples {
@@ -62,36 +66,64 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
     // Create a single file writer
     m_writer = createWriter(m_cfg.outputPath);
   }
+
+  if (m_cfg.perEvent &&
+      HepMC3Util::formatFromFilename(m_cfg.outputPath.string()) ==
+          HepMC3Util::Format::root) {
+    ACTS_WARNING(
+        "Per-event output is enabled and the output format is ROOT. This is "
+        "likely not what you want");
+  }
 }
 
 std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
     const std::filesystem::path& target) {
-  std::filesystem::path path =
-      target.string() +
-      std::string{HepMC3Util::compressionExtension(m_cfg.compression)};
+  ACTS_DEBUG("Creating writer for: " << target);
 
-  switch (m_cfg.compression) {
-    case HepMC3Util::Compression::none:
-      return std::make_unique<HepMC3::WriterAscii>(path);
+  auto format = HepMC3Util::formatFromFilename(target.string());
+
+  if (format == HepMC3Util::Format::root) {
+    ACTS_DEBUG("~> Root");
+    if (m_cfg.compression != HepMC3Util::Compression::none) {
+      ACTS_ERROR("~~> Compression not supported for Root");
+      throw std::invalid_argument("Compression not supported for Root");
+    }
+    return std::make_unique<HepMC3::WriterRootTree>(target);
+  } else {
+    std::filesystem::path path =
+        target.string() +
+        std::string{HepMC3Util::compressionExtension(m_cfg.compression)};
+    ACTS_DEBUG("~> Ascii (=> " << path << ")");
+
+    switch (m_cfg.compression) {
+      case HepMC3Util::Compression::none:
+        ACTS_DEBUG("~~> uncompressed");
+        return std::make_unique<HepMC3::WriterAscii>(path);
 #ifdef HEPMC3_USE_COMPRESSION
-    case HepMC3Util::Compression::zlib:
-      return std::make_unique<
-          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(path);
-    case HepMC3Util::Compression::lzma:
-      return std::make_unique<
-          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::lzma>>(
-          path);
-    case HepMC3Util::Compression::bzip2:
-      return std::make_unique<
-          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::bz2>>(
-          path);
-    case HepMC3Util::Compression::zstd:
-      return std::make_unique<
-          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
-          path);
+      case HepMC3Util::Compression::zlib:
+        ACTS_DEBUG("~~> GZ");
+        return std::make_unique<
+            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(
+            path);
+      case HepMC3Util::Compression::lzma:
+        ACTS_DEBUG("~~> LZMA");
+        return std::make_unique<
+            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::lzma>>(
+            path);
+      case HepMC3Util::Compression::bzip2:
+        ACTS_DEBUG("~~> BZ2");
+        return std::make_unique<
+            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::bz2>>(
+            path);
+      case HepMC3Util::Compression::zstd:
+        ACTS_DEBUG("~~> ZSTD");
+        return std::make_unique<
+            HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
+            path);
 #endif
-    default:
-      throw std::invalid_argument{"Unknown compression value"};
+      default:
+        throw std::invalid_argument{"Unknown compression value"};
+    }
   }
 }
 
