@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
@@ -33,15 +32,17 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
-  Acts::SurfaceBoundFactory boundFactory{};
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
 
   // (BOX object) - XY
   auto boxXY = make_intrusive<GeoBox>(100, 200, 2);
   auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
-  auto physXY = make_intrusive<GeoFullPhysVol>(logXY);
+  auto fphysXY = make_intrusive<GeoFullPhysVol>(logXY);
 
+  PVConstLink physXY{make_intrusive<GeoFullPhysVol>(logXY)};
+
+  Acts::SurfaceBoundFactory boundFactory{};
   auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
       physXY, Acts::Transform3::Identity(), boundFactory);
 

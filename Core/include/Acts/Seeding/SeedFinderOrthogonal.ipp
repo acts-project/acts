@@ -6,20 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Seeding/SeedFinderOrthogonal.hpp"
+
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <functional>
-#include <numeric>
 #include <type_traits>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
     const external_spacepoint_t &low) const -> typename tree_t::range_t {

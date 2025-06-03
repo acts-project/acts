@@ -23,21 +23,10 @@ GeoModelDetector::GeoModelDetector(const Config& cfg)
     m_cfg.geoModelTree = Acts::GeoModelReader::readFromDb(m_cfg.path);
   }
   if (!m_cfg.geoModelTree.worldVolume) {
-    THROW_EXCEPTION("Failed to load geometry from '" << m_cfg.path << "'");
+    throw std::runtime_error(
+        "GeoModelDetector() - Failed to load geometry from '" + m_cfg.path +
+        "'");
   }
-  //// Dummy tracking geometry for the moments
-
-  auto worldTrkVol = std::make_unique<Acts::TrackingVolume>(
-      Acts::Transform3::Identity(),
-      std::make_unique<Acts::CuboidVolumeBounds>(10, 10, 10), "SmallWorld");
-
-  // m_trackingGeometry =
-  // std::make_unique<Acts::TrackingGeometry>(std::move(worldTrkVol));
-
-  // m_nominalGeometryContext = Acts::GeometryContext();
-
-  // m_trackingGeometry =
-  // m_cfg.trackingGeometryBuilder.trackingGeometry(m_nominalGeometryContext);
 }
 
 }  // namespace ActsExamples

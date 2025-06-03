@@ -39,10 +39,11 @@ if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     # set test library dependencies
     set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
     set(dd4hep_tests
-        DD4hepDetectorElement
         DD4hepCylinderLayerStructure
-        DD4hepDiscLayerStructure
         DD4hepCylindricalDetector
+        DD4hepDetectorElement
+        DD4hepDiscLayerStructure
+        DD4hepGeometryContext
     )
     foreach(_test ${dd4hep_tests})
         add_unittest(${_test} ${_test}Tests.cpp)

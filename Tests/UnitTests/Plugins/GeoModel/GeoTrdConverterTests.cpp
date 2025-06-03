@@ -28,7 +28,6 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
-  Acts::SurfaceBoundFactory boundFactory{};
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
 
@@ -37,9 +36,11 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   //  double YHalfLength2, double ZHalfLength);
   auto trapYZ = make_intrusive<GeoTrd>(2, 2, 50, 80, 60);
   auto logYZ = make_intrusive<GeoLogVol>("LogVolumeYZ", trapYZ, material);
+  auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   PVConstLink physYZ{make_intrusive<GeoFullPhysVol>(logYZ)};
 
+  Acts::SurfaceBoundFactory boundFactory{};
   auto converted = Acts::GeoTrdConverter{}.toSensitiveSurface(
       physYZ, idTransform, boundFactory);
 

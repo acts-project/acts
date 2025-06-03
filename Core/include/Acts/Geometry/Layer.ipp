@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <limits>
-#include <map>
+#pragma once
+
+#include "Acts/Geometry/Layer.hpp"
 
 namespace Acts {
 
@@ -32,7 +33,7 @@ inline const TrackingVolume* Layer::trackingVolume() const {
 }
 
 inline void Layer::encloseTrackingVolume(const TrackingVolume& tvol) {
-  m_trackingVolume = &(tvol);
+  m_trackingVolume = &tvol;
 }
 
 inline const Volume* Layer::representingVolume() const {

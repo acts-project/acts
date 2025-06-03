@@ -41,12 +41,13 @@ struct GeoDims {
 };
 void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
-  for (const auto& box : cache.volumeBoxFPVs) {
-    const Acts::VolumeBounds& bounds = std::get<1>(box)->volumeBounds();
+  for (const auto& convertedObj : cache.volumeBoxFPVs) {
+    const auto& box = std::get<1>(convertedObj);
+    const Acts::VolumeBounds& bounds = box->volumeBounds();
     for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
-    std::vector<const Acts::Surface*> surfaces = std::get<1>(box)->surfaces();
+    std::vector<const Acts::Surface*> surfaces = box->surfaces();
 
     for (auto surface : surfaces) {
       const Acts::SurfaceBounds& sbounds = surface->bounds();

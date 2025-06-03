@@ -169,7 +169,7 @@ oddDigiConfig = (
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))

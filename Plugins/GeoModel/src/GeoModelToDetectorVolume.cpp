@@ -95,7 +95,8 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
                  GeoTrf::RotateX3D(rotationAngle / 2);
       }
     } else {
-      THROW_EXCEPTION("FATAL: Translating GeoTrd to ACTS failed");
+      throw std::runtime_error("convertVolume() - Translating the GeoTrd " +
+                               printGeoShape(shape) + " to ACTS failed");
     }
 
   } else if (id == GeoShapeSubtraction::getClassTypeID()) {
@@ -110,7 +111,7 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
     const GeoShape* shapeOp = shiftShape->getOp();
     return convertVolume(newTrf * shiftShape->getX(), shapeOp, boundFactory);
   } else {
-    THROW_EXCEPTION("Cannot convert " << printGeoShape(shape));
+    throw std::runtime_error("Cannot convert " + printGeoShape(shape));
   }
   return std::make_shared<Volume>(newTrf, bounds);
 }

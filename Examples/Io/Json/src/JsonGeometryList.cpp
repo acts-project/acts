@@ -18,7 +18,8 @@ void ActsExamples::from_json(const nlohmann::json& data,
               .withBoundary(data.value("boundary", null))
               .withLayer(data.value("layer", null))
               .withApproach(data.value("approach", null))
-              .withSensitive(data.value("sensitive", null));
+              .withSensitive(data.value("sensitive", null))
+              .withExtra(data.value("extra", null));
 }
 
 void ActsExamples::to_json(nlohmann::json& data,
@@ -37,6 +38,9 @@ void ActsExamples::to_json(nlohmann::json& data,
   }
   if (geoId.sensitive() != 0u) {
     data["sensitive"] = geoId.sensitive();
+  }
+  if (geoId.extra() != 0u) {
+    data["extra"] = geoId.extra();
   }
 }
 

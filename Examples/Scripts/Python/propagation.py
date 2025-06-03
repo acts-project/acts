@@ -4,7 +4,7 @@ import os
 import acts
 import acts.examples
 from acts.examples import GenericDetector, AlignedDetector
-from acts.examples.odd import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
     EtaConfig,
@@ -15,7 +15,9 @@ from acts.examples.simulation import (
 u = acts.UnitConstants
 
 
-def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
+def runPropagation(
+    trackingGeometry, field, outputDir, s=None, decorators=[], sterileLogger=True
+):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
 
     for d in decorators:
@@ -49,7 +51,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        sterileLogger=True,
+        sterileLogger=sterileLogger,
         inputTrackParameters="params_particles_generated",
         outputSummaryCollection="propagation_summary",
     )
@@ -62,6 +64,15 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
             filePath=outputDir + "/propagation_summary.root",
         )
     )
+
+    if sterileLogger:
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation_summary",
+                filePath=outputDir + "/propagation_steps.root",
+            )
+        )
 
     return s
 
@@ -88,9 +99,8 @@ if "__main__" == __name__:
     # )
 
     ## Alternative: DD4hep detector
-    # dd4hepCfg = acts.examples.DD4hepDetector.Config()
-    # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
-    # detector = acts.examples.DD4hepDetector(dd4hepCfg)
+    # detector = getOpenDataDetector()
+    # trackingGeometry = detector.trackingGeometry()
 
     trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
@@ -122,4 +132,5 @@ if "__main__" == __name__:
         field,
         os.getcwd() + "/propagation",
         decorators=contextDecorators,
+        sterileLogger=True,
     ).run()

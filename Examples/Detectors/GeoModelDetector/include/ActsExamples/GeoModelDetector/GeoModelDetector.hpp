@@ -18,39 +18,45 @@
 
 namespace ActsExamples {
 
-
-
-/** @brief Detector implementation to connect the GeoModel detector description with the
- *         translation to the G4 geometry and with the tracking geometry. */
+/// @brief Detector implementation to connect the GeoModel detector description with the
+///        transcription to the G4 geometry and with the tracking geometry.
 struct GeoModelDetector : public Detector {
   struct Config {
-    /** @brief Configured instance to the GeoModel loaded geoModel tree */
+    /// @brief Configured instance to the GeoModel loaded geoModel tree
     Acts::GeoModelTree geoModelTree{};
-    /** @brief Path to the GeoModel file. Used if the GeoModelTree remains unconfigured*/
+    /// @brief Path to the GeoModel file. Used if the GeoModelTree remains unconfigured
     std::string path{};
-    /// Logging level of the child tools
+    /// @brief Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
-
+  /// @brief Standard constructor to configure the Detector building
+  /// @param cfg: Options to steer the building process
   explicit GeoModelDetector(const Config& cfg);
 
+  /// @brief Build the Geant4 detector construction
+  /// @note This throws an exception if Geant4 is not enabled
+  /// @param options The Geant4 construction options
+  /// @return The Geant4 detector construction
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 
-  std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
-      const Acts::GeometryContext& gctx,    
-      Acts::ITrackingGeometryBuilder& builder) {
+  /// @brief Instantiate the building of the tracking geometry from an external builder
+  ///        The tracking geometry builder should contain the surfaces built from the same GeoModelTree
+  ///        as the GeoModelDetector itself.
+  /// @param gctx: Geometry context to access the aligned transform of the volumes
+  /// @param builder: Reference to the TrackingGeometry builder interpreting the GeoModelTree
+  /// @return A constructed tracking geometry
+  std::shared_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
+      const Acts::GeometryContext& gctx,
+      const Acts::ITrackingGeometryBuilder& builder) {
     if (!m_trackingGeometry) {
       m_trackingGeometry = builder.trackingGeometry(gctx);
     }
-    return std::move(m_trackingGeometry);
- }
+    return m_trackingGeometry;
+  }
 
  private:
-
   Config m_cfg{};
-
-  std::unique_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
 };
 
 }  // namespace ActsExamples

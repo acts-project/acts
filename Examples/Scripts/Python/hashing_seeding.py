@@ -127,7 +127,9 @@ class Config:
             oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+            detector = getOpenDataDetector(
+                odd_dir=geoDir, materialDecorator=oddMaterialDeco
+            )
             trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
