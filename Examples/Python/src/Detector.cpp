@@ -14,6 +14,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -51,6 +52,14 @@ void addDetector(Context& ctx) {
                 const std::optional<py::object>&,
                 const std::optional<py::object>&,
                 const std::optional<py::object>&) { self.reset(); });
+  }
+
+  {
+    py::class_<StructureSelector, std::shared_ptr<StructureSelector>>(
+        mex, "StructureSelector")
+        .def(py::init<std::shared_ptr<const Acts::TrackingGeometry>>())
+        .def("selectSurfaces", &StructureSelector::selectSurfaces)
+        .def("selectedTransforms", &StructureSelector::selectedTransforms);
   }
 
   {
