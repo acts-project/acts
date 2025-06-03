@@ -324,7 +324,7 @@ if args.reco:
         s,
         trackingGeometry,
         field,
-        seedingAlgorithm=SeedingAlgorithm.Default2,
+        seedingAlgorithm=SeedingAlgorithm.Triplet2,
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,

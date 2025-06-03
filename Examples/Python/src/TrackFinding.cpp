@@ -21,12 +21,12 @@
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithm2.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
+#include "ActsExamples/TrackFinding/TripletSeedingAlgorithm2.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -121,7 +121,8 @@ void addTrackFinding(Context& ctx) {
   }
   {
     using Config = Acts::TripletSeedFilter2::Config;
-    auto c = py::class_<Config>(m, "SeedFilter2Config").def(py::init<>());
+    auto c =
+        py::class_<Config>(m, "TripletSeedFilter2Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor,
                        zOriginWeightFactor, compatSeedWeight, deltaRMin,
                        maxSeedsPerSpM, compatSeedLimit, useDeltaRorTopRadius,
@@ -130,7 +131,8 @@ void addTrackFinding(Context& ctx) {
   }
   {
     using Config = Acts::TripletSeedFinder2::Config;
-    auto c = py::class_<Config>(m, "SeedFinder2Config").def(py::init<>());
+    auto c =
+        py::class_<Config>(m, "TripletSeedFinder2Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(
         c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
         deltaRMinTopSP, deltaRMaxTopSP, impactMax, sigmaScattering,
@@ -144,7 +146,8 @@ void addTrackFinding(Context& ctx) {
   }
   {
     using Options = Acts::TripletSeedFinder2::Options;
-    auto c = py::class_<Options>(m, "SeedFinder2Options").def(py::init<>());
+    auto c =
+        py::class_<Options>(m, "TripletSeedFinder2Options").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
     patchKwargsConstructor(c);
   }
@@ -192,7 +195,7 @@ void addTrackFinding(Context& ctx) {
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingAlgorithm2, mex, "SeedingAlgorithm2",
+      ActsExamples::TripletSeedingAlgorithm2, mex, "TripletSeedingAlgorithm2",
       inputSpacePoints, outputSeeds, finderConfig, finderOptions, filterConfig,
       gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
       numPhiNeighbors, useExtraCuts);
