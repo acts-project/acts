@@ -52,6 +52,12 @@ struct GeometryIdGetter {
       -> decltype(thing.geometryId(), Acts::GeometryIdentifier()) {
     return thing.geometryId();
   }
+  // support pointer type elements that implement `geometryId()`.
+  template <typename T>
+  inline auto operator()(const T& thing) const
+      -> decltype(thing->geometryId(), Acts::GeometryIdentifier()) {
+    return thing->geometryId();
+  }
   // support reference_wrappers around such types as well
   template <typename T>
   inline auto operator()(std::reference_wrapper<T> thing) const
