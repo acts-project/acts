@@ -70,6 +70,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
   if (!m_iovStores.empty()) {
     ACTS_VERBOSE("Looking for alignment store for event " << eventNumber
                                                           << " in IOV stores.");
+    std::lock_guard<std::mutex> lock(m_iovMutex);
     std::ranges::for_each(m_iovStores, [&](auto& iovStore) {
       auto& [iov, store, counter] = iovStore;
       if (eventNumber >= iov[0] && eventNumber <= iov[1]) {
