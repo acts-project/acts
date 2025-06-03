@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/TripletSeedFilter2.hpp"
 
+#include "Acts/Seeding2/IExperimentTripletSeedCuts2.hpp"
+
 #include <numeric>
 
 namespace Acts {

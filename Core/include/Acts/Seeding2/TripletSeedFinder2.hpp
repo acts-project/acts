@@ -36,6 +36,9 @@ namespace Acts {
 /// interaction region, and then forming triplets by combinding these
 /// doublets at a common middle space point. The triplets are then filtered
 /// using a seed filter to produce a set of track seeds.
+///
+/// Note that this algorithm is designed and tuned for cylindrical detectors and
+/// uses R-Z coordinates for the space points.
 class TripletSeedFinder2 {
  private:
   enum class SpacePointCandidateType { eBottom, eTop };
@@ -227,7 +230,7 @@ class TripletSeedFinder2 {
 
   explicit TripletSeedFinder2(const DerivedConfig& config,
                               std::unique_ptr<const Logger> logger =
-                                  getDefaultLogger("SeedFinder2",
+                                  getDefaultLogger("TripletSeedFinder2",
                                                    Logging::Level::INFO));
 
   const DerivedConfig& config() const { return m_cfg; }
