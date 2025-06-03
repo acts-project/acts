@@ -28,6 +28,7 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
                                            const GeoTube& geoTube,
                                            const Transform3& absTransform,
+                                           SurfaceBoundFactory& boundFactory,
                                            bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
@@ -45,7 +46,7 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
 
   if (targetShape == Surface::SurfaceType::Straw) {
     // Create the element and the surface
-    auto lineBounds = std::make_shared<LineBounds>(outerRadius, halfZ);
+    auto lineBounds = boundFactory.makeBounds<LineBounds>(outerRadius, halfZ);
     if (!sensitive) {
       auto surface = Surface::makeShared<StrawSurface>(transform, lineBounds);
       return std::make_tuple(nullptr, surface);
