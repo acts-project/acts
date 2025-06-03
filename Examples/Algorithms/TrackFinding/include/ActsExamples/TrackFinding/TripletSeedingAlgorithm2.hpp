@@ -27,7 +27,7 @@
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class SeedingAlgorithm2 final : public IAlgorithm {
+class TripletSeedingAlgorithm2 final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -66,7 +66,7 @@ class SeedingAlgorithm2 final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedingAlgorithm2(const Config& cfg, Acts::Logging::Level lvl);
+  TripletSeedingAlgorithm2(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

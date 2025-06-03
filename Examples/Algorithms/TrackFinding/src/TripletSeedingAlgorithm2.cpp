@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/SeedingAlgorithm2.hpp"
+#include "ActsExamples/TrackFinding/TripletSeedingAlgorithm2.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData2/SeedContainer2.hpp"
@@ -26,23 +26,8 @@ using namespace Acts::HashedStringLiteral;
 
 namespace ActsExamples {
 
-namespace {
-
-class SpacePointContainerProxy {
- public:
-  explicit SpacePointContainerProxy(const SimSpacePointContainer& container)
-      : m_container(container) {}
-
-  std::size_t size() const { return m_container.size(); }
-
- private:
-  const SimSpacePointContainer m_container;
-};
-
-}  // namespace
-
-SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
-                                     Acts::Logging::Level lvl)
+TripletSeedingAlgorithm2::TripletSeedingAlgorithm2(const Config& cfg,
+                                                   Acts::Logging::Level lvl)
     : IAlgorithm("SeedingAlgorithm2", lvl), m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -121,7 +106,8 @@ SeedingAlgorithm2::SeedingAlgorithm2(const Config& cfg,
       m_cfg.finderConfig.derive(), logger().cloneWithSuffix("SeedFinder2"));
 }
 
-ProcessCode SeedingAlgorithm2::execute(const AlgorithmContext& ctx) const {
+ProcessCode TripletSeedingAlgorithm2::execute(
+    const AlgorithmContext& ctx) const {
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints;

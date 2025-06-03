@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default Default2 TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
+    "Default Triplet2 TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -401,9 +401,9 @@ def addSeeding(
                 spacePointGridConfigArg,
                 logLevel,
             )
-        elif seedingAlgorithm == SeedingAlgorithm.Default2:
-            logger.info("Using default2 seeding")
-            seeds = addStandardSeeding2(
+        elif seedingAlgorithm == SeedingAlgorithm.Triplet2:
+            logger.info("Using triplet2 seeding")
+            seeds = addTripletSeeding2(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -823,7 +823,7 @@ def addStandardSeeding(
     return seedingAlg.config.outputSeeds
 
 
-def addStandardSeeding2(
+def addTripletSeeding2(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
@@ -834,12 +834,12 @@ def addStandardSeeding2(
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
 ):
-    """adds standard seeding
+    """adds triplet seeding
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
 
-    finderConfig = acts.SeedFinder2Config(
+    finderConfig = acts.TripletSeedFinder2Config(
         **acts.examples.defaultKWArgs(
             deltaRMinTopSP=(
                 seedFinderConfigArg.deltaR[0]
@@ -882,7 +882,7 @@ def addStandardSeeding2(
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
         ),
     )
-    finderOptions = acts.SeedFinder2Options(
+    finderOptions = acts.TripletSeedFinder2Options(
         **acts.examples.defaultKWArgs(
             beamPos=(
                 acts.Vector2(0.0, 0.0)
@@ -894,7 +894,7 @@ def addStandardSeeding2(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
     )
-    filterConfig = acts.SeedFilter2Config(
+    filterConfig = acts.TripletSeedFilter2Config(
         **acts.examples.defaultKWArgs(
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
@@ -926,7 +926,7 @@ def addStandardSeeding2(
         )
     )
 
-    seedingAlg = acts.examples.SeedingAlgorithm2(
+    seedingAlg = acts.examples.TripletSeedingAlgorithm2(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,

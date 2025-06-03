@@ -11,7 +11,7 @@ add_library(
     src/MuonHoughSeeder.cpp
     src/GbtsSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
-    src/SeedingAlgorithm2.cpp
+    src/TripletSeedingAlgorithm2.cpp
 )
 
 target_include_directories(
