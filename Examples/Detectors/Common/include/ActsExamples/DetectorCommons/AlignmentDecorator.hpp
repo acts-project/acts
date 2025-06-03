@@ -37,7 +37,7 @@ namespace ActsExamples {
 ///    which are simple arrays with two elements representing the start and end
 class AlignmentDecorator : public IContextDecorator {
  public:
-  /// The intervall of validity (IOV) for alignment data
+  /// The interval of validity (IOV) for alignment data
   /// This is a simple array with two elements, representing the start and end
   /// of the validity interval.
   using IOV = std::array<std::size_t, 2>;
@@ -91,8 +91,9 @@ class AlignmentDecorator : public IContextDecorator {
   std::mutex m_iovMutex;  //@< Mutex for IOV operations
   std::vector<std::tuple<IOV, std::shared_ptr<IAlignmentStore>, std::size_t>>
       m_iovStores;  //!< Stores for alignment data, each with a validity
-                    //!< interval and a counter of events passed since last in use
-                    
+                    //!< interval and a counter of events passed since last in
+                    //!< use
+
   std::vector<std::tuple<IOV, std::function<void(Acts::Transform3&)>>>
       m_iovGenerators;  //!< Generators for alignment data, each with a validity
                         //!< interval

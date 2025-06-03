@@ -56,7 +56,8 @@ ActsExamples::AlignmentDecorator::AlignmentDecorator(
     checkOverlappingIOVs(m_cfg.iovGenerators);
   } else {
     throw std::runtime_error(
-        "Both IOV stores and generators cannot be either empty nor configured.");
+        "Both IOV stores and generators cannot be either empty nor "
+        "configured.");
   }
 }
 
@@ -75,7 +76,9 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
       auto& [iov, store, counter] = iovStore;
       if (eventNumber >= iov[0] && eventNumber <= iov[1]) {
         alignmentStore = store.get();
-        if (counter == 0u) { ++counter; }  // Increase the counter if first use;
+        if (counter == 0u) {
+          ++counter;
+        }  // Increase the counter if first use;
       }
     });
   }
@@ -114,17 +117,20 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
       }
     }
     // Remove if count is greater than the interval
-    auto rmIdx = std::ranges::remove_if(m_iovStores, [this](const auto& iovStore) -> bool {
-      const auto& [iov, store, counter] = iovStore;
-      if (counter > m_cfg.gcInterval) {
-        ACTS_DEBUG("Garbage collection: removing alignment store for IOV [" +
-                   std::to_string(iov[0]) + ", " + std::to_string(iov[1]) +
-                   "] with counter " + std::to_string(counter-1) +
-                   " reaching/exceeding interval " + std::to_string(m_cfg.gcInterval));
-        return true;  // Remove if counter exceeds interval
-      }
-      return false;  // Keep it
-    });
+    auto rmIdx = std::ranges::remove_if(
+        m_iovStores, [this](const auto& iovStore) -> bool {
+          const auto& [iov, store, counter] = iovStore;
+          if (counter > m_cfg.gcInterval) {
+            ACTS_DEBUG(
+                "Garbage collection: removing alignment store for IOV [" +
+                std::to_string(iov[0]) + ", " + std::to_string(iov[1]) +
+                "] with counter " + std::to_string(counter - 1) +
+                " reaching/exceeding interval " +
+                std::to_string(m_cfg.gcInterval));
+            return true;  // Remove if counter exceeds interval
+          }
+          return false;  // Keep it
+        });
     // Do the actual removal
     m_iovStores.erase(rmIdx.begin(), rmIdx.end());
   }
