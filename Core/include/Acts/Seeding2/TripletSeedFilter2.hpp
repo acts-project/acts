@@ -98,6 +98,22 @@ class TripletSeedFilter2 final {
                                   getDefaultLogger("TripletSeedFilter2",
                                                    Logging::Level::INFO));
 
+  /// Create seed candidates with fixed bottom and middle space points and
+  /// all compatible top space points.
+  ///
+  /// @param options Configuration options for the filter
+  /// @param state Mutable state that is used to store intermediate results
+  /// @param spacePoints Container with all space points
+  /// @param rColumn Dense column of space point radii
+  /// @param bottomSp Fixed bottom space point
+  /// @param middleSp Fixed middle space point
+  /// @param topSpVec Vector containing all space points that may be compatible
+  ///                 with both bottom and middle space point
+  /// @param invHelixDiameterVec Vector containing 1/(2*r) values where r is the
+  ///                            helix radius
+  /// @param impactParametersVec Vector containing the impact parameters
+  /// @param zOrigin Z origin of the detector, used for z0 calculation
+  /// @param candidatesCollector Container for the seed candidates
   void filter2SpFixed(const Options& options, State& state,
                       const SpacePointContainer2& spacePoints,
                       const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -108,6 +124,13 @@ class TripletSeedFilter2 final {
                       float zOrigin,
                       CandidatesForMiddleSp2& candidatesCollector) const;
 
+  /// Create final seeds for all candidates with the same middle space point
+  ///
+  /// @param options Configuration options for the filter
+  /// @param state Mutable state that is used to store intermediate results
+  /// @param candidates Collection of seed candidates
+  /// @param numQualitySeeds Number of high quality seeds in seed confirmation
+  /// @param outputCollection Output container for the seeds
   void filter1SpFixed(const Options& options, State& state,
                       std::vector<TripletCandidate2>& candidates,
                       std::size_t numQualitySeeds,

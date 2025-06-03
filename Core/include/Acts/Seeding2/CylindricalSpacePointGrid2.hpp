@@ -80,6 +80,10 @@ class CylindricalSpacePointGrid2 {
     /// magnetic field
     float bFieldInZ = 0. * UnitConstants::T;
 
+    std::optional<GridBinFinder<3ul>> bottomBinFinder;
+    std::optional<GridBinFinder<3ul>> topBinFinder;
+    std::array<std::vector<std::size_t>, 3ul> navigation;
+
     DerivedConfig derive() const;
   };
 
@@ -129,23 +133,21 @@ class CylindricalSpacePointGrid2 {
       const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn) const;
 
+  auto& at(std::size_t index) { return grid().at(index); }
+  const auto& at(std::size_t index) const { return grid().at(index); }
+
   GridType& grid() { return *m_grid; }
   const GridType& grid() const { return *m_grid; }
 
-  BinnedGroup binnedGround(
-      const Acts::GridBinFinder<3ul>& bottomBinFinder,
-      const Acts::GridBinFinder<3ul>& topBinFinder,
-      const std::array<std::vector<std::size_t>, 3ul>& navigation) && {
-    return BinnedGroup(std::move(*m_grid), bottomBinFinder, topBinFinder,
-                       navigation);
-  }
+  const BinnedGroup& binnedGround() const { return *m_binnedGroup; }
 
  private:
   DerivedConfig m_cfg;
 
   std::unique_ptr<const Logger> m_logger;
 
-  std::optional<GridType> m_grid;
+  GridType* m_grid{};
+  std::optional<BinnedGroup> m_binnedGroup;
 
   std::size_t m_counter{};
   std::vector<bool> m_usedBinIndex;

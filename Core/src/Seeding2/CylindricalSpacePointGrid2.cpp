@@ -187,8 +187,11 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   ACTS_VERBOSE("- Z axis  : " << zAxis);
   ACTS_VERBOSE("- R axis  : " << rAxis);
 
-  m_grid.emplace(
+  GridType grid(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
+  m_binnedGroup.emplace(std::move(grid), m_cfg.bottomBinFinder.value(),
+                        m_cfg.topBinFinder.value(), m_cfg.navigation);
+  m_grid = &m_binnedGroup->grid();
 
   m_usedBinIndex = std::vector<bool>(m_grid->size(), false);
   m_rBinsIndex.reserve(m_grid->size());
