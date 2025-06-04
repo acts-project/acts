@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"

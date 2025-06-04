@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 
 #include <limits>
 #include <span>
@@ -17,7 +17,105 @@ namespace Acts {
 
 using SeedIndex2 = std::size_t;
 
-class SeedContainer2;
+template <bool read_only>
+class SeedProxy2;
+
+using MutableSeedProxy2 = SeedProxy2<false>;
+using ConstSeedProxy2 = SeedProxy2<true>;
+
+class SeedContainer2 {
+ public:
+  using IndexType = SeedIndex2;
+  using MutableProxyType = MutableSeedProxy2;
+  using ConstProxyType = ConstSeedProxy2;
+
+  std::size_t size() const { return m_entries.size(); }
+  bool empty() const { return size() == 0; }
+
+  void reserve(std::size_t size) {
+    m_entries.reserve(size);
+    m_spacePoints.reserve(size * 3);
+  }
+  void clear() {
+    m_entries.clear();
+    m_spacePoints.clear();
+  }
+
+  MutableProxyType createSeed(std::span<const SpacePointIndex2> spacePoints);
+
+  MutableProxyType at(IndexType index);
+  ConstProxyType at(IndexType index) const;
+
+  float &quality(IndexType index) { return m_entries[index].quality; }
+  float &vertexZ(IndexType index) { return m_entries[index].vertexZ; }
+
+  std::span<const std::size_t> spacePointIndices(IndexType index) const {
+    return std::span<const std::size_t>(
+        m_spacePoints.data() + m_entries[index].spacePointOffset,
+        m_spacePoints.data() + m_entries[index].spacePointOffset +
+            m_entries[index].seedSize);
+  }
+  float quality(IndexType index) const { return m_entries[index].quality; }
+  float vertexZ(IndexType index) const { return m_entries[index].vertexZ; }
+
+  template <bool read_only>
+  class SeedIterator {
+   public:
+    static constexpr bool ReadOnly = read_only;
+
+    using ContainerType = const_if_t<ReadOnly, SeedContainer2>;
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = SeedProxy2<ReadOnly>;
+    using difference_type = std::ptrdiff_t;
+
+    SeedIterator() = default;
+    SeedIterator(ContainerType &container, IndexType index)
+        : m_container(&container), m_index(index) {}
+
+    SeedIterator &operator++() {
+      ++m_index;
+      return *this;
+    }
+    SeedIterator operator++(int) {
+      SeedIterator tmp(*this);
+      ++(*this);
+      return tmp;
+    }
+
+    bool operator==(const SeedIterator &other) const {
+      return m_index == other.m_index && m_container == other.m_container;
+    }
+    bool operator!=(const SeedIterator &other) const {
+      return !(*this == other);
+    }
+
+    value_type operator*() const { return value_type(*m_container, m_index); }
+
+   private:
+    ContainerType *m_container{};
+    IndexType m_index{};
+  };
+  using iterator = SeedIterator<false>;
+  using const_iterator = SeedIterator<true>;
+
+  iterator begin() { return iterator(*this, 0); }
+  iterator end() { return iterator(*this, size()); }
+
+  const_iterator begin() const { return const_iterator(*this, 0); }
+  const_iterator end() const { return const_iterator(*this, size()); }
+
+ private:
+  struct Entry {
+    std::size_t seedSize{};
+    std::size_t spacePointOffset{};
+    float quality{-std::numeric_limits<float>::infinity()};
+    float vertexZ{};
+  };
+
+  std::vector<Entry> m_entries{};
+  std::vector<SpacePointIndex2> m_spacePoints{};
+};
 
 template <bool read_only>
 class SeedProxy2 {
@@ -146,129 +244,21 @@ class SeedProxy2 {
   IndexType m_index{0};
 };
 
-using MutableSeedProxy2 = SeedProxy2<false>;
-using ConstSeedProxy2 = SeedProxy2<true>;
+inline MutableSeedProxy2 SeedContainer2::createSeed(
+    std::span<const SpacePointIndex2> spacePoints) {
+  m_entries.emplace_back(spacePoints.size(), m_spacePoints.size(),
+                         -std::numeric_limits<float>::infinity(), 0.f);
+  m_spacePoints.insert(m_spacePoints.end(), spacePoints.begin(),
+                       spacePoints.end());
+  return MutableProxyType(*this, size() - 1);
+}
 
-class SeedContainer2 {
- public:
-  using IndexType = SeedIndex2;
-  using MutableProxyType = MutableSeedProxy2;
-  using ConstProxyType = ConstSeedProxy2;
+inline MutableSeedProxy2 SeedContainer2::at(IndexType index) {
+  return MutableProxyType(*this, index);
+}
 
-  std::size_t size() const { return m_entries.size(); }
-  bool empty() const { return size() == 0; }
-
-  void reserve(std::size_t size) {
-    m_entries.reserve(size);
-    m_spacePoints.reserve(size * 3);
-  }
-  void clear() {
-    m_entries.clear();
-    m_spacePoints.clear();
-  }
-
-  IndexType addSeed(SpacePointIndex2 bottom, SpacePointIndex2 middle,
-                    SpacePointIndex2 top) {
-    m_entries.emplace_back(3, m_spacePoints.size(),
-                           -std::numeric_limits<float>::infinity(), 0.f);
-    m_spacePoints.push_back(bottom);
-    m_spacePoints.push_back(middle);
-    m_spacePoints.push_back(top);
-    return size() - 1;
-  }
-
-  MutableSeedProxy2 makeSeed(SpacePointIndex2 bottom, SpacePointIndex2 middle,
-                             SpacePointIndex2 top) {
-    return at(addSeed(bottom, middle, top));
-  }
-
-  template <bool read_only>
-  MutableSeedProxy2 copySeed(SeedProxy2<read_only> other) {
-    auto seed =
-        makeSeed(other.spacePointIndices()[0], other.spacePointIndices()[1],
-                 other.spacePointIndices()[2]);
-    seed.quality() = other.quality();
-    seed.vertexZ() = other.vertexZ();
-    return seed;
-  }
-
-  MutableProxyType at(IndexType index) {
-    return MutableProxyType(*this, index);
-  }
-
-  float &quality(IndexType index) { return m_entries[index].quality; }
-  float &vertexZ(IndexType index) { return m_entries[index].vertexZ; }
-
-  ConstProxyType at(IndexType index) const {
-    return ConstProxyType(*this, index);
-  }
-
-  std::span<const std::size_t> spacePointIndices(IndexType index) const {
-    return std::span<const std::size_t>(
-        m_spacePoints.data() + m_entries[index].spacePointOffset,
-        m_spacePoints.data() + m_entries[index].spacePointOffset +
-            m_entries[index].seedSize);
-  }
-  float quality(IndexType index) const { return m_entries[index].quality; }
-  float vertexZ(IndexType index) const { return m_entries[index].vertexZ; }
-
-  template <bool read_only>
-  class SeedIterator {
-   public:
-    static constexpr bool ReadOnly = read_only;
-
-    using ContainerType = const_if_t<ReadOnly, SeedContainer2>;
-
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = SeedProxy2<ReadOnly>;
-    using difference_type = std::ptrdiff_t;
-
-    SeedIterator() = default;
-    SeedIterator(ContainerType &container, IndexType index)
-        : m_container(&container), m_index(index) {}
-
-    SeedIterator &operator++() {
-      ++m_index;
-      return *this;
-    }
-    SeedIterator operator++(int) {
-      SeedIterator tmp(*this);
-      ++(*this);
-      return tmp;
-    }
-
-    bool operator==(const SeedIterator &other) const {
-      return m_index == other.m_index && m_container == other.m_container;
-    }
-    bool operator!=(const SeedIterator &other) const {
-      return !(*this == other);
-    }
-
-    value_type operator*() const { return value_type(*m_container, m_index); }
-
-   private:
-    ContainerType *m_container{};
-    IndexType m_index{};
-  };
-  using iterator = SeedIterator<false>;
-  using const_iterator = SeedIterator<true>;
-
-  iterator begin() { return iterator(*this, 0); }
-  iterator end() { return iterator(*this, size()); }
-
-  const_iterator begin() const { return const_iterator(*this, 0); }
-  const_iterator end() const { return const_iterator(*this, size()); }
-
- private:
-  struct Entry {
-    std::size_t seedSize{};
-    std::size_t spacePointOffset{};
-    float quality{-std::numeric_limits<float>::infinity()};
-    float vertexZ{};
-  };
-
-  std::vector<Entry> m_entries{};
-  std::vector<SpacePointIndex2> m_spacePoints{};
-};
+inline ConstSeedProxy2 SeedContainer2::at(IndexType index) const {
+  return ConstProxyType(*this, index);
+}
 
 }  // namespace Acts

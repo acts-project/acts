@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData2/SeedContainer2.hpp"
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding2/TripletSeedFilter2.hpp"

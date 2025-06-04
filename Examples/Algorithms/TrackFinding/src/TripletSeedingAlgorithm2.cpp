@@ -8,9 +8,9 @@
 
 #include "ActsExamples/TrackFinding/TripletSeedingAlgorithm2.hpp"
 
+#include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData2/SeedContainer2.hpp"
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"

@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/TripletSeedFinder2.hpp"
 
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/TripletSeedFilter2.hpp"
 
 #include <numeric>

@@ -276,7 +276,8 @@ void TripletSeedFilter2::filter1SpFixed(
                                     << top << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
 
-    auto seed = outputCollection.makeSeed(bottom, middle, top);
+    auto seed = outputCollection.createSeed(
+        std::array<SpacePointIndex2, 3>{bottom, middle, top});
     seed.vertexZ() = zOrigin;
     seed.quality() = bestSeedQuality;
 
