@@ -397,19 +397,6 @@ void DetrayPayloadConverter::handlePortal(
 }
 
 namespace {
-std::optional<std::size_t> findSurfaceInVolume(
-    const detray::io::volume_payload& volPayload, const Surface& surface) {
-  auto srfIt =
-      std::ranges::find_if(volPayload.surfaces, [&](const auto& srfPayload) {
-        return srfPayload.source == surface.geometryId().value();
-      });
-
-  if (srfIt == volPayload.surfaces.end()) {
-    return std::nullopt;
-  }
-
-  return std::distance(volPayload.surfaces.begin(), srfIt);
-}
 
 constexpr static detray::io::material_slab_payload s_dummyMaterialSlab{
     .type = detray::io::material_id::slab,
