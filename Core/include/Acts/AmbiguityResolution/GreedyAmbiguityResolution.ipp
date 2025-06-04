@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+
 #include "Acts/EventData/TrackStateType.hpp"
 
 #include <unordered_map>
