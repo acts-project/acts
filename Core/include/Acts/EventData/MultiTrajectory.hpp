@@ -14,24 +14,16 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
-#include "Acts/EventData/TrackStateProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <bitset>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <string_view>
 #include <type_traits>
-#include <vector>
 
 #include <Eigen/Core>
 

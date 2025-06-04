@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTube =
-      gmCache.boundingBoxes[0];
+  BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
+  const auto& volumeTube = std::get<1>(gmCache.volumeBoxFPVs[0]);
   const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
       &volumeTube->volumeBounds());
   std::vector<double> convDims = bounds->values();

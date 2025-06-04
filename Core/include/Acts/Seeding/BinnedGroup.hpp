@@ -10,10 +10,7 @@
 
 #include "Acts/Seeding/BinnedGroupIterator.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
-#include "Acts/Utilities/Holders.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace Acts {
@@ -35,19 +32,19 @@ class BinnedGroup {
   BinnedGroup() = delete;
 
   /// brief Constructor
-  BinnedGroup(grid_t&& grid, const Acts::GridBinFinder<DIM>& bottomFinder,
-              const Acts::GridBinFinder<DIM>& topFinder,
+  BinnedGroup(grid_t&& grid, const GridBinFinder<DIM>& bottomFinder,
+              const GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
   BinnedGroup(grid_t&& grid, std::vector<bool> mask,
-              const Acts::GridBinFinder<DIM>& bottomFinder,
-              const Acts::GridBinFinder<DIM>& topFinder,
+              const GridBinFinder<DIM>& bottomFinder,
+              const GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
-  BinnedGroup(grid_t& grid, const Acts::GridBinFinder<DIM>& bottomFinder,
-              const Acts::GridBinFinder<DIM>& topFinder,
+  BinnedGroup(grid_t& grid, const GridBinFinder<DIM>& bottomFinder,
+              const GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>()) = delete;
 
@@ -85,10 +82,10 @@ class BinnedGroup {
 
   /// @brief Get the begin iterator
   /// @return The iterator
-  Acts::BinnedGroupIterator<grid_t> begin() const;
+  BinnedGroupIterator<grid_t> begin() const;
   /// @brief Get the end iterator
   /// @return The iterator
-  Acts::BinnedGroupIterator<grid_t> end() const;
+  BinnedGroupIterator<grid_t> end() const;
 
  private:
   /// @brief The N-dimentional grid
@@ -97,9 +94,9 @@ class BinnedGroup {
   /// corresponds to the global bins in the grid
   std::vector<bool> m_mask{};
   /// @brief The Grid Bin Finder for bottom candidates
-  const Acts::GridBinFinder<DIM>* m_bottomBinFinder{nullptr};
+  const GridBinFinder<DIM>* m_bottomBinFinder{nullptr};
   /// @brief The Grid Bin Finder for top candidates
-  const Acts::GridBinFinder<DIM>* m_topBinFinder{nullptr};
+  const GridBinFinder<DIM>* m_topBinFinder{nullptr};
   /// @brief Order of bins to loop over when searching for SPs
   std::array<std::vector<std::size_t>, DIM> m_bins{};
 };
