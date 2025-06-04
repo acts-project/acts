@@ -16,7 +16,8 @@ namespace bc = boost::container;
 namespace {
 
 template <typename T>
-Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor, std::size_t rank = 2) {
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
+                  std::size_t rank = 2) {
   assert(rank == 1 || rank == 2);
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
@@ -147,9 +148,11 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   ACTS_DEBUG("Create score tensor");
   auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
                                             execContext);
-  
+
   std::vector<Ort::Value> outputTensors;
-  auto outputRank = m_model->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetDimensionsCount();
+  auto outputRank = m_model->GetOutputTypeInfo(0)
+                        .GetTensorTypeAndShapeInfo()
+                        .GetDimensionsCount();
   outputTensors.push_back(toOnnx(memoryInfo, scores, outputRank));
   std::vector<const char *> outputNames{m_outputName.c_str()};
 
