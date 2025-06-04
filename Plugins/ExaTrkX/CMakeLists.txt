@@ -1,9 +1,11 @@
 add_library(
     ActsPluginExaTrkX
     SHARED
-    src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
+    src/BoostTrackBuilding.cpp
+    src/TruthGraphMetricsHook.cpp
+    src/GraphStoreHook.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -42,9 +44,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         PRIVATE
             src/TorchEdgeClassifier.cpp
             src/TorchMetricLearning.cpp
-            src/BoostTrackBuilding.cpp
-            src/TorchTruthGraphMetricsHook.cpp
-            src/TorchGraphStoreHook.cpp
+            src/buildEdges.cpp
     )
 endif()
 
@@ -71,15 +71,10 @@ target_include_directories(
 
 target_link_libraries(
     ActsPluginExaTrkX
-    PUBLIC
-        ActsCore
-        Boost::boost
-        ${TORCH_LIBRARIES} # TODO try to make this private again (torch::Device is leaking)
-        std::filesystem
+    PUBLIC ActsCore Boost::boost std::filesystem
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
@@ -90,12 +85,14 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:-g
             --generate-line-info
+            --expt-relaxed-constexpr
             --extended-lambda>
     )
     target_compile_definitions(
         ActsPluginExaTrkX
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
+    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::cudart)
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
@@ -105,6 +102,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
+    target_link_libraries(ActsPluginExaTrkX PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(
