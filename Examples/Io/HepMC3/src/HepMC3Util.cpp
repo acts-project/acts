@@ -28,6 +28,16 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   auto event = std::make_shared<HepMC3::GenEvent>();
   event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
 
+  // Loop once to find the total size we'll need
+  std::size_t nParticles = 0;
+  std::size_t nVertices = 0;
+  for (const auto& genEvent : genEvents) {
+    nParticles += genEvent->particles_size();
+    nVertices += genEvent->vertices_size();
+  }
+
+  event->reserve(nParticles, nVertices);
+
   for (const auto& genEvent : genEvents) {
     auto sample = mergeTimer.sample();
     particles.clear();

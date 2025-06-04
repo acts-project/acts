@@ -1,3 +1,0 @@
-set(integrationtest_extra_libraries ActsPluginLegacy)
-
-add_integrationtest(ATLSeeding ATLSeedingIntegrationTest.cpp)
