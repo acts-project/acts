@@ -364,7 +364,6 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
         });
       });
 
-      break;
     }  // loop over layers
   });
 
