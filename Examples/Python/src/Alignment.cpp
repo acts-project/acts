@@ -63,6 +63,7 @@ void addAlignment(Context& ctx) {
                                                 "AlignmentGeneratorGlobalShift")
         .def(py::init<>())
         .def_readwrite("shift", &AlignmentGenerator::GlobalShift::shift)
+        .def_readwrite("randomize", &AlignmentGenerator::GlobalShift::randomize)
         .def("__call__", &AlignmentGenerator::GlobalShift::operator());
   }
 
@@ -72,7 +73,31 @@ void addAlignment(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("axis", &AlignmentGenerator::GlobalRotation::axis)
         .def_readwrite("angle", &AlignmentGenerator::GlobalRotation::angle)
+        .def_readwrite("randomize",
+                       &AlignmentGenerator::GlobalRotation::randomize)
         .def("__call__", &AlignmentGenerator::GlobalRotation::operator());
+  }
+
+  {
+    py::class_<AlignmentGenerator::LocalRotation>(
+        mex, "AlignmentGeneratorLocalRotation")
+        .def(py::init<>())
+        .def_readwrite("axis", &AlignmentGenerator::LocalRotation::axis)
+        .def_readwrite("angle", &AlignmentGenerator::LocalRotation::angle)
+        .def_readwrite("randomize",
+                       &AlignmentGenerator::LocalRotation::randomize)
+        .def("__call__", &AlignmentGenerator::LocalRotation::operator());
+  }
+
+  {
+    py::class_<AlignmentGenerator::LocalShift>(mex,
+                                               "AlignmentGeneratorLocalShift")
+        .def(py::init<>())
+        .def_readwrite("axisDirection",
+                       &AlignmentGenerator::LocalShift::axisDirection)
+        .def_readwrite("shift", &AlignmentGenerator::LocalShift::shift)
+        .def_readwrite("randomize", &AlignmentGenerator::LocalShift::randomize)
+        .def("__call__", &AlignmentGenerator::LocalShift::operator());
   }
 }
 

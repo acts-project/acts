@@ -279,6 +279,8 @@ void addFramework(Context& ctx) {
   py::class_<RandomNumbers::Config>(randomNumbers, "Config")
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
+
+  // mex.def()
 }
 
 }  // namespace Acts::Python
