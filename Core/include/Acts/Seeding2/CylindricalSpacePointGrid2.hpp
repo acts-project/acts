@@ -37,7 +37,7 @@ class CylindricalSpacePointGrid2 {
   struct DerivedConfig;
 
   struct Config {
-    /// minimum pT to be found by seedFinder
+    /// minimum pT
     float minPt = 0 * UnitConstants::MeV;
     /// minimum extension of sensitive detector layer relevant for seeding as
     /// distance from x=y=0 (i.e. in r)
