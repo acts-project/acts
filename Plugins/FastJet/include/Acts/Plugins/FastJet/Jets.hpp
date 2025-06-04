@@ -18,6 +18,10 @@
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 
+namespace HepMC3 {
+class GenParticle;
+}
+
 namespace Acts::FastJet {
 
 /// Default jet definition: Anti-kt with a radius of 0.4
@@ -84,13 +88,45 @@ class TrackJetBuilder {
   fastjet::ClusterSequence m_clusterSeq{};
 };
 
+enum class JetLabel { Unknown = -99, LightJet = 0, CJet = 4, BJet = 5 };
+
+inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
+  switch (label) {
+    case JetLabel::Unknown:
+      os << "Unknown";
+      break;
+    case JetLabel::LightJet:
+      os << "LightJet";
+      break;
+    case JetLabel::CJet:
+      os << "CJet";
+      break;
+    case JetLabel::BJet:
+      os << "BJet";
+      break;
+  }
+  return os;
+}
+
 class TruthJetBuilder {
  public:
   explicit TruthJetBuilder(const Acts::Vector4& fm) { m_fourMomentum = fm; }
+  TruthJetBuilder(const Acts::Vector4& fm, const JetLabel label)
+      : m_fourMomentum(fm), m_label(label) {}
+
+  void setLabel(JetLabel jl) { m_label = jl; }
+  JetLabel getLabel() const { return m_label; }
+
+  void getLabelHadron(const HepMC3::GenParticle* hadron){
+    m_labelHadron = hadron;
+  }
+  const HepMC3::GenParticle* getLabelHadron() const { return m_labelHadron; }
   const Acts::Vector4 getTruthJetFourMomentum() const { return m_fourMomentum; }
 
  private:
   Acts::Vector4 m_fourMomentum{0., 0., 0., 0.};
+  JetLabel m_label{JetLabel::Unknown};
+  const HepMC3::GenParticle* m_labelHadron{nullptr};
 };
 
 class JetProperties {

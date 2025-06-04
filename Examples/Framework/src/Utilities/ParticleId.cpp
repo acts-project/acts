@@ -9,6 +9,7 @@
 #include "ActsExamples/Utilities/ParticleId.hpp"
 
 #include <cmath>
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -461,10 +462,10 @@ bool isLepton(int pdg) {
   return sp >= 11 && sp <= 18;
 }
 
-Hadron hadronLabel(int pdg) {
+HadronType hadronLabel(int pdg) {
   DecodedPID p(pdg);
 
-  using enum Hadron;
+  using enum HadronType;
 
   if (isBBbarMeson(p)) {
     return BBbarMeson;
@@ -500,4 +501,33 @@ Hadron hadronLabel(int pdg) {
   return Unknown;
 }
 
+std::ostream& operator<<(std::ostream& os, HadronType hadron) {
+  switch (hadron) {
+    using enum HadronType;
+    case Hadron:
+      return os << "Hadron";
+    case BBbarMeson:
+      return os << "BBbarMeson";
+    case CCbarMeson:
+      return os << "CCbarMeson";
+    case BottomMeson:
+      return os << "BottomMeson";
+    case BottomBaryon:
+      return os << "BottomBaryon";
+    case CharmedMeson:
+      return os << "CharmedMeson";
+    case CharmedBaryon:
+      return os << "CharmedBaryon";
+    case StrangeMeson:
+      return os << "StrangeMeson";
+    case StrangeBaryon:
+      return os << "StrangeBaryon";
+    case LightMeson:
+      return os << "LightMeson";
+    case LightBaryon:
+      return os << "LightBaryon";
+    case Unknown:
+      return os << "Unknown";
+  }
+}
 }  // namespace ActsExamples::ParticleId

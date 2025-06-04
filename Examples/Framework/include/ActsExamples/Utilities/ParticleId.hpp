@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include <iosfwd>
+
 namespace ActsExamples::ParticleId {
 
 bool isHadron(int pdg);
 bool isLepton(int pdg);
 
-enum class Hadron {
+enum class HadronType {
   Hadron = 1,
   BBbarMeson = 2,
   CCbarMeson = 3,
@@ -28,6 +30,8 @@ enum class Hadron {
   Unknown = 12
 };
 
-Hadron hadronLabel(int pdg);
+std::ostream& operator<<(std::ostream& os, HadronType hadron);
+
+HadronType hadronLabel(int pdg);
 
 }  // namespace ActsExamples::ParticleId

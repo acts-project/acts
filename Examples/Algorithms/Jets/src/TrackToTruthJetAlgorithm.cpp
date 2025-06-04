@@ -37,7 +37,11 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);
   const auto& truthJets = m_inputJets(ctx);
   // Take a copy that we will modify
-  Acts::FastJet::TrackJetContainer jets = truthJets;
+  Acts::FastJet::TrackJetContainer jets;
+
+  for(const auto& truthJet : truthJets) {
+    jets.emplace_back(truthJet);
+  }
 
   ACTS_DEBUG("TrackToTruthJetAlg - Number of tracks: " << tracks.size());
   ACTS_DEBUG("TrackToTruthJetAlg - Number of truth jets: " << truthJets.size());
@@ -46,12 +50,20 @@ ProcessCode ActsExamples::TrackToTruthJetAlgorithm::execute(
   for (const auto& track : tracks) {
     double minDeltaR = m_cfg.maxDeltaR;
 
-    ACTS_VERBOSE("Track index: " << track.index()
-                                 << ", momentum: " << track.momentum().x()
-                                 << ", " << track.momentum().y() << ", "
-                                 << track.momentum().z());
+    double trackEnergy =
+        sqrt(track.absoluteMomentum() *
+             track.absoluteMomentum());  // need to add mass here!
 
+    ACTS_VERBOSE("Track index: "
+                 << track.index() << ", momentum: " << track.momentum().x()
+                 << ", " << track.momentum().y() << ", " << track.momentum().z()
+                 << ", energy: " << trackEnergy);
     Acts::FastJet::TruthJetBuilder* matchedJet = nullptr;
+
+    // Create a fastjet::PseudoJet object for the track
+    fastjet::PseudoJet trackJet(track.momentum().x(), track.momentum().y(),
+                                track.momentum().z(), trackEnergy);
+    trackJet.set_user_index(track.index());
 
     // Loop over the jets to find the closest one
     std::size_t i = 0;
