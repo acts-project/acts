@@ -75,11 +75,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
         << phiBins);
   } else {
     // calculate circle intersections of helix and max detector radius
-    float minHelixRadius =
-        config.minPt /
-        (1_T * 1e6 *
-         m_cfg.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
-                            // = pT[MeV] / (300 *Bz[kT])
+    // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) = pT[MeV] / (300 *Bz[kT])
+    float minHelixRadius = config.minPt / (1_T * 1e6 * m_cfg.bFieldInZ);
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax * 0.5) {

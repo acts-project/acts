@@ -221,15 +221,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if a column with the same name already exists.
   template <typename T>
   DenseColumn<T> &createDenseExtraColumn(const std::string &name) {
-    auto it = m_extraColumns.find(name);
-    if (it != m_extraColumns.end()) {
-      throw std::runtime_error("Extra column already exists: " + name);
-    }
-    auto holder = std::make_unique<DenseColumnHolder<T>>();
-    holder->resize(size());
-    auto &result = holder->column;
-    m_extraColumns[name] = std::move(holder);
-    return result;
+    return createExtraColumn<DenseColumnHolder<T>>(name);
   }
 
   /// Returns a mutable reference to the dense extra column with the given name.
@@ -239,12 +231,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
   DenseColumn<T> &denseExtraColumn(const std::string &name) {
-    auto it = m_extraColumns.find(name);
-    if (it == m_extraColumns.end()) {
-      throw std::runtime_error("Extra column not found: " + name);
-    }
-    auto holder = dynamic_cast<DenseColumnHolder<T> &>(*it->second);
-    return holder.column;
+    return extraColumn<DenseColumnHolder<T>>(name);
   }
   /// Returns a const reference to the dense extra column with the given name.
   /// If the column does not exist, an exception is thrown.
@@ -253,12 +240,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
   const DenseColumn<T> &denseExtraColumn(const std::string &name) const {
-    auto it = m_extraColumns.find(name);
-    if (it == m_extraColumns.end()) {
-      throw std::runtime_error("Extra column not found: " + name);
-    }
-    auto holder = dynamic_cast<const DenseColumnHolder<T> &>(*it->second);
-    return holder.column;
+    return extraColumn<DenseColumnHolder<T>>(name);
   }
 
   /// Additional sparse column of data that can be added to the space point
@@ -349,14 +331,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if a column with the same name already exists.
   template <typename T>
   SparseColumn<T> &createSparseExtraColumn(const std::string &name) {
-    auto it = m_extraColumns.find(name);
-    if (it != m_extraColumns.end()) {
-      throw std::runtime_error("Extra column already exists: " + name);
-    }
-    auto holder = std::make_unique<SparseColumnHolder<T>>();
-    auto &result = holder->column;
-    m_extraColumns[name] = std::move(holder);
-    return result;
+    return createExtraColumn<SparseColumnHolder<T>>(name);
   }
 
   /// Returns a mutable reference to the sparse extra column with the given
@@ -366,12 +341,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
   SparseColumn<T> &sparseExtraColumn(const std::string &name) {
-    auto it = m_extraColumns.find(name);
-    if (it == m_extraColumns.end()) {
-      throw std::runtime_error("Extra column not found: " + name);
-    }
-    auto holder = dynamic_cast<SparseColumnHolder<T> &>(*it->second);
-    return holder.column;
+    return extraColumn<SparseColumnHolder<T>>(name);
   }
   /// Returns a const reference to the sparse extra column with the given name.
   /// If the column does not exist, an exception is thrown.
@@ -380,12 +350,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
   const SparseColumn<T> &sparseExtraColumn(const std::string &name) const {
-    auto it = m_extraColumns.find(name);
-    if (it == m_extraColumns.end()) {
-      throw std::runtime_error("Extra column not found: " + name);
-    }
-    auto holder = dynamic_cast<const SparseColumnHolder<T> &>(*it->second);
-    return holder.column;
+    return extraColumn<SparseColumnHolder<T>>(name);
   }
 
   template <bool read_only>
@@ -428,7 +393,6 @@ class SpacePointContainer2 {
   using const_iterator = Iterator<true>;
 
   iterator begin() { return iterator(*this, 0); }
-  /// Returns an iterator to the end of the space point container.
   iterator end() { return iterator(*this, size()); }
 
   const_iterator begin() const { return const_iterator(*this, 0); }
@@ -528,6 +492,36 @@ class SpacePointContainer2 {
 
   std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
       m_extraColumns;
+
+  template <typename Holder>
+  auto &createExtraColumn(const std::string &name) {
+    auto it = m_extraColumns.find(name);
+    if (it != m_extraColumns.end()) {
+      throw std::runtime_error("Extra column already exists: " + name);
+    }
+    auto holder = std::make_unique<Holder>();
+    auto &result = holder->column;
+    m_extraColumns[name] = std::move(holder);
+    return result;
+  }
+  template <typename Holder>
+  auto &extraColumn(const std::string &name) {
+    auto it = m_extraColumns.find(name);
+    if (it == m_extraColumns.end()) {
+      throw std::runtime_error("Extra column not found: " + name);
+    }
+    auto holder = dynamic_cast<Holder &>(*it->second);
+    return holder.column;
+  }
+  template <typename Holder>
+  auto &extraColumn(const std::string &name) const {
+    auto it = m_extraColumns.find(name);
+    if (it == m_extraColumns.end()) {
+      throw std::runtime_error("Extra column not found: " + name);
+    }
+    auto holder = dynamic_cast<const Holder &>(*it->second);
+    return holder.column;
+  }
 };
 
 /// A proxy class for accessing individual space points.
