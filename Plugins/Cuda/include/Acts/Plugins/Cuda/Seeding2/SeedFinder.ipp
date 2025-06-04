@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
+
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/CountDublets.hpp"
 #include "Acts/Plugins/Cuda/Seeding2/Details/FindDublets.hpp"

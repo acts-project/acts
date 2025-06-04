@@ -4,10 +4,10 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-04-20
+  SPACK_VERSION: develop-2025-05-25
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v10.0.0
 
 .ccache_base:
   cache:
@@ -206,7 +206,7 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval)"
+    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
