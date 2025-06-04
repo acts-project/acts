@@ -84,40 +84,40 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    # detector = GenericDetector(materialDecorator=matDeco)
-    # trackingGeometry = detector.trackingGeometry()
+    detector = GenericDetector(materialDecorator=matDeco)
+    trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: DD4hep detector
     # detector = getOpenDataDetector()
     # trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Misaligned DD4hep detector
-    detector = getOpenDataDetector(misaligned=True)
-    trackingGeometry = detector.trackingGeometry()
-    structureSelector = StructureSelector(trackingGeometry)
-    pixelBarrelID = acts.GeometryIdentifier(volume=17)
-    pixelBarrelTransforms = structureSelector.selectedTransforms(
-        acts.GeometryContext(), pixelBarrelID
-    )
-    alignDecoConfig = AlignmentDecorator.Config()
-    alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(
-        pixelBarrelTransforms
-    )
+    # detector = getOpenDataDetector(misaligned=True)
+    # trackingGeometry = detector.trackingGeometry()
+    # structureSelector = StructureSelector(trackingGeometry)
+    # pixelBarrelID = acts.GeometryIdentifier(volume=17)
+    # pixelBarrelTransforms = structureSelector.selectedTransforms(
+    #     acts.GeometryContext(), pixelBarrelID
+    # )
+    # alignDecoConfig = AlignmentDecorator.Config()
+    # alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(
+    #     pixelBarrelTransforms
+    # )
 
-    gRot = acts.examples.AlignmentGeneratorGlobalRotation()
-    gRot.axis = acts.Vector3(0.0, 0.0, 1.0)
-    gRot.angle = 0.05
+    # gRot = acts.examples.AlignmentGeneratorGlobalRotation()
+    # gRot.axis = acts.Vector3(0.0, 0.0, 1.0)
+    # gRot.angle = 0.05
 
-    lShift = acts.examples.AlignmentGeneratorLocalShift()
-    lShift.axisDirection = acts.AxisDirection.AxisZ
-    lShift.shift = 3.0
+    # lShift = acts.examples.AlignmentGeneratorLocalShift()
+    # lShift.axisDirection = acts.AxisDirection.AxisZ
+    # lShift.shift = 3.0
 
-    alignDecoConfig.iovGenerators = [((0, 25), lShift), ((25, 50), gRot)]
-    alignDecoConfig.garbageCollection = True
-    alignDecoConfig.gcInterval = 20
+    # alignDecoConfig.iovGenerators = [((0, 25), lShift), ((25, 50), gRot)]
+    # alignDecoConfig.garbageCollection = True
+    # alignDecoConfig.gcInterval = 20
 
-    alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.VERBOSE)
-    contextDecorators = [alignDeco]
+    # alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.VERBOSE)
+    # contextDecorators = [alignDeco]
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
@@ -147,5 +147,5 @@ if "__main__" == __name__:
         outputDir=os.getcwd() + "/propagation",
         s=None,
         decorators=contextDecorators,
-        sterileLogger=False,
+        sterileLogger=True,
     ).run()
