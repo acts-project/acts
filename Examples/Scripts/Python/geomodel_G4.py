@@ -7,7 +7,6 @@ from acts import (
     CylindricalContainerBuilder,
     DetectorBuilder,
     GeometryIdGenerator,
-    
 )
 
 from acts.examples import ObjTrackingGeometryWriter
@@ -73,22 +72,22 @@ def main():
 
     # Read the geometry model from the database
     gmTree = gm.readFromDb(args.input)
-    # gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
-    # gmFactoryConfig.nameList = [
-    #     "RpcGasGap",
-    #     "MDTDriftGas",
-    # ]
-    # gmFactoryConfig.convertSubVolumes = True
-    # gmFactoryConfig.convertBox = ["MDT"]
+    gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
+    gmFactoryConfig.nameList = [
+        "RpcGasGap",
+        "MDTDriftGas",
+    ]
+    gmFactoryConfig.convertSubVolumes = True
+    gmFactoryConfig.convertBox = ["MDT"]
 
-    # gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
-    # # The options
-    # gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
-    # gmFactoryOptions.queries = ["Muon"]
- 
-    # # The Cache & construct call
-    # gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    # gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+    gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
+    # The options
+    gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
+    gmFactoryOptions.queries = ["Muon"]
+
+    # The Cache & construct call
+    gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
+    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
@@ -102,18 +101,19 @@ def main():
     gmBuilderConfig.geoModel = gmTree
     gmBuilderConfig.stationNames = ["BIL"]
 
-   
+    trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
+        gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE
+    )
 
-    trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE)
-        
-
-    trackingGeometry = detector.buildMuonMockupTrackingGeometry(gContext, trackingGeometryBuilder)
+    trackingGeometry = detector.buildMuonMockupTrackingGeometry(
+        gContext, trackingGeometryBuilder
+    )
 
     writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=os.path.join(args.outDir, "obj")
-            )
+        level=acts.logging.INFO, outputDir=os.path.join(args.outDir, "obj")
+    )
     writer.write(gContext, trackingGeometry)
-    
+
     runGeant4(detector, trackingGeometry, field, args.outDir).run()
 
 
