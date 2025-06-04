@@ -46,9 +46,10 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
-      outputSpacePoints, trackingGeometry, geometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
+                                "SpacePointMaker", inputMeasurements,
+                                outputSpacePoints, trackingGeometry,
+                                geometrySelection, stripGeometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;

@@ -1266,3 +1266,33 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     assert rfp.exists()
 
     assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.odd
+def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+    if detector_config.name == "generic":
+        pytest.skip("No strip spacepoint formation for the generic detector currently")
+
+    from strip_spacepoints import createStripSpacepoints
+
+    s = Sequencer(events=20, numThreads=-1)
+
+    config_path = Path(__file__).parent.parent.parent.parent / "Examples" / "Configs"
+
+    geo_selection = config_path / "odd-strip-spacepoint-selection.json"
+    digi_config_file = config_path / "odd-digi-smearing-config.json"
+
+    with detector_config.detector:
+        createStripSpacepoints(
+            trackingGeometry=detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=digi_config_file,
+            geoSelection=geo_selection,
+            outputDir=tmp_path,
+            s=s,
+        ).run()
+
+    root_file = "strip_spacepoints.root"
+    rfp = tmp_path / root_file
+
+    assert_root_hash(root_file, rfp)

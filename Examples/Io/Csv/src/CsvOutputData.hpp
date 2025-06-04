@@ -256,7 +256,8 @@ struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0;
+  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0,
+                extra_id = 0;
   /// Center position components in mm.
   float cx = 0, cy = 0, cz = 0;
   /// Rotation matrix components.
@@ -278,10 +279,11 @@ struct SurfaceData {
   float pitch_v = -1.f;
 
   DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
-                 module_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv,
-                 rot_yw, rot_zu, rot_zv, rot_zw, bounds_type, bound_param0,
-                 bound_param1, bound_param2, bound_param3, bound_param4,
-                 bound_param5, bound_param6, module_t, pitch_u, pitch_v);
+                 module_id, extra_id, cx, cy, cz, rot_xu, rot_xv, rot_xw,
+                 rot_yu, rot_yv, rot_yw, rot_zu, rot_zv, rot_zw, bounds_type,
+                 bound_param0, bound_param1, bound_param2, bound_param3,
+                 bound_param4, bound_param5, bound_param6, module_t, pitch_u,
+                 pitch_v);
 };
 
 struct LayerVolumeData {

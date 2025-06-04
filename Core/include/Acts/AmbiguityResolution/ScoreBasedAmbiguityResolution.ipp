@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
