@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData2/SeedContainer2.hpp"
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData2/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
 namespace Acts {

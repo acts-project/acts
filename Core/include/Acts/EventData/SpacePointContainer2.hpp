@@ -126,8 +126,18 @@ class SpacePointContainer2 {
   /// @param y The y coordinate of the space point.
   /// @param z The z coordinate of the space point.
   /// @return A mutable proxy to the newly created space point.
-  MutableSpacePointProxy2 createSpacePoint(SourceLink sourceLink, float x,
-                                           float y, float z);
+  MutableProxyType createSpacePoint(SourceLink sourceLink, float x, float y,
+                                    float z);
+
+  /// Emplaces a new space point with the given source links and coordinates.
+  /// This will create a new space point at the end of the container.
+  /// @param sourceLinks The source links associated with the space point.
+  /// @param x The x coordinate of the space point.
+  /// @param y The y coordinate of the space point.
+  /// @param z The z coordinate of the space point.
+  /// @return A mutable proxy to the newly created space point.
+  MutableProxyType createSpacePoint(std::span<const SourceLink> sourceLinks,
+                                    float x, float y, float z);
 
   /// Returns a mutable proxy to the space point at the given index.
   /// If the index is out of range, an exception is thrown.
@@ -639,6 +649,23 @@ inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
   }
 
   return MutableSpacePointProxy2(*this, size() - 1);
+}
+
+inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
+    std::span<const SourceLink> sourceLinks, float x, float y, float z) {
+  m_entries.emplace_back<std::size_t, std::size_t>(m_sourceLinks.size(),
+                                                   sourceLinks.size());
+  m_xyz.push_back(x);
+  m_xyz.push_back(y);
+  m_xyz.push_back(z);
+  m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
+                       sourceLinks.end());
+
+  for (auto &column : m_extraColumns) {
+    column.second->emplace_back();
+  }
+
+  return MutableProxyType(*this, size() - 1);
 }
 
 inline MutableSpacePointProxy2 SpacePointContainer2::at(IndexType index) {
