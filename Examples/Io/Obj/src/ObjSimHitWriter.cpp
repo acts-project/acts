@@ -99,10 +99,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     std::size_t lOffset = 1;
     for (auto& [pId, pHits] : particleHits) {
       // Draw the particle hits
-      std::sort(pHits.begin(), pHits.end(),
-                [](const Acts::Vector4& a, const Acts::Vector4& b) {
-                  return a[Acts::eTime] < b[Acts::eTime];
-                });
+      std::ranges::sort(pHits,
+                        [](const Acts::Vector4& a, const Acts::Vector4& b) {
+                          return a[Acts::eTime] < b[Acts::eTime];
+                        });
 
       osHits << "o particle_" << pId << std::endl;
       for (const auto& hit : pHits) {
