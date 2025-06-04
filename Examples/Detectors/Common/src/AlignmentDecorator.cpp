@@ -34,6 +34,11 @@ void checkOverlappingIOVs(IovCollection& iovStores) {
   }
 }
 
+bool eventWithinIOV(const std::array<std::size_t, 2>& iov,
+                    std::size_t eventNumber) {
+  return eventNumber >= iov[0] && eventNumber <= iov[1];
+}
+
 }  // namespace
 
 ActsExamples::AlignmentDecorator::AlignmentDecorator(
@@ -71,10 +76,10 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
   if (!m_iovStores.empty()) {
     ACTS_VERBOSE("Looking for alignment store for event " << eventNumber
                                                           << " in IOV stores.");
-    std::lock_guard<std::mutex> lock(m_iovMutex);
+    std::scoped_lock lock(m_iovMutex);
     std::ranges::for_each(m_iovStores, [&](auto& iovStore) {
       auto& [iov, store, counter] = iovStore;
-      if (eventNumber >= iov[0] && eventNumber <= iov[1]) {
+      if (eventWithinIOV(iov, eventNumber)) {
         alignmentStore = store.get();
         if (counter == 0u) {
           ++counter;
@@ -88,9 +93,9 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
                  << eventNumber << ", checking generators.");
     std::ranges::for_each(m_iovGenerators, [&](auto& iovGenerator) {
       const auto& [iov, generator] = iovGenerator;
-      if (eventNumber >= iov[0] && eventNumber <= iov[1]) {
+      if (eventWithinIOV(iov, eventNumber)) {
         auto alignmentStorePtr = m_cfg.nominalStore->clone();
-        std::lock_guard<std::mutex> lock(m_iovMutex);
+        std::scoped_lock lock(m_iovMutex);
         alignmentStorePtr->visitStore(generator);
         m_iovStores.emplace_back(iov, alignmentStorePtr,
                                  1);  // Add to the IOV stores
@@ -104,33 +109,30 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
 
   // Run the garbage collection if requested
   if (m_cfg.garbageCollection) {
-    std::lock_guard<std::mutex> lock(m_iovMutex);
+    std::scoped_lock lock(m_iovMutex);
     // First increase the counters
     for (auto& [iov, store, counter] : m_iovStores) {
-      if (eventNumber < iov[0] || eventNumber > iov[1]) {
-        if (counter > 0 && counter <= m_cfg.gcInterval) {
-          ++counter;
-          ACTS_VERBOSE("Garbage collection: keeping alignment store for IOV ["
-                       << iov[0] << ", " << iov[1]
-                       << "] events passed since last in use: " << counter);
-        }
+      if (!eventWithinIOV(iov, eventNumber) && counter > 0) {
+        ++counter;
+        ACTS_VERBOSE("Garbage collection: keeping alignment store for IOV ["
+                     << iov[0] << ", " << iov[1]
+                     << "] events passed since last in use: " << counter);
       }
     }
     // Remove if count is greater than the interval
-    auto rmIdx = std::ranges::remove_if(
-        m_iovStores, [this](const auto& iovStore) -> bool {
-          const auto& [iov, store, counter] = iovStore;
-          if (counter > m_cfg.gcInterval) {
-            ACTS_DEBUG(
-                "Garbage collection: removing alignment store for IOV [" +
-                std::to_string(iov[0]) + ", " + std::to_string(iov[1]) +
-                "] with counter " + std::to_string(counter - 1) +
-                " reaching/exceeding interval " +
-                std::to_string(m_cfg.gcInterval));
-            return true;  // Remove if counter exceeds interval
-          }
-          return false;  // Keep it
-        });
+    auto rmIdx = std::ranges::remove_if(m_iovStores, [this](
+                                                         const auto& iovStore) {
+      const auto& [iov, store, counter] = iovStore;
+      if (counter > m_cfg.gcInterval) {
+        ACTS_DEBUG("Garbage collection: removing alignment store for IOV [" +
+                   std::to_string(iov[0]) + ", " + std::to_string(iov[1]) +
+                   "] with counter " + std::to_string(counter - 1) +
+                   " reaching/exceeding interval " +
+                   std::to_string(m_cfg.gcInterval));
+        return true;  // Remove if counter exceeds interval
+      }
+      return false;  // Keep it
+    });
     // Do the actual removal
     m_iovStores.erase(rmIdx.begin(), rmIdx.end());
   }

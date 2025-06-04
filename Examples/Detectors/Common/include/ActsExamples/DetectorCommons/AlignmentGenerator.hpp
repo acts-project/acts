@@ -79,8 +79,9 @@ struct ClippedGaussRandom {
 /// This generator does nothing
 struct Nominal {
   /// @brief The call operation for the nominal alignment
-  void operator()(Acts::Transform3* /*transform*/) const {}
-  // No operation, this is a nominal alignment generator}
+  void operator()(Acts::Transform3* /*transform*/) const {
+    // No operation, this is a nominal alignment generator}
+  }
 };
 
 /// This generator applies a constant global shift to the transform
