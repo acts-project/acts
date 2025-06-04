@@ -119,8 +119,9 @@ ProcessCode TripletSeedingAlgorithm2::execute(
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (m_spacePointSelector(sp)) {
-      auto newSp = coreSpacePoints.createSpacePoint(Acts::SourceLink(&sp),
-                                                    sp.x(), sp.y(), sp.z());
+      auto newSp = coreSpacePoints.createSpacePoint(
+          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)}, sp.x(),
+          sp.y(), sp.z());
       newSp.extra(rColumn) = sp.r();
       newSp.extra(phiColumn) = std::atan2(sp.y(), sp.x());
       newSp.extra(varianceRColumn) = sp.varianceR();

@@ -119,16 +119,6 @@ class SpacePointContainer2 {
     }
   }
 
-  /// Emplaces a new space point with the given source link and coordinates.
-  /// This will create a new space point at the end of the container.
-  /// @param sourceLink The source link associated with the space point.
-  /// @param x The x coordinate of the space point.
-  /// @param y The y coordinate of the space point.
-  /// @param z The z coordinate of the space point.
-  /// @return A mutable proxy to the newly created space point.
-  MutableProxyType createSpacePoint(SourceLink sourceLink, float x, float y,
-                                    float z);
-
   /// Emplaces a new space point with the given source links and coordinates.
   /// This will create a new space point at the end of the container.
   /// @param sourceLinks The source links associated with the space point.
@@ -538,7 +528,7 @@ class SpacePointContainer2 {
 template <bool read_only>
 class SpacePointProxy2 {
  public:
-  /// Indicates whether this spacepoint proxy is read-only or data can be
+  /// Indicates whether this space point proxy is read-only or data can be
   /// modified
   static constexpr bool ReadOnly = read_only;
 
@@ -635,21 +625,6 @@ class SpacePointProxy2 {
   ContainerType *m_container{};
   IndexType m_index{};
 };
-
-inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
-    SourceLink sourceLink, float x, float y, float z) {
-  m_entries.emplace_back<std::size_t, std::size_t>(m_sourceLinks.size(), 1);
-  m_xyz.push_back(x);
-  m_xyz.push_back(y);
-  m_xyz.push_back(z);
-  m_sourceLinks.emplace_back(std::move(sourceLink));
-
-  for (auto &column : m_extraColumns) {
-    column.second->emplace_back();
-  }
-
-  return MutableSpacePointProxy2(*this, size() - 1);
-}
 
 inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
     std::span<const SourceLink> sourceLinks, float x, float y, float z) {
