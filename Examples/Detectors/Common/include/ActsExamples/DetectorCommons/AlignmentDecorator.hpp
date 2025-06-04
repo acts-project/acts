@@ -85,8 +85,7 @@ class AlignmentDecorator : public IContextDecorator {
 
   std::unique_ptr<const Acts::Logger> m_logger;  ///!< The logging instance
 
-  static constexpr std::string m_name =
-      "AlignmentDecorator";  //!< The name of the decorator
+  std::string m_name = "AlignmentDecorator";  //!< The name of the decorator
 
   std::mutex m_iovMutex;  //@< Mutex for IOV operations
   std::vector<std::tuple<IOV, std::shared_ptr<IAlignmentStore>, std::size_t>>
