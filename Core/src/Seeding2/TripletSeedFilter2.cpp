@@ -49,13 +49,13 @@ TripletSeedFilter2::TripletSeedFilter2(const DerivedConfig& config,
     : m_cfg(config), m_logger(std::move(logger)) {}
 
 void TripletSeedFilter2::filter2SpFixed(
-    const Options& options, State& state,
+    const Options& options, State& state, Cache& cache,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
     SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
-    const std::vector<SpacePointIndex2>& topSpVec,
-    const std::vector<float>& invHelixDiameterVec,
-    const std::vector<float>& impactParametersVec, float zOrigin,
+    std::span<const SpacePointIndex2> topSpVec,
+    std::span<const float> invHelixDiameterVec,
+    std::span<const float> impactParametersVec, float zOrigin,
     CandidatesForMiddleSp2& candidatesCollector) const {
   auto spB = spacePoints.at(bottomSp);
   auto spM = spacePoints.at(middleSp);
@@ -65,25 +65,25 @@ void TripletSeedFilter2::filter2SpFixed(
   float weightMax = std::numeric_limits<float>::lowest();
 
   // initialize original index locations
-  state.topSpIndexVec.resize(topSpVec.size());
-  std::iota(state.topSpIndexVec.begin(), state.topSpIndexVec.end(), 0);
-  std::ranges::sort(state.topSpIndexVec, {},
+  cache.topSpIndexVec.resize(topSpVec.size());
+  std::iota(cache.topSpIndexVec.begin(), cache.topSpIndexVec.end(), 0);
+  std::ranges::sort(cache.topSpIndexVec, {},
                     [&invHelixDiameterVec](const std::size_t t) {
                       return invHelixDiameterVec[t];
                     });
 
   // vector containing the radius of all compatible seeds
-  state.compatibleSeedR.reserve(m_cfg.compatSeedLimit);
+  cache.compatibleSeedR.reserve(m_cfg.compatSeedLimit);
 
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (const std::size_t topSpIndex : state.topSpIndexVec) {
+  for (const std::size_t topSpIndex : cache.topSpIndexVec) {
     auto topSp = topSpVec[topSpIndex];
     auto spT = spacePoints.at(topSp);
 
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
-    state.compatibleSeedR.clear();
+    cache.compatibleSeedR.clear();
 
     float invHelixDiameter = invHelixDiameterVec[topSpIndex];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
@@ -97,10 +97,10 @@ void TripletSeedFilter2::filter2SpFixed(
 
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
-         variableCompTopIndex < state.topSpIndexVec.size();
+         variableCompTopIndex < cache.topSpIndexVec.size();
          variableCompTopIndex++) {
       std::size_t compatibletopSpIndex =
-          state.topSpIndexVec[variableCompTopIndex];
+          cache.topSpIndexVec[variableCompTopIndex];
       if (compatibletopSpIndex == topSpIndex) {
         continue;
       }
@@ -125,7 +125,7 @@ void TripletSeedFilter2::filter2SpFixed(
         continue;
       }
       bool newCompSeed = true;
-      for (const float previousDiameter : state.compatibleSeedR) {
+      for (const float previousDiameter : cache.compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
@@ -136,10 +136,10 @@ void TripletSeedFilter2::filter2SpFixed(
         }
       }
       if (newCompSeed) {
-        state.compatibleSeedR.push_back(otherTopR);
+        cache.compatibleSeedR.push_back(otherTopR);
         weight += m_cfg.compatSeedWeight;
       }
-      if (state.compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
+      if (cache.compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
         break;
       }
     }
@@ -155,7 +155,7 @@ void TripletSeedFilter2::filter2SpFixed(
 
     // increment in seed weight if number of compatible seeds is larger than
     // numSeedIncrement
-    if (state.compatibleSeedR.size() > m_cfg.numSeedIncrement) {
+    if (cache.compatibleSeedR.size() > m_cfg.numSeedIncrement) {
       weight += m_cfg.seedWeightIncrement;
     }
 
@@ -165,7 +165,7 @@ void TripletSeedFilter2::filter2SpFixed(
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
       int deltaSeedConf =
-          state.compatibleSeedR.size() + 1 - options.nTopSeedConf;
+          cache.compatibleSeedR.size() + 1 - options.nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
@@ -230,7 +230,7 @@ void TripletSeedFilter2::filter2SpFixed(
 
 void TripletSeedFilter2::filter1SpFixed(
     const Options& options, State& state,
-    std::vector<TripletCandidate2>& candidates, std::size_t numQualitySeeds,
+    std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
     SeedContainer2& outputCollection) const {
   if (m_cfg.experimentCuts != nullptr) {
     m_cfg.experimentCuts->cutPerMiddleSp(candidates);

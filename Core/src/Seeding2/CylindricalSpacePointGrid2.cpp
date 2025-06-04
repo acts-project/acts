@@ -211,26 +211,6 @@ void CylindricalSpacePointGrid2::fill(
     const SpacePointContainer2::DenseColumn<float>& phiColumn,
     const SpacePointContainer2::DenseColumn<float>& rColumn) {
   extend(spacePoints.range({0, spacePoints.size()}), phiColumn, rColumn);
-  sort(spacePoints, rColumn);
-}
-
-void CylindricalSpacePointGrid2::sort(
-    const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::DenseColumn<float>& rColumn) {
-  ACTS_VERBOSE("Sorting the grid");
-
-  for (std::size_t binIndex : m_rBinsIndex) {
-    auto& rbin = grid().atPosition(binIndex);
-    std::ranges::sort(rbin, {}, [&](const auto& sp) {
-      return spacePoints.at(sp).extra(rColumn);
-    });
-  }
-
-  m_usedBinIndex.assign(grid().size(), false);
-  m_rBinsIndex.clear();
-
-  ACTS_VERBOSE(
-      "Number of space points inserted (within grid range): " << m_counter);
 }
 
 Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(

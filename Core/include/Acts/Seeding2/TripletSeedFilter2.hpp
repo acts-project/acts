@@ -80,17 +80,19 @@ class TripletSeedFilter2 final {
 
   struct DerivedConfig : public Config {};
 
-  struct State {
-    std::vector<std::uint32_t> topSpIndexVec;
-    std::vector<float> compatibleSeedR;
-
-    std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
-  };
-
   struct Options {
     bool seedConfirmation = false;
     SeedConfirmationRangeConfig seedConfRange;
     std::size_t nTopSeedConf = 0;
+  };
+
+  struct State {
+    std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
+  };
+
+  struct Cache {
+    std::vector<std::uint32_t> topSpIndexVec;
+    std::vector<float> compatibleSeedR;
   };
 
   explicit TripletSeedFilter2(const DerivedConfig& config,
@@ -101,8 +103,9 @@ class TripletSeedFilter2 final {
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.
   ///
-  /// @param options Configuration options for the filter
+  /// @param options Frequently changing configuration
   /// @param state Mutable state that is used to store intermediate results
+  /// @param cache Cache object to store intermediate results
   /// @param spacePoints Container with all space points
   /// @param rColumn Dense column of space point radii
   /// @param bottomSp Fixed bottom space point
@@ -114,25 +117,24 @@ class TripletSeedFilter2 final {
   /// @param impactParametersVec Vector containing the impact parameters
   /// @param zOrigin Z origin of the detector, used for z0 calculation
   /// @param candidatesCollector Container for the seed candidates
-  void filter2SpFixed(const Options& options, State& state,
+  void filter2SpFixed(const Options& options, State& state, Cache& cache,
                       const SpacePointContainer2& spacePoints,
                       const SpacePointContainer2::DenseColumn<float>& rColumn,
                       SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
-                      const std::vector<SpacePointIndex2>& topSpVec,
-                      const std::vector<float>& invHelixDiameterVec,
-                      const std::vector<float>& impactParametersVec,
-                      float zOrigin,
+                      std::span<const SpacePointIndex2> topSpVec,
+                      std::span<const float> invHelixDiameterVec,
+                      std::span<const float> impactParametersVec, float zOrigin,
                       CandidatesForMiddleSp2& candidatesCollector) const;
 
   /// Create final seeds for all candidates with the same middle space point
   ///
-  /// @param options Configuration options for the filter
+  /// @param options Frequently changing configuration
   /// @param state Mutable state that is used to store intermediate results
   /// @param candidates Collection of seed candidates
   /// @param numQualitySeeds Number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
   void filter1SpFixed(const Options& options, State& state,
-                      std::vector<TripletCandidate2>& candidates,
+                      std::span<TripletCandidate2> candidates,
                       std::size_t numQualitySeeds,
                       SeedContainer2& outputCollection) const;
 

@@ -22,8 +22,8 @@ namespace Acts {
 
 class CylindricalSpacePointGrid2 {
  public:
-  /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
-  /// It stores a vector of internal space points to external space points
+  /// Cylindrical Space Point bin is a 2D (phi,z) grid. It stores a vector of
+  /// space point indices.
   using GridType = Grid<std::vector<SpacePointIndex2>,
                         Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
                         Axis<AxisType::Variable, AxisBoundaryType::Open>,
@@ -124,9 +124,6 @@ class CylindricalSpacePointGrid2 {
 
   void fill(const SpacePointContainer2& spacePoints,
             const SpacePointContainer2::DenseColumn<float>& phiColumn,
-            const SpacePointContainer2::DenseColumn<float>& rColumn);
-
-  void sort(const SpacePointContainer2& spacePoints,
             const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   Range1D<float> computeRadiusRange(
