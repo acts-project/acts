@@ -525,17 +525,16 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     for (std::uint32_t i = 0; i < sortedBottoms.size(); ++i) {
       cotThetaBottoms[i] = state.linCircleBottom[i].cotTheta;
     }
-    std::ranges::sort(sortedBottoms, {}, [&state](const std::uint32_t s) {
-      return state.linCircleBottom[s].cotTheta;
+    std::ranges::sort(sortedBottoms, {}, [&](const std::uint32_t s) {
+      return cotThetaBottoms[s];
     });
 
     std::vector<float> cotThetaTops(state.linCircleTop.size());
     for (std::uint32_t i = 0; i < sortedTops.size(); ++i) {
       cotThetaTops[i] = state.linCircleTop[i].cotTheta;
     }
-    std::ranges::sort(sortedTops, {}, [&state](const std::uint32_t s) {
-      return state.linCircleTop[s].cotTheta;
-    });
+    std::ranges::sort(sortedTops, {},
+                      [&](const std::uint32_t s) { return cotThetaTops[s]; });
   }
 
   // Reserve enough space, in case current capacity is too little
