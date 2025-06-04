@@ -151,8 +151,11 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     SeedFilterState seedFilterState;
     if (m_config.seedConfirmation) {
       // check if middle SP is in the central or forward region
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
       SeedConfirmationRangeConfig seedConfRange =
-          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf |
            zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange
               : m_config.centralSeedConfirmationRange;
@@ -318,8 +321,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
-      if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
-          zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
+      if (zOriginTimesDeltaR<m_config.collisionRegionMin * deltaR |
+                             zOriginTimesDeltaR>
+              m_config.collisionRegionMax *
+          deltaR) {
         continue;
       }
 
@@ -331,12 +339,18 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (deltaZ > m_config.cotThetaMax * deltaR ||
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
+        if (deltaZ > m_config.cotThetaMax * deltaR |
             deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
         // if z-distance between SPs is within max and min values
-        if (deltaZ > m_config.deltaZMax || deltaZ < -m_config.deltaZMax) {
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
+        if (deltaZ > m_config.deltaZMax | deltaZ < -m_config.deltaZMax) {
           continue;
         }
 
@@ -397,7 +411,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (deltaZ > m_config.cotThetaMax * deltaR ||
+        //
+        // intentionally using `|` after profiling. faster due to better branch
+        // prediction
+        if (deltaZ > m_config.cotThetaMax * deltaR |
             deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
@@ -446,7 +463,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (deltaZ > m_config.cotThetaMax * deltaR ||
+      //
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
+      if (deltaZ > m_config.cotThetaMax * deltaR |
           deltaZ < -m_config.cotThetaMax * deltaR) {
         continue;
       }
@@ -493,22 +513,29 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   std::size_t numTopSp = state.compatTopSP.size();
 
   // sort: make index vector
-  std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
-  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
-    sorted_bottoms[i] = i;
+  std::vector<std::uint32_t> sortedBottoms(state.compatBottomSP.size());
+  for (std::uint32_t i = 0; i < sortedBottoms.size(); ++i) {
+    sortedBottoms[i] = i;
   }
-
-  std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
-  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
-    sorted_tops[i] = i;
+  std::vector<std::uint32_t> sortedTops(state.linCircleTop.size());
+  for (std::uint32_t i = 0; i < sortedTops.size(); ++i) {
+    sortedTops[i] = i;
   }
 
   if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
-    std::ranges::sort(sorted_bottoms, {}, [&state](const std::size_t s) {
+    std::vector<float> cotThetaBottoms(state.compatBottomSP.size());
+    for (std::uint32_t i = 0; i < sortedBottoms.size(); ++i) {
+      cotThetaBottoms[i] = state.linCircleBottom[i].cotTheta;
+    }
+    std::ranges::sort(sortedBottoms, {}, [&state](const std::uint32_t s) {
       return state.linCircleBottom[s].cotTheta;
     });
 
-    std::ranges::sort(sorted_tops, {}, [&state](const std::size_t s) {
+    std::vector<float> cotThetaTops(state.linCircleTop.size());
+    for (std::uint32_t i = 0; i < sortedTops.size(); ++i) {
+      cotThetaTops[i] = state.linCircleTop[i].cotTheta;
+    }
+    std::ranges::sort(sortedTops, {}, [&state](const std::uint32_t s) {
       return state.linCircleTop[s].cotTheta;
     });
   }
@@ -523,7 +550,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   // clear previous results and then loop on bottoms and tops
   state.candidatesCollector.clear();
 
-  for (const std::size_t b : sorted_bottoms) {
+  for (const std::size_t b : sortedBottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSp) {
       break;
@@ -580,7 +607,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     }
 
     for (std::size_t index_t = t0; index_t < numTopSp; index_t++) {
-      const std::size_t t = sorted_tops[index_t];
+      const std::size_t t = sortedTops[index_t];
 
       auto lt = state.linCircleTop[t];
 
