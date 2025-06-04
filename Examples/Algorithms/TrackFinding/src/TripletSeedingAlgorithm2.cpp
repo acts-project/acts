@@ -11,6 +11,7 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/Seeding2/TripletSeedFinder2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -97,7 +98,7 @@ TripletSeedingAlgorithm2::TripletSeedingAlgorithm2(const Config& cfg,
                                         m_cfg.zBinNeighborsTop, 0);
   m_cfg.gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
 
-  m_cfg.finderConfig.seedFilter = std::make_unique<Acts::TripletSeedFilter2>(
+  m_cfg.finderConfig.filter = std::make_unique<Acts::TripletSeedFilter2>(
       m_cfg.filterConfig.derive(), logger().cloneWithSuffix("Filter"));
 
   m_seedFinder = Acts::TripletSeedFinder2(m_cfg.finderConfig.derive(),
@@ -150,8 +151,10 @@ ProcessCode TripletSeedingAlgorithm2::execute(
   // run the seeding
   Acts::SeedContainer2 seeds;
   Acts::TripletSeedFinder2::State state;
+  Acts::TripletSeedFinder2::Cache cache;
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
+  m_seedFinder->initialize(state, derivedOptions);
 
   std::vector<Acts::SpacePointIndex2> bottomSp;
   std::vector<Acts::SpacePointIndex2> middleSp;
@@ -171,9 +174,11 @@ ProcessCode TripletSeedingAlgorithm2::execute(
       topSp.insert(topSp.end(), grid.at(t).begin(), grid.at(t).end());
     }
 
-    m_seedFinder->createSeeds(derivedOptions, state, coreSpacePoints, rColumn,
-                              &varianceRColumn, &varianceZColumn, bottomSp,
-                              middleSp, topSp, seeds);
+    m_seedFinder->createSeeds(
+        state, cache,
+        Acts::TripletSeedFinder2::ContainerPointers(
+            coreSpacePoints, rColumn, varianceRColumn, varianceZColumn),
+        bottomSp, middleSp, topSp, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

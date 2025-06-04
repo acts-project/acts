@@ -13,6 +13,8 @@
 
 #include <numeric>
 
+#include <Eigen/src/Core/Matrix.h>
+
 namespace Acts {
 
 using namespace UnitLiterals;
@@ -79,19 +81,63 @@ TripletSeedFinder2::TripletSeedFinder2(const DerivedConfig& config,
                                        std::unique_ptr<const Logger> logger_)
     : m_cfg(config), m_logger(std::move(logger_)) {}
 
-void TripletSeedFinder2::deriveDoubletCuts(
-    DoubletCuts& cuts, const ConstSpacePointProxy2& spM,
-    const SpacePointContainer2::DenseColumn<float>& rColumn) const {
+TripletSeedFinder2::DoubletCuts TripletSeedFinder2::deriveDoubletCuts(
+    const DerivedOptions& options,
+    SpacePointCandidateType spacePointCandidateType) const {
+  DoubletCuts cuts;
+
+  cuts.impactMax = m_cfg.impactMax;
+  cuts.interactionPointCut = m_cfg.interactionPointCut;
+  cuts.deltaRMin = (spacePointCandidateType == SpacePointCandidateType::eBottom)
+                       ? m_cfg.deltaRMinBottomSP
+                       : m_cfg.deltaRMinTopSP;
+  cuts.deltaRMax = (spacePointCandidateType == SpacePointCandidateType::eBottom)
+                       ? m_cfg.deltaRMaxBottomSP
+                       : m_cfg.deltaRMaxTopSP;
+  cuts.collisionRegionMin = m_cfg.collisionRegionMin;
+  cuts.collisionRegionMax = m_cfg.collisionRegionMax;
+  cuts.cotThetaMax = m_cfg.cotThetaMax;
+  cuts.deltaZMax = m_cfg.deltaZMax;
+  cuts.minHelixDiameter2 = options.minHelixDiameter2;
+  cuts.experimentCuts = m_cfg.experimentCuts;
+
+  return cuts;
+}
+
+TripletSeedFinder2::TripletCuts TripletSeedFinder2::deriveTripletCuts(
+    const DerivedOptions& options) const {
+  TripletCuts cuts;
+
+  cuts.minPt = m_cfg.minPt;
+  cuts.sigmaScattering = m_cfg.sigmaScattering;
+  cuts.radLengthPerSeed = m_cfg.radLengthPerSeed;
+  cuts.maxPtScattering = m_cfg.maxPtScattering;
+  cuts.impactMax = m_cfg.impactMax;
+  cuts.helixCutTolerance = m_cfg.helixCutTolerance;
+  cuts.highland = m_cfg.highland;
+  cuts.pTPerHelixRadius = options.pTPerHelixRadius;
+  cuts.sigmapT2perRadius = options.sigmapT2perRadius;
+  cuts.multipleScattering2 = options.multipleScattering2;
+  cuts.minHelixDiameter2 = options.minHelixDiameter2;
+  cuts.seedConfirmation = m_cfg.seedConfirmation;
+  cuts.centralSeedConfirmationRange = m_cfg.centralSeedConfirmationRange;
+  cuts.forwardSeedConfirmationRange = m_cfg.forwardSeedConfirmationRange;
+  cuts.toleranceParam = m_cfg.toleranceParam;
+
+  return cuts;
+}
+
+TripletSeedFinder2::MiddleSpacePointInfo
+TripletSeedFinder2::computeMiddleSpacePointInfo(
+    const ConstSpacePointProxy2& spM,
+    const SpacePointContainer2::DenseColumn<float>& rColumn) {
   const float rM = spM.extra(rColumn);
   const float uIP = -1. / rM;
   const float cosPhiM = -spM.x() * uIP;
   const float sinPhiM = -spM.y() * uIP;
   const float uIP2 = uIP * uIP;
 
-  cuts.uIP = uIP;
-  cuts.uIP2 = uIP2;
-  cuts.cosPhiM = cosPhiM;
-  cuts.sinPhiM = sinPhiM;
+  return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
 std::pair<float, float> TripletSeedFinder2::retrieveRadiusRangeForMiddle(
@@ -113,29 +159,43 @@ std::pair<float, float> TripletSeedFinder2::retrieveRadiusRangeForMiddle(
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
 
-void TripletSeedFinder2::createSeeds(
-    const DerivedOptions& options, State& state,
-    const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::DenseColumn<float>& rColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
-    std::vector<SpacePointIndex2>& bottomSps,
-    std::vector<SpacePointIndex2>& middleSps,
-    std::vector<SpacePointIndex2>& topSps, SeedContainer2& outputSeeds) const {
+void TripletSeedFinder2::initialize(State& state,
+                                    const DerivedOptions& options) const {
+  state.options = options;
+
+  state.bottomDoubletCuts =
+      deriveDoubletCuts(options, SpacePointCandidateType::eBottom);
+  state.topDoubletCuts =
+      deriveDoubletCuts(options, SpacePointCandidateType::eTop);
+
+  state.tripletCuts = deriveTripletCuts(options);
+}
+
+void TripletSeedFinder2::createSeeds(State& state, Cache& cache,
+                                     const ContainerPointers& containerPointers,
+                                     std::span<SpacePointIndex2> bottomSps,
+                                     std::span<SpacePointIndex2> middleSps,
+                                     std::span<SpacePointIndex2> topSps,
+                                     SeedContainer2& outputSeeds) const {
   std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
-    return -spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
+    return -containerPointers.spacePoints().at(index).z() /
+           containerPointers.spacePoints().at(index).extra(
+               containerPointers.rColumn());
   });
   std::ranges::sort(middleSps, {}, [&](SpacePointIndex2 index) {
-    return spacePoints.at(index).extra(rColumn);
+    return containerPointers.spacePoints().at(index).extra(
+        containerPointers.rColumn());
   });
   std::ranges::sort(topSps, {}, [&](SpacePointIndex2 index) {
-    return spacePoints.at(index).z() / spacePoints.at(index).extra(rColumn);
+    return containerPointers.spacePoints().at(index).z() /
+           containerPointers.spacePoints().at(index).extra(
+               containerPointers.rColumn());
   });
 
   TripletSeedFilter2::Options filterOptions;
   filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
-  state.candidatesCollector.reserve(m_cfg.maxSeedsPerSpMConf,
+  cache.candidatesCollector.reserve(m_cfg.maxSeedsPerSpMConf,
                                     m_cfg.maxQualitySeedsPerSpMConf);
 
   if (middleSps.empty()) {
@@ -143,20 +203,20 @@ void TripletSeedFinder2::createSeeds(
     return;
   }
 
-  auto firstMiddleSp = spacePoints.at(middleSps.front());
+  auto firstMiddleSp = containerPointers.spacePoints().at(middleSps.front());
 
   // we compute this here since all middle space point candidates belong to
   // the same z-bin
   auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-      retrieveRadiusRangeForMiddle(firstMiddleSp, options.rMiddleSpRange);
+      retrieveRadiusRangeForMiddle(firstMiddleSp, state.options.rMiddleSpRange);
   ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                << "]");
 
   for (SpacePointIndex2 middleSpIndex : middleSps) {
-    auto spM = spacePoints.at(middleSpIndex);
+    auto spM = containerPointers.spacePoints().at(middleSpIndex);
 
-    const float rM = spM.extra(rColumn);
+    const float rM = spM.extra(containerPointers.rColumn());
     const float zM = spM.z();
 
     // check if spM is outside our radial region of interest
@@ -168,22 +228,17 @@ void TripletSeedFinder2::createSeeds(
       break;
     }
 
-    DoubletCuts doubletCuts;
-    doubletCuts.deltaRMin = m_cfg.deltaRMinTopSP;
-    doubletCuts.deltaRMax = m_cfg.deltaRMaxTopSP;
-    deriveDoubletCuts(doubletCuts, spM, rColumn);
+    MiddleSpacePointInfo middleSpacePointInfo =
+        computeMiddleSpacePointInfo(spM, containerPointers.rColumn());
 
     // Iterate over middle-top doublets
-    state.compatibleTopSp.clear();
-    state.linCirclesTop.clear();
-    state.linCircleCotThetaTop.clear();
+    cache.topDoublets.clear();
     createDoublets<SpacePointCandidateType::eTop>(
-        m_cfg, options, doubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, topSps, state.compatibleTopSp,
-        state.linCirclesTop, state.linCircleCotThetaTop);
+        state.topDoubletCuts, containerPointers, spM, middleSpacePointInfo,
+        topSps, cache.topDoublets);
 
     // no top SP found -> try next spM
-    if (state.compatibleTopSp.empty()) {
+    if (cache.topDoublets.empty()) {
       ACTS_VERBOSE("No compatible Tops, moving to next middle candidate");
       continue;
     }
@@ -206,98 +261,81 @@ void TripletSeedFinder2::createSeeds(
               ? filterOptions.seedConfRange.nTopForLargeR
               : filterOptions.seedConfRange.nTopForSmallR;
       // continue if number of top SPs is smaller than minimum
-      if (state.compatibleTopSp.size() < filterOptions.nTopSeedConf) {
+      if (cache.topDoublets.size() < filterOptions.nTopSeedConf) {
         ACTS_VERBOSE("Number of top SPs is "
-                     << state.compatibleTopSp.size()
+                     << cache.topDoublets.size()
                      << " and is smaller than minimum, moving to next middle "
                         "candidate");
         continue;
       }
     }
 
-    doubletCuts.deltaRMin = m_cfg.deltaRMinBottomSP;
-    doubletCuts.deltaRMax = m_cfg.deltaRMaxBottomSP;
-
     // Iterate over middle-bottom doublets
-    state.compatibleBottomSp.clear();
-    state.linCirclesBottom.clear();
-    state.linCircleCotThetaBottom.clear();
+    cache.bottomDoublets.clear();
     createDoublets<SpacePointCandidateType::eBottom>(
-        m_cfg, options, doubletCuts, spacePoints, rColumn, varianceRColumn,
-        varianceZColumn, spM, bottomSps, state.compatibleBottomSp,
-        state.linCirclesBottom, state.linCircleCotThetaBottom);
+        state.bottomDoubletCuts, containerPointers, spM, middleSpacePointInfo,
+        bottomSps, cache.bottomDoublets);
 
     // no bottom SP found -> try next spM
-    if (state.compatibleBottomSp.empty()) {
+    if (cache.bottomDoublets.empty()) {
       ACTS_VERBOSE("No compatible Bottoms, moving to next middle candidate");
       continue;
     }
 
-    ACTS_VERBOSE("Candidates: "
-                 << state.compatibleBottomSp.size() << " bottoms and "
-                 << state.compatibleTopSp.size()
-                 << " tops for middle candidate indexed " << spM.index());
+    ACTS_VERBOSE("Candidates: " << cache.bottomDoublets.size()
+                                << " bottoms and " << cache.topDoublets.size()
+                                << " tops for middle candidate indexed "
+                                << spM.index());
 
     // filter candidates
-    state.candidatesCollector.clear();
+    cache.candidatesCollector.clear();
     if (m_cfg.useDetailedDoubleMeasurementInfo) {
       createTriplets<MeasurementInfo::eDetailed>(
-          m_cfg, options, filterOptions, state.filterState, spacePoints,
-          rColumn, varianceRColumn, varianceZColumn, nullptr, nullptr, nullptr,
-          nullptr, spM, state.compatibleBottomSp, state.linCirclesBottom,
-          state.linCircleCotThetaBottom, state.compatibleTopSp,
-          state.linCirclesTop, state.linCircleCotThetaTop, state.sortedBottoms,
-          state.sortedTops, state.topSpVec, state.curvatures,
-          state.impactParameters, state.candidatesCollector);
+          cache.tripletCache, state.tripletCuts, *m_cfg.filter, filterOptions,
+          state.filter, cache.filter, containerPointers, spM,
+          cache.bottomDoublets, cache.topDoublets, cache.tripletTopCandidates,
+          cache.candidatesCollector);
     } else {
       createTriplets<MeasurementInfo::eDefault>(
-          m_cfg, options, filterOptions, state.filterState, spacePoints,
-          rColumn, varianceRColumn, varianceZColumn, nullptr, nullptr, nullptr,
-          nullptr, spM, state.compatibleBottomSp, state.linCirclesBottom,
-          state.linCircleCotThetaBottom, state.compatibleTopSp,
-          state.linCirclesTop, state.linCircleCotThetaTop, state.sortedBottoms,
-          state.sortedTops, state.topSpVec, state.curvatures,
-          state.impactParameters, state.candidatesCollector);
+          cache.tripletCache, state.tripletCuts, *m_cfg.filter, filterOptions,
+          state.filter, cache.filter, containerPointers, spM,
+          cache.bottomDoublets, cache.topDoublets, cache.tripletTopCandidates,
+          cache.candidatesCollector);
     }
 
     // retrieve all candidates
     // this collection is already sorted, higher weights first
     const std::size_t numQualitySeeds =
-        state.candidatesCollector.nHighQualityCandidates();
-    state.candidatesCollector.toSortedCandidates(spacePoints,
-                                                 state.sortedCandidates);
-    m_cfg.seedFilter->filter1SpFixed(filterOptions, state.filterState,
-                                     state.sortedCandidates, numQualitySeeds,
-                                     outputSeeds);
+        cache.candidatesCollector.nHighQualityCandidates();
+    cache.candidatesCollector.toSortedCandidates(
+        containerPointers.spacePoints(), cache.sortedCandidates);
+    m_cfg.filter->filter1SpFixed(filterOptions, state.filter,
+                                 cache.sortedCandidates, numQualitySeeds,
+                                 outputSeeds);
   }  // loop on middle space points
 }
 
 template <TripletSeedFinder2::SpacePointCandidateType candidate_type>
 void TripletSeedFinder2::createDoublets(
-    const DerivedConfig& config, const DerivedOptions& options,
-    const DoubletCuts& cuts, const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::DenseColumn<float>& rColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
+    const DoubletCuts& cuts, const ContainerPointers& containerPointers,
     const ConstSpacePointProxy2& middleSp,
-    const std::vector<SpacePointIndex2>& candidateSps,
-    std::vector<SpacePointIndex2>& compatibleSp,
-    std::vector<LinCircle>& linCircles, std::vector<float>& cotThetas) {
+    const MiddleSpacePointInfo& middleSpInfo,
+    std::span<const SpacePointIndex2> candidateSps,
+    Doublets& compatibleDoublets) {
   constexpr bool isBottomCandidate =
       candidate_type == SpacePointCandidateType::eBottom;
 
-  const float impactMax =
-      isBottomCandidate ? -config.impactMax : config.impactMax;
+  const float impactMax = isBottomCandidate ? -cuts.impactMax : cuts.impactMax;
 
   const float xM = middleSp.x();
   const float yM = middleSp.y();
   const float zM = middleSp.z();
-  const float rM = middleSp.extra(rColumn);
+  const float rM = middleSp.extra(containerPointers.rColumn());
 
   float vIPAbs = 0;
-  if (config.interactionPointCut) {
+  if (cuts.interactionPointCut) {
     // equivalent to m_cfg.impactMax / (rM * rM);
-    vIPAbs = impactMax * cuts.uIP2;
+    vIPAbs = impactMax * middleSpInfo.uIP2;
   }
 
   float deltaR = 0.;
@@ -307,26 +345,31 @@ void TripletSeedFinder2::createDoublets(
                             float iDeltaR2, float cotTheta) {
     // TOD use some reasonable defaults
 
-    float varianceZM =
-        varianceZColumn != nullptr ? middleSp.extra(*varianceZColumn) : 0;
-    float varianceZO =
-        varianceZColumn != nullptr ? otherSp.extra(*varianceZColumn) : 0;
-    float varianceRM =
-        varianceRColumn != nullptr ? middleSp.extra(*varianceRColumn) : 0;
-    float varianceRO =
-        varianceRColumn != nullptr ? otherSp.extra(*varianceRColumn) : 0;
+    float varianceZM = containerPointers.hasVarianceColumns()
+                           ? middleSp.extra(containerPointers.varianceZColumn())
+                           : 0;
+    float varianceZO = containerPointers.hasVarianceColumns()
+                           ? otherSp.extra(containerPointers.varianceZColumn())
+                           : 0;
+    float varianceRM = containerPointers.hasVarianceColumns()
+                           ? middleSp.extra(containerPointers.varianceRColumn())
+                           : 0;
+    float varianceRO = containerPointers.hasVarianceColumns()
+                           ? otherSp.extra(containerPointers.varianceRColumn())
+                           : 0;
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
   };
 
   for (SpacePointIndex2 otherSpIndex : candidateSps) {
-    ConstSpacePointProxy2 otherSp = spacePoints.at(otherSpIndex);
+    ConstSpacePointProxy2 otherSp =
+        containerPointers.spacePoints().at(otherSpIndex);
 
     if constexpr (isBottomCandidate) {
-      deltaR = rM - otherSp.extra(rColumn);
+      deltaR = rM - otherSp.extra(containerPointers.rColumn());
     } else {
-      deltaR = otherSp.extra(rColumn) - rM;
+      deltaR = otherSp.extra(containerPointers.rColumn()) - rM;
     }
 
     if (deltaR<cuts.deltaRMin | deltaR> cuts.deltaRMax) {
@@ -348,9 +391,9 @@ void TripletSeedFinder2::createDoublets(
     //
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
-    if (zOriginTimesDeltaR<config.collisionRegionMin * deltaR |
+    if (zOriginTimesDeltaR<cuts.collisionRegionMin * deltaR |
                            zOriginTimesDeltaR>
-            config.collisionRegionMax *
+            cuts.collisionRegionMax *
         deltaR) {
       continue;
     }
@@ -359,22 +402,22 @@ void TripletSeedFinder2::createDoublets(
     // transformation to avoid unnecessary calculations. If
     // interactionPointCut is true we apply the curvature cut first because it
     // is more frequent but requires the coordinate transformation
-    if (!config.interactionPointCut) {
+    if (!cuts.interactionPointCut) {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if (deltaZ > config.cotThetaMax * deltaR |
-          deltaZ < -config.cotThetaMax * deltaR) {
+      if (deltaZ > cuts.cotThetaMax * deltaR |
+          deltaZ < -cuts.cotThetaMax * deltaR) {
         continue;
       }
       // if z-distance between SPs is within max and min values
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if (deltaZ > config.deltaZMax | deltaZ < -config.deltaZMax) {
+      if (deltaZ > cuts.deltaZMax | deltaZ < -cuts.deltaZMax) {
         continue;
       }
 
@@ -382,8 +425,10 @@ void TripletSeedFinder2::createDoublets(
       const float deltaX = otherSp.x() - xM;
       const float deltaY = otherSp.y() - yM;
 
-      const float xNewFrame = deltaX * cuts.cosPhiM + deltaY * cuts.sinPhiM;
-      const float yNewFrame = deltaY * cuts.cosPhiM - deltaX * cuts.sinPhiM;
+      const float xNewFrame =
+          deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
+      const float yNewFrame =
+          deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
 
       const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
       const float iDeltaR2 = 1. / deltaR2;
@@ -397,10 +442,9 @@ void TripletSeedFinder2::createDoublets(
       const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
       // fill output vectors
-      compatibleSp.emplace_back(otherSp.index());
-      linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
-                              yNewFrame);
-      cotThetas.emplace_back(cotTheta);
+      compatibleDoublets.emplace_back(
+          otherSp.index(),
+          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
       continue;
     }
 
@@ -408,8 +452,10 @@ void TripletSeedFinder2::createDoublets(
     const float deltaX = otherSp.x() - xM;
     const float deltaY = otherSp.y() - yM;
 
-    const float xNewFrame = deltaX * cuts.cosPhiM + deltaY * cuts.sinPhiM;
-    const float yNewFrame = deltaY * cuts.cosPhiM - deltaX * cuts.sinPhiM;
+    const float xNewFrame =
+        deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
+    const float yNewFrame =
+        deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
 
     const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
     const float iDeltaR2 = 1. / deltaR2;
@@ -433,8 +479,8 @@ void TripletSeedFinder2::createDoublets(
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if (deltaZ > config.cotThetaMax * deltaR |
-          deltaZ < -config.cotThetaMax * deltaR) {
+      if (deltaZ > cuts.cotThetaMax * deltaR |
+          deltaZ < -cuts.cotThetaMax * deltaR) {
         continue;
       }
 
@@ -444,7 +490,9 @@ void TripletSeedFinder2::createDoublets(
       // discard bottom-middle doublets in a certain (r, eta) region according
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
-        if (!config.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
+        if (cuts.experimentCuts.connected() &&
+            !cuts.experimentCuts(otherSp.extra(containerPointers.rColumn()),
+                                 cotTheta)) {
           continue;
         }
       }
@@ -452,9 +500,9 @@ void TripletSeedFinder2::createDoublets(
       const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
       // fill output vectors
-      compatibleSp.emplace_back(otherSp.index());
-      linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
-                              yNewFrame);
+      compatibleDoublets.emplace_back(
+          otherSp.index(),
+          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
       continue;
     }
 
@@ -465,12 +513,12 @@ void TripletSeedFinder2::createDoublets(
     // we can obtain aCoef as the slope dv/du of the linear function,
     // estimated using du and dv between the two SP bCoef is obtained by
     // inserting aCoef into the linear equation
-    const float aCoef = (vT - vIP) / (uT - cuts.uIP);
-    const float bCoef = vIP - aCoef * cuts.uIP;
+    const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
+    const float bCoef = vIP - aCoef * middleSpInfo.uIP;
     // the distance of the straight line from the origin (radius of the
     // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
     // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-    if ((bCoef * bCoef) * options.minHelixDiameter2 > 1 + aCoef * aCoef) {
+    if ((bCoef * bCoef) * cuts.minHelixDiameter2 > 1 + aCoef * aCoef) {
       continue;
     }
 
@@ -480,8 +528,8 @@ void TripletSeedFinder2::createDoublets(
     //
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
-    if (deltaZ > config.cotThetaMax * deltaR |
-        deltaZ < -config.cotThetaMax * deltaR) {
+    if (deltaZ > cuts.cotThetaMax * deltaR |
+        deltaZ < -cuts.cotThetaMax * deltaR) {
       continue;
     }
 
@@ -491,7 +539,9 @@ void TripletSeedFinder2::createDoublets(
     // discard bottom-middle doublets in a certain (r, eta) region according
     // to detector specific cuts
     if constexpr (isBottomCandidate) {
-      if (!config.experimentCuts(otherSp.extra(rColumn), cotTheta)) {
+      if (cuts.experimentCuts.connected() &&
+          !cuts.experimentCuts(otherSp.extra(containerPointers.rColumn()),
+                               cotTheta)) {
         continue;
       }
     }
@@ -499,84 +549,71 @@ void TripletSeedFinder2::createDoublets(
     const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
     // fill output vectors
-    compatibleSp.emplace_back(otherSp.index());
-    linCircles.emplace_back(cotTheta, iDeltaR, er, uT, vT, xNewFrame,
-                            yNewFrame);
+    compatibleDoublets.emplace_back(
+        otherSp.index(), {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
   }
 }
 
 template <TripletSeedFinder2::MeasurementInfo measurement_info>
 void TripletSeedFinder2::createTriplets(
-    const DerivedConfig& config, const DerivedOptions& options,
+    TripletCache& cache, const TripletCuts& cuts,
+    const TripletSeedFilter2& filter,
     const TripletSeedFilter2::Options& filterOptions,
     TripletSeedFilter2::State& filterState,
-    const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::DenseColumn<float>& rColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceRColumn,
-    const SpacePointContainer2::DenseColumn<float>* varianceZColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>* topStripVectorColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>* bottomStripVectorColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>* stripCenterDistanceColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>*
-        topStripCenterPositionColumn,
-    const ConstSpacePointProxy2& spM,
-    const std::vector<SpacePointIndex2>& bottomSps,
-    const std::vector<LinCircle>& bottomLinCircles,
-    const std::vector<float>& bottomCotThetas,
-    const std::vector<SpacePointIndex2>& topSps,
-    const std::vector<LinCircle>& topLinCircles,
-    const std::vector<float>& topCotThetas,
-    std::vector<std::uint32_t>& sortedBottoms,
-    std::vector<std::uint32_t>& sortedTops,
-    std::vector<SpacePointIndex2>& topSpVec, std::vector<float>& curvatures,
-    std::vector<float>& impactParameters,
+    TripletSeedFilter2::Cache& filterCache,
+    const ContainerPointers& containerPointers,
+    const ConstSpacePointProxy2& spM, const Doublets& bottomDoublets,
+    const Doublets& topDoublets, TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   constexpr bool isDetailedMeasurement =
       measurement_info == MeasurementInfo::eDetailed;
 
-  const float rM = spM.extra(rColumn);
+  const float rM = spM.extra(containerPointers.rColumn());
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
-  const float varianceRM =
-      varianceRColumn != nullptr ? spM.extra(*varianceRColumn) : 0;
-  const float varianceZM =
-      varianceZColumn != nullptr ? spM.extra(*varianceZColumn) : 0;
+  const float varianceRM = containerPointers.hasVarianceColumns()
+                               ? spM.extra(containerPointers.varianceRColumn())
+                               : 0;
+  const float varianceZM = containerPointers.hasVarianceColumns()
+                               ? spM.extra(containerPointers.varianceZColumn())
+                               : 0;
 
   // make index vectors for sorting
-  sortedBottoms.resize(bottomSps.size());
-  std::iota(sortedBottoms.begin(), sortedBottoms.end(), 0);
+  cache.sortedBottoms.resize(bottomDoublets.size());
+  std::iota(cache.sortedBottoms.begin(), cache.sortedBottoms.end(), 0);
 
-  sortedTops.resize(topSps.size());
-  std::iota(sortedTops.begin(), sortedTops.end(), 0);
+  cache.sortedTops.resize(topDoublets.size());
+  std::iota(cache.sortedTops.begin(), cache.sortedTops.end(), 0);
 
   if constexpr (!isDetailedMeasurement) {
     // sorting becomes less expensive when we copy the cotTheta values into
     // their own arrays due to more optimal usage of the cache
 
-    std::ranges::sort(
-        sortedBottoms, {},
-        [&bottomCotThetas](const std::size_t s) { return bottomCotThetas[s]; });
-    std::ranges::sort(sortedTops, {}, [&topCotThetas](const std::size_t s) {
-      return topCotThetas[s];
-    });
+    std::ranges::sort(cache.sortedBottoms, {},
+                      [&bottomDoublets](const std::size_t s) {
+                        return bottomDoublets.cotTheta[s];
+                      });
+    std::ranges::sort(cache.sortedTops, {},
+                      [&topDoublets](const std::size_t s) {
+                        return topDoublets.cotTheta[s];
+                      });
   }
 
   // Reserve enough space, in case current capacity is too little
-  topSpVec.reserve(topSps.size());
-  curvatures.reserve(topSps.size());
-  impactParameters.reserve(topSps.size());
+  tripletTopCandidates.resize(topDoublets.size());
 
   std::size_t t0 = 0;
 
-  for (const std::size_t b : sortedBottoms) {
+  for (const std::size_t b : cache.sortedBottoms) {
     // break if we reached the last top SP
-    if (t0 >= topSps.size()) {
+    if (t0 >= topDoublets.size()) {
       break;
     }
 
-    auto spB = spacePoints.at(bottomSps[b]);
+    auto spB =
+        containerPointers.spacePoints().at(bottomDoublets.spacePoints[b]);
 
-    const auto& lb = bottomLinCircles[b];
+    const auto& lb = bottomDoublets.linCircles[b];
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -585,7 +622,7 @@ void TripletSeedFinder2::createTriplets(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = 1. + cotThetaB * cotThetaB;
-    float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
+    float sigmaSquaredPtDependent = iSinTheta2 * cuts.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -595,19 +632,17 @@ void TripletSeedFinder2::createTriplets(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
+    float scatteringInRegion2 = cuts.multipleScattering2 * iSinTheta2;
 
     float sinTheta = 1 / std::sqrt(iSinTheta2);
     float cosTheta = cotThetaB * sinTheta;
 
     // clear all vectors used in each inner for loop
-    topSpVec.clear();
-    curvatures.clear();
-    impactParameters.clear();
+    tripletTopCandidates.clear();
 
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
-    float rotationTermsUVtoXY[2] = {0, 0};
+    Eigen::Vector2f rotationTermsUVtoXY = {0, 0};
     if constexpr (isDetailedMeasurement) {
       rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
       rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
@@ -617,22 +652,23 @@ void TripletSeedFinder2::createTriplets(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
-    if (!config.seedConfirmation ||
-        spB.extra(rColumn) > filterOptions.seedConfRange.rMaxSeedConf) {
+    if (!cuts.seedConfirmation ||
+        spB.extra(containerPointers.rColumn()) >
+            filterOptions.seedConfRange.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (config.seedConfirmation &&
+    if (cuts.seedConfirmation &&
         candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
 
-    for (std::size_t indexSortedTop = t0; indexSortedTop < topSps.size();
+    for (std::size_t indexSortedTop = t0; indexSortedTop < topDoublets.size();
          ++indexSortedTop) {
-      const std::size_t t = sortedTops[indexSortedTop];
+      const std::size_t t = cache.sortedTops[indexSortedTop];
 
-      auto spT = spacePoints.at(topSps[t]);
+      auto spT = containerPointers.spacePoints().at(topDoublets.spacePoints[t]);
 
-      const auto& lt = topLinCircles[t];
+      const auto& lt = topDoublets.linCircles[t];
 
       float cotThetaT = lt.cotTheta;
       float rMxy = 0.;
@@ -640,7 +676,7 @@ void TripletSeedFinder2::createTriplets(
       float vb = 0.;
       float ut = 0.;
       float vt = 0.;
-      double rMTransf[3];
+      Vector3 rMTransf;
       float xB = 0.;
       float yB = 0.;
       float xT = 0.;
@@ -662,15 +698,13 @@ void TripletSeedFinder2::createTriplets(
 
         // position of Middle SP converted from UV to XY assuming cotTheta
         // evaluated from the Bottom and Middle SPs double
-        double positionMiddle[3] = {
+        Vector3 positionMiddle = {
             rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
             zPositionMiddle};
 
-        if (!xyzCoordinateCheck(
-                config.toleranceParam, spM, *topStripVectorColumn,
-                *bottomStripVectorColumn, *stripCenterDistanceColumn,
-                *topStripCenterPositionColumn, positionMiddle, rMTransf)) {
+        if (!stripCoordinateCheck(cuts.toleranceParam, spM, containerPointers,
+                                  positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -678,32 +712,28 @@ void TripletSeedFinder2::createTriplets(
         float B0 = 2. * (Vb - A0 * Ub);
         float Cb = 1. - B0 * lb.y;
         float Sb = A0 + B0 * lb.x;
-        double positionBottom[3] = {
+        Vector3 positionBottom = {
             rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
             zPositionMiddle};
 
-        double rBTransf[3];
-        if (!xyzCoordinateCheck(
-                config.toleranceParam, spB, *topStripVectorColumn,
-                *bottomStripVectorColumn, *stripCenterDistanceColumn,
-                *topStripCenterPositionColumn, positionBottom, rBTransf)) {
+        Vector3 rBTransf;
+        if (!stripCoordinateCheck(cuts.toleranceParam, spB, containerPointers,
+                                  positionBottom, rBTransf)) {
           continue;
         }
 
         // coordinate transformation and checks for top spacepoint
         float Ct = 1. - B0 * lt.y;
         float St = A0 + B0 * lt.x;
-        double positionTop[3] = {
+        Vector3 positionTop = {
             rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
             zPositionMiddle};
 
-        double rTTransf[3];
-        if (!xyzCoordinateCheck(
-                config.toleranceParam, spT, *topStripVectorColumn,
-                *bottomStripVectorColumn, *stripCenterDistanceColumn,
-                *topStripCenterPositionColumn, positionTop, rTTransf)) {
+        Vector3 rTTransf;
+        if (!stripCoordinateCheck(cuts.toleranceParam, spT, containerPointers,
+                                  positionTop, rTTransf)) {
           continue;
         }
 
@@ -809,7 +839,7 @@ void TripletSeedFinder2::createTriplets(
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * options.minHelixDiameter2) {
+      if (S2 < B2 * cuts.minHelixDiameter2) {
         continue;
       }
 
@@ -820,15 +850,15 @@ void TripletSeedFinder2::createTriplets(
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      if (!std::isinf(config.maxPtScattering)) {
+      if (!std::isinf(cuts.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
         // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0 || options.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * config.maxPtScattering) {
-          float pTscatterSigma = (config.highland / config.maxPtScattering) *
-                                 config.sigmaScattering;
+        if (B2 == 0 || cuts.pTPerHelixRadius * std::sqrt(S2 / B2) >
+                           2. * cuts.maxPtScattering) {
+          float pTscatterSigma =
+              (cuts.highland / cuts.maxPtScattering) * cuts.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
         }
       }
@@ -854,82 +884,62 @@ void TripletSeedFinder2::createTriplets(
         Im = std::abs((A - B * rM) * rM);
       }
 
-      if (Im > config.impactMax) {
+      if (Im > cuts.impactMax) {
         continue;
       }
 
-      topSpVec.push_back(spT.index());
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      curvatures.push_back(B / std::sqrt(S2));
-      impactParameters.push_back(Im);
+      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), Im);
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (topSpVec.size() < minCompatibleTopSPs) {
+    if (tripletTopCandidates.topSpacePoints.size() < minCompatibleTopSPs) {
       continue;
     }
 
     float zOrigin = spM.z() - rM * lb.cotTheta;
-    config.seedFilter->filter2SpFixed(filterOptions, filterState, spacePoints,
-                                      rColumn, spB.index(), spM.index(),
-                                      topSpVec, curvatures, impactParameters,
-                                      zOrigin, candidatesCollector);
+    filter.filter2SpFixed(
+        filterOptions, filterState, filterCache,
+        containerPointers.spacePoints(), containerPointers.rColumn(),
+        spB.index(), spM.index(), tripletTopCandidates.topSpacePoints,
+        tripletTopCandidates.curvatures, tripletTopCandidates.impactParameters,
+        zOrigin, candidatesCollector);
   }  // loop on bottoms
 }
 
-bool TripletSeedFinder2::xyzCoordinateCheck(
-    double toleranceParam, const ConstSpacePointProxy2& sp,
-    const SpacePointContainer2::DenseColumn<Vector3>& topStripVectorColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>& bottomStripVectorColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>& stripCenterDistanceColumn,
-    const SpacePointContainer2::DenseColumn<Vector3>&
-        topStripCenterPositionColumn,
-    const double* spacepointPosition, double* outputCoordinates) {
-  const Vector3& topStripVector = sp.extra(topStripVectorColumn);
-  const Vector3& bottomStripVector = sp.extra(bottomStripVectorColumn);
-  const Vector3& stripCenterDistance = sp.extra(stripCenterDistanceColumn);
-
-  const double xTopStripVector = topStripVector[0];
-  const double yTopStripVector = topStripVector[1];
-  const double zTopStripVector = topStripVector[2];
-  const double xBottomStripVector = bottomStripVector[0];
-  const double yBottomStripVector = bottomStripVector[1];
-  const double zBottomStripVector = bottomStripVector[2];
+bool TripletSeedFinder2::stripCoordinateCheck(
+    double tolerance, const ConstSpacePointProxy2& sp,
+    const ContainerPointers& containerPointers,
+    const Vector3& spacePointPosition, Vector3& outputCoordinates) {
+  const Vector3& topStripVector =
+      sp.extra(containerPointers.topStripVectorColumn());
+  const Vector3& bottomStripVector =
+      sp.extra(containerPointers.bottomStripVectorColumn());
+  const Vector3& stripCenterDistance =
+      sp.extra(containerPointers.stripCenterDistanceColumn());
 
   // cross product between top strip vector and spacepointPosition
-  double d1[3] = {yTopStripVector * spacepointPosition[2] -
-                      zTopStripVector * spacepointPosition[1],
-                  zTopStripVector * spacepointPosition[0] -
-                      xTopStripVector * spacepointPosition[2],
-                  xTopStripVector * spacepointPosition[1] -
-                      yTopStripVector * spacepointPosition[0]};
+  Vector3 d1 = topStripVector.cross(spacePointPosition);
 
   // scalar product between bottom strip vector and d1
-  double bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
-               zBottomStripVector * d1[2];
+  double bd1 = bottomStripVector.dot(d1);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
-  double s1 = stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
-              stripCenterDistance[2] * d1[2];
-  if (std::abs(s1) > std::abs(bd1) * toleranceParam) {
+  double s1 = stripCenterDistance.dot(d1);
+  if (std::abs(s1) > std::abs(bd1) * tolerance) {
     return false;
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  double d0[3] = {yBottomStripVector * spacepointPosition[2] -
-                      zBottomStripVector * spacepointPosition[1],
-                  zBottomStripVector * spacepointPosition[0] -
-                      xBottomStripVector * spacepointPosition[2],
-                  xBottomStripVector * spacepointPosition[1] -
-                      yBottomStripVector * spacepointPosition[0]};
+  Vector3 d0 = bottomStripVector.cross(spacePointPosition);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
   double s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
               stripCenterDistance[2] * d0[2];
-  if (std::abs(s0) > std::abs(bd1) * toleranceParam) {
+  if (std::abs(s0) > std::abs(bd1) * tolerance) {
     return false;
   }
 
@@ -937,14 +947,12 @@ bool TripletSeedFinder2::xyzCoordinateCheck(
   // detector elements
 
   const Vector3& topStripCenterPosition =
-      sp.extra(topStripCenterPositionColumn);
+      sp.extra(containerPointers.topStripCenterPositionColumn());
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;
-  outputCoordinates[1] = topStripCenterPosition[1] + yTopStripVector * s0;
-  outputCoordinates[2] = topStripCenterPosition[2] + zTopStripVector * s0;
+  outputCoordinates = topStripCenterPosition + topStripVector * s0;
   return true;
 }
 
