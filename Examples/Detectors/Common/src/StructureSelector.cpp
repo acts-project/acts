@@ -17,7 +17,7 @@ struct SensitiveGetter {
   /// @brief Visitor call operator
   /// @param surface
   void operator()(const Acts::Surface* surface) {
-    if (surface) {
+    if (surface != nullptr) {
       auto geoId = surface->geometryId();
       if (geoId.sensitive() != 0u ||
           surface->associatedDetectorElement() != nullptr) {
