@@ -155,8 +155,11 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
       SeedConfirmationRangeConfig seedConfRange =
-          ((zM > m_config.centralSeedConfirmationRange.zMaxSeedConf) |
-           (zM < m_config.centralSeedConfirmationRange.zMinSeedConf))
+          static_cast<bool>(
+              static_cast<int>(
+                  zM > m_config.centralSeedConfirmationRange.zMaxSeedConf) |
+              static_cast<int>(
+                  zM < m_config.centralSeedConfirmationRange.zMinSeedConf))
               ? m_config.forwardSeedConfirmationRange
               : m_config.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
@@ -324,8 +327,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if ((zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR) |
-          (zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR)) {
+      if (static_cast<int>(zOriginTimesDeltaR <
+                           m_config.collisionRegionMin * deltaR) |
+          static_cast<int>(zOriginTimesDeltaR >
+                           m_config.collisionRegionMax * deltaR)) {
         continue;
       }
 
@@ -340,15 +345,16 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         //
         // intentionally using `|` after profiling. faster due to better branch
         // prediction
-        if ((deltaZ > m_config.cotThetaMax * deltaR) |
-            (deltaZ < -m_config.cotThetaMax * deltaR)) {
+        if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
+            static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
           continue;
         }
         // if z-distance between SPs is within max and min values
         //
         // intentionally using `|` after profiling. faster due to better branch
         // prediction
-        if ((deltaZ > m_config.deltaZMax) | (deltaZ < -m_config.deltaZMax)) {
+        if (static_cast<int>(deltaZ > m_config.deltaZMax) |
+            static_cast<int>(deltaZ < -m_config.deltaZMax)) {
           continue;
         }
 
@@ -412,8 +418,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         //
         // intentionally using `|` after profiling. faster due to better branch
         // prediction
-        if ((deltaZ > m_config.cotThetaMax * deltaR) |
-            (deltaZ < -m_config.cotThetaMax * deltaR)) {
+        if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
+            static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -464,8 +470,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       //
       // intentionally using `|` after profiling. faster due to better branch
       // prediction
-      if ((deltaZ > m_config.cotThetaMax * deltaR) |
-          (deltaZ < -m_config.cotThetaMax * deltaR)) {
+      if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
+          static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
         continue;
       }
 

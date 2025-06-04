@@ -59,8 +59,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
     seedConfRange =
-        ((bottomSp.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf) |
-         (bottomSp.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf))
+        static_cast<bool>(
+            static_cast<int>(bottomSp.z() >
+                             m_cfg.centralSeedConfirmationRange.zMaxSeedConf) |
+            static_cast<int>(bottomSp.z() <
+                             m_cfg.centralSeedConfirmationRange.zMinSeedConf))
             ? m_cfg.forwardSeedConfirmationRange
             : m_cfg.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
