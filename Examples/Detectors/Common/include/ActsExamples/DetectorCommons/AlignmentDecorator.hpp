@@ -78,15 +78,15 @@ class AlignmentDecorator : public IContextDecorator {
   ProcessCode decorate(AlgorithmContext& context) override;
 
   /// Get the name of the decorator
-  const std::string& name() const override {
-    static const std::string name = "AlignmentDecorator";
-    return name;
-  }
+  const std::string& name() const override { return m_name; }
 
  private:
   Config m_cfg;  //!< The configuration strcut
 
   std::unique_ptr<const Acts::Logger> m_logger;  ///!< The logging instance
+
+  constexpr static std::string m_name =
+      "AlignmentDecorator";  //!< The name of the decorator
 
   std::mutex m_iovMutex;  //@< Mutex for IOV operations
   std::vector<std::tuple<IOV, std::shared_ptr<IAlignmentStore>, std::size_t>>
