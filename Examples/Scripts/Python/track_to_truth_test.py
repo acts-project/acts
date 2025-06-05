@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Optional
+import argparse
 
 import acts
 import acts.examples
@@ -35,9 +36,19 @@ from acts.examples.reconstruction import (
     addKalmanTracks,
 )
 
-s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
-outputDir = Path.cwd() / " trackToTruth_output"
+parser = argparse.ArgumentParser()
+parser.add_argument("--events", "-n", type=int, default=1000)
+args = parser.parse_args()
+
+outputDir = Path.cwd() / "trackToTruth_output"
+print(outputDir)
 outputDir.mkdir(exist_ok=True)
+s = acts.examples.Sequencer(
+    events=args.events,
+    numThreads=1,
+    logLevel=acts.logging.INFO,
+    outputDir=str(outputDir),
+)
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -81,6 +92,7 @@ addPythia8(
     writeHepMC3=None,
 )
 
+# Effective truth level selection for simulation + track reconstruction
 addGenParticleSelection(
     s,
     ParticleSelectorConfig(
@@ -181,16 +193,26 @@ s.addWriter(
     )
 )
 
+s.addAlgorithm(
+    acts.examples.ParticleSelector(
+        level=acts.logging.INFO,
+        inputParticles="particles_generated_selected",
+        outputParticles="jet_input_particles",
+        eta=(-3.0, 3.0),
+        pt=(150 * u.MeV, None),
+    )
+)
+
 addTruthJetAlg(
     s,
     TruthJetConfig(
-        inputTruthParticles="particles_generated_selected",
+        inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
         jetPtMin=10 * u.GeV,
         inputHepMC3Event="pythia8-event",
         doJetLabeling=True,
     ),
-    loglevel=acts.logging.DEBUG,
+    loglevel=acts.logging.INFO,
 )
 
 # addTrackToTruthJetAlg(
