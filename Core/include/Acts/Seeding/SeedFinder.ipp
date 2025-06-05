@@ -151,15 +151,9 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     SeedFilterState seedFilterState;
     if (m_config.seedConfirmation) {
       // check if middle SP is in the central or forward region
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
       SeedConfirmationRangeConfig seedConfRange =
-          static_cast<bool>(
-              static_cast<int>(
-                  zM > m_config.centralSeedConfirmationRange.zMaxSeedConf) |
-              static_cast<int>(
-                  zM < m_config.centralSeedConfirmationRange.zMinSeedConf))
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange
               : m_config.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
@@ -261,6 +255,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
   float deltaR = 0.;
   float deltaZ = 0.;
 
+  const auto outsideRangeCheck = [](const float value, const float min,
+                                    const float max) -> bool {
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
+    return static_cast<bool>(static_cast<int>(value < min) |
+                             static_cast<int>(value > max));
+  };
+
   for (auto& otherSPCol : otherSPsNeighbours) {
     const std::vector<const external_spacepoint_t*>& otherSPs =
         grid.at(otherSPCol.index);
@@ -324,13 +326,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
-      if (static_cast<int>(zOriginTimesDeltaR <
-                           m_config.collisionRegionMin * deltaR) |
-          static_cast<int>(zOriginTimesDeltaR >
-                           m_config.collisionRegionMax * deltaR)) {
+      if (outsideRangeCheck(zOriginTimesDeltaR,
+                            m_config.collisionRegionMin * deltaR,
+                            m_config.collisionRegionMax * deltaR)) {
         continue;
       }
 
@@ -342,19 +340,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
-            static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -m_config.cotThetaMax * deltaR,
+                              m_config.cotThetaMax * deltaR)) {
           continue;
         }
         // if z-distance between SPs is within max and min values
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (static_cast<int>(deltaZ > m_config.deltaZMax) |
-            static_cast<int>(deltaZ < -m_config.deltaZMax)) {
+        if (outsideRangeCheck(deltaZ, -m_config.deltaZMax,
+                              m_config.deltaZMax)) {
           continue;
         }
 
@@ -415,11 +407,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        //
-        // intentionally using `|` after profiling. faster due to better branch
-        // prediction
-        if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
-            static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -m_config.cotThetaMax * deltaR,
+                              m_config.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -467,11 +456,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
-      if (static_cast<int>(deltaZ > m_config.cotThetaMax * deltaR) |
-          static_cast<int>(deltaZ < -m_config.cotThetaMax * deltaR)) {
+      if (outsideRangeCheck(deltaZ, -m_config.cotThetaMax * deltaR,
+                            m_config.cotThetaMax * deltaR)) {
         continue;
       }
 
