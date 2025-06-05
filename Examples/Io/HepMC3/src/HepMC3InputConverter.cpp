@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
@@ -52,9 +53,6 @@ ProcessCode HepMC3InputConverter::execute(const AlgorithmContext& ctx) const {
 }
 
 namespace {
-
-constexpr int kBeamParticleStatus = 4;
-constexpr int kUndecayedParticleStatus = 1;
 
 Acts::Vector4 convertPosition(const HepMC3::FourVector& vec) {
   return Acts::Vector4(vec.x() * 1_mm, vec.y() * 1_mm, vec.z() * 1_mm,
@@ -152,10 +150,10 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         }
       }
     } else {
-      if (particle->status() != kUndecayedParticleStatus) {
+      if (particle->status() != HepMC3Util::kUndecayedParticleStatus) {
         ACTS_ERROR("Undecayed particle has status "
                    << particle->status() << "(and not "
-                   << kUndecayedParticleStatus << ")");
+                   << HepMC3Util::kUndecayedParticleStatus << ")");
       }
       // This particle is a final state particle
       nParticles += 1;
@@ -230,7 +228,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     for (const auto& vertex : genEvent.vertices()) {
       if (vertex->particles_in().empty() ||
           std::ranges::all_of(vertex->particles_in(), [](const auto& particle) {
-            return particle->status() == kBeamParticleStatus;
+            return particle->status() == HepMC3Util::kBeamParticleStatus;
           })) {
         // Check if primary vertex is within tolerance of an existing primary
         // vertex

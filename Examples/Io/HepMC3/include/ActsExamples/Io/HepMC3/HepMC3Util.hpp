@@ -30,6 +30,10 @@ void mergeEvents(HepMC3::GenEvent& event,
                  std::span<std::shared_ptr<const HepMC3::GenEvent>> genEvents,
                  const Acts::Logger& logger);
 
+constexpr int kBeamParticleStatus = 4;
+constexpr int kUndecayedParticleStatus = 1;
+constexpr int kDecayedParticleStatus = 2;
+
 enum class Compression { none, zlib, lzma, bzip2, zstd };
 
 std::ostream& operator<<(std::ostream& os, HepMC3Util::Compression compression);
