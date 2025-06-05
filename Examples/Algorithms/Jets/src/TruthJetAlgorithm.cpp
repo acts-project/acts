@@ -9,19 +9,24 @@
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
+<<<<<<< HEAD
 #include "ActsExamples/Utilities/ParticleId.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+=======
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "Acts/Plugins/FastJet/Jets.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+<<<<<<< HEAD
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
+=======
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 #include "ActsExamples/Utilities/ParticleId.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -79,16 +84,25 @@ JetLabel jetLabelFromHadronType(ParticleId::HadronType hType) {
     case CCbarMeson:
     case CharmedMeson:
     case CharmedBaryon:
+<<<<<<< HEAD
       return Acts::FastJet::JetLabel::CJet;
+=======
+      return JetLabel::CJet;
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
     case StrangeMeson:
     case StrangeBaryon:
     case LightMeson:
     case LightBaryon:
+<<<<<<< HEAD
       return Acts::FastJet::JetLabel::LightJet;
+=======
+      return JetLabel::LightJet;
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
     default:
       return Acts::FastJet::JetLabel::Unknown;
   }
 }
+<<<<<<< HEAD
 
 void findHadrons(
     const std::shared_ptr<const HepMC3::GenParticle>& particle,
@@ -125,26 +139,38 @@ void findHadrons(
 
 }  // namespace
 
+=======
+}  // namespace
+
+ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
+  std::ofstream outfile;
+  outfile.open("particles.csv");
+  outfile << "event,pt,eta,phi,pdg" << std::endl;
+
+  outfile.flush();
+  outfile.close();
+
+  outfile.open("jets.csv");
+  outfile << "event,pt,eta,phi,label" << std::endl;
+
+  outfile.flush();
+  outfile.close();
+
+  return ProcessCode::SUCCESS;
+}
+
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   Acts::FastJet::TrackJetContainer outputJets;
 
   const SimParticleContainer& truthParticlesRaw = m_inputTruthParticles(ctx);
   std::vector<const SimParticle*> truthParticles;
+  truthParticles.reserve(truthParticlesRaw.size());
   std::ranges::transform(truthParticlesRaw, std::back_inserter(truthParticles),
                          [](const auto& particle) { return &particle; });
 
-  // std::vector<const HepMC3::GenParticle*> truthParticlesHepMC3;
-  // findInputParticles(genEvent, truthParticlesHepMC3);
-
   ACTS_DEBUG("Number of truth particles: " << truthParticles.size());
-  // ACTS_DEBUG(
-  //     "Number of truth particles (HepMC3): " << truthParticlesHepMC3.size());
-
-  // if (truthParticlesHepMC3.size() != truthParticles.size()) {
-  //   ACTS_ERROR("Number of truth particles (HepMC3) and (SimParticle)
-  //   differ"); return ProcessCode::ABORT;
-  // }
 
   const fastjet::JetDefinition defaultJetDefinition =
       fastjet::JetDefinition(fastjet::antikt_algorithm, m_cfg.jetClusteringR);
@@ -157,28 +183,29 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   {
     std::lock_guard lock(mtxPseudoJets);
     std::ofstream outfile;
-    outfile.open("pseudojets.csv",
+    outfile.open("particles.csv",
                  std::ios_base::app);  // append instead of overwrite
 
     for (unsigned int i = 0; i < truthParticles.size(); i++) {
       const auto* particle = truthParticles.at(i);
-      //   fastjet::PseudoJet pseudoJet(
-      //       particle->momentum().px(), particle->momentum().py(),
-      // particle->momentum().pz(), particle->momentum().e());
-
       fastjet::PseudoJet pseudoJet(
           particle->momentum().x(), particle->momentum().y(),
           particle->momentum().z(), particle->energy());
 
       outfile << ctx.eventNumber << "," << pseudoJet.pt() << ","
               << pseudoJet.eta() << "," << pseudoJet.phi() << ","
-              << particle->pdg();
+              << static_cast<int>(particle->pdg());
       outfile << std::endl;
 
     pseudoJet.set_user_index(i);
     inputPseudoJets.push_back(pseudoJet);
   }
+<<<<<<< HEAD
   ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
+=======
+
+  ACTS_DEBUG("Number of input jet input particles: " << inputPseudoJets.size());
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 
   std::vector<fastjet::PseudoJet> jets;
   fastjet::ClusterSequence clusterSeq;
@@ -266,7 +293,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
           return std::pair{label, particle};
         }) |
         std::views::filter([](const auto& hadron) {
-          return hadron.first > JetLabel::LightJet;
+          return hadron.first > JetLabel::Unknown;
         });
 
     std::ranges::copy(hadronView, std::back_inserter(hadrons));
@@ -290,6 +317,69 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     double drap = a.rap() - b.rap();
     return std::sqrt(dphi * dphi + drap * drap);
   };
+<<<<<<< HEAD
+=======
+
+  auto classifyJet = [&](const fastjet::PseudoJet& jet) {
+    auto hadronsInJetView =
+        hadrons | std::views::filter([&jet, this](const auto& hadron) {
+          const auto& momentum = hadron.second->momentum();
+          fastjet::PseudoJet hadronJet(momentum.px(), momentum.py(),
+                                       momentum.pz(), momentum.e());
+          return deltaR(jet, hadronJet) < m_cfg.jetLabelingDeltaR;
+        }) |
+        std::views::transform([](const auto& hadron) {
+          return std::pair{
+              hadron.second,
+              jetLabelFromHadronType(ActsExamples::ParticleId::hadronType(
+                  hadron.second->pdg_id()))};
+        });
+
+    std::vector<std::pair<std::shared_ptr<const HepMC3::GenParticle>, JetLabel>>
+        hadronsInJet;
+    std::ranges::copy(hadronsInJetView, std::back_inserter(hadronsInJet));
+
+    ACTS_VERBOSE("-> hadrons in jet: " << hadronsInJet.size());
+    for (const auto& hadron : hadronsInJet) {
+      ACTS_VERBOSE(
+          "  - " << hadron.first->pdg_id() << " "
+                 << Acts::findName(hadron.first->pdg_id()).value_or("UNKNOWN")
+                 << " label=" << hadron.second);
+    }
+
+    auto maxHadronIt = std::ranges::max_element(
+        hadronsInJet, [](const auto& a, const auto& b) { return a < b; },
+        [](const auto& a) {
+          const auto& [hadron, label] = a;
+          return label;
+        });
+
+    if (maxHadronIt == hadronsInJet.end()) {
+      // Now hadronic "jet"
+      return JetLabel::Unknown;
+    }
+
+    const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
+
+    ACTS_VERBOSE("-> max hadron type="
+                 << Acts::findName(maxHadron->pdg_id()).value_or("UNKNOWN")
+                 << " label=" << maxHadronLabel);
+
+    return maxHadronLabel;
+  };
+
+  boost::container::flat_map<JetLabel, std::size_t> jetLabelCounts;
+
+  Acts::AveragingScopedTimer timer("Jet classification", logger(),
+                                   Acts::Logging::DEBUG);
+
+  static std::mutex mtxJets;
+  {
+    std::lock_guard lock(mtxJets);
+    std::ofstream outfile;
+    outfile.open("jets.csv", std::ios_base::app);
+
+>>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
     for (unsigned int i = 0; i < jets.size(); i++) {
       // Get information on the jet constituents
       const auto& jet = jets[i];
@@ -360,12 +450,12 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
       ACTS_VERBOSE("-> jet label: " << label);
       ACTS_VERBOSE("-> jet constituents: ");
 
-      // if (logger().doPrint(Acts::Logging::VERBOSE)) {
-      //   for (const auto& constituent : constituentIndices) {
-      //     const auto& particle = inputParticles.at(constituent);
-      //     ACTS_VERBOSE("- " << particle);
-      //   }
-      // }
+      if (logger().doPrint(Acts::Logging::VERBOSE)) {
+        for (const auto& constituent : constituentIndices) {
+          const auto& particle = truthParticles.at(constituent);
+          ACTS_VERBOSE("- " << particle);
+        }
+      }
     }
 
     outfile.flush();

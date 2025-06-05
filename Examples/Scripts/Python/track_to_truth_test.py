@@ -38,6 +38,8 @@ from acts.examples.reconstruction import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--events", "-n", type=int, default=1000)
+parser.add_argument("--pileup", "--pu", "-p", type=int, default=0)
+parser.add_argument("--jobs", "-j", type=int, default=-1)
 args = parser.parse_args()
 
 outputDir = Path.cwd() / "trackToTruth_output"
@@ -45,7 +47,7 @@ print(outputDir)
 outputDir.mkdir(exist_ok=True)
 s = acts.examples.Sequencer(
     events=args.events,
-    numThreads=1,
+    numThreads=args.jobs,
     logLevel=acts.logging.INFO,
     outputDir=str(outputDir),
 )
@@ -80,7 +82,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 addPythia8(
     s,
     nhard=1,
-    npileup=0,
+    npileup=args.pileup,
     hardProcess=["Top:qqbar2ttbar=on"],
     vtxGen=acts.examples.GaussianVertexGenerator(
         mean=acts.Vector4(0, 0, 0, 0),
@@ -161,17 +163,17 @@ s.addAlgorithm(
 )
 s.addWhiteboardAlias("tracks", "selected-tracks")
 
-s.addWriter(
-    acts.examples.RootTrackStatesWriter(
-        level=acts.logging.INFO,
-        inputTracks="tracks",
-        inputParticles="particles_selected",
-        inputTrackParticleMatching="track_particle_matching",
-        inputSimHits="simhits",
-        inputMeasurementSimHitsMap="measurement_simhits_map",
-        filePath=str(outputDir / "trackstates_kf.root"),
-    )
-)
+# s.addWriter(
+#     acts.examples.RootTrackStatesWriter(
+#         level=acts.logging.INFO,
+#         inputTracks="tracks",
+#         inputParticles="particles_selected",
+#         inputTrackParticleMatching="track_particle_matching",
+#         inputSimHits="simhits",
+#         inputMeasurementSimHitsMap="measurement_simhits_map",
+#         filePath=str(outputDir / "trackstates_kf.root"),
+#     )
+# )
 
 s.addWriter(
     acts.examples.RootTrackSummaryWriter(
@@ -208,7 +210,7 @@ addTruthJetAlg(
     TruthJetConfig(
         inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
-        jetPtMin=10 * u.GeV,
+        jetPtMin=20 * u.GeV,
         inputHepMC3Event="pythia8-event",
         doJetLabeling=True,
     ),
