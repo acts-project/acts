@@ -85,7 +85,7 @@ struct CylindricalSpacePointGridConfig {
 
   bool isInInternalUnits = true;
   [[deprecated(
-      "SeedFinderOrthogonalConfig uses internal "
+      "CylindricalSpacePointGridConfig uses internal "
       "units")]] CylindricalSpacePointGridConfig
   toInternalUnits() const {
     return *this;
@@ -122,7 +122,7 @@ struct CylindricalSpacePointGridOptions {
 
   bool isInInternalUnits = true;
   [[deprecated(
-      "SeedFinderOrthogonalConfig uses internal "
+      "CylindricalSpacePointGridOptions uses internal "
       "units")]] CylindricalSpacePointGridOptions
   toInternalUnits() const {
     return *this;

@@ -38,7 +38,7 @@ struct SpacePointContainerOptions {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
-  bool isInInternalUnits = false;
+  bool isInInternalUnits = true;
   [[deprecated(
       "SpacePointContainerOptions uses internal "
       "units")]] SpacePointContainerOptions
