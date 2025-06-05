@@ -363,11 +363,17 @@ class TripletSeedFinder2 {
     std::vector<TripletCandidate2> sortedCandidates;
   };
 
+  /// Collection of pointers to the space point container and its
+  /// additional columns. This is used as a basket to pass around
+  /// the input data for the triplet seed finder.
   class ContainerPointers {
    public:
+    /// Minimal input: space points and r column.
     ContainerPointers(const SpacePointContainer2& spacePoints,
                       const SpacePointContainer2::DenseColumn<float>& rColumn)
         : m_spacePoints(&spacePoints), m_rColumn(&rColumn) {}
+
+    /// Space points, r column, and variance columns.
     ContainerPointers(
         const SpacePointContainer2& spacePoints,
         const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -377,6 +383,8 @@ class TripletSeedFinder2 {
           m_rColumn(&rColumn),
           m_varianceRColumn(&varianceRColumn),
           m_varianceZColumn(&varianceZColumn) {}
+
+    /// Space points, r column, variance columns, and strip columns.
     ContainerPointers(
         const SpacePointContainer2& spacePoints,
         const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -397,6 +405,10 @@ class TripletSeedFinder2 {
           m_bottomStripVectorColumn(&bottomStripVectorColumn),
           m_stripCenterDistanceColumn(&stripCenterDistanceColumn),
           m_topStripCenterPositionColumn(&topStripCenterPositionColumn) {}
+
+    /// Pointer to the copied-from index column, if available.
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copiedFromIndexColumn = nullptr;
 
     [[nodiscard]] const SpacePointContainer2& spacePoints() const {
       return *m_spacePoints;
@@ -442,9 +454,6 @@ class TripletSeedFinder2 {
     [[nodiscard]] bool hasCopiedFromIndexColumn() const {
       return copiedFromIndexColumn != nullptr;
     }
-
-    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
-        copiedFromIndexColumn = nullptr;
 
    private:
     const SpacePointContainer2* m_spacePoints = nullptr;
