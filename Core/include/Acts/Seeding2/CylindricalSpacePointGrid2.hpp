@@ -28,11 +28,8 @@ class CylindricalSpacePointGrid2 {
                         Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
                         Axis<AxisType::Variable, AxisBoundaryType::Open>,
                         Axis<AxisType::Variable, AxisBoundaryType::Open>>;
-
   /// Cylindrical Binned Group
-  using BinnedGroup = BinnedGroup<GridType>;
-
-  using BinnedGroupIterator = BinnedGroupIterator<GridType>;
+  using BinnedGroupType = BinnedGroup<GridType>;
 
   struct DerivedConfig;
 
@@ -139,7 +136,7 @@ class CylindricalSpacePointGrid2 {
   GridType& grid() { return *m_grid; }
   const GridType& grid() const { return *m_grid; }
 
-  const BinnedGroup& binnedGround() const { return *m_binnedGroup; }
+  const BinnedGroupType& binnedGround() const { return *m_binnedGroup; }
 
  private:
   DerivedConfig m_cfg;
@@ -147,7 +144,7 @@ class CylindricalSpacePointGrid2 {
   std::unique_ptr<const Logger> m_logger;
 
   GridType* m_grid{};
-  std::optional<BinnedGroup> m_binnedGroup;
+  std::optional<BinnedGroupType> m_binnedGroup;
 
   std::size_t m_counter{};
   std::vector<bool> m_usedBinIndex;
