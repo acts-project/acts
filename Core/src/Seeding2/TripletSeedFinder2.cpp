@@ -155,27 +155,12 @@ void TripletSeedFinder2::initialize(State& state,
   state.tripletCuts = deriveTripletCuts(options);
 }
 
-void TripletSeedFinder2::createSeeds(State& state, Cache& cache,
-                                     const ContainerPointers& containerPointers,
-                                     std::span<SpacePointIndex2> bottomSps,
-                                     std::span<SpacePointIndex2> middleSps,
-                                     std::span<SpacePointIndex2> topSps,
-                                     SeedContainer2& outputSeeds) const {
-  std::ranges::sort(bottomSps, {}, [&](SpacePointIndex2 index) {
-    return -containerPointers.spacePoints().at(index).z() /
-           containerPointers.spacePoints().at(index).extra(
-               containerPointers.rColumn());
-  });
-  std::ranges::sort(middleSps, {}, [&](SpacePointIndex2 index) {
-    return containerPointers.spacePoints().at(index).extra(
-        containerPointers.rColumn());
-  });
-  std::ranges::sort(topSps, {}, [&](SpacePointIndex2 index) {
-    return containerPointers.spacePoints().at(index).z() /
-           containerPointers.spacePoints().at(index).extra(
-               containerPointers.rColumn());
-  });
-
+void TripletSeedFinder2::createSeeds(
+    State& state, Cache& cache, const ContainerPointers& containerPointers,
+    std::span<const SpacePointIndex2> bottomSps,
+    std::span<const SpacePointIndex2> middleSps,
+    std::span<const SpacePointIndex2> topSps,
+    SeedContainer2& outputSeeds) const {
   TripletSeedFilter2::Options filterOptions;
   filterOptions.seedConfirmation = m_cfg.seedConfirmation;
 
@@ -230,11 +215,8 @@ void TripletSeedFinder2::createSeeds(State& state, Cache& cache,
     // apply cut on the number of top SP if seedConfirmation is true
     if (m_cfg.seedConfirmation) {
       // check if middle SP is in the central or forward region
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
       filterOptions.seedConfRange =
-          (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf |
+          (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
            zM < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
               ? m_cfg.forwardSeedConfirmationRange
               : m_cfg.centralSeedConfirmationRange;
@@ -326,8 +308,16 @@ void TripletSeedFinder2::createDoublets(
   float deltaR = 0.;
   float deltaZ = 0.;
 
-  auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
-                            float iDeltaR2, float cotTheta) {
+  const auto outsideRangeCheck = [](const float value, const float min,
+                                    const float max) -> bool {
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
+    return static_cast<bool>(static_cast<int>(value < min) |
+                             static_cast<int>(value > max));
+  };
+
+  const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
+                                  float iDeltaR2, float cotTheta) {
     // TOD use some reasonable defaults
 
     float varianceZM = containerPointers.hasVarianceColumns()
@@ -357,9 +347,7 @@ void TripletSeedFinder2::createDoublets(
       deltaR = otherSp.extra(containerPointers.rColumn()) - rM;
     }
 
-    // intentionally using `|` after profiling. faster due to better branch
-    // prediction
-    if (deltaR<cuts.deltaRMin | deltaR> cuts.deltaRMax) {
+    if (outsideRangeCheck(deltaR, cuts.deltaRMin, cuts.deltaRMax)) {
       continue;
     }
 
@@ -375,13 +363,8 @@ void TripletSeedFinder2::createDoublets(
     // collisionRegion by deltaR to avoid divisions
     const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
     // check if duplet origin on z axis within collision region
-    //
-    // intentionally using `|` after profiling. faster due to better branch
-    // prediction
-    if (zOriginTimesDeltaR<cuts.collisionRegionMin * deltaR |
-                           zOriginTimesDeltaR>
-            cuts.collisionRegionMax *
-        deltaR) {
+    if (outsideRangeCheck(zOriginTimesDeltaR, cuts.collisionRegionMin * deltaR,
+                          cuts.collisionRegionMax * deltaR)) {
       continue;
     }
 
@@ -393,18 +376,12 @@ void TripletSeedFinder2::createDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
-      if (deltaZ > cuts.cotThetaMax * deltaR |
-          deltaZ < -cuts.cotThetaMax * deltaR) {
+      if (outsideRangeCheck(deltaZ, -cuts.cotThetaMax * deltaR,
+                            cuts.cotThetaMax * deltaR)) {
         continue;
       }
       // if z-distance between SPs is within max and min values
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
-      if (deltaZ > cuts.deltaZMax | deltaZ < -cuts.deltaZMax) {
+      if (outsideRangeCheck(deltaZ, -cuts.deltaZMax, cuts.deltaZMax)) {
         continue;
       }
 
@@ -463,11 +440,8 @@ void TripletSeedFinder2::createDoublets(
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      //
-      // intentionally using `|` after profiling. faster due to better branch
-      // prediction
-      if (deltaZ > cuts.cotThetaMax * deltaR |
-          deltaZ < -cuts.cotThetaMax * deltaR) {
+      if (outsideRangeCheck(deltaZ, -cuts.cotThetaMax * deltaR,
+                            cuts.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -512,11 +486,8 @@ void TripletSeedFinder2::createDoublets(
     // check if duplet cotTheta is within the region of interest
     // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
     // cotThetaMax by deltaR to avoid division
-    //
-    // intentionally using `|` after profiling. faster due to better branch
-    // prediction
-    if (deltaZ > cuts.cotThetaMax * deltaR |
-        deltaZ < -cuts.cotThetaMax * deltaR) {
+    if (outsideRangeCheck(deltaZ, -cuts.cotThetaMax * deltaR,
+                          cuts.cotThetaMax * deltaR)) {
       continue;
     }
 
