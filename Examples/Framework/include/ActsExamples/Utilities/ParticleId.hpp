@@ -34,6 +34,8 @@ std::ostream& operator<<(std::ostream& os, HadronType hadron);
 
 bool isQuark(int pdg);
 
+bool isInteracting(int pdg);
+
 HadronType hadronType(int pdg);
 
 }  // namespace ActsExamples::ParticleId
