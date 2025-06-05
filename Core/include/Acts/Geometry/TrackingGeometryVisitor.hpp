@@ -38,7 +38,7 @@ class ITrackingGeometryVisitor {
  private:
   /// Flag to indicate if the visitor should follow from the outermost to the
   /// innermost volume depth
-  bool m_visitInDepth;
+  bool m_visitInDepth{true};
 };
 
 /// @brief Visitor interface for traversing the tracking geometry hierarchy
