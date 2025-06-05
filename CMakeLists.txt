@@ -164,7 +164,7 @@ set_option_if(
   ACTS_BUILD_EXAMPLES_EDM4HEP
 )
 set_option_if(
-  ACTS_BUILD_PLUGIN_PODIO
+  ACTS_BUILD_EXAMPLES_PODIO
   ACTS_BUILD_EXAMPLES_EDM4HEP
 )
 set_option_if(
@@ -268,20 +268,21 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.71.0)
-set(_acts_dd4hep_version 1.21)
+set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.7)
+set(_acts_edm4hep_version 0.10.5)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
-set(_acts_podio_fallback_version 0.16) # if not found, will try this one
+set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
-set(_acts_hepmc3_version 3.2.1)
+set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.10.5)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_root_version 6.20)
+set(_acts_geomodel_version 6.3.0)
+set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
-set(_acts_pythia8_version 8.309)
+set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
 set(_acts_detray_version 0.98.0)
 set(_acts_traccc_version 0.22.0)
@@ -412,12 +413,10 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
         )
     endif()
 
-    set(_gm_ver_min 6.3.0)
-
-    if(GeoModelCore_VERSION VERSION_LESS _gm_ver_min)
+    if(GeoModelCore_VERSION VERSION_LESS _acts_geomodel_version)
         message(
             FATAL_ERROR
-            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_gm_ver_min} or newer."
+            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_acts_geomodel_version} or newer."
         )
     endif()
     # find other GeoModel components of EXACT same version
