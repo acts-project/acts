@@ -19,6 +19,8 @@
 //
 // These files are licensed under Apache License 2.0
 
+namespace ActsExamples::ParticleId {
+
 namespace {
 
 class DecodedPID : public std::pair<int, std::vector<int>> {
@@ -305,11 +307,6 @@ bool isPentaquark(const DecodedPID& p) {
           (p(3) >= p(4) && p(4) >= p(5) && p(5) >= p(6)));
 }
 
-// https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L159
-bool isQuark(const int& p) {
-  return p != 0 && (std::abs(p) <= 8 || std::abs(p) == MAVTOP);
-}
-
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L211-216
 bool isDiquark(const DecodedPID& p) {
   if (p.ndigits() == 4 && p(0) >= p(1) && p(2) == 0 && p.last() % 2 == 1 &&
@@ -448,8 +445,6 @@ bool isLightMeson(const DecodedPID& p) {
 
 }  // namespace
 
-namespace ActsExamples::ParticleId {
-
 // https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L325
 bool isHadron(int pdg) {
   DecodedPID p(pdg);
@@ -462,7 +457,7 @@ bool isLepton(int pdg) {
   return sp >= 11 && sp <= 18;
 }
 
-HadronType hadronLabel(int pdg) {
+HadronType hadronType(int pdg) {
   DecodedPID p(pdg);
 
   using enum HadronType;
@@ -499,6 +494,11 @@ HadronType hadronLabel(int pdg) {
   }
 
   return Unknown;
+}
+
+// https://gitlab.cern.ch/atlas/athena/-/blob/b0898f93585c4eec97550a9e0a16f5b6e6b6b973/Generators/TruthUtils/TruthUtils/AtlasPID.h#L159
+bool isQuark(int pdg) {
+  return pdg != 0 && (std::abs(pdg) <= 8 || std::abs(pdg) == MAVTOP);
 }
 
 std::ostream& operator<<(std::ostream& os, HadronType hadron) {

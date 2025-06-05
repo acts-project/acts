@@ -32,6 +32,8 @@ enum class HadronType {
 
 std::ostream& operator<<(std::ostream& os, HadronType hadron);
 
-HadronType hadronLabel(int pdg);
+bool isQuark(int pdg);
+
+HadronType hadronType(int pdg);
 
 }  // namespace ActsExamples::ParticleId

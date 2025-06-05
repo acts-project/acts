@@ -27,6 +27,7 @@ from acts.examples.simulation import (
     addDigitization,
     ParticleSelectorConfig,
     addDigiParticleSelection,
+    addGenParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -34,7 +35,7 @@ from acts.examples.reconstruction import (
     addKalmanTracks,
 )
 
-s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
 outputDir = Path.cwd() / " trackToTruth_output"
 outputDir.mkdir(exist_ok=True)
 
@@ -68,7 +69,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 addPythia8(
     s,
     nhard=1,
-    npileup=1,
+    npileup=0,
     hardProcess=["Top:qqbar2ttbar=on"],
     vtxGen=acts.examples.GaussianVertexGenerator(
         mean=acts.Vector4(0, 0, 0, 0),
@@ -78,6 +79,16 @@ addPythia8(
     outputDirRoot=None,
     outputDirCsv=None,
     writeHepMC3=None,
+)
+
+addGenParticleSelection(
+    s,
+    ParticleSelectorConfig(
+        rho=(0.0, 24 * u.mm),
+        absZ=(0.0, 1.0 * u.m),
+        eta=(-3.0, 3.0),
+        pt=(150 * u.MeV, None),
+    ),
 )
 
 addFatras(
@@ -179,18 +190,18 @@ addTruthJetAlg(
         inputHepMC3Event="pythia8-event",
         doJetLabeling=True,
     ),
-    loglevel=acts.logging.VERBOSE,
-)
-
-addTrackToTruthJetAlg(
-    s,
-    TrackToTruthJetConfig(
-        inputTracks="tracks",
-        inputJets="truth_jets",
-        outputTrackJets="track_jets",
-        maxDeltaR=0.4,
-    ),
     loglevel=acts.logging.DEBUG,
 )
+
+# addTrackToTruthJetAlg(
+#     s,
+#     TrackToTruthJetConfig(
+#         inputTracks="tracks",
+#         inputJets="truth_jets",
+#         outputTrackJets="track_jets",
+#         maxDeltaR=0.4,
+#     ),
+#     loglevel=acts.logging.DEBUG,
+# )
 
 s.run()
