@@ -126,6 +126,9 @@ class CylindricalSpacePointGrid2 {
             const SpacePointContainer2::DenseColumn<float>& phiColumn,
             const SpacePointContainer2::DenseColumn<float>& rColumn);
 
+  void sort(const SpacePointContainer2& spacePoints,
+            const SpacePointContainer2::DenseColumn<float>& rColumn);
+
   Range1D<float> computeRadiusRange(
       const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn) const;

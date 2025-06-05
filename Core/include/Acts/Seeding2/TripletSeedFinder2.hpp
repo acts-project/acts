@@ -502,9 +502,9 @@ class TripletSeedFinder2 {
   /// top groups based on their z-coordinate and radius.
   void createSeeds(State& state, Cache& cache,
                    const ContainerPointers& containerPointers,
-                   std::span<SpacePointIndex2> bottomSps,
-                   std::span<SpacePointIndex2> middleSps,
-                   std::span<SpacePointIndex2> topSps,
+                   std::span<const SpacePointIndex2> bottomSps,
+                   std::span<const SpacePointIndex2> middleSps,
+                   std::span<const SpacePointIndex2> topSps,
                    SeedContainer2& outputSeeds) const;
 
   /// Derives doublet cuts based on the provided options and space point
