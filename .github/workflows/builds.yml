@@ -189,13 +189,6 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
-      - name: Save PR number
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          mkdir -p physmon
-          echo ${{ github.event.number }} > physmon/pr_number
-          echo ${{ github.event.pull_request.head.sha }} > physmon/sha
-
       - name: Physics performance checks
         shell: bash
         run: |
@@ -217,7 +210,9 @@ jobs:
 
       - name: Post step summary
         if: always()
-        run: cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
+        run: |
+          mkdir -p physmon
+          cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: always()
