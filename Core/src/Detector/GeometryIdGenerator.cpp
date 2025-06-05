@@ -12,6 +12,8 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <ranges>
+
 Acts::Experimental::IGeometryIdGenerator::GeoIdCache
 Acts::Experimental::GeometryIdGenerator::generateCache() const {
   return Cache{};

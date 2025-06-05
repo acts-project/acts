@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <ranges>
 #include <tuple>
 #include <utility>
 #include <vector>
