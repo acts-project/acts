@@ -106,6 +106,12 @@ void addFramework(Context& ctx) {
   py::class_<ActsExamples::IReader, std::shared_ptr<ActsExamples::IReader>>(
       mex, "IReader");
 
+  py::class_<ActsExamples::IContextDecorator,
+             std::shared_ptr<ActsExamples::IContextDecorator>>(
+      mex, "IContextDecorator")
+      .def("decorate", &IContextDecorator::decorate)
+      .def("name", &IContextDecorator::name);
+
   py::enum_<ProcessCode>(mex, "ProcessCode")
       .value("SUCCESS", ProcessCode::SUCCESS)
       .value("ABORT", ProcessCode::ABORT)
@@ -273,6 +279,8 @@ void addFramework(Context& ctx) {
   py::class_<RandomNumbers::Config>(randomNumbers, "Config")
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
+
+  // mex.def()
 }
 
 }  // namespace Acts::Python

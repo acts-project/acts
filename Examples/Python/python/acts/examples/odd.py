@@ -18,6 +18,7 @@ def getOpenDataDetectorDirectory():
 
 def getOpenDataDetector(
     materialDecorator=None,
+    misaligned=False,
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
@@ -101,6 +102,11 @@ def getOpenDataDetector(
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
         materialDecorator=materialDecorator,
     )
+    if misaligned:
+        dd4hepConfig.detectorElementFactory = (
+            acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+        )
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
