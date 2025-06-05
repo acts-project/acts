@@ -45,18 +45,18 @@ class CandidatesForMiddleSp2 {
   /// @brief Setting maximum number of candidates to keep
   /// @param nLow Maximum number of candidates in the low-quality collection
   /// @param nHigh Maximum number of candidates in the high-quality collection
-  void reserve(std::size_t nLow, std::size_t nHigh);
+  void setMaxElements(std::size_t nLow, std::size_t nHigh);
 
   /// @brief Clear the internal storage
   void clear();
 
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
-  std::size_t nLowQualityCandidates() const;
+  std::size_t nLowQualityCandidates() const { return m_nLow; }
 
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
-  std::size_t nHighQualityCandidates() const;
+  std::size_t nHighQualityCandidates() const { return m_nHigh; }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria

@@ -40,11 +40,9 @@ namespace Acts {
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
 class TripletSeedFinder2 {
- private:
-  enum class SpacePointCandidateType { eBottom, eTop };
-  enum class MeasurementInfo { eDefault, eDetailed };
-
  public:
+  enum class SpacePointCandidateType { eBottom, eTop };
+
   struct DerivedConfig;
   struct DerivedOptions;
 
@@ -493,17 +491,31 @@ class TripletSeedFinder2 {
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
   /// @param containerPointers Space point container and its extra columns
-  /// @param bottomSps Mutable group of space points to be used as innermost SP in a seed
-  /// @param middleSps Mutable group of space points to be used as middle SP in a seed
-  /// @param topSps Mutable group of space points to be used as outermost SP in a seed
+  /// @param bottomSps Group of space points to be used as innermost SP in a seed
+  /// @param middleSps Group of space points to be used as middle SP in a seed
+  /// @param topSps Group of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
-  ///
-  /// @note This function will sort the space points in the bottom, middle, and
-  /// top groups based on their z-coordinate and radius.
   void createSeeds(State& state, Cache& cache,
                    const ContainerPointers& containerPointers,
                    std::span<const SpacePointIndex2> bottomSps,
                    std::span<const SpacePointIndex2> middleSps,
+                   std::span<const SpacePointIndex2> topSps,
+                   SeedContainer2& outputSeeds) const;
+
+  /// Create all possible seeds from bottom, middle, and top space points.
+  ///
+  /// @param options frequently changing configuration (like beam position)
+  /// @param state State of the seed finder
+  /// @param cache Cache object to store intermediate results
+  /// @param containerPointers Space point container and its extra columns
+  /// @param bottomSps Group of space points to be used as innermost SP in a seed
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param topSps Group of space points to be used as outermost SP in a seed
+  /// @param outputSeeds Output container for the seeds
+  void createSeeds(State& state, Cache& cache,
+                   const ContainerPointers& containerPointers,
+                   std::span<const SpacePointIndex2> bottomSps,
+                   SpacePointIndex2 middleSp,
                    std::span<const SpacePointIndex2> topSps,
                    SeedContainer2& outputSeeds) const;
 
@@ -558,7 +570,6 @@ class TripletSeedFinder2 {
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
-  template <MeasurementInfo measurement_info>
   static void createTriplets(TripletCache& cache, const TripletCuts& cuts,
                              const TripletSeedFilter2& filter,
                              const TripletSeedFilter2::Options& filterOptions,
@@ -570,6 +581,31 @@ class TripletSeedFinder2 {
                              const Doublets& topDoublets,
                              TripletTopCandidates& tripletTopCandidates,
                              CandidatesForMiddleSp2& candidatesCollector);
+
+  /// Create triplets from the bottom, middle, and top space points.
+  ///
+  /// @tparam measurement_info Type of measurement information (e.g. Default or Detailed)
+  ///
+  /// @param cache Cache object to store intermediate results
+  /// @param cuts Triplet cuts that define the compatibility of space points
+  /// @param filter Triplet seed filter that defines the filtering criteria
+  /// @param filterState State object that holds the state of the filter
+  /// @param filterCache Cache object that holds memory used in SeedFilter
+  /// @param containerPointers Space point container and its extra columns
+  /// @param spM Space point candidate to be used as middle SP in a seed
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param tripletTopCandidates Cache for triplet top candidates
+  /// @param candidatesCollector Collector for candidates for middle space points
+  static void createTripletsDetailed(
+      const TripletCuts& cuts, const TripletSeedFilter2& filter,
+      const TripletSeedFilter2::Options& filterOptions,
+      TripletSeedFilter2::State& filterState,
+      TripletSeedFilter2::Cache& filterCache,
+      const ContainerPointers& containerPointers,
+      const ConstSpacePointProxy2& spM, const Doublets& bottomDoublets,
+      const Doublets& topDoublets, TripletTopCandidates& tripletTopCandidates,
+      CandidatesForMiddleSp2& candidatesCollector);
 
  private:
   static MiddleSpacePointInfo computeMiddleSpacePointInfo(
@@ -588,7 +624,7 @@ class TripletSeedFinder2 {
 
   /// Check the compatibility of strip space point coordinates in xyz assuming
   /// the Bottom-Middle direction with the strip measurement details
-  static bool stripCoordinateCheck(double tolerance,
+  static bool stripCoordinateCheck(float tolerance,
                                    const ConstSpacePointProxy2& sp,
                                    const ContainerPointers& containerPointers,
                                    const Vector3& spacePointPosition,

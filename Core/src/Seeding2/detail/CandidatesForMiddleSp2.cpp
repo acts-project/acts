@@ -10,7 +10,8 @@
 
 namespace Acts {
 
-void CandidatesForMiddleSp2::reserve(std::size_t nLow, std::size_t nHigh) {
+void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
+                                            std::size_t nHigh) {
   m_maxSizeHigh = nHigh;
   m_maxSizeLow = nLow;
 
@@ -282,14 +283,6 @@ bool CandidatesForMiddleSp2::ascendingByQuality(
     const SpacePointContainer2& spacePoints, const TripletCandidate2& i1,
     const TripletCandidate2& i2) {
   return !descendingByQuality(spacePoints, i1, i2);
-}
-
-std::size_t CandidatesForMiddleSp2::nLowQualityCandidates() const {
-  return m_nLow;
-}
-
-std::size_t CandidatesForMiddleSp2::nHighQualityCandidates() const {
-  return m_nHigh;
 }
 
 }  // namespace Acts
