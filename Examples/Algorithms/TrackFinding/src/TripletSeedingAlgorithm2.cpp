@@ -99,7 +99,7 @@ TripletSeedingAlgorithm2::TripletSeedingAlgorithm2(const Config& cfg,
   m_cfg.gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   m_cfg.finderConfig.filter = std::make_unique<Acts::TripletSeedFilter2>(
-      m_cfg.filterConfig.derive(), logger().cloneWithSuffix("Filter"));
+      m_cfg.filterConfig, logger().cloneWithSuffix("Filter"));
 
   m_seedFinder = Acts::TripletSeedFinder2(m_cfg.finderConfig.derive(),
                                           logger().cloneWithSuffix("Finder"));
