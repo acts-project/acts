@@ -8,36 +8,30 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/detail/BlueprintDrawer.hpp"
-#include "Acts/Detector/detail/BlueprintHelper.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
-#include <string>
+#include <iostream>
 
 #include <DD4hep/DetElement.h>
-#include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Detector.h>
-#include <XML/Utilities.h>
-#include <XMLFragments.hpp>
 
+#include "DD4hep/DetFactoryHelper.h"
 #include "DD4hepTestsHelper.hpp"
+#include "XML/Utilities.h"
+#include "XMLFragments.hpp"
 
+namespace {
 Acts::GeometryContext tContext;
 Acts::Test::CylindricalTrackingGeometry cGeometry =
     Acts::Test::CylindricalTrackingGeometry(tContext);
+}  // namespace
 
 const char* beampipe_head_xml =
     R""""(
@@ -184,7 +178,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
 
   // Create an XML from it
   std::ofstream cxml;
-  cxml.open("CylindricalDetector.xml");
+  cxml.open("CylindricalDetectorTestSF.xml");
   cxml << head_xml;
   cxml << segmentation_xml;
 
@@ -292,143 +286,82 @@ auto store = generateXML();
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
-BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
+BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto lcdd = &(dd4hep::Detector::getInstance());
-  lcdd->fromCompact("CylindricalDetector.xml");
+  lcdd->fromCompact("CylindricalDetectorTestSF.xml");
   lcdd->volumeManager();
   lcdd->apply("DD4hepVolumeManager", 0, nullptr);
 
   auto world = lcdd->world();
 
-  // Test starts here
+  // Test starts here - with nonimal detector construction
   Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-  auto surfaceFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
+  auto surfaceFactory = Acts::DD4hepDetectorSurfaceFactory(
       sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
                                              Acts::Logging::VERBOSE));
 
-  auto layerStructure =
-      std::make_shared<Acts::Experimental::DD4hepLayerStructure>(
-          std::move(surfaceFactory),
-          Acts::getDefaultLogger("DD4hepLayerStructure",
-                                 Acts::Logging::VERBOSE));
+  Acts::DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
+  Acts::DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
 
-  Acts::Experimental::DD4hepBlueprintFactory::Config bpCfg{layerStructure};
-  Acts::Experimental::DD4hepBlueprintFactory::Cache bpCache;
-
-  Acts::Experimental::DD4hepBlueprintFactory bp(
-      bpCfg,
-      Acts::getDefaultLogger("DD4hepBlueprintFactory", Acts::Logging::VERBOSE));
-  auto dd4hepBlueprint = bp.create(bpCache, tContext, world);
-
-  // We should have 6 store entries now
-  // 1 : beam pipe (empty)
-  // 1 : endcap
-  // 2 : barrel
-  // 1 : endcap
-  BOOST_CHECK_EQUAL(bpCache.dd4hepStore.size(), 6u);
-
-  // Now fill the gaps
-  Acts::Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
-
-  // dot -P -Tsvg -o plugins.svg
-  std::ofstream cbp("cylindrical_detector_dd4hep.dot");
-  Acts::Experimental::detail::BlueprintDrawer::dotStream(cbp, *dd4hepBlueprint);
-  cbp.close();
-
-  // Create a Cylindrical detector builder from this blueprint
-  auto detectorBuilder =
-      std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
-          *dd4hepBlueprint, Acts::Logging::VERBOSE);
-
-  // Detector builder
-  Acts::Experimental::DetectorBuilder::Config dCfg;
-  dCfg.auxiliary =
-      "*** Test : auto generated cylindrical detector builder  ***";
-  dCfg.name = "Cylindrical detector from blueprint";
-  dCfg.builder = detectorBuilder;
-  dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
-
-  auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
-
-  // Detector construction check
-  BOOST_REQUIRE_NE(detector, nullptr);
-  // We should have 14 volumes
-  // 1 : beampipe
-  // 3 : negative encap
-  // 7 : barrel
-  // 3 : positive encap
-  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
+  surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
+  // Check the number of surfaces
+  BOOST_CHECK_EQUAL(sFactoryCache.sensitiveSurfaces.size(), 1488u);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
 }
 
-BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
+BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
   auto lcdd = &(dd4hep::Detector::getInstance());
-  lcdd->fromCompact("CylindricalDetector.xml");
+  lcdd->fromCompact("CylindricalDetectorTestSF.xml");
   lcdd->volumeManager();
   lcdd->apply("DD4hepVolumeManager", 0, nullptr);
 
   auto world = lcdd->world();
 
-  Acts::Experimental::DD4hepDetectorStructure::Options dsOptions;
-  dsOptions.logLevel = Acts::Logging::VERBOSE;
-  dsOptions.emulateToGraph = "cylindrical_detector_structure";
+  // A typical extension would be overriding the `tranform(const
+  // GeometryContext&)` method in order change how the detector element is
+  // handled in alignment, for simplicity here we show a simple extension that
+  // overrides the  thickness
+  class ExtendedDetectorElement : public Acts::DD4hepDetectorElement {
+   public:
+    using Acts::DD4hepDetectorElement::DD4hepDetectorElement;
 
-  auto [detectorEm, detectorStoreEm] =
-      Acts::Experimental::DD4hepDetectorStructure(
-          Acts::getDefaultLogger("DD4hepDetectorStructure",
-                                 Acts::Logging::VERBOSE))
-          .construct(tContext, world, dsOptions);
+    double thickness() const final {
+      // Return a fixed thickness for testing purposes
+      return 42. * Acts::UnitConstants::mm;
+    }
+  };
 
-  // Detector construction : no detector constructed, as we have only
-  // emulated the grapth writing
-  BOOST_CHECK_EQUAL(detectorEm, nullptr);
+  auto extendedFactory =
+      [](const dd4hep::DetElement& detElem, const std::string& axes,
+         double scalor, bool isDisc,
+         const std::shared_ptr<const Acts::ISurfaceMaterial>& material)
+      -> std::shared_ptr<Acts::DD4hepDetectorElement> {
+    return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
+                                                     isDisc, material);
+  };
 
-  // Now build in non-emulation mode
-  dsOptions.emulateToGraph = "";
-  auto [detector, detectorStore] =
-      Acts::Experimental::DD4hepDetectorStructure(
-          Acts::getDefaultLogger("DD4hepDetectorStructure",
-                                 Acts::Logging::VERBOSE))
-          .construct(tContext, world, dsOptions);
+  // Test starts here - with nonimal detector construction
+  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  sFactoryConfig.detectorElementFactory = extendedFactory;
+  auto surfaceFactory = Acts::DD4hepDetectorSurfaceFactory(
+      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
+                                             Acts::Logging::VERBOSE));
 
-  BOOST_REQUIRE_NE(detector, nullptr);
+  Acts::DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
+  Acts::DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
 
-  // We should have 14 volumes
-  // 1 : beampipe
-  // 3 : negative endcap
-  // 7 : barrel
-  // 3 : positive endcap
-  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
-
-  // We should have 6 store entries now
-  // 1 : beam pipe (empty)
-  // 1 : endcap
-  // 3 : barrel
-  // 1 : endcap
-  BOOST_CHECK_EQUAL(detectorStore.size(), 6u);
-
-  int elements = 0;
-  for (const auto& [key, value] : detectorStore) {
-    elements += value.size();
+  surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
+  // Check the number of surfaces
+  BOOST_CHECK_EQUAL(sFactoryCache.sensitiveSurfaces.size(), 1488u);
+  for (const auto& [detElem, surface] : sFactoryCache.sensitiveSurfaces) {
+    // Check that the extended detector element is used
+    BOOST_CHECK_NE(dynamic_cast<const ExtendedDetectorElement*>(detElem.get()),
+                   nullptr);
+    // Check that the thickness is 42 mm
+    CHECK_CLOSE_ABS(detElem->thickness(), 42. * Acts::UnitConstants::mm, 1e-10);
   }
-
-  // There should be 1488 elements
-  // NegEndcapLayer_0 has : 44 detector elements.
-  // PixelBarrel_0 has : 224 detector elements.
-  // PixelBarrel_1 has : 448 detector elements.
-  // PixelBarrel_2 has : 728 detector elements.
-  // PosEndcapLayer_0 has : 44 detector elements.
-  BOOST_CHECK_EQUAL(elements, 1488);
-
-  // Cross-check with the surfaces
-  int surfaces = 0;
-  for (const auto& v : detector->volumes()) {
-    surfaces += v->surfaces().size();
-  }
-  // Sensitives + 1 (beampipe)
-  BOOST_CHECK_EQUAL(surfaces, 1489);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
