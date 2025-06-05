@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
+#include <limits>
+
 namespace Acts {
 
 void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
