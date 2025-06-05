@@ -18,26 +18,6 @@ CylindricalSpacePointGrid2::Config::derive() const {
 
   static_cast<Config&>(result) = *this;
 
-  // TODO get rid of unit conversions
-  {
-    result.minPt /= 1_MeV;
-    result.rMin /= 1_mm;
-    result.rMax /= 1_mm;
-    result.zMax /= 1_mm;
-    result.zMin /= 1_mm;
-    result.deltaRMax /= 1_mm;
-    result.impactMax /= 1_mm;
-
-    for (float& val : result.zBinEdges) {
-      val /= 1_mm;
-    }
-    for (float& val : result.rBinEdges) {
-      val /= 1_mm;
-    }
-
-    result.bFieldInZ /= 1000_T;
-  }
-
   return result;
 }
 
@@ -74,9 +54,9 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
         "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
         << phiBins);
   } else {
-    // calculate circle intersections of helix and max detector radius
-    // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) = pT[MeV] / (300 *Bz[kT])
-    float minHelixRadius = config.minPt / (1_T * 1e6 * m_cfg.bFieldInZ);
+    // calculate circle intersections of helix and max detector radius in mm.
+    // bFieldInZ is in (pT/radius) natively, no need for conversion
+    float minHelixRadius = config.minPt / m_cfg.bFieldInZ;
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax * 0.5) {

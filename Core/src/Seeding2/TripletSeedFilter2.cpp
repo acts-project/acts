@@ -30,21 +30,7 @@ float getBestSeedQuality(
 
 }  // namespace
 
-TripletSeedFilter2::DerivedConfig TripletSeedFilter2::Config::derive() const {
-  DerivedConfig result;
-
-  static_cast<Config&>(result) = *this;
-
-  // TODO get rid of unit conversions
-  {
-    result.deltaRMin /= 1_mm;
-    result.deltaInvHelixDiameter /= 1. / 1_mm;
-  }
-
-  return result;
-}
-
-TripletSeedFilter2::TripletSeedFilter2(const DerivedConfig& config,
+TripletSeedFilter2::TripletSeedFilter2(const Config& config,
                                        std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {}
 

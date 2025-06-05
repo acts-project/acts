@@ -29,8 +29,6 @@ class IExperimentTripletSeedCuts2;
 /// uses R-Z coordinates for the space points.
 class TripletSeedFilter2 final {
  public:
-  struct DerivedConfig;
-
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
     /// Allowed difference in curvature (inverted seed radii) between two
@@ -74,11 +72,7 @@ class TripletSeedFilter2 final {
     bool useDeltaRorTopRadius = false;
 
     std::shared_ptr<IExperimentTripletSeedCuts2> experimentCuts;
-
-    DerivedConfig derive() const;
   };
-
-  struct DerivedConfig : public Config {};
 
   struct Options {
     bool seedConfirmation = false;
@@ -95,7 +89,7 @@ class TripletSeedFilter2 final {
     std::vector<float> compatibleSeedR;
   };
 
-  explicit TripletSeedFilter2(const DerivedConfig& config,
+  explicit TripletSeedFilter2(const Config& config,
                               std::unique_ptr<const Logger> logger =
                                   getDefaultLogger("TripletSeedFilter2",
                                                    Logging::Level::INFO));
@@ -141,7 +135,7 @@ class TripletSeedFilter2 final {
  private:
   const Logger& logger() const { return *m_logger; }
 
-  const DerivedConfig m_cfg;
+  const Config m_cfg;
 
   std::unique_ptr<const Logger> m_logger;
 };

@@ -24,27 +24,17 @@ TripletSeedFinder2::DerivedConfig TripletSeedFinder2::Config::derive() const {
 
   static_cast<Config&>(result) = *this;
 
-  // TODO get rid of unit conversions
+  // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
-    result.minPt /= 1_MeV;
-    result.deltaRMinTopSP /= 1_mm;
-    result.deltaRMaxTopSP /= 1_mm;
-    result.deltaRMinBottomSP /= 1_mm;
-    result.deltaRMaxBottomSP /= 1_mm;
-    result.impactMax /= 1_mm;
-    result.maxPtScattering /= 1_MeV;
-    result.collisionRegionMin /= 1_mm;
-    result.collisionRegionMax /= 1_mm;
-    result.deltaZMax /= 1_mm;
-    result.toleranceParam /= 1_mm;
+    const float xOverX0 = result.radLengthPerSeed;
+    const float q2OverBeta2 = 1;  // q^2=1, beta^2~1
+    // RPP2018 eq. 33.15 (treats beta and q² consistently)
+    const float t = std::sqrt(xOverX0 * q2OverBeta2);
+    // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
+    //                          = 2 * log(sqrt(x/X0) * (q/beta))
+    result.highland = 13.6_MeV * t * (1.0f + 0.038f * 2 * std::log(t));
   }
 
-  // TODO use Interactions.hpp for highland
-
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  result.highland = 13.6 * std::sqrt(result.radLengthPerSeed) *
-                    (1 + 0.038 * std::log(result.radLengthPerSeed));
   const float maxScatteringAngle = result.highland / result.minPt;
   result.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
 
@@ -57,14 +47,8 @@ TripletSeedFinder2::DerivedOptions TripletSeedFinder2::Options::derive(
 
   static_cast<Options&>(result) = *this;
 
-  // TODO get rid of unit conversions
-  {
-    result.beamPos[0] /= 1_mm;
-    result.beamPos[1] /= 1_mm;
-    result.bFieldInZ /= 1000. * 1_T;
-  }
-
-  result.pTPerHelixRadius = 1_T * 1e6 * result.bFieldInZ;
+  // bFieldInZ is in (pT/radius) natively, no need for conversion
+  result.pTPerHelixRadius = result.bFieldInZ;
   result.minHelixDiameter2 =
       std::pow(config.minPt * 2 / result.pTPerHelixRadius, 2) *
       config.helixCutTolerance;
@@ -372,6 +356,8 @@ void TripletSeedFinder2::createDoublets(
       deltaR = otherSp.extra(containerPointers.rColumn()) - rM;
     }
 
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
     if (deltaR<cuts.deltaRMin | deltaR> cuts.deltaRMax) {
       continue;
     }
