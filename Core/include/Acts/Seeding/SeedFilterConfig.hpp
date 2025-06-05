@@ -12,7 +12,6 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <cstddef>
-#include <stdexcept>
 
 namespace Acts {
 
@@ -84,20 +83,9 @@ struct SeedFilterConfig {
   /// compatible SPs
   bool useDeltaRorTopRadius = false;
 
-  bool isInInternalUnits = false;
-  SeedFilterConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for SeedFilterConfig");
-    }
-    using namespace UnitLiterals;
-    SeedFilterConfig config = *this;
-    config.isInInternalUnits = true;
-    config.deltaRMin /= 1_mm;
-    config.deltaInvHelixDiameter /= 1. / 1_mm;
-
-    return config;
-  }
+  bool isInInternalUnits = true;
+  //[[deprecated("SeedFilterConfig uses internal units")]]
+  SeedFilterConfig toInternalUnits() const { return *this; }
 };
 
 }  // namespace Acts

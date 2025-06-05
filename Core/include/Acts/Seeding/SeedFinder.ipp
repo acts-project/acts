@@ -20,10 +20,6 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
     const SeedFinderConfig<external_spacepoint_t>& config,
     std::unique_ptr<const Logger> logger)
     : m_config(config), m_logger(std::move(logger)) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderConfig not in ACTS internal units in SeedFinder");
-  }
   if (std::isnan(config.deltaRMaxTopSP)) {
     throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
   }
@@ -46,11 +42,6 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     container_t& outputCollection, const sp_range_t& bottomSPsIdx,
     const std::size_t middleSPsIdx, const sp_range_t& topSPsIdx,
     const Range1D<float>& rMiddleSPRange) const {
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOptions not in ACTS internal units in SeedFinder");
-  }
-
   // This is used for seed filtering later
   const std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
