@@ -1,0 +1,118 @@
+name: External
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+      - 'develop/**'
+    paths-ignore:
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 500M
+  CCACHE_KEY_SUFFIX: r2
+
+jobs:
+  eic-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          path: acts
+
+      - uses: actions/checkout@v4
+        with:
+          repository: eic/EICrecon
+          path: EICrecon
+
+      - name: Setup CMVFS
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Build
+        id: build
+        uses: eic/run-cvmfs-osg-eic-shell@main
+        continue-on-error: true
+        with:
+          platform-release: "eic_xl:nightly"
+          run: |
+            pushd acts
+            ccache -z && \
+            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::group::Acts configure phase"
+            cmake -B build -S . \
+              -GNinja \
+              -DACTS_BUILD_EXAMPLES=ON \
+              -DACTS_BUILD_FATRAS=ON \
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+            echo "::endgroup::"
+            echo "::group::Acts build phase"
+            cmake --build build
+            echo "::endgroup::"
+            echo "::group::Acts install phase"
+            cmake --install build
+            echo "::endgroup::"
+            popd
+
+            pushd EICrecon
+            export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
+            echo "::group::EICrecon configure phase"
+            ccache -z && \
+            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include" \
+                LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
+            cmake -B build -S . \
+              -GNinja \
+              -DActs_ROOT=$CMAKE_INSTALL_PREFIX
+            echo "::endgroup::"
+            echo "::group::EICrecon build phase"
+            cmake --build build
+            echo "::endgroup::"
+            popd
+
+            ccache -s
+
+      - name: Find Comment
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Downstream build failure
+
+      - name: Create or update comment
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Downstream build failure
+
+             - eic-shell (cc @eic/epic-acts-devs)
+          edit-mode: replace
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
