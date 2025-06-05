@@ -33,12 +33,9 @@ CylindricalSpacePointGridCreator::createGrid(
         "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
         << phiBins);
   } else {
-    // calculate circle intersections of helix and max detector radius
-    float minHelixRadius =
-        config.minPt /
-        (1_T * 1e6 *
-         options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
-                              // = pT[MeV] / (300 *Bz[kT])
+    // calculate circle intersections of helix and max detector radius in mm.
+    // bFieldInZ is in (pT/radius) natively, no need for conversion
+    float minHelixRadius = config.minPt / options.bFieldInZ;
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax * 0.5) {

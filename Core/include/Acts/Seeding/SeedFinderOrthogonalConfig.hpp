@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <cmath>
 #include <memory>
 #include <numbers>
 
