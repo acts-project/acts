@@ -46,6 +46,7 @@ struct VersionInfo {
 
   friend std::ostream& operator<<(std::ostream& os, const VersionInfo& vi);
 
+
  private:
   VersionInfo(unsigned int majorIn, unsigned int minorIn, unsigned int patchIn,
               const char* const commitHashIn);
