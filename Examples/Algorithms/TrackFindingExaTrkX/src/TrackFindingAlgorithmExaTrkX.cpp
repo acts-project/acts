@@ -9,8 +9,8 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/GraphStoreHook.hpp"
+#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -33,12 +33,10 @@ namespace {
 struct LoopHook : public Acts::ExaTrkXHook {
   std::vector<Acts::ExaTrkXHook*> hooks;
 
-  ~LoopHook() {}
-
-  void operator()(const std::any& nodes, const std::any& edges,
-                  const std::any& weights) const override {
+  void operator()(const Acts::PipelineTensors& tensors,
+                  const Acts::ExecutionContext& ctx) const override {
     for (auto hook : hooks) {
-      (*hook)(nodes, edges, weights);
+      (*hook)(tensors, ctx);
     }
   }
 };
@@ -101,16 +99,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Setup hooks
   LoopHook hook;
 
-  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
+  std::unique_ptr<Acts::TruthGraphMetricsHook> truthGraphHook;
   if (m_inputTruthGraph.isInitialized()) {
-    truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+    truthGraphHook = std::make_unique<Acts::TruthGraphMetricsHook>(
         m_inputTruthGraph(ctx).edges, this->logger().clone());
     hook.hooks.push_back(&*truthGraphHook);
   }
 
-  std::unique_ptr<Acts::TorchGraphStoreHook> graphStoreHook;
+  std::unique_ptr<Acts::GraphStoreHook> graphStoreHook;
   if (m_outputGraph.isInitialized()) {
-    graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
+    graphStoreHook = std::make_unique<Acts::GraphStoreHook>();
     hook.hooks.push_back(&*graphStoreHook);
   }
 

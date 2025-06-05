@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <numeric>
 
 BOOST_AUTO_TEST_CASE(test_track_building) {
   // Make some spacepoint IDs
@@ -30,30 +30,43 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
   }
 
   // Make edges
-  std::vector<std::int64_t> edges;
+  std::vector<std::int64_t> e0, e1;
   for (const auto &track : refTracks) {
     for (auto it = track.begin(); it != track.end() - 1; ++it) {
       // edges must be 0 based, so subtract 100 again
-      edges.push_back(*it - 100);
-      edges.push_back(*std::next(it) - 100);
+      e0.push_back(*it - 100);
+      e1.push_back(*std::next(it) - 100);
     }
   }
 
-  auto edgeTensor =
-      Acts::detail::vectorToTensor2D(edges, 2).t().contiguous().clone();
-  auto dummyWeights = torch::ones(edges.size() / 2, torch::kFloat32);
+  Acts::ExecutionContext execCtx{Acts::Device::Cpu(), {}};
+
+  auto edgeTensor = Acts::Tensor<std::int64_t>::Create({2, e0.size()}, execCtx);
+  std::copy(e0.begin(), e0.end(), edgeTensor.data());
+  std::copy(e1.begin(), e1.end(), edgeTensor.data() + e0.size());
+
+  auto dummyNodes =
+      Acts::Tensor<float>::Create({spacepointIds.size(), 16}, execCtx);
+  auto dummyWeights = Acts::Tensor<float>::Create({e0.size(), 1}, execCtx);
+  std::fill(dummyWeights.data(), dummyWeights.data() + dummyWeights.size(),
+            1.f);
 
   // Run Track building
   auto logger = Acts::getDefaultLogger("TestLogger", Acts::Logging::ERROR);
   Acts::BoostTrackBuilding trackBuilder({}, std::move(logger));
 
-  auto testTracks = trackBuilder({}, edgeTensor, dummyWeights, spacepointIds);
+  auto testTracks = trackBuilder({std::move(dummyNodes), std::move(edgeTensor),
+                                  std::nullopt, std::move(dummyWeights)},
+                                 spacepointIds);
+
+  BOOST_CHECK_EQUAL(testTracks.size(), refTracks.size());
 
   // Sort tracks, so we can find them
-  std::for_each(testTracks.begin(), testTracks.end(),
-                [](auto &t) { std::ranges::sort(t); });
-  std::for_each(refTracks.begin(), refTracks.end(),
-                [](auto &t) { std::ranges::sort(t); });
+  std::ranges::for_each(testTracks, [](auto &t) { std::ranges::sort(t); });
+  std::ranges::sort(testTracks, std::less{}, [](auto &t) { return t.at(0); });
+
+  std::ranges::for_each(refTracks, [](auto &t) { std::ranges::sort(t); });
+  std::ranges::sort(refTracks, std::less{}, [](auto &t) { return t.at(0); });
 
   // Check what we have here
   for (const auto &refTrack : refTracks) {

@@ -323,6 +323,420 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   return trackingGeometry;
 }
 
+class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
+ public:
+  using GenericDetectorBuilder::GenericDetectorBuilder;
+
+  std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
+      const Acts::GeometryContext& gctx,
+      std::optional<std::filesystem::path> graphvizFile);
+
+  void buildPixel(Acts::Experimental::BlueprintNode& parent,
+                  const Acts::GeometryContext& gctx);
+
+  void buildShortStrip(Acts::Experimental::BlueprintNode& parent,
+                       const Acts::GeometryContext& gctx);
+
+  void buildLongStrip(Acts::Experimental::BlueprintNode& parent,
+                      const Acts::GeometryContext& gctx);
+
+  static std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> asHomogeneous(
+      std::string_view debugLabel,
+      const std::shared_ptr<const Acts::ISurfaceMaterial>& material) {
+    auto hm = std::dynamic_pointer_cast<const Acts::HomogeneousSurfaceMaterial>(
+        material);
+    if (hm == nullptr) {
+      throw std::runtime_error(std::string{debugLabel} +
+                               " material is not homogeneous");
+    }
+    return hm;
+  }
+
+  using LayerType = Acts::SurfaceArrayNavigationPolicy::LayerType;
+  std::unique_ptr<Acts::NavigationPolicyFactory> createNavigationPolicy(
+      LayerType layerType,
+      std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
+    using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+    return Acts::NavigationPolicyFactory::make()
+        .add<Acts::TryAllNavigationPolicy>(
+            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<SrfArrayNavPol>(
+            SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
+        .asUniquePtr();
+  }
+};
+
+std::unique_ptr<const Acts::TrackingGeometry>
+Gen3GenericDetectorBuilder::buildTrackingGeometry(
+    const Acts::GeometryContext& gctx,
+    std::optional<std::filesystem::path> graphvizFile) {
+  using enum Acts::AxisDirection;
+  using namespace Acts::UnitLiterals;
+  using namespace Acts::Experimental;
+  using enum Acts::AxisBoundaryType;
+  using enum Acts::CylinderVolumeBounds::Face;
+  ACTS_INFO("GenericDetector construction in  Gen3 mode");
+
+  Blueprint::Config cfg;
+  cfg.envelope = Acts::ExtentEnvelope{{
+      .z = {20_mm, 20_mm},
+      .r = {0_mm, 20_mm},
+  }};
+  Blueprint root{cfg};
+
+  root.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
+    auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
+        0_mm, kBeamPipeRadius, kBeamPipeHalfLengthZ);
+    auto beampipe = std::make_unique<Acts::TrackingVolume>(
+        Acts::Transform3::Identity(), std::move(beampipeBounds), "Beampipe");
+
+    detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
+      bpMat.configureFace(OuterCylinder,
+                          asHomogeneous("Beam pipe", m_beamPipeMaterial));
+      bpMat.addStaticVolume(std::move(beampipe));
+    });
+
+    buildPixel(detector, gctx);
+
+    if (m_cfg.buildLevel > 1) {
+      buildShortStrip(detector, gctx);
+      buildLongStrip(detector, gctx);
+    }
+  });
+
+  if (graphvizFile) {
+    std::ofstream file(*graphvizFile);
+    root.graphviz(file);
+  }
+
+  BlueprintOptions options;
+  auto trackingGeometry =
+      root.construct(options, gctx, *logger().clone("Blprnt"));
+  return trackingGeometry;
+}
+
+void Gen3GenericDetectorBuilder::buildPixel(
+    Acts::Experimental::BlueprintNode& parent,
+    const Acts::GeometryContext& gctx) {
+  using enum Acts::AxisDirection;
+  using namespace Acts::Experimental;
+  using namespace Acts::UnitLiterals;
+  using enum Acts::CylinderVolumeBounds::Face;
+  using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
+  using ResizeStrategy = Acts::VolumeResizeStrategy;
+
+  ACTS_DEBUG("Building Pixel");
+
+  ProtoLayerCreator pplCreator = createPixelProtoLayerCreator();
+
+  auto& pixel = parent.addCylinderContainer("Pixel", AxisR);
+
+  if (m_cfg.buildLevel > 1) {
+    ACTS_DEBUG("Building PST");
+    auto pstVolume = std::make_unique<Acts::TrackingVolume>(
+        Acts::Transform3::Identity(),
+        std::make_unique<Acts::CylinderVolumeBounds>(
+            kPstRadius - kPstThickness, kPstRadius, kPstHalfLengthZ),
+        "PST");
+
+    pixel.addMaterial("PSTMaterial", [&](auto& pstMat) {
+      pstMat.configureFace(OuterCylinder, asHomogeneous("PST", m_pstMaterial));
+      pstMat.addStaticVolume(std::move(pstVolume));
+    });
+  }
+
+  auto& sensitive = pixel.addCylinderContainer("Pixel", AxisZ);
+  sensitive.addCylinderContainer("Pixel_Barrel", AxisR, [&](auto& barrel) {
+    barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
+    barrel.setResizeStrategies(ResizeStrategy::Expand, ResizeStrategy::Gap);
+
+    auto centralProtoLayerSurfaces = pplCreator.centralProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << centralProtoLayerSurfaces.size()
+                         << " central proto layers to "
+                         << "Pixel_Barrel");
+    for (const auto& [idx, temp] :
+
+         Acts::enumerate(centralProtoLayerSurfaces)) {
+      auto& pl = temp.protoLayer;
+      std::string layerName = "Pixel_Barrel_L" + std::to_string(idx);
+      barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(OuterCylinder,
+                          asHomogeneous("Pixel", m_pixelCentralMaterial));
+        mat.addLayer(layerName, [&](auto& layer) {
+          ACTS_VERBOSE("Adding layer " << layer.name());
+          layer.setProtoLayer(pl);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Cylinder));
+
+          ACTS_VERBOSE("-> Number of surfaces: " << layer.surfaces().size());
+        });
+      });
+    }
+  });
+
+  sensitive.addCylinderContainer("Pixel_nEC", AxisZ, [&](auto& endcap) {
+    endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+    endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+    auto protoLayerSurfaces = pplCreator.negativeProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                         << " negative proto layers to "
+                         << "Pixel_nEC");
+    for (const auto& [idx, temp] :
+
+         Acts::enumerate(protoLayerSurfaces)) {
+      auto& pl = temp.protoLayer;
+      std::string layerName = "Pixel_nEC_L" + std::to_string(idx);
+      endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(NegativeDisc,
+                          asHomogeneous("Pixel", m_pixelEndcapMaterial));
+        mat.addLayer(layerName, [&](auto& layer) {
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Disc));
+          ACTS_VERBOSE("Adding layer " << layer.name());
+          layer.setProtoLayer(pl);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+        });
+      });
+    }
+  });
+
+  sensitive.addCylinderContainer("Pixel_pEC", AxisZ, [&](auto& endcap) {
+    endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+    endcap.setResizeStrategy(ResizeStrategy::Gap);
+    auto protoLayerSurfaces = pplCreator.positiveProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                         << " positive proto layers to "
+                         << "Pixel_pEC");
+    for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+      auto& pl = temp.protoLayer;
+      std::string layerName = "Pixel_pEC_L" + std::to_string(idx);
+      endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(PositiveDisc,
+                          asHomogeneous("Pixel", m_pixelEndcapMaterial));
+        mat.addLayer(layerName, [&](auto& layer) {
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Disc));
+          ACTS_VERBOSE("Adding layer " << layer.name());
+          layer.setProtoLayer(pl);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+        });
+      });
+    }
+  });
+}
+
+void Gen3GenericDetectorBuilder::buildShortStrip(
+    Acts::Experimental::BlueprintNode& parent,
+    const Acts::GeometryContext& gctx) {
+  using enum Acts::AxisDirection;
+  using namespace Acts::Experimental;
+  using namespace Acts::UnitLiterals;
+  using enum Acts::CylinderVolumeBounds::Face;
+  using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
+  using ResizeStrategy = Acts::VolumeResizeStrategy;
+
+  ACTS_DEBUG("Building Short Strip");
+
+  ProtoLayerCreator ssplCreator = createShortStripProtoLayerCreator();
+
+  auto& sstrip = parent.addCylinderContainer("ShortStrip", AxisZ);
+  sstrip.setAttachmentStrategy(AttachmentStrategy::Gap);
+  sstrip.setResizeStrategy(ResizeStrategy::Gap);
+
+  sstrip.addCylinderContainer("ShortStrip_Barrel", AxisR, [&](auto& barrel) {
+    barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
+    barrel.setResizeStrategy(ResizeStrategy::Gap);
+
+    auto protoLayerSurfaces = ssplCreator.centralProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                         << " central proto layers to "
+                         << "ShortStrip");
+    for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+      auto& pl = temp.protoLayer;
+      std::string layerName = "ShortStrip_Barrel_L" + std::to_string(idx);
+      barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(
+            InnerCylinder,
+            asHomogeneous("ShortStrip", m_shortStripCentralMaterial));
+        mat.addLayer(layerName, [&](auto& layer) {
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Cylinder));
+          ACTS_VERBOSE("Adding layer " << layer.name());
+          layer.setProtoLayer(pl);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+        });
+      });
+    }
+  });
+
+  if (m_cfg.buildLevel > 2) {
+    sstrip.addCylinderContainer("ShortStrip_nEC", AxisZ, [&](auto& endcap) {
+      endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+      endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+      auto protoLayerSurfaces = ssplCreator.negativeProtoLayers(gctx);
+
+      ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                           << " negative proto layers to "
+                           << "ShortStrip_nEC");
+      for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+        auto& pl = temp.protoLayer;
+        std::string layerName = "ShortStrip_nEC_L" + std::to_string(idx);
+        endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          mat.configureFace(
+              NegativeDisc,
+              asHomogeneous("ShortStrip", m_shortStripEndcapMaterial));
+          mat.addLayer(layerName, [&](auto& layer) {
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
+            ACTS_VERBOSE("Adding layer " << layer.name());
+            layer.setProtoLayer(pl);
+            layer.setEnvelope(
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+          });
+        });
+      }
+    });
+
+    sstrip.addCylinderContainer("ShortStrip_pEC", AxisZ, [&](auto& endcap) {
+      endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+      endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+      auto protoLayerSurfaces = ssplCreator.positiveProtoLayers(gctx);
+
+      ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                           << " positive proto layers to "
+                           << "ShortStrip_pEC");
+      for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+        auto& pl = temp.protoLayer;
+        std::string layerName = "ShortStrip_pEC_L" + std::to_string(idx);
+        endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          mat.configureFace(
+              PositiveDisc,
+              asHomogeneous("ShortStrip", m_shortStripEndcapMaterial));
+          mat.addLayer(layerName, [&](auto& layer) {
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
+            ACTS_VERBOSE("Adding layer " << layer.name());
+            layer.setProtoLayer(pl);
+            layer.setEnvelope(
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+          });
+        });
+      }
+    });
+  }
+}
+
+void Gen3GenericDetectorBuilder::buildLongStrip(
+    Acts::Experimental::BlueprintNode& parent,
+    const Acts::GeometryContext& gctx) {
+  using enum Acts::AxisDirection;
+  using namespace Acts::Experimental;
+  using namespace Acts::UnitLiterals;
+  using enum Acts::CylinderVolumeBounds::Face;
+  using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
+  using ResizeStrategy = Acts::VolumeResizeStrategy;
+
+  ACTS_DEBUG("Building Long Strip");
+
+  ProtoLayerCreator lsplCreator = createLongStripProtoLayerCreator();
+
+  auto& lstrip = parent.addCylinderContainer("LongStrip", AxisZ);
+  lstrip.setAttachmentStrategy(AttachmentStrategy::Gap);
+  lstrip.setResizeStrategy(ResizeStrategy::Gap);
+
+  lstrip.addCylinderContainer("LongStrip_Barrel", AxisR, [&](auto& barrel) {
+    barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
+    barrel.setResizeStrategy(ResizeStrategy::Gap);
+
+    auto protoLayerSurfaces = lsplCreator.centralProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                         << " central proto layers to "
+                         << "LongStrip_Barrel");
+    for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+      auto& pl = temp.protoLayer;
+      std::string layerName = "LongStrip_Barrel_L" + std::to_string(idx);
+      barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
+        mat.configureFace(
+            InnerCylinder,
+            asHomogeneous("LongStrip", m_longStripCentralMaterial));
+        mat.addLayer(layerName, [&](auto& layer) {
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Cylinder));
+          ACTS_VERBOSE("Adding layer " << layer.name());
+          layer.setProtoLayer(pl);
+          layer.setEnvelope(
+              Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
+        });
+      });
+    }
+  });
+
+  if (m_cfg.buildLevel > 2) {
+    lstrip.addCylinderContainer("LongStrip_nEC", AxisZ, [&](auto& endcap) {
+      endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+      endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+      auto protoLayerSurfaces = lsplCreator.negativeProtoLayers(gctx);
+
+      ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                           << " negative proto layers to "
+                           << "LongStrip_nEC");
+      for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+        auto& pl = temp.protoLayer;
+        std::string layerName = "LongStrip_nEC_L" + std::to_string(idx);
+        endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          mat.configureFace(
+              NegativeDisc,
+              asHomogeneous("LongStrip", m_longStripEndcapMaterial));
+          mat.addLayer(layerName, [&](auto& layer) {
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
+            ACTS_VERBOSE("Adding layer " << layer.name());
+            layer.setProtoLayer(pl);
+            layer.setEnvelope(
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+          });
+        });
+      }
+    });
+
+    lstrip.addCylinderContainer("LongStrip_pEC", AxisZ, [&](auto& endcap) {
+      endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+      endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+      auto protoLayerSurfaces = lsplCreator.positiveProtoLayers(gctx);
+
+      ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                           << " positive proto layers to "
+                           << "LongStrip_pEC");
+      for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+        auto& pl = temp.protoLayer;
+        std::string layerName = "LongStrip_pEC_L" + std::to_string(idx);
+        endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          mat.configureFace(
+              PositiveDisc,
+              asHomogeneous("LongStrip", m_longStripEndcapMaterial));
+          mat.addLayer(layerName, [&](auto& layer) {
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
+            ACTS_VERBOSE("Adding layer " << layer.name());
+            layer.setProtoLayer(pl);
+            layer.setEnvelope(
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+          });
+        });
+      }
+    });
+  }
+}
 }  // namespace
 }  // namespace Generic
 
@@ -364,11 +778,18 @@ void GenericDetector::buildTrackingGeometry(
   cfg.layerLogLevel = m_cfg.layerLogLevel;
   cfg.buildLevel = m_cfg.buildLevel;
 
-  m_trackingGeometry =
-      Generic::Gen1GenericDetectorBuilder(cfg, logger().clone())
-          .buildTrackingGeometry(m_nominalGeometryContext,
-                                 m_cfg.materialDecorator, m_cfg.surfaceLogLevel,
-                                 m_cfg.volumeLogLevel);
+  if (m_cfg.gen3) {
+    m_trackingGeometry =
+        Generic::Gen3GenericDetectorBuilder(cfg, logger().clone())
+            .buildTrackingGeometry(m_nominalGeometryContext,
+                                   m_cfg.graphvizFile);
+  } else {
+    m_trackingGeometry =
+        Generic::Gen1GenericDetectorBuilder(cfg, logger().clone())
+            .buildTrackingGeometry(m_nominalGeometryContext,
+                                   m_cfg.materialDecorator,
+                                   m_cfg.surfaceLogLevel, m_cfg.volumeLogLevel);
+  }
 
   if (m_trackingGeometry == nullptr) {
     throw std::runtime_error("Error building tracking geometry");
