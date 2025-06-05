@@ -293,9 +293,10 @@ void TripletSeedFinder2::createSeeds(State& state, Cache& cache,
         cache.candidatesCollector.nHighQualityCandidates();
     cache.candidatesCollector.toSortedCandidates(
         containerPointers.spacePoints(), cache.sortedCandidates);
-    m_cfg.filter->filter1SpFixed(filterOptions, state.filter,
-                                 cache.sortedCandidates, numQualitySeeds,
-                                 outputSeeds);
+    m_cfg.filter->filter1SpFixed(
+        filterOptions, state.filter, containerPointers.spacePoints(),
+        containerPointers.copiedFromIndexColumn, cache.sortedCandidates,
+        numQualitySeeds, outputSeeds);
   }  // loop on middle space points
 }
 
@@ -888,9 +889,9 @@ void TripletSeedFinder2::createTriplets(
     filter.filter2SpFixed(
         filterOptions, filterState, filterCache,
         containerPointers.spacePoints(), containerPointers.rColumn(),
-        spB.index(), spM.index(), tripletTopCandidates.topSpacePoints,
-        tripletTopCandidates.curvatures, tripletTopCandidates.impactParameters,
-        zOrigin, candidatesCollector);
+        containerPointers.copiedFromIndexColumn, spB.index(), spM.index(),
+        tripletTopCandidates.topSpacePoints, tripletTopCandidates.curvatures,
+        tripletTopCandidates.impactParameters, zOrigin, candidatesCollector);
   }  // loop on bottoms
 }
 
@@ -923,8 +924,7 @@ bool TripletSeedFinder2::stripCoordinateCheck(
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
-  double s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-              stripCenterDistance[2] * d0[2];
+  double s0 = stripCenterDistance.dot(d0);
   if (std::abs(s0) > std::abs(bd1) * tolerance) {
     return false;
   }
