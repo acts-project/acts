@@ -24,8 +24,9 @@
 
 namespace Acts {
 
-auto VectorMultiTrajectory::addTrackState_impl(
-    TrackStatePropMask mask, IndexType iprevious) -> IndexType {
+auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
+                                               IndexType iprevious)
+    -> IndexType {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();

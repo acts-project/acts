@@ -67,8 +67,9 @@ auto MultiEigenStepperLoop<E, R>::boundState(
 }
 
 template <typename E, typename R>
-auto MultiEigenStepperLoop<E, R>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto MultiEigenStepperLoop<E, R>::curvilinearState(State& state,
+                                                   bool transportCov) const
+    -> BoundState {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>

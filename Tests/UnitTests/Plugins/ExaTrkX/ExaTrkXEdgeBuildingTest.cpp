@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
 
     for (auto postIt = postEdges.begin(); postIt != postEdges.end();
          postIt += 2) {
-      bool noflp = (*preIt == *postIt) and *(preIt + 1) == *(postIt + 1);
-      bool flp = *preIt == *(postIt + 1) and *(preIt + 1) == *(postIt);
+      bool noflp = (*preIt == *postIt) and * (preIt + 1) == *(postIt + 1);
+      bool flp = *preIt == *(postIt + 1) and * (preIt + 1) == *(postIt);
 
       found += (flp or noflp);
     }

@@ -202,28 +202,27 @@ class Result {
   /// @note This function always returns by value.
   /// @return Either the valid value, or the given substitute.
   template <typename U>
-  T value_or(U&& v) &&
-    requires(std::same_as<std::decay_t<U>, T>)
-  {
-    if (ok()) {
-      return std::move(*this).value();
-    } else {
-      return std::forward<U>(v);
-    }
-  }
+      T value_or(U&& v) &&
+      requires(std::same_as<std::decay_t<U>, T>) {
+        if (ok()) {
+          return std::move(*this).value();
+        } else {
+          return std::forward<U>(v);
+        }
+      }
 
-  /// Transforms the value contained in this result.
-  ///
-  /// Applying a function `f` to a valid value `x` returns `f(x)`, while
-  /// applying `f` to an invalid value returns another invalid value.
-  ///
-  /// @param[in] callable The transformation function to apply.
-  /// @note This is the lvalue version.
-  /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
-  /// @return The modified valid value if exists, or an error otherwise.
-  template <typename C>
-  auto transform(C&& callable) const&
-    requires std::invocable<C, const T&>
+      /// Transforms the value contained in this result.
+      ///
+      /// Applying a function `f` to a valid value `x` returns `f(x)`, while
+      /// applying `f` to an invalid value returns another invalid value.
+      ///
+      /// @param[in] callable The transformation function to apply.
+      /// @note This is the lvalue version.
+      /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
+      /// @return The modified valid value if exists, or an error otherwise.
+      template <typename C>
+      auto transform(C&& callable) const&
+        requires std::invocable<C, const T&>
   {
     using CallableReturnType = decltype(std::declval<C>()(std::declval<T>()));
     using R = Result<std::decay_t<CallableReturnType>, E>;

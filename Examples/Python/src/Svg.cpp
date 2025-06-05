@@ -351,7 +351,9 @@ void addSvg(Context& ctx) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  { svg.def("drawDetector", &drawDetector); }
+  {
+    svg.def("drawDetector", &drawDetector);
+  }
 
   // Legacy geometry drawing
   {

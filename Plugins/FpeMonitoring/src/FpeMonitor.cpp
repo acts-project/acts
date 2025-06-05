@@ -267,7 +267,7 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
 
   std::lock_guard lock{state.mutex};
 
-  struct sigaction action {};
+  struct sigaction action{};
   action.sa_sigaction = &signalHandler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGFPE, &action, nullptr);

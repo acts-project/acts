@@ -30,7 +30,7 @@ class ITrackingGeometryVisitor {
  public:
   virtual ~ITrackingGeometryVisitor() = default;
 
-  ITrackingGeometryVisitor(bool visitInDepth = true)
+  explicit ITrackingGeometryVisitor(bool visitInDepth = true)
       : m_visitInDepth(visitInDepth) {}
 
   /// @brief indicate the order of visiting
@@ -54,7 +54,7 @@ class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor from base class
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  virtual ~TrackingGeometryVisitor() = 0;
+  ~TrackingGeometryVisitor() override = 0;
 
   /// @brief Visit a tracking volume in the geometry
   /// @param volume The tracking volume being visited
@@ -94,7 +94,7 @@ class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  virtual ~TrackingGeometryMutableVisitor();
+  ~TrackingGeometryMutableVisitor() override = 0;
 
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
