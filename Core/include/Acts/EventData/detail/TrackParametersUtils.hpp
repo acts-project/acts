@@ -41,7 +41,7 @@ concept TrackParamsGrid = requires {
     {
       val.first
     } -> std::same_as<
-        std::shared_ptr<typename decltype(val.first)::element_type>&>;
+          std::shared_ptr<typename decltype(val.first)::element_type>&>;
     { val.second } -> std::same_as<decltype(val.first)&>;
   };
 };
