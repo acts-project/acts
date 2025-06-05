@@ -27,4 +27,26 @@ constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
 }
 
+/// @brief Helper struct to calculate sin/cos in one go
+template <typename T>
+struct sincos {
+  /// @brief Standard constructor taking an angle
+  /// @param alpha: Angle to consider
+  sincos(const T alpha) : cs{std::cos(alpha)}, sn{std::sin(alpha)} {}
+  T cs{0.};
+  T sn{0.};
+};
+
+
+/// @brief Calculates the sum of 1 + 2 + 3+ ... + N using the
+///        Gaussian sum formula
+/// @param N: Upper limit of the sum
+template<typename T,
+        typename std::enable_if_t<std::is_integral_v<T>, bool> = true>
+constexpr T prefixSum(const T N) {
+    return N *(N +1) / 2;
+} 
+
+
+
 }  // namespace Acts
