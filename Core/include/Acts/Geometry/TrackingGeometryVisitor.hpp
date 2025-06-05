@@ -24,6 +24,8 @@ class BoundarySurfaceT;
 ///
 /// This class provides a common interface for both const and mutable visitors
 /// to the tracking geometry hierarchy. It allows decide on the visiting order
+/// based on the visitInDepth flag. If true, the visiting happens from the
+/// outermost volume and goes deeper to the volumes into the hierarchy.
 class ITrackingGeometryVisitor {
  public:
   virtual ~ITrackingGeometryVisitor() = default;
@@ -33,7 +35,7 @@ class ITrackingGeometryVisitor {
 
   /// @brief indicate the order of visiting
   /// @note default is outermost --> innermost volume visiting
-  bool visitInDepth() { return m_visitInDepth; }
+  bool visitInDepth() const { return m_visitInDepth; }
 
  private:
   /// Flag to indicate if the visitor should follow from the outermost to the
@@ -49,9 +51,8 @@ class ITrackingGeometryVisitor {
 /// structure.
 class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
  public:
-  /// @brief Constructor
-  explicit TrackingGeometryVisitor(bool visitInDepth = true)
-      : ITrackingGeometryVisitor(visitInDepth) {}
+  /// @brief Constructor from base class
+  using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
   virtual ~TrackingGeometryVisitor() = 0;
 
@@ -91,8 +92,7 @@ class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
 class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
  public:
   /// @brief Constructor
-  explicit TrackingGeometryMutableVisitor(bool visitInDepth = true)
-      : ITrackingGeometryVisitor(visitInDepth) {}
+  using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
   virtual ~TrackingGeometryMutableVisitor();
 
