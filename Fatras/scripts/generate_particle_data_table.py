@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-# /// script
-# dependencies = [
-#   "particle==0.24.0",
-# ]
-# ///
-
 #
 # use scikit-hep/particle to generate c++ code for the particle data table.
 #
