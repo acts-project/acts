@@ -149,13 +149,25 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   ACTS_DEBUG("Number of input pseudo jets from truth particles: "
              << inputPseudoJets.size());
 
-  // Run the jet clustering
-  fastjet::ClusterSequence clusterSeq(inputPseudoJets, defaultJetDefinition);
+  std::vector<fastjet::PseudoJet> jets;
+  fastjet::ClusterSequence clusterSeq;
+  {
+    Acts::ScopedTimer timer("Jet clustering", logger());
+    // Run the jet clustering, only once
+    clusterSeq =
+        fastjet::ClusterSequence(inputPseudoJets, defaultJetDefinition);
 
+<<<<<<< HEAD
   // Get the jets above a certain pt threshold
   std::vector<fastjet::PseudoJet> jets =
       sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
   ACTS_DEBUG("Number of clustered truth jets: " << jets.size());
+=======
+    // Get the jets above a certain pt threshold
+    jets = sorted_by_pt(clusterSeq.inclusive_jets(m_cfg.jetPtMin));
+    ACTS_DEBUG("Number of clustered jets: " << jets.size());
+  }
+>>>>>>> e2234f05f (add some timing)
 
   std::vector<std::pair<JetLabel, std::shared_ptr<const HepMC3::GenParticle>>>
       hadrons;
@@ -304,6 +316,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   boost::container::flat_map<JetLabel, std::size_t> jetLabelCounts;
 
+  Acts::AveragingScopedTimer timer("Jet classification", logger());
+
   for (unsigned int i = 0; i < jets.size(); i++) {
     // Get information on the jet constituents
     const auto& jet = jets[i];
@@ -345,7 +359,11 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
                  << jetFourMomentum(3) << " and " << constituentIndices.size()
                  << " constituents.");
 
-    auto label = classifyJet(jet);
+    JetLabel label = JetLabel::Unknown;
+    if (m_cfg.doJetLabeling) {
+      timer.sample();
+      label = classifyJet(jet);
+    }
 
     // Initialize the (track) jet with 4-momentum
     Acts::FastJet::TruthJetBuilder storedJet(jetFourMomentum);
