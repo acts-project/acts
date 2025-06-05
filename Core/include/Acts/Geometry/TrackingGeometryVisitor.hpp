@@ -20,6 +20,26 @@ class Layer;
 
 template <typename T>
 class BoundarySurfaceT;
+/// @brief Base class for tracking geometry visitors
+///
+/// This class provides a common interface for both const and mutable visitors
+/// to the tracking geometry hierarchy. It allows decide on the visiting order
+class ITrackingGeometryVisitor {
+ public:
+  virtual ~ITrackingGeometryVisitor() = default;
+
+  ITrackingGeometryVisitor(bool visitInDepth = true)
+      : m_visitInDepth(visitInDepth) {}
+
+  /// @brief indicate the order of visiting
+  /// @note default is outermost --> innermost volume visiting
+  bool visitInDepth() { return m_visitInDepth; }
+
+ private:
+  /// Flag to indicate if the visitor should follow from the outermost to the
+  /// innermost volume depth
+  bool m_visitInDepth;
+};
 
 /// @brief Visitor interface for traversing the tracking geometry hierarchy
 ///
@@ -27,8 +47,12 @@ class BoundarySurfaceT;
 /// geometry components without modifying them. It's used for operations like
 /// visualization, validation, or collecting information about the geometry
 /// structure.
-class TrackingGeometryVisitor {
+class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
  public:
+  /// @brief Constructor
+  explicit TrackingGeometryVisitor(bool visitInDepth = true)
+      : ITrackingGeometryVisitor(visitInDepth) {}
+
   virtual ~TrackingGeometryVisitor() = 0;
 
   /// @brief Visit a tracking volume in the geometry
@@ -64,8 +88,12 @@ class TrackingGeometryVisitor {
 /// This visitor allows for non-const access to traverse and modify the
 /// tracking geometry components. It's used for operations like geometry
 /// construction, material decoration, or geometry ID assignment.
-class TrackingGeometryMutableVisitor {
+class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
  public:
+  /// @brief Constructor
+  explicit TrackingGeometryMutableVisitor(bool visitInDepth = true)
+      : ITrackingGeometryVisitor(visitInDepth) {}
+
   virtual ~TrackingGeometryMutableVisitor();
 
   /// @brief Visit and potentially modify a tracking volume
