@@ -74,6 +74,21 @@ class SeedFinder {
 
     // Mutable variables for Space points used in the seeding
     SpacePointMutableData spacePointMutableData{};
+
+    std::size_t nSpacePointsSeen{0};
+    std::size_t nTopSpacePointsSeen{0};
+    std::size_t nMiddleSpacePointsSeen{0};
+    std::size_t nBottomSpacePointsSeen{0};
+    std::size_t nTopDoubletsCreated{0};
+    std::size_t nBottomDoubletsCreated{0};
+    std::size_t nTripletCandidatesChecked{0};
+    std::size_t nTripletCandidatesCreated{0};
+
+    std::size_t nTripletCutCotThetaAvg2{0};
+    std::size_t nTripletCutFirstDeltaCotTheta2{0};
+    std::size_t nTripletCutHelixRadius{0};
+    std::size_t nTripletCutSecondDeltaCotTheta2{0};
+    std::size_t nTripletCutImpactParameter{0};
   };
 
   SeedFinder() = default;
@@ -106,6 +121,8 @@ class SeedFinder {
                            const std::size_t middleSPs,
                            const sp_range_t& topSPs,
                            const Range1D<float>& rMiddleSPRange) const;
+
+  void printStatistics(const SeedingState& state) const;
 
  private:
   /// Given a middle space point candidate, get the proper radius validity range

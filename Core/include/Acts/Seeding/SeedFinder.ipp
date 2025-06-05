@@ -72,6 +72,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   if (middleSPs.empty()) {
     return;
   }
+  state.nSpacePointsSeen += middleSPs.size();
+  state.nMiddleSpacePointsSeen += middleSPs.size();
 
   // neighbours
   // clear previous results
@@ -87,6 +89,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
     state.bottomNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+    state.nSpacePointsSeen += grid.at(idx).size();
+    state.nBottomSpacePointsSeen += grid.at(idx).size();
   }
   // if no bottom candidates, then no need to proceed
   if (state.bottomNeighbours.size() == 0) {
@@ -101,6 +105,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
     state.topNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+    state.nSpacePointsSeen += grid.at(idx).size();
+    state.nTopSpacePointsSeen += grid.at(idx).size();
   }
   // if no top candidates, then no need to proceed
   if (state.topNeighbours.size() == 0) {
@@ -140,6 +146,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
         options, grid, state.spacePointMutableData, state.topNeighbours, *spM,
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
         m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM, sinPhiM);
+    state.nTopDoubletsCreated += state.compatTopSP.size();
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -179,6 +186,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
         *spM, state.linCircleBottom, state.compatBottomSP,
         m_config.deltaRMinBottomSP, m_config.deltaRMaxBottomSP, uIP, uIP2,
         cosPhiM, sinPhiM);
+    state.nBottomDoubletsCreated += state.compatBottomSP.size();
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -580,6 +588,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     }
 
     for (std::size_t index_t = t0; index_t < numTopSp; index_t++) {
+      ++state.nTripletCandidatesChecked;
+
       const std::size_t t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
@@ -672,6 +682,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
       } else if (cotThetaAvg2 <= 0) {
+        ++state.nTripletCutCotThetaAvg2;
         continue;
       }
 
@@ -695,6 +706,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        ++state.nTripletCutFirstDeltaCotTheta2;
         // skip top SPs based on cotTheta sorting when producing triplets
         if constexpr (detailedMeasurement ==
                       DetectorMeasurementInfo::eDetailed) {
@@ -754,6 +766,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * options.minHelixDiameter2) {
+        ++state.nTripletCutHelixRadius;
         continue;
       }
 
@@ -780,6 +793,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+        ++state.nTripletCutSecondDeltaCotTheta2;
         if constexpr (detailedMeasurement ==
                       DetectorMeasurementInfo::eDetailed) {
           continue;
@@ -801,6 +815,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       }
 
       if (Im > m_config.impactMax) {
+        ++state.nTripletCutImpactParameter;
         continue;
       }
 
@@ -809,6 +824,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);
+      ++state.nTripletCandidatesCreated;
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
@@ -842,6 +858,32 @@ std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
     return {m_config.rRangeMiddleSP[zBin][0], m_config.rRangeMiddleSP[zBin][1]};
   }
   return {m_config.rMinMiddle, m_config.rMaxMiddle};
+}
+
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
+void SeedFinder<external_spacepoint_t, grid_t, platform_t>::printStatistics(
+    const SeedingState& state) const {
+  ACTS_INFO("SeedFinder statistics:");
+  ACTS_INFO("- space points seen: " << state.nSpacePointsSeen);
+  ACTS_INFO("- middle space points seen: " << state.nMiddleSpacePointsSeen);
+  ACTS_INFO("- top space points seen: " << state.nTopSpacePointsSeen);
+  ACTS_INFO("- bottom space points seen: " << state.nBottomSpacePointsSeen);
+  ACTS_INFO("- top doublets created: " << state.nTopDoubletsCreated);
+  ACTS_INFO("- doublets created: " << state.nBottomDoubletsCreated);
+  ACTS_INFO(
+      "- triplet candidates checked: " << state.nTripletCandidatesChecked);
+  ACTS_INFO(
+      "- triplet candidates created: " << state.nTripletCandidatesCreated);
+
+  ACTS_INFO("- triplet cuts:");
+  ACTS_INFO("  - nTripletCutCotThetaAvg2: " << state.nTripletCutCotThetaAvg2);
+  ACTS_INFO("  - nTripletCutFirstDeltaCotTheta2: "
+            << state.nTripletCutFirstDeltaCotTheta2);
+  ACTS_INFO("  - nTripletCutSecondDeltaCotTheta2: "
+            << state.nTripletCutSecondDeltaCotTheta2);
+  ACTS_INFO("  - nTripletCutHelixRadius: " << state.nTripletCutHelixRadius);
+  ACTS_INFO(
+      "  - nTripletCutImpactParameter: " << state.nTripletCutImpactParameter);
 }
 
 }  // namespace Acts
