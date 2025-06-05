@@ -869,7 +869,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::printStatistics(
   ACTS_INFO("- top space points seen: " << state.nTopSpacePointsSeen);
   ACTS_INFO("- bottom space points seen: " << state.nBottomSpacePointsSeen);
   ACTS_INFO("- top doublets created: " << state.nTopDoubletsCreated);
-  ACTS_INFO("- doublets created: " << state.nBottomDoubletsCreated);
+  ACTS_INFO("- bottom doublets created: " << state.nBottomDoubletsCreated);
   ACTS_INFO(
       "- triplet candidates checked: " << state.nTripletCandidatesChecked);
   ACTS_INFO(
