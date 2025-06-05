@@ -863,26 +863,26 @@ std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::printStatistics(
     const SeedingState& state) const {
-  ACTS_INFO("SeedFinder statistics:");
-  ACTS_INFO("- space points seen: " << state.nSpacePointsSeen);
-  ACTS_INFO("- middle space points seen: " << state.nMiddleSpacePointsSeen);
-  ACTS_INFO("- top space points seen: " << state.nTopSpacePointsSeen);
-  ACTS_INFO("- bottom space points seen: " << state.nBottomSpacePointsSeen);
-  ACTS_INFO("- top doublets created: " << state.nTopDoubletsCreated);
-  ACTS_INFO("- bottom doublets created: " << state.nBottomDoubletsCreated);
-  ACTS_INFO(
+  ACTS_DEBUG("SeedFinder statistics:");
+  ACTS_DEBUG("- space points seen: " << state.nSpacePointsSeen);
+  ACTS_DEBUG("- middle space points seen: " << state.nMiddleSpacePointsSeen);
+  ACTS_DEBUG("- top space points seen: " << state.nTopSpacePointsSeen);
+  ACTS_DEBUG("- bottom space points seen: " << state.nBottomSpacePointsSeen);
+  ACTS_DEBUG("- top doublets created: " << state.nTopDoubletsCreated);
+  ACTS_DEBUG("- bottom doublets created: " << state.nBottomDoubletsCreated);
+  ACTS_DEBUG(
       "- triplet candidates checked: " << state.nTripletCandidatesChecked);
-  ACTS_INFO(
+  ACTS_DEBUG(
       "- triplet candidates created: " << state.nTripletCandidatesCreated);
 
-  ACTS_INFO("- triplet cuts:");
-  ACTS_INFO("  - nTripletCutCotThetaAvg2: " << state.nTripletCutCotThetaAvg2);
-  ACTS_INFO("  - nTripletCutFirstDeltaCotTheta2: "
-            << state.nTripletCutFirstDeltaCotTheta2);
-  ACTS_INFO("  - nTripletCutSecondDeltaCotTheta2: "
-            << state.nTripletCutSecondDeltaCotTheta2);
-  ACTS_INFO("  - nTripletCutHelixRadius: " << state.nTripletCutHelixRadius);
-  ACTS_INFO(
+  ACTS_DEBUG("- triplet cuts:");
+  ACTS_DEBUG("  - nTripletCutCotThetaAvg2: " << state.nTripletCutCotThetaAvg2);
+  ACTS_DEBUG("  - nTripletCutFirstDeltaCotTheta2: "
+             << state.nTripletCutFirstDeltaCotTheta2);
+  ACTS_DEBUG("  - nTripletCutSecondDeltaCotTheta2: "
+             << state.nTripletCutSecondDeltaCotTheta2);
+  ACTS_DEBUG("  - nTripletCutHelixRadius: " << state.nTripletCutHelixRadius);
+  ACTS_DEBUG(
       "  - nTripletCutImpactParameter: " << state.nTripletCutImpactParameter);
 }
 
