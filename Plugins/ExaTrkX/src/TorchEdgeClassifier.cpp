@@ -170,6 +170,10 @@ PipelineTensors TorchEdgeClassifier::operator()(
   torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
+  if (edgesAfterCut.numel() == 0) {
+    throw NoEdgesError{};
+  }
+
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
   t3 = std::chrono::high_resolution_clock::now();
