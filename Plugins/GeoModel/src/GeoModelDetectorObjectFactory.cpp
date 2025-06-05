@@ -35,7 +35,6 @@
 #include <GeoModelKernel/GeoTubs.h>
 
 namespace Acts {
-
 GeoModelDetectorObjectFactory::GeoModelDetectorObjectFactory(
     const Config &cfg, std::unique_ptr<const Logger> mlogger)
     : m_logger(std::move(mlogger)), m_cfg(cfg) {}

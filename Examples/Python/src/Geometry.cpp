@@ -50,6 +50,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
+
 #include <array>
 #include <memory>
 #include <numbers>
@@ -732,7 +733,8 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Detector builder
     auto dBuilder =
-        py::class_<DetectorBuilder, std::shared_ptr<DetectorBuilder>>(
+        py::class_<DetectorBuilder, 
+        std::shared_ptr<DetectorBuilder>>(
             m, "DetectorBuilder")
             .def(py::init([](const DetectorBuilder::Config& config,
                              const std::string& name,

@@ -30,9 +30,8 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
-
+#include <GeoModelKernel/throwExcept.h>
 namespace Acts::GeoModel {
-
 std::shared_ptr<Volume> convertVolume(const Transform3& trf,
                                       const GeoShape* shape,
                                       VolumeBoundFactory& boundFactory) {
