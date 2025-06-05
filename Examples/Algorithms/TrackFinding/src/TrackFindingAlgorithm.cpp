@@ -45,6 +45,7 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <system_error>
 #include <unordered_map>
@@ -222,12 +223,11 @@ class BranchStopper {
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
           trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
         auto volumeId = trackState.referenceSurface().geometryId().volume();
-        if (std::find(m_cfg.pixelVolumeIds.begin(), m_cfg.pixelVolumeIds.end(),
-                      volumeId) != m_cfg.pixelVolumeIds.end()) {
+        if (std::ranges::find(m_cfg.pixelVolumeIds, volumeId) !=
+            m_cfg.pixelVolumeIds.end()) {
           ++branchState.nPixelHoles;
-        } else if (std::find(m_cfg.stripVolumeIds.begin(),
-                             m_cfg.stripVolumeIds.end(),
-                             volumeId) != m_cfg.stripVolumeIds.end()) {
+        } else if (std::ranges::find(m_cfg.stripVolumeIds, volumeId) !=
+                   m_cfg.stripVolumeIds.end()) {
           ++branchState.nStripHoles;
         }
       }
