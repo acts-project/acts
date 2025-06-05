@@ -285,6 +285,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
+  m_seedFinder.printStatistics(state);
+
   // we have seeds of proxies
   // convert them to seed of external space points
   SimSeedContainer SeedContainerForStorage;
