@@ -10,7 +10,6 @@
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/ModuleMapUtils.cuh"
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
 #include <CUDA_graph_creator>
 #include <CUDA_module_map_doublet>
@@ -18,7 +17,6 @@
 #include <TTree_hits>
 #include <chrono>
 
-#include <c10/cuda/CUDAGuard.h>
 #include <cub/block/block_merge_sort.cuh>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
@@ -27,8 +25,6 @@
 #include <thrust/transform_scan.h>
 
 using Clock = std::chrono::high_resolution_clock;
-
-using namespace torch::indexing;
 
 namespace {
 
@@ -115,11 +111,12 @@ ModuleMapCuda::~ModuleMapCuda() {
 
 namespace {}  // namespace
 
-std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
+PipelineTensors ModuleMapCuda::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<std::uint64_t> &moduleIds,
     const ExecutionContext &execContext) {
   auto t0 = std::chrono::high_resolution_clock::now();
+  assert(execContext.device.isCuda());
 
   if (moduleIds.empty()) {
     throw NoEdgesError{};
@@ -147,18 +144,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ////////////////////////
 
   // Full node features to device
-  auto nodeFeatures = torch::empty(
-      features.size(),
-      torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat32));
-  nodeFeatures = nodeFeatures.reshape(
-      {static_cast<long>(nHits), static_cast<long>(nFeatures)});
-  float *cudaNodeFeaturePtr = nodeFeatures.data_ptr<float>();
+
+  auto nodeFeatures =
+      Acts::Tensor<float>::Create({nHits, nFeatures}, execContext);
+  float *cudaNodeFeaturePtr = nodeFeatures.data();
   ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeaturePtr, features.data(),
                                   features.size() * sizeof(float),
                                   cudaMemcpyHostToDevice, stream));
-  ACTS_VERBOSE("Slice of node features[0:9,0:9]:\n"
-               << nodeFeatures.index({Slice(0, std::min(9ul, nHits)),
-                                      Slice(0, std::min(9ul, nFeatures))}));
 
   // Module IDs to device
   ScopedCudaPtr<std::uint64_t> cudaModuleIds(nHits, stream);
@@ -247,7 +239,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // TODO refactor this to avoid that inputData type in this form
-
   const auto edgeData = makeEdges(inputData, cudaHitIndice, stream);
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
@@ -263,31 +254,24 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
                               << ", blockDim: " << blockDim.x);
 
   // Make edge features
-  auto edgeFeatures = torch::empty(
-      6 * edgeData.nEdges,
-      torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat32));
-  edgeFeatures = edgeFeatures.reshape({static_cast<long>(edgeData.nEdges), 6});
+  auto edgeFeatures =
+      Acts::Tensor<float>::Create({edgeData.nEdges, 6}, execContext);
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   detail::makeEdgeFeatures<<<gridDimEdges, blockDim, 0, stream>>>(
       edgeData.nEdges, edgeData.cudaEdgePtr,
       edgeData.cudaEdgePtr + edgeData.nEdges, nFeatures, cudaNodeFeaturePtr,
-      edgeFeatures.data_ptr<float>());
+      edgeFeatures.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  //  Make torch tensors
-  ACTS_VERBOSE("edge features:\n"
-               << edgeFeatures.index({Slice(None, 5), Slice()}));
-  auto edgeFeaturesNew = edgeFeatures.clone();
-
   auto edgeIndex =
-      torch::from_blob(edgeData.cudaEdgePtr,
-                       {2, static_cast<long>(edgeData.nEdges)},
-                       at::TensorOptions().device(at::kCUDA).dtype(at::kInt))
-          .to(torch::kLong);
+      Tensor<std::int64_t>::Create({2, edgeData.nEdges}, execContext);
+  thrust::transform(thrust::cuda::par.on(stream), edgeData.cudaEdgePtr,
+                    edgeData.cudaEdgePtr + 2 * edgeData.nEdges,
+                    edgeIndex.data(),
+                    [] __device__(int i) -> std::int64_t { return i; });
   ACTS_CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
-  ACTS_VERBOSE("edge index:\n" << edgeIndex.index({Slice(), Slice(0, 10)}));
 
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
@@ -300,7 +284,10 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_DEBUG("Inference: " << ms(t1, t2));
   ACTS_DEBUG("Postprocessing: " << ms(t2, t3));
 
-  return {nodeFeatures, edgeIndex, edgeFeatures};
+  return {std::move(nodeFeatures),
+          std::move(edgeIndex),
+          std::move(edgeFeatures),
+          {}};
 }
 
 struct ArgsortFun {

@@ -11,9 +11,7 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <any>
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -31,10 +29,9 @@ struct ExaTrkXTiming {
 
 class ExaTrkXHook {
  public:
-  virtual ~ExaTrkXHook() {}
-  virtual void operator()(const std::any & /*nodes*/,
-                          const std::any & /*edges*/,
-                          const std::any & /*weights*/) const {};
+  virtual ~ExaTrkXHook() = default;
+  virtual void operator()(const PipelineTensors & /*tensors*/,
+                          const ExecutionContext & /*execCtx*/) const {};
 };
 
 class ExaTrkXPipeline {

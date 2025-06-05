@@ -8,28 +8,25 @@
 
 #pragma once
 
+#include <Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #ifndef ACTS_EXATRKX_CPUONLY
 #include <cuda_runtime_api.h>
 #endif
 
-#include <cstdint>
-
-#include <torch/torch.h>
-
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
 #ifndef ACTS_EXATRKX_CPUONLY
-  if (torch::cuda::is_available() && logger.level() == Acts::Logging::VERBOSE) {
+  if (logger.level() == Acts::Logging::VERBOSE) {
     constexpr float kb = 1024;
     constexpr float mb = kb * kb;
 
-    int device;
-    std::size_t free, total;
-    cudaMemGetInfo(&free, &total);
-    cudaGetDevice(&device);
+    int device{};
+    std::size_t free{}, total{};
+    ACTS_CUDA_CHECK(cudaMemGetInfo(&free, &total));
+    ACTS_CUDA_CHECK(cudaGetDevice(&device));
 
     ACTS_VERBOSE("Current CUDA device: " << device);
     ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb
