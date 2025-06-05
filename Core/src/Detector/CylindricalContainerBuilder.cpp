@@ -216,16 +216,15 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Run through the builders
-  std::ranges::for_each(
-      m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
-        auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
-        // Collect individual components, volumes, containers, roots
-        volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
-        containers.push_back(cContainer);
-        rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
-                           cRoots.volumes.end());
-      });
+  std::ranges::for_each(m_cfg.builders, [&](const auto& builder) {
+    auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
+    atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
+    // Collect individual components, volumes, containers, roots
+    volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
+    containers.push_back(cContainer);
+    rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
+                       cRoots.volumes.end());
+  });
   // Navigation level detected, connect volumes (cleaner and faster than
   // connect containers)
   if (atNavigationLevel) {
