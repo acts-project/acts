@@ -32,8 +32,8 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   std::size_t nParticles = 0;
   std::size_t nVertices = 0;
   for (const auto& genEvent : genEvents) {
-    nParticles += genEvent->particles_size();
-    nVertices += genEvent->vertices_size();
+    nParticles += genEvent->particles().size();
+    nVertices += genEvent->vertices().size();
   }
 
   event->reserve(nParticles, nVertices);
@@ -41,7 +41,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   for (const auto& genEvent : genEvents) {
     auto sample = mergeTimer.sample();
     particles.clear();
-    particles.reserve(genEvent->particles_size());
+    particles.reserve(genEvent->particles().size());
 
     auto copyAttributes = [&](const auto& src, auto& dst) {
       for (const auto& attr : src.attribute_names()) {
