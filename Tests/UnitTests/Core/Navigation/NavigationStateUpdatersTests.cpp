@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <ranges>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -99,8 +100,8 @@ struct IndexedSurfacesExtractor {
     // The extracted surfaces
     std::vector<const Surface*> eSurfaces;
     eSurfaces.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
+    std::ranges::for_each(
+        indices, [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
     return eSurfaces;
   }
 };
