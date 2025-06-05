@@ -75,7 +75,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
       timing->graphBuildingTime = t1 - t0;
     }
 
-    hook(tensors);
+    hook(tensors, ctx);
 
     if (timing != nullptr) {
       timing->classifierTimes.clear();
@@ -92,7 +92,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
         timing->classifierTimes.push_back(t1 - t0);
       }
 
-      hook(tensors);
+      hook(tensors, ctx);
     }
 
     t0 = std::chrono::high_resolution_clock::now();

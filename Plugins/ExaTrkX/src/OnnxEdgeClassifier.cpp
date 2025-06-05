@@ -17,7 +17,8 @@ namespace {
 
 template <typename T>
 Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
-                  std::size_t dims) {
+                  std::size_t rank = 2) {
+  assert(rank == 1 || rank == 2);
   ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
 
   if constexpr (std::is_same_v<T, float>) {
@@ -30,9 +31,14 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
   }
 
   bc::static_vector<std::int64_t, 2> shape;
-  for (auto i = 0ul; i < dims; ++i) {
-    shape.push_back(tensor.shape().at(i));
+  for (auto size : tensor.shape()) {
+    // If rank is 1 and we encounter a dimension with size 1, then we skip it
+    if (size > 1 || rank == 2) {
+      shape.push_back(size);
+    }
   }
+
+  assert(shape.size() == rank);
   return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
                                   shape.data(), shape.size(), onnxType);
 }
@@ -124,20 +130,17 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   bc::static_vector<const char *, 3> inputNames;
 
   // Node tensor
-  // ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures, 2));
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
 
   // Edge tensor
-  // ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex, 2));
+  inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
 
   // Edge feature tensor
   std::optional<Acts::Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
-    // ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
-    inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures, 2));
+    inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
 
@@ -145,11 +148,12 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   ACTS_DEBUG("Create score tensor");
   auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
                                             execContext);
+
   std::vector<Ort::Value> outputTensors;
-  outputTensors.push_back(toOnnx(memoryInfo, scores,
-                                 m_model->GetOutputTypeInfo(0)
-                                     .GetTensorTypeAndShapeInfo()
-                                     .GetDimensionsCount()));
+  auto outputRank = m_model->GetOutputTypeInfo(0)
+                        .GetTensorTypeAndShapeInfo()
+                        .GetDimensionsCount();
+  outputTensors.push_back(toOnnx(memoryInfo, scores, outputRank));
   std::vector<const char *> outputNames{m_outputName.c_str()};
 
   ACTS_DEBUG("Run model");
@@ -157,13 +161,6 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   m_model->Run(options, inputNames.data(), inputTensors.data(),
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
-
-  //ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-
-  // ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
-  //ACTS_VERBOSE("Slice of classified output:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
   sigmoid(scores, execContext.stream);
   auto [newScores, newEdgeIndex] =

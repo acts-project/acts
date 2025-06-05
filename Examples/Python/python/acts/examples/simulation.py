@@ -54,6 +54,12 @@ ParticleSelectorConfig = namedtuple(
     defaults=[(None, None)] * 10 + [None] * 5,
 )
 
+TruthJetConfig = namedtuple(
+    "TruthJetConfig",
+    ["inputTruthParticles", "outputJets", "jetPtMin"],
+    defaults=[None, None],
+)
+
 
 def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
     return {
@@ -81,6 +87,14 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
         "removeNeutral": config.removeNeutral,
         "removeSecondaries": config.removeSecondaries,
         "measurementCounter": config.nMeasurementsGroupMin,
+    }
+
+
+def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
+    return {
+        "inputTruthParticles": config.inputTruthParticles,
+        "outputJets": config.outputJets,
+        "jetPtMin": config.jetPtMin,
     }
 
 
@@ -837,3 +851,19 @@ def addDigiParticleSelection(
     s.addWhiteboardAlias(
         "particles_digitized_selected", selector.config.outputParticles
     )
+
+
+def addTruthJetAlg(
+    s: acts.examples.Sequencer,
+    config: TruthJetConfig,
+    loglevel: Optional[acts.logging.Level] = None,
+) -> None:
+    from acts.examples import TruthJetAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, loglevel)
+    truthJetAlg = acts.examples.TruthJetAlgorithm(
+        **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
+        level=customLogLevel(),
+    )
+
+    s.addAlgorithm(truthJetAlg)

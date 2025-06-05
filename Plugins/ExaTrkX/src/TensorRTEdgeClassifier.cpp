@@ -138,11 +138,13 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
                       static_cast<long>(tensors.edgeIndex.shape()[1])});
   context->setTensorAddress("edge_index", tensors.edgeIndex.data());
 
-  context->setInputShape(
-      "edge_attr",
-      nvinfer1::Dims2{static_cast<long>(tensors.edgeFeatures->shape()[0]),
-                      static_cast<long>(tensors.edgeFeatures->shape()[1])});
-  context->setTensorAddress("edge_attr", tensors.edgeFeatures->data());
+  if (tensors.edgeFeatures.has_value()) {
+    context->setInputShape(
+        "edge_attr",
+        nvinfer1::Dims2{static_cast<long>(tensors.edgeFeatures->shape()[0]),
+                        static_cast<long>(tensors.edgeFeatures->shape()[1])});
+    context->setTensorAddress("edge_attr", tensors.edgeFeatures->data());
+  }
 
   auto scores =
       Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul}, execContext);
@@ -167,8 +169,6 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   sigmoid(scores, execContext.stream);
 
   ACTS_VERBOSE("Size after classifier: " << scores.shape()[0]);
-  //ACTS_VERBOSE("Slice of classified output:\n"
-  //             << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
   printCudaMemInfo(logger());
 
   auto [newScores, newEdgeIndex] =

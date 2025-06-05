@@ -256,7 +256,8 @@ struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0;
+  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0,
+                extra_id = 0;
   /// Center position components in mm.
   float cx = 0, cy = 0, cz = 0;
   /// Rotation matrix components.

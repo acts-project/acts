@@ -30,7 +30,8 @@ struct ExaTrkXTiming {
 class ExaTrkXHook {
  public:
   virtual ~ExaTrkXHook() = default;
-  virtual void operator()(const PipelineTensors & /*tensors*/) const {};
+  virtual void operator()(const PipelineTensors & /*tensors*/,
+                          const ExecutionContext & /*execCtx*/) const {};
 };
 
 class ExaTrkXPipeline {

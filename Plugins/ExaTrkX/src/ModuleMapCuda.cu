@@ -151,9 +151,6 @@ PipelineTensors ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeaturePtr, features.data(),
                                   features.size() * sizeof(float),
                                   cudaMemcpyHostToDevice, stream));
-  //ACTS_VERBOSE("Slice of node features[0:9,0:9]:\n"
-  //             << nodeFeatures.index({Slice(0, std::min(9ul, nHits)),
-  //                                    Slice(0, std::min(9ul, nFeatures))}));
 
   // Module IDs to device
   ScopedCudaPtr<std::uint64_t> cudaModuleIds(nHits, stream);
@@ -268,9 +265,6 @@ PipelineTensors ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  //ACTS_VERBOSE("edge features:\n"
-  //             << edgeFeatures.index({Slice(None, 5), Slice()}));
-
   auto edgeIndex =
       Tensor<std::int64_t>::Create({2, edgeData.nEdges}, execContext);
   thrust::transform(thrust::cuda::par.on(stream), edgeData.cudaEdgePtr,
@@ -278,7 +272,6 @@ PipelineTensors ModuleMapCuda::operator()(
                     edgeIndex.data(),
                     [] __device__(int i) -> std::int64_t { return i; });
   ACTS_CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
-  //ACTS_VERBOSE("edge index:\n" << edgeIndex.index({Slice(), Slice(0, 10)}));
 
   ACTS_CUDA_CHECK(cudaGetLastError());
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));

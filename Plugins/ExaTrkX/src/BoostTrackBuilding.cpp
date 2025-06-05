@@ -53,13 +53,16 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     PipelineTensors tensors, std::vector<int>& spacepointIDs,
     const ExecutionContext& execContext) {
   ACTS_DEBUG("Start track building");
-  using RTF = const Tensor<float>&;
+
   using RTI = const Tensor<std::int64_t>&;
   const auto& edgeTensor =
       tensors.edgeIndex.device().isCpu()
           ? static_cast<RTI>(tensors.edgeIndex)
           : static_cast<RTI>(tensors.edgeIndex.clone(
                 {Acts::Device::Cpu(), execContext.stream}));
+
+  assert(tensors.edgeScores.has_value());
+  using RTF = const Tensor<float>&;
   const auto& scoreTensor =
       tensors.edgeScores->device().isCpu()
           ? static_cast<RTF>(*tensors.edgeScores)
@@ -70,7 +73,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   assert(edgeTensor.shape().at(1) == scoreTensor.shape().at(0));
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdgesInitial = scoreTensor.shape().at(1);
+  const auto numEdgesInitial = edgeTensor.shape().at(1);
 
   if (numEdgesInitial == 0) {
     ACTS_WARNING("No edges remained after edge classification");

@@ -59,4 +59,5 @@ target_sources(
         TrapezoidPortalShell.cpp
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
+        MultiWireVolumeBuilder.cpp
 )

@@ -6,15 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Seeding/BinnedGroup.hpp"
+
+#include <numeric>
+
 namespace Acts {
 
 template <typename grid_t>
 BinnedGroup<grid_t>::BinnedGroup(
-    grid_t&& grid,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& bottomFinder,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& topFinder,
-    std::array<std::vector<std::size_t>, Acts::BinnedGroup<grid_t>::DIM>
-        navigation)
+    grid_t&& grid, const GridBinFinder<BinnedGroup<grid_t>::DIM>& bottomFinder,
+    const GridBinFinder<BinnedGroup<grid_t>::DIM>& topFinder,
+    std::array<std::vector<std::size_t>, BinnedGroup<grid_t>::DIM> navigation)
     : m_grid(std::move(grid)),
       m_mask(m_grid.size(true), true),
       m_bottomBinFinder(&bottomFinder),
@@ -35,10 +39,9 @@ BinnedGroup<grid_t>::BinnedGroup(
 template <typename grid_t>
 BinnedGroup<grid_t>::BinnedGroup(
     grid_t&& grid, std::vector<bool> mask,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& bottomFinder,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& topFinder,
-    std::array<std::vector<std::size_t>, Acts::BinnedGroup<grid_t>::DIM>
-        navigation)
+    const GridBinFinder<BinnedGroup<grid_t>::DIM>& bottomFinder,
+    const GridBinFinder<BinnedGroup<grid_t>::DIM>& topFinder,
+    std::array<std::vector<std::size_t>, BinnedGroup<grid_t>::DIM> navigation)
     : m_grid(std::move(grid)),
       m_mask(std::move(mask)),
       m_bottomBinFinder(&bottomFinder),
@@ -80,18 +83,18 @@ const std::vector<bool>& BinnedGroup<grid_t>::mask() const {
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::begin() const {
-  return Acts::BinnedGroupIterator<grid_t>(
-      *this, std::array<std::size_t, Acts::BinnedGroup<grid_t>::DIM>(), m_bins);
+BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::begin() const {
+  return BinnedGroupIterator<grid_t>(
+      *this, std::array<std::size_t, BinnedGroup<grid_t>::DIM>(), m_bins);
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::end() const {
-  std::array<std::size_t, Acts::BinnedGroup<grid_t>::DIM> endline{};
-  for (std::size_t i(0ul); i < Acts::BinnedGroup<grid_t>::DIM; ++i) {
+BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::end() const {
+  std::array<std::size_t, BinnedGroup<grid_t>::DIM> endline{};
+  for (std::size_t i(0ul); i < BinnedGroup<grid_t>::DIM; ++i) {
     endline[i] = m_bins[i].size();
   }
-  return Acts::BinnedGroupIterator<grid_t>(*this, endline, m_bins);
+  return BinnedGroupIterator<grid_t>(*this, endline, m_bins);
 }
 
 }  // namespace Acts

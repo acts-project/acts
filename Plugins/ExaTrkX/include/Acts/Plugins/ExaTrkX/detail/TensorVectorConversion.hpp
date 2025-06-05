@@ -103,6 +103,18 @@ std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
 }
 
 template <typename T>
+torch::Tensor actsToNonOwningTorchTensor(Acts::Tensor<T> &tensor) {
+  const auto device = tensor.device().type == Acts::Device::Type::eCUDA
+                          ? torch::Device(torch::kCUDA, tensor.device().index)
+                          : torch::kCPU;
+  return torch::from_blob(
+      tensor.data(),
+      {static_cast<long>(tensor.shape().at(0)),
+       static_cast<long>(tensor.shape().at(1))},
+      torch::TensorOptions{}.device(device).dtype(TorchTypeMap<T>::type));
+}
+
+template <typename T>
 Tensor<T> torchToActsTensor(const at::Tensor &tensor,
                             const ExecutionContext &execContext) {
   assert(tensor.is_contiguous());

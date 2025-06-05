@@ -7,6 +7,8 @@ add_library(
     src/FullyConnectedGraphConstructor.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
+    src/TruthGraphMetricsHook.cpp
+    src/GraphStoreHook.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -104,10 +106,10 @@ endif()
 if(ACTS_EXATRKX_ENABLE_TORCH)
     target_sources(
         ActsPluginExaTrkX
-        PRIVATE src/TorchEdgeClassifier.cpp src/TorchMetricLearning.cpp
-        src/buildEdges.cpp
-        #    src/TorchTruthGraphMetricsHook.cpp
-        #src/TorchGraphStoreHook.cpp
+        PRIVATE
+            src/TorchEdgeClassifier.cpp
+            src/TorchMetricLearning.cpp
+            src/buildEdges.cpp
     )
 endif()
 
@@ -162,13 +164,14 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
         PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:-g
             --generate-line-info
+            --expt-relaxed-constexpr
             --extended-lambda>
     )
     target_compile_definitions(
         ActsPluginExaTrkX
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginExaTrkX PRIVATE CUDA::cudart)
+    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::cudart)
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
@@ -178,7 +181,6 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         ActsPluginExaTrkX
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
-
     target_link_libraries(ActsPluginExaTrkX PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
@@ -211,3 +213,4 @@ install(
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
