@@ -91,6 +91,14 @@ ParticleSelector::ParticleSelector(const Config& config,
         "and inputMeasurements");
   }
 
+  auto printInteger = [](auto x) -> std::string {
+    if (x == std::numeric_limits<decltype(x)>::max()) {
+      return "MAX";
+    } else {
+      return std::to_string(x);
+    }
+  };
+
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
   ACTS_DEBUG("selection particle |z| [" << m_cfg.absZMin << "," << m_cfg.absZMax
@@ -107,10 +115,11 @@ ParticleSelector::ParticleSelector(const Config& config,
                                        << ")");
   ACTS_DEBUG("selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax
                                       << ")");
-  ACTS_DEBUG("selection particle hits [" << m_cfg.hitsMin << ","
-                                         << m_cfg.hitsMax << ")");
+  ACTS_DEBUG("selection particle hits [" << printInteger(m_cfg.hitsMin) << ","
+                                         << printInteger(m_cfg.hitsMax) << ")");
   ACTS_DEBUG("selection particle measurements ["
-             << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
+             << printInteger(m_cfg.measurementsMin) << ","
+             << printInteger(m_cfg.measurementsMax) << ")");
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
