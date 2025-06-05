@@ -439,12 +439,20 @@ class TripletSeedFinder2 {
              m_stripCenterDistanceColumn != nullptr &&
              m_topStripCenterPositionColumn != nullptr;
     }
+    [[nodiscard]] bool hasCopiedFromIndexColumn() const {
+      return copiedFromIndexColumn != nullptr;
+    }
+
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copiedFromIndexColumn = nullptr;
 
    private:
     const SpacePointContainer2* m_spacePoints = nullptr;
     const SpacePointContainer2::DenseColumn<float>* m_rColumn = nullptr;
+
     const SpacePointContainer2::DenseColumn<float>* m_varianceRColumn = nullptr;
     const SpacePointContainer2::DenseColumn<float>* m_varianceZColumn = nullptr;
+
     const SpacePointContainer2::DenseColumn<Vector3>* m_topStripVectorColumn =
         nullptr;
     const SpacePointContainer2::DenseColumn<Vector3>*

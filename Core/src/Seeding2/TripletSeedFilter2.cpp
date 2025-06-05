@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding2/TripletSeedFilter2.hpp"
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/IExperimentTripletSeedCuts2.hpp"
 
 #include <numeric>
@@ -19,13 +20,36 @@ using namespace UnitLiterals;
 namespace {
 
 float getBestSeedQuality(
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copyFromIndexColumn,
     const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 sp) {
+  if (copyFromIndexColumn != nullptr) {
+    sp = spacePoints.at(sp).extra(*copyFromIndexColumn);
+  }
   auto it = bestSeedQualityMap.find(sp);
   if (it != bestSeedQualityMap.end()) {
     return it->second;
   }
   return std::numeric_limits<float>::lowest();
+}
+
+void setBestSeedQuality(
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copyFromIndexColumn,
+    std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
+    SpacePointIndex2 top, SpacePointIndex2 middle, SpacePointIndex2 bottom,
+    float quality) {
+  if (copyFromIndexColumn != nullptr) {
+    top = spacePoints.at(top).extra(*copyFromIndexColumn);
+    middle = spacePoints.at(middle).extra(*copyFromIndexColumn);
+    bottom = spacePoints.at(bottom).extra(*copyFromIndexColumn);
+  }
+  bestSeedQualityMap[top] = quality;
+  bestSeedQualityMap[middle] = quality;
+  bestSeedQualityMap[bottom] = quality;
 }
 
 }  // namespace
@@ -38,6 +62,8 @@ void TripletSeedFilter2::filter2SpFixed(
     const Options& options, State& state, Cache& cache,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copyFromIndexColumn,
     SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
     std::span<const SpacePointIndex2> topSpVec,
     std::span<const float> invHelixDiameterVec,
@@ -171,9 +197,12 @@ void TripletSeedFilter2::filter2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < getBestSeedQuality(state.bestSeedQualityMap, bottomSp) &&
-          weight < getBestSeedQuality(state.bestSeedQualityMap, middleSp) &&
-          weight < getBestSeedQuality(state.bestSeedQualityMap, topSp)) {
+      if (weight < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                      state.bestSeedQualityMap, bottomSp) &&
+          weight < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                      state.bestSeedQualityMap, middleSp) &&
+          weight < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                      state.bestSeedQualityMap, topSp)) {
         continue;
       }
 
@@ -216,6 +245,9 @@ void TripletSeedFilter2::filter2SpFixed(
 
 void TripletSeedFilter2::filter1SpFixed(
     const Options& options, State& state,
+    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
+        copyFromIndexColumn,
     std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
     SeedContainer2& outputCollection) const {
   if (m_cfg.experimentCuts != nullptr) {
@@ -244,19 +276,22 @@ void TripletSeedFilter2::filter1SpFixed(
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
-      if (bestSeedQuality <
-              getBestSeedQuality(state.bestSeedQualityMap, bottom) &&
-          bestSeedQuality <
-              getBestSeedQuality(state.bestSeedQualityMap, middle) &&
-          bestSeedQuality < getBestSeedQuality(state.bestSeedQualityMap, top)) {
+      if (bestSeedQuality < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                               state.bestSeedQualityMap,
+                                               bottom) &&
+          bestSeedQuality < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                               state.bestSeedQualityMap,
+                                               middle) &&
+          bestSeedQuality < getBestSeedQuality(spacePoints, copyFromIndexColumn,
+                                               state.bestSeedQualityMap, top)) {
         continue;
       }
     }
 
     // set quality of seed components
-    state.bestSeedQualityMap[bottom] = bestSeedQuality;
-    state.bestSeedQualityMap[middle] = bestSeedQuality;
-    state.bestSeedQualityMap[top] = bestSeedQuality;
+    setBestSeedQuality(spacePoints, copyFromIndexColumn,
+                       state.bestSeedQualityMap, top, middle, bottom,
+                       bestSeedQuality);
 
     ACTS_VERBOSE("Adding seed: [b=" << bottom << ", m=" << middle << ", t="
                                     << top << "], quality=" << bestSeedQuality
