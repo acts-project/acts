@@ -13,24 +13,17 @@
 #include <concepts>
 #include <numbers>
 
+namespace Acts {
+
 template <typename external_spacepoint_t>
-Acts::CylindricalSpacePointGrid<external_spacepoint_t>
-Acts::CylindricalSpacePointGridCreator::createGrid(
-    const Acts::CylindricalSpacePointGridConfig& config,
-    const Acts::CylindricalSpacePointGridOptions& options,
-    const Acts::Logger& logger) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "CylindricalSpacePointGridConfig not in ACTS internal units in "
-        "CylindricalSpacePointGridCreator::createGrid");
-  }
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "CylindricalSpacePointGridOptions not in ACTS internal units in "
-        "CylindricalSpacePointGridCreator::createGrid");
-  }
-  using AxisScalar = Acts::Vector3::Scalar;
-  using namespace Acts::UnitLiterals;
+CylindricalSpacePointGrid<external_spacepoint_t>
+CylindricalSpacePointGridCreator::createGrid(
+    const CylindricalSpacePointGridConfig& config,
+    const CylindricalSpacePointGridOptions& options, const Logger& logger) {
+  config.checkConfig();
+
+  using AxisScalar = Vector3::Scalar;
+  using namespace UnitLiterals;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
@@ -106,7 +99,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     phiBins = std::min(phiBins, config.maxPhiBins);
   }
 
-  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
       config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
@@ -154,28 +147,22 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
   ACTS_VERBOSE("- Z axis  : " << zAxis);
   ACTS_VERBOSE("- R axis  : " << rAxis);
 
-  return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
+  return CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
 }
 
 template <typename external_spacepoint_t,
           typename external_spacepoint_iterator_t>
-void Acts::CylindricalSpacePointGridCreator::fillGrid(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::SeedFinderOptions& options,
-    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+void CylindricalSpacePointGridCreator::fillGrid(
+    const SeedFinderConfig<external_spacepoint_t>& config,
+    const SeedFinderOptions& options,
+    CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, const Acts::Logger& logger) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
-  }
+    external_spacepoint_iterator_t spEnd, const Logger& logger) {
+  (void)options;
+
   if (config.seedFilter == nullptr) {
     throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
-  }
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
   // Space points are assumed to be ALREADY CORRECTED for beamspot position
@@ -205,7 +192,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    Acts::Vector3 position(sp.phi(), sp.z(), sp.radius());
+    Vector3 position(sp.phi(), sp.z(), sp.radius());
     if (!grid.isInside(position)) {
       continue;
     }
@@ -237,12 +224,14 @@ template <typename external_spacepoint_t, typename external_collection_t>
   requires std::ranges::range<external_collection_t> &&
            std::same_as<typename external_collection_t::value_type,
                         external_spacepoint_t>
-void Acts::CylindricalSpacePointGridCreator::fillGrid(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::SeedFinderOptions& options,
-    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-    const external_collection_t& collection, const Acts::Logger& logger) {
-  Acts::CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
+void CylindricalSpacePointGridCreator::fillGrid(
+    const SeedFinderConfig<external_spacepoint_t>& config,
+    const SeedFinderOptions& options,
+    CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const external_collection_t& collection, const Logger& logger) {
+  CylindricalSpacePointGridCreator::fillGrid<external_spacepoint_t>(
       config, options, grid, std::ranges::begin(collection),
       std::ranges::end(collection), logger);
 }
+
+}  // namespace Acts

@@ -22,18 +22,13 @@ namespace Acts {
 
 struct SpacePointContainerConfig {
   bool useDetailedDoubleMeasurementInfo = false;
-  bool isInInternalUnits = false;
 
-  SpacePointContainerConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "SpacePointContainerConfig");
-    }
-    using namespace Acts::UnitLiterals;
-    SpacePointContainerConfig config = *this;
-    config.isInInternalUnits = true;
-    return config;
+  bool isInInternalUnits = true;
+  [[deprecated(
+      "SpacePointContainerConfig uses internal "
+      "units")]] SpacePointContainerConfig
+  toInternalUnits() const {
+    return *this;
   };
 };
 
@@ -42,20 +37,13 @@ struct SpacePointContainerOptions {
   // used as offset for Space Points
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
-  bool isInInternalUnits = false;
 
-  SpacePointContainerOptions toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "SpacePointContainerOptions");
-    }
-    using namespace Acts::UnitLiterals;
-    SpacePointContainerOptions options = *this;
-    options.isInInternalUnits = true;
-    options.beamPos[0] /= 1_mm;
-    options.beamPos[1] /= 1_mm;
-    return options;
+  bool isInInternalUnits = false;
+  [[deprecated(
+      "SpacePointContainerOptions uses internal "
+      "units")]] SpacePointContainerOptions
+  toInternalUnits() const {
+    return *this;
   }
 };
 

@@ -32,7 +32,7 @@ struct SeedFinderGbtsConfig {
   //   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
-  //   bool isInInternalUnits = false;
+  //   bool isInInternalUnits = true;
   /// for load space points
 
   // Parameter which can loosen the tolerance of the track seed to form a

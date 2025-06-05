@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -17,6 +16,7 @@
 #include <numbers>
 
 namespace Acts {
+
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
@@ -146,46 +146,28 @@ struct SeedFinderOrthogonalConfig {
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
-  bool isInInternalUnits = false;
-
-  SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
-    if (!isInInternalUnits) {
-      throw std::runtime_error(
-          "SeedFinderOrthogonalConfig not in ACTS internal units in "
-          "calculateDerivedQuantities");
-    }
-    SeedFinderOrthogonalConfig config = *this;
-    /// calculation of scattering using the highland formula
-    /// convert pT to p once theta angle is known
-    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
-                      (1 + 0.038 * std::log(radLengthPerSeed));
-    config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
-    return config;
+  bool isInInternalUnits = true;
+  [[deprecated(
+      "SeedFinderOrthogonalConfig uses internal "
+      "units")]] SeedFinderOrthogonalConfig
+  toInternalUnits() const {
+    return *this;
   }
 
-  SeedFinderOrthogonalConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "SeedFinderOrthogonalConfig already in ACTS internal units in "
-          "toInternalUnits");
-    }
-    using namespace Acts::UnitLiterals;
+  SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
     SeedFinderOrthogonalConfig config = *this;
-    config.isInInternalUnits = true;
-    config.minPt /= 1_MeV;
-    config.deltaRMinTopSP /= 1_mm;
-    config.deltaRMaxTopSP /= 1_mm;
-    config.deltaRMinBottomSP /= 1_mm;
-    config.deltaRMaxBottomSP /= 1_mm;
-    config.impactMax /= 1_mm;
-    config.maxPtScattering /= 1_MeV;
-    config.collisionRegionMin /= 1_mm;
-    config.collisionRegionMax /= 1_mm;
-    config.zMin /= 1_mm;
-    config.zMax /= 1_mm;
-    config.rMax /= 1_mm;
-    config.rMin /= 1_mm;
-
+    // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
+    {
+      const float xOverX0 = config.radLengthPerSeed;
+      const float q2OverBeta2 = 1;  // q^2=1, beta^2~1
+      // RPP2018 eq. 33.15 (treats beta and q² consistently)
+      const float t = std::sqrt(xOverX0 * q2OverBeta2);
+      // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
+      //                          = 2 * log(sqrt(x/X0) * (q/beta))
+      config.highland =
+          13.6 * UnitConstants::MeV * t * (1.0f + 0.038f * 2 * std::log(t));
+    }
+    config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
     return config;
   }
 };
