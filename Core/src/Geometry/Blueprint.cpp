@@ -302,54 +302,6 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
 
-  // world->apply(overloaded{
-  //     [&](TrackingVolume &volume) {
-  //       iportal = 0;
-  //       isensitive = 0;
-  //       currentVolume = &volume;
-
-  //       auto id = volume.geometryId();
-
-  //       if (id == GeometryIdentifier{}) {
-  //         auto it = std::ranges::find(volumesById, nullptr);
-  //         if (it == volumesById.end()) {
-  //           ACTS_ERROR(prefix() << "No free volume IDs left, all "
-  //                               << volumesById.size() << " are used");
-  //           // @TODO: Maybe link to documentation about this
-  //           throw std::logic_error("No free volume IDs left");
-  //         }
-
-  //         id = GeometryIdentifier().withVolume(
-  //             std::distance(volumesById.begin(), it) + 1);
-
-  //         ACTS_DEBUG(prefix() << "Assigning volume ID " << id << " for "
-  //                             << volume.volumeName());
-  //         volume.assignGeometryId(id);
-  //         *it = &volume;
-  //       }
-
-  //       // assign Portal IDs and sensitive surface IDs
-  //       for (auto &portal : volume.portals()) {
-  //         if (portal.surface().geometryId() != GeometryIdentifier{}) {
-  //           continue;
-  //         }
-  //         iportal += 1;
-  //         auto portalId = id.withBoundary(iportal);
-  //         ACTS_DEBUG(prefix() << "Assigning portal ID: " << portalId);
-  //         portal.surface().assignGeometryId(portalId);
-  //       }
-  //       for (auto &surface : volume.surfaces()) {
-  //         if (surface.geometryId() == GeometryIdentifier{}) {
-  //           isensitive += 1;
-  //           auto surfaceId = id.withSensitive(isensitive);
-  //           ACTS_DEBUG(prefix() << "Assigning surface ID: " << surfaceId);
-  //           surface.assignGeometryId(surfaceId);
-  //         }
-  //       }
-  //     }
-
-  // });
-
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);
 }
