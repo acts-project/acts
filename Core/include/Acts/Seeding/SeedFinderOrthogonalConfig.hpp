@@ -148,12 +148,8 @@ struct SeedFinderOrthogonalConfig {
       DelegateFuncTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = true;
-  [[deprecated(
-      "SeedFinderOrthogonalConfig uses internal "
-      "units")]] SeedFinderOrthogonalConfig
-  toInternalUnits() const {
-    return *this;
-  }
+  //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
+  SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
     SeedFinderOrthogonalConfig config = *this;

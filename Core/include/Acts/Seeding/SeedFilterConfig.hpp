@@ -84,10 +84,8 @@ struct SeedFilterConfig {
   bool useDeltaRorTopRadius = false;
 
   bool isInInternalUnits = true;
-  [[deprecated("SeedFilterConfig uses internal units")]] SeedFilterConfig
-  toInternalUnits() const {
-    return *this;
-  }
+  //[[deprecated("SeedFilterConfig uses internal units")]]
+  SeedFilterConfig toInternalUnits() const { return *this; }
 };
 
 }  // namespace Acts

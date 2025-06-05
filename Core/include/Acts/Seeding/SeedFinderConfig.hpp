@@ -192,10 +192,8 @@ struct SeedFinderConfig {
       DelegateFuncTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = true;
-  [[deprecated("SeedFinderConfig uses internal units")]] SeedFinderConfig
-  toInternalUnits() const {
-    return *this;
-  }
+  //[[deprecated("SeedFinderConfig uses internal units")]]
+  SeedFinderConfig toInternalUnits() const { return *this; }
 
   SeedFinderConfig calculateDerivedQuantities() const {
     SeedFinderConfig config = *this;
@@ -231,10 +229,8 @@ struct SeedFinderOptions {
   float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = true;
-  [[deprecated("SeedFinderOptions uses internal units")]] SeedFinderOptions
-  toInternalUnits() const {
-    return *this;
-  }
+  //[[deprecated("SeedFinderOptions uses internal units")]]
+  SeedFinderOptions toInternalUnits() const { return *this; }
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
