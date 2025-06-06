@@ -163,6 +163,10 @@ class SeedContainer2 {
     std::size_t spacePointOffset{};
     float quality{-std::numeric_limits<float>::infinity()};
     float vertexZ{};
+
+    Entry() = default;
+    Entry(std::size_t size, std::size_t offset, float q, float vz)
+        : seedSize(size), spacePointOffset(offset), quality(q), vertexZ(vz) {}
   };
 
   std::vector<Entry> m_entries{};

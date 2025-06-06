@@ -555,8 +555,6 @@ class TripletSeedFinder2 {
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
-  /// @tparam measurement_info Type of measurement information (e.g. Default or Detailed)
-  ///
   /// @param cache Cache object to store intermediate results
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
@@ -583,10 +581,9 @@ class TripletSeedFinder2 {
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
-  /// @tparam measurement_info Type of measurement information (e.g. Default or Detailed)
-  ///
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
+  /// @param filterOptions Options for the triplet seed filter
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
   /// @param containerPointers Space point container and its extra columns
