@@ -79,4 +79,16 @@ std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 /// @return Optional string view of particle name
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
 
+namespace ParticleId {
+bool isHadron(int pdg);
+
+bool isLepton(int pdg);
+
+bool isQuark(int pdg);
+
+bool isInteracting(int pdg);
+
+HadronType hadronType(int pdg);
+}  // namespace ParticleId
+
 }  // namespace Acts

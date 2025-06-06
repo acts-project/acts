@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <iosfwd>
 #include <stdexcept>
 #include <utility>
 
@@ -82,5 +83,22 @@ static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
   int A = std::abs((pdgNum / 10) % 1000);
   return std::make_pair(Z, A);
 }
+
+enum class HadronType {
+  Hadron = 1,
+  BBbarMeson = 2,
+  CCbarMeson = 3,
+  BottomMeson = 4,
+  BottomBaryon = 5,
+  CharmedMeson = 6,
+  CharmedBaryon = 7,
+  StrangeMeson = 8,
+  StrangeBaryon = 9,
+  LightMeson = 10,
+  LightBaryon = 11,
+  Unknown = 12
+};
+
+std::ostream& operator<<(std::ostream& os, HadronType hadron);
 
 }  // namespace Acts
