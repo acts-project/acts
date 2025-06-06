@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <memory>
 #include <ostream>
 #include <span>
@@ -15,6 +17,8 @@
 namespace HepMC3 {
 class GenEvent;
 class GenParticle;
+class GenVertex;
+class FourVector;
 }  // namespace HepMC3
 
 namespace Acts {
@@ -55,5 +59,11 @@ static constexpr std::string_view kEventGeneratorIndexAttribute =
     "acts_gen_event_index";
 
 int eventGeneratorIndex(const HepMC3::GenParticle& particle);
+int eventGeneratorIndex(const HepMC3::GenVertex& vertex);
+
+Acts::Vector4 convertPosition(const HepMC3::FourVector& vec);
+
+std::vector<const HepMC3::GenVertex*> findHardScatterVertices(
+    const HepMC3::GenEvent& event);
 
 }  // namespace ActsExamples::HepMC3Util
