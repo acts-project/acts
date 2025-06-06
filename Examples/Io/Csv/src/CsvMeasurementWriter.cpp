@@ -127,8 +127,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       }
     }
 
-    if( !clusters.empty() ) {
-      const auto &cluster = clusters.at(measIdx);
+    if (!clusters.empty()) {
+      const auto& cluster = clusters.at(measIdx);
       meas.global_x = cluster.globalPosition.x();
       meas.global_y = cluster.globalPosition.y();
       meas.global_z = cluster.globalPosition.z();
@@ -142,7 +142,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
 
     // CLUSTER / channel information ------------------------------
     if (!clusters.empty() && writerCells) {
-      const auto &cluster = clusters.at(measIdx);
+      const auto& cluster = clusters.at(measIdx);
       cell.geometry_id = meas.geometry_id;
       cell.measurement_id = meas.measurement_id;
       for (auto& c : cluster.channels) {

@@ -384,7 +384,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
                                           std::back_inserter(spacePoints));
     }
 
-    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore << " spacepoints for selector " << sel);
+    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore
+                        << " spacepoints for selector " << sel);
   }
 
   spacePoints.shrink_to_fit();

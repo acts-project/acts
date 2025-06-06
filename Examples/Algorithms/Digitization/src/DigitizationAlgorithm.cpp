@@ -284,9 +284,10 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
-            
-              if( m_cfg.computeGlobalClusterPosition ) {
-                dParameters.cluster.globalPosition = measurementGlobalPosition(dParameters, *surfacePtr, ctx.geoContext);
+
+              if (m_cfg.computeGlobalClusterPosition) {
+                dParameters.cluster.globalPosition = measurementGlobalPosition(
+                    dParameters, *surfacePtr, ctx.geoContext);
               }
               clusters.emplace_back(std::move(dParameters.cluster));
 
