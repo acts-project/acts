@@ -68,4 +68,21 @@ measurementConstituents(const DigitizedParameters& dParams) {
   return {indices, par, cov};
 }
 
+/// Function that computes a global position for a measurement.
+/// For 1D measurements, 0 is assumed for the missing dimension.
+/// This is reliable for Rectangle bounds and Trapezoid bounds.
+inline Acts::Vector3 measurementGlobalPosition(const DigitizedParameters &digitizedParameters, const Acts::Surface &surface,
+                                        const Acts::GeometryContext &gctx) {
+  if(surface.bounds().type() != Acts::SurfaceBounds::eRectangle && surface.bounds().type() != Acts::SurfaceBounds::eTrapezoid) {
+    throw std::runtime_error("Currently can only compute global position of Rectangle and Trapezoid bounds. Consider disabeling the option to compute the global position.");
+  }
+  Acts::Vector2 locPos = Acts::Vector2::Zero();
+  for(auto idx : digitizedParameters.indices) {
+    if( idx == Acts::eBoundLoc0 || idx == Acts::eBoundLoc1 ) {
+      locPos[idx] = digitizedParameters.values.at(idx);
+    }
+  }
+  return surface.localToGlobal(gctx, locPos, Acts::Vector3::Zero());
+}
+
 }  // namespace ActsExamples

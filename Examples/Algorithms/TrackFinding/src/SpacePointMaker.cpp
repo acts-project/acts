@@ -249,6 +249,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   // Loop over the geometry selections
   std::vector<std::pair<Acts::SourceLink, Acts::SourceLink>> stripSLPairs;
   for (auto sel : m_cfg.stripGeometrySelection) {
+    auto nSpacepointsBefore = spacePoints.size();
     stripSLPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
@@ -382,6 +383,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
       m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {sl1, sl2}, spOpt,
                                           std::back_inserter(spacePoints));
     }
+
+    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore << " spacepoints for selector " << sel);
   }
 
   spacePoints.shrink_to_fit();

@@ -209,10 +209,11 @@ struct MeasurementData {
   float local0 = 0, local1 = 0, phi = 0, theta = 0, time = 0;
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
+  float global_x = 0, global_y = 0, global_z = 0;
 
   DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, local_key,
                  local0, local1, phi, theta, time, var_local0, var_local1,
-                 var_phi, var_theta, var_time);
+                 var_phi, var_theta, var_time, global_x, global_y, global_z);
 };
 
 struct CellData {

@@ -725,6 +725,7 @@ def addDigitization(
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
+    computeGlobalClusterPosition: Optional[bool] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -763,6 +764,7 @@ def addDigitization(
         outputSimHitMeasurementsMap="simhit_measurements_map",
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
+            computeGlobalClusterPosition=computeGlobalClusterPosition,
         ),
     )
 

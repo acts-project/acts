@@ -54,7 +54,7 @@ void addDigitization(Context& ctx) {
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
-        doMerge, minEnergyDeposit, digitizationConfigs, minMaxRetries);
+        doMerge, minEnergyDeposit, digitizationConfigs, minMaxRetries, computeGlobalClusterPosition);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
