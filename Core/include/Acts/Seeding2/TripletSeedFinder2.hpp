@@ -487,7 +487,6 @@ class TripletSeedFinder2 {
   /// Create all possible seeds from bottom, middle, and top space points.
   /// This function is the main entry point for the seeding algorithm.
   ///
-  /// @param options frequently changing configuration (like beam position)
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
   /// @param containerPointers Space point container and its extra columns
@@ -504,7 +503,6 @@ class TripletSeedFinder2 {
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
-  /// @param options frequently changing configuration (like beam position)
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
   /// @param containerPointers Space point container and its extra columns
@@ -562,6 +560,7 @@ class TripletSeedFinder2 {
   /// @param cache Cache object to store intermediate results
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
+  /// @param filterOptions Options for the triplet seed filter
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
   /// @param containerPointers Space point container and its extra columns
@@ -586,7 +585,6 @@ class TripletSeedFinder2 {
   ///
   /// @tparam measurement_info Type of measurement information (e.g. Default or Detailed)
   ///
-  /// @param cache Cache object to store intermediate results
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param filterState State object that holds the state of the filter
