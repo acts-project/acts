@@ -124,26 +124,7 @@ TripletSeedFinder2::computeMiddleSpacePointInfo(
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
-std::pair<float, float> TripletSeedFinder2::retrieveRadiusRangeForMiddle(
-    const ConstSpacePointProxy2& spM,
-    const Range1D<float>& rMiddleSpRange) const {
-  if (m_cfg.useVariableMiddleSPRange) {
-    return {rMiddleSpRange.min(), rMiddleSpRange.max()};
-  }
-  if (m_cfg.rRangeMiddleSP.empty()) {
-    return {m_cfg.rMinMiddle, m_cfg.rMaxMiddle};
-  }
-
-  /// get zBin position of the middle SP
-  auto pVal =
-      std::lower_bound(m_cfg.zBinEdges.begin(), m_cfg.zBinEdges.end(), spM.z());
-  int zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
-  /// protects against zM at the limit of zBinEdges
-  zBin == 0 ? zBin : --zBin;
-  return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
-}
-
-void TripletSeedFinder2::initialize(State& state,
+void TripletSeedFinder2::initialize(State& state, Cache& cache,
                                     const DerivedOptions& options) const {
   state.options = options;
 
@@ -153,45 +134,9 @@ void TripletSeedFinder2::initialize(State& state,
       deriveDoubletCuts(options, SpacePointCandidateType::eTop);
 
   state.tripletCuts = deriveTripletCuts(options);
-}
 
-void TripletSeedFinder2::createSeeds(
-    State& state, Cache& cache, const ContainerPointers& containerPointers,
-    std::span<const SpacePointIndex2> bottomSps,
-    std::span<const SpacePointIndex2> middleSps,
-    std::span<const SpacePointIndex2> topSps,
-    SeedContainer2& outputSeeds) const {
-  if (middleSps.empty()) {
-    ACTS_VERBOSE("No middle space points, skipping");
-    return;
-  }
-
-  // we compute this here since all middle space point candidates belong to
-  // the same z-bin
-  auto firstMiddleSp = containerPointers.spacePoints().at(middleSps.front());
-  auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-      retrieveRadiusRangeForMiddle(firstMiddleSp, state.options.rMiddleSpRange);
-  ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
-               << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
-               << "]");
-
-  for (SpacePointIndex2 middleSpIndex : middleSps) {
-    auto spM = containerPointers.spacePoints().at(middleSpIndex);
-
-    const float rM = spM.extra(containerPointers.rColumn());
-
-    // check if spM is outside our radial region of interest
-    if (rM < minRadiusRangeForMiddle) {
-      continue;
-    }
-    if (rM > maxRadiusRangeForMiddle) {
-      // break because SPs are sorted in r
-      break;
-    }
-
-    createSeeds(state, cache, containerPointers, bottomSps, middleSpIndex,
-                topSps, outputSeeds);
-  }  // loop on middle space points
+  cache.candidatesCollector.setMaxElements(m_cfg.maxSeedsPerSpMConf,
+                                           m_cfg.maxQualitySeedsPerSpMConf);
 }
 
 void TripletSeedFinder2::createSeeds(
@@ -201,9 +146,6 @@ void TripletSeedFinder2::createSeeds(
     SeedContainer2& outputSeeds) const {
   TripletSeedFilter2::Options filterOptions;
   filterOptions.seedConfirmation = m_cfg.seedConfirmation;
-
-  cache.candidatesCollector.setMaxElements(m_cfg.maxSeedsPerSpMConf,
-                                           m_cfg.maxQualitySeedsPerSpMConf);
 
   auto spM = containerPointers.spacePoints().at(middleSp);
 

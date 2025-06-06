@@ -41,6 +41,27 @@ class TripletSeedingAlgorithm2 final : public IAlgorithm {
     Acts::TripletSeedFinder2::Options finderOptions;
     Acts::TripletSeedFilter2::Config filterConfig;
 
+    // Seeding parameters used in the space-point grid creation and bin finding
+
+    /// Vector containing the z-bin edges for non equidistant binning in z
+    std::vector<float> zBinEdges;
+
+    // Seeding parameters used to define the region of interest for middle
+    // space-point
+
+    /// Radial range for middle space-point
+    /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
+    /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP
+    /// is empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
+    float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+    float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+    /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP
+    /// can be used to define a fixed r range for each z bin: {{rMin, rMax},
+    /// ...}
+    bool useVariableMiddleSPRange = false;
+    /// Range defined in vector for each z bin
+    std::vector<std::vector<float>> rRangeMiddleSP;
+
     float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
     float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
@@ -95,6 +116,16 @@ class TripletSeedingAlgorithm2 final : public IAlgorithm {
                                                             "InputSpacePoints"};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  /// Get the proper radius validity range given a middle space point candidate.
+  /// In case the radius range changes according to the z-bin we need to
+  /// retrieve the proper range. We can do this computation only once, since all
+  /// the middle space point candidates belong to the same z-bin
+  /// @param spM space point candidate to be used as middle SP in a seed
+  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
+  std::pair<float, float> retrieveRadiusRangeForMiddle(
+      const Acts::ConstSpacePointProxy2& spM,
+      const Acts::Range1D<float>& rMiddleSPRange) const;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     static float rMin = 45.;

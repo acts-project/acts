@@ -20,7 +20,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -47,27 +46,6 @@ class TripletSeedFinder2 {
   struct DerivedOptions;
 
   struct Config {
-    // Seeding parameters used in the space-point grid creation and bin finding
-
-    /// Vector containing the z-bin edges for non equidistant binning in z
-    std::vector<float> zBinEdges;
-
-    // Seeding parameters used to define the region of interest for middle
-    // space-point
-
-    /// Radial range for middle space-point
-    /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
-    /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP
-    /// is empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-    float rMinMiddle = 60.f * UnitConstants::mm;
-    float rMaxMiddle = 120.f * UnitConstants::mm;
-    /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP
-    /// can be used to define a fixed r range for each z bin: {{rMin, rMax},
-    /// ...}
-    bool useVariableMiddleSPRange = false;
-    /// Range defined in vector for each z bin
-    std::vector<std::vector<float>> rRangeMiddleSP;
-
     // Seeding parameters used to define the cuts on space-point doublets
 
     /// Minimum radial distance between middle-outer doublet components
@@ -175,11 +153,7 @@ class TripletSeedFinder2 {
   };
 
   struct Options {
-    /// location of beam in x,y plane.
-    /// used as offset for Space Points
-    Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
-    /// field induction
-    float bFieldInZ = 2.08 * UnitConstants::T;
+    float bFieldInZ = 2 * UnitConstants::T;
 
     Range1D<float> rMiddleSpRange;
 
@@ -482,7 +456,8 @@ class TripletSeedFinder2 {
   /// @param state State of the seed finder
   /// @param options Derived options that may include configuration parameters
   /// @note This function should be called before using the seed finder
-  void initialize(State& state, const DerivedOptions& options) const;
+  void initialize(State& state, Cache& cache,
+                  const DerivedOptions& options) const;
 
   /// Create all possible seeds from bottom, middle, and top space points.
   /// This function is the main entry point for the seeding algorithm.
@@ -606,16 +581,6 @@ class TripletSeedFinder2 {
   static MiddleSpacePointInfo computeMiddleSpacePointInfo(
       const ConstSpacePointProxy2& spM,
       const SpacePointContainer2::DenseColumn<float>& rColumn);
-
-  /// Get the proper radius validity range given a middle space point candidate.
-  /// In case the radius range changes according to the z-bin we need to
-  /// retrieve the proper range. We can do this computation only once, since all
-  /// the middle space point candidates belong to the same z-bin
-  /// @param spM space point candidate to be used as middle SP in a seed
-  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
-  std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const ConstSpacePointProxy2& spM,
-      const Range1D<float>& rMiddleSPRange) const;
 
   /// Check the compatibility of strip space point coordinates in xyz assuming
   /// the Bottom-Middle direction with the strip measurement details

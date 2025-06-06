@@ -138,17 +138,15 @@ void addTrackFinding(Context& ctx) {
         deltaRMinTopSP, deltaRMaxTopSP, impactMax, sigmaScattering,
         maxPtScattering, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
         collisionRegionMin, collisionRegionMax, radLengthPerSeed, deltaZMax,
-        zBinEdges, interactionPointCut, useVariableMiddleSPRange,
-        rRangeMiddleSP, rMinMiddle, rMaxMiddle, seedConfirmation,
-        centralSeedConfirmationRange, forwardSeedConfirmationRange,
-        useDetailedDoubleMeasurementInfo);
+        interactionPointCut, seedConfirmation, centralSeedConfirmationRange,
+        forwardSeedConfirmationRange, useDetailedDoubleMeasurementInfo);
     patchKwargsConstructor(c);
   }
   {
     using Options = Acts::TripletSeedFinder2::Options;
     auto c =
         py::class_<Options>(m, "TripletSeedFinder2Options").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
+    ACTS_PYTHON_STRUCT(c, bFieldInZ);
     patchKwargsConstructor(c);
   }
 
@@ -197,8 +195,9 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TripletSeedingAlgorithm2, mex, "TripletSeedingAlgorithm2",
       inputSpacePoints, outputSeeds, finderConfig, finderOptions, filterConfig,
-      gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
-      numPhiNeighbors, useExtraCuts);
+      gridConfig, useVariableMiddleSPRange, rRangeMiddleSP, rMinMiddle,
+      rMaxMiddle, zBinEdges, allowSeparateRMax, zBinNeighborsTop,
+      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
