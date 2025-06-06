@@ -27,10 +27,12 @@ namespace ActsPython {
 void addTruthJet(Context& ctx) {
   auto& mex = ctx.get("examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthJetAlgorithm, mex,
-                                "TruthJetAlgorithm", outputJets, jetPtMin,
-                                inputHepMC3Event, doJetLabeling, jetClusteringR,
-                                inputTruthParticles);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthJetAlgorithm, mex, "TruthJetAlgorithm", outputJets,
+      jetPtMin, inputHepMC3Event, doJetLabeling, jetClusteringR,
+      inputTruthParticles, jetLabelingHadronPtMin,
+      clusterHardScatterParticlesOnly, jetLabelingHardScatterHadronsOnly,
+      debugCsvOutput);
 }  // addTruthJet
 
 void addTrackToTruthJet(Context& ctx) {

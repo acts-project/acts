@@ -50,16 +50,6 @@ class TruthJetAlgorithm final : public IAlgorithm {
     std::optional<std::string> inputHepMC3Event;
     bool doJetLabeling = true;
     double jetLabelingDeltaR = 0.4;
-    double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
-    bool jetLabelingHardScatterHadronsOnly = true;
-
-    // Isolated TRUTH lepton overlap removal
-    bool doOverlapRemoval = false;
-    double overlapRemovalDeltaR = 0.2;
-    double overlapRemovalIsolationDeltaR = 0.2;
-    double overlapRemovalIsolation = 0.1;
-
-    bool debugCsvOutput = false;    
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

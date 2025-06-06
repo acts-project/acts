@@ -20,12 +20,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "Acts/Plugins/FastJet/Jets.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-<<<<<<< HEAD
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
-=======
->>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 #include "ActsExamples/Utilities/ParticleId.hpp"
 
 #include <algorithm>
@@ -143,18 +137,26 @@ void findHadrons(
 }  // namespace
 
 ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
-  std::ofstream outfile;
-  outfile.open("particles.csv");
-  outfile << "event,pt,eta,phi,pdg" << std::endl;
+  if (m_cfg.debugCsvOutput) {
+    std::ofstream outfile;
+    outfile.open("particles.csv");
+    outfile << "event,pt,eta,phi,pdg" << std::endl;
 
-  outfile.flush();
-  outfile.close();
+    outfile.flush();
+    outfile.close();
 
-  outfile.open("jets.csv");
-  outfile << "event,pt,eta,phi,label" << std::endl;
+    outfile.open("jets.csv");
+    outfile << "event,pt,eta,phi,label" << std::endl;
 
-  outfile.flush();
-  outfile.close();
+    outfile.flush();
+    outfile.close();
+
+    outfile.open("hadrons.csv");
+    outfile << "event,pt,eta,phi,pdg" << std::endl;
+
+    outfile.flush();
+    outfile.close();
+  }
 
   return ProcessCode::SUCCESS;
 }
@@ -162,7 +164,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
 >>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  Acts::FastJet::TrackJetContainer outputJets;
+  TrackJetContainer outputJets;
 
   const SimParticleContainer& truthParticlesRaw = m_inputTruthParticles(ctx);
   std::vector<const SimParticle*> truthParticles;
@@ -181,28 +183,45 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   static std::mutex mtxPseudoJets;
   {
-    std::lock_guard lock(mtxPseudoJets);
     std::ofstream outfile;
-    outfile.open("particles.csv",
-                 std::ios_base::app);  // append instead of overwrite
+    Acts::ScopedTimer timer("Input particle building", logger(),
+                            Acts::Logging::DEBUG);
+
+    std::unique_lock lock(mtxPseudoJets, std::defer_lock);
+    if (m_cfg.debugCsvOutput) {
+      lock.lock();
+      outfile.open("particles.csv",
+                   std::ios_base::app);  // append instead of overwrite
+    }
 
     for (unsigned int i = 0; i < truthParticles.size(); i++) {
       const auto* particle = truthParticles.at(i);
+
+      const auto* gp = particle->genParticle();
+      // Convention is that idx=0 is hard-scatter, check if we need to skip it
+      if (m_cfg.clusterHardScatterParticlesOnly && gp != nullptr &&
+          HepMC3Util::eventGeneratorIndex(*gp) != 0) {
+        continue;
+      }
+
       fastjet::PseudoJet pseudoJet(
           particle->momentum().x(), particle->momentum().y(),
           particle->momentum().z(), particle->energy());
 
-      outfile << ctx.eventNumber << "," << pseudoJet.pt() << ","
-              << pseudoJet.eta() << "," << pseudoJet.phi() << ","
-              << static_cast<int>(particle->pdg());
-      outfile << std::endl;
+      if (m_cfg.debugCsvOutput) {
+        outfile << ctx.eventNumber << "," << pseudoJet.pt() << ","
+                << pseudoJet.eta() << "," << pseudoJet.phi() << ","
+                << static_cast<int>(particle->pdg());
+        outfile << std::endl;
+      }
 
-    pseudoJet.set_user_index(i);
-    inputPseudoJets.push_back(pseudoJet);
+      pseudoJet.set_user_index(i);
+      inputPseudoJets.push_back(pseudoJet);
+    }
+
+    outfile.flush();
+    outfile.close();
   }
-<<<<<<< HEAD
-  ACTS_DEBUG("Number of input pseudo jets: " << inputPseudoJets.size());
-=======
 
   ACTS_DEBUG("Number of input jet input particles: " << inputPseudoJets.size());
 >>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
@@ -229,6 +248,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   std::vector<std::pair<const HepMC3::GenParticle*, ParticleId::HadronType>>
       hadrons;
   if (m_cfg.doJetLabeling) {
+    Acts::ScopedTimer timer("Hadron finding", logger(), Acts::Logging::DEBUG);
     ACTS_DEBUG("Jet labeling is enabled");
     const auto& genEvent = *m_inputHepMC3Event(ctx);
 
@@ -284,8 +304,18 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     // }
 
     auto hadronView =
-        genEvent.particles() | std::views::filter([](const auto& particle) {
-          return ParticleId::isHadron(particle->pdg_id());
+        genEvent.particles() | std::views::filter([this](const auto& particle) {
+          if (m_cfg.jetLabelingHardScatterHadronsOnly) {
+            if (HepMC3Util::eventGeneratorIndex(*particle) != 0) {
+              // Convention is that idx=0 is hard-scatter
+              return false;
+            }
+          }
+
+          return ParticleId::isHadron(particle->pdg_id()) &&
+                 (particle->status() == HepMC3Util::kDecayedParticleStatus ||
+                  particle->status() == HepMC3Util::kUndecayedParticleStatus) &&
+                 particle->momentum().pt() >= m_cfg.jetLabelingHadronPtMin;
         }) |
         std::views::transform([](const auto& particle) {
           auto type = ActsExamples::ParticleId::hadronType(particle->pdg_id());
@@ -304,6 +334,20 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     });
     auto unique = std::ranges::unique(hadrons);
     hadrons.erase(unique.begin(), unique.end());
+
+    if (m_cfg.debugCsvOutput) {
+      static std::mutex mtxHadrons;
+      std::lock_guard lock(mtxHadrons);
+      std::ofstream outfile;
+      outfile.open("hadrons.csv", std::ios_base::app);
+      for (const auto& hadron : hadrons) {
+        outfile << ctx.eventNumber << "," << hadron.second->momentum().pt()
+                << "," << hadron.second->momentum().eta() << ","
+                << hadron.second->momentum().phi() << ","
+                << static_cast<int>(hadron.second->pdg_id());
+        outfile << std::endl;
+      }
+    }
   }
 
   // Prepare jets for the storage - conversion of jets to custom track jet class
@@ -370,14 +414,17 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
   boost::container::flat_map<JetLabel, std::size_t> jetLabelCounts;
 
-  Acts::AveragingScopedTimer timer("Jet classification", logger(),
-                                   Acts::Logging::DEBUG);
-
   static std::mutex mtxJets;
   {
-    std::lock_guard lock(mtxJets);
+    Acts::AveragingScopedTimer timer("Jet classification", logger(),
+                                     Acts::Logging::DEBUG);
+
     std::ofstream outfile;
-    outfile.open("jets.csv", std::ios_base::app);
+    std::unique_lock lock(mtxJets, std::defer_lock);
+    if (m_cfg.debugCsvOutput) {
+      lock.lock();
+      outfile.open("jets.csv", std::ios_base::app);
+    }
 
 >>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
     for (unsigned int i = 0; i < jets.size(); i++) {
@@ -423,13 +470,16 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 
       JetLabel label = JetLabel::Unknown;
       if (m_cfg.doJetLabeling) {
-        timer.sample();
+        ACTS_DEBUG("Classifying jet " << i);
+        auto sample = timer.sample();
         label = classifyJet(jet);
       }
 
-      outfile << ctx.eventNumber << "," << jet.pt() << "," << jet.eta() << ","
-              << jet.phi() << "," << static_cast<int>(label);
-      outfile << std::endl;
+      if (m_cfg.debugCsvOutput) {
+        outfile << ctx.eventNumber << "," << jet.pt() << "," << jet.eta() << ","
+                << jet.phi() << "," << static_cast<int>(label);
+        outfile << std::endl;
+      }
 
       // Initialize the (track) jet with 4-momentum and jet label
       Acts::FastJet::TruthJetBuilder storedJet(jetFourMomentum, label);
@@ -458,8 +508,10 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
       }
     }
 
-    outfile.flush();
-    outfile.close();
+    if (m_cfg.debugCsvOutput) {
+      outfile.flush();
+      outfile.close();
+    }
   }
 
   ACTS_DEBUG("-> jet label counts: ");

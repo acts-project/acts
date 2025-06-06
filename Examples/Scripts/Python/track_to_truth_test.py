@@ -19,11 +19,9 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     MomentumConfig,
-    TruthJetConfig,
     TrackToTruthJetConfig,
     addFatras,
     addPythia8,
-    addTruthJetAlg,
     addTrackToTruthJetAlg,
     addDigitization,
     ParticleSelectorConfig,
@@ -39,7 +37,9 @@ from acts.examples.reconstruction import (
 parser = argparse.ArgumentParser()
 parser.add_argument("--events", "-n", type=int, default=1000)
 parser.add_argument("--pileup", "--pu", "-p", type=int, default=0)
+parser.add_argument("--hardscatter", "--hs", type=int, default=1)
 parser.add_argument("--jobs", "-j", type=int, default=-1)
+parser.add_argument("--csv", action="store_true")
 args = parser.parse_args()
 
 outputDir = Path.cwd() / "trackToTruth_output"
@@ -81,7 +81,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 addPythia8(
     s,
-    nhard=1,
+    nhard=args.hardscatter,
     npileup=args.pileup,
     hardProcess=["Top:qqbar2ttbar=on"],
     vtxGen=acts.examples.GaussianVertexGenerator(
@@ -120,6 +120,7 @@ addDigitization(
     field,
     digiConfigFile=oddDigiConfig,
     rnd=rnd,
+    logLevel=acts.logging.ERROR,
 )
 
 addDigiParticleSelection(
@@ -149,6 +150,7 @@ addKalmanTracks(
     trackingGeometry,
     field,
     reverseFilteringMomThreshold,
+    logLevel=acts.logging.FATAL,
 )
 
 s.addAlgorithm(
@@ -177,7 +179,7 @@ s.addWhiteboardAlias("tracks", "selected-tracks")
 
 s.addWriter(
     acts.examples.RootTrackSummaryWriter(
-        level=acts.logging.INFO,
+        level=acts.logging.FATAL,
         inputTracks="tracks",
         inputParticles="particles_selected",
         inputTrackParticleMatching="track_particle_matching",
@@ -187,7 +189,7 @@ s.addWriter(
 
 s.addWriter(
     acts.examples.TrackFitterPerformanceWriter(
-        level=acts.logging.INFO,
+        level=acts.logging.FATAL,
         inputTracks="tracks",
         inputParticles="particles_selected",
         inputTrackParticleMatching="track_particle_matching",
@@ -198,24 +200,28 @@ s.addWriter(
 s.addAlgorithm(
     acts.examples.ParticleSelector(
         level=acts.logging.INFO,
-        inputParticles="particles_generated_selected",
+        inputParticles="particles_generated",
         outputParticles="jet_input_particles",
-        eta=(-3.0, 3.0),
+        # eta=(-3.0, 3.0),
         pt=(150 * u.MeV, None),
     )
 )
 
-addTruthJetAlg(
-    s,
-    TruthJetConfig(
-        inputTruthParticles="jet_input_particles",
-        outputJets="truth_jets",
-        jetPtMin=20 * u.GeV,
-        inputHepMC3Event="pythia8-event",
-        doJetLabeling=True,
-    ),
-    loglevel=acts.logging.INFO,
+truthJetAlg = acts.examples.TruthJetAlgorithm(
+    level=acts.logging.INFO,
+    inputTruthParticles="jet_input_particles",
+    outputJets="truth_jets",
+    jetPtMin=10 * u.GeV,
+    inputHepMC3Event="pythia8-event",
+    doJetLabeling=True,
+    jetLabelingHadronPtMin=5 * u.GeV,
+    # if we don't have hard scatter, use all particles, else only use hard scatter particles
+    jetLabelingHardScatterHadronsOnly=args.hardscatter != 0,
+    clusterHardScatterParticlesOnly=args.hardscatter != 0,
+    debugCsvOutput=args.csv,
 )
+
+s.addAlgorithm(truthJetAlg)
 
 # addTrackToTruthJetAlg(
 #     s,
