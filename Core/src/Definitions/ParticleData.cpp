@@ -9,7 +9,6 @@
 #include "Acts/Definitions/ParticleData.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <cassert>
 #include <cmath>
