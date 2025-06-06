@@ -15,6 +15,7 @@
 
 #include <array>
 #include <limits>
+#include <numbers>
 
 #include "Eigen/Dense"
 
@@ -251,6 +252,25 @@ inline std::pair<double, double> incidentAngles(
   double phi = std::atan2(trfDir[2], trfDir[0]);
   double theta = std::atan2(trfDir[2], trfDir[1]);
   return {phi, theta};
+}
+
+/// Calculate the deltaR between two vectors.
+/// @note DeltaR is defined as sqrt(deltaPhi^2 + deltaEta^2)
+/// @tparam Derived Eigen derived concrete type
+/// @param v1 First vector
+/// @param v2 Second vector
+/// @return The deltaR value
+template <typename Derived>
+double deltaR(const Eigen::MatrixBase<Derived>& v1,
+              const Eigen::MatrixBase<Derived>& v2)
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
+  double dphi = abs(phi(v1) - phi(v2));
+  if (dphi > std::numbers::pi) {
+    dphi = std::numbers::pi * 2 - dphi;
+  }
+  double deta = eta(v1) - eta(v2);
+  return std::sqrt(dphi * dphi + deta * deta);
 }
 
 }  // namespace Acts::VectorHelpers
