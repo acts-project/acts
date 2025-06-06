@@ -32,6 +32,8 @@ from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
     addKalmanTracks,
+    addVertexFitting,
+    VertexFinder,
 )
 
 parser = argparse.ArgumentParser()
@@ -185,6 +187,14 @@ s.addWriter(
         inputTrackParticleMatching="track_particle_matching",
         filePath=str(outputDir / "tracksummary_kf.root"),
     )
+)
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.AMVF,
+    outputDirRoot=outputDir,
+    logLevel=acts.logging.FATAL,
 )
 
 s.addWriter(
