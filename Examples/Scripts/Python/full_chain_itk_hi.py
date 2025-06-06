@@ -38,8 +38,10 @@ trackingGeometry = detector.trackingGeometry()
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=1, numThreads=1, outputDir=str(outputDir), skip=34935)
-# s = acts.examples.Sequencer(events=10, numThreads=1, outputDir=str(outputDir), skip=2000)
+# this will produce a problematic event, please avoid it
+# s = acts.examples.Sequencer(events=1, numThreads=1, outputDir=str(outputDir), skip=34935)
+
+s = acts.examples.Sequencer(events=10, numThreads=1, outputDir=str(outputDir))
 
 addPythia8(
     s,
