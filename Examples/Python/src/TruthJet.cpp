@@ -32,7 +32,7 @@ void addTruthJet(Context& ctx) {
       jetPtMin, inputHepMC3Event, doJetLabeling, jetClusteringR,
       inputTruthParticles, jetLabelingHadronPtMin,
       clusterHardScatterParticlesOnly, jetLabelingHardScatterHadronsOnly,
-      debugCsvOutput);
+      debugCsvOutput, jetEtaRange);
 }  // addTruthJet
 
 void addTrackToTruthJet(Context& ctx) {

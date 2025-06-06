@@ -212,9 +212,11 @@ truthJetAlg = acts.examples.TruthJetAlgorithm(
     inputTruthParticles="jet_input_particles",
     outputJets="truth_jets",
     jetPtMin=10 * u.GeV,
+    jetEtaRange=(-3.0, 3.0),
     inputHepMC3Event="pythia8-event",
     doJetLabeling=True,
     jetLabelingHadronPtMin=5 * u.GeV,
+    jetLabelingDeltaR=0.4,
     # if we don't have hard scatter, use all particles, else only use hard scatter particles
     jetLabelingHardScatterHadronsOnly=args.hardscatter != 0,
     clusterHardScatterParticlesOnly=args.hardscatter != 0,
