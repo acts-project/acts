@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/IExperimentTripletSeedCuts2.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 namespace Acts {
