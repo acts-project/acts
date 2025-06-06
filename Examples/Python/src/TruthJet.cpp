@@ -32,7 +32,9 @@ void addTruthJet(Context& ctx) {
       jetPtMin, inputHepMC3Event, doJetLabeling, jetClusteringR,
       inputTruthParticles, jetLabelingHadronPtMin,
       clusterHardScatterParticlesOnly, jetLabelingHardScatterHadronsOnly,
-      debugCsvOutput, jetEtaRange, jetLabelingDeltaR);
+      debugCsvOutput, jetEtaRange, jetLabelingDeltaR, doOverlapRemoval,
+      overlapRemovalDeltaR, overlapRemovalIsolationDeltaR,
+      overlapRemovalIsolation);
 }  // addTruthJet
 
 void addTrackToTruthJet(Context& ctx) {

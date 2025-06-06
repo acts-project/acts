@@ -59,6 +59,10 @@ class TrackJet {
 
   Acts::Vector4 getFourMomentum() const { return m_fourMomentum; }
 
+  Acts::Vector3 getDirection() const {
+    return m_fourMomentum.head<3>().normalized();
+  }
+
   void addTrack(const int trk_idx) { m_trackIndices.push_back(trk_idx); }
 
   std::vector<int> getTracks() const { return m_trackIndices; }
