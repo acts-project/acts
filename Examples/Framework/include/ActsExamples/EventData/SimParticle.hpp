@@ -14,6 +14,10 @@
 
 #include <boost/container/flat_set.hpp>
 
+namespace HepMC3 {
+class GenParticle;
+}
+
 namespace ActsExamples {
 
 using SimBarcode = ::ActsFatras::Barcode;
@@ -171,7 +175,15 @@ class SimParticle final {
   /// Particle outcome.
   ActsFatras::ParticleOutcome outcome() const { return finalState().outcome(); }
 
+  /// Set the HepMC3::GenParticle pointer.
+  void setGenParticle(const HepMC3::GenParticle* genParticle) {
+    m_genParticle = genParticle;
+  }
+  /// Get the HepMC3::GenParticle pointer.
+  const HepMC3::GenParticle* genParticle() const { return m_genParticle; }
+
  private:
+  const HepMC3::GenParticle* m_genParticle{nullptr};
   SimParticleState m_initial;
   SimParticleState m_final;
 };
