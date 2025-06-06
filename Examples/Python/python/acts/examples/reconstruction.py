@@ -2404,3 +2404,26 @@ def addHoughVertexFinding(
         )
 
     return s
+
+def addHoughSeedFilter(
+    s,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    inputSeeds: Optional[str] = "seeds",
+) -> None:
+    from acts.examples import (
+        HoughVtxSeedFilterAlgorithm,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    outputSeeds = "filtered-"+inputseeds
+
+    filterHough = HoughVtxSeedFilterAlgorithm(
+        level=customLogLevel(),
+        inputSeeds=inputSeeds,
+        outputSeeds=outputSeeds,
+    )
+    s.addAlgorithm(filterHough)
+    s.addWhiteboardAlias(inputSeeds, outputSeeds)
+
+    return s
