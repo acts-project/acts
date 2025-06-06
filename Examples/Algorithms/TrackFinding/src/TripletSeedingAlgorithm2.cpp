@@ -151,10 +151,10 @@ ProcessCode TripletSeedingAlgorithm2::execute(
   // run the seeding
   Acts::SeedContainer2 seeds;
   Acts::TripletSeedFinder2::State state;
-  Acts::TripletSeedFinder2::Cache cache;
+  static thread_local Acts::TripletSeedFinder2::Cache cache;
 
   auto derivedOptions = finderOptions.derive(m_seedFinder->config());
-  m_seedFinder->initialize(state, derivedOptions);
+  m_seedFinder->initialize(state, cache, derivedOptions);
 
   std::vector<Acts::SpacePointIndex2> bottomSp;
   std::vector<Acts::SpacePointIndex2> middleSp;
@@ -174,11 +174,35 @@ ProcessCode TripletSeedingAlgorithm2::execute(
       topSp.insert(topSp.end(), grid.at(t).begin(), grid.at(t).end());
     }
 
-    m_seedFinder->createSeeds(
-        state, cache,
-        Acts::TripletSeedFinder2::ContainerPointers(
-            coreSpacePoints, rColumn, varianceRColumn, varianceZColumn),
-        bottomSp, middleSp, topSp, seeds);
+    // we compute this here since all middle space point candidates belong to
+    // the same z-bin
+    auto firstMiddleSp = coreSpacePoints.at(middleSp.front());
+    auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
+        retrieveRadiusRangeForMiddle(firstMiddleSp,
+                                     state.options.rMiddleSpRange);
+    ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
+                 << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
+                 << "]");
+
+    for (Acts::SpacePointIndex2 middleSpIndex : middleSp) {
+      auto spM = coreSpacePoints.at(middleSpIndex);
+      const float rM = spM.extra(rColumn);
+
+      // check if spM is outside our radial region of interest
+      if (rM < minRadiusRangeForMiddle) {
+        continue;
+      }
+      if (rM > maxRadiusRangeForMiddle) {
+        // break because SPs are sorted in r
+        break;
+      }
+
+      m_seedFinder->createSeeds(
+          state, cache,
+          Acts::TripletSeedFinder2::ContainerPointers(
+              coreSpacePoints, rColumn, varianceRColumn, varianceZColumn),
+          bottomSp, middleSpIndex, topSp, seeds);
+    }  // loop on middle space points
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
@@ -205,6 +229,25 @@ ProcessCode TripletSeedingAlgorithm2::execute(
 
   m_outputSeeds(ctx, std::move(seedContainerForStorage));
   return ProcessCode::SUCCESS;
+}
+
+std::pair<float, float> TripletSeedingAlgorithm2::retrieveRadiusRangeForMiddle(
+    const Acts::ConstSpacePointProxy2& spM,
+    const Acts::Range1D<float>& rMiddleSpRange) const {
+  if (m_cfg.useVariableMiddleSPRange) {
+    return {rMiddleSpRange.min(), rMiddleSpRange.max()};
+  }
+  if (m_cfg.rRangeMiddleSP.empty()) {
+    return {m_cfg.rMinMiddle, m_cfg.rMaxMiddle};
+  }
+
+  /// get zBin position of the middle SP
+  auto pVal =
+      std::lower_bound(m_cfg.zBinEdges.begin(), m_cfg.zBinEdges.end(), spM.z());
+  int zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
+  /// protects against zM at the limit of zBinEdges
+  zBin == 0 ? zBin : --zBin;
+  return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
 
 }  // namespace ActsExamples

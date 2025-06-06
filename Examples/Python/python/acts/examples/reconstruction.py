@@ -873,10 +873,7 @@ def addTripletSeeding2(
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             deltaZMax=seedFinderConfigArg.deltaZMax,
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
-            zBinEdges=seedFinderConfigArg.zBinEdges,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
@@ -884,13 +881,6 @@ def addTripletSeeding2(
     )
     finderOptions = acts.TripletSeedFinder2Options(
         **acts.examples.defaultKWArgs(
-            beamPos=(
-                acts.Vector2(0.0, 0.0)
-                if seedFinderOptionsArg.beamPos == (None, None)
-                else acts.Vector2(
-                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
-                )
-            ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
     )
@@ -936,6 +926,9 @@ def addTripletSeeding2(
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+            zBinEdges=seedFinderConfigArg.zBinEdges,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
         ),
         gridConfig=gridConfig,
         finderConfig=finderConfig,
