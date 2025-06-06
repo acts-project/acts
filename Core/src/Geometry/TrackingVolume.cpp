@@ -732,7 +732,6 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   // if the visitor is configured for inner--->outer volume visiting we visit
   // the children first
   if (!visitor.visitInDepth()) {
-    std::cout << "Visiting from children" << std::endl;
     for (auto& volume : volumes()) {
       volume.apply(visitor);
     }
