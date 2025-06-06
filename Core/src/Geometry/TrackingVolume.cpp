@@ -792,8 +792,12 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
+  if (visitor.visitInDepth()) {
+    // if the visitor is configured for outer--->inner volume visiting we visit
+    // the children last
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
   }
 }
 
