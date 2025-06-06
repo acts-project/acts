@@ -84,6 +84,9 @@ bool isHadron(int pdg);
 
 bool isLepton(int pdg);
 
+bool isMuon(int pdg);
+bool isElectron(int pdg);
+
 bool isQuark(int pdg);
 
 bool isInteracting(int pdg);
