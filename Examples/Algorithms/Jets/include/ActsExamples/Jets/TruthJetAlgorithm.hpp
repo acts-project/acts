@@ -50,6 +50,10 @@ class TruthJetAlgorithm final : public IAlgorithm {
     std::optional<std::string> inputHepMC3Event;
     bool doJetLabeling = true;
     double jetLabelingDeltaR = 0.4;
+    double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
+    bool jetLabelingHardScatterHadronsOnly = true;
+
+    bool debugCsvOutput = false;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
@@ -63,9 +67,6 @@ class TruthJetAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  void overlapRemoval(const SimParticleContainer& truthParticles,
-                      Acts::FastJet::TrackJetContainer& jets) const;
-
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};

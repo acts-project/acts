@@ -526,6 +526,10 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     }
   }
 
+  if (m_cfg.doOverlapRemoval) {
+    overlapRemoval(truthParticlesRaw, outputJets);
+  }
+
   ACTS_DEBUG("-> jet label counts: ");
   for (const auto& [label, count] : jetLabelCounts) {
     ACTS_DEBUG("  - " << label << ": " << count);
@@ -534,4 +538,59 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   m_outputJets(ctx, std::move(outputJets));
   return ProcessCode::SUCCESS;
 }
-};  // namespace ActsExamples
+
+void TruthJetAlgorithm::overlapRemoval(
+    const SimParticleContainer& truthParticles, TrackJetContainer& jets) const {
+  ACTS_DEBUG("Running overlap removal for jets against isolated truth leptons");
+  Acts::ScopedTimer timer("Overlap removal", logger(), Acts::Logging::DEBUG);
+
+  std::vector<const SimParticle*> isolatedLeptons;
+
+  for (const auto& particle : truthParticles) {
+    if (!Acts::ParticleId::isMuon(particle.pdg()) &&
+        !Acts::ParticleId::isElectron(particle.pdg())) {
+      continue;
+    }
+
+    // For this lepton, sum up all total momenta inside a cone
+    double totalMomentum = 0.;
+    for (const auto& otherParticle : truthParticles) {
+      // exclude self
+      if (particle.particleId() == otherParticle.particleId()) {
+        continue;
+      }
+
+      double deltaR = Acts::VectorHelpers::deltaR(particle.direction(),
+                                                  otherParticle.direction());
+
+      if (deltaR < m_cfg.overlapRemovalIsolationDeltaR) {
+        // Add the momentum of the other particle to the total momentum
+        totalMomentum += otherParticle.fourMomentum().norm();
+      }
+    }
+
+    double isolation = totalMomentum / particle.fourMomentum().norm();
+    if (isolation < m_cfg.overlapRemovalIsolation) {
+      isolatedLeptons.push_back(&particle);
+    }
+  }
+
+  ACTS_DEBUG("Number of isolated leptons: " << isolatedLeptons.size());
+  ACTS_DEBUG("Number of jets before overlap removal: " << jets.size());
+
+  // erase if jet is within deltaR of any isolated lepton
+  std::erase_if(jets, [&](const auto& jet) -> bool {
+    for (const auto& lepton : isolatedLeptons) {
+      double deltaR =
+          Acts::VectorHelpers::deltaR(jet.getDirection(), lepton->direction());
+      if (deltaR < m_cfg.overlapRemovalDeltaR) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  ACTS_DEBUG("Number of jets after overlap removal: " << jets.size());
+}
+
+}  // namespace ActsExamples
