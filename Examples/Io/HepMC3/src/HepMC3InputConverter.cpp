@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
-#include "ActsExamples/Utilities/ParticleId.hpp"
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
@@ -157,7 +156,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << HepMC3Util::kUndecayedParticleStatus << ")");
       }
 
-      if (!ParticleId::isInteracting(particle->pdg_id())) {
+      if (!Acts::ParticleId::isInteracting(particle->pdg_id())) {
         continue;
       }
 
