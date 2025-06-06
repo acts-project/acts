@@ -14,7 +14,8 @@
 
 namespace HepMC3 {
 class GenEvent;
-}
+class GenParticle;
+}  // namespace HepMC3
 
 namespace Acts {
 class Logger;
@@ -49,5 +50,10 @@ std::ostream& operator<<(std::ostream& os, Format format);
 std::span<const Format> availableFormats();
 
 Format formatFromFilename(std::string_view filename);
+
+static constexpr std::string_view kEventGeneratorIndexAttribute =
+    "acts_gen_event_index";
+
+int eventGeneratorIndex(const HepMC3::GenParticle& particle);
 
 }  // namespace ActsExamples::HepMC3Util

@@ -197,7 +197,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
 
       SimParticle simParticle{particleId, pdg, charge, mass};
-      simParticle.initialState().setPosition4(vertex.position4);
+      simParticle.initial().setPosition4(vertex.position4);
+      simParticle.setGenParticle(particle.get());
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
