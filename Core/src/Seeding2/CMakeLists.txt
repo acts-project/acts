@@ -3,6 +3,7 @@ target_sources(
     PRIVATE
         detail/CandidatesForMiddleSp2.cpp
         CylindricalSpacePointGrid2.cpp
-        TripletSeedFilter2.cpp
-        TripletSeedFinder2.cpp
+        DoubletFinder2.cpp
+        GroupedTripletSeedFilter2.cpp
+        GroupedTripletSeedFinder2.cpp
 )

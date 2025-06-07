@@ -31,8 +31,6 @@ class CylindricalSpacePointGrid2 {
   /// Cylindrical Binned Group
   using BinnedGroupType = BinnedGroup<GridType>;
 
-  struct DerivedConfig;
-
   struct Config {
     /// minimum pT
     float minPt = 0 * UnitConstants::MeV;
@@ -54,9 +52,9 @@ class CylindricalSpacePointGrid2 {
     /// spacepoint
     float deltaRMax = 270 * UnitConstants::mm;
     /// maximum forward direction expressed as cot(theta)
-    float cotThetaMax = 0;
+    float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
     /// maximum impact parameter in mm
-    float impactMax = 0 * UnitConstants::mm;
+    float impactMax = 20 * UnitConstants::mm;
     /// minimum phi value for phiAxis construction
     float phiMin = -std::numbers::pi_v<float>;
     /// maximum phi value for phiAxis construction
@@ -80,14 +78,10 @@ class CylindricalSpacePointGrid2 {
     std::optional<GridBinFinder<3ul>> bottomBinFinder;
     std::optional<GridBinFinder<3ul>> topBinFinder;
     std::array<std::vector<std::size_t>, 3ul> navigation;
-
-    DerivedConfig derive() const;
   };
 
-  struct DerivedConfig : public Config {};
-
   explicit CylindricalSpacePointGrid2(
-      const DerivedConfig& config,
+      const Config& config,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalSpacePointGrid2", Logging::Level::INFO));
 
@@ -139,7 +133,7 @@ class CylindricalSpacePointGrid2 {
   const BinnedGroupType& binnedGround() const { return *m_binnedGroup; }
 
  private:
-  DerivedConfig m_cfg;
+  Config m_cfg;
 
   std::unique_ptr<const Logger> m_logger;
 
