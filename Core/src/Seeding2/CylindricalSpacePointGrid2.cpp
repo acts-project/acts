@@ -12,25 +12,15 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
-CylindricalSpacePointGrid2::DerivedConfig
-CylindricalSpacePointGrid2::Config::derive() const {
-  DerivedConfig result;
-
-  static_cast<Config&>(result) = *this;
-
-  return result;
-}
-
 CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
-    const DerivedConfig& config, std::unique_ptr<const Logger> _logger)
+    const Config& config, std::unique_ptr<const Logger> _logger)
     : m_cfg(config), m_logger(std::move(_logger)) {
   if (m_cfg.phiMin < -std::numbers::pi_v<float> ||
       m_cfg.phiMax > std::numbers::pi_v<float>) {
     throw std::runtime_error(
         "CylindricalSpacePointGrid2: phiMin (" + std::to_string(m_cfg.phiMin) +
         ") and/or phiMax (" + std::to_string(m_cfg.phiMax) +
-        ") are outside "
-        "the allowed phi range, defined as "
+        ") are outside the allowed phi range, defined as "
         "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
   }
   if (m_cfg.phiMin > m_cfg.phiMax) {
@@ -56,27 +46,27 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   } else {
     // calculate circle intersections of helix and max detector radius in mm.
     // bFieldInZ is in (pT/radius) natively, no need for conversion
-    float minHelixRadius = config.minPt / m_cfg.bFieldInZ;
+    float minHelixRadius = m_cfg.minPt / m_cfg.bFieldInZ;
 
     // sanity check: if yOuter takes the square root of a negative number
-    if (minHelixRadius < config.rMax * 0.5) {
+    if (minHelixRadius < m_cfg.rMax * 0.5) {
       throw std::domain_error(
           "The value of minHelixRadius cannot be smaller than rMax / 2. Please "
-          "check the configuration of bFieldInZ and minPt");
+          "check the m_cfguration of bFieldInZ and minPt");
     }
 
-    float maxR2 = config.rMax * config.rMax;
+    float maxR2 = m_cfg.rMax * m_cfg.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
     float outerAngle = std::atan(xOuter / yOuter);
     // intersection of helix and max detector radius minus maximum R distance
     // from middle SP to top SP
     float innerAngle = 0;
-    float rMin = config.rMax;
-    if (config.rMax > config.deltaRMax) {
-      rMin = config.rMax - config.deltaRMax;
+    float rMin = m_cfg.rMax;
+    if (m_cfg.rMax > m_cfg.deltaRMax) {
+      rMin = m_cfg.rMax - m_cfg.deltaRMax;
       float innerCircleR2 =
-          (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
+          (m_cfg.rMax - m_cfg.deltaRMax) * (m_cfg.rMax - m_cfg.deltaRMax);
       float xInner = innerCircleR2 / (2 * minHelixRadius);
       float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
       innerAngle = std::atan(xInner / yInner);
@@ -84,18 +74,18 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
 
     // evaluating the azimutal deflection including the maximum impact parameter
     float deltaAngleWithMaxD0 =
-        std::abs(std::asin(config.impactMax / (rMin)) -
-                 std::asin(config.impactMax / config.rMax));
+        std::abs(std::asin(m_cfg.impactMax / (rMin)) -
+                 std::asin(m_cfg.impactMax / m_cfg.rMax));
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal
     // deflection including the maximum impact parameter
-    // Divide by config.phiBinDeflectionCoverage since we combine
-    // config.phiBinDeflectionCoverage number of consecutive phi bins in the
+    // Divide by m_cfg.phiBinDeflectionCoverage since we combine
+    // m_cfg.phiBinDeflectionCoverage number of consecutive phi bins in the
     // seed making step. So each individual bin should cover
-    // 1/config.phiBinDeflectionCoverage of the maximum expected azimutal
+    // 1/m_cfg.phiBinDeflectionCoverage of the maximum expected azimutal
     // deflection
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
-                     config.phiBinDeflectionCoverage;
+                     m_cfg.phiBinDeflectionCoverage;
 
     // sanity check: if the delta phi is equal to or less than zero, we'll be
     // creating an infinite or a negative number of bins, which would be bad!
@@ -114,46 +104,45 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     // number) of the maximum expected azimutal deflection.
 
     // set protection for large number of bins, by default it is large
-    phiBins = std::min(phiBins, config.maxPhiBins);
+    phiBins = std::min(phiBins, m_cfg.maxPhiBins);
   }
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
-      config.phiMin, config.phiMax, phiBins);
+      m_cfg.phiMin, m_cfg.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<double> zValues{};
 
   // If zBinEdges is not defined, calculate the edges as zMin + bin * zBinSize
-  if (config.zBinEdges.empty()) {
+  if (m_cfg.zBinEdges.empty()) {
     // TODO: can probably be optimized using smaller z bins
     // and returning (multiple) neighbors only in one z-direction for forward
     // seeds
     // FIXME: zBinSize must include scattering
-    float zBinSize = config.cotThetaMax * config.deltaRMax;
+    float zBinSize = m_cfg.cotThetaMax * m_cfg.deltaRMax;
     float zBins =
-        std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
+        std::max(1.f, std::floor((m_cfg.zMax - m_cfg.zMin) / zBinSize));
 
     zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
-      double edge = config.zMin + bin * ((config.zMax - config.zMin) / zBins);
+      double edge = m_cfg.zMin + bin * ((m_cfg.zMax - m_cfg.zMin) / zBins);
       zValues.push_back(edge);
     }
-
   } else {
-    // Use the zBinEdges defined in the config
-    zValues.reserve(config.zBinEdges.size());
-    for (float bin : config.zBinEdges) {
+    // Use the zBinEdges defined in the m_cfg
+    zValues.reserve(m_cfg.zBinEdges.size());
+    for (float bin : m_cfg.zBinEdges) {
       zValues.push_back(bin);
     }
   }
 
   std::vector<double> rValues{};
-  rValues.reserve(std::max(2ul, config.rBinEdges.size()));
-  if (config.rBinEdges.empty()) {
-    rValues = {config.rMin, config.rMax};
+  rValues.reserve(std::max(2ul, m_cfg.rBinEdges.size()));
+  if (m_cfg.rBinEdges.empty()) {
+    rValues = {m_cfg.rMin, m_cfg.rMax};
   } else {
-    rValues.insert(rValues.end(), config.rBinEdges.begin(),
-                   config.rBinEdges.end());
+    rValues.insert(rValues.end(), m_cfg.rBinEdges.begin(),
+                   m_cfg.rBinEdges.end());
   }
 
   Axis<AxisType::Variable, AxisBoundaryType::Open> zAxis(std::move(zValues));

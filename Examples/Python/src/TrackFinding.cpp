@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm2.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -26,7 +27,6 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
-#include "ActsExamples/TrackFinding/TripletSeedingAlgorithm2.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -111,46 +111,6 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::CylindricalSpacePointGrid2::Config;
-    auto c = py::class_<Config>(m, "SpacePointGrid2Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, minPt, rMax, zMax, zMin, phiMin, phiMax, deltaRMax,
-                       cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
-                       impactMax, zBinEdges, bFieldInZ);
-    patchKwargsConstructor(c);
-  }
-  {
-    using Config = Acts::TripletSeedFilter2::Config;
-    auto c =
-        py::class_<Config>(m, "TripletSeedFilter2Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor,
-                       zOriginWeightFactor, compatSeedWeight, deltaRMin,
-                       maxSeedsPerSpM, compatSeedLimit, useDeltaRorTopRadius,
-                       seedWeightIncrement, numSeedIncrement);
-    patchKwargsConstructor(c);
-  }
-  {
-    using Config = Acts::TripletSeedFinder2::Config;
-    auto c =
-        py::class_<Config>(m, "TripletSeedFinder2Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
-        deltaRMinTopSP, deltaRMaxTopSP, impactMax, sigmaScattering,
-        maxPtScattering, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
-        collisionRegionMin, collisionRegionMax, radLengthPerSeed, deltaZMax,
-        interactionPointCut, seedConfirmation, centralSeedConfirmationRange,
-        forwardSeedConfirmationRange, useDetailedDoubleMeasurementInfo);
-    patchKwargsConstructor(c);
-  }
-  {
-    using Options = Acts::TripletSeedFinder2::Options;
-    auto c =
-        py::class_<Options>(m, "TripletSeedFinder2Options").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, bFieldInZ);
-    patchKwargsConstructor(c);
-  }
-
-  {
     using Config = Acts::Experimental::SeedFinderGbtsConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedFinderGbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, sigmaScattering, highland, maxScatteringAngle2,
@@ -193,11 +153,19 @@ void addTrackFinding(Context& ctx) {
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TripletSeedingAlgorithm2, mex, "TripletSeedingAlgorithm2",
-      inputSpacePoints, outputSeeds, finderConfig, finderOptions, filterConfig,
-      gridConfig, useVariableMiddleSPRange, rRangeMiddleSP, rMinMiddle,
-      rMaxMiddle, zBinEdges, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+      ActsExamples::GridTripletSeedingAlgorithm2, mex,
+      "GridTripletSeedingAlgorithm2", inputSpacePoints, outputSeeds, bFieldInZ,
+      minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax, rMin, rMax, zMin,
+      zMax, phiMin, phiMax, phiBinDeflectionCoverage, maxPhiBins,
+      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, zBinEdges,
+      zBinsCustomLooping, rMinMiddle, rMaxMiddle, useVariableMiddleSPRange,
+      rRangeMiddleSP, deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin,
+      deltaZMax, interactionPointCut, collisionRegionMin, collisionRegionMax,
+      helixCutTolerance, sigmaScattering, radLengthPerSeed, maxPtScattering,
+      toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
+      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
+      seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,

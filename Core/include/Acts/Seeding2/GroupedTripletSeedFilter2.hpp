@@ -21,13 +21,13 @@
 
 namespace Acts {
 
-class IExperimentTripletSeedCuts2;
+class ITripletSeedCuts2;
 
 /// @brief Triplet seed filter used in the triplet seeding algorithm
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class TripletSeedFilter2 final {
+class GroupedTripletSeedFilter2 final {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
@@ -71,13 +71,27 @@ class TripletSeedFilter2 final {
     /// compatible SPs
     bool useDeltaRorTopRadius = false;
 
-    std::shared_ptr<IExperimentTripletSeedCuts2> experimentCuts;
+    std::shared_ptr<ITripletSeedCuts2> experimentCuts;
   };
 
   struct Options {
     bool seedConfirmation = false;
+
     SeedConfirmationRangeConfig seedConfRange;
+
     std::size_t nTopSeedConf = 0;
+
+    /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
+    /// Seeds that are not confirmed as "high-quality" are only selected if no
+    /// other "high-quality" seed has been found for that inner-middle doublet
+    /// Maximum number of normal seeds (not classified as "high-quality" seeds)
+    /// in seed confirmation
+    std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
+    /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
+    /// in seed confirmation. If the limit is reached we check if there is a
+    /// normal quality seed to be replaced
+    std::size_t maxQualitySeedsPerSpMConf =
+        std::numeric_limits<std::size_t>::max();
   };
 
   struct State {
@@ -89,10 +103,10 @@ class TripletSeedFilter2 final {
     std::vector<float> compatibleSeedR;
   };
 
-  explicit TripletSeedFilter2(const Config& config,
-                              std::unique_ptr<const Logger> logger =
-                                  getDefaultLogger("TripletSeedFilter2",
-                                                   Logging::Level::INFO));
+  explicit GroupedTripletSeedFilter2(
+      const Config& config,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("GroupedTripletSeedFilter2", Logging::Level::INFO));
 
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.
@@ -143,7 +157,7 @@ class TripletSeedFilter2 final {
  private:
   const Logger& logger() const { return *m_logger; }
 
-  const Config m_cfg;
+  Config m_cfg;
 
   std::unique_ptr<const Logger> m_logger;
 };

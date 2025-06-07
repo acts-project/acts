@@ -403,7 +403,7 @@ def addSeeding(
             )
         elif seedingAlgorithm == SeedingAlgorithm.Triplet2:
             logger.info("Using triplet2 seeding")
-            seeds = addTripletSeeding2(
+            seeds = addGridTripletSeeding2(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -823,7 +823,7 @@ def addStandardSeeding(
     return seedingAlg.config.outputSeeds
 
 
-def addTripletSeeding2(
+def addGridTripletSeeding2(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
@@ -839,101 +839,56 @@ def addTripletSeeding2(
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
 
-    finderConfig = acts.TripletSeedFinder2Config(
-        **acts.examples.defaultKWArgs(
-            deltaRMinTopSP=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFinderConfigArg.deltaRTopSP[0] is None
-                else seedFinderConfigArg.deltaRTopSP[0]
-            ),
-            deltaRMaxTopSP=(
-                seedFinderConfigArg.deltaR[1]
-                if seedFinderConfigArg.deltaRTopSP[1] is None
-                else seedFinderConfigArg.deltaRTopSP[1]
-            ),
-            deltaRMinBottomSP=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFinderConfigArg.deltaRBottomSP[0] is None
-                else seedFinderConfigArg.deltaRBottomSP[0]
-            ),
-            deltaRMaxBottomSP=(
-                seedFinderConfigArg.deltaR[1]
-                if seedFinderConfigArg.deltaRBottomSP[1] is None
-                else seedFinderConfigArg.deltaRBottomSP[1]
-            ),
-            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
-            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            cotThetaMax=seedFinderConfigArg.cotThetaMax,
-            sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            minPt=seedFinderConfigArg.minPt,
-            impactMax=seedFinderConfigArg.impactMax,
-            interactionPointCut=seedFinderConfigArg.interactionPointCut,
-            deltaZMax=seedFinderConfigArg.deltaZMax,
-            maxPtScattering=seedFinderConfigArg.maxPtScattering,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            seedConfirmation=seedFinderConfigArg.seedConfirmation,
-            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
-            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-        ),
-    )
-    finderOptions = acts.TripletSeedFinder2Options(
-        **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
-        )
-    )
-    filterConfig = acts.TripletSeedFilter2Config(
-        **acts.examples.defaultKWArgs(
-            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
-            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
-            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
-            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
-            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
-            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
-            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-        )
-    )
-
-    gridConfig = acts.SpacePointGrid2Config(
-        **acts.examples.defaultKWArgs(
-            minPt=finderConfig.minPt,
-            rMax=spacePointGridConfigArg.rMax,
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
-            deltaRMax=spacePointGridConfigArg.deltaRMax,
-            cotThetaMax=finderConfig.cotThetaMax,
-            phiMin=spacePointGridConfigArg.phi[0],
-            phiMax=spacePointGridConfigArg.phi[1],
-            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            impactMax=spacePointGridConfigArg.impactMax,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
-            bFieldInZ=finderOptions.bFieldInZ,
-        )
-    )
-
-    seedingAlg = acts.examples.TripletSeedingAlgorithm2(
+    seedingAlg = acts.examples.GridTripletSeedingAlgorithm2(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
-            allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
-            zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
-            zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
-            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
-            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
-            zBinEdges=seedFinderConfigArg.zBinEdges,
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            minPt=seedFinderConfigArg.minPt,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            impactMax=seedFinderConfigArg.impactMax,
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            phiMin=spacePointGridConfigArg.phi[0],
+            phiMax=spacePointGridConfigArg.phi[1],
+            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
+            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            rMinMiddle=None,
+            rMaxMiddle=None,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaZMin=None,
+            deltaZMax=None,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            helixCutTolerance=None,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            maxPtScattering=seedFinderConfigArg.maxPtScattering,
+            toleranceParam=None,
+            deltaInvHelixDiameter=None,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
-        gridConfig=gridConfig,
-        finderConfig=finderConfig,
-        finderOptions=finderOptions,
-        filterConfig=filterConfig,
     )
     sequence.addAlgorithm(seedingAlg)
 
