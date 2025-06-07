@@ -21,7 +21,7 @@ namespace Acts {
 using namespace UnitLiterals;
 
 GroupedTripletSeedFinder2::DerivedTripletCuts
-GroupedTripletSeedFinder2::TripletCuts::derive(const Options& options) const {
+GroupedTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
   DerivedTripletCuts result;
 
   static_cast<TripletCuts&>(result) = *this;
@@ -41,7 +41,7 @@ GroupedTripletSeedFinder2::TripletCuts::derive(const Options& options) const {
   const float maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
 
   // bFieldInZ is in (pT/radius) natively, no need for conversion
-  result.pTPerHelixRadius = options.bFieldInZ;
+  result.pTPerHelixRadius = bFieldInZ;
   result.minHelixDiameter2 =
       std::pow(result.minPt * 2 / result.pTPerHelixRadius, 2) *
       result.helixCutTolerance;
@@ -58,19 +58,6 @@ GroupedTripletSeedFinder2::TripletCuts::derive(const Options& options) const {
 GroupedTripletSeedFinder2::GroupedTripletSeedFinder2(
     const Config& config, std::unique_ptr<const Logger> logger_)
     : m_cfg(config), m_logger(std::move(logger_)) {}
-
-GroupedTripletSeedFinder2::MiddleSpacePointInfo
-GroupedTripletSeedFinder2::computeMiddleSpacePointInfo(
-    const ConstSpacePointProxy2& spM,
-    const SpacePointContainer2::DenseColumn<float>& rColumn) {
-  const float rM = spM.extra(rColumn);
-  const float uIP = -1. / rM;
-  const float cosPhiM = -spM.x() * uIP;
-  const float sinPhiM = -spM.y() * uIP;
-  const float uIP2 = uIP * uIP;
-
-  return {uIP, uIP2, cosPhiM, sinPhiM};
-}
 
 void GroupedTripletSeedFinder2::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
