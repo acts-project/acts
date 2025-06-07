@@ -70,6 +70,7 @@ static const int TQUARK = 6;
 
 static const int ELECTRON = 11;
 static const int MUON = 13;
+static const int TAU = 15;
 
 static const int GLUON = 21;
 // APID: 9 rather than 21 is used to denote a gluon/gluino in composite states.
@@ -796,6 +797,14 @@ bool ParticleId::isMuon(int pdg) {
 
 bool ParticleId::isElectron(int pdg) {
   return std::abs(pdg) == ELECTRON;
+}
+
+bool ParticleId::isPhoton(int pdg) {
+  return std::abs(pdg) == PHOTON;
+}
+
+bool ParticleId::isTau(int pdg) {
+  return std::abs(pdg) == TAU;
 }
 
 HadronType ParticleId::hadronType(int pdg) {
