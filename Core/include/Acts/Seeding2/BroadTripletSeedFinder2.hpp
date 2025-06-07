@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/DoubletFinder2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
 #include "Acts/Seeding2/SpacePointContainerPointers2.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -36,7 +36,7 @@ namespace Acts {
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class GroupedTripletSeedFinder2 {
+class BroadTripletSeedFinder2 {
  public:
   struct Config {};
 
@@ -49,7 +49,7 @@ class GroupedTripletSeedFinder2 {
     /// Enables setting of the following delegates.
     bool useDetailedDoubleMeasurementInfo = false;
 
-    GroupedTripletSeedFilter2::Options filter;
+    BroadTripletSeedFilter2::Options filter;
   };
 
   struct DerivedTripletCuts;
@@ -124,10 +124,10 @@ class GroupedTripletSeedFinder2 {
   };
 
   struct Cache {
-    GroupedTripletSeedFilter2::Cache filter;
+    BroadTripletSeedFilter2::Cache filter;
 
-    DoubletFinder2::Doublets bottomDoublets;
-    DoubletFinder2::Doublets topDoublets;
+    DoubletSeedFinder2::DoubletsForMiddleSp bottomDoublets;
+    DoubletSeedFinder2::DoubletsForMiddleSp topDoublets;
 
     TripletCache tripletCache;
     TripletTopCandidates tripletTopCandidates;
@@ -137,13 +137,13 @@ class GroupedTripletSeedFinder2 {
   };
 
   struct State {
-    GroupedTripletSeedFilter2::State filter;
+    BroadTripletSeedFilter2::State filter;
   };
 
-  explicit GroupedTripletSeedFinder2(
+  explicit BroadTripletSeedFinder2(
       const Config& config,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("GroupedTripletSeedFinder2", Logging::Level::INFO));
+          getDefaultLogger("BroadTripletSeedFinder2", Logging::Level::INFO));
 
   const Config& config() const { return m_cfg; }
 
@@ -158,10 +158,10 @@ class GroupedTripletSeedFinder2 {
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(
       const Options& options, State& state, Cache& cache,
-      const DoubletFinder2::DerivedCuts& bottomCuts,
-      const DoubletFinder2::DerivedCuts& topCuts,
+      const DoubletSeedFinder2::DerivedCuts& bottomCuts,
+      const DoubletSeedFinder2::DerivedCuts& topCuts,
       const DerivedTripletCuts& tripletCuts,
-      const GroupedTripletSeedFilter2& filter,
+      const BroadTripletSeedFilter2& filter,
       const SpacePointContainerPointers2& containerPointers,
       std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
       std::span<const SpacePointIndex2> topSps,
@@ -184,14 +184,14 @@ class GroupedTripletSeedFinder2 {
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTriplets(
       TripletCache& cache, const DerivedTripletCuts& cuts,
-      const GroupedTripletSeedFilter2& filter,
-      const GroupedTripletSeedFilter2::Options& filterOptions,
-      GroupedTripletSeedFilter2::State& filterState,
-      GroupedTripletSeedFilter2::Cache& filterCache,
+      const BroadTripletSeedFilter2& filter,
+      const BroadTripletSeedFilter2::Options& filterOptions,
+      BroadTripletSeedFilter2::State& filterState,
+      BroadTripletSeedFilter2::Cache& filterCache,
       const SpacePointContainerPointers2& containerPointers,
       const ConstSpacePointProxy2& spM,
-      const DoubletFinder2::Doublets& bottomDoublets,
-      const DoubletFinder2::Doublets& topDoublets,
+      const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
+      const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
 
@@ -209,14 +209,14 @@ class GroupedTripletSeedFinder2 {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTripletsDetailed(
-      const DerivedTripletCuts& cuts, const GroupedTripletSeedFilter2& filter,
-      const GroupedTripletSeedFilter2::Options& filterOptions,
-      GroupedTripletSeedFilter2::State& filterState,
-      GroupedTripletSeedFilter2::Cache& filterCache,
+      const DerivedTripletCuts& cuts, const BroadTripletSeedFilter2& filter,
+      const BroadTripletSeedFilter2::Options& filterOptions,
+      BroadTripletSeedFilter2::State& filterState,
+      BroadTripletSeedFilter2::Cache& filterCache,
       const SpacePointContainerPointers2& containerPointers,
       const ConstSpacePointProxy2& spM,
-      const DoubletFinder2::Doublets& bottomDoublets,
-      const DoubletFinder2::Doublets& topDoublets,
+      const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
+      const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
 

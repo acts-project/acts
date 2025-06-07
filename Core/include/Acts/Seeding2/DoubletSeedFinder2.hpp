@@ -17,7 +17,7 @@
 
 namespace Acts {
 
-class DoubletFinder2 {
+class DoubletSeedFinder2 {
  public:
   enum SpacePointCandidateType { eBottom, eTop };
 
@@ -70,7 +70,7 @@ class DoubletFinder2 {
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 
-  struct Doublets {
+  struct DoubletsForMiddleSp {
     std::vector<SpacePointIndex2> spacePoints;
     /// contains parameters required to calculate a circle with linear equation
     std::vector<LinCircle> linCircles;
@@ -93,7 +93,7 @@ class DoubletFinder2 {
     }
   };
 
-  struct MiddleSpacePointInfo {
+  struct MiddleSpInfo {
     /// minus one over radius of middle SP
     float uIP{};
     /// square of uIP
@@ -104,7 +104,7 @@ class DoubletFinder2 {
     float sinPhiM{};
   };
 
-  static MiddleSpacePointInfo computeMiddleSpacePointInfo(
+  static MiddleSpInfo computeMiddleSpInfo(
       const ConstSpacePointProxy2& spM,
       const SpacePointContainer2::DenseColumn<float>& rColumn);
 
@@ -124,10 +124,9 @@ class DoubletFinder2 {
   static void createDoublets(
       const DerivedCuts& cuts,
       const SpacePointContainerPointers2& containerPointers,
-      const ConstSpacePointProxy2& middleSp,
-      const MiddleSpacePointInfo& middleSpInfo,
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
-      Doublets& compatibleDoublets);
+      DoubletsForMiddleSp& compatibleDoublets);
 };
 
 }  // namespace Acts

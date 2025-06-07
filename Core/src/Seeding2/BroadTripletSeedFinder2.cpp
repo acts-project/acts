@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/GroupedTripletSeedFinder2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFinder2.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/DoubletFinder2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
 
 #include <numeric>
 
@@ -20,8 +20,8 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
-GroupedTripletSeedFinder2::DerivedTripletCuts
-GroupedTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
+BroadTripletSeedFinder2::DerivedTripletCuts
+BroadTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
   DerivedTripletCuts result;
 
   static_cast<TripletCuts&>(result) = *this;
@@ -55,16 +55,16 @@ GroupedTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
   return result;
 }
 
-GroupedTripletSeedFinder2::GroupedTripletSeedFinder2(
+BroadTripletSeedFinder2::BroadTripletSeedFinder2(
     const Config& config, std::unique_ptr<const Logger> logger_)
     : m_cfg(config), m_logger(std::move(logger_)) {}
 
-void GroupedTripletSeedFinder2::createSeedsFromGroup(
+void BroadTripletSeedFinder2::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
-    const DoubletFinder2::DerivedCuts& bottomCuts,
-    const DoubletFinder2::DerivedCuts& topCuts,
+    const DoubletSeedFinder2::DerivedCuts& bottomCuts,
+    const DoubletSeedFinder2::DerivedCuts& topCuts,
     const DerivedTripletCuts& tripletCuts,
-    const GroupedTripletSeedFilter2& filter,
+    const BroadTripletSeedFilter2& filter,
     const SpacePointContainerPointers2& containerPointers,
     std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
     std::span<const SpacePointIndex2> topSps,
@@ -75,15 +75,13 @@ void GroupedTripletSeedFinder2::createSeedsFromGroup(
 
   auto spM = containerPointers.spacePoints().at(middleSp);
 
-  DoubletFinder2::MiddleSpacePointInfo middleSpacePointInfo =
-      DoubletFinder2::computeMiddleSpacePointInfo(spM,
-                                                  containerPointers.rColumn());
+  DoubletSeedFinder2::MiddleSpInfo middleSpInfo =
+      DoubletSeedFinder2::computeMiddleSpInfo(spM, containerPointers.rColumn());
 
   // create middle-top doublets
   cache.topDoublets.clear();
-  DoubletFinder2::createDoublets<DoubletFinder2::eTop>(
-      topCuts, containerPointers, spM, middleSpacePointInfo, topSps,
-      cache.topDoublets);
+  DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eTop>(
+      topCuts, containerPointers, spM, middleSpInfo, topSps, cache.topDoublets);
 
   // no top SP found -> try next spM
   if (cache.topDoublets.empty()) {
@@ -93,8 +91,8 @@ void GroupedTripletSeedFinder2::createSeedsFromGroup(
 
   // create middle-bottom doublets
   cache.bottomDoublets.clear();
-  DoubletFinder2::createDoublets<DoubletFinder2::eBottom>(
-      bottomCuts, containerPointers, spM, middleSpacePointInfo, bottomSps,
+  DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eBottom>(
+      bottomCuts, containerPointers, spM, middleSpInfo, bottomSps,
       cache.bottomDoublets);
 
   // no bottom SP found -> try next spM
@@ -134,16 +132,16 @@ void GroupedTripletSeedFinder2::createSeedsFromGroup(
                         cache.sortedCandidates, numQualitySeeds, outputSeeds);
 }
 
-void GroupedTripletSeedFinder2::createTriplets(
+void BroadTripletSeedFinder2::createTriplets(
     TripletCache& cache, const DerivedTripletCuts& cuts,
-    const GroupedTripletSeedFilter2& filter,
-    const GroupedTripletSeedFilter2::Options& filterOptions,
-    GroupedTripletSeedFilter2::State& filterState,
-    GroupedTripletSeedFilter2::Cache& filterCache,
+    const BroadTripletSeedFilter2& filter,
+    const BroadTripletSeedFilter2::Options& filterOptions,
+    BroadTripletSeedFilter2::State& filterState,
+    BroadTripletSeedFilter2::Cache& filterCache,
     const SpacePointContainerPointers2& containerPointers,
     const ConstSpacePointProxy2& spM,
-    const DoubletFinder2::Doublets& bottomDoublets,
-    const DoubletFinder2::Doublets& topDoublets,
+    const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
+    const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.extra(containerPointers.rColumn());
@@ -339,15 +337,15 @@ void GroupedTripletSeedFinder2::createTriplets(
   }  // loop on bottoms
 }
 
-void GroupedTripletSeedFinder2::createTripletsDetailed(
-    const DerivedTripletCuts& cuts, const GroupedTripletSeedFilter2& filter,
-    const GroupedTripletSeedFilter2::Options& filterOptions,
-    GroupedTripletSeedFilter2::State& filterState,
-    GroupedTripletSeedFilter2::Cache& filterCache,
+void BroadTripletSeedFinder2::createTripletsDetailed(
+    const DerivedTripletCuts& cuts, const BroadTripletSeedFilter2& filter,
+    const BroadTripletSeedFilter2::Options& filterOptions,
+    BroadTripletSeedFilter2::State& filterState,
+    BroadTripletSeedFilter2::Cache& filterCache,
     const SpacePointContainerPointers2& containerPointers,
     const ConstSpacePointProxy2& spM,
-    const DoubletFinder2::Doublets& bottomDoublets,
-    const DoubletFinder2::Doublets& topDoublets,
+    const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
+    const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.extra(containerPointers.rColumn());
@@ -593,7 +591,7 @@ void GroupedTripletSeedFinder2::createTripletsDetailed(
   }  // loop on bottoms
 }
 
-bool GroupedTripletSeedFinder2::stripCoordinateCheck(
+bool BroadTripletSeedFinder2::stripCoordinateCheck(
     float tolerance, const ConstSpacePointProxy2& sp,
     const SpacePointContainerPointers2& containerPointers,
     const Vector3& spacePointPosition, Vector3& outputCoordinates) {

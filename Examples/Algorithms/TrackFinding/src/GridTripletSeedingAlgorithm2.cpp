@@ -11,9 +11,9 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/DoubletFinder2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFilter2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFinder2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFinder2.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
 #include "Acts/Seeding2/SpacePointContainerPointers2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -67,9 +67,9 @@ GridTripletSeedingAlgorithm2::GridTripletSeedingAlgorithm2(
   m_gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   m_seedFinder =
-      Acts::GroupedTripletSeedFinder2({}, logger().cloneWithSuffix("Finder"));
+      Acts::BroadTripletSeedFinder2({}, logger().cloneWithSuffix("Finder"));
 
-  Acts::GroupedTripletSeedFilter2::Config filterConfig;
+  Acts::BroadTripletSeedFilter2::Config filterConfig;
   filterConfig.deltaInvHelixDiameter = m_cfg.deltaInvHelixDiameter;
   filterConfig.deltaRMin = m_cfg.deltaRMin;
   filterConfig.compatSeedWeight = m_cfg.compatSeedWeight;
@@ -80,7 +80,7 @@ GridTripletSeedingAlgorithm2::GridTripletSeedingAlgorithm2(
   filterConfig.seedWeightIncrement = m_cfg.seedWeightIncrement;
   filterConfig.numSeedIncrement = m_cfg.numSeedIncrement;
 
-  m_seedFilter = Acts::GroupedTripletSeedFilter2(
+  m_seedFilter = Acts::BroadTripletSeedFilter2(
       filterConfig, logger().cloneWithSuffix("Filter"));
 }
 
@@ -120,14 +120,14 @@ ProcessCode GridTripletSeedingAlgorithm2::execute(
   const Acts::Range1D<float> rRange =
       grid.computeRadiusRange(coreSpacePoints, rColumn);
 
-  Acts::GroupedTripletSeedFinder2::Options finderOptions;
+  Acts::BroadTripletSeedFinder2::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
 
-  Acts::GroupedTripletSeedFilter2::Options filterOptions;
+  Acts::BroadTripletSeedFilter2::Options filterOptions;
   filterOptions.seedConfirmation = m_cfg.seedConfirmation;
   filterOptions.seedConfRange = m_cfg.centralSeedConfirmationRange;
 
-  Acts::DoubletFinder2::Cuts doubletCuts;
+  Acts::DoubletSeedFinder2::Cuts doubletCuts;
   doubletCuts.deltaRMin = m_cfg.deltaRMin;
   doubletCuts.deltaRMax = m_cfg.deltaRMax;
   doubletCuts.deltaZMin = m_cfg.deltaZMin;
@@ -144,7 +144,7 @@ ProcessCode GridTripletSeedingAlgorithm2::execute(
   }
   auto derivedDoubletOptions = doubletCuts.derive(m_cfg.bFieldInZ);
 
-  Acts::GroupedTripletSeedFinder2::TripletCuts tripletCuts;
+  Acts::BroadTripletSeedFinder2::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
   tripletCuts.sigmaScattering = m_cfg.sigmaScattering;
   tripletCuts.radLengthPerSeed = m_cfg.radLengthPerSeed;
@@ -161,8 +161,8 @@ ProcessCode GridTripletSeedingAlgorithm2::execute(
 
   // run the seeding
   Acts::SeedContainer2 seeds;
-  Acts::GroupedTripletSeedFinder2::State state;
-  static thread_local Acts::GroupedTripletSeedFinder2::Cache cache;
+  Acts::BroadTripletSeedFinder2::State state;
+  static thread_local Acts::BroadTripletSeedFinder2::Cache cache;
 
   std::vector<Acts::SpacePointIndex2> bottomSps;
   std::vector<Acts::SpacePointIndex2> middleSps;
