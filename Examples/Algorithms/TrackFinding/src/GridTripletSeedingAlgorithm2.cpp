@@ -152,7 +152,7 @@ ProcessCode GridTripletSeedingAlgorithm2::execute(
   tripletCuts.impactMax = m_cfg.impactMax;
   tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  auto derivedTripletOptions = tripletCuts.derive(finderOptions);
+  auto derivedTripletOptions = tripletCuts.derive(m_cfg.bFieldInZ);
 
   /// variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {

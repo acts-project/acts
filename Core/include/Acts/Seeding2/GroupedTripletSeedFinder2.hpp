@@ -82,7 +82,7 @@ class GroupedTripletSeedFinder2 {
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
 
-    DerivedTripletCuts derive(const Options& options) const;
+    DerivedTripletCuts derive(float bFieldInZ) const;
   };
 
   struct DerivedTripletCuts : public TripletCuts {
@@ -91,17 +91,6 @@ class GroupedTripletSeedFinder2 {
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
     float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
     float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
-  };
-
-  struct MiddleSpacePointInfo {
-    /// minus one over radius of middle SP
-    float uIP{};
-    /// square of uIP
-    float uIP2{};
-    /// ratio between middle SP x position and radius
-    float cosPhiM{};
-    /// ratio between middle SP y position and radius
-    float sinPhiM{};
   };
 
   struct TripletCache {
@@ -230,10 +219,6 @@ class GroupedTripletSeedFinder2 {
       const DoubletFinder2::Doublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
-
-  static MiddleSpacePointInfo computeMiddleSpacePointInfo(
-      const ConstSpacePointProxy2& spM,
-      const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   /// Check the compatibility of strip space point coordinates in xyz assuming
   /// the Bottom-Middle direction with the strip measurement details
