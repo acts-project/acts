@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFinder2.hpp"
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFilter2.hpp"
-#include "Acts/Seeding2/GroupedTripletSeedFinder2.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -230,8 +230,8 @@ class GridTripletSeedingAlgorithm2 final : public IAlgorithm {
 
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
-  std::optional<Acts::GroupedTripletSeedFinder2> m_seedFinder;
-  std::optional<Acts::GroupedTripletSeedFilter2> m_seedFilter;
+  std::optional<Acts::BroadTripletSeedFinder2> m_seedFinder;
+  std::optional<Acts::BroadTripletSeedFilter2> m_seedFilter;
 
   Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
       Acts::DelegateFuncTag<voidSpacePointSelector>{}};

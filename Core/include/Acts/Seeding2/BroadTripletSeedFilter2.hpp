@@ -27,7 +27,7 @@ class ITripletSeedCuts2;
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class GroupedTripletSeedFilter2 final {
+class BroadTripletSeedFilter2 final {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
@@ -103,10 +103,10 @@ class GroupedTripletSeedFilter2 final {
     std::vector<float> compatibleSeedR;
   };
 
-  explicit GroupedTripletSeedFilter2(
+  explicit BroadTripletSeedFilter2(
       const Config& config,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("GroupedTripletSeedFilter2", Logging::Level::INFO));
+          getDefaultLogger("BroadTripletSeedFilter2", Logging::Level::INFO));
 
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/GroupedTripletSeedFilter2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/ITripletSeedCuts2.hpp"
@@ -55,11 +55,11 @@ void setBestSeedQuality(
 
 }  // namespace
 
-GroupedTripletSeedFilter2::GroupedTripletSeedFilter2(
+BroadTripletSeedFilter2::BroadTripletSeedFilter2(
     const Config& config, std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {}
 
-void GroupedTripletSeedFilter2::filter2SpFixed(
+void BroadTripletSeedFilter2::filter2SpFixed(
     const Options& options, State& state, Cache& cache,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
@@ -244,7 +244,7 @@ void GroupedTripletSeedFilter2::filter2SpFixed(
   }
 }
 
-void GroupedTripletSeedFilter2::filter1SpFixed(
+void BroadTripletSeedFilter2::filter1SpFixed(
     const Options& options, State& state,
     const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
