@@ -9,12 +9,6 @@
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
-<<<<<<< HEAD
-#include "ActsExamples/Utilities/ParticleId.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
-=======
->>>>>>> 22caccbe6 (refactor: cleanup, tweaking)
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -141,7 +135,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
   if (m_cfg.debugCsvOutput) {
     std::ofstream outfile;
     outfile.open("particles.csv");
-    outfile << "event,pt,eta,phi,pdg" << std::endl;
+    outfile << "event,pt,eta,phi,pdg,label" << std::endl;
 
     outfile.flush();
     outfile.close();
@@ -153,7 +147,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::initialize() {
     outfile.close();
 
     outfile.open("hadrons.csv");
-    outfile << "event,pt,eta,phi,pdg" << std::endl;
+    outfile << "event,pt,eta,phi,pdg,label" << std::endl;
 
     outfile.flush();
     outfile.close();
@@ -212,7 +206,9 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
       if (m_cfg.debugCsvOutput) {
         outfile << ctx.eventNumber << "," << pseudoJet.pt() << ","
                 << pseudoJet.eta() << "," << pseudoJet.phi() << ","
-                << static_cast<int>(particle->pdg());
+                << static_cast<int>(particle->pdg()) << ","
+                << static_cast<int>(jetLabelFromHadronType(
+                       Acts::ParticleId::hadronType(particle->pdg())));
         outfile << std::endl;
       }
 
@@ -325,10 +321,27 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
             }
           }
 
-          return Acts::ParticleId::isHadron(particle->pdg_id()) &&
-                 (particle->status() == HepMC3Util::kDecayedParticleStatus ||
-                  particle->status() == HepMC3Util::kUndecayedParticleStatus) &&
-                 particle->momentum().pt() >= m_cfg.jetLabelingHadronPtMin;
+          if (!Acts::ParticleId::isHadron(particle->pdg_id())) {
+            return false;
+          }
+
+          if (particle->status() != HepMC3Util::kDecayedParticleStatus &&
+              particle->status() != HepMC3Util::kUndecayedParticleStatus) {
+            return false;
+          }
+
+          // Apply pt cut only on B or C hadrons
+          auto label = jetLabelFromHadronType(
+              Acts::ParticleId::hadronType(particle->pdg_id()));
+          using enum JetLabel;
+
+          if (label == BJet || label == CJet) {
+            if (particle->momentum().pt() < m_cfg.jetLabelingHadronPtMin) {
+              return false;
+            }
+          }
+
+          return true;
         }) |
         std::views::transform([](const auto& particle) {
           auto type = Acts::ParticleId::hadronType(particle->pdg_id());
@@ -357,7 +370,8 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
         outfile << ctx.eventNumber << "," << hadron.second->momentum().pt()
                 << "," << hadron.second->momentum().eta() << ","
                 << hadron.second->momentum().phi() << ","
-                << static_cast<int>(hadron.second->pdg_id());
+                << static_cast<int>(hadron.second->pdg_id()) << ","
+                << static_cast<int>(hadron.first);
         outfile << std::endl;
       }
     }
@@ -547,8 +561,12 @@ void TruthJetAlgorithm::overlapRemoval(
   std::vector<const SimParticle*> isolatedLeptons;
 
   for (const auto& particle : truthParticles) {
-    if (!Acts::ParticleId::isMuon(particle.pdg()) &&
-        !Acts::ParticleId::isElectron(particle.pdg())) {
+    bool accept = Acts::ParticleId::isMuon(particle.pdg()) ||
+                  Acts::ParticleId::isElectron(particle.pdg()) ||
+                  Acts::ParticleId::isTau(particle.pdg()) ||
+                  Acts::ParticleId::isPhoton(particle.pdg());
+
+    if (!accept) {
       continue;
     }
 
