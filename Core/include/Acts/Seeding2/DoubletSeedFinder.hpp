@@ -10,14 +10,14 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding2/SpacePointContainerPointers2.hpp"
+#include "Acts/Seeding2/SpacePointContainerPointers.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <vector>
 
 namespace Acts {
 
-class DoubletSeedFinder2 {
+class DoubletSeedFinder {
  public:
   enum SpacePointCandidateType { eBottom, eTop };
 
@@ -123,7 +123,7 @@ class DoubletSeedFinder2 {
   template <SpacePointCandidateType candidate_type>
   static void createDoublets(
       const DerivedCuts& cuts,
-      const SpacePointContainerPointers2& containerPointers,
+      const SpacePointContainerPointers& containerPointers,
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
       DoubletsForMiddleSp& compatibleDoublets);

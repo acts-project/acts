@@ -18,7 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm2.hpp"
+#include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -153,8 +153,8 @@ void addTrackFinding(Context& ctx) {
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GridTripletSeedingAlgorithm2, mex,
-      "GridTripletSeedingAlgorithm2", inputSpacePoints, outputSeeds, bFieldInZ,
+      ActsExamples::GridTripletSeedingAlgorithm, mex,
+      "GridTripletSeedingAlgorithm", inputSpacePoints, outputSeeds, bFieldInZ,
       minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax, rMin, rMax, zMin,
       zMax, phiMin, phiMax, phiBinDeflectionCoverage, maxPhiBins,
       zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, zBinEdges,

@@ -10,9 +10,9 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
-#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
-#include "Acts/Seeding2/SpacePointContainerPointers2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder.hpp"
+#include "Acts/Seeding2/SpacePointContainerPointers.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -36,7 +36,7 @@ namespace Acts {
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class BroadTripletSeedFinder2 {
+class BroadTripletSeedFinder {
  public:
   struct Config {};
 
@@ -49,7 +49,7 @@ class BroadTripletSeedFinder2 {
     /// Enables setting of the following delegates.
     bool useDetailedDoubleMeasurementInfo = false;
 
-    BroadTripletSeedFilter2::Options filter;
+    BroadTripletSeedFilter::Options filter;
   };
 
   struct DerivedTripletCuts;
@@ -124,10 +124,10 @@ class BroadTripletSeedFinder2 {
   };
 
   struct Cache {
-    BroadTripletSeedFilter2::Cache filter;
+    BroadTripletSeedFilter::Cache filter;
 
-    DoubletSeedFinder2::DoubletsForMiddleSp bottomDoublets;
-    DoubletSeedFinder2::DoubletsForMiddleSp topDoublets;
+    DoubletSeedFinder::DoubletsForMiddleSp bottomDoublets;
+    DoubletSeedFinder::DoubletsForMiddleSp topDoublets;
 
     TripletCache tripletCache;
     TripletTopCandidates tripletTopCandidates;
@@ -137,13 +137,13 @@ class BroadTripletSeedFinder2 {
   };
 
   struct State {
-    BroadTripletSeedFilter2::State filter;
+    BroadTripletSeedFilter::State filter;
   };
 
-  explicit BroadTripletSeedFinder2(
-      const Config& config,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("BroadTripletSeedFinder2", Logging::Level::INFO));
+  explicit BroadTripletSeedFinder(const Config& config,
+                                  std::unique_ptr<const Logger> logger =
+                                      getDefaultLogger("BroadTripletSeedFinder",
+                                                       Logging::Level::INFO));
 
   const Config& config() const { return m_cfg; }
 
@@ -158,11 +158,11 @@ class BroadTripletSeedFinder2 {
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(
       const Options& options, State& state, Cache& cache,
-      const DoubletSeedFinder2::DerivedCuts& bottomCuts,
-      const DoubletSeedFinder2::DerivedCuts& topCuts,
+      const DoubletSeedFinder::DerivedCuts& bottomCuts,
+      const DoubletSeedFinder::DerivedCuts& topCuts,
       const DerivedTripletCuts& tripletCuts,
-      const BroadTripletSeedFilter2& filter,
-      const SpacePointContainerPointers2& containerPointers,
+      const BroadTripletSeedFilter& filter,
+      const SpacePointContainerPointers& containerPointers,
       std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
       std::span<const SpacePointIndex2> topSps,
       SeedContainer2& outputSeeds) const;
@@ -184,14 +184,14 @@ class BroadTripletSeedFinder2 {
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTriplets(
       TripletCache& cache, const DerivedTripletCuts& cuts,
-      const BroadTripletSeedFilter2& filter,
-      const BroadTripletSeedFilter2::Options& filterOptions,
-      BroadTripletSeedFilter2::State& filterState,
-      BroadTripletSeedFilter2::Cache& filterCache,
-      const SpacePointContainerPointers2& containerPointers,
+      const BroadTripletSeedFilter& filter,
+      const BroadTripletSeedFilter::Options& filterOptions,
+      BroadTripletSeedFilter::State& filterState,
+      BroadTripletSeedFilter::Cache& filterCache,
+      const SpacePointContainerPointers& containerPointers,
       const ConstSpacePointProxy2& spM,
-      const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
-      const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
+      const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
+      const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
 
@@ -209,14 +209,14 @@ class BroadTripletSeedFinder2 {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTripletsDetailed(
-      const DerivedTripletCuts& cuts, const BroadTripletSeedFilter2& filter,
-      const BroadTripletSeedFilter2::Options& filterOptions,
-      BroadTripletSeedFilter2::State& filterState,
-      BroadTripletSeedFilter2::Cache& filterCache,
-      const SpacePointContainerPointers2& containerPointers,
+      const DerivedTripletCuts& cuts, const BroadTripletSeedFilter& filter,
+      const BroadTripletSeedFilter::Options& filterOptions,
+      BroadTripletSeedFilter::State& filterState,
+      BroadTripletSeedFilter::Cache& filterCache,
+      const SpacePointContainerPointers& containerPointers,
       const ConstSpacePointProxy2& spM,
-      const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
-      const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
+      const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
+      const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
 
@@ -224,7 +224,7 @@ class BroadTripletSeedFinder2 {
   /// the Bottom-Middle direction with the strip measurement details
   static bool stripCoordinateCheck(
       float tolerance, const ConstSpacePointProxy2& sp,
-      const SpacePointContainerPointers2& containerPointers,
+      const SpacePointContainerPointers& containerPointers,
       const Vector3& spacePointPosition, Vector3& outputCoordinates);
 
  private:
