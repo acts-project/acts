@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default Triplet2 TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
+    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -401,9 +401,9 @@ def addSeeding(
                 spacePointGridConfigArg,
                 logLevel,
             )
-        elif seedingAlgorithm == SeedingAlgorithm.Triplet2:
-            logger.info("Using triplet2 seeding")
-            seeds = addGridTripletSeeding2(
+        elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
+            logger.info("Using grid triplet seeding")
+            seeds = addGridTripletSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
