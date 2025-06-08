@@ -823,7 +823,7 @@ def addStandardSeeding(
     return seedingAlg.config.outputSeeds
 
 
-def addGridTripletSeeding2(
+def addGridTripletSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
