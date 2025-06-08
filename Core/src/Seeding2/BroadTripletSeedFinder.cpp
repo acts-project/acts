@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/BroadTripletSeedFinder2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter2.hpp"
-#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
+#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
 #include <numeric>
 
@@ -20,8 +20,8 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
-BroadTripletSeedFinder2::DerivedTripletCuts
-BroadTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
+BroadTripletSeedFinder::DerivedTripletCuts
+BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
   DerivedTripletCuts result;
 
   static_cast<TripletCuts&>(result) = *this;
@@ -55,17 +55,16 @@ BroadTripletSeedFinder2::TripletCuts::derive(float bFieldInZ) const {
   return result;
 }
 
-BroadTripletSeedFinder2::BroadTripletSeedFinder2(
+BroadTripletSeedFinder::BroadTripletSeedFinder(
     const Config& config, std::unique_ptr<const Logger> logger_)
     : m_cfg(config), m_logger(std::move(logger_)) {}
 
-void BroadTripletSeedFinder2::createSeedsFromGroup(
+void BroadTripletSeedFinder::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
-    const DoubletSeedFinder2::DerivedCuts& bottomCuts,
-    const DoubletSeedFinder2::DerivedCuts& topCuts,
-    const DerivedTripletCuts& tripletCuts,
-    const BroadTripletSeedFilter2& filter,
-    const SpacePointContainerPointers2& containerPointers,
+    const DoubletSeedFinder::DerivedCuts& bottomCuts,
+    const DoubletSeedFinder::DerivedCuts& topCuts,
+    const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
+    const SpacePointContainerPointers& containerPointers,
     std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
     std::span<const SpacePointIndex2> topSps,
     SeedContainer2& outputSeeds) const {
@@ -75,12 +74,12 @@ void BroadTripletSeedFinder2::createSeedsFromGroup(
 
   auto spM = containerPointers.spacePoints().at(middleSp);
 
-  DoubletSeedFinder2::MiddleSpInfo middleSpInfo =
-      DoubletSeedFinder2::computeMiddleSpInfo(spM, containerPointers.rColumn());
+  DoubletSeedFinder::MiddleSpInfo middleSpInfo =
+      DoubletSeedFinder::computeMiddleSpInfo(spM, containerPointers.rColumn());
 
   // create middle-top doublets
   cache.topDoublets.clear();
-  DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eTop>(
+  DoubletSeedFinder::createDoublets<DoubletSeedFinder::eTop>(
       topCuts, containerPointers, spM, middleSpInfo, topSps, cache.topDoublets);
 
   // no top SP found -> try next spM
@@ -91,7 +90,7 @@ void BroadTripletSeedFinder2::createSeedsFromGroup(
 
   // create middle-bottom doublets
   cache.bottomDoublets.clear();
-  DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eBottom>(
+  DoubletSeedFinder::createDoublets<DoubletSeedFinder::eBottom>(
       bottomCuts, containerPointers, spM, middleSpInfo, bottomSps,
       cache.bottomDoublets);
 
@@ -132,16 +131,16 @@ void BroadTripletSeedFinder2::createSeedsFromGroup(
                         cache.sortedCandidates, numQualitySeeds, outputSeeds);
 }
 
-void BroadTripletSeedFinder2::createTriplets(
+void BroadTripletSeedFinder::createTriplets(
     TripletCache& cache, const DerivedTripletCuts& cuts,
-    const BroadTripletSeedFilter2& filter,
-    const BroadTripletSeedFilter2::Options& filterOptions,
-    BroadTripletSeedFilter2::State& filterState,
-    BroadTripletSeedFilter2::Cache& filterCache,
-    const SpacePointContainerPointers2& containerPointers,
+    const BroadTripletSeedFilter& filter,
+    const BroadTripletSeedFilter::Options& filterOptions,
+    BroadTripletSeedFilter::State& filterState,
+    BroadTripletSeedFilter::Cache& filterCache,
+    const SpacePointContainerPointers& containerPointers,
     const ConstSpacePointProxy2& spM,
-    const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
-    const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
+    const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
+    const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.extra(containerPointers.rColumn());
@@ -337,15 +336,15 @@ void BroadTripletSeedFinder2::createTriplets(
   }  // loop on bottoms
 }
 
-void BroadTripletSeedFinder2::createTripletsDetailed(
-    const DerivedTripletCuts& cuts, const BroadTripletSeedFilter2& filter,
-    const BroadTripletSeedFilter2::Options& filterOptions,
-    BroadTripletSeedFilter2::State& filterState,
-    BroadTripletSeedFilter2::Cache& filterCache,
-    const SpacePointContainerPointers2& containerPointers,
+void BroadTripletSeedFinder::createTripletsDetailed(
+    const DerivedTripletCuts& cuts, const BroadTripletSeedFilter& filter,
+    const BroadTripletSeedFilter::Options& filterOptions,
+    BroadTripletSeedFilter::State& filterState,
+    BroadTripletSeedFilter::Cache& filterCache,
+    const SpacePointContainerPointers& containerPointers,
     const ConstSpacePointProxy2& spM,
-    const DoubletSeedFinder2::DoubletsForMiddleSp& bottomDoublets,
-    const DoubletSeedFinder2::DoubletsForMiddleSp& topDoublets,
+    const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
+    const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.extra(containerPointers.rColumn());
@@ -591,9 +590,9 @@ void BroadTripletSeedFinder2::createTripletsDetailed(
   }  // loop on bottoms
 }
 
-bool BroadTripletSeedFinder2::stripCoordinateCheck(
+bool BroadTripletSeedFinder::stripCoordinateCheck(
     float tolerance, const ConstSpacePointProxy2& sp,
-    const SpacePointContainerPointers2& containerPointers,
+    const SpacePointContainerPointers& containerPointers,
     const Vector3& spacePointPosition, Vector3& outputCoordinates) {
   const Vector3& topStripVector =
       sp.extra(containerPointers.topStripVectorColumn());

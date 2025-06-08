@@ -16,16 +16,16 @@ namespace Acts {
 /// Collection of pointers to the space point container and its
 /// additional columns. This is used as a basket to pass around
 /// the input data for the triplet seed finder.
-class SpacePointContainerPointers2 {
+class SpacePointContainerPointers {
  public:
   /// Minimal input: space points and r column.
-  SpacePointContainerPointers2(
+  SpacePointContainerPointers(
       const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn)
       : m_spacePoints(&spacePoints), m_rColumn(&rColumn) {}
 
   /// Space points, r column, and variance columns.
-  SpacePointContainerPointers2(
+  SpacePointContainerPointers(
       const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn,
       const SpacePointContainer2::DenseColumn<float>& varianceRColumn,
@@ -36,7 +36,7 @@ class SpacePointContainerPointers2 {
         m_varianceZColumn(&varianceZColumn) {}
 
   /// Space points, r column, variance columns, and strip columns.
-  SpacePointContainerPointers2(
+  SpacePointContainerPointers(
       const SpacePointContainer2& spacePoints,
       const SpacePointContainer2::DenseColumn<float>& rColumn,
       const SpacePointContainer2::DenseColumn<float>& varianceRColumn,

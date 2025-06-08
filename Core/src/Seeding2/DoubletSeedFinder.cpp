@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/DoubletSeedFinder2.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
 namespace Acts {
 
-DoubletSeedFinder2::DerivedCuts DoubletSeedFinder2::Cuts::derive(
+DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
     float bFieldInZ) const {
   DerivedCuts result;
 
@@ -24,7 +24,7 @@ DoubletSeedFinder2::DerivedCuts DoubletSeedFinder2::Cuts::derive(
   return result;
 }
 
-DoubletSeedFinder2::MiddleSpInfo DoubletSeedFinder2::computeMiddleSpInfo(
+DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
     const ConstSpacePointProxy2& spM,
     const SpacePointContainer2::DenseColumn<float>& rColumn) {
   const float rM = spM.extra(rColumn);
@@ -36,10 +36,10 @@ DoubletSeedFinder2::MiddleSpInfo DoubletSeedFinder2::computeMiddleSpInfo(
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
-template <DoubletSeedFinder2::SpacePointCandidateType candidate_type>
-void DoubletSeedFinder2::createDoublets(
+template <DoubletSeedFinder::SpacePointCandidateType candidate_type>
+void DoubletSeedFinder::createDoublets(
     const DerivedCuts& cuts,
-    const SpacePointContainerPointers2& containerPointers,
+    const SpacePointContainerPointers& containerPointers,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets) {
@@ -266,15 +266,15 @@ void DoubletSeedFinder2::createDoublets(
 }
 
 // instantiate the template for both candidate types
-template void DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eBottom>(
+template void DoubletSeedFinder::createDoublets<DoubletSeedFinder::eBottom>(
     const DerivedCuts& cuts,
-    const SpacePointContainerPointers2& containerPointers,
+    const SpacePointContainerPointers& containerPointers,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets);
-template void DoubletSeedFinder2::createDoublets<DoubletSeedFinder2::eTop>(
+template void DoubletSeedFinder::createDoublets<DoubletSeedFinder::eTop>(
     const DerivedCuts& cuts,
-    const SpacePointContainerPointers2& containerPointers,
+    const SpacePointContainerPointers& containerPointers,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets);

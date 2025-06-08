@@ -839,7 +839,7 @@ def addGridTripletSeeding2(
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
 
-    seedingAlg = acts.examples.GridTripletSeedingAlgorithm2(
+    seedingAlg = acts.examples.GridTripletSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,

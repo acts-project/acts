@@ -21,13 +21,13 @@
 
 namespace Acts {
 
-class ITripletSeedCuts2;
+class ITripletSeedCuts;
 
 /// @brief Triplet seed filter used in the triplet seeding algorithm
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class BroadTripletSeedFilter2 final {
+class BroadTripletSeedFilter final {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
@@ -71,7 +71,7 @@ class BroadTripletSeedFilter2 final {
     /// compatible SPs
     bool useDeltaRorTopRadius = false;
 
-    std::shared_ptr<ITripletSeedCuts2> experimentCuts;
+    std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };
 
   struct Options {
@@ -103,10 +103,10 @@ class BroadTripletSeedFilter2 final {
     std::vector<float> compatibleSeedR;
   };
 
-  explicit BroadTripletSeedFilter2(
-      const Config& config,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("BroadTripletSeedFilter2", Logging::Level::INFO));
+  explicit BroadTripletSeedFilter(const Config& config,
+                                  std::unique_ptr<const Logger> logger =
+                                      getDefaultLogger("BroadTripletSeedFilter",
+                                                       Logging::Level::INFO));
 
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.
