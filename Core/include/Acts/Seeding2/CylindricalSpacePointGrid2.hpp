@@ -54,7 +54,7 @@ class CylindricalSpacePointGrid2 {
     /// maximum forward direction expressed as cot(theta)
     float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
     /// maximum impact parameter in mm
-    float impactMax = 20 * UnitConstants::mm;
+    float impactMax = 0 * UnitConstants::mm;
     /// minimum phi value for phiAxis construction
     float phiMin = -std::numbers::pi_v<float>;
     /// maximum phi value for phiAxis construction
