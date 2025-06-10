@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
   BOOST_CHECK(container.empty());
   BOOST_CHECK_EQUAL(container.size(), 0u);
 
-  for (auto _ : container) {
+  for ([[maybe_unused]] auto _ : container) {
     BOOST_FAIL("Container should be empty, no space points should be iterated");
   }
 }
