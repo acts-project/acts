@@ -28,7 +28,7 @@ class BoundarySurfaceT;
 /// outermost volume and goes deeper to the volumes into the hierarchy.
 class ITrackingGeometryVisitor {
  public:
-  virtual ~ITrackingGeometryVisitor() = 0;
+  virtual ~ITrackingGeometryVisitor() = default;
 
   explicit ITrackingGeometryVisitor(bool visitDepthFirst = false)
       : m_visitDepthFirst(visitDepthFirst) {}
@@ -54,7 +54,7 @@ class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor from base class
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  ~TrackingGeometryVisitor() override = 0;
+  virtual ~TrackingGeometryVisitor();
 
   /// @brief Visit a tracking volume in the geometry
   /// @param volume The tracking volume being visited
@@ -94,7 +94,7 @@ class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  ~TrackingGeometryMutableVisitor() override = 0;
+  virtual ~TrackingGeometryMutableVisitor();
 
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
