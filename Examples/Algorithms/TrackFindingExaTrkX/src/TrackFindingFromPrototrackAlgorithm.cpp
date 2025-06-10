@@ -13,6 +13,9 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
+#include <algorithm>
+#include <ranges>
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
@@ -215,8 +218,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::finalize() {
       float, ba::features<ba::tag::sum, ba::tag::mean, ba::tag::variance>>;
 
   Accumulator totalAcc;
-  std::for_each(m_nTracksPerSeeds.begin(), m_nTracksPerSeeds.end(),
-                [&](auto v) { totalAcc(static_cast<float>(v)); });
+  std::ranges::for_each(m_nTracksPerSeeds,
+                        [&](auto v) { totalAcc(static_cast<float>(v)); });
   ACTS_INFO("- total number tracks: " << ba::sum(totalAcc));
   ACTS_INFO("- avg tracks per seed: " << ba::mean(totalAcc) << " +- "
                                       << std::sqrt(ba::variance(totalAcc)));
