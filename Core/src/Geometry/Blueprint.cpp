@@ -34,10 +34,10 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
  public:
   explicit BlueprintVisitor(
       const Logger &logger,
-      std::array<GeometryIdentifier, GeometryIdentifier::getMaxVolume()>
-          &volumesIds)
-      : TrackingGeometryMutableVisitor(false),
-        m_volumesIds(volumesIds),
+      std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
+          &volumesById)
+      : TrackingGeometryMutableVisitor(true),
+        m_volumesById(volumesById),
         m_logger(logger) {}
 
   void visitVolume(TrackingVolume &volume) override {
@@ -47,20 +47,21 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
     auto id = volume.geometryId();
 
     if (id == GeometryIdentifier{}) {
-      auto it = std::ranges::find(m_volumesIds, GeometryIdentifier{});
-      if (it == m_volumesIds.end()) {
-        ACTS_ERROR("No free volume IDs left, all " << m_volumesIds.size()
+      auto it = std::ranges::find(m_volumesById, nullptr);
+      if (it == m_volumesById.end()) {
+        ACTS_ERROR("No free volume IDs left, all " << m_volumesById.size()
                                                    << " are used");
+        // @TODO: Maybe link to documentation about this
         throw std::logic_error("No free volume IDs left");
       }
 
       id = GeometryIdentifier().withVolume(
-          std::distance(m_volumesIds.begin(), it) + 1);
+          std::distance(m_volumesById.begin(), it) + 1);
 
       ACTS_DEBUG("Assigning volume ID " << id << " for "
                                         << volume.volumeName());
       volume.assignGeometryId(id);
-      *it = id;
+      *it = &volume;
     }
 
     for (auto &portal : volume.portals()) {
@@ -84,8 +85,8 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
   }
 
  private:
-  std::array<GeometryIdentifier, GeometryIdentifier::getMaxVolume()>
-      &m_volumesIds;
+  std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
+      &m_volumesById;
   const Logger &m_logger;
   const Acts::Logger &logger() const { return m_logger; }
 };
@@ -293,21 +294,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   ACTS_DEBUG(prefix() << "Assigning volume IDs for remaining volumes");
 
-  std::array<GeometryIdentifier, GeometryIdentifier::getMaxVolume()>
-      usedGeoIds{};
-  usedGeoIds.fill(GeometryIdentifier{});
-
-  std::ranges::for_each(volumesById,
-                        [&usedGeoIds](const TrackingVolume *volume) {
-                          if (volume != nullptr) {
-                            auto id = volume->geometryId();
-                            if (id != GeometryIdentifier{}) {
-                              usedGeoIds[id.volume() - 1] = id;
-                            }
-                          }
-                        });
-
-  BlueprintVisitor visitor{logger, usedGeoIds};
+  BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
 
   return std::make_unique<TrackingGeometry>(

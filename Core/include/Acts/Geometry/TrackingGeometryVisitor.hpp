@@ -28,19 +28,19 @@ class BoundarySurfaceT;
 /// outermost volume and goes deeper to the volumes into the hierarchy.
 class ITrackingGeometryVisitor {
  public:
-  virtual ~ITrackingGeometryVisitor() = default;
+  virtual ~ITrackingGeometryVisitor() = 0;
 
-  explicit ITrackingGeometryVisitor(bool visitInDepth = true)
-      : m_visitInDepth(visitInDepth) {}
+  explicit ITrackingGeometryVisitor(bool visitDepthFirst = false)
+      : m_visitDepthFirst(visitDepthFirst) {}
 
   /// @brief indicate the order of visiting
   /// @note default is outermost --> innermost volume visiting
-  bool visitInDepth() const { return m_visitInDepth; }
+  bool visitDepthFirst() const { return m_visitDepthFirst; }
 
  private:
   /// Flag to indicate if the visitor should follow from the outermost to the
   /// innermost volume depth
-  bool m_visitInDepth{true};
+  bool m_visitDepthFirst{false};
 };
 
 /// @brief Visitor interface for traversing the tracking geometry hierarchy

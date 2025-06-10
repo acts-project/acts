@@ -717,7 +717,7 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   // if the visitor is configured for inner--->outer volume visiting we visit
   // the children first
-  if (!visitor.visitInDepth()) {
+  if (visitor.visitDepthFirst()) {
     for (auto& volume : volumes()) {
       volume.apply(visitor);
     }
@@ -781,7 +781,7 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  if (visitor.visitInDepth()) {
+  if (!visitor.visitDepthFirst()) {
     // if the visitor is configured for outer--->inner volume visiting we visit
     // the children last
     for (auto& volume : volumes()) {
