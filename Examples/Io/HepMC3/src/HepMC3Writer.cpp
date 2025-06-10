@@ -13,7 +13,6 @@
 
 #include <filesystem>
 #include <stdexcept>
-#include <thread>
 
 #include <HepMC3/Version.h>
 #include <HepMC3/WriterAscii.h>
