@@ -54,7 +54,7 @@ class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor from base class
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  virtual ~TrackingGeometryVisitor();
+  ~TrackingGeometryVisitor() override;
 
   /// @brief Visit a tracking volume in the geometry
   /// @param volume The tracking volume being visited
@@ -94,7 +94,7 @@ class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
   /// @brief Constructor
   using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
 
-  virtual ~TrackingGeometryMutableVisitor();
+  ~TrackingGeometryMutableVisitor() override;
 
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
