@@ -512,6 +512,7 @@ class SpacePointContainer2 {
       throw std::runtime_error("Extra column already exists: " + name);
     }
     auto holder = std::make_unique<Holder>();
+    holder->resize(size());
     auto &result = holder->column;
     m_extraColumns[name] = std::move(holder);
     return result;
