@@ -8,18 +8,19 @@ new major version. The `Conventional Commits
 requests to track the type of changes that have been merged and ensure that the
 version number is increased correctly.
 
-Since ACTS is still under active development, so we create **major** versions
-that break API relatively frequently. We try to limit breaking changes to about
+Since ACTS is still under active development, we create **major** versions
+that break the API relatively frequently. We try to limit breaking changes to about
 once a month.
 
 Public API
 ----------
 
-The API surface of ACTS is very large. Everything at the top-level in the ``Acts`` is considered public.
+The API surface of ACTS is very large. Everything at the top-level in the ``Acts``-namespace is considered public.
 
 .. note::
-    If a private a symbol is part of an otherwise public API, this should be
-    **considered a bug**, which we'd appreciate being reported as an issue.
+    If a private a symbol, e.g. in a the `Acts::detail` or `Acts::Experimental` namespaces 
+    is part of an otherwise public API, this should be **considered a bug**, which we'd 
+    appreciate being reported as an issue.
 
 There are a number of optional components in the ``Plugins/`` folder, only some of which are considered part of the public API:
 
