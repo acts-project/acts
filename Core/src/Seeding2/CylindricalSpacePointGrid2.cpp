@@ -8,9 +8,7 @@
 
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 
-namespace Acts {
-
-using namespace UnitLiterals;
+namespace Acts::Experimental {
 
 CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     const Config& config, std::unique_ptr<const Logger> _logger)
@@ -219,4 +217,4 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
   return {minRange, maxRange};
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

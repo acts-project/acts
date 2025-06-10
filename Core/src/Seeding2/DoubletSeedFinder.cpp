@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
     float bFieldInZ) const {
@@ -279,4 +279,4 @@ template void DoubletSeedFinder::createDoublets<DoubletSeedFinder::eTop>(
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets);
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

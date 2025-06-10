@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 using SpacePointIndex2 = std::size_t;
 using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
@@ -670,4 +670,4 @@ inline ConstSpacePointProxy2 SpacePointContainer2::at(IndexType index) const {
   return ConstProxyType(*this, index);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

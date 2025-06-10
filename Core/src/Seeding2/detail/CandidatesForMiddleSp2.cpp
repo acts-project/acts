@@ -10,7 +10,7 @@
 
 #include <limits>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
                                             std::size_t nHigh) {
@@ -287,4 +287,4 @@ bool CandidatesForMiddleSp2::ascendingByQuality(
   return !descendingByQuality(spacePoints, i1, i2);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

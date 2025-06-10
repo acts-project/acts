@@ -12,7 +12,7 @@
 
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief A description of a triplet candidate.
 struct TripletCandidate2 {
@@ -188,4 +188,4 @@ class CandidatesForMiddleSp2 {
   std::vector<std::size_t> m_indicesLow{};
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
