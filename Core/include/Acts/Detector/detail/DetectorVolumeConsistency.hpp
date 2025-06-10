@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -45,10 +45,10 @@ void checkRotationAlignment(
 /// @note throws exception if the volumes are not ordered
 ///
 /// @return a vector with position differences (ordered)
-std::vector<ActsScalar> checkCenterAlignment(
+std::vector<double> checkCenterAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
-    BinningValue axisValue);
+    AxisDirection axisValue);
 
 }  // namespace detail::DetectorVolumeConsistency
 }  // namespace Acts::Experimental

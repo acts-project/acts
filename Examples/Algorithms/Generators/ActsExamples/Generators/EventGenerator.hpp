@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,14 +18,17 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+namespace HepMC3 {
+class GenEvent;
+class GenVertex;
+}  // namespace HepMC3
+
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Event generator based on separate particles and vertex generators.
 ///
@@ -79,8 +82,7 @@ class EventGenerator final : public ActsExamples::IReader {
     ///
     /// @param rng Shared random number generator instance
     /// @return The vertex and particle containers
-    virtual std::pair<SimVertexContainer, SimParticleContainer> operator()(
-        RandomEngine& rng) = 0;
+    virtual std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) = 0;
   };
 
   /// @brief Combined struct which contains all generator components
@@ -91,14 +93,17 @@ class EventGenerator final : public ActsExamples::IReader {
   };
 
   struct Config {
-    /// Name of the output particles collection.
-    std::string outputParticles;
-    /// Name of the vertex collection.
-    std::string outputVertices;
+    /// Name of the output event collection.
+    std::optional<std::string> outputEvent = "hepmc3_event";
+
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
     /// The random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
+
+    /// If true, print the listing of the generated event. This can be very
+    /// verbose
+    bool printListing = false;
   };
 
   EventGenerator(const Config& cfg, Acts::Logging::Level lvl);
@@ -117,12 +122,17 @@ class EventGenerator final : public ActsExamples::IReader {
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 
+  void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
+                    std::vector<SimVertex>& vertices,
+                    std::vector<SimParticle>& particles,
+                    std::size_t& nSecondaryVertices, std::size_t& nParticles,
+                    std::vector<bool>& seenVertices);
+
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
-                                                          "OutputParticles"};
-  WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
+      this, "OutputEvent"};
 };
 
 }  // namespace ActsExamples

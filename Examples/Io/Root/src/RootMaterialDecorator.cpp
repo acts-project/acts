@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
@@ -19,6 +19,7 @@
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousVolumeMaterial.hpp>
+#include <Acts/Utilities/AxisDefinitions.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
 #include <Acts/Utilities/BinningType.hpp>
 
@@ -111,12 +112,12 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       Acts::GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
 
       // Reconstruct the geometry ID
-      Acts::GeometryIdentifier geoID;
-      geoID.setVolume(volID);
-      geoID.setBoundary(bouID);
-      geoID.setLayer(layID);
-      geoID.setApproach(appID);
-      geoID.setSensitive(senID);
+      auto geoID = Acts::GeometryIdentifier()
+                       .withVolume(volID)
+                       .withBoundary(bouID)
+                       .withLayer(layID)
+                       .withApproach(appID)
+                       .withSensitive(senID);
       ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
       // Construct the names
@@ -148,15 +149,16 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
 
       // Only go on when you have all histograms
-      if (std::all_of(hists.begin(), hists.end(),
-                      [](const auto* hist) { return hist != nullptr; })) {
+      if (std::ranges::all_of(
+              hists, [](const auto* hist) { return hist != nullptr; })) {
         // Get the number of bins
         int nbins0 = t->GetNbinsX();
         int nbins1 = t->GetNbinsY();
 
         // The material matrix
         Acts::MaterialSlabMatrix materialMatrix(
-            nbins1, Acts::MaterialSlabVector(nbins0, Acts::MaterialSlab()));
+            nbins1,
+            Acts::MaterialSlabVector(nbins0, Acts::MaterialSlab::Nothing()));
 
         // We need binned material properties
         if (nbins0 * nbins1 > 1) {
@@ -183,10 +185,8 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            Acts::BinningValue val =
-                static_cast<Acts::BinningValue>(v->GetBinContent(ib));
-            Acts::BinningOption opt =
-                static_cast<Acts::BinningOption>(o->GetBinContent(ib));
+            auto val = static_cast<Acts::AxisDirection>(v->GetBinContent(ib));
+            auto opt = static_cast<Acts::BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
             float rmax = max->GetBinContent(ib);
             bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
@@ -225,8 +225,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       Acts::GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
 
       // Reconstruct the geometry ID
-      Acts::GeometryIdentifier geoID;
-      geoID.setVolume(volID);
+      auto geoID = Acts::GeometryIdentifier().withVolume(volID);
       ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
       // Construct the names
@@ -268,8 +267,8 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            Acts::BinningValue val =
-                static_cast<Acts::BinningValue>(v->GetBinContent(ib));
+            Acts::AxisDirection val =
+                static_cast<Acts::AxisDirection>(v->GetBinContent(ib));
             Acts::BinningOption opt =
                 static_cast<Acts::BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);

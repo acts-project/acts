@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,9 +12,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
-
-#include <array>
-#include <memory>
 
 namespace Acts {
 
@@ -45,20 +42,7 @@ class MagneticFieldProvider {
   virtual Result<Vector3> getField(const Vector3& position,
                                    Cache& cache) const = 0;
 
-  /// Retrieve magnetic field value its its gradient. Requires a cache object
-  /// created through makeCache().
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @param [in,out] cache Field provider specific cache object
-  /// @return magnetic field vector
-  virtual Result<Vector3> getFieldGradient(const Vector3& position,
-                                           ActsMatrix<3, 3>& derivative,
-                                           Cache& cache) const = 0;
-
-  virtual ~MagneticFieldProvider();
+  virtual ~MagneticFieldProvider() = default;
 };
-
-inline MagneticFieldProvider::~MagneticFieldProvider() = default;
 
 }  // namespace Acts

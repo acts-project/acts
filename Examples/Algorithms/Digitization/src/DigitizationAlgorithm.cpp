@@ -1,46 +1,35 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstdint>
 #include <limits>
 #include <ostream>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    DigitizationConfig config, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("DigitizationAlgorithm", level),
-      m_cfg(std::move(config)) {
+namespace ActsExamples {
+
+DigitizationAlgorithm::DigitizationAlgorithm(Config config,
+                                             Acts::Logging::Level level)
+    : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
@@ -55,9 +44,6 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   }
 
   if (m_cfg.doClusterization) {
-    if (m_cfg.outputSourceLinks.empty()) {
-      throw std::invalid_argument("Missing source links output collection");
-    }
     if (m_cfg.outputMeasurements.empty()) {
       throw std::invalid_argument("Missing measurements output collection");
     }
@@ -72,14 +58,23 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
       throw std::invalid_argument(
           "Missing hit-to-simulated-hits map output collection");
     }
+    if (m_cfg.outputParticleMeasurementsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing particle-to-measurements map output collection");
+    }
+    if (m_cfg.outputSimHitMeasurementsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing particle-to-simulated-hits map output collection");
+    }
 
-    m_sourceLinkWriteHandle.initialize(m_cfg.outputSourceLinks);
-    m_measurementWriteHandle.initialize(m_cfg.outputMeasurements);
-    m_clusterWriteHandle.initialize(m_cfg.outputClusters);
-    m_measurementParticlesMapWriteHandle.initialize(
+    m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputClusters.initialize(m_cfg.outputClusters);
+    m_outputMeasurementParticlesMap.initialize(
         m_cfg.outputMeasurementParticlesMap);
-    m_measurementSimHitsMapWriteHandle.initialize(
-        m_cfg.outputMeasurementSimHitsMap);
+    m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+    m_outputParticleMeasurementsMap.initialize(
+        m_cfg.outputParticleMeasurementsMap);
+    m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
   }
 
   if (m_cfg.doOutputCells) {
@@ -87,10 +82,10 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
       throw std::invalid_argument("Missing cell output collection");
     }
 
-    m_cellsWriteHandle.initialize(m_cfg.outputCells);
+    m_outputCells.initialize(m_cfg.outputCells);
   }
 
-  m_simContainerReadHandle.initialize(m_cfg.inputSimHits);
+  m_inputHits.initialize(m_cfg.inputSimHits);
 
   // Create the digitizers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
@@ -105,7 +100,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
     std::vector<Acts::BoundIndices> indices;
-    for (auto& gcf : smCfg) {
+    for (auto& gcf : smCfg.params) {
       indices.push_back(gcf.index);
     }
     indices.insert(indices.begin(), geoCfg.indices.begin(),
@@ -120,7 +115,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
           "Digitization configuration contains duplicate parameter indices");
     }
 
-    switch (smCfg.size()) {
+    switch (smCfg.params.size()) {
       case 0u:
         digitizerInput.emplace_back(geoId, makeDigitizer<0u>(digiCfg));
         break;
@@ -144,20 +139,18 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 }
 
-ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Retrieve input
-  const auto& simHits = m_simContainerReadHandle(ctx);
+  const auto& simHits = m_inputHits(ctx);
   ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
 
   // Prepare output containers
   // need list here for stable addresses
-  IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
-  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
+
+  IndexMultimap<SimBarcode> measurementParticlesMap;
   IndexMultimap<Index> measurementSimHitsMap;
-  sourceLinks.reserve(simHits.size());
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
@@ -278,7 +271,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           // Store the cell data into a map.
           if (m_cfg.doOutputCells) {
             std::vector<Cluster::Cell> cells;
-            for (const auto& [dParameters, simhits] :
+            for (const auto& [dParameters, simHitsIdxs] :
                  digitizeParametersResult) {
               for (const auto& cell : dParameters.cluster.channels) {
                 cells.push_back(cell);
@@ -288,28 +281,18 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           }
 
           if (m_cfg.doClusterization) {
-            for (auto& [dParameters, simhits] : digitizeParametersResult) {
-              // The measurement container is unordered and the index under
-              // which the measurement will be stored is known before adding it.
-              Index measurementIdx = measurements.size();
-              IndexSourceLink sourceLink{moduleGeoId, measurementIdx};
-
-              // Add to output containers:
-              // index map and source link container are geometry-ordered.
-              // since the input is also geometry-ordered, new items can
-              // be added at the end.
-              sourceLinks.insert(sourceLinks.end(), sourceLink);
-
-              createMeasurement(measurements, dParameters, sourceLink);
+            for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
+              auto measurement =
+                  createMeasurement(measurements, moduleGeoId, dParameters);
               clusters.emplace_back(std::move(dParameters.cluster));
-              // this digitization does hit merging so there can be more than
-              // one mapping entry for each digitized hit.
-              for (auto simHitIdx : simhits) {
+
+              for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
                 measurementParticlesMap.emplace_hint(
-                    measurementParticlesMap.end(), measurementIdx,
+                    measurementParticlesMap.end(), measurement.index(),
                     simHits.nth(simHitIdx)->particleId());
                 measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                                   measurementIdx, simHitIdx);
+                                                   measurement.index(),
+                                                   simHitIdx);
               }
             }
           }
@@ -323,24 +306,28 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
         << " skipped in Digitization. Enable DEBUG mode to see more details.");
   }
 
-  if (m_cfg.doOutputCells) {
-    m_cellsWriteHandle(ctx, std::move(cellsMap));
+  if (m_cfg.doClusterization) {
+    m_outputMeasurements(ctx, std::move(measurements));
+    m_outputClusters(ctx, std::move(clusters));
+
+    // invert them before they are moved
+    m_outputParticleMeasurementsMap(
+        ctx, invertIndexMultimap(measurementParticlesMap));
+    m_outputSimHitMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementSimHitsMap));
+
+    m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+    m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
   }
 
-  if (m_cfg.doClusterization) {
-    m_sourceLinkWriteHandle(ctx, std::move(sourceLinks));
-    m_measurementWriteHandle(ctx, std::move(measurements));
-    m_clusterWriteHandle(ctx, std::move(clusters));
-    m_measurementParticlesMapWriteHandle(ctx,
-                                         std::move(measurementParticlesMap));
-    m_measurementSimHitsMapWriteHandle(ctx, std::move(measurementSimHitsMap));
+  if (m_cfg.doOutputCells) {
+    m_outputCells(ctx, std::move(cellsMap));
   }
 
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::DigitizedParameters
-ActsExamples::DigitizationAlgorithm::localParameters(
+DigitizedParameters DigitizationAlgorithm::localParameters(
     const GeometricConfig& geoCfg,
     const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
@@ -348,27 +335,39 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
-  Acts::ActsScalar totalWeight = 0.;
-  Acts::Vector2 m(0., 0.);
-  std::size_t b0min = std::numeric_limits<std::size_t>::max();
-  std::size_t b0max = 0;
-  std::size_t b1min = std::numeric_limits<std::size_t>::max();
-  std::size_t b1max = 0;
+  // For digital readout, the weight needs to be split in x and y
+  std::array<double, 2u> pos = {0., 0.};
+  std::array<double, 2u> totalWeight = {0., 0.};
+  std::array<std::size_t, 2u> bmin = {std::numeric_limits<std::size_t>::max(),
+                                      std::numeric_limits<std::size_t>::max()};
+  std::array<std::size_t, 2u> bmax = {0, 0};
+
+  // The component digital store
+  std::array<std::set<std::size_t>, 2u> componentChannels;
+
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    Acts::ActsScalar charge =
-        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
-    if (geoCfg.digital || charge > geoCfg.threshold) {
-      totalWeight += charge;
-      std::size_t b0 = bin[0];
-      std::size_t b1 = bin[1];
-      m += Acts::Vector2(charge * binningData[0].center(b0),
-                         charge * binningData[1].center(b1));
-      b0min = std::min(b0min, b0);
-      b0max = std::max(b0max, b0);
-      b1min = std::min(b1min, b1);
-      b1max = std::max(b1max, b1);
+    double charge = geoCfg.charge(ch.activation, rng);
+    // Loop and check
+    if (charge > geoCfg.threshold) {
+      double weight = geoCfg.digital ? 1. : charge;
+      for (std::size_t ib = 0; ib < 2; ++ib) {
+        if (geoCfg.digital && geoCfg.componentDigital) {
+          // only fill component of this row/column if not yet filled
+          if (!componentChannels[ib].contains(bin[ib])) {
+            totalWeight[ib] += weight;
+            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            componentChannels[ib].insert(bin[ib]);
+          }
+        } else {
+          totalWeight[ib] += weight;
+          pos[ib] += weight * binningData[ib].center(bin[ib]);
+        }
+        // min max channels
+        bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));
+        bmax[ib] = std::max(bmax[ib], static_cast<std::size_t>(bin[ib]));
+      }
       // Create a copy of the channel, as activation may change
       auto chdig = ch;
       chdig.bin = ch.bin;
@@ -376,19 +375,22 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       dParameters.cluster.channels.push_back(chdig);
     }
   }
-  if (totalWeight > 0.) {
-    m *= 1. / totalWeight;
+  if (totalWeight[0] > 0. && totalWeight[1] > 0.) {
+    pos[0] /= totalWeight[0];
+    pos[1] /= totalWeight[1];
     dParameters.indices = geoCfg.indices;
     for (auto idx : dParameters.indices) {
-      dParameters.values.push_back(m[idx]);
+      dParameters.values.push_back(pos[idx]);
     }
-    std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
-    std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
+    std::size_t size0 = (bmax[0] - bmin[0] + 1);
+    std::size_t size1 = (bmax[1] - bmin[1] + 1);
 
-    dParameters.variances = geoCfg.variances({size0, size1}, {b0min, b1min});
+    dParameters.variances = geoCfg.variances({size0, size1}, bmin);
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
   }
 
   return dParameters;
 }
+
+}  // namespace ActsExamples

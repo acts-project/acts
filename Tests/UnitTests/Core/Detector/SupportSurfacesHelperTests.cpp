@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -42,8 +43,8 @@ BOOST_AUTO_TEST_CASE(CylindricalSupportCase) {
   // phi max = 2pi
 
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binR, 100., 110.);
-  lExtent.set(Acts::BinningValue::binZ, -400., 400.);
+  lExtent.set(Acts::AxisDirection::AxisR, 100., 110.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -400., 400.);
 
   // Test creation of surface components
   CylindricalSupport csCreator{10., {1., 1.}};
@@ -97,11 +98,11 @@ BOOST_AUTO_TEST_CASE(DiscSupportCase) {
   // As a single disc
   // rmin = 100
   // rmax = 400
-  /// phi min = 0
+  // phi min = 0
   // phi max = 2pi
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binR, 100., 400.);
-  lExtent.set(Acts::BinningValue::binZ, -405., -395.);
+  lExtent.set(Acts::AxisDirection::AxisR, 100., 400.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -405., -395.);
 
   // Test creation of surface components
   DiscSupport dsCreator{0., {1., 1.}};
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(DiscSupportCase) {
   dsValues = {120., 399.};
   BOOST_CHECK_THROW(cylindricalSupport(dsComponents), std::invalid_argument);
 
-  dsValues = {120., 399., M_PI, 0.};
+  dsValues = {120., 399., std::numbers::pi, 0.};
   dsType = Acts::Surface::SurfaceType::Cylinder;
   BOOST_CHECK_THROW(cylindricalSupport(dsComponents), std::invalid_argument);
 }
@@ -161,14 +162,14 @@ BOOST_AUTO_TEST_CASE(RectangularSupportCase) {
   // dy = [-200,200]
   // dz = [-50, -60]
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binX, -100., 100.);
-  lExtent.set(Acts::BinningValue::binY, -200., 200.);
-  lExtent.set(Acts::BinningValue::binZ, -60., -50.);
+  lExtent.set(Acts::AxisDirection::AxisX, -100., 100.);
+  lExtent.set(Acts::AxisDirection::AxisY, -200., 200.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -60., -50.);
 
   // place in Z with offset 2_mm
   // Asymmetric clearances in x an y for testing
   RectangularSupport rsCreator{
-      Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
+      Acts::AxisDirection::AxisZ, 2., {1., 2.}, {3., 4.}};
   auto rsComponents = rsCreator(lExtent);
   auto& [rsType, rsValues, rsTransform] = rsComponents;
 
@@ -191,8 +192,8 @@ BOOST_AUTO_TEST_CASE(RectangularSupportCase) {
 
   // Invalid / runtime checks
   Acts::Extent invalid;
-  invalid.set(Acts::BinningValue::binX, -100., 100.);
-  invalid.set(Acts::BinningValue::binY, -200., 200.);
+  invalid.set(Acts::AxisDirection::AxisX, -100., 100.);
+  invalid.set(Acts::AxisDirection::AxisY, -200., 200.);
   BOOST_CHECK_THROW(rsCreator(invalid), std::invalid_argument);
 }
 
@@ -208,8 +209,8 @@ BOOST_AUTO_TEST_CASE(addCylinderSupportCase) {
   // -> did yield and extend of 100 < r 110
   // The volume would give an extend of -400 < z < 400
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binR, 100., 110.);
-  lExtent.set(Acts::BinningValue::binZ, -400., 400.);
+  lExtent.set(Acts::AxisDirection::AxisR, 100., 110.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -400., 400.);
 
   // Cylinder support
   CylindricalSupport csCreator{10., {1., 1.}};
@@ -248,8 +249,8 @@ BOOST_AUTO_TEST_CASE(addDiscSupportCase) {
 
   // The Extent
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binR, 100., 400.);
-  lExtent.set(Acts::BinningValue::binZ, -110., -100.);
+  lExtent.set(Acts::AxisDirection::AxisR, 100., 400.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -110., -100.);
 
   // Disc support: this would set the disc at the center
   DiscSupport dsCreator{0., {1., 1.}};
@@ -290,14 +291,14 @@ BOOST_AUTO_TEST_CASE(addRectangularSupportCase) {
   // dy = [-200,200]
   // dz = [-50, -60]
   Acts::Extent lExtent;
-  lExtent.set(Acts::BinningValue::binX, -100., 100.);
-  lExtent.set(Acts::BinningValue::binY, -200., 200.);
-  lExtent.set(Acts::BinningValue::binZ, -60., -50.);
+  lExtent.set(Acts::AxisDirection::AxisX, -100., 100.);
+  lExtent.set(Acts::AxisDirection::AxisY, -200., 200.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -60., -50.);
 
   // place in Z with offset 2_mm
   // Asymmetric clearances in x an y for testing
   RectangularSupport rsCreator{
-      Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
+      Acts::AxisDirection::AxisZ, 2., {1., 2.}, {3., 4.}};
 
   // Add a single disc as a support surface
   Acts::Experimental::detail::SupportSurfacesHelper::addSupport(
@@ -336,14 +337,14 @@ BOOST_AUTO_TEST_CASE(addMisconfiguredSupportCase) {
       std::invalid_argument);
 
   // The Extent
-  lExtent.set(Acts::BinningValue::binR, 100., 400.);
-  lExtent.set(Acts::BinningValue::binZ, -110., -100.);
+  lExtent.set(Acts::AxisDirection::AxisR, 100., 400.);
+  lExtent.set(Acts::AxisDirection::AxisZ, -110., -100.);
 
   // Wrong surface type
   struct InvalidCreator {
     auto operator()(const Acts::Extent& /*e*/) const {
       return std::make_tuple(Acts::Surface::SurfaceType::Perigee,
-                             std::vector<Acts::ActsScalar>{},
+                             std::vector<double>{},
                              Acts::Transform3::Identity());
     }
   };

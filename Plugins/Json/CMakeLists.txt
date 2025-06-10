@@ -15,6 +15,7 @@ add_library(
     src/MaterialJsonConverter.cpp
     src/PortalJsonConverter.cpp
     src/ProtoDetectorJsonConverter.cpp
+    src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp
     src/UtilitiesJsonConverter.cpp
@@ -22,6 +23,8 @@ add_library(
     src/VolumeJsonConverter.cpp
     src/AmbiguityConfigJsonConverter.cpp
     src/DetrayJsonHelper.cpp
+    src/JsonDetectorElement.cpp
+    src/JsonSurfacesReader.cpp
 )
 target_include_directories(
     ActsPluginJson

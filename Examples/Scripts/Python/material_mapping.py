@@ -46,7 +46,7 @@ def runMaterialMapping(
 
     wb = WhiteBoard(acts.logging.INFO)
 
-    context = AlgorithmContext(0, 0, wb)
+    context = AlgorithmContext(0, 0, wb, 0)
 
     for decorator in decorators:
         assert decorator.decorate(context) == ProcessCode.SUCCESS
@@ -155,7 +155,9 @@ if "__main__" == __name__:
 
     mapName = args.outFile.split(".")[0]
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(None)
+    detector = getOpenDataDetector(None)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     runMaterialMapping(
         trackingGeometry,

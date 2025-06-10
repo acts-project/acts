@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Volume.hpp"
 
@@ -33,13 +33,13 @@ Volume::Volume(const Volume& vol, const Transform3& shift)
       m_center(m_transform.translation()),
       m_volumeBounds(vol.m_volumeBounds) {}
 
-Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
-                                BinningValue bValue) const {
+Vector3 Volume::referencePosition(const GeometryContext& /*gctx*/,
+                                  AxisDirection aDir) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
-  if (bValue == BinningValue::binR || bValue == BinningValue::binRPhi) {
+  if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     // the binning Position for R-type may have an offset
-    return (center() + m_volumeBounds->binningOffset(bValue));
+    return (center() + m_volumeBounds->referenceOffset(aDir));
   }
   // return the center
   return center();
@@ -55,7 +55,7 @@ Volume& Volume::operator=(const Volume& vol) {
   return *this;
 }
 
-bool Volume::inside(const Vector3& gpos, ActsScalar tol) const {
+bool Volume::inside(const Vector3& gpos, double tol) const {
   Vector3 posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
@@ -79,7 +79,8 @@ void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
 }
 
 void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
-                    std::optional<Transform3> transform) {
+                    std::optional<Transform3> transform,
+                    const Logger& /*logger*/) {
   if (volbounds) {
     m_volumeBounds = std::move(volbounds);
   }
@@ -125,10 +126,6 @@ void Volume::setTransform(const Transform3& transform) {
 bool Volume::operator==(const Volume& other) const {
   return (m_transform.matrix() == other.m_transform.matrix()) &&
          (*m_volumeBounds == *other.m_volumeBounds);
-}
-
-bool Volume::operator!=(const Volume& other) const {
-  return !(*this == other);
 }
 
 void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,

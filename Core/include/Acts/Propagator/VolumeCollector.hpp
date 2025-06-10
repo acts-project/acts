@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,8 +25,8 @@ struct VolumeSelector {
   /// @param sMaterial is the directive to select material volumes
   /// @param sLayer is the directive to select volumes with layers
   /// @param sPassive is the directive to select passive volumes
-  VolumeSelector(bool sMaterial = true, bool sLayer = false,
-                 bool sPassive = false)
+  explicit VolumeSelector(bool sMaterial = true, bool sLayer = false,
+                          bool sPassive = false)
       : selectMaterial(sMaterial),
         selectLayer(sLayer),
         selectPassive(sPassive) {}
@@ -91,9 +91,9 @@ struct VolumeCollector {
   /// @param logger the logger object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& logger) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& logger) const {
     auto currentVolume = navigator.currentVolume(state.navigation);
 
     // The current volume has been assigned by the navigator

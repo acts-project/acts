@@ -1,23 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 /// This file implements the tools for a hough transform.
 
 #pragma once
-#include "Acts/Utilities/Delegate.hpp"
+
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <array>
-#include <map>
-#include <optional>
-#include <set>
 #include <span>
 #include <unordered_set>
 
@@ -162,7 +157,7 @@ class HoughPlane {
 
   /// @brief instantiate the (empty) hough plane
   /// @param cfg: configuration
-  HoughPlane(const HoughPlaneConfig& cfg);
+  explicit HoughPlane(const HoughPlaneConfig& cfg);
 
   /// fill and reset methods to modify the grid content
 
@@ -327,7 +322,7 @@ class LayerGuidedCombinatoric {
   };
   /// @brief constructor
   /// @param cfg: Configuration object
-  LayerGuidedCombinatoric(const LayerGuidedCombinatoricConfig& cfg);
+  explicit LayerGuidedCombinatoric(const LayerGuidedCombinatoricConfig& cfg);
 
   /// @brief main peak finder method.
   /// @param plane: Filled hough plane to search
@@ -376,7 +371,7 @@ class IslandsAroundMax {
   };
   /// @brief constructor.
   /// @param cfg: configuration object
-  IslandsAroundMax(const IslandsAroundMaxConfig& cfg);
+  explicit IslandsAroundMax(const IslandsAroundMaxConfig& cfg);
 
   /// @brief main peak finder method.
   /// @param plane: The filled hough plane to search

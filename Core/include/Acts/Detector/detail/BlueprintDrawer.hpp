@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -55,7 +55,7 @@ struct Options {
 /// @param ss the stream into which the dot output should be written
 /// @param node the node to be drawn
 /// @param options the options for the drawer
-void dotStream(std::ostream& ss, const Blueprint::Node& node,
+void dotStream(std::ostream& ss, const Gen2Blueprint::Node& node,
                const Options& options = Options{});
 
 }  // namespace Acts::Experimental::detail::BlueprintDrawer

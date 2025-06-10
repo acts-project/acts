@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
@@ -16,11 +16,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
-    const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
-    Scalar rndTheta2, Scalar rndTheta3) const {
+    const Particle &particle, double gammaE, double rndPsi, double rndTheta1,
+    double rndTheta2, double rndTheta3) const {
   // ------------------------------------------------------
   // simple approach
   // (a) simulate theta uniform within the opening angle of the relativistic
@@ -30,10 +31,10 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
   // later
   //      the azimutal angle
 
-  Scalar psi = 2. * M_PI * rndPsi;
+  double psi = 2. * std::numbers::pi * rndPsi;
 
   // the start of the equation
-  Scalar theta = 0.;
+  double theta = 0.;
   if (uniformHertzDipoleAngle) {
     // the simplest simulation
     theta = particle.mass() / particle.energy() * rndTheta1;
@@ -41,20 +42,20 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     // ----->
     theta = particle.mass() / particle.energy();
     // follow
-    constexpr Scalar a = 0.625;  // 5/8
-    Scalar u = -log(rndTheta2 * rndTheta3) / a;
+    constexpr double a = 0.625;  // 5/8
+    double u = -log(rndTheta2 * rndTheta3) / a;
     theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
   }
 
-  Vector3 particleDirection = particle.direction();
-  Vector3 photonDirection = particleDirection;
+  Acts::Vector3 particleDirection = particle.direction();
+  Acts::Vector3 photonDirection = particleDirection;
 
   // construct the combined rotation to the scattered direction
   Acts::RotationMatrix3 rotation(
       // rotation of the scattering deflector axis relative to the reference
       Acts::AngleAxis3(psi, particleDirection) *
       // rotation by the scattering angle around the deflector axis
-      Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(particleDirection)));
+      Acts::AngleAxis3(theta, Acts::createCurvilinearUnitU(particleDirection)));
   photonDirection.applyOnTheLeft(rotation);
 
   Particle photon(particle.particleId().makeDescendant(0),

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -53,8 +53,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
   // The surfaces for the KDTree structure
   std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces;
   // Fill Discs
-  std::vector<Acts::ActsScalar> pixelDiscs = {-800., -700., -600.,
-                                              600.,  700.,  800.};
+  std::vector<double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
   for (const auto& z : pixelDiscs) {
     auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                             55., z, 2., 22u);
@@ -63,7 +62,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
                          urSurfaces.end());
   }
   // Fill Barrels
-  std::vector<Acts::ActsScalar> pixelBarrels = {32., 72., 116., 172.};
+  std::vector<double> pixelBarrels = {32., 72., 116., 172.};
   std::vector<std::pair<int, int>> pixelBinning = {
       {16, 14}, {32, 14}, {52, 14}, {78, 14}};
   for (auto [ir, r] : enumerate(pixelBarrels)) {
@@ -100,12 +99,12 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
 
   using KDTS = Acts::Experimental::KdtSurfaces<>;
   auto skdt = std::make_shared<KDTS>(
-      KDTS(tContext, pSurfaces, {BinningValue::binZ, BinningValue::binR}));
+      KDTS(tContext, pSurfaces, {AxisDirection::AxisZ, AxisDirection::AxisR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
   Acts::Extent regionND3;
-  regionND3.set(BinningValue::binZ, -820, -780);
-  regionND3.set(BinningValue::binR, 0., 200.);
+  regionND3.set(AxisDirection::AxisZ, -820, -780);
+  regionND3.set(AxisDirection::AxisR, 0., 200.);
   Acts::Experimental::KdtSurfacesProvider<> end3(skdt, regionND3);
 
   auto nd3 = end3.surfaces(tContext);
@@ -113,8 +112,8 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
 
   // query: 2nd Pixel barrel
   Acts::Extent regionB1;
-  regionB1.set(BinningValue::binZ, -580, 580);
-  regionB1.set(BinningValue::binR, 60., 80.);
+  regionB1.set(AxisDirection::AxisZ, -580, 580);
+  regionB1.set(AxisDirection::AxisR, 60., 80.);
 
   Acts::Experimental::KdtSurfacesProvider<> ba1(skdt, regionB1);
 

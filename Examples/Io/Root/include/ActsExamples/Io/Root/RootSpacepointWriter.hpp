@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -37,6 +38,8 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   struct Config {
     /// Input particle collection to write.
     std::string inputSpacepoints;
+    /// Input measurement particles map (optional)
+    std::string inputMeasurementParticlesMap;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.
@@ -69,6 +72,9 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
                      const SimSpacePointContainer& spacepoints) final;
 
  private:
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+
   Config m_cfg;
   std::mutex m_writeMutex;
   TFile* m_outputFile = nullptr;
@@ -76,16 +82,21 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// Event identifier.
   std::uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  std::uint64_t m_measurementId = 0;
+  std::uint64_t m_measurementId1 = 0;
+  std::uint64_t m_measurementId2 = 0;
   /// Space point surface identifier.
-  std::uint64_t m_geometryId = 0;
+  std::uint64_t m_geometryId1 = 0;
+  std::uint64_t m_geometryId2 = 0;
   /// Global space point position components in mm.
   float m_x = std::numeric_limits<float>::infinity();
   float m_y = std::numeric_limits<float>::infinity();
   float m_z = std::numeric_limits<float>::infinity();
+  float m_r = std::numeric_limits<float>::infinity();
   // Global space point position uncertainties
   float m_var_r = std::numeric_limits<float>::infinity();
   float m_var_z = std::numeric_limits<float>::infinity();
+  // Fake spacepoint (only relevant for strip)
+  bool m_fake{};
 };
 
 }  // namespace ActsExamples

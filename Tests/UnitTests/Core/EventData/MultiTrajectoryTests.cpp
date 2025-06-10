@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/context.hpp>
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
     static_cast<void>(tsp);
-    VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
+    VectorMultiTrajectory::ConstTrackStateProxy ctsp{t.getTrackState(i0)};
     static_cast<void>(ctsp);
 
     tsp.predicted().setRandom();
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   }
 
   // is this something we actually want?
-  ConstVectorMultiTrajectory ct = t;
+  ConstVectorMultiTrajectory ct{t};
   BOOST_CHECK_EQUAL(ct.size(), t.size());
 
   ConstVectorMultiTrajectory ctm{std::move(t)};
@@ -201,6 +201,11 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
 BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   CommonTests ct;
   ct.testMultiTrajectoryExtraColumnsRuntime();
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryAllocateCalibratedInit) {
+  CommonTests ct;
+  ct.testMultiTrajectoryAllocateCalibratedInit(rng);
 }
 
 BOOST_AUTO_TEST_CASE(MemoryStats) {

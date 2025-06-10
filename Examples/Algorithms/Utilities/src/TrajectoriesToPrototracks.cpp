@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 
@@ -16,7 +17,6 @@
 #include <vector>
 
 namespace ActsExamples {
-class IndexSourceLink;
 struct AlgorithmContext;
 
 TrajectoriesToPrototracks::TrajectoriesToPrototracks(Config cfg,
@@ -41,9 +41,9 @@ ProcessCode TrajectoriesToPrototracks::execute(
           return true;
         }
 
-        auto source_link =
+        const auto sourceLink =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
-        track.push_back(source_link.index());
+        track.push_back(sourceLink.index());
 
         return true;
       });

@@ -1,23 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <string>
 #include <unordered_map>
@@ -31,8 +33,6 @@
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
 #include <boost/version.hpp>
-
-class G4PrimaryParticle;
 
 #if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>
@@ -52,61 +52,81 @@ BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
 
 namespace {
 
-ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
-                            const G4StepPoint* postStepPoint,
-                            ActsFatras::Barcode particleId,
-                            Acts::GeometryIdentifier geoId,
-                            std::int32_t index) {
-  static constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
+std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
-  G4ThreeVector preStepPosition = convertLength * preStepPoint->GetPosition();
-  G4double preStepTime = convertTime * preStepPoint->GetGlobalTime();
-  G4ThreeVector postStepPosition = convertLength * postStepPoint->GetPosition();
-  G4double postStepTime = convertTime * postStepPoint->GetGlobalTime();
+  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
-  G4ThreeVector preStepMomentum = convertEnergy * preStepPoint->GetMomentum();
-  G4double preStepEnergy = convertEnergy * preStepPoint->GetTotalEnergy();
-  G4ThreeVector postStepMomentum = convertEnergy * postStepPoint->GetMomentum();
-  G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
+  Acts::Vector4 preStepPosition(convertLength * preStepPoint->GetPosition().x(),
+                                convertLength * preStepPoint->GetPosition().y(),
+                                convertLength * preStepPoint->GetPosition().z(),
+                                convertTime * preStepPoint->GetGlobalTime());
+  Acts::Vector4 preStepMomentum(convertEnergy * preStepPoint->GetMomentum().x(),
+                                convertEnergy * preStepPoint->GetMomentum().y(),
+                                convertEnergy * preStepPoint->GetMomentum().z(),
+                                convertEnergy * preStepPoint->GetTotalEnergy());
+  Acts::Vector4 postStepPosition(
+      convertLength * postStepPoint->GetPosition().x(),
+      convertLength * postStepPoint->GetPosition().y(),
+      convertLength * postStepPoint->GetPosition().z(),
+      convertTime * postStepPoint->GetGlobalTime());
+  Acts::Vector4 postStepMomentum(
+      convertEnergy * postStepPoint->GetMomentum().x(),
+      convertEnergy * postStepPoint->GetMomentum().y(),
+      convertEnergy * postStepPoint->GetMomentum().z(),
+      convertEnergy * postStepPoint->GetTotalEnergy());
 
-  Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
-  Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
-  Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
-  Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
-
-  Acts::ActsScalar mXpre = preStepMomentum[0];
-  Acts::ActsScalar mYpre = preStepMomentum[1];
-  Acts::ActsScalar mZpre = preStepMomentum[2];
-  Acts::ActsScalar mEpre = preStepEnergy;
-  Acts::ActsScalar mXpost = postStepMomentum[0];
-  Acts::ActsScalar mYpost = postStepMomentum[1];
-  Acts::ActsScalar mZpost = postStepMomentum[2];
-  Acts::ActsScalar mEpost = postStepEnergy;
-
-  Acts::Vector4 particlePosition(hX, hY, hZ, hT);
-  Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
-  Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
-
-  return ActsFatras::Hit(geoId, particleId, particlePosition, beforeMomentum,
-                         afterMomentum, index);
+  return {preStepPosition, preStepMomentum, postStepPosition, postStepMomentum};
 }
+
+ActsFatras::Hit hitFromStep(const G4Step* step, ActsFatras::Barcode particleId,
+                            Acts::GeometryIdentifier geoId,
+                            std::int32_t index) {
+  auto [preStepPosition, preStepMomentum, postStepPosition, postStepMomentum] =
+      kinematicsOfStep(step);
+
+  return ActsFatras::Hit(geoId, particleId,
+                         0.5 * (preStepPosition + postStepPosition),
+                         preStepMomentum, postStepMomentum, index);
+}
+
+Acts::detail::Step stepFromG4Step(const G4Step* step) {
+  Acts::detail::Step pStep;
+  auto [preStepPosition, preStepMomentum, postStepPosition, postStepMomentum] =
+      kinematicsOfStep(step);
+
+  pStep.navDir = Acts::Direction::Forward();
+  pStep.position = 0.5 * (preStepPosition + postStepPosition).block<3, 1>(0, 0);
+  pStep.momentum = 0.5 * (preStepMomentum + postStepMomentum).block<3, 1>(0, 0);
+  pStep.nTotalTrials = 1;
+  return pStep;
+}
+
 }  // namespace
 
-ActsExamples::SensitiveSteppingAction::SensitiveSteppingAction(
+namespace ActsExamples::Geant4 {
+
+SensitiveSteppingAction::SensitiveSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
-    const G4Step* step) {
+void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   // Unit conversions G4->::ACTS
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr auto mappingPrefix = SensitiveSurfaceMapper::mappingPrefix;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
   G4PrimaryParticle* primaryParticle =
       track->GetDynamicParticle()->GetPrimaryParticle();
+
+  // Get PreStepPoint and PostStepPoint
+  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   // Bail out if charged & configured to do so
   G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
@@ -135,15 +155,11 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     throw std::runtime_error("No volume found, terminate simulation");
   }
   std::string volumeName = volume->GetName();
-
-  if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
-      std::string_view::npos) {
+  ACTS_VERBOSE("Check whether volume " << volumeName << " is sensitive");
+  if (!m_cfg.stepLogging &&
+      volumeName.find(mappingPrefix) == std::string::npos) {
     return;
   }
-
-  // Get PreStepPoint and PostStepPoint
-  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
-  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   // The G4Touchable for the matching
   const G4VTouchable* touchable = track->GetTouchable();
@@ -158,7 +174,8 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   ACTS_VERBOSE("Found " << nSurfaces << " candidate surfaces for volume "
                         << volumeName);
 
-  if (nSurfaces == 0) {
+  const Acts::Surface* surface = nullptr;
+  if (nSurfaces == 0 && !m_cfg.stepLogging) {
     ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
     return;
   } else if (nSurfaces == 1u) {
@@ -168,7 +185,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     // Find the closest surface to the current position
     Acts::GeometryContext gctx;
     for (; bsf != esf; ++bsf) {
-      const Acts::Surface* surface = bsf->second;
+      surface = bsf->second;
       const G4ThreeVector& translation = touchable->GetTranslation();
       Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
                                      convertLength * translation.y(),
@@ -182,18 +199,64 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   }
 
   // This is not the case if we have a particle-ID collision
-  if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
-      eventStore().trackIdMapping.end()) {
+  if (!eventStore().trackIdMapping.contains(track->GetTrackID())) {
     return;
   }
 
+  // Output is only strictly valid if step logging is not enabled
   const auto particleId = eventStore().trackIdMapping.at(track->GetTrackID());
+  if (!m_cfg.stepLogging && surface != nullptr) {
+    ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
+  } else if (m_cfg.stepLogging) {
+    if (!eventStore().propagationRecords.contains(track->GetTrackID())) {
+      // Create the propagation summary
+      double xVtx = track->GetVertexPosition().x() * convertLength;
+      double yVtx = track->GetVertexPosition().y() * convertLength;
+      double zVtx = track->GetVertexPosition().z() * convertLength;
+      double xDirVtx = track->GetVertexMomentumDirection().x();
+      double yDirVtx = track->GetVertexMomentumDirection().y();
+      double zDirVtx = track->GetVertexMomentumDirection().z();
+      double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
-  ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
+      PropagationSummary iSummary(Acts::BoundTrackParameters::createCurvilinear(
+          Acts::Vector4(xVtx, yVtx, zVtx, 0.),
+          Acts::Vector3(xDirVtx, yDirVtx, zDirVtx), absCharge / absMomentum,
+          std::nullopt, Acts::ParticleHypothesis::pion()));
+
+      eventStore().propagationRecords.insert({track->GetTrackID(), iSummary});
+    }
+    PropagationSummary& pSummary =
+        eventStore().propagationRecords.at(track->GetTrackID());
+
+    // Increase the step counter
+    pSummary.nSteps += 1;
+
+    double currentTrackLength = track->GetTrackLength() * convertLength;
+    double currentStepLength = currentTrackLength - pSummary.pathLength;
+    pSummary.pathLength = currentTrackLength;
+
+    // Create a new step for the step logging
+    Acts::detail::Step pStep = stepFromG4Step(step);
+    pStep.geoID = geoId;
+    pStep.surface = surface != nullptr ? surface->getSharedPtr() : nullptr;
+    // Check if last step was on same surface
+    if (!pSummary.steps.empty() && pSummary.steps.back().geoID == geoId &&
+        pSummary.steps.back().surface != nullptr) {
+      auto& lastStep = pSummary.steps.back();
+      lastStep.stepSize = Acts::ConstrainedStep(currentStepLength);
+      lastStep.position = 0.5 * (pStep.position + lastStep.position);
+      lastStep.momentum = 0.5 * (pStep.momentum + lastStep.momentum);
+    } else {
+      // Record the propagation state
+      pStep.stepSize = Acts::ConstrainedStep(currentStepLength);
+      pSummary.steps.emplace_back(std::move(pStep));
+    }
+    // You have nothing to do from here
+    return;
+  }
 
   // Set particle hit count to zero, so we have this entry in the map later
-  if (eventStore().particleHitCount.find(particleId) ==
-      eventStore().particleHitCount.end()) {
+  if (!eventStore().particleHitCount.contains(particleId)) {
     eventStore().particleHitCount[particleId] = 0;
   }
 
@@ -231,7 +294,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     ACTS_VERBOSE("-> merge single step to hit");
     ++eventStore().particleHitCount[particleId];
     eventStore().hits.push_back(
-        hitFromStep(preStepPoint, postStepPoint, particleId, geoId,
+        hitFromStep(step, particleId, geoId,
                     eventStore().particleHitCount.at(particleId) - 1));
 
     eventStore().numberGeantSteps += 1ul;
@@ -244,8 +307,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   if (postOnBoundary || particleStopped || particleDecayed) {
     ACTS_VERBOSE("-> merge buffer to hit");
     auto& buffer = eventStore().hitBuffer;
-    buffer.push_back(
-        hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
+    buffer.push_back(hitFromStep(step, particleId, geoId, -1));
 
     const auto pos4 =
         0.5 * (buffer.front().fourPosition() + buffer.back().fourPosition());
@@ -256,11 +318,10 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
         buffer.back().momentum4After(),
         eventStore().particleHitCount.at(particleId) - 1);
 
-    assert(std::all_of(buffer.begin(), buffer.end(),
-                       [&](const auto& h) { return h.geometryId() == geoId; }));
-    assert(std::all_of(buffer.begin(), buffer.end(), [&](const auto& h) {
-      return h.particleId() == particleId;
-    }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.geometryId() == geoId; }));
+    assert(std::ranges::all_of(
+        buffer, [&](const auto& h) { return h.particleId() == particleId; }));
 
     eventStore().numberGeantSteps += buffer.size();
     eventStore().maxStepsForHit =
@@ -274,10 +335,11 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   // hit buffer.
   if (!postOnBoundary) {
     // ACTS_VERBOSE("-> add hit to buffer");
-    eventStore().hitBuffer.push_back(
-        hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
+    eventStore().hitBuffer.push_back(hitFromStep(step, particleId, geoId, -1));
     return;
   }
 
   assert(false && "should never reach this");
 }
+
+}  // namespace ActsExamples::Geant4

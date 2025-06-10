@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
@@ -19,17 +19,18 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 namespace Acts {
 
-CylinderVolumeBounds::CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax,
-                                           ActsScalar halfz, ActsScalar halfphi,
-                                           ActsScalar avgphi,
-                                           ActsScalar bevelMinZ,
-                                           ActsScalar bevelMaxZ)
+CylinderVolumeBounds::CylinderVolumeBounds(double rmin, double rmax,
+                                           double halfz, double halfphi,
+                                           double avgphi, double bevelMinZ,
+                                           double bevelMaxZ)
     : m_values() {
   m_values[eMinR] = rmin;
   m_values[eMaxR] = rmax;
@@ -43,16 +44,16 @@ CylinderVolumeBounds::CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(
-    const std::array<ActsScalar, eSize>& values)
+    const std::array<double, eSize>& values)
     : m_values(values) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
-                                           ActsScalar thickness)
+                                           double thickness)
     : VolumeBounds() {
-  ActsScalar cR = cBounds.get(CylinderBounds::eR);
+  double cR = cBounds.get(CylinderBounds::eR);
   if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
         "CylinderVolumeBounds: invalid extrusion thickness."));
@@ -68,7 +69,7 @@ CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
-                                           ActsScalar thickness)
+                                           double thickness)
     : VolumeBounds() {
   if (thickness <= 0.) {
     throw(std::invalid_argument(
@@ -92,11 +93,11 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
   Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
   // Set up transform for beveled edges if they are defined
-  ActsScalar bevelMinZ = get(eBevelMinZ);
-  ActsScalar bevelMaxZ = get(eBevelMaxZ);
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
   Transform3 transMinZ, transMaxZ;
   if (bevelMinZ != 0.) {
-    ActsScalar sy = 1 - 1 / std::cos(bevelMinZ);
+    double sy = 1 - 1 / std::cos(bevelMinZ);
     transMinZ = transform * vMinZ *
                 Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -104,7 +105,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
-    ActsScalar sy = 1 - 1 / std::cos(bevelMaxZ);
+    double sy = 1 - 1 / std::cos(bevelMaxZ);
     transMaxZ = transform * vMaxZ *
                 Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -114,24 +115,24 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::AlongNormal});
+      OrientedSurface{std::move(dSurface), Direction::AlongNormal()});
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::OppositeNormal});
+      OrientedSurface{std::move(dSurface), Direction::OppositeNormal()});
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(cSurface), Direction::OppositeNormal});
+      OrientedSurface{std::move(cSurface), Direction::OppositeNormal()});
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(cSurface), Direction::AlongNormal});
+        OrientedSurface{std::move(cSurface), Direction::AlongNormal()});
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -142,22 +143,22 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector),
                               Vector3(0., 0., 1.)) *
                    Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-                   AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
+                   AngleAxis3(std::numbers::pi / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::AlongNormal});
+        OrientedSurface{std::move(pSurface), Direction::AlongNormal()});
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
                    AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector),
                               Vector3(0., 0., 1.)) *
                    Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-                   AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
+                   AngleAxis3(-std::numbers::pi / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::OppositeNormal});
+        OrientedSurface{std::move(pSurface), Direction::OppositeNormal()});
   }
   return oSurfaces;
 }
@@ -174,7 +175,7 @@ void CylinderVolumeBounds::buildSurfaceBounds() {
   m_discBounds = std::make_shared<const RadialBounds>(
       get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
 
-  if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
+  if (std::abs(get(eHalfPhiSector) - std::numbers::pi) > s_epsilon) {
     m_sectorPlaneBounds = std::make_shared<const RectangleBounds>(
         0.5 * (get(eMaxR) - get(eMinR)), get(eHalfLengthZ));
   }
@@ -194,10 +195,10 @@ std::ostream& CylinderVolumeBounds::toStream(std::ostream& os) const {
 Volume::BoundingBox CylinderVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  ActsScalar xmax = 0, xmin = 0, ymax = 0, ymin = 0;
+  double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
-  if (get(eHalfPhiSector) > M_PI / 2.) {
+  if (get(eHalfPhiSector) > std::numbers::pi / 2.) {
     // more than half
     ymax = xmax;
     ymin = -xmax;
@@ -218,10 +219,10 @@ Volume::BoundingBox CylinderVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-bool CylinderVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
+bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  ActsScalar ros = perp(pos);
+  double ros = perp(pos);
   bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
   bool insideR = insidePhi
                      ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
@@ -231,29 +232,27 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   return (insideZ && insideR && insidePhi);
 }
 
-Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
+Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
     const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::BinningValue::binR ||
-      bValue == Acts::BinningValue::binRPhi) {
+  if (aDir == Acts::AxisDirection::AxisR ||
+      aDir == Acts::AxisDirection::AxisRPhi) {
     return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
-  return VolumeBounds::binningOffset(bValue);
+  return VolumeBounds::referenceOffset(aDir);
 }
 
-ActsScalar CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::BinningValue::binR) {
+double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
+  if (aDir == Acts::AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
-  if (bValue == Acts::BinningValue::binZ) {
+  if (aDir == Acts::AxisDirection::AxisZ) {
     return get(eHalfLengthZ);
   }
-  return VolumeBounds::binningBorder(bValue);
+  return VolumeBounds::referenceBorder(aDir);
 }
 
-std::vector<ActsScalar> CylinderVolumeBounds::values() const {
-  std::vector<ActsScalar> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+std::vector<double> CylinderVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
 void CylinderVolumeBounds::checkConsistency() {
@@ -274,7 +273,7 @@ void CylinderVolumeBounds::checkConsistency() {
         "CylinderVolumeBounds: invalid longitudinal input: hlZ (" +
         std::to_string(get(eHalfLengthZ)) + ") <= 0");
   }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi sector setup.");
   }
@@ -290,13 +289,13 @@ void CylinderVolumeBounds::checkConsistency() {
   }
 }
 
-void CylinderVolumeBounds::set(BoundValues bValue, ActsScalar value) {
+void CylinderVolumeBounds::set(BoundValues bValue, double value) {
   set({{bValue, value}});
 }
 
 void CylinderVolumeBounds::set(
-    std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues) {
-  std::array<ActsScalar, eSize> previous = m_values;
+    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
+  std::array<double, eSize> previous = m_values;
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
   }
@@ -308,5 +307,8 @@ void CylinderVolumeBounds::set(
     throw e;
   }
 }
+
+CylinderVolumeBounds::CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) =
+    default;
 
 }  // namespace Acts

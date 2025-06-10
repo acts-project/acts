@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
 
   // Global access
   Vector3 gPosition{0.5, 3.5, 6.5};
-  std::vector<BinningValue> fCast = {Acts::BinningValue::binX};
-  std::vector<BinningValue> sCast = {Acts::BinningValue::binY};
-  std::vector<BinningValue> tCast = {Acts::BinningValue::binZ};
+  std::vector<AxisDirection> fCast = {Acts::AxisDirection::AxisX};
+  std::vector<AxisDirection> sCast = {Acts::AxisDirection::AxisY};
+  std::vector<AxisDirection> tCast = {Acts::AxisDirection::AxisZ};
 
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   auto sgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, sCast);
@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
 
   // Can this go into a delegate?
   auto gsu = std::make_unique<
-      const Acts::GridAccess::GlobalSubspace<BinningValue::binX>>();
+      const Acts::GridAccess::GlobalSubspace<AxisDirection::AxisX>>();
   Acts::GridAccess::GlobalToGridLocal1DimDelegate gsuDelegate;
   gsuDelegate.connect<
-      &Acts::GridAccess::GlobalSubspace<BinningValue::binX>::toGridLocal>(
+      &Acts::GridAccess::GlobalSubspace<AxisDirection::AxisX>::toGridLocal>(
       std::move(gsu));
 
   BOOST_CHECK(gsuDelegate.connected());
@@ -88,26 +88,26 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
 
   // Global access
   Vector3 gPosition{0.5, 3.5, 6.5};
-  std::vector<BinningValue> fCast = {Acts::BinningValue::binX,
-                                     Acts::BinningValue::binY};
+  std::vector<AxisDirection> fCast = {Acts::AxisDirection::AxisX,
+                                      Acts::AxisDirection::AxisY};
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 300u);
 }
 
 BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
-  Acts::GridAccess::GlobalSubspace<BinningValue::binX, BinningValue::binY>
+  Acts::GridAccess::GlobalSubspace<AxisDirection::AxisX, AxisDirection::AxisY>
       gssXY;
 
   auto xy = gssXY.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(xy[0], 1.);
   BOOST_CHECK_EQUAL(xy[1], 2.);
 
-  Acts::GridAccess::GlobalSubspace<BinningValue::binZ> gssZ;
+  Acts::GridAccess::GlobalSubspace<AxisDirection::AxisZ> gssZ;
   auto z = gssZ.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(z[0], 3.);
 
   Acts::GridAccess::Affine3Transformed<
-      Acts::GridAccess::GlobalSubspace<BinningValue::binZ>>
+      Acts::GridAccess::GlobalSubspace<AxisDirection::AxisZ>>
       gssZT(gssZ, Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
                       Vector3{0., 0., 100.}));
 
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {
-  Acts::ActsScalar radius = 100.;
-  Acts::ActsScalar shift = 0.;
+  double radius = 100.;
+  double shift = 0.;
   Acts::GridAccess::BoundCylinderToZPhi bctzp(radius, shift);
 
   auto zphi = bctzp.toGridLocal(Vector2{0.25 * radius, 52.});

@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include "codegen/sympy_cov_math.hpp"
 
@@ -17,8 +18,6 @@ namespace Acts::detail {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-using CurvilinearState =
-    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 Result<BoundState> sympy::boundState(
     const GeometryContext& geoContext, const Surface& surface,
@@ -55,12 +54,14 @@ Result<BoundState> sympy::boundState(
       fullTransportJacobian, accumulatedPath);
 }
 
-CurvilinearState sympy::curvilinearState(
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath) {
+BoundState sympy::curvilinearState(BoundSquareMatrix& boundCovariance,
+                                   BoundMatrix& fullTransportJacobian,
+                                   FreeMatrix& freeTransportJacobian,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters,
+                                   const ParticleHypothesis& particleHypothesis,
+                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
 
   // Covariance transport
@@ -81,12 +82,12 @@ CurvilinearState sympy::curvilinearState(
   pos4[ePos1] = freeParameters[eFreePos1];
   pos4[ePos2] = freeParameters[eFreePos2];
   pos4[eTime] = freeParameters[eFreeTime];
-  CurvilinearTrackParameters curvilinearParams(
-      pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
-      particleHypothesis);
+  BoundTrackParameters curvilinearParams =
+      BoundTrackParameters::createCurvilinear(
+          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
+          particleHypothesis);
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParams), fullTransportJacobian,
-                         accumulatedPath);
+  return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
 
 void sympy::transportCovarianceToBound(
@@ -97,9 +98,9 @@ void sympy::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
-  boundToBoundTransportJacobian(geoContext, surface, freeParameters,
-                                boundToFreeJacobian, freeTransportJacobian,
-                                freeToPathDerivatives, fullTransportJacobian);
+  sympy::boundToBoundTransportJacobian(
+      geoContext, surface, freeParameters, boundToFreeJacobian,
+      freeTransportJacobian, freeToPathDerivatives, fullTransportJacobian);
 
   bool correction = false;
   if (freeToBoundCorrection) {
@@ -153,7 +154,7 @@ void sympy::transportCovarianceToCurvilinear(
     BoundToFreeMatrix& boundToFreeJacobian, const Vector3& direction) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
-  boundToCurvilinearTransportJacobian(
+  sympy::boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeTransportJacobian,
       freeToPathDerivatives, fullTransportJacobian);
 

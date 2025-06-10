@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -43,6 +43,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <random>
 #include <string>
@@ -79,9 +80,10 @@ std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
 std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                               std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
 // Track charge helper distribution
 std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
@@ -97,7 +99,8 @@ std::uniform_int_distribution<std::uint32_t> nTracksDist(5, 15);
 
 // Dummy user-defined InputTrack type
 struct InputTrackStub {
-  InputTrackStub(const BoundTrackParameters& params) : m_parameters(params) {}
+  explicit InputTrackStub(const BoundTrackParameters& params)
+      : m_parameters(params) {}
 
   const BoundTrackParameters& parameters() const { return m_parameters; }
 

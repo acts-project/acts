@@ -4,7 +4,7 @@ import os
 import acts
 import acts.examples
 from acts.examples import GenericDetector, AlignedDetector
-from acts.examples.odd import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
     EtaConfig,
@@ -15,7 +15,9 @@ from acts.examples.simulation import (
 u = acts.UnitConstants
 
 
-def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
+def runPropagation(
+    trackingGeometry, field, outputDir, s=None, decorators=[], sterileLogger=True
+):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
 
     for d in decorators:
@@ -31,19 +33,12 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         rnd=rnd,
     )
 
-    # Run particle smearing
-    trackParametersGenerator = acts.examples.ParticleSmearing(
-        level=acts.logging.INFO,
-        inputParticles="particles_input",
-        outputTrackParameters="start_parameters",
-        randomNumbers=rnd,
-        sigmaD0=0.0,
-        sigmaZ0=0.0,
-        sigmaPhi=0.0,
-        sigmaTheta=0.0,
-        sigmaPtRel=0.0,
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.WARNING,
+        inputParticles="particles_generated",
+        outputTrackParameters="params_particles_generated",
     )
-    s.addAlgorithm(trackParametersGenerator)
+    s.addAlgorithm(trkParamExtractor)
 
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
@@ -56,8 +51,8 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        sterileLogger=True,
-        inputTrackParameters="start_parameters",
+        sterileLogger=sterileLogger,
+        inputTrackParameters="params_particles_generated",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)
@@ -70,6 +65,15 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         )
     )
 
+    if sterileLogger:
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation_summary",
+                filePath=outputDir + "/propagation_steps.root",
+            )
+        )
+
     return s
 
 
@@ -79,14 +83,10 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    (
-        detector,
-        trackingGeometry,
-        contextDecorators,
-    ) = GenericDetector.create(mdecorator=matDeco)
+    detector = GenericDetector(materialDecorator=matDeco)
 
     ## Alternative: Aligned detector in a couple of modes
-    # detector, trackingGeometry, contextDecorators = AlignedDetector.create(
+    # detector = AlignedDetector(
     #     decoratorLogLevel=acts.logging.INFO,
     #     # These parameters need to be tuned so that GC doesn't break
     #     # with multiple threads
@@ -99,10 +99,11 @@ if "__main__" == __name__:
     # )
 
     ## Alternative: DD4hep detector
-    # dd4hepCfg = acts.examples.DD4hepDetector.Config()
-    # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
-    # detector = acts.examples.DD4hepDetector()
-    # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
+    # detector = getOpenDataDetector()
+    # trackingGeometry = detector.trackingGeometry()
+
+    trackingGeometry = detector.trackingGeometry()
+    contextDecorators = detector.contextDecorators()
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
@@ -131,4 +132,5 @@ if "__main__" == __name__:
         field,
         os.getcwd() + "/propagation",
         decorators=contextDecorators,
+        sterileLogger=True,
     ).run()

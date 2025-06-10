@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,10 +17,10 @@
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
-#include <type_traits>
 
 namespace Acts {
 
@@ -28,124 +28,6 @@ template <TrackContainerBackend track_container_t,
           CommonMultiTrajectoryBackend traj_t,
           template <typename> class holder_t>
 class TrackContainer;
-
-namespace detail_tc {
-template <typename T, bool select>
-using ConstIf = std::conditional_t<select, const T, T>;
-
-/// Helper iterator to allow iteration over tracks via track proxies.
-template <typename container_t, typename proxy_t, bool ReadOnly>
-class TrackProxyIterator {
-  using ProxyType = proxy_t;
-  using IndexType = typename ProxyType::IndexType;
-  using ContainerType = container_t;
-
- public:
-  using iterator_category = std::random_access_iterator_tag;
-  using value_type = ProxyType;
-  using difference_type = std::ptrdiff_t;
-  using pointer = void;
-  using reference = void;
-
-  TrackProxyIterator(container_t& container, IndexType itrack)
-    requires(!ReadOnly)
-      : m_container(&container), m_itrack(itrack) {}
-
-  TrackProxyIterator(const container_t& container, IndexType itrack)
-    requires ReadOnly
-      : m_container(&container), m_itrack(itrack) {}
-
-  TrackProxyIterator& operator++() {
-    m_itrack++;
-    return *this;
-  }
-  TrackProxyIterator& operator--() {
-    m_itrack--;
-    return *this;
-  }
-
-  bool operator==(const TrackProxyIterator& other) const {
-    return m_container == other.m_container && m_itrack == other.m_itrack;
-  }
-
-  bool operator!=(const TrackProxyIterator& other) const {
-    return !(*this == other);
-  }
-
-  bool operator<(const TrackProxyIterator& other) const {
-    return m_itrack < other.m_itrack;
-  }
-
-  bool operator>(const TrackProxyIterator& other) const {
-    return m_itrack > other.m_itrack;
-  }
-
-  bool operator<=(const TrackProxyIterator& other) const {
-    return m_itrack <= other.m_itrack;
-  }
-
-  bool operator>=(const TrackProxyIterator& other) const {
-    return m_itrack >= other.m_itrack;
-  }
-
-  ProxyType operator*() const { return m_container->getTrack(m_itrack); }
-
-  ProxyType operator*()
-    requires(!ReadOnly)
-  {
-    return m_container->getTrack(m_itrack);
-  }
-
-  TrackProxyIterator operator[](difference_type n) const {
-    TrackProxyIterator copy = *this;
-    copy += n;
-    return copy;
-  };
-
-  TrackProxyIterator& operator+=(difference_type n) {
-    m_itrack += n;
-    return *this;
-  }
-
-  TrackProxyIterator operator-=(difference_type n) {
-    m_itrack -= n;
-    return *this;
-  }
-
-  friend difference_type operator-(const TrackProxyIterator& lhs,
-                                   const TrackProxyIterator& rhs) {
-    return lhs.m_itrack - rhs.m_itrack;
-  }
-
-  friend TrackProxyIterator operator+(const TrackProxyIterator& lhs,
-                                      difference_type rhs) {
-    TrackProxyIterator copy = lhs;
-    copy += rhs;
-    return copy;
-  }
-
-  friend TrackProxyIterator operator+(difference_type lhs,
-                                      const TrackProxyIterator& rhs) {
-    return rhs + lhs;
-  }
-
-  friend TrackProxyIterator operator-(const TrackProxyIterator& lhs,
-                                      difference_type rhs) {
-    return lhs + (-rhs);
-  }
-
-  friend TrackProxyIterator operator-(difference_type lhs,
-                                      const TrackProxyIterator& rhs) {
-    return rhs + (-lhs);
-  }
-
- private:
-  detail_lt::TransitiveConstPointer<ConstIf<ContainerType, ReadOnly>>
-      m_container;
-  IndexType m_itrack;
-};
-
-}  // namespace detail_tc
 
 /// Proxy class representing a single track.
 /// This class provides a **view** into an associated @ref TrackContainer, and
@@ -229,16 +111,29 @@ class TrackProxy {
   ///
   /// @{
 
-  /// Copy constructor from a mutable track proxy. This is always valid, either
-  /// mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy(const MutableTrackProxy& other)
+  /// Copy constructor: const to const or mutable to mutable
+  /// @param other the other track proxy
+  TrackProxy(const TrackProxy& other) = default;
+
+  /// Copy assignment operator: const to const or mutable to mutable
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const TrackProxy& other) = default;
+
+  /// Constructor from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  explicit TrackProxy(const MutableTrackProxy& other)
+    requires ReadOnly
       : m_container{other.m_container}, m_index{other.m_index} {}
 
-  /// Copy assignment operator from mutable track proxy. This is always valid,
-  /// either mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy& operator=(const MutableTrackProxy& other) {
+  /// Copy assignment operator from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const MutableTrackProxy& other)
+    requires ReadOnly
+  {
     m_container = other.m_container;
     m_index = other.m_index;
     return *this;
@@ -360,27 +255,27 @@ class TrackProxy {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+  double theta() const { return parameters()[eBoundTheta]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+  double phi() const { return parameters()[eBoundPhi]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+  double loc0() const { return parameters()[eBoundLoc0]; }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+  double loc1() const { return parameters()[eBoundLoc1]; }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  ActsScalar time() const { return parameters()[eBoundTime]; }
+  double time() const { return parameters()[eBoundTime]; }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+  double qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
@@ -401,17 +296,17 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  ActsScalar charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
-  ActsScalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
   /// @return The track transverse momentum value
-  ActsScalar transverseMomentum() const {
+  double transverseMomentum() const {
     return std::sin(theta()) * absoluteMomentum();
   }
 
@@ -441,7 +336,8 @@ class TrackProxy {
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
-  /// Return the number of measurements for the track. Const version
+  /// Return a mutable reference to the number of measurements for the track.
+  /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of measurements
   unsigned int& nMeasurements()
@@ -450,8 +346,7 @@ class TrackProxy {
     return component<unsigned int, hashString("nMeasurements")>();
   }
 
-  /// Return a mutable reference to the number of measurements for the track.
-  /// Mutable version
+  /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nMeasurements() const {
     return component<unsigned int, hashString("nMeasurements")>();
@@ -694,9 +589,6 @@ class TrackProxy {
       // append track states (cheap), but they're in the wrong order
       for (const auto& srcTrackState : other.trackStatesReversed()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
-        if (srcTrackState.hasCalibrated()) {
-          destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
-        }
         destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
                                 true);
       }
@@ -827,7 +719,7 @@ class TrackProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// Retrieve a const reference to a component
@@ -855,7 +747,7 @@ class TrackProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// @}
@@ -892,13 +784,14 @@ class TrackProxy {
   const auto& container() const { return *m_container; }
 
  private:
-  TrackProxy(detail_tc::ConstIf<TrackContainer<Container, Trajectory, holder_t>,
-                                ReadOnly>& container,
-             IndexType itrack)
+  TrackProxy(
+      const_if_t<ReadOnly, TrackContainer<Container, Trajectory, holder_t>>&
+          container,
+      IndexType itrack)
       : m_container{&container}, m_index{itrack} {}
 
-  detail_lt::TransitiveConstPointer<detail_tc::ConstIf<
-      TrackContainer<Container, Trajectory, holder_t>, ReadOnly>>
+  detail_lt::TransitiveConstPointer<
+      const_if_t<ReadOnly, TrackContainer<Container, Trajectory, holder_t>>>
       m_container;
   IndexType m_index;
 };

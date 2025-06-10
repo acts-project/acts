@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -150,13 +151,11 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 };
 
-ActsScalar calculateDeterminant(
+double calculateDeterminant(
     const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
-        projector,
-    unsigned int calibratedSize);
+    BoundSubspaceIndices projector, unsigned int calibratedSize);
 
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
@@ -190,14 +189,22 @@ void computePosteriorWeights(
             .template calibratedCovariance<
                 MultiTrajectoryTraits::MeasurementSizeMax>()
             .data(),
-        state.predictedCovariance(), state.projector(), state.calibratedSize());
+        state.predictedCovariance(), state.projectorSubspaceIndices(),
+        state.calibratedSize());
+
+    if (detR <= 0) {
+      // If the determinant is not positive, just leave the weight as it is
+      continue;
+    }
 
     const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
-    // If something is not finite here, just leave the weight as it is
-    if (std::isfinite(factor)) {
-      weights.at(tip) *= factor;
+    if (!std::isfinite(factor)) {
+      // If something is not finite here, just leave the weight as it is
+      continue;
     }
+
+    weights.at(tip) *= factor;
   }
 }
 

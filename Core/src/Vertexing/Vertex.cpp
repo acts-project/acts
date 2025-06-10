@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -37,7 +37,7 @@ Vector3 Vertex::position() const {
   return VectorHelpers::position(m_position);
 }
 
-ActsScalar Vertex::time() const {
+double Vertex::time() const {
   return m_position[eTime];
 }
 
@@ -74,7 +74,7 @@ const std::vector<TrackAtVertex>& Vertex::tracks() const {
 }
 
 std::pair<double, double> Vertex::fitQuality() const {
-  return std::pair<double, double>(m_chiSquared, m_numberDoF);
+  return {m_chiSquared, m_numberDoF};
 }
 
 void Vertex::setPosition(const Vector3& position) {
@@ -85,7 +85,7 @@ void Vertex::setFullPosition(const Vector4& fullPosition) {
   m_position = fullPosition;
 }
 
-void Vertex::setTime(ActsScalar time) {
+void Vertex::setTime(double time) {
   m_position[eTime] = time;
 }
 

@@ -1,16 +1,19 @@
-# This file is part of the Acts project.
+# This file is part of the ACTS project.
 #
-# Copyright (C) 2022 CERN for the benefit of the Acts project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+cmake_minimum_required(VERSION 3.25)
+
 include(FetchContent)
 
 message(STATUS "Building FRNN as part of the ACTS project")
 
 # Declare where to get frnncontent from
-FetchContent_Declare(frnncontent ${ACTS_FRNN_SOURCE})
+FetchContent_Declare(frnncontent SYSTEM ${ACTS_FRNN_SOURCE})
 
 # FRNN does not provide a CMakeLists.txt, so we use a custom one. Because of this,
 # we have to implement the populate step manually

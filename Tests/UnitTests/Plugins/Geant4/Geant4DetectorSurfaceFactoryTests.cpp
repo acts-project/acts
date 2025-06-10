@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,6 +15,7 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <memory>
+#include <numbers>
 #include <string>
 
 #include "G4Box.hh"
@@ -67,8 +68,8 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
   G4LogicalVolume* worldLV = new G4LogicalVolume(worldS, nullptr, "World");
 
   G4Tubs* cylinderS =
-      new G4Tubs("cylinder", 99, 100, 100, -M_PI * CLHEP::radian,
-                 2 * M_PI * CLHEP::radian);
+      new G4Tubs("cylinder", 99, 100, 100, -std::numbers::pi * CLHEP::radian,
+                 2 * std::numbers::pi * CLHEP::radian);
 
   G4LogicalVolume* cylinderLV =
       new G4LogicalVolume(cylinderS, nullptr, "World");
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   auto vol1S = new G4Box("volume1", 25, 10, 50);
   auto vol1L = new G4LogicalVolume(vol1S, nullptr, "Volume1");
 
-  G4Transform3D transformVol1(CLHEP::HepRotationX(M_PI / 4),
+  G4Transform3D transformVol1(CLHEP::HepRotationX(std::numbers::pi / 4.),
                               G4ThreeVector(20, 0, 0));
 
   [[maybe_unused]] auto vol1PV = new G4PVPlacement(
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   auto vol2S = new G4Box("volume2", 25, 10, 50);
   auto vol2L = new G4LogicalVolume(vol2S, nullptr, "Volume2");
 
-  G4Transform3D transformVol2(CLHEP::HepRotationY(M_PI / 6),
+  G4Transform3D transformVol2(CLHEP::HepRotationY(std::numbers::pi / 6.),
                               G4ThreeVector(0, 100, 20));
 
   [[maybe_unused]] auto vol2PV = new G4PVPlacement(
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   auto vol3S = new G4Box("volume3", 25, 10, 50);
   auto vol3L = new G4LogicalVolume(vol3S, nullptr, "Volume3");
 
-  G4Transform3D transformVol3(CLHEP::HepRotationZ(M_PI / 12),
+  G4Transform3D transformVol3(CLHEP::HepRotationZ(std::numbers::pi / 12.),
                               G4ThreeVector(30, 100, 0));
 
   [[maybe_unused]] auto vol3PV = new G4PVPlacement(

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,9 +25,9 @@ struct TGeoMaterialConverter {
   /// to steer the conversion process
   struct Options {
     /// @brief  Convert input TGeo unit to ACTS unit
-    ActsScalar unitLengthScalor = 10.;
+    double unitLengthScalor = 10.;
     /// @brief  Convert input TGeo unit to ACTS unit
-    ActsScalar unitMassScalor = 1.;
+    double unitMassScalor = 1.;
   };
 
   /// @brief Helper method to convert a TGeoMaterial into Acts::MaterialSlab
@@ -39,8 +39,7 @@ struct TGeoMaterialConverter {
   ///
   /// @return a material slab object
   static MaterialSlab materialSlab(const TGeoMaterial& tgMaterial,
-                                   ActsScalar thicknessIn,
-                                   ActsScalar thicknessOut,
+                                   double thicknessIn, double thicknessOut,
                                    const Options& options);
 };
 }  // namespace Acts

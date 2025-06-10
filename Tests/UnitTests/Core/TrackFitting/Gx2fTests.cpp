@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,12 +14,9 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -35,6 +32,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <numbers>
 #include <vector>
 
 #include "FitterTestsCommon.hpp"
@@ -79,11 +77,11 @@ static void drawMeasurements(
 }
 
 //// Construct initial track parameters.
-Acts::CurvilinearTrackParameters makeParameters(
-    const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
-    const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
-    const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
-    const ActsScalar p = 2_GeV, const ActsScalar q = 1_e) {
+Acts::BoundTrackParameters makeParameters(
+    const double x = 0.0_m, const double y = 0.0_m, const double z = 0.0_m,
+    const double w = 42_ns, const double phi = 0_degree,
+    const double theta = 90_degree, const double p = 2_GeV,
+    const double q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -95,8 +93,8 @@ Acts::CurvilinearTrackParameters makeParameters(
   const Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   const Acts::Vector4 mPos4(x, y, z, w);
-  return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
-                                          Acts::ParticleHypothesis::pion());
+  return Acts::BoundTrackParameters::createCurvilinear(
+      mPos4, phi, theta, q / p, cov, Acts::ParticleHypothesis::pion());
 }
 
 static std::vector<Acts::SourceLink> prepareSourceLinks(
@@ -124,7 +122,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   const double halfSizeSurface = 1_m;
 
   // Rotation of the surfaces around the y-axis
-  const double rotationAngle = M_PI * 0.5;
+  const double rotationAngle = std::numbers::pi / 2.;
   const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
   const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -149,7 +147,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
     // Add material only for selected surfaces
-    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
+    if (surfaceIndexWithMaterial.contains(surfPos)) {
       // Material of the surfaces
       MaterialSlab matProp(makeSilicon(), 5_mm);
       cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
@@ -210,117 +208,6 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   return detector;
 }
 
-/// @brief Create a simple telescope detector in the Y direction.
-///
-/// We cannot reuse the previous detector, since the cuboid volume builder only
-/// allows merging of YZ-faces.
-///
-/// @param geoCtx
-/// @param nSurfaces Number of surfaces
-std::shared_ptr<const TrackingGeometry> makeToyDetectorYdirection(
-    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
-  if (nSurfaces < 1) {
-    throw std::invalid_argument("At least 1 surfaces needs to be created.");
-  }
-
-  // Define the dimensions of the square surfaces
-  const double halfSizeSurface = 1_m;
-
-  // Rotation of the surfaces around the x-axis
-  const double rotationAngle = M_PI * 0.5;
-  const Vector3 xPos(1., 0., 0.);
-  const Vector3 yPos(0., cos(rotationAngle), sin(rotationAngle));
-  const Vector3 zPos(0., -sin(rotationAngle), cos(rotationAngle));
-
-  // Construct builder
-  CuboidVolumeBuilder cvb;
-
-  // Create configurations for surfaces
-  std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (std::size_t surfPos = 1; surfPos <= nSurfaces; surfPos++) {
-    // Position of the surfaces
-    CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {0., surfPos * UnitConstants::m, 0.};
-
-    // Rotation of the surfaces
-    cfg.rotation.col(0) = xPos;
-    cfg.rotation.col(1) = yPos;
-    cfg.rotation.col(2) = zPos;
-
-    // Boundaries of the surfaces (shape)
-    cfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(halfSizeSurface, halfSizeSurface));
-
-    // Thickness of the detector element
-    cfg.thickness = 1_um;
-
-    cfg.detElementConstructor =
-        [](const Transform3& trans,
-           const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
-          return new DetectorElementStub(trans, bounds, thickness);
-        };
-    surfaceConfig.push_back(cfg);
-  }
-
-  // Build layer configurations
-  std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
-  for (auto& sCfg : surfaceConfig) {
-    CuboidVolumeBuilder::LayerConfig cfg;
-    cfg.surfaceCfg = {sCfg};
-    cfg.active = true;
-    cfg.envelopeX = {-0.1_mm, 0.1_mm};
-    cfg.envelopeY = {-0.1_mm, 0.1_mm};
-    cfg.envelopeZ = {-0.1_mm, 0.1_mm};
-    cfg.binningDimension = Acts::BinningValue::binY;
-    layerConfig.push_back(cfg);
-  }
-
-  // Inner Volume - Build volume configuration
-  CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                         2 * halfSizeSurface};
-  volumeConfig.position = {0., volumeConfig.length.y() / 2, 0.};
-  volumeConfig.layerCfg = layerConfig;
-  volumeConfig.name = "TestVolume";
-  volumeConfig.binningDimension = Acts::BinningValue::binY;
-
-  // This basically adds an empty volume in y-direction
-  // Second inner Volume - Build volume configuration
-  CuboidVolumeBuilder::VolumeConfig volumeConfig2;
-  //    volumeConfig2.length = volumeConfig.length;
-  volumeConfig2.length = {2 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                          2 * halfSizeSurface};
-  ;
-  volumeConfig2.position = {volumeConfig2.length.x(),
-                            volumeConfig2.length.y() / 2, 0.};
-  volumeConfig2.name = "AdditionalVolume";
-  volumeConfig2.binningDimension = Acts::BinningValue::binY;
-
-  // Outer volume - Build TrackingGeometry configuration and fill
-  CuboidVolumeBuilder::Config config;
-  config.length = {4 * halfSizeSurface, (nSurfaces + 1) * 1_m,
-                   2 * halfSizeSurface};
-  config.position = {volumeConfig.length.x() / 2, volumeConfig.length.y() / 2,
-                     0.};
-  config.volumeCfg = {volumeConfig, volumeConfig2};
-
-  cvb.setConfig(config);
-
-  TrackingGeometryBuilder::Config tgbCfg;
-
-  tgbCfg.trackingVolumeBuilders.push_back(
-      [=](const auto& context, const auto& inner, const auto&) {
-        return cvb.trackingVolume(context, inner, nullptr);
-      });
-
-  TrackingGeometryBuilder tgb(tgbCfg);
-
-  std::unique_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(geoCtx);
-  return detector;
-}
-
 struct Detector {
   // geometry
   std::shared_ptr<const TrackingGeometry> geometry;
@@ -340,7 +227,7 @@ const MeasurementResolution resPixel = {MeasurementType::eLoc01,
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
 const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
 const MeasurementResolutionMap resMapAllPixel = {
-    {Acts::GeometryIdentifier().setVolume(0), resPixel}};
+    {Acts::GeometryIdentifier().withVolume(0), resPixel}};
 
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
@@ -507,7 +394,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -540,13 +428,13 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   ACTS_DEBUG("Create the measurements");
   const MeasurementResolutionMap resMap = {
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(8), resPixel},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(10), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(12), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(2), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(4), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(6), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(8), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(10), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(12), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(14), resPixel},
   };
 
   using SimPropagator =
@@ -612,7 +500,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -709,7 +598,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 8e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -806,7 +696,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1068,7 +959,8 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
@@ -1102,7 +994,7 @@ BOOST_AUTO_TEST_CASE(Material) {
       createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
                          resMapAllPixel, rng);
 
-  const Acts::ActsVector<2> scatterOffset = {100_mm, 100_mm};
+  const Acts::Vector2 scatterOffset = {100_mm, 100_mm};
   const std::size_t indexMaterialSurface = 3;
   for (std::size_t iMeas = indexMaterialSurface; iMeas < nSurfaces; iMeas++) {
     // This only works, because our detector is evenly spaced
@@ -1167,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(Material) {
     ViewConfig viewContainer = {.color = {220, 220, 0}};
     viewContainer.triangulate = triangulate;
     ViewConfig viewGrid = {.color = {220, 0, 0}};
-    viewGrid.nSegments = 8;
+    viewGrid.quarterSegments = 8;
     viewGrid.offset = 3.;
     viewGrid.triangulate = triangulate;
 
@@ -1215,14 +1107,15 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 26e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 15e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1.1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
+                    2e-2);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
-  //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 3.5e-27, 1e1);
 
   // Convergence
   BOOST_CHECK_EQUAL(

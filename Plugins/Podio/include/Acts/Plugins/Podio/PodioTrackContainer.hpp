@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -62,7 +63,7 @@ class PodioTrackContainerBase {
       typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
-  PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
+  explicit PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
       : m_helper{helper} {}
 
   template <bool EnsureConst, typename T>
@@ -135,7 +136,7 @@ class PodioTrackContainerBase {
     auto track = instance.m_collection->at(itrack);
     const auto& src = track.getParticleHypothesis();
     return ParticleHypothesis{static_cast<PdgParticle>(src.absPdg), src.mass,
-                              src.absQ};
+                              AnyCharge{src.absQ}};
   }
 
   static void populateSurfaceBuffer(
@@ -155,7 +156,7 @@ class PodioTrackContainerBase {
 
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
-  MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper)
+  explicit MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper)
       : PodioTrackContainerBase{helper},
         m_collection{std::make_unique<ActsPodioEdm::TrackCollection>()} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
@@ -164,7 +165,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   MutablePodioTrackContainer(const MutablePodioTrackContainer& other);
   MutablePodioTrackContainer(MutablePodioTrackContainer&& other) = default;
 
-  MutablePodioTrackContainer(const ConstPodioTrackContainer& other);
+  explicit MutablePodioTrackContainer(const ConstPodioTrackContainer& other);
 
   // BEGIN INTERFACE HELPER
 
@@ -189,7 +190,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   bool hasColumn_impl(HashedString key) const {
-    return m_dynamic.find(key) != m_dynamic.end();
+    return m_dynamic.contains(key);
   }
 
   std::size_t size_impl() const { return m_collection->size(); }
@@ -238,7 +239,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(std::string_view key) {
-    Acts::HashedString hashedKey = hashString(key);
+    Acts::HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
@@ -365,7 +366,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   }
 
   bool hasColumn_impl(HashedString key) const {
-    return m_dynamic.find(key) != m_dynamic.end();
+    return m_dynamic.contains(key);
   }
 
   std::size_t size_impl() const { return m_collection->size(); }

@@ -1,87 +1,38 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
 
-namespace {
-
-Acts::BoundSquareMatrix makeInitialCovariance(
-    const TrackParamsEstimationAlgorithm::Config& config,
-    const Acts::BoundVector& params, const SimSpacePoint& sp) {
-  Acts::BoundSquareMatrix result = Acts::BoundSquareMatrix::Zero();
-
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-    double sigma = config.initialSigmas[i];
-    double variance = sigma * sigma;
-
-    if (i == Acts::eBoundQOverP) {
-      // note that we rely on the fact that sigma theta is already computed
-      double varianceTheta = result(Acts::eBoundTheta, Acts::eBoundTheta);
-
-      // transverse momentum contribution
-      variance +=
-          std::pow(config.initialSigmaPtRel * params[Acts::eBoundQOverP], 2);
-
-      // theta contribution
-      variance +=
-          varianceTheta * std::pow(params[Acts::eBoundQOverP] *
-                                       std::tan(params[Acts::eBoundTheta]),
-                                   2);
-    }
-
-    // Inflate the time uncertainty if no time measurement is available
-    if (i == Acts::eBoundTime && !sp.t().has_value()) {
-      variance *= config.noTimeVarInflation;
-    }
-
-    // Inflate the initial covariance
-    variance *= config.initialVarInflation[i];
-
-    result(i, i) = variance;
-  }
-
-  return result;
-}
-
-}  // namespace
-
-ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
-    ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
+    TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
@@ -103,8 +54,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParamsEstimationAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   auto const& seeds = m_inputSeeds(ctx);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
@@ -136,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
-    const auto bottomSP = seed.sp().front();
+    const auto& bottomSP = seed.sp().front();
     if (bottomSP->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
@@ -159,20 +110,32 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     }
     Acts::Vector3 field = *fieldRes;
 
-    // Estimate the track parameters from seed
-    auto optParams = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        m_cfg.bFieldMin, logger());
-    if (!optParams.has_value()) {
-      ACTS_WARNING("Estimation of track parameters for seed " << iseed
-                                                              << " failed.");
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
+                                             << field.norm());
       continue;
     }
 
-    const auto& params = optParams.value();
+    // Estimate the track parameters from seed
+    const auto paramsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), *surface, field);
+    if (!paramsResult.ok()) {
+      ACTS_WARNING("Skip track because param estimation failed "
+                   << paramsResult.error());
+      continue;
+    }
+    const auto& params = *paramsResult;
 
-    Acts::BoundSquareMatrix cov =
-        makeInitialCovariance(m_cfg, params, *bottomSP);
+    Acts::EstimateTrackParamCovarianceConfig config{
+        .initialSigmas =
+            Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas.data()},
+        .initialSigmaQoverPt = m_cfg.initialSigmaQoverPt,
+        .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
+        .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
+            m_cfg.initialVarInflation.data()}};
+
+    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+        config, params, bottomSP->t().has_value());
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                  m_cfg.particleHypothesis);
@@ -197,4 +160,5 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   return ProcessCode::SUCCESS;
 }
+
 }  // namespace ActsExamples

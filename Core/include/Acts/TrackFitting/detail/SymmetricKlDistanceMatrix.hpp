@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -66,7 +66,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
 /// @brief Class representing a symmetric distance matrix
 class SymmetricKLDistanceMatrix {
-  using Array = Eigen::Array<Acts::ActsScalar, Eigen::Dynamic, 1>;
+  using Array = Eigen::Array<double, Eigen::Dynamic, 1>;
   using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
 
   Array m_distances;
@@ -127,7 +127,7 @@ class SymmetricKLDistanceMatrix {
   }
 
   auto minDistancePair() const {
-    auto min = std::numeric_limits<Acts::ActsScalar>::max();
+    auto min = std::numeric_limits<double>::max();
     std::size_t idx = 0;
 
     for (auto i = 0l; i < m_distances.size(); ++i) {

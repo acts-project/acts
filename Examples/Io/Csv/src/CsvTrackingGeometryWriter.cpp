@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
@@ -73,6 +73,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   data.boundary_id = surface.geometryId().boundary();
   data.layer_id = surface.geometryId().layer();
   data.module_id = surface.geometryId().sensitive();
+  data.extra_id = surface.geometryId().extra();
   // center position
   auto center = surface.center(geoCtx);
   data.cx = center.x() / Acts::UnitConstants::mm;
@@ -128,12 +129,12 @@ void writeSurface(SurfaceWriter& sfWriter, const Acts::Surface& surface,
 /// @param transform the layer transform
 /// @param representingBoundValues [in,out] the bound values
 /// @param last is the last layer
-void writeCylinderLayerVolume(
-    LayerVolumeWriter& lvWriter, const Acts::Layer& lv,
-    const Acts::Transform3& transform,
-    std::vector<Acts::ActsScalar>& representingBoundValues,
-    std::vector<Acts::ActsScalar>& volumeBoundValues,
-    std::vector<Acts::ActsScalar>& lastBoundValues, bool last) {
+void writeCylinderLayerVolume(LayerVolumeWriter& lvWriter,
+                              const Acts::Layer& lv,
+                              const Acts::Transform3& transform,
+                              std::vector<double>& representingBoundValues,
+                              std::vector<double>& volumeBoundValues,
+                              std::vector<double>& lastBoundValues, bool last) {
   // The layer volume to be written
   LayerVolumeData lvDims;
   lvDims.geometry_id = lv.geometryId().value();
@@ -229,9 +230,8 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
     const auto& vTransform = volume.transform();
 
     // Get the values of the volume boundaries
-    std::vector<Acts::ActsScalar> volumeBoundValues =
-        volume.volumeBounds().values();
-    std::vector<Acts::ActsScalar> lastBoundValues;
+    std::vector<double> volumeBoundValues = volume.volumeBounds().values();
+    std::vector<double> lastBoundValues;
 
     if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
       auto vTranslation = vTransform.translation();
@@ -285,7 +285,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
         // Write the layer volume, exclude single layer volumes (written above)
         if (rVolume != nullptr && writeLayerVolume && layers.size() > 3) {
           // Get the values of the representing volume
-          std::vector<Acts::ActsScalar> representingBoundValues =
+          std::vector<double> representingBoundValues =
               rVolume->volumeBounds().values();
           if (rVolume->volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
             bool last = (layerIdx + 2 ==
@@ -352,9 +352,8 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
     for (const auto& confined : volume.confinedVolumes()->arrayObjects()) {
-      writeVolume(sfWriter, sfGridWriter, lvWriter, *confined.get(),
-                  writeSensitive, writeBoundary, writeSurfaceGrid,
-                  writeLayerVolume, geoCtx);
+      writeVolume(sfWriter, sfGridWriter, lvWriter, *confined, writeSensitive,
+                  writeBoundary, writeSurfaceGrid, writeLayerVolume, geoCtx);
     }
   }
 }

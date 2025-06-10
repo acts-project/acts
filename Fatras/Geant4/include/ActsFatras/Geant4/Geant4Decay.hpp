@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -27,8 +27,6 @@ namespace ActsFatras {
 /// Handle particle decays using the Geant4 decay models.
 class Geant4Decay {
  public:
-  using Scalar = Particle::Scalar;
-
   /// Constructor
   Geant4Decay();
 
@@ -40,7 +38,7 @@ class Geant4Decay {
   ///
   /// @return Proper time limit of the particle
   template <typename generator_t>
-  Scalar generateProperTimeLimit(generator_t& generator,
+  double generateProperTimeLimit(generator_t& generator,
                                  const Particle& particle) const;
 
   /// Decay the particle and create the decay products.
@@ -67,13 +65,13 @@ class Geant4Decay {
 };
 
 template <typename generator_t>
-Particle::Scalar Geant4Decay::generateProperTimeLimit(
-    generator_t& generator, const Particle& particle) const {
+double Geant4Decay::generateProperTimeLimit(generator_t& generator,
+                                            const Particle& particle) const {
   // Get the particle properties
   const Acts::PdgParticle pdgCode = particle.pdg();
   // Keep muons stable
   if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
 
   // Get the Geant4 particle
@@ -81,14 +79,14 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
 
   // Fast exit if the particle is stable
   if (!pDef || pDef->GetPDGStable()) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
 
   // Get average lifetime
-  constexpr Scalar convertTime = Acts::UnitConstants::mm / CLHEP::s;
-  const Scalar tau = pDef->GetPDGLifeTime() * convertTime;
+  constexpr double convertTime = Acts::UnitConstants::mm / CLHEP::s;
+  const double tau = pDef->GetPDGLifeTime() * convertTime;
   // Sample & return the lifetime
-  std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
+  std::uniform_real_distribution<double> uniformDistribution{0., 1.};
 
   return -tau * std::log(uniformDistribution(generator));
 }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 
@@ -12,21 +12,20 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Utilities/Result.hpp"
 
-#include <ostream>
-#include <system_error>
 #include <utility>
 
 #include <G4SystemOfUnits.hh>
 #include <G4UnitsTable.hh>
 
-ActsExamples::MagneticFieldWrapper::MagneticFieldWrapper(
+namespace ActsExamples::Geant4 {
+
+MagneticFieldWrapper::MagneticFieldWrapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4MagneticField(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
-                                                       G4double* Bfield) const {
+void MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
+                                         G4double* Bfield) const {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertField = CLHEP::tesla / Acts::UnitConstants::T;
 
@@ -47,3 +46,5 @@ void ActsExamples::MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
   Bfield[1] = convertField * field[1];
   Bfield[2] = convertField * field[2];
 }
+
+}  // namespace ActsExamples::Geant4

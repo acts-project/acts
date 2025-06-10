@@ -1,25 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -32,19 +28,17 @@
 #include <G4PrimaryVertex.hh>
 #include <G4UnitsTable.hh>
 
-namespace ActsExamples {
-class WhiteBoard;
-}  // namespace ActsExamples
+namespace ActsExamples::Geant4 {
 
-ActsExamples::SimParticleTranslation::SimParticleTranslation(
+SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4VUserPrimaryGeneratorAction(),
       m_cfg(cfg),
       m_logger(std::move(logger)) {}
 
-ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
+SimParticleTranslation::~SimParticleTranslation() = default;
 
-void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
+void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   anEvent->SetEventID(m_eventNr++);
   unsigned int eventID = anEvent->GetEventID();
 
@@ -162,3 +156,5 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
                            << lastVertex->transpose());
   }
 }
+
+}  // namespace ActsExamples::Geant4

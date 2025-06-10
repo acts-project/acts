@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/detail/GeoBoxConverter.hpp"
 
@@ -25,9 +25,10 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
                                           const GeoBox& geoBox,
                                           const Transform3& absTransform,
+                                          SurfaceBoundFactory& boundFactory,
                                           bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -35,9 +36,9 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   transform.translation() = unitLength * absTransform.translation();
   auto rotation = absTransform.rotation();
   // Get the half lengths
-  std::vector<ActsScalar> halfLengths = {geoBox.getXHalfLength(),
-                                         geoBox.getYHalfLength(),
-                                         geoBox.getZHalfLength()};
+  std::vector<double> halfLengths = {geoBox.getXHalfLength(),
+                                     geoBox.getYHalfLength(),
+                                     geoBox.getZHalfLength()};
   // Create the surface
   auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
   auto zIndex = std::distance(halfLengths.begin(), minElement);
@@ -53,9 +54,10 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   transform.linear() = rotation;
 
   // Create the surface bounds
-  ActsScalar halfX = unitLength * halfLengths[xIndex];
-  ActsScalar halfY = unitLength * halfLengths[yIndex];
-  auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(halfX, halfY);
+  double halfX = unitLength * halfLengths[xIndex];
+  double halfY = unitLength * halfLengths[yIndex];
+  auto rectangleBounds =
+      boundFactory.makeBounds<Acts::RectangleBounds>(halfX, halfY);
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, rectangleBounds);

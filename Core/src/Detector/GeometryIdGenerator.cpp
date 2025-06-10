@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 
@@ -56,7 +56,7 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   auto& pSurface = portal.surface();
   if (pSurface.geometryId().boundary() == 0 || m_cfg.overrideExistingIds) {
     GeometryIdentifier geoID = volumeId(ccache, false);
-    geoID.setBoundary(++ccache.portalCount);
+    geoID = geoID.withBoundary(++ccache.portalCount);
     ACTS_VERBOSE("Assigning portal id " << ccache.portalCount);
     pSurface.assignGeometryId(geoID);
   }
@@ -73,18 +73,17 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   } else if ((rGeoID.sensitive() == 0 && rGeoID.passive() == 0) ||
              m_cfg.overrideExistingIds) {
     if (surface.associatedDetectorElement() != nullptr) {
-      geoID.setSensitive(++ccache.sensitiveCount);
+      geoID = geoID.withSensitive(++ccache.sensitiveCount);
       ACTS_VERBOSE("Assigning sensitive id " << ccache.sensitiveCount);
     } else {
       ACTS_VERBOSE("Assigning passive id " << ccache.passiveCount);
-      geoID.setPassive(++ccache.passiveCount);
+      geoID = geoID.withPassive(++ccache.passiveCount);
     }
     surface.assignGeometryId(geoID);
   } else if (rGeoID.sensitive() != 0 || rGeoID.passive() != 0) {
     ACTS_VERBOSE(
         "Surface already has a geometry id, only setting volume and layer id.");
-    rGeoID.setVolume(geoID.volume());
-    rGeoID.setLayer(geoID.layer());
+    rGeoID = rGeoID.withVolume(geoID.volume()).withLayer(geoID.layer());
     surface.assignGeometryId(rGeoID);
   }
 }
@@ -93,13 +92,13 @@ Acts::GeometryIdentifier Acts::Experimental::GeometryIdGenerator::volumeId(
     Cache& cache, bool incrementLayer) const {
   GeometryIdentifier geoID(0u);
   if (!m_cfg.containerMode) {
-    geoID.setVolume(cache.volumeCount);
+    geoID = geoID.withVolume(cache.volumeCount);
   } else {
-    geoID.setVolume(m_cfg.containerId);
+    geoID = geoID.withVolume(m_cfg.containerId);
     if (incrementLayer) {
       ++cache.layerCount;
     }
-    geoID.setLayer(cache.layerCount);
+    geoID = geoID.withLayer(cache.layerCount);
     ACTS_VERBOSE("Container mode: assigning volume id "
                  << m_cfg.containerId << ", layer id " << cache.layerCount);
   }

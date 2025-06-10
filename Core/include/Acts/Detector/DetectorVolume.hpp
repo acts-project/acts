@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -61,8 +61,8 @@ class Detector;
 class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
   using BoundingBox =
-      Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
-                                   Acts::ActsScalar, 3>;
+      Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume, double,
+                                   3>;
 
   friend class DetectorVolumeFactory;
 
@@ -84,7 +84,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
     /// Store constructor
     ///
     /// @param objects are the ones copied into the internal store
-    ObjectStore(std::vector<internal_type> objects)
+    explicit ObjectStore(std::vector<internal_type> objects)
         : internal(std::move(objects)) {
       external = unpack_shared_const_vector(internal);
     }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,7 +12,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
@@ -56,9 +56,10 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// Constructor
   /// @param cvhConfig is the configuration struct for this builder
   /// @param logger logging instance
-  CylinderVolumeHelper(const Config& cvhConfig,
-                       std::unique_ptr<const Logger> logger = getDefaultLogger(
-                           "CylinderVolumeHelper", Logging::INFO));
+  explicit CylinderVolumeHelper(const Config& cvhConfig,
+                                std::unique_ptr<const Logger> logger =
+                                    getDefaultLogger("CylinderVolumeHelper",
+                                                     Logging::INFO));
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -205,7 +206,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<CylinderVolumeBounds>& cylinderVolumeBounds,
       const Transform3& transform, double& rMinClean, double& rMaxClean,
-      double& zMinClean, double& zMaxClean, BinningValue& bValue,
+      double& zMinClean, double& zMaxClean, AxisDirection& bValue,
       BinningType bType = arbitrary) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume

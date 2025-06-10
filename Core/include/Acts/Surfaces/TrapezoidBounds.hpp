@@ -1,24 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
 #include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -40,25 +37,22 @@ class TrapezoidBounds : public PlanarBounds {
     eSize = 4
   };
 
-  TrapezoidBounds() = delete;
-
   /// Constructor for symmetric Trapezoid
   ///
   /// @param halfXnegY minimal half length X, definition at negative Y
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
   /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
-  TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
-                  double rotAngle = 0.) noexcept(false);
+  explicit TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
+                           double rotAngle = 0.) noexcept(false);
 
   /// Constructor for symmetric Trapezoid - from fixed size array
   ///
   /// @param values the values to be stream in
-  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
+  explicit TrapezoidBounds(const std::array<double, eSize>& values) noexcept(
+      false);
 
-  ~TrapezoidBounds() override;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eTrapezoid; }
 
   std::vector<double> values() const final;
 
@@ -108,13 +102,13 @@ class TrapezoidBounds : public PlanarBounds {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
+  /// @param ignoredSegments is and ignored parameter used to describe
+  /// the number of segments to approximate curved sectors.
   ///
   /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

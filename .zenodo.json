@@ -112,11 +112,16 @@
       "affiliation": "CERN / University of Amsterdam",
       "name": "Stephen Nicholas Swatman",
       "orcid": "0000-0002-3747-3229"
-    }
+    },
     {
       "affiliation": "CERN / TU Wien",
       "name": "Felix Russo",
       "orcid": "0009-0005-8975-2245"
+    },
+    {
+      "affiliation": "UC Berkeley",
+      "name": "Carlo Varni",
+      "orcid": "0000-0001-6733-4310"
     }
   ],
   "access_right": "open",

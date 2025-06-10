@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -39,9 +39,9 @@ class GeoModelBlueprintCreater {
     /// with a kdtree sorting structure
     std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
     /// The binning values for the KDTree sorting
-    std::vector<BinningValue> kdtBinning = {};
-    /// Polyhedron approximations
-    unsigned int nSegments = 1u;
+    std::vector<AxisDirection> kdtBinning = {};
+    /// Polyhedron approximation: number of segments per circlequarter
+    unsigned int quarterSegments = 1u;
   };
 
   /// The cache struct
@@ -58,20 +58,22 @@ class GeoModelBlueprintCreater {
     std::string topEntry;
     /// Optionally override the top node bounds
     std::string topBoundsOverride = "";
+    /// Export dot graph
+    std::string dotGraph = "";
   };
 
   /// The Blueprint return object
   struct Blueprint {
     std::string name;
-    std::unique_ptr<Acts::Experimental::Blueprint::Node> topNode;
+    std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node> topNode;
 
     /// Access to the top node
-    const Acts::Experimental::Blueprint::Node& node() const {
+    const Acts::Experimental::Gen2Blueprint::Node& node() const {
       if (topNode == nullptr) {
         throw std::runtime_error(
             "GeoModelBlueprintCreater::Blueprint: No top node created");
       }
-      return *(topNode.get());
+      return *topNode;
     }
   };
 
@@ -96,10 +98,10 @@ class GeoModelBlueprintCreater {
   ///
   /// @param cfg the configuration struct
   /// @param mlogger a screen output logger
-  GeoModelBlueprintCreater(const Config& cfg,
-                           std::unique_ptr<const Logger> mlogger =
-                               getDefaultLogger("GeoModelBlueprintCreater",
-                                                Acts::Logging::INFO));
+  explicit GeoModelBlueprintCreater(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger =
+          getDefaultLogger("GeoModelBlueprintCreater", Acts::Logging::INFO));
 
   /// Method that reads the GeoModel blueprint from database
   ///
@@ -119,7 +121,7 @@ class GeoModelBlueprintCreater {
   /// @param motherExtent an extent given from external parameters (e.g. mother volume)
   ///
   /// @return a newly created node
-  std::unique_ptr<Experimental::Blueprint::Node> createNode(
+  std::unique_ptr<Experimental::Gen2Blueprint::Node> createNode(
       Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
       const Extent& motherExtent = Extent()) const;
@@ -138,7 +140,7 @@ class GeoModelBlueprintCreater {
   createInternalStructureBuilder(
       Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
       const Extent& externalExtent = Extent(),
-      const std::vector<BinningValue>& internalConstraints = {}) const;
+      const std::vector<AxisDirection>& internalConstraints = {}) const;
 
   /// @brief Parse bound value string from the database
   ///
@@ -148,7 +150,7 @@ class GeoModelBlueprintCreater {
   /// @param internalExtent the extend of the internal objects (marked "i" in the database)
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
-  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<ActsScalar>, Vector3>
+  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<double>, Vector3>
   parseBounds(const std::string& boundsEntry,
               const Extent& externalExtent = Extent(),
               const Extent& internalExtent = Extent()) const;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -50,10 +50,10 @@ class DD4hepBlueprintFactory {
   ///
   /// @param cfg the config object
   /// @param mlogger the logging instance
-  DD4hepBlueprintFactory(const Config& cfg,
-                         std::unique_ptr<const Logger> mlogger =
-                             getDefaultLogger("DD4hepBlueprintFactory",
-                                              Acts::Logging::INFO));
+  explicit DD4hepBlueprintFactory(const Config& cfg,
+                                  std::unique_ptr<const Logger> mlogger =
+                                      getDefaultLogger("DD4hepBlueprintFactory",
+                                                       Acts::Logging::INFO));
 
   /// @brief Create a blueprint from a DD4hep detector element
   ///
@@ -62,13 +62,13 @@ class DD4hepBlueprintFactory {
   /// @param dd4hepElement the dd4hep detector element tree
   ///
   /// @return a new blueprint top node
-  std::unique_ptr<Blueprint::Node> create(
+  std::unique_ptr<Gen2Blueprint::Node> create(
       Cache& cache, const GeometryContext& gctx,
       const dd4hep::DetElement& dd4hepElement) const;
 
  private:
   /// @brief auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
 
   /// Configuration struct
@@ -87,7 +87,7 @@ class DD4hepBlueprintFactory {
   /// @param gctx the geometry context
   /// @param dd4hepElement the detector element at current level
   /// @param hiearchyLevel the current hierarchy level
-  void recursiveParse(Cache& cache, Blueprint::Node& mother,
+  void recursiveParse(Cache& cache, Gen2Blueprint::Node& mother,
                       const GeometryContext& gctx,
                       const dd4hep::DetElement& dd4hepElement,
                       unsigned int hiearchyLevel = 0) const;
@@ -100,8 +100,8 @@ class DD4hepBlueprintFactory {
   /// @param extOpt the optional extent as output from the internal parsing
   ///
   /// @return a tuple of the bounds type, values and binning, auxiliary data
-  std::tuple<Transform3, VolumeBounds::BoundsType, std::vector<ActsScalar>,
-             std::vector<BinningValue>, std::string>
+  std::tuple<Transform3, VolumeBounds::BoundsType, std::vector<double>,
+             std::vector<AxisDirection>, std::string>
   extractExternals([[maybe_unused]] const GeometryContext& gctx,
                    const dd4hep::DetElement& dd4hepElement,
                    const std::string& baseName,

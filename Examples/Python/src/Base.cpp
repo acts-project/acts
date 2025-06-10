@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
@@ -13,7 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Any.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -26,6 +26,7 @@
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
@@ -158,6 +159,8 @@ void addLogging(Acts::Python::Context& ctx) {
         };
   };
 
+  py::class_<Logger>(m, "Logger");
+
   auto logger =
       py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(logging, "Logger")
           .def("log", &PythonLogger::log)
@@ -176,7 +179,7 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def(
       "getLogger",
       [](const std::string& name) {
-        if (pythonLoggers.find(name) == pythonLoggers.end()) {
+        if (!pythonLoggers.contains(name)) {
           pythonLoggers[name] =
               std::make_shared<PythonLogger>(name, Acts::Logging::INFO);
         }
@@ -206,6 +209,28 @@ void addLogging(Acts::Python::Context& ctx) {
 
   logging.def("setFailureThreshold", &Logging::setFailureThreshold);
   logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+
+  struct ScopedFailureThresholdContextManager {
+    std::optional<Logging::ScopedFailureThreshold> m_scopedFailureThreshold =
+        std::nullopt;
+    Logging::Level m_level;
+
+    explicit ScopedFailureThresholdContextManager(Logging::Level level)
+        : m_level(level) {}
+
+    void enter() { m_scopedFailureThreshold.emplace(m_level); }
+
+    void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
+              const py::object& /*traceback*/) {
+      m_scopedFailureThreshold.reset();
+    }
+  };
+
+  py::class_<ScopedFailureThresholdContextManager>(logging,
+                                                   "ScopedFailureThreshold")
+      .def(py::init<Logging::Level>(), "level"_a)
+      .def("__enter__", &ScopedFailureThresholdContextManager::enter)
+      .def("__exit__", &ScopedFailureThresholdContextManager::exit);
 
   static py::exception<Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);
@@ -358,17 +383,21 @@ void addAlgebra(Acts::Python::Context& ctx) {
 void addBinning(Context& ctx) {
   auto& m = ctx.get("main");
 
-  auto binningValue = py::enum_<Acts::BinningValue>(m, "BinningValue")
-                          .value("binX", Acts::BinningValue::binX)
-                          .value("binY", Acts::BinningValue::binY)
-                          .value("binZ", Acts::BinningValue::binZ)
-                          .value("binR", Acts::BinningValue::binR)
-                          .value("binPhi", Acts::BinningValue::binPhi);
+  auto binningValue = py::enum_<Acts::AxisDirection>(m, "AxisDirection")
+                          .value("AxisX", Acts::AxisDirection::AxisX)
+                          .value("AxisY", Acts::AxisDirection::AxisY)
+                          .value("AxisZ", Acts::AxisDirection::AxisZ)
+                          .value("AxisR", Acts::AxisDirection::AxisR)
+                          .value("AxisPhi", Acts::AxisDirection::AxisPhi)
+                          .value("AxisRPhi", Acts::AxisDirection::AxisRPhi)
+                          .value("AxisTheta", Acts::AxisDirection::AxisTheta)
+                          .value("AxisEta", Acts::AxisDirection::AxisEta)
+                          .value("AxisMag", Acts::AxisDirection::AxisMag);
 
   auto boundaryType = py::enum_<Acts::AxisBoundaryType>(m, "AxisBoundaryType")
-                          .value("bound", Acts::AxisBoundaryType::Bound)
-                          .value("closed", Acts::AxisBoundaryType::Closed)
-                          .value("open", Acts::AxisBoundaryType::Open);
+                          .value("Bound", Acts::AxisBoundaryType::Bound)
+                          .value("Closed", Acts::AxisBoundaryType::Closed)
+                          .value("Open", Acts::AxisBoundaryType::Open);
 
   auto axisType = py::enum_<Acts::AxisType>(m, "AxisType")
                       .value("equidistant", Acts::AxisType::Equidistant)

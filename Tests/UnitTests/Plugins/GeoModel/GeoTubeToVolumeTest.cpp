@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 
   // (BOX object) - XY
   std::vector<double> dims = {5, 6, 50};
-  auto tube = new GeoTube(dims[0], dims[1], dims[2]);
-  auto logTube = new GeoLogVol("Tube", tube, material);
+  auto tube = make_intrusive<GeoTube>(dims[0], dims[1], dims[2]);
+  auto logTube = make_intrusive<GeoLogVol>("Tube", tube, material);
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion
@@ -51,12 +51,12 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTube =
-      gmCache.boundingBoxes[0];
+  BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
+  const auto& volumeTube = std::get<1>(gmCache.volumeBoxFPVs[0]);
   const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
       &volumeTube->volumeBounds());
-  std::vector<Acts::ActsScalar> convDims = bounds->values();
-  for (long unsigned int i = 0; i < dims.size(); i++) {
+  std::vector<double> convDims = bounds->values();
+  for (std::size_t i = 0; i < dims.size(); i++) {
     BOOST_CHECK(dims[i] == convDims[i]);
   }
 }

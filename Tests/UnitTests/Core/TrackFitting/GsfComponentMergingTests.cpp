@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -33,6 +33,7 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <stdexcept>
 #include <tuple>
@@ -50,7 +51,7 @@ using namespace Acts::UnitLiterals;
 // Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
-  Acts::ActsScalar weight = 0;
+  double weight = 0;
   Acts::ActsVector<D> boundPars;
   Acts::ActsSquareMatrix<D> boundCov;
 };
@@ -231,8 +232,8 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
           a.boundPars = BoundVector::Ones();
           a.boundPars[eBoundLoc0] *= p_it->first;
           a.boundPars[eBoundLoc1] *= p_it->second;
-          a.boundPars[eBoundPhi] =
-              detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
+          a.boundPars[eBoundPhi] = detail::wrap_periodic(
+              phi + dphi, -std::numbers::pi, 2 * std::numbers::pi);
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
     for (int i = 0; i < 2; ++i) {
-      res[i] = detail::difference_periodic(a[i], b[i], 2 * M_PI);
+      res[i] = detail::difference_periodic(a[i], b[i], 2 * std::numbers::pi);
     }
     return res;
   });
@@ -303,17 +304,17 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto [mean_test, boundCov_test] =
       detail::gaussianMixtureMeanCov(cmps, std::identity{}, d);
 
-  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[0], mean_test[0],
-                                                   2 * M_PI)) < 1.e-1);
-  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[1], mean_test[1],
-                                                   2 * M_PI)) < 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(
+                  mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(
+                  mean_data[1], mean_test[1], 2 * std::numbers::pi)) < 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
   const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
-  const auto surface =
+  const std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};

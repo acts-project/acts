@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -84,7 +84,8 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
 /// @brief Interface for the material mapping, this is the accumulation step
 class MaterialBlender : public ISurfaceMaterialAccumulater {
  public:
-  MaterialBlender(const std::vector<std::shared_ptr<Surface>>& surfaces = {})
+  explicit MaterialBlender(
+      const std::vector<std::shared_ptr<Surface>>& surfaces = {})
       : m_surfaces(surfaces) {}
 
   /// The state of the material accumulater, this is used
@@ -173,7 +174,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
                                            100.0)};
 
   for (auto [is, surface] : enumerate(surfaces)) {
-    surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
   }
 
   // The assigner

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -20,7 +20,7 @@
 
 class G4Event;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class SimParticleTranslation
 ///
@@ -52,10 +52,10 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  SimParticleTranslation(const Config& cfg,
-                         std::unique_ptr<const Acts::Logger> logger =
-                             Acts::getDefaultLogger("SimParticleTranslation",
-                                                    Acts::Logging::INFO));
+  explicit SimParticleTranslation(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "SimParticleTranslation", Acts::Logging::INFO));
 
   ~SimParticleTranslation() override;
 
@@ -81,4 +81,4 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

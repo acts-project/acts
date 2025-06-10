@@ -1,17 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iosfwd>
+#include <memory>
 #include <vector>
 
 namespace Acts {
@@ -20,6 +21,9 @@ namespace Acts {
 /// such as for inspection.
 class IAxis {
  public:
+  /// Virtual destructor
+  virtual ~IAxis() = default;
+
   /// @brief returns whether the axis is equidistant
   ///
   /// @return bool is equidistant
@@ -41,28 +45,54 @@ class IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  virtual std::vector<ActsScalar> getBinEdges() const = 0;
+  virtual std::vector<double> getBinEdges() const = 0;
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  virtual ActsScalar getMin() const = 0;
+  virtual double getMin() const = 0;
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  virtual ActsScalar getMax() const = 0;
+  virtual double getMax() const = 0;
 
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// Centralized axis factory for equidistant binning
+  ///
+  /// @param aBoundaryType the axis boundary type
+  /// @param min the minimum edge of the axis
+  /// @param max the maximum edge of the axis
+  /// @param nbins the number of bins
+  ///
+  /// @throws std::invalid_argument if min >= max or nbins == 0
+  ///
+  /// @return a unique pointer to the axis
+  static std::unique_ptr<IAxis> createEquidistant(
+      AxisBoundaryType aBoundaryType, double min, double max,
+      std::size_t nbins);
+
+  /// Centralized axis factory for variable binning
+  ///
+  /// @param aBoundaryType the axis boundary type
+  /// @param edges are the bin edges
+  ///
+  /// @throws std::invalid_argument if edges is empty or not strictly increasing
+  ///
+  /// @return a unique pointer to the axis
+  static std::unique_ptr<IAxis> createVariable(
+      AxisBoundaryType aBoundaryType, const std::vector<double>& edges);
+
   /// Helper function that dispatches from the @c IAxis base class
   /// to a concrete axis type. It will call the provided @p callable
   /// with a const reference to the concrete axis type.
   /// @tparam callable_t the callable type
   /// @param callable the callable object
+  /// @return the value returned by the callable
   template <typename callable_t>
   decltype(auto) visit(const callable_t& callable) const {
     auto switchOnType =

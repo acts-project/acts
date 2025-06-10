@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 
@@ -68,23 +68,23 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
     Acts::Vector3 position = refPosition;
     if constexpr (decltype(multiLink.indexedUpdater)::grid_type::DIM == 1u) {
       // Get the binning value
-      Acts::BinningValue bValue = casts[0u];
+      Acts::AxisDirection bValue = casts[0u];
       // Get the boundaries - take care, they are in local coordinates
       const auto& boundaries =
           multiLink.indexedUpdater.grid.axes()[0u]->getBinEdges();
 
-      Acts::ActsScalar refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
+      double refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
 
-      if (bValue == Acts::BinningValue::binR) {
-        Acts::ActsScalar phi = Acts::VectorHelpers::phi(refPosition);
+      if (bValue == Acts::AxisDirection::AxisR) {
+        double phi = Acts::VectorHelpers::phi(refPosition);
         position = Acts::Vector3(refC * std::cos(phi), refC * std::sin(phi),
                                  refPosition.z());
-      } else if (bValue == Acts::BinningValue::binZ) {
+      } else if (bValue == Acts::AxisDirection::AxisZ) {
         // correct to global
         refC += surface.transform(gctx).translation().z();
         position[2] = refC;
-      } else if (bValue == Acts::BinningValue::binPhi) {
-        Acts::ActsScalar r = Acts::VectorHelpers::perp(refPosition);
+      } else if (bValue == Acts::AxisDirection::AxisPhi) {
+        double r = Acts::VectorHelpers::perp(refPosition);
         position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
                                  refPosition.z());
       } else {
@@ -119,15 +119,15 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
   switch (surfaceType) {
     case SurfaceBounds::eCylinder: {
       // Get phi
-      ActsScalar r = boundValues[0u];
-      ActsScalar aphi = boundValues[3u];
+      double r = boundValues[0u];
+      double aphi = boundValues[3u];
       rPos = Vector3(r * std::cos(aphi), r * std::sin(aphi),
                      surfaceTranslation.z());
     } break;
     case SurfaceBounds::eDisc: {
       // Get phi
-      ActsScalar r = 0.5 * (boundValues[0u] + boundValues[1u]);
-      ActsScalar aphi = boundValues[3u];
+      double r = 0.5 * (boundValues[0u] + boundValues[1u]);
+      double aphi = boundValues[3u];
       rPos = Vector3(r * std::cos(aphi), r * std::sin(aphi),
                      surfaceTranslation.z());
     } break;

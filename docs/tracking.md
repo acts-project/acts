@@ -97,16 +97,17 @@ position $l$ and the momentum vector $\vec p$ are shown.
 
 Aside from the nominal quantities captured in $\vec x$, the related
 uncertainties and correlations need to be taken into account as well. They
-can be expressed as a $5\times 5$ covariance matrix like
+can be expressed as a $6\times 6$ covariance matrix like
 
 \begin{equation*}
   C =
   \begin{bmatrix}
-   \sigma^2(l_0)& \text{cov}(l_0,l_1) & \text{cov}(l_0, \phi) & \text{cov}(l_0, \theta) & \text{cov}(l_0, q/p) \\
-   . & \sigma^2(l_1) & \text{cov}(l_1, \phi) & \text{cov}(l_1, \theta) & \text{cov}(l_1, q/p) \\
-   . & . &  \sigma^2(\phi) & \text{cov}(\phi,\theta) & \text{cov}(\phi, q/p) \\
-   . & . & . & \sigma^2(\theta) & \text{cov}(\theta, q/p) \\
-   . & . & . & . & \sigma^2(q/p)
+   \sigma^2(l_0)& \text{cov}(l_0,l_1) & \text{cov}(l_0, \phi) & \text{cov}(l_0, \theta) & \text{cov}(l_0, q/p) & \text{cov}(l_0, t) \\
+   . & \sigma^2(l_1) & \text{cov}(l_1, \phi) & \text{cov}(l_1, \theta) & \text{cov}(l_1, q/p) & \text{cov}(l_1, t) \\
+   . & . &  \sigma^2(\phi) & \text{cov}(\phi,\theta) & \text{cov}(\phi, q/p) & \text{cov}(\phi, t) \\
+   . & . & . & \sigma^2(\theta) & \text{cov}(\theta, q/p) & \text{cov}(\theta, t) \\
+   . & . & . & . & \sigma^2(q/p) & \text{cov}(q/p, t) \\
+   . & . & . & . & . & \sigma^2(t)
   \end{bmatrix}
 \end{equation*}
 
@@ -188,7 +189,7 @@ as the approximation of $y(t_{n+1})$ like
 
 $$
   \begin{aligned}
-    y_{n+1} &= y_n + \frac 1 6 h ( k_1 + 2 k_2 + 2 k_2 + k_4)\\
+    y_{n+1} &= y_n + \frac 1 6 h ( k_1 + 2 k_2 + 2 k_3 + k_4)\\
     t_{n+1} &= t_n + h
   \end{aligned}
 $$
@@ -1028,5 +1029,5 @@ tracks.
 [^Fruhwirth:1987fm]: R. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
 [^phd:piacquadio:2010]: G. Piacquadio, 2010, Identification of b-jets and investigation of the discovery potential of a Higgs boson in the $W H \rightarrow l \nu \bar{b} b$ channel with the ATLAS experiment.
 [^phd:schlag:2022]: B. Schlag, 2022, Advanced Algorithms and Software for Primary Vertex Reconstruction and Search for Flavor-Violating Supersymmetry with the ATLAS Experiment.
-[^billoirfitting:1992]: P. Billoir et al., 2022, Fast vertex fitting with a local parametrization of tracks.
+[^billoirfitting:1992]: P. Billoir et al., 1992, Fast vertex fitting with a local parametrization of tracks.
 [^fruwirth:amvfitting:2004]: R. Frühwirth et al., 2004, Adaptive Multi-Vertex fitting.

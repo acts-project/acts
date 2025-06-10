@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
@@ -15,7 +15,6 @@
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
@@ -108,13 +107,13 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   // Measure if configured to do so
   if (cache.sExtent.has_value()) {
     auto sExtent =
-        sSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+        sSurface->polyhedronRepresentation(gctx, cache.nExtentQSegments)
             .extent();
     cache.sExtent.value().extend(sExtent, cache.extentConstraints);
   }
 
   // Attach surface material if present
-  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface,
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -137,7 +136,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
   // Measure if configured to do so
   if (cache.pExtent.has_value()) {
     auto sExtent =
-        pSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+        pSurface->polyhedronRepresentation(gctx, cache.nExtentQSegments)
             .extent();
     cache.pExtent.value().extend(sExtent, cache.extentConstraints);
   }
@@ -150,16 +149,19 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
 void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     const GeometryContext& gctx, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
-    ActsScalar thickness, const Options& options) const {
+    double thickness, const Options& options) const {
   // Bool proto material overrules converted material
   bool protoMaterial =
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
   if (protoMaterial) {
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
-    Experimental::BinningDescription pmBinning{
-        DD4hepBinningHelpers::convertBinning(
-            dd4hepElement, prefix + "_proto_material_binning")};
-    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    auto materialBinning = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, prefix + "_proto_material_binning");
+    std::vector<DirectedProtoAxis> pmBinning = {};
+    for (const auto& [dpAxis, bins] : materialBinning) {
+      pmBinning.emplace_back(dpAxis);
+    }
+    ACTS_VERBOSE(" - converted binning is " << pmBinning);
     Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
         gctx, surface, pmBinning);
 

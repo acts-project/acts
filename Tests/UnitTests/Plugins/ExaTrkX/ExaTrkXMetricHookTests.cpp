@@ -1,19 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
 
 #include <cassert>
-#include <iostream>
-
-#include <torch/torch.h>
 
 void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
                         std::vector<std::int64_t> &testGraph,
@@ -21,15 +18,25 @@ void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
   std::stringstream ss;
   auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO, &ss);
 
-  Acts::TorchTruthGraphMetricsHook hook(truthGraph, std::move(logger));
+  Acts::TruthGraphMetricsHook hook(truthGraph, std::move(logger));
 
-  auto opts = torch::TensorOptions().dtype(torch::kInt64);
-  const auto edgeTensor =
-      torch::from_blob(testGraph.data(),
-                       {static_cast<long>(testGraph.size() / 2), 2}, opts)
-          .transpose(0, 1);
+  auto numTestEdges = testGraph.size() / 2;
+  auto edgeIndexTensor = Acts::Tensor<std::int64_t>::Create(
+      {2, numTestEdges}, {Acts::Device::Cpu(), {}});
 
-  hook({}, edgeTensor, {});
+  // Transpose the input vector into the tensor
+  for (auto i = 0ul; i < numTestEdges; ++i) {
+    *(edgeIndexTensor.data() + i) = testGraph.at(2 * i);
+    *(edgeIndexTensor.data() + numTestEdges + i) = testGraph.at(2 * i + 1);
+  }
+
+  Acts::PipelineTensors tensors{
+      Acts::Tensor<float>::Create({1, 1}, {Acts::Device::Cpu(), {}}),
+      std::move(edgeIndexTensor),
+      {},
+      {}};
+
+  hook(tensors, {Acts::Device::Cpu(), {}});
 
   const auto str = ss.str();
 

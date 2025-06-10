@@ -1,18 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -64,10 +60,10 @@ class GreedyAmbiguityResolution {
     boost::container::flat_set<std::size_t> selectedTracks;
   };
 
-  GreedyAmbiguityResolution(const Config& cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("GreedyAmbiguityResolution",
-                                                 Logging::INFO))
+  explicit GreedyAmbiguityResolution(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("GreedyAmbiguityResolution", Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Computes the initial state for the input data. This function accumulates

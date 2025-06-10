@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
@@ -16,9 +16,16 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 
-#include "edm4hep/TrackState.h"
+#include <numbers>
 
-namespace Acts::EDM4hepUtil::detail {
+#include <edm4hep/EDM4hepVersion.h>
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <edm4hep/TrackState.h>
+
+namespace Acts::EDM4hepUtil {
+namespace detail {
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
@@ -149,7 +156,8 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
   result.values[0] = targetPars[Acts::eBoundLoc0];
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
-  result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
+  result.values[3] =
+      std::tan(std::numbers::pi / 2. - targetPars[Acts::eBoundTheta]);
   result.values[4] = targetPars[Acts::eBoundQOverP] /
                      std::sin(targetPars[Acts::eBoundTheta]) * Bz;
   result.values[5] = targetPars[Acts::eBoundTime];
@@ -174,7 +182,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
   targetPars[eBoundPhi] = params.values[2];
-  targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
+  targetPars[eBoundTheta] = std::numbers::pi / 2. - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
   targetPars[eBoundTime] = params.values[5];
@@ -182,4 +190,27 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   return {params.surface, targetPars, cov, params.particleHypothesis};
 }
 
-}  // namespace Acts::EDM4hepUtil::detail
+}  // namespace detail
+
+#if EDM4HEP_VERSION_MAJOR >= 1 || \
+    (EDM4HEP_VERSION_MAJOR == 0 && EDM4HEP_VERSION_MINOR == 99)
+edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
+  return hit.getParticle();
+}
+
+void setParticle(edm4hep::MutableSimTrackerHit& hit,
+                 const edm4hep::MCParticle& particle) {
+  hit.setParticle(particle);
+}
+#else
+edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
+  return hit.getMCParticle();
+}
+
+void setParticle(edm4hep::MutableSimTrackerHit& hit,
+                 const edm4hep::MCParticle& particle) {
+  hit.setMCParticle(particle);
+}
+#endif
+
+}  // namespace Acts::EDM4hepUtil

@@ -1,15 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -65,11 +64,11 @@ class Geant4DetectorSurfaceFactory {
   /// Nested option struct that allows per call changeable configuration
   struct Options {
     /// Convert the length scale
-    ActsScalar scaleConversion = 1.;
+    double scaleConversion = 1.;
     /// Convert the material
-    bool convertMaterial = true;
+    bool convertMaterial = false;
     /// Converted material thickness (< 0 indicates keeping original thickness)
-    ActsScalar convertedMaterialThickness = -1;
+    double convertedMaterialThickness = -1;
     /// A selector for sensitive surfaces
     std::shared_ptr<IGeant4PhysicalVolumeSelector> sensitiveSurfaceSelector =
         nullptr;
@@ -91,4 +90,5 @@ class Geant4DetectorSurfaceFactory {
   void construct(Cache& cache, const G4Transform3D& g4ToGlobal,
                  const G4VPhysicalVolume& g4PhysVol, const Options& option);
 };
+
 }  // namespace Acts

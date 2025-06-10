@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
@@ -54,9 +54,10 @@ void addVertexing(Context& ctx) {
                                 inputProtoVertices, outputVertices, bField,
                                 doConstrainedFit, constraintPos, constraintCov);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
-                                mex, "SingleSeedVertexFinderAlgorithm",
-                                inputSpacepoints, outputVertices);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HoughVertexFinderAlgorithm, mex,
+                                "HoughVertexFinderAlgorithm", inputSpacepoints,
+                                outputVertices, targetSPs, minAbsEta, maxAbsEta,
+                                minHits, defVtxPosition);
 }
 
 }  // namespace Acts::Python

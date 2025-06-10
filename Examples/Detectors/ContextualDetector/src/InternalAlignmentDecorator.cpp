@@ -1,15 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -18,14 +17,13 @@
 #include <thread>
 #include <utility>
 
-ActsExamples::Contextual::InternalAlignmentDecorator::
-    InternalAlignmentDecorator(const Config& cfg,
-                               std::unique_ptr<const Acts::Logger> logger)
+namespace ActsExamples {
+
+InternalAlignmentDecorator::InternalAlignmentDecorator(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-ActsExamples::ProcessCode
-ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+ProcessCode InternalAlignmentDecorator::decorate(AlgorithmContext& context) {
   // We need to lock the Decorator
   std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);
 
@@ -56,16 +54,16 @@ ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
       // Create an algorithm local random number generator
       RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
 
-      for (auto& lstore : m_cfg.detectorStore) {
-        for (auto& ldet : lstore) {
-          // get the nominal transform
-          Acts::Transform3 tForm =
-              ldet->nominalTransform(context.geoContext);  // copy
-          // create a new transform
-          applyTransform(tForm, m_cfg, rng, iov);
-          // put it back into the store
-          ldet->addAlignedTransform(tForm, iov);
-        }
+      ACTS_VERBOSE("Emulating new alignment for " << m_cfg.detectorStore.size()
+                                                  << " detector elements.");
+      for (auto& ldet : m_cfg.detectorStore) {
+        // get the nominal transform
+        Acts::Transform3 tForm =
+            ldet->nominalTransform(context.geoContext);  // copy
+        // create a new transform
+        applyTransform(tForm, m_cfg, rng, iov);
+        // put it back into the store
+        ldet->addAlignedTransform(tForm, iov);
       }
     }
   }
@@ -79,10 +77,8 @@ ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
         ACTS_DEBUG("IOV " << this_iov << " has not been accessed in the last "
                           << m_cfg.flushSize << " events, clearing");
         it = m_activeIovs.erase(it);
-        for (auto& lstore : m_cfg.detectorStore) {
-          for (auto& ldet : lstore) {
-            ldet->clearAlignedTransform(this_iov);
-          }
+        for (auto& ldet : m_cfg.detectorStore) {
+          ldet->clearAlignedTransform(this_iov);
         }
       } else {
         it++;
@@ -92,3 +88,5 @@ ActsExamples::Contextual::InternalAlignmentDecorator::decorate(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

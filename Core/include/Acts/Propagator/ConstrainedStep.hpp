@@ -1,14 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <array>
@@ -40,65 +40,65 @@ namespace Acts {
 /// The hierarchy is:
 /// - Overstepping resolution / backpropagation
 /// - Convergence
-/// - Step into the void with `std::numeric_limits<Scalar>::max()`
+/// - Step into the void with `std::numeric_limits<double>::max()`
 class ConstrainedStep {
  public:
-  using Scalar = ActsScalar;
-
   /// the types of constraints
-  /// from actor    - this would be a typical navigation step
-  /// from aborter  - this would be a target condition
-  /// from user     - this is user given for what reason ever
-  enum Type : int { actor = 0, aborter = 1, user = 2 };
+  /// from navigator - this would be a navigation step
+  /// from actor     - this would be an actor condition
+  /// from user      - this is user given for what reason ever
+  enum class Type : int { Navigator = 0, Actor = 1, User = 2 };
 
   constexpr ConstrainedStep() = default;
 
-  /// constructor from Scalar
-  /// @param value is the user given initial value
-  constexpr explicit ConstrainedStep(Scalar value) { setUser(value); }
+  /// constructor
+  /// @param v is the user given initial value
+  constexpr explicit ConstrainedStep(double v) { setUser(v); }
 
-  /// set accuracy by one Scalar
+  /// set accuracy
   ///
   /// this will set only the accuracy, as this is the most
   /// exposed to the Propagator
   ///
-  /// @param value is the new accuracy value
-  constexpr void setAccuracy(Scalar value) {
-    assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
+  /// @param v is the new accuracy value
+  constexpr void setAccuracy(double v) {
+    assert(v > 0 && "ConstrainedStep accuracy must be > 0.");
     // set the accuracy value
-    m_accuracy = value;
+    m_accuracy = v;
   }
 
-  /// set user by one Scalar
+  /// set user
   ///
-  /// @param value is the new user value
-  constexpr void setUser(Scalar value) {
+  /// @param v is the new user value
+  constexpr void setUser(double v) {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
-    // assert(value != 0 && "ConstrainedStep user must be != 0.");
+    // assert(v != 0 && "ConstrainedStep user must be != 0.");
     // set the user value
-    m_values[user] = value;
+    setValue(Type::User, v);
   }
 
   /// returns the min step size
-  constexpr Scalar value() const {
-    Scalar min = *std::min_element(m_values.begin(), m_values.end());
+  constexpr double value() const {
+    double min = *std::min_element(m_values.begin(), m_values.end());
     // accuracy is always positive and therefore handled separately
-    Scalar result = std::min(std::abs(min), m_accuracy);
+    double result = std::min(std::abs(min), m_accuracy);
     return std::signbit(min) ? -result : result;
   }
 
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
-  constexpr Scalar value(Type type) const { return m_values[type]; }
+  constexpr double value(Type type) const {
+    return m_values[toUnderlying(type)];
+  }
 
   /// Access the accuracy value
-  constexpr Scalar accuracy() const { return m_accuracy; }
+  constexpr double accuracy() const { return m_accuracy; }
 
   /// release a certain constraint value
   ///
   /// @param type is the constraint type to be released
-  constexpr void release(Type type) { m_values[type] = kNotSet; }
+  constexpr void release(Type type) { setValue(type, kNotSet); }
 
   /// release accuracy
   constexpr void releaseAccuracy() { m_accuracy = kNotSet; }
@@ -108,42 +108,38 @@ class ConstrainedStep {
   /// Only navigation and target abortion step size
   /// updates may change the sign due to overstepping
   ///
-  /// @param value is the new value to be updated
+  /// @param v is the new value to be updated
   /// @param type is the constraint type
-  /// @param releaseStep Allow step size to increase again
-  constexpr void update(Scalar value, Type type, bool releaseStep = false) {
-    if (releaseStep) {
-      release(type);
-    }
+  constexpr void update(double v, Type type) {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
-    if (std::abs(value) < std::abs(m_values[type])) {
+    if (std::abs(v) < std::abs(value(type))) {
       // TODO enable assert; see
       // https://github.com/acts-project/acts/issues/2543
       // assert(value != 0 && "ConstrainedStep user must be != 0.");
-      m_values[type] = value;
+      setValue(type, v);
     }
   }
 
   std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
-    auto streamValue = [&](Scalar val) {
+    auto streamValue = [&](double v) {
       os << std::setw(5);
-      if (std::abs(val) == kNotSet) {
-        os << (val > 0 ? "+∞" : "-∞");
+      if (std::abs(v) == kNotSet) {
+        os << (v > 0 ? "+∞" : "-∞");
       } else {
-        os << val;
+        os << v;
       }
     };
 
     os << "(";
     streamValue(m_accuracy);
     os << ", ";
-    streamValue(value(actor));
+    streamValue(value(Type::Navigator));
     os << ", ";
-    streamValue(value(aborter));
+    streamValue(value(Type::Actor));
     os << ", ";
-    streamValue(value(user));
+    streamValue(value(Type::User));
     os << ")";
 
     return os;
@@ -156,12 +152,16 @@ class ConstrainedStep {
   }
 
  private:
-  inline static constexpr auto kNotSet = std::numeric_limits<Scalar>::max();
+  static constexpr auto kNotSet = std::numeric_limits<double>::max();
 
   /// the step size tuple
-  std::array<Scalar, 3> m_values = {kNotSet, kNotSet, kNotSet};
+  std::array<double, 3> m_values = {kNotSet, kNotSet, kNotSet};
   /// the accuracy value - this can vary up and down given a good step estimator
-  Scalar m_accuracy = kNotSet;
+  double m_accuracy = kNotSet;
+
+  constexpr void setValue(Type type, double v) {
+    m_values[toUnderlying(type)] = v;
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {

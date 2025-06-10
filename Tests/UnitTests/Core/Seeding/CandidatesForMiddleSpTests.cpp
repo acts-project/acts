@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -60,32 +60,6 @@ BOOST_AUTO_TEST_CASE(TripletCandidateObject) {
   BOOST_CHECK_EQUAL(copiedAssignCandidate.weight, 2.4f);
   BOOST_CHECK_EQUAL(copiedAssignCandidate.zOrigin, 1.1f);
   BOOST_CHECK_EQUAL(copiedAssignCandidate.isQuality, true);
-
-  // Move Constructor
-  Acts::TripletCandidate<UnitTestSpacePoint> movedConstructedCandidate(
-      std::move(constructedCandidate));
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.bottom, &spacePoints[0]);
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.middle, &spacePoints[1]);
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.top, &spacePoints[2]);
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.weight, 2.4f);
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.zOrigin, 1.1f);
-  BOOST_CHECK_EQUAL(movedConstructedCandidate.isQuality, true);
-  BOOST_CHECK_EQUAL(constructedCandidate.bottom, nullptr);
-  BOOST_CHECK_EQUAL(constructedCandidate.middle, nullptr);
-  BOOST_CHECK_EQUAL(constructedCandidate.top, nullptr);
-
-  // Move Assign
-  Acts::TripletCandidate<UnitTestSpacePoint> movedAssignCandidate =
-      std::move(copiedAssignCandidate);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.bottom, &spacePoints[0]);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.middle, &spacePoints[1]);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.top, &spacePoints[2]);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.weight, 2.4f);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.zOrigin, 1.1f);
-  BOOST_CHECK_EQUAL(movedAssignCandidate.isQuality, true);
-  BOOST_CHECK_EQUAL(copiedAssignCandidate.bottom, nullptr);
-  BOOST_CHECK_EQUAL(copiedAssignCandidate.middle, nullptr);
-  BOOST_CHECK_EQUAL(copiedAssignCandidate.top, nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {

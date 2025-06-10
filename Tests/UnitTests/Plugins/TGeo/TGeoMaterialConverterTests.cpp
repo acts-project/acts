@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -25,8 +25,8 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
 
-  ActsScalar A = 26.98;
-  ActsScalar Z = 13.;
+  double A = 26.98;
+  double Z = 13.;
   TGeoMaterial *mat = new TGeoMaterial("Al", A, Z, 2.7);
 
   // ROOT calculates the radiation/int length in cm
@@ -39,10 +39,9 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   options.unitMassScalor = 1.;
 
   // Assume we describe a 10 mm thick box as a 10 mm thick slab
-  ActsScalar tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
-  ActsScalar tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
-  ActsScalar rho =
-      2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
+  double tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
+  double tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
+  double rho = 2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
   Acts::MaterialSlab slab_10_10 =
       Acts::TGeoMaterialConverter::materialSlab(*mat, 10_mm, 10_mm, options);

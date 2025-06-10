@@ -1,29 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
-#include <cstddef>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootPropagationSummaryWriter
 ///
@@ -55,7 +51,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   /// Constructor with
   /// @param cfg configuration struct
   /// @param output logging level
-  RootPropagationSummaryWriter(
+  explicit RootPropagationSummaryWriter(
       const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
@@ -110,10 +106,17 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   int m_nMaterials = 0;
   int m_nPortals = 0;
 
-  // steper statistics
-  int m_nSteps = 0;
-  int m_nStepTrials = 0;
-  int m_pathLength = 0;
+  // stepper statistics
+  std::size_t m_nAttemptedSteps = 0;
+  std::size_t m_nRejectedSteps = 0;
+  std::size_t m_nSuccessfulSteps = 0;
+  std::size_t m_nReverseSteps = 0;
+  double m_pathLength = 0;
+  double m_absolutePathLength = 0;
+
+  // navigator statistics
+  std::size_t m_nRenavigations = 0;
+  std::size_t m_nVolumeSwitches = 0;
 };
 
 }  // namespace ActsExamples

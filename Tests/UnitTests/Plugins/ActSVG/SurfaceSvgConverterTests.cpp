@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <fstream>
+#include <numbers>
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
 
@@ -52,11 +53,10 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   auto svgObject =
       Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyObject = Acts::Svg::View::xy(svgObject, identification);
-  auto xyAxes =
-      Acts::Svg::axesXY(static_cast<Acts::ActsScalar>(xyObject._x_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._x_range[1]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[1]));
+  auto xyAxes = Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
+                                  static_cast<double>(xyObject._x_range[1]),
+                                  static_cast<double>(xyObject._y_range[0]),
+                                  static_cast<double>(xyObject._y_range[1]));
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   planarStyle.highlightColor = {255, 153, 51};
   planarStyle.highlights = {"mouseover", "mouseout"};
   planarStyle.strokeWidth = 0.5;
-  planarStyle.nSegments = 0u;
+  planarStyle.quarterSegments = 0u;
 
   // Rectangle case
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(36., 64.);
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  Acts::ActsScalar phi = 0.125 * M_PI;
-  Acts::ActsScalar radius = 150.;
+  double phi = std::numbers::pi / 8.;
+  double radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
   Acts::Vector3 localY(std::cos(phi), std::sin(phi), 0.);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   discStyle.highlightColor = {153, 204, 0};
   discStyle.highlights = {"mouseover", "mouseout"};
   discStyle.strokeWidth = 0.5;
-  discStyle.nSegments = 72u;
+  discStyle.quarterSegments = 72u;
 
   auto transform = Acts::Transform3::Identity();
   transform.pretranslate(Acts::Vector3{20., 20., 100.});
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   runPlanarTests(*fullRing, discStyle, "full_ring");
 
   // Sectorial disc case
-  auto sectoralDiscBounds =
-      std::make_shared<Acts::RadialBounds>(0., 64., 0.25 * M_PI, 0.5 * M_PI);
+  auto sectoralDiscBounds = std::make_shared<Acts::RadialBounds>(
+      0., 64., std::numbers::pi / 4., std::numbers::pi / 2.);
   auto sectoralDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
       transform, sectoralDiscBounds);
   runPlanarTests(*sectoralDisc, discStyle, "full_disc");

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -34,8 +34,7 @@ class AnyVector {
   static std::pair<AnyVector, std::vector<T>*> create(Args&&... args) {
     std::vector<T>* vector = new std::vector<T>(std::forward<Args>(args)...);
     std::function<void()> deleter = [vector] { delete vector; };
-    return std::make_pair(
-        AnyVector{static_cast<void*>(vector), std::move(deleter)}, vector);
+    return {AnyVector{static_cast<void*>(vector), std::move(deleter)}, vector};
   }
 
   // Default-construct a null type-erased vector

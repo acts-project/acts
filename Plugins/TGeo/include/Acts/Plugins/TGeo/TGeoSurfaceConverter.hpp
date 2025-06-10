@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 
@@ -77,13 +78,13 @@ struct TGeoSurfaceConverter {
   /// Convert a TGeoShape to a Surface
   ///
   /// @param tgShape The TGeoShape
-  /// @param tgMatrix The matrix representing the tranbsform
+  /// @param tgMatrix The matrix representing the transform
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return shared pointer to a surface and the original thickness that
   /// has been condensed to the surface
-  static std::tuple<std::shared_ptr<Surface>, ActsScalar> toSurface(
+  static std::tuple<std::shared_ptr<Surface>, double> toSurface(
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
       const std::string& axes, double scalor = 10.) noexcept(false);
 
@@ -95,7 +96,7 @@ struct TGeoSurfaceConverter {
     if (degree > 180. && degree < 360.) {
       degree -= 360.;
     }
-    return degree / 180. * M_PI;
+    return degree / 180. * std::numbers::pi;
   }
 };
 

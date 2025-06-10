@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -98,8 +98,8 @@ class MaterialMapping : public IAlgorithm {
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  MaterialMapping(const Config& cfg,
-                  Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialMapping(const Config& cfg,
+                           Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method
   ///

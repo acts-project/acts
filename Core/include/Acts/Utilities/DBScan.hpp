@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -70,8 +70,8 @@ class DBScan {
   /// @param minPoints The minimum number of points to form a cluster.
   /// @param onePointCluster If true, all the noise points are considered as
   /// individual one point clusters.
-  DBScan(scalar_t epsilon = 1.0, std::size_t minPoints = 1,
-         bool onePointCluster = false)
+  explicit DBScan(scalar_t epsilon = 1.0, std::size_t minPoints = 1,
+                  bool onePointCluster = false)
       : m_eps(epsilon),
         m_minPoints(minPoints),
         m_onePointCluster(onePointCluster) {}

@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
-#include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
+#include "ActsExamples/Utilities/PrototracksToTracks.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
@@ -51,12 +51,12 @@ void addUtilities(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
-      inputMeasurementParticleMap, inputSourceLinks,
+      inputMeasurements, inputMeasurementParticleMap,
       outputMeasurementParticleMap, geometrySelection);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToTracks, mex,
-                                "PrototracksToTracks", inputMeasurements,
-                                inputProtoTracks, outputTracks);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PrototracksToTracks, mex, "PrototracksToTracks",
+      inputMeasurements, inputProtoTracks, inputTrackParameters, outputTracks);
 }
 
 }  // namespace Acts::Python

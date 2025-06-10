@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -117,21 +117,21 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
   reference.pretranslate(Vector3(1., 2., 3.));
   reference.rotate(Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized()));
 
-  std::vector<ActsScalar> referenceT = {1., 2., 3.};
-  std::vector<ActsScalar> referenceR = {0.992946,   -0.0975562, 0.0673888,
-                                        0.0997267,  0.994574,   -0.0296247,
-                                        -0.0641331, 0.0361362,  0.997287};
+  std::vector<double> referenceT = {1., 2., 3.};
+  std::vector<double> referenceR = {0.992946,   -0.0975562, 0.0673888,
+                                    0.0997267,  0.994574,   -0.0296247,
+                                    -0.0641331, 0.0361362,  0.997287};
 
   // Test standard writing
   Transform3JsonConverter::Options standardOptions{true, false};
   nlohmann::json standardOut =
       Transform3JsonConverter::toJson(reference, standardOptions);
   // Check translation read back in
-  BOOST_CHECK(standardOut["translation"].get<std::vector<ActsScalar>>() ==
+  BOOST_CHECK(standardOut["translation"].get<std::vector<double>>() ==
               referenceT);
   // Check rotation read back in - not transposed
-  std::vector<ActsScalar> readR =
-      standardOut["rotation"].get<std::vector<ActsScalar>>();
+  std::vector<double> readR =
+      standardOut["rotation"].get<std::vector<double>>();
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[i], rr, 1e-5);
   }
@@ -141,12 +141,12 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
   nlohmann::json transposeOut =
       Transform3JsonConverter::toJson(reference, transposeOptions);
   // Check translation read back in
-  BOOST_CHECK(transposeOut["translation"].get<std::vector<ActsScalar>>() ==
+  BOOST_CHECK(transposeOut["translation"].get<std::vector<double>>() ==
               referenceT);
 
   // Check rotation read back in - transposed
   std::vector<std::size_t> transposedIndices = {0, 3, 6, 1, 4, 7, 2, 5, 8};
-  readR = transposeOut["rotation"].get<std::vector<ActsScalar>>();
+  readR = transposeOut["rotation"].get<std::vector<double>>();
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[transposedIndices[i]], rr, 1e-5);
   }

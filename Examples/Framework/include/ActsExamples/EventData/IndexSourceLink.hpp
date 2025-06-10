@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -60,10 +60,6 @@ class IndexSourceLink final {
     return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
-  friend bool operator!=(const IndexSourceLink& lhs,
-                         const IndexSourceLink& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 struct IndexSourceLinkSurfaceAccessor {
@@ -88,11 +84,6 @@ struct IndexSourceLinkSurfaceAccessor {
 
 }  // namespace Experimental
 
-/// Container of index source links.
-///
-/// Since the source links provide a `.geometryId()` accessor, they can be
-/// stored in an ordered geometry container.
-using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 /// Accessor for the above source link container
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
@@ -109,4 +100,5 @@ struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
     return {Iterator{begin}, Iterator{end}};
   }
 };
+
 }  // namespace ActsExamples

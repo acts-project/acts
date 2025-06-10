@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 /*
  * fullMaterial.cxx
@@ -12,6 +12,8 @@
  *  Created on: 22 Aug 2016
  *      Author: jhrdinka
  */
+
+#include "Acts/Utilities/AngleHelpers.hpp"
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -111,7 +113,7 @@ fullMaterial(std::string inFile,
   for (auto& mrecord : mrecords) {
     std::vector<Acts::MaterialStep> steps = mrecord.materialSteps();
     float                           theta = mrecord.theta();
-    float                           eta   = -log(tan(theta * 0.5));
+    float                           eta   = Acts::AngleHelpers::etaFromTheta(theta);
     float                           phi   = VectorHelpers::phi(mrecord);
 
     float thickness = 0.;

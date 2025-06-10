@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -22,7 +21,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -30,13 +28,11 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
-#include <utility>
-#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -46,7 +42,7 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const GeometryContext geoCtx;
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
@@ -76,12 +72,20 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
+
+  // reflection
+  BoundTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
              double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
-  phi = ((0 < theta) && (theta < M_PI)) ? phi : 0.0;
+  phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 
   // global direction for reference
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
@@ -180,7 +184,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -189,7 +193,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // negative charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -1_e / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, -1_e / p,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
@@ -198,7 +202,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // positive charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1_e / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1_e / p,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
@@ -207,7 +211,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -216,7 +220,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // double-negative any parameters from global information
   {
     auto params = BoundTrackParameters::create(
-                      surface, geoCtx, pos4, dir, -2_e / p, std::nullopt,
+                      geoCtx, surface, pos4, dir, -2_e / p, std::nullopt,
                       ParticleHypothesis::pionLike(2_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
@@ -225,7 +229,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // triple-positive any parameters from global information
   {
     auto params = BoundTrackParameters::create(
-                      surface, geoCtx, pos4, dir, 3_e / p, std::nullopt,
+                      geoCtx, surface, pos4, dir, 3_e / p, std::nullopt,
                       ParticleHypothesis::pionLike(3_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);

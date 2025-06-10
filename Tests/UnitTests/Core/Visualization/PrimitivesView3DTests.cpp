@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,6 +17,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DHelpers) {
   decops = Acts::EventDataView3D::decomposeCovariance(covariance);
   BOOST_CHECK_EQUAL(decops[0], 8.);
   BOOST_CHECK_EQUAL(decops[1], 0.);
-  CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
+  CHECK_CLOSE_ABS(decops[2], std::numbers::pi / 4., 0.0001);
 
   // Fully negatively correlated
   covariance.setZero();
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DHelpers) {
   decops = Acts::EventDataView3D::decomposeCovariance(covariance);
   BOOST_CHECK_EQUAL(decops[0], 8.);
   BOOST_CHECK_EQUAL(decops[1], 0.);
-  CHECK_CLOSE_ABS(decops[2], 3 * M_PI / 4, 0.0001);
+  CHECK_CLOSE_ABS(decops[2], 3 * std::numbers::pi / 4., 0.0001);
 
   // Correlation coefficient 0.5 (off-diagonal: 3*2*0.5)
   covariance.setZero();
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DHelpers) {
   decops = Acts::EventDataView3D::decomposeCovariance(covariance);
   BOOST_CHECK_EQUAL(decops[0], 6.);
   BOOST_CHECK_EQUAL(decops[1], 2.);
-  CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
+  CHECK_CLOSE_ABS(decops[2], std::numbers::pi / 4., 0.0001);
 
   // Correlation coefficient -0.5 & different diagonal (off-diagonal: 3*2*0.5)
   covariance.setZero();

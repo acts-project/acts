@@ -1,24 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -38,10 +39,10 @@ class MultiWireStructureBuilder {
     Transform3 transform = Transform3::Identity();
 
     /// The bounds of the multi-wire volume
-    std::vector<ActsScalar> mlBounds = {};
+    std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
-    std::vector<ProtoBinning> mlBinning = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
     float toleranceOverlap = 10.;
@@ -51,7 +52,7 @@ class MultiWireStructureBuilder {
   /// @param config The configure of the MultiWireStructureBuilder
   /// @param logger logging instance for screen output
 
-  MultiWireStructureBuilder(
+  explicit MultiWireStructureBuilder(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "MultiWireStructureBuilder", Acts::Logging::VERBOSE));

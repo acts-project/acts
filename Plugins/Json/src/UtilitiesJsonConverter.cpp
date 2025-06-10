@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
@@ -54,7 +54,37 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   float min = j["min"];
   float max = j["max"];
   int bins = j["bins"];
-  auto bValue = j["value"].get<BinningValue>();
+
+  // Support legacy format with BinningValue instead of AxisDirection,
+  // this will anyway disappear with the removal of BinUtility
+  AxisDirection bValue = AxisDirection::AxisX;
+  if (j["value"].get<std::string>().substr(0, 3) == "bin") {
+    std::string bValueStr = j["value"];
+    if (bValueStr == "binX") {
+      bValue = AxisDirection::AxisX;
+    } else if (bValueStr == "binY") {
+      bValue = AxisDirection::AxisY;
+    } else if (bValueStr == "binZ") {
+      bValue = AxisDirection::AxisZ;
+    } else if (bValueStr == "binR") {
+      bValue = AxisDirection::AxisR;
+    } else if (bValueStr == "binPhi") {
+      bValue = AxisDirection::AxisPhi;
+    } else if (bValueStr == "binRPhi") {
+      bValue = AxisDirection::AxisRPhi;
+    } else if (bValueStr == "binH") {
+      bValue = AxisDirection::AxisTheta;
+    } else if (bValueStr == "binEta") {
+      bValue = AxisDirection::AxisEta;
+    } else if (bValueStr == "binMag") {
+      bValue = AxisDirection::AxisMag;
+    } else {
+      throw std::invalid_argument("Unknown binning value name: " + bValueStr);
+    }
+  } else {
+    bValue = j["value"].get<AxisDirection>();
+  }
+
   if (bins == 1 && !(j["type"] == "arbitrary")) {
     bd = BinningData(bValue, min, max);
     return;

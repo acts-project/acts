@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,7 +14,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -50,7 +50,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     const Surface& surface =
         sc.surface != nullptr ? *sc.surface : sc.portal->surface();
     // Only allow overstepping if it's not a portal
-    ActsScalar overstepTolerance =
+    double overstepTolerance =
         sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
     BoundaryTolerance boundaryTolerance =
@@ -86,7 +86,7 @@ class SingleObjectNavigation : public navigation_type {
  public:
   /// Convenience constructor
   /// @param so the single object
-  SingleObjectNavigation(const object_type* so) : m_object(so) {
+  explicit SingleObjectNavigation(const object_type* so) : m_object(so) {
     if (so == nullptr) {
       throw std::invalid_argument("SingleObjectNavigation: object is nullptr");
     }
@@ -195,7 +195,7 @@ class IndexedGridNavigation : public navigation_type {
   grid_type grid;
 
   /// These are the cast parameters - copied from constructor
-  std::array<BinningValue, grid_type::DIM> casts{};
+  std::array<AxisDirection, grid_type::DIM> casts{};
 
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
@@ -205,7 +205,7 @@ class IndexedGridNavigation : public navigation_type {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   IndexedGridNavigation(grid_type&& igrid,
-                        const std::array<BinningValue, grid_type::DIM>& icasts,
+                        const std::array<AxisDirection, grid_type::DIM>& icasts,
                         const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
@@ -262,7 +262,7 @@ class ChainedNavigation : public navigation_type {
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedNavigation(const std::tuple<updators_t...>&& upts)
+  explicit ChainedNavigation(const std::tuple<updators_t...>&& upts)
       : updators(std::move(upts)) {}
 
   /// A combined navigation state updated to fill the candidates from

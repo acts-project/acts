@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -33,7 +33,7 @@
 
 class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
  public:
-  CompBuilder(
+  explicit CompBuilder(
       const std::vector<std::shared_ptr<Acts::Surface>>& sensitives = {})
       : m_sensitives(sensitives) {}
 
@@ -60,8 +60,7 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
       portalContainer[ip] = p;
     }
 
-    Acts::GeometryIdentifier geoID;
-    geoID.setVolume(1);
+    auto geoID = Acts::GeometryIdentifier().withVolume(1);
     dVolume->assignGeometryId(geoID);
 
     return Acts::Experimental::DetectorComponent{
@@ -85,8 +84,7 @@ class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
       Acts::Experimental::DetectorVolume& dVolume) const final {
     for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
-      Acts::GeometryIdentifier geoID;
-      geoID.setSensitive(is + 1);
+      auto geoID = Acts::GeometryIdentifier().withSensitive(is + 1);
       s->assignGeometryId(geoID);
     }
   }

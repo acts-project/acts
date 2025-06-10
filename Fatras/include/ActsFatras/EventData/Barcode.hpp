@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -154,7 +154,17 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
     // The vertex is identified by primary vertex, secondary vertex, and
     // generation. The other components are set to 0 so two particle originating
     // from the same vertex will have the same vertex ID.
-    return Barcode(*this).setParticle(0).setSubParticle(0);
+    return Barcode()
+        .setVertexPrimary(vertexPrimary())
+        .setVertexSecondary(vertexSecondary())
+        .setGeneration(generation());
+  }
+
+  friend inline std::ostream& operator<<(std::ostream& os, Barcode barcode) {
+    os << "vp=" << barcode.vertexPrimary()
+       << "|vs=" << barcode.vertexSecondary() << "|p=" << barcode.particle()
+       << "|g=" << barcode.generation() << "|sp=" << barcode.subParticle();
+    return os;
   }
 };
 

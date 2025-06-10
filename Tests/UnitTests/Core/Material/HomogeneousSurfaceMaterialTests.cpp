@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
   matHalf.scaleThickness(0.5);
 
   HomogeneousSurfaceMaterial hsm(mat, 1.);
-  hsm *= 0.5;
+  hsm.scale(0.5);
 
   auto matBin = hsm.materialSlab(Vector3(0., 0., 0.));
 
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   MaterialSlab matHalf = mat;
   matHalf.scaleThickness(0.5);
 
-  MaterialSlab vacuum = MaterialSlab();
+  MaterialSlab vacuum = MaterialSlab::Nothing();
 
   // Constructor from arguments
   HomogeneousSurfaceMaterial hsmfwd(mat, 1.);
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, mat2d);
   BOOST_CHECK_EQUAL(mat, mat3d);
 
-  Direction fDir = Direction::Forward;
-  Direction bDir = Direction::Backward;
+  Direction fDir = Direction::Forward();
+  Direction bDir = Direction::Backward();
 
   MaterialUpdateStage pre = MaterialUpdateStage::PreUpdate;
   MaterialUpdateStage full = MaterialUpdateStage::FullUpdate;

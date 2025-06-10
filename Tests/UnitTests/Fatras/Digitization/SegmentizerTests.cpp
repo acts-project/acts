@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -47,9 +47,10 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
       Acts::Transform3::Identity(), rectangleBounds);
 
   // The segmentation
-  Acts::BinUtility pixelated(20, -1., 1., Acts::open, Acts::BinningValue::binX);
+  Acts::BinUtility pixelated(20, -1., 1., Acts::open,
+                             Acts::AxisDirection::AxisX);
   pixelated +=
-      Acts::BinUtility(20, -1., 1., Acts::open, Acts::BinningValue::binY);
+      Acts::BinUtility(20, -1., 1., Acts::open, Acts::AxisDirection::AxisY);
 
   Segmentizer cl;
 
@@ -92,9 +93,9 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
       Acts::Transform3::Identity(), radialBounds);
 
   // The segmentation
-  Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::BinningValue::binR);
+  Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::AxisDirection::AxisR);
   strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open,
-                             Acts::BinningValue::binPhi);
+                             Acts::AxisDirection::AxisPhi);
 
   Segmentizer cl;
 
@@ -169,8 +170,10 @@ BOOST_DATA_TEST_CASE(
       }
       // 1 - write the grid
       grid.open("Segmentizer" + name + "Grid.csv");
-      if (segmentation.binningData()[0].binvalue == Acts::BinningValue::binX &&
-          segmentation.binningData()[1].binvalue == Acts::BinningValue::binY) {
+      if (segmentation.binningData()[0].binvalue ==
+              Acts::AxisDirection::AxisX &&
+          segmentation.binningData()[1].binvalue ==
+              Acts::AxisDirection::AxisY) {
         double bxmin = segmentation.binningData()[0].min;
         double bxmax = segmentation.binningData()[0].max;
         double bymin = segmentation.binningData()[1].min;
@@ -184,9 +187,9 @@ BOOST_DATA_TEST_CASE(
           csvHelper.writeLine(grid, {bxmin, yval}, {bxmax, yval});
         }
       } else if (segmentation.binningData()[0].binvalue ==
-                     Acts::BinningValue::binR &&
+                     Acts::AxisDirection::AxisR &&
                  segmentation.binningData()[1].binvalue ==
-                     Acts::BinningValue::binPhi) {
+                     Acts::AxisDirection::AxisPhi) {
         double brmin = segmentation.binningData()[0].min;
         double brmax = segmentation.binningData()[0].max;
         double bphimin = segmentation.binningData()[1].min;
@@ -217,9 +220,9 @@ BOOST_DATA_TEST_CASE(
                  ".csv");
 
     /// Run the Segmentizer
-    auto cSegement = cl.segments(geoCtx, *surface, segmentation, {start, end});
+    auto cSegments = cl.segments(geoCtx, *surface, segmentation, {start, end});
 
-    for (const auto& cs : cSegement) {
+    for (const auto& cs : cSegments) {
       csvHelper.writeLine(segments, cs.path2D[0], cs.path2D[1]);
     }
 

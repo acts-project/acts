@@ -1,19 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -38,7 +38,7 @@ struct ProtoSupport {
   Surface::SurfaceType type = Surface::SurfaceType::Other;
 
   /// The offset of the support to an estimated position (e.g. from an extent)
-  ActsScalar offset = 0.;
+  double offset = 0.;
 
   /// A given extent from the volume, this allows to set support surfaces
   /// to fit into given volume extensions (flagged by the binning value
@@ -55,7 +55,7 @@ struct ProtoSupport {
   /// The internal constraint would overwrite the volume one in order to allow
   /// support surfaces to be fitted from global volume extensions to the
   /// actually contained internal objects.
-  std::vector<BinningValue> internalConstraints = {};
+  std::vector<AxisDirection> internalConstraints = {};
 
   // Building instructions 2 (surface is provided):
 
@@ -63,13 +63,13 @@ struct ProtoSupport {
   std::shared_ptr<Surface> surface = nullptr;
 
   /// The (optional) binning description for proto material
-  std::optional<BinningDescription> protoMaterialBinning = std::nullopt;
+  std::optional<std::vector<ProtoAxis>> protoMaterialBinning = std::nullopt;
 
   /// Potential splits into planar approximations (valid for cylinder/disc)
   unsigned int splits = 1u;
 
   /// Planar placement (only valid for planar support surfaces)
-  BinningValue pPlacement = BinningValue::binZ;
+  AxisDirection pPlacement = AxisDirection::AxisZ;
 
   /// Indicate if the support surface(s) should always be addressed in
   /// navigation

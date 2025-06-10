@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -213,7 +213,7 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  AnyBase(AnyBase&& other) {
+  AnyBase(AnyBase&& other) noexcept {
     _ACTS_ANY_VERBOSE("Move construct (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -249,7 +249,7 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  operator bool() const { return m_handler != nullptr; }
+  explicit operator bool() const { return m_handler != nullptr; }
 
  private:
   void* dataPtr() {

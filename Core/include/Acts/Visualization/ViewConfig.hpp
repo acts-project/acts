@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include <array>
 #include <filesystem>
-#include <string>
+#include <string_view>
 
 namespace Acts {
 
@@ -49,17 +49,31 @@ struct Color {
   constexpr Color(double r, double g, double b)
       : Color{std::array<double, 3>{r, g, b}} {}
 
+ private:
+  constexpr static int hexToInt(std::string_view hex) {
+    constexpr auto hexCharToInt = [](char c) {
+      if (c >= '0' && c <= '9') {
+        return c - '0';
+      } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+      } else if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+      } else {
+        throw std::invalid_argument("Invalid hex character");
+      }
+    };
+
+    int value = 0;
+    for (char c : hex) {
+      value = (value << 4) + hexCharToInt(c);
+    }
+    return value;
+  };
+
+ public:
   /// Constructor from hex string. The expected format is `#RRGGBB`
   /// @param hex The hex string
   constexpr explicit Color(std::string_view hex) {
-    auto hexToInt = [](std::string_view hexStr) {
-      int value = 0;
-      std::stringstream ss;
-      ss << std::hex << hexStr;
-      ss >> value;
-      return value;
-    };
-
     if (hex[0] == '#' && hex.size() == 7) {
       rgb[0] = hexToInt(hex.substr(1, 2));  // Extract R component
       rgb[1] = hexToInt(hex.substr(3, 2));  // Extract G component
@@ -85,7 +99,6 @@ struct Color {
   /// @param rhs The second color
   /// @return True if the colors are equal
   friend bool operator==(const Color& lhs, const Color& rhs) = default;
-
   /// Output stream operator
   /// @param os The output stream
   /// @param color The color to be printed
@@ -98,6 +111,10 @@ struct Color {
 
   std::array<int, 3> rgb{};
 };
+
+constexpr Color s_defaultSurfaceColor{"#0000aa"};
+constexpr Color s_defaultPortalColor{"#308c48"};
+constexpr Color s_defaultVolumColor{"#ffaa00"};
 
 /// @brief Struct to concentrate all visualization configurations
 /// in order to harmonize visualization interfaces
@@ -112,12 +129,20 @@ struct ViewConfig {
   double lineThickness = 0.15;
   /// The visual surface thickness for this object
   double surfaceThickness = 0.15;
-  /// The number of segments to approximate full 2pi
-  unsigned int nSegments = 72;
+  /// The number of segments to approximate a quarter of the circle
+  unsigned int quarterSegments = 72;
   /// Whether to triangulate or not
   bool triangulate = false;
   /// Write name - non-empty string indicates writing
   std::filesystem::path outputName = std::filesystem::path("");
 };
+
+static const ViewConfig s_viewSurface = {.color = {170, 170, 170}};
+static const ViewConfig s_viewPortal = {.color = Color{"#308c48"}};
+static const ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
+static const ViewConfig s_viewPassive = {.color = {240, 280, 0}};
+static const ViewConfig s_viewVolume = {.color = {220, 220, 0}};
+static const ViewConfig s_viewGrid = {.color = {220, 0, 0}};
+static const ViewConfig s_viewLine = {.color = {0, 0, 220}};
 
 }  // namespace Acts

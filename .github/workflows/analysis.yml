@@ -20,8 +20,9 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 1.25G
-  CCACHE_KEY_SUFFIX: r1
+  CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
+  DEPENDENCY_TAG: v10.0.0
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -29,18 +30,24 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:74
     steps:
 
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Cache build
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
         run: >
@@ -86,18 +93,26 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:58
+    container: ghcr.io/acts-project/ubuntu2404:74
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a409b5
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
+          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Measure
         run: cmakeperf collect build/compile_commands.json -o perf.csv

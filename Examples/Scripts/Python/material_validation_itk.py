@@ -10,6 +10,8 @@ import acts
 
 
 def runMaterialValidation(
+    nevents,
+    ntracks,
     trackingGeometry,
     decorators,
     field,
@@ -18,7 +20,8 @@ def runMaterialValidation(
     dumpPropagationSteps=False,
     s=None,
 ):
-    s = s or Sequencer(events=1000, numThreads=-1)
+    # Create a sequencer
+    s = s or Sequencer(events=nevents, numThreads=-1)
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -44,31 +47,22 @@ def runMaterialValidation(
         rnd=rnd,
     )
 
-    # Run particle smearing
-    trackParametersGenerator = acts.examples.ParticleSmearing(
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
         level=acts.logging.INFO,
-        inputParticles="particles_input",
-        outputTrackParameters="start_parameters",
-        randomNumbers=rnd,
-        sigmaD0=0.0,
-        sigmaZ0=0.0,
-        sigmaPhi=0.0,
-        sigmaTheta=0.0,
-        sigmaPRel=0.0,
-        addCovariances=False,
+        inputParticles="particles_generated",
+        outputTrackParameters="params_particles_generated",
     )
-    s.addAlgorithm(trackParametersGenerator)
+    s.addAlgorithm(trkParamExtractor)
 
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         sterileLogger=False,
         recordMaterialInteractions=True,
-        inputTrackParameters="start_parameters",
+        inputTrackParameters="params_particles_generated",
         outputPropagationSteps="propagation_steps",
         outputMaterialTracks="material-tracks",
     )
-
     s.addAlgorithm(alg)
 
     s.addWriter(
@@ -113,9 +107,9 @@ if "__main__" == __name__:
 
     from acts.examples.itk import buildITkGeometry
 
-    detector, trackingGeometry, decorators = buildITkGeometry(
-        geo_example_dir, customMaterialFile=args.material
-    )
+    detector = buildITkGeometry(geo_example_dir, customMaterialFile=args.material)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
 

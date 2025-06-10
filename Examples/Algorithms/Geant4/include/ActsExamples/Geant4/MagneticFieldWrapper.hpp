@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,7 +18,7 @@ namespace Acts {
 class MagneticFieldProvider;
 }
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A magnetic field wrapper for the Acts magnetic field
 /// to be used with Geant4.
@@ -34,10 +34,10 @@ class MagneticFieldWrapper : public G4MagneticField {
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  MagneticFieldWrapper(const Config& cfg,
-                       std::unique_ptr<const Acts::Logger> logger =
-                           Acts::getDefaultLogger("MagneticFieldWrapper",
-                                                  Acts::Logging::INFO));
+  explicit MagneticFieldWrapper(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("MagneticFieldWrapper", Acts::Logging::INFO));
   ~MagneticFieldWrapper() override = default;
 
   /// Public get field interface
@@ -58,4 +58,4 @@ class MagneticFieldWrapper : public G4MagneticField {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,9 +12,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
-#include <array>
 #include <filesystem>
-#include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -60,14 +58,18 @@ class PlyVisualization3D : public IVisualization3D {
   /// @copydoc Acts::IVisualization3D::clear()
   void clear() final;
 
+  void object(const std::string& /*name*/) final {
+    // Unimplemented
+  }
+
  private:
   std::vector<std::pair<VertexType, Color>> m_vertices;
   std::vector<FaceType> m_faces;
   std::vector<std::pair<std::pair<std::size_t, std::size_t>, Color>> m_edges;
 };
 
-#ifndef DOXYGEN
-#include "detail/PlyVisualization3D.ipp"
-#endif
-
 }  // namespace Acts
+
+#ifndef DOXYGEN
+#include "PlyVisualization3D.ipp"
+#endif

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,9 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
-#include <cmath>
 #include <cstddef>
-#include <exception>
 #include <iosfwd>
 #include <vector>
 
@@ -54,6 +52,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param vertices A collection of vertices.
   /// throws a logic error if this is not the case
   template <typename coll_t>
+    requires std::same_as<typename coll_t::value_type, Acts::Vector2>
   static void convex_impl(const coll_t& vertices) noexcept(false);
 };
 
@@ -80,27 +79,24 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
-  ConvexPolygonBounds() = delete;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(false);
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(
+      false);
 
   /// Constructor from a fixed size array of vertices.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The vertices
-  ConvexPolygonBounds(const vertex_array& vertices) noexcept(false);
+  explicit ConvexPolygonBounds(const vertex_array& vertices) noexcept(false);
 
   /// Constructor from a fixed size array of parameters
   /// This will throw if the vertices do not form a convex polygon.
   /// @param values The values to build up the vertices
-  ConvexPolygonBounds(const value_array& values) noexcept(false);
+  explicit ConvexPolygonBounds(const value_array& values) noexcept(false);
 
-  ~ConvexPolygonBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
@@ -112,13 +108,13 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   /// Return the vertices
   ///
-  /// @param lseg the number of segments used to approximate
+  /// @param ignoredSegments the number of segments used to approximate
   /// and eventually curved line
   ///
   /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
   /// Return a rectangle bounds object that encloses this polygon.
   /// @return The rectangular bounds
@@ -144,20 +140,14 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
   constexpr static int eSize = -1;
 
-  /// Default constructor, deleted
-  ConvexPolygonBounds() = delete;
-
-  /// Defaulted destructor
-  ~ConvexPolygonBounds() override = default;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2>& vertices);
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices);
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -15,6 +15,7 @@
 #include <exception>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -26,7 +27,7 @@
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-#if ((BOOST_VERSION / 100) % 1000) <= 71
+#if BOOST_VERSION < 107200
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
 
@@ -79,7 +80,8 @@ int main(int argc, char** argv) {
     ao("phi-bins", value<unsigned int>()->default_value(10),
        "Number of bins in phi.");
     ao("phi-range",
-       value<Interval>()->value_name("MIN:MAX")->default_value({-M_PI, M_PI}),
+       value<Interval>()->value_name("MIN:MAX")->default_value(
+           {-std::numbers::pi, std::numbers::pi}),
        "Range for the phi bins.");
     ao("pt-borders", value<VariableReals>()->required(),
        "Transverse momentum borders.");
@@ -109,7 +111,7 @@ int main(int argc, char** argv) {
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
 
-    if (vm.count("help") != 0u) {
+    if (vm.contains("help")) {
       std::cout << description;
       return 1;
     }
@@ -141,8 +143,8 @@ int main(int argc, char** argv) {
     unsigned int nPhiBins = vm["phi-bins"].as<unsigned int>();
     auto phiInterval = vm["phi-range"].as<Interval>();
     std::array<float, 2> phiRange = {
-        static_cast<float>(phiInterval.lower.value_or(-M_PI)),
-        static_cast<float>(phiInterval.upper.value_or(M_PI))};
+        static_cast<float>(phiInterval.lower.value_or(-std::numbers::pi)),
+        static_cast<float>(phiInterval.upper.value_or(std::numbers::pi))};
 
     auto ptBorders = vm["pt-borders"].as<VariableReals>().values;
     if (ptBorders.empty()) {

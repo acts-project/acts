@@ -1,12 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -37,8 +38,8 @@ class GaussianGridTrackDensity {
     /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
     /// @note The value of @p zMinMax_ together with @p mainGridSize_ determines the
     /// overall bin size to be used as seen below
-    Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
-           int trkGridSize_ = 15)
+    explicit Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
+                    int trkGridSize_ = 15)
         : mainGridSize(mainGridSize_),
           trkGridSize(trkGridSize_),
           zMinMax(zMinMax_) {
@@ -78,7 +79,7 @@ class GaussianGridTrackDensity {
     float maxRelativeDensityDev = 0.01;
   };
 
-  GaussianGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
+  explicit GaussianGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Returns the z position of maximum track density
   ///

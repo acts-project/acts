@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(CenterReference) {
 BOOST_AUTO_TEST_CASE(BinningPositionReference) {
   // Simply return binning position, we test only the behavior of the generator
   // not the output
-  auto binningPosition =
-      BinningValueReferenceGenerator<Acts::BinningValue::binZ>{}.references(
+  auto referencePosition =
+      AxisDirectionReferenceGenerator<Acts::AxisDirection::AxisZ>{}.references(
           tContext, *pSurface);
-  BOOST_CHECK_EQUAL(binningPosition.size(), 1u);
+  BOOST_CHECK_EQUAL(referencePosition.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(PolyhedronReference) {

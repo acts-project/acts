@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,17 +19,16 @@
 
 namespace Acts::Test {
 
-using Scalar = Acts::ActsScalar;
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 struct DriftCircle {
-  Scalar y{0.};
-  Scalar z{0.};
-  Scalar rDrift{0.};
-  Scalar rDriftError{0.};
+  double y{0.};
+  double z{0.};
+  double rDrift{0.};
+  double rDriftError{0.};
 
-  DriftCircle(const Scalar _y, const Scalar _z, const Scalar _r,
-              const Scalar _rUncert)
+  DriftCircle(const double _y, const double _z, const double _r,
+              const double _rUncert)
       : y{_y}, z{_z}, rDrift{_r}, rDriftError{_rUncert} {}
 };
 
@@ -92,7 +91,7 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
       houghPlane(planeCfg);
 
-  // also insantiate the peak finder
+  // also instantiate the peak finder
   Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       Acts::GeometryIdentifier::Value>
       peakFinder(peakFinderCfg);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -482,12 +482,10 @@ BOOST_FIXTURE_TEST_CASE(range_search_combinatorial, TreeFixture3DDoubleInt2) {
 
               std::vector<int> valid;
 
-              for (const std::pair<std::array<double, 3>, int>& i :
-                   test_vector) {
-                const std::array<double, 3>& c = i.first;
+              for (const auto& [c, value] : test_vector) {
                 if (xmin <= c[0] && c[0] < xmax && ymin <= c[1] &&
                     c[1] < ymax && zmin <= c[2] && c[2] < zmax) {
-                  valid.push_back(i.second);
+                  valid.push_back(value);
                 }
               }
 

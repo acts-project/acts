@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-# This file is part of the Acts project.
+# This file is part of the ACTS project.
 #
-# Copyright (C) 2021 CERN for the benefit of the Acts project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http:#mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Configuration taken from: https://arxiv.org/pdf/1904.06778.pdf
 # See also https://github.com/acts-project/acts/issues/946
@@ -50,10 +50,7 @@ for vid in volumes:
 
 output = subprocess.check_output(base_cli).decode("utf-8")
 
-ref_path = (
-    args.sourcedir
-    + "/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-)
+ref_path = args.sourcedir + "/Examples/Configs/generic-digi-smearing-config.json"
 
 with open(ref_path, "r") as ifile:
     ref = ifile.read()

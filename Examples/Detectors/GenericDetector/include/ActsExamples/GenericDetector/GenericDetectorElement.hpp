@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,7 +22,7 @@ class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
 
 /// @class GenericDetectorElement
 ///
@@ -101,28 +101,4 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
 
-inline const Acts::Transform3&
-ActsExamples::Generic::GenericDetectorElement::transform(
-    const Acts::GeometryContext& /*gctx*/) const {
-  return *m_elementTransform;
-}
-
-inline const Acts::Surface&
-ActsExamples::Generic::GenericDetectorElement::surface() const {
-  return *m_elementSurface;
-}
-
-inline Acts::Surface& ActsExamples::Generic::GenericDetectorElement::surface() {
-  return *m_elementSurface;
-}
-
-inline double ActsExamples::Generic::GenericDetectorElement::thickness() const {
-  return m_elementThickness;
-}
-
-inline ActsExamples::Generic::GenericDetectorElement::Identifier
-ActsExamples::Generic::GenericDetectorElement::identifier() const {
-  return m_elementIdentifier;
-}
-
-}  // namespace ActsExamples::Generic
+}  // namespace ActsExamples

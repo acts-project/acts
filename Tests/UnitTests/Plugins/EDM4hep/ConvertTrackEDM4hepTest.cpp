@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numbers>
 #include <random>
 
 #include <edm4hep/TrackCollection.h>
@@ -40,14 +41,14 @@ BOOST_AUTO_TEST_SUITE(EDM4hepParameterConversion)
 
 BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
   BoundVector par;
-  par << 1_mm, 5_mm, 0.1, M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, 0.1, std::numbers::pi / 2. * 0.9, -1 / 1_GeV, 5_ns;
 
   BoundMatrix cov;
   cov.setIdentity();
 
   double Bz = 2_T;
 
-  double tanLambda = std::tan(M_PI_2 - par[Acts::eBoundTheta]);
+  double tanLambda = std::tan(std::numbers::pi / 2. - par[Acts::eBoundTheta]);
   double omega =
       par[Acts::eBoundQOverP] / std::sin(par[Acts::eBoundTheta]) * Bz;
 
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   auto refSurface = Surface::makeShared<PerigeeSurface>(Vector3{50, 30, 20});
 
   BoundVector par;
-  par << 1_mm, 5_mm, 0, M_PI_2, -1 / 1_GeV,
+  par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
   BoundMatrix cov;
@@ -107,12 +108,13 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
-  auto planeSurface =
+  std::shared_ptr<PlaneSurface> planeSurface =
       CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
           .planeSurface();
 
   BoundVector par;
-  par << 1_mm, 5_mm, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2. * 0.9,
+      -1 / 1_GeV, 5_ns;
 
   BoundMatrix cov;
   cov.setIdentity();
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   auto refSurface = Surface::makeShared<PerigeeSurface>(Vector3{50, 30, 20});
 
   BoundVector par;
-  par << 1_mm, 5_mm, 0, M_PI_2, -1 / 1_GeV,
+  par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
@@ -206,12 +208,13 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
-  auto refSurface =
+  std::shared_ptr<PlaneSurface> refSurface =
       CurvilinearSurface(Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized())
           .planeSurface();
 
   BoundVector par;
-  par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2., -1 / 1_GeV,
+      5_ns;
 
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
                                 ParticleHypothesis::pion()};
@@ -266,15 +269,14 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
-  using const_proxy_t = decltype(tracks)::ConstTrackProxy;
-
   std::mt19937 rng{42};
   std::normal_distribution<double> gauss(0., 1.);
   std::uniform_real_distribution<double> f(-1, 1);
   std::uniform_real_distribution<double> r(0, 1);
   std::uniform_int_distribution<std::uint32_t> nTracks(2, 20);
   std::uniform_int_distribution<std::uint32_t> nTs(1, 20);
-  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
   std::uniform_real_distribution<double> etaDist(-4, 4);
   std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
   std::uniform_real_distribution<double> qDist(0., 1.);
@@ -348,7 +350,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   auto logger = getDefaultLogger("EDM4hep", Logging::INFO);
 
-  for (const_proxy_t track : tracks) {
+  for (const auto& track : tracks) {
     auto to = edm4hepTracks.create();
     EDM4hepUtil::writeTrack(gctx, track, to, Bz, *logger);
   }
@@ -370,7 +372,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
                             std::make_shared<Acts::VectorMultiTrajectory>());
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
-    EDM4hepUtil::readTrack(edm4hepTrack, readTracks.makeTrack(), Bz, *logger);
+    auto track = readTracks.makeTrack();
+    EDM4hepUtil::readTrack(edm4hepTrack, track, Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());

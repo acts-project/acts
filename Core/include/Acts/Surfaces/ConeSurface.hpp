@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -19,13 +18,12 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -40,7 +38,7 @@ namespace Acts {
 /// at the tip of the cone.
 /// Propagations to a cone surface will be returned in
 /// curvilinear coordinates.
-
+///
 class ConeSurface : public RegularSurface {
   friend class Surface;
 
@@ -61,7 +59,7 @@ class ConeSurface : public RegularSurface {
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the opening angle for cone ssectors
   ConeSurface(const Transform3& transform, double alpha, double zmin,
-              double zmax, double halfPhi = M_PI);
+              double zmax, double halfPhi = std::numbers::pi);
 
   /// Constructor from HepTransform and ConeBounds
   ///
@@ -84,9 +82,6 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
-  ~ConeSurface() override = default;
-  ConeSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
@@ -95,11 +90,11 @@ class ConeSurface : public RegularSurface {
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue defines the type of binning applied in the global frame
+  /// @param aDir defines the direction of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -200,15 +195,16 @@ class ConeSurface : public RegularSurface {
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
-  /// @note that a surface transform can invalidate the extrema
-  /// in the transformed space
+  /// @param quarterSegments Number of segments used to approximate a quarter
+  ///
+  /// @note The phi extrema points at (-pi, -1/2 pi, 0, 1/2 pi) that fall within
+  /// the surface will be inserted to guarantee an appropriate extent
+  /// measurement in x and y
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx,
+      unsigned int quarterSegments = 2u) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

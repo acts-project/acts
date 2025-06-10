@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -28,10 +28,10 @@ using Covariance = Eigen::Map<BoundMatrix>;
 using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
 
-using Measurement = Eigen::Map<ActsVector<2>>;
+using Measurement = Eigen::Map<Vector2>;
 using MeasurementCovariance = Eigen::Map<ActsSquareMatrix<2>>;
 
-using ConstMeasurement = Eigen::Map<const ActsVector<2>>;
+using ConstMeasurement = Eigen::Map<const Vector2>;
 using ConstMeasurementCovariance = Eigen::Map<const ActsSquareMatrix<2>>;
 
 using DynamicMeasurement =
@@ -110,12 +110,6 @@ concept TrackStateProxyConcept =
 
       { cv.hasProjector() } -> std::same_as<bool>;
       { v.hasProjector() } -> std::same_as<bool>;
-
-      { cv.effectiveProjector() } -> std::same_as<detail::EffectiveProjector>;
-      { v.effectiveProjector() } -> std::same_as<detail::EffectiveProjector>;
-
-      { cv.projectorBitset() } -> std::same_as<ProjectorBitset>;
-      { v.projectorBitset() } -> std::same_as<ProjectorBitset>;
 
       { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
       { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
@@ -247,6 +241,13 @@ concept MutableTrackStateProxyConcept =
       } -> std::same_as<detail::DynamicMeasurementCovariance>;
 
       { v.allocateCalibrated(measdim) };
+
+      { v.allocateCalibrated(ActsVector<1>{}, ActsSquareMatrix<1>{}) };
+      // Assuming intermediate values are also allowed
+      {
+        v.allocateCalibrated(ActsVector<eBoundSize>{},
+                             ActsSquareMatrix<eBoundSize>{})
+      };
 
       { v.chi2() } -> std::same_as<double&>;
 

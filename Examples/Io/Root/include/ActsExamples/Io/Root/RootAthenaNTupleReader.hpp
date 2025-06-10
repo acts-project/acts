@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -178,6 +178,8 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   /// @param config The Configuration struct
   RootAthenaNTupleReader(const Config &config, Acts::Logging::Level level);
 
+  ~RootAthenaNTupleReader() override;
+
   /// Framework name() method
   std::string name() const final { return "RootAthenaNTupleReader"; }
 
@@ -214,7 +216,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain *m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// The handle to branches in current event
   BranchPointerWrapper m_branches;

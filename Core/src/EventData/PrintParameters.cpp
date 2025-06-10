@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/PrintParameters.hpp"
 
@@ -188,8 +188,7 @@ void Acts::detail::printFreeParameters(std::ostream& os,
 
 void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
                                     const std::uint8_t* indices,
-                                    const ActsScalar* params,
-                                    const ActsScalar* cov) {
+                                    const double* params, const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeBoundNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));
@@ -197,8 +196,7 @@ void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
 
 void Acts::detail::printMeasurement(std::ostream& os, FreeIndices size,
                                     const std::uint8_t* indices,
-                                    const ActsScalar* params,
-                                    const ActsScalar* cov) {
+                                    const double* params, const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeFreeNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -50,20 +51,19 @@ class LayerCreator {
     double cylinderZtolerance{10.};
     /// cylinder module phi tolerance: it counts as same phi, if ...
     double cylinderPhiTolerance{0.1};
-    /// standard constructor
-    Config() = default;
+    /// Default z envelope. Can be overridden by proto layer
+    Envelope defaultEnvelopeZ = zeroEnvelope;
+    /// Default r envelope. Can be overridden by proto layer
+    Envelope defaultEnvelopeR = zeroEnvelope;
   };
 
   /// Constructor
   ///
   /// @param lcConfig is the configuration object
   /// @param logger logging instance
-  LayerCreator(const Config& lcConfig,
-               std::unique_ptr<const Logger> logger =
-                   getDefaultLogger("LayerCreator", Logging::INFO));
-
-  /// Destructor
-  ~LayerCreator() = default;
+  explicit LayerCreator(const Config& lcConfig,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("LayerCreator", Logging::INFO));
 
   /// returning a cylindrical layer
   ///
@@ -174,7 +174,7 @@ class LayerCreator {
   /// bValue
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
-  /// @param [in] bValue Direction of the aligned surfaces
+  /// @param [in] aDir Direction of the aligned surfaces
   /// @param [in] transform is the (optional) transform of the layer
   /// @param [in] _protoLayer (optional) proto layer specifying the dimensions
   /// and
@@ -187,7 +187,7 @@ class LayerCreator {
   MutableLayerPtr planeLayer(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-      std::size_t bins2, BinningValue bValue,
+      std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;

@@ -1,12 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Utilities/Frustum.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <numbers>
 
 template <typename value_t, std::size_t DIM, std::size_t SIDES>
 Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
@@ -17,13 +23,13 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   using rotation_t = Eigen::Rotation2D<value_type>;
 
   static_assert(SIDES == 2, "2D frustum can only have 2 sides");
-  assert(opening_angle < M_PI);
+  assert(opening_angle < std::numbers::pi_v<value_type>);
 
   translation_t translation(origin);
   value_type angle = VectorHelpers::phi(dir);
   Eigen::Rotation2D<value_type> rot(angle);
 
-  value_type normal_angle = 0.5 * M_PI - 0.5 * opening_angle;
+  value_type normal_angle = std::numbers::pi / 2. - opening_angle / 2.;
   VertexType normal1 = rotation_t(normal_angle) * VertexType::UnitX();
   VertexType normal2 = rotation_t(-normal_angle) * VertexType::UnitX();
 
@@ -37,7 +43,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   requires(DIM == 3)
     : m_origin(origin) {
   static_assert(SIDES > 2, "3D frustum must have 3 or more sides");
-  assert(opening_angle < M_PI);
+  assert(opening_angle < std::numbers::pi_v<value_type>);
   using angle_axis_t = Eigen::AngleAxis<value_type>;
 
   const VertexType ldir = VertexType::UnitZ();
@@ -48,7 +54,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
 
   m_normals[0] = ldir;
 
-  const value_type phi_sep = 2 * M_PI / sides;
+  const value_type phi_sep = 2. * std::numbers::pi_v<value_type> / sides;
   transform_type rot;
   rot = angle_axis_t(phi_sep, ldir);
 

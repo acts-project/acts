@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
@@ -24,25 +24,18 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <initializer_list>
 #include <memory>
-#include <ostream>
+#include <numbers>
 #include <string>
-#include <utility>
 
 using namespace Acts::UnitLiterals;
-
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
 
 namespace Acts::Test {
 
@@ -54,16 +47,20 @@ GeometryContext testContext = GeometryContext();
 BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
 /// Unit test for creating compliant/non-compliant CylinderSurface object
 BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
-  // CylinderSurface default constructor is deleted
-  //
+  /// Test default construction
+  // default construction is deleted
+
   /// Constructor with transform, radius and halfZ
-  double radius(1.0), halfZ(10.), halfPhiSector(M_PI / 8.);
-  Translation3 translation{0., 1., 2.};
+  const double radius = 1.;
+  const double halfZ = 10.;
+  const double halfPhiSector = std::numbers::pi / 8.;
+  const Translation3 translation{0., 1., 2.};
+
   auto pTransform = Transform3(translation);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ)->type(),
       Surface::Cylinder);
-  //
+
   /// Constructor with transform pointer, radius, halfZ and halfPhiSector
   BOOST_CHECK_EQUAL(Surface::makeShared<CylinderSurface>(pTransform, radius,
                                                          halfZ, halfPhiSector)
@@ -75,8 +72,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   BOOST_CHECK_EQUAL(
       Surface::makeShared<CylinderSurface>(pTransform, pCylinderBounds)->type(),
       Surface::Cylinder);
-  //
-  //
+
   /// Copy constructor
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -84,7 +80,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
       Surface::makeShared<CylinderSurface>(*cylinderSurfaceObject);
   BOOST_CHECK_EQUAL(copiedCylinderSurface->type(), Surface::Cylinder);
   BOOST_CHECK(*copiedCylinderSurface == *cylinderSurfaceObject);
-  //
+
   /// Copied and transformed
   auto copiedTransformedCylinderSurface = Surface::makeShared<CylinderSurface>(
       testContext, *cylinderSurfaceObject, pTransform);
@@ -96,33 +92,35 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
                         Transform3::Identity(), nullptr),
                     AssertionFailureException);
 }
-//
+
 /// Unit test for testing CylinderSurface properties
 BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test clone method
-  double radius(1.0), halfZ(10.);
-  Translation3 translation{0., 1., 2.};
+  const double radius = 1.;
+  const double halfZ = 10.;
+  const Translation3 translation{0., 1., 2.};
+
   auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
-  //
+
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->type(), Surface::Cylinder);
-  //
-  /// Test binningPosition
-  Vector3 binningPosition{0., 1., 2.};
-  CHECK_CLOSE_ABS(
-      cylinderSurfaceObject->binningPosition(testContext, BinningValue::binPhi),
-      binningPosition, 1e-9);
-  //
+
+  /// Test referencePosition
+  Vector3 referencePosition{0., 1., 2.};
+  CHECK_CLOSE_ABS(cylinderSurfaceObject->referencePosition(
+                      testContext, AxisDirection::AxisPhi),
+                  referencePosition, 1e-9);
+
   /// Test referenceFrame
-  double rootHalf = std::sqrt(0.5);
-  Vector3 globalPosition{rootHalf, 1. - rootHalf, 0.};
-  Vector3 globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
+  const double invSqrt2 = 1. / std::numbers::sqrt2;
+  Vector3 globalPosition{invSqrt2, 1. - invSqrt2, 0.};
+  Vector3 globalPositionZ{invSqrt2, 1. - invSqrt2, 2.};
   Vector3 momentum{15., 15., 15.};
   Vector3 momentum2{6.6, -3., 2.};
   RotationMatrix3 expectedFrame;
-  expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1., 0.;
+  expectedFrame << invSqrt2, 0., invSqrt2, invSqrt2, 0., -invSqrt2, 0., 1., 0.;
   // check without shift
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
                            testContext, globalPosition, momentum),
@@ -131,53 +129,52 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
                            testContext, globalPositionZ, momentum2),
                        expectedFrame, 1e-6, 1e-9);
-  //
+
   /// Test normal, given 3D position
   Vector3 origin{0., 0., 0.};
   Vector3 normal3D = {0., -1., 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, origin), normal3D,
                   1e-9);
 
-  Vector3 pos45deg = {rootHalf, 1 + rootHalf, 0.};
-  Vector3 pos45degZ = {rootHalf, 1 + rootHalf, 4.};
-  Vector3 normal45deg = {rootHalf, rootHalf, 0.};
+  Vector3 pos45deg = {invSqrt2, 1 + invSqrt2, 0.};
+  Vector3 pos45degZ = {invSqrt2, 1 + invSqrt2, 4.};
+  Vector3 normal45deg = {invSqrt2, invSqrt2, 0.};
   // test the normal vector
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
-                  normal45deg, 1e-6 * rootHalf);
+                  normal45deg, 1e-6 * invSqrt2);
   // test that the normal vector is independent of z coordinate
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45degZ),
-                  normal45deg, 1e-6 * rootHalf);
-  //
+                  normal45deg, 1e-6 * invSqrt2);
+
   /// Test normal given 2D rphi position
-  Vector2 positionPiBy2(1.0, 0.);
+  Vector2 positionPiBy2(1., 0.);
   Vector3 normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, positionPiBy2),
                   normalAtPiBy2, 1e-9);
 
-  //
   /// Test rotational symmetry axis
   Vector3 symmetryAxis{0., 0., 1.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->rotSymmetryAxis(testContext),
                   symmetryAxis, 1e-9);
-  //
+
   /// Test bounds
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->bounds().type(),
                     SurfaceBounds::eCylinder);
-  //
+
   /// Test localToGlobal
   Vector2 localPosition{0., 0.};
   globalPosition = cylinderSurfaceObject->localToGlobal(
       testContext, localPosition, momentum);
   Vector3 expectedPosition{1, 1, 2};
   BOOST_CHECK_EQUAL(globalPosition, expectedPosition);
-  //
+
   /// Testing globalToLocal
   localPosition = cylinderSurfaceObject
                       ->globalToLocal(testContext, globalPosition, momentum)
                       .value();
   Vector2 expectedLocalPosition{0., 0.};
   BOOST_CHECK_EQUAL(localPosition, expectedLocalPosition);
-  //
+
   /// Test isOnSurface
   Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(cylinderSurfaceObject->isOnSurface(
@@ -188,13 +185,13 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
       testContext, offSurface, momentum, BoundaryTolerance::None()));
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
                                                   BoundaryTolerance::None()));
-  //
-  /// intersection test
+
+  /// Intersection test
   Vector3 direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, BoundaryTolerance::Infinite());
   Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
-                                   Intersection3D::Status::reachable};
+                                   IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection[0].isValid());
   CHECK_CLOSE_ABS(sfIntersection[0].position(), expectedIntersect.position(),
                   1e-9);
@@ -208,16 +205,15 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
-  //
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
                                                         momentum.normalized()),
-                  std::sqrt(3.), 0.01);
-  //
+                  std::numbers::sqrt3, 0.01);
+
   /// Test name
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->name(),
                     std::string("Acts::CylinderSurface"));
-  //
+
   /// Test dump
   boost::test_tools::output_test_stream dumpOutput;
   std::string expected =
@@ -232,18 +228,20 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
-  double radius(1.0), halfZ(10.);
-  Translation3 translation{0., 1., 2.};
+  const double radius = 1.;
+  const double halfZ = 10.;
+  const Translation3 translation{0., 1., 2.};
+
   auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
-  //
+
   auto cylinderSurfaceObject2 =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
-  //
+
   /// Test equality operator
   BOOST_CHECK(*cylinderSurfaceObject == *cylinderSurfaceObject2);
-  //
+
   BOOST_TEST_CHECKPOINT(
       "Create and then assign a CylinderSurface object to the existing one");
   /// Test assignment
@@ -256,9 +254,13 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
 
 /// Unit test for testing CylinderSurface properties
 BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
+  using enum AxisDirection;
+
   // Some radius and half length
-  double radius(1.0), halfZ(10.);
-  Translation3 translation{0., 0., 2.};
+  const double radius = 1.;
+  const double halfZ = 10.;
+  const Translation3 translation{0., 0., 2.};  // != {0., 1., 2.}
+
   auto pTransform = Transform3(translation);
   auto cylinderSurface =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -266,28 +268,22 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   auto cylinderExtent =
       cylinderSurface->polyhedronRepresentation(testContext, 1).extent();
 
-  CHECK_CLOSE_ABS(-8, cylinderExtent.min(BinningValue::binZ),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(12, cylinderExtent.max(BinningValue::binZ),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.min(BinningValue::binR),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(BinningValue::binR),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(BinningValue::binX),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(BinningValue::binX),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(BinningValue::binY),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(BinningValue::binY),
-                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-8, cylinderExtent.min(AxisZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(12, cylinderExtent.max(AxisZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.min(AxisR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisY), s_onSurfaceTolerance);
 }
 
 /// Unit test for testing CylinderSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
-  double radius(1.0), halfZ(10.);
-  Translation3 translation{0., 1., 2.};
+  const double radius = 1.;
+  const double halfZ = 10.;
+  const Translation3 translation{0., 1., 2.};
+
   auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -322,30 +318,30 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
   double halfZ = 330;
   double averagePhi = 0.1;
 
-  auto bounds =
-      std::make_shared<CylinderBounds>(r, halfZ, M_PI / 8, averagePhi);
+  auto bounds = std::make_shared<CylinderBounds>(r, halfZ, std::numbers::pi / 8,
+                                                 averagePhi);
   auto cylinder = Acts::Surface::makeShared<CylinderSurface>(trf, bounds);
 
   Vector3 exp = Vector3{r * std::cos(averagePhi), r * std::sin(averagePhi), 0};
   exp = trf * exp;
 
-  Vector3 bp = cylinder->binningPosition(testContext, BinningValue::binR);
+  Vector3 bp = cylinder->referencePosition(testContext, AxisDirection::AxisR);
   CHECK_CLOSE_ABS(bp, exp, 1e-10);
   CHECK_CLOSE_ABS(
-      cylinder->binningPositionValue(testContext, BinningValue::binR),
+      cylinder->referencePositionValue(testContext, AxisDirection::AxisR),
       VectorHelpers::perp(exp), 1e-10);
 
-  bp = cylinder->binningPosition(testContext, BinningValue::binRPhi);
+  bp = cylinder->referencePosition(testContext, AxisDirection::AxisRPhi);
   CHECK_CLOSE_ABS(bp, exp, 1e-10);
   CHECK_CLOSE_ABS(
-      cylinder->binningPositionValue(testContext, BinningValue::binRPhi),
+      cylinder->referencePositionValue(testContext, AxisDirection::AxisRPhi),
       VectorHelpers::phi(exp) * VectorHelpers::perp(exp), 1e-10);
 
-  for (auto b :
-       {BinningValue::binX, BinningValue::binY, BinningValue::binZ,
-        BinningValue::binEta, BinningValue::binH, BinningValue::binMag}) {
+  for (auto b : {AxisDirection::AxisX, AxisDirection::AxisY,
+                 AxisDirection::AxisZ, AxisDirection::AxisEta,
+                 AxisDirection::AxisTheta, AxisDirection::AxisMag}) {
     BOOST_TEST_CONTEXT("binValue: " << b) {
-      BOOST_CHECK_EQUAL(cylinder->binningPosition(testContext, b),
+      BOOST_CHECK_EQUAL(cylinder->referencePosition(testContext, b),
                         cylinder->center(testContext));
     }
   }
@@ -361,7 +357,7 @@ BOOST_AUTO_TEST_CASE(InvalidDetectorElement) {
   auto cyl2 = Surface::makeShared<CylinderSurface>(bounds, detElem);
 
   BOOST_CHECK_THROW(
-      cyl1->mergedWith(*cyl2, Acts::BinningValue::binR, false, *logger),
+      cyl1->mergedWith(*cyl2, Acts::AxisDirection::AxisR, false, *logger),
       SurfaceMergingException);
 }
 
@@ -383,57 +379,57 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
       base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm);
 
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl2, Acts::BinningValue::binPhi, false, *logger),
+      cyl->mergedWith(*cyl2, Acts::AxisDirection::AxisPhi, false, *logger),
       SurfaceMergingException);
 
   auto cylShiftedXy = Surface::makeShared<CylinderSurface>(
       base * Translation3{Vector3{1_mm, 2_mm, 200_mm}}, 30_mm, 100_mm);
-  BOOST_CHECK_THROW(
-      cyl->mergedWith(*cylShiftedXy, Acts::BinningValue::binZ, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(cyl->mergedWith(*cylShiftedXy, Acts::AxisDirection::AxisZ,
+                                    false, *logger),
+                    SurfaceMergingException);
 
   auto cylRotatedX = Surface::makeShared<CylinderSurface>(
       base * AngleAxis3{10_degree, Vector3::UnitX()} *
           Translation3{Vector3::UnitZ() * 200_mm},
       30_mm, 100_mm);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cylRotatedX, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cylRotatedX, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with different radius
   auto cyl3 = Surface::makeShared<CylinderSurface>(
       base * Translation3{Vector3::UnitZ() * 200_mm}, 35_mm, 100_mm);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl3, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl3, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with bevel
   auto cyl4 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm, M_PI, 0,
-      M_PI / 8.0);
+      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
+      std::numbers::pi, 0, std::numbers::pi / 8.);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl4, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl4, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   auto cyl5 = Surface::makeShared<CylinderSurface>(
-      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm, M_PI, 0, 0,
-      M_PI / 8.0);
+      base * Translation3{Vector3::UnitZ() * 200_mm}, 30_mm, 100_mm,
+      std::numbers::pi, 0, 0, std::numbers::pi / 8.);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl5, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl5, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with overlap in z
   auto cyl6 = Surface::makeShared<CylinderSurface>(
       base * Translation3{Vector3::UnitZ() * 150_mm}, 30_mm, 100_mm);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl6, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl6, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with gap in z
   auto cyl7 = Surface::makeShared<CylinderSurface>(
       base * Translation3{Vector3::UnitZ() * 250_mm}, 30_mm, 100_mm);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl7, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl7, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   // Cylinder with phi sector and relative z rotation
@@ -442,7 +438,7 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
           Translation3{Vector3::UnitZ() * 200_mm},
       30_mm, 100_mm, 10_degree, 40_degree);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(*cyl8, Acts::BinningValue::binZ, false, *logger),
+      cyl->mergedWith(*cyl8, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 
   auto cylPhi1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
@@ -451,7 +447,7 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
       Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm,
       55_degree);
   BOOST_CHECK_THROW(
-      cylPhi1->mergedWith(*cylPhi2, Acts::BinningValue::binZ, false, *logger),
+      cylPhi1->mergedWith(*cylPhi2, Acts::AxisDirection::AxisZ, false, *logger),
       SurfaceMergingException);
 }
 
@@ -474,12 +470,12 @@ BOOST_DATA_TEST_CASE(ZDirection,
       30_mm, 100_mm);
 
   auto [cyl3, reversed] =
-      cyl->mergedWith(*cyl2, Acts::BinningValue::binZ, false, *logger);
+      cyl->mergedWith(*cyl2, Acts::AxisDirection::AxisZ, false, *logger);
   BOOST_REQUIRE_NE(cyl3, nullptr);
   BOOST_CHECK(!reversed);
 
   auto [cyl3Reversed, reversed2] =
-      cyl2->mergedWith(*cyl, Acts::BinningValue::binZ, false, *logger);
+      cyl2->mergedWith(*cyl, Acts::AxisDirection::AxisZ, false, *logger);
   BOOST_REQUIRE_NE(cyl3Reversed, nullptr);
   BOOST_CHECK(cyl3->bounds() == cyl3Reversed->bounds());
   BOOST_CHECK(reversed2);
@@ -507,7 +503,7 @@ BOOST_DATA_TEST_CASE(ZDirection,
       45_degree);
 
   auto [cylPhi12, reversedPhy12] =
-      cylPhi1->mergedWith(*cylPhi2, Acts::BinningValue::binZ, false, *logger);
+      cylPhi1->mergedWith(*cylPhi2, Acts::AxisDirection::AxisZ, false, *logger);
 
   BOOST_REQUIRE_NE(cylPhi12, nullptr);
   auto boundsPhi12 = cylPhi12->bounds();
@@ -530,7 +526,7 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -540,31 +536,31 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
   // Cylinder with overlap in phi
   auto cylPhi2 = Surface::makeShared<CylinderSurface>(base, 30_mm, 100_mm,
                                                       45_degree, a(85_degree));
-  BOOST_CHECK_THROW(
-      cylPhi->mergedWith(*cylPhi2, Acts::BinningValue::binRPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(cylPhi->mergedWith(*cylPhi2, Acts::AxisDirection::AxisRPhi,
+                                       false, *logger),
+                    SurfaceMergingException);
 
   // Cylinder with gap in phi
   auto cylPhi3 = Surface::makeShared<CylinderSurface>(base, 30_mm, 100_mm,
                                                       45_degree, a(105_degree));
-  BOOST_CHECK_THROW(
-      cylPhi->mergedWith(*cylPhi3, Acts::BinningValue::binRPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(cylPhi->mergedWith(*cylPhi3, Acts::AxisDirection::AxisRPhi,
+                                       false, *logger),
+                    SurfaceMergingException);
 
   // Cylinder with a z shift
   auto cylPhi4 = Surface::makeShared<CylinderSurface>(
       base * Translation3{Vector3::UnitZ() * 20_mm}, 30_mm, 100_mm, 45_degree,
       a(95_degree));
-  BOOST_CHECK_THROW(
-      cylPhi->mergedWith(*cylPhi4, Acts::BinningValue::binRPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(cylPhi->mergedWith(*cylPhi4, Acts::AxisDirection::AxisRPhi,
+                                       false, *logger),
+                    SurfaceMergingException);
 
   // Test phi sector with different z halflengths
   auto cylPhi5 = Surface::makeShared<CylinderSurface>(base, 30_mm, 110_mm,
                                                       45_degree, a(95_degree));
-  BOOST_CHECK_THROW(
-      cylPhi->mergedWith(*cylPhi5, Acts::BinningValue::binRPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(cylPhi->mergedWith(*cylPhi5, Acts::AxisDirection::AxisRPhi,
+                                       false, *logger),
+                    SurfaceMergingException);
 }
 
 BOOST_DATA_TEST_CASE(RPhiDirection,
@@ -579,7 +575,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -590,13 +586,13 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                                                      45_degree, a(95_degree));
 
     auto [cyl3, reversed] =
-        cyl->mergedWith(*cyl2, Acts::BinningValue::binRPhi, false, *logger);
+        cyl->mergedWith(*cyl2, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl3, nullptr);
     BOOST_CHECK_EQUAL(base.matrix(), cyl3->transform(testContext).matrix());
     BOOST_CHECK(reversed);
 
     auto [cyl3Reversed, reversed2] =
-        cyl2->mergedWith(*cyl, Acts::BinningValue::binRPhi, false, *logger);
+        cyl2->mergedWith(*cyl, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl3Reversed, nullptr);
     BOOST_CHECK(*cyl3 == *cyl3Reversed);
     BOOST_CHECK(!reversed2);
@@ -605,7 +601,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
     BOOST_CHECK_SMALL(
         detail::difference_periodic(bounds.get(CylinderBounds::eAveragePhi),
-                                    a(85_degree), 2 * M_PI),
+                                    a(85_degree), 2 * std::numbers::pi),
         1e-6);
     BOOST_CHECK_CLOSE(bounds.get(CylinderBounds::eHalfPhiSector), 55_degree,
                       0.1);
@@ -615,13 +611,13 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto cyl5 = Surface::makeShared<CylinderSurface>(base, 30_mm, 100_mm,
                                                      10_degree, a(-160_degree));
     auto [cyl45, reversed45] =
-        cyl4->mergedWith(*cyl5, Acts::BinningValue::binRPhi, false, *logger);
+        cyl4->mergedWith(*cyl5, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl45, nullptr);
     BOOST_CHECK_EQUAL(base.matrix(), cyl45->transform(testContext).matrix());
     BOOST_CHECK(reversed45);
 
     auto [cyl54, reversed54] =
-        cyl5->mergedWith(*cyl4, Acts::BinningValue::binRPhi, false, *logger);
+        cyl5->mergedWith(*cyl4, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl54, nullptr);
     BOOST_CHECK(!reversed54);
 
@@ -629,7 +625,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
     BOOST_CHECK_SMALL(detail::difference_periodic(
                           cyl45->bounds().get(CylinderBounds::eAveragePhi),
-                          a(180_degree), 2 * M_PI),
+                          a(180_degree), 2 * std::numbers::pi),
                       1e-6);
     BOOST_CHECK_CLOSE(cyl45->bounds().get(CylinderBounds::eHalfPhiSector),
                       30_degree, 1e-6);
@@ -640,12 +636,12 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                                                      90_degree, a(-90_degree));
 
     auto [cyl67, reversed67] =
-        cyl6->mergedWith(*cyl7, Acts::BinningValue::binRPhi, false, *logger);
+        cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
     BOOST_CHECK_EQUAL(base.matrix(), cyl67->transform(testContext).matrix());
 
     auto [cyl76, reversed76] =
-        cyl7->mergedWith(*cyl6, Acts::BinningValue::binRPhi, false, *logger);
+        cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
     BOOST_CHECK_EQUAL(base.matrix(), cyl76->transform(testContext).matrix());
 
@@ -656,7 +652,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
     BOOST_CHECK_SMALL(detail::difference_periodic(
                           cyl67->bounds().get(CylinderBounds::eAveragePhi),
-                          a(180_degree), 2 * M_PI),
+                          a(180_degree), 2 * std::numbers::pi),
                       1e-6);
     BOOST_CHECK_CLOSE(cyl67->bounds().get(CylinderBounds::eHalfPhiSector),
                       180_degree, 1e-6);
@@ -672,7 +668,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                                                      45_degree, 0_degree);
 
     auto [cyl3, reversed] =
-        cyl1->mergedWith(*cyl2, Acts::BinningValue::binRPhi, true, *logger);
+        cyl1->mergedWith(*cyl2, Acts::AxisDirection::AxisRPhi, true, *logger);
 
     BOOST_REQUIRE_NE(cyl3, nullptr);
     Transform3 trfExpected12 =
@@ -692,7 +688,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto cyl5 = Surface::makeShared<CylinderSurface>(trf5, 30_mm, 100_mm,
                                                      10_degree, 0_degree);
     auto [cyl45, reversed45] =
-        cyl4->mergedWith(*cyl5, Acts::BinningValue::binRPhi, true, *logger);
+        cyl4->mergedWith(*cyl5, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl45, nullptr);
     Transform3 trfExpected45 =
         base * AngleAxis3(a(180_degree), Vector3::UnitZ());
@@ -701,7 +697,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     BOOST_CHECK(reversed45);
 
     auto [cyl54, reversed54] =
-        cyl5->mergedWith(*cyl4, Acts::BinningValue::binRPhi, true, *logger);
+        cyl5->mergedWith(*cyl4, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl54, nullptr);
     BOOST_CHECK(!reversed54);
 
@@ -719,14 +715,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                                                      90_degree, 0_degree);
 
     auto [cyl67, reversed67] =
-        cyl6->mergedWith(*cyl7, Acts::BinningValue::binRPhi, true, *logger);
+        cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
     Transform3 expected67 = trf6 * AngleAxis3(90_degree, Vector3::UnitZ());
     CHECK_CLOSE_OR_SMALL(cyl67->transform(testContext).matrix(),
                          expected67.matrix(), 1e-6, 1e-10);
 
     auto [cyl76, reversed76] =
-        cyl7->mergedWith(*cyl6, Acts::BinningValue::binRPhi, true, *logger);
+        cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
     Transform3 expected76 = trf7 * AngleAxis3(90_degree, Vector3::UnitZ());
     CHECK_CLOSE_OR_SMALL(cyl76->transform(testContext).matrix(),

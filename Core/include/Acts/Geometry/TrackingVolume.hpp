@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,18 +13,20 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Navigation/NavigationDelegate.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -33,7 +35,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/container/small_vector.hpp>
+#include <boost/container/container_fwd.hpp>
 
 namespace Acts {
 
@@ -41,13 +43,14 @@ class GlueVolumesDescriptor;
 class VolumeBounds;
 template <typename object_t>
 struct NavigationOptions;
-class GeometryIdentifier;
 class IMaterialDecorator;
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class Surface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
+class Portal;
+class INavigationPolicy;
 
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
@@ -114,8 +117,8 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
-  TrackingVolume(TrackingVolume&&) = default;
-  TrackingVolume& operator=(TrackingVolume&&) = default;
+  TrackingVolume(TrackingVolume&&) noexcept;
+  TrackingVolume& operator=(TrackingVolume&&) noexcept;
 
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
@@ -150,9 +153,9 @@ class TrackingVolume : public Volume {
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  TrackingVolume(Volume& volume, const std::string& volumeName = "undefined");
+  explicit TrackingVolume(Volume& volume,
+                          const std::string& volumeName = "undefined");
 
-  // @TODO: This needs to be refactored to include Gen3 volumes
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position associated with that search
@@ -175,44 +178,12 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    if (!restrictToSensitives) {
-      // Visit the boundary surfaces
-      for (const auto& bs : m_boundarySurfaces) {
-        visitor(&(bs->surfaceRepresentation()));
+    apply([&visitor, restrictToSensitives](const Surface& surface) {
+      if (restrictToSensitives && surface.geometryId().sensitive() == 0) {
+        return;
       }
-    }
-
-    // Internal structure
-    if (m_confinedVolumes == nullptr) {
-      // no sub volumes => loop over the confined layers
-      if (m_confinedLayers != nullptr) {
-        for (const auto& layer : m_confinedLayers->arrayObjects()) {
-          // Surfaces contained in the surface array
-          if (layer->surfaceArray() != nullptr) {
-            for (const auto& srf : layer->surfaceArray()->surfaces()) {
-              visitor(srf);
-              continue;
-            }
-          }
-          if (!restrictToSensitives) {
-            // Surfaces of the layer
-            visitor(&layer->surfaceRepresentation());
-            // Approach surfaces of the layer
-            if (layer->approachDescriptor() != nullptr) {
-              for (const auto& srf :
-                   layer->approachDescriptor()->containedSurfaces()) {
-                visitor(srf);
-              }
-            }
-          }
-        }
-      }
-    } else {
-      // contains sub volumes
-      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitSurfaces(visitor, restrictToSensitives);
-      }
-    }
+      visitor(&surface);
+    });
   }
 
   /// @brief Visit all sensitive surfaces
@@ -240,17 +211,50 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
-    visitor(this);
-    if (m_confinedVolumes != nullptr) {
-      // contains sub volumes
-      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitVolumes(visitor);
-      }
-    }
+    apply([&visitor](const TrackingVolume& volume) { visitor(&volume); });
+  }
 
-    for (const auto& volume : m_volumes) {
-      volume->visitVolumes(visitor);
-    }
+  /// @brief Apply a visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
+  void apply(TrackingGeometryVisitor& visitor) const;
+
+  /// @brief Apply a mutable visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
+  void apply(TrackingGeometryMutableVisitor& visitor);
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable)
+    requires(detail::callableWithAnyMutable<Callable>() &&
+             !detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryMutableVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable) const
+    requires(detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
   }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
@@ -300,6 +304,45 @@ class TrackingVolume : public Volume {
   /// Return mutable view of the registered volumes under this tracking volume
   /// @return the range of volumes
   MutableVolumeRange volumes();
+
+  using MutablePortalRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::shared_ptr<Portal>>>;
+
+  using PortalRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::shared_ptr<Portal>>>;
+
+  /// Return all portals registered under this tracking volume
+  /// @return the range of portals
+  PortalRange portals() const;
+
+  /// Return mutable view of the registered portals under this tracking volume
+  /// @return the range of portals
+  MutablePortalRange portals();
+
+  /// Add a portal to this tracking volume
+  /// @param portal The portal to add
+  void addPortal(std::shared_ptr<Portal> portal);
+
+  using MutableSurfaceRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::shared_ptr<Surface>>>;
+  using SurfaceRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::shared_ptr<Surface>>>;
+
+  /// Return all surfaces registered under this tracking volume
+  /// @return the range of surfaces
+  SurfaceRange surfaces() const;
+
+  /// Return mutable view of the registered surfaces under this tracking volume
+  /// @return the range of surfaces
+  MutableSurfaceRange surfaces();
+
+  /// Add a surface to this tracking volume
+  /// @param surface The surface to add
+  void addSurface(std::shared_ptr<Surface> surface);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
@@ -426,12 +469,41 @@ class TrackingVolume : public Volume {
   /// @param gvd register a new GlueVolumeDescriptor
   void registerGlueVolumeDescriptor(std::unique_ptr<GlueVolumesDescriptor> gvd);
 
+  /// Clear boundary surfaces for this tracking volume
+  void clearBoundarySurfaces();
+
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
   ///  - negativeFaceXY
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
+
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfig The view configuration
+  /// @param portalViewConfig View configuration for portals
+  /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  void visualize(IVisualization3D& helper, const GeometryContext& gctx,
+                 const ViewConfig& viewConfig,
+                 const ViewConfig& portalViewConfig,
+                 const ViewConfig& sensitiveViewConfig) const;
+
+  /// Register a navigation policy with this volume. The argument can not be
+  /// nullptr.
+  /// @param policy is the navigation policy to be registered
+  void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
+
+  /// Populate the navigation stream with navigation candidates from this
+  /// volume. Internally, this consults the registered navigation policy, where
+  /// the default is a noop.
+  /// @param args are the navigation arguments
+  /// @param stream is the navigation stream to be updated
+  /// @param logger is the logger
+  void initializeNavigationCandidates(const NavigationArguments& args,
+                                      AppendOnlyNavigationStream& stream,
+                                      const Logger& logger) const;
 
  private:
   void connectDenseBoundarySurfaces(
@@ -468,22 +540,6 @@ class TrackingVolume : public Volume {
   /// @}
 
  private:
-  /// close the Geometry, i.e. set the GeometryIdentifier and assign material
-  ///
-  /// @param materialDecorator is a dedicated decorator for the
-  ///        material to be assigned (surface, volume based)
-  /// @param volumeMap is a map to find the a volume by identifier
-  /// @param vol is the geometry id of the volume
-  ///        as calculated by the TrackingGeometry
-  /// @param hook Identifier hook to be applied to surfaces
-  /// @param logger A @c Logger instance
-  ///
-  void closeGeometry(
-      const IMaterialDecorator* materialDecorator,
-      std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      std::size_t& vol, const GeometryIdentifierHook& hook,
-      const Logger& logger = getDummyLogger());
-
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
@@ -494,6 +550,12 @@ class TrackingVolume : public Volume {
   std::string m_name;
 
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
+  std::vector<std::shared_ptr<Portal>> m_portals;
+  std::vector<std::shared_ptr<Surface>> m_surfaces;
+
+  std::unique_ptr<INavigationPolicy> m_navigationPolicy;
+
+  NavigationDelegate m_navigationDelegate{};
 };
 
 }  // namespace Acts

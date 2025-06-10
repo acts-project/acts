@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,14 +15,8 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
 #include <stdexcept>
-#include <utility>
 #include <vector>
-
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
 
 using vec2 = Acts::Vector2;
 template <int N>
@@ -42,7 +36,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
     // wrong number of vertices
     BOOST_CHECK_THROW(poly<3> trip{vertices}, AssertionFailureException);
   }
-  { poly<4> quad = {vertices}; }
+  { poly<4> quad(vertices); }
 
   // this one is self intersecting
   vertices = {{0, 0}, {1, 0}, {0.5, 1}, {0.9, 1.2}};
@@ -50,13 +44,13 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
 
   // this one is not
   vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
-  { poly<4> quad = {vertices}; }
+  { poly<4> quad(vertices); }
 
   vertices = {{0, 0}, {1, 0}, {0.8, 0.5}, {1, 1}, {0, 1}};
-  { BOOST_CHECK_THROW(poly<5> pent(vertices), std::logic_error); }
+  { BOOST_CHECK_THROW(poly<5> pent{vertices}, std::logic_error); }
 
   vertices = {{0, 0}, {1, 0}, {1.1, 0.5}, {1, 1}, {0, 1}};
-  { poly<5> pent{vertices}; }
+  { poly<5> pent(vertices); }
 }
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
@@ -101,6 +95,10 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
   std::copy_n(valvector.begin(), poly<4>::eSize, values.begin());
   poly<4> recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
+
+  // Get the vertices back
+  auto rvertices = original.vertices();
+  BOOST_CHECK_EQUAL(rvertices.size(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {

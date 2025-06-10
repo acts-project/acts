@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 
@@ -66,19 +66,19 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     // TODO validate geo id consistency
     const auto particleId = ActsFatras::Barcode(data.particle_id);
 
-    ActsFatras::Hit::Vector4 pos4{
+    Acts::Vector4 pos4{
         data.tx * Acts::UnitConstants::mm,
         data.ty * Acts::UnitConstants::mm,
         data.tz * Acts::UnitConstants::mm,
         data.tt * Acts::UnitConstants::mm,
     };
-    ActsFatras::Hit::Vector4 mom4{
+    Acts::Vector4 mom4{
         data.tpx * Acts::UnitConstants::GeV,
         data.tpy * Acts::UnitConstants::GeV,
         data.tpz * Acts::UnitConstants::GeV,
         data.te * Acts::UnitConstants::GeV,
     };
-    ActsFatras::Hit::Vector4 delta4{
+    Acts::Vector4 delta4{
         data.deltapx * Acts::UnitConstants::GeV,
         data.deltapy * Acts::UnitConstants::GeV,
         data.deltapz * Acts::UnitConstants::GeV,

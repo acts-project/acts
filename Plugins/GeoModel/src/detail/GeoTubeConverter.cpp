@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
 
@@ -28,9 +28,10 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
                                            const GeoTube& geoTube,
                                            const Transform3& absTransform,
+                                           SurfaceBoundFactory& boundFactory,
                                            bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -39,13 +40,13 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
   transform.linear() = absTransform.rotation();
 
   // Create the surface
-  ActsScalar innerRadius = unitLength * geoTube.getRMin();
-  ActsScalar outerRadius = unitLength * geoTube.getRMax();
-  ActsScalar halfZ = unitLength * geoTube.getZHalfLength();
+  double innerRadius = unitLength * geoTube.getRMin();
+  double outerRadius = unitLength * geoTube.getRMax();
+  double halfZ = unitLength * geoTube.getZHalfLength();
 
   if (targetShape == Surface::SurfaceType::Straw) {
     // Create the element and the surface
-    auto lineBounds = std::make_shared<LineBounds>(outerRadius, halfZ);
+    auto lineBounds = boundFactory.makeBounds<LineBounds>(outerRadius, halfZ);
     if (!sensitive) {
       auto surface = Surface::makeShared<StrawSurface>(transform, lineBounds);
       return std::make_tuple(nullptr, surface);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // TODO We still use some Kalman Fitter functionalities. Check for replacement
 
@@ -113,17 +113,18 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
                       gx2fOptions, tracks);
   }
 
-  // We need a placeholder for the directNavigator overload. Otherwise, we would
-  // have an unimplemented pure virtual method in a final class.
+  // The direct navigation is not implemented for the GX2F. Instead we ignore it
+  // and fall back to the standard navigation.
   TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& /*sourceLinks*/,
-      const TrackParameters& /*initialParameters*/,
-      const GeneralFitterOptions& /*options*/,
-      const RefittingCalibrator& /*calibrator*/,
+      const std::vector<Acts::SourceLink>& sourceLinks,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& /*surfaceSequence*/,
-      TrackContainer& /*tracks*/) const override {
-    throw std::runtime_error(
-        "direct navigation with GX2 fitter is not implemented");
+      TrackContainer& tracks) const override {
+    const auto gx2fOptions = makeGx2fOptions(options, calibrator);
+    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+                      gx2fOptions, tracks);
   }
 };
 

@@ -1,15 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -22,7 +21,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -38,7 +36,6 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <cmath>
-#include <fstream>
 #include <optional>
 #include <random>
 #include <sstream>
@@ -231,8 +228,8 @@ static inline std::string testMeasurement(IVisualization3D& helper,
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<detail::Test::TestSourceLink> sourcelinks;
-  sourcelinks.reserve(nSurfaces);
+  std::vector<detail::Test::TestSourceLink> sourceLinks;
+  sourceLinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
   SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
@@ -241,7 +238,7 @@ static inline std::string testMeasurement(IVisualization3D& helper,
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+    sourceLinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -250,8 +247,8 @@ static inline std::string testMeasurement(IVisualization3D& helper,
 
   // Draw the measurements
   std::cout << "Draw the measurements" << std::endl;
-  //  auto singleMeasurement = sourcelinks[0];
-  for (auto& singleMeasurement : sourcelinks) {
+  //  auto singleMeasurement = sourceLinks[0];
+  for (auto& singleMeasurement : sourceLinks) {
     auto cov = singleMeasurement.covariance;
     auto lposition = singleMeasurement.parameters;
 
@@ -291,8 +288,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Acts::SourceLink> sourcelinks;
-  sourcelinks.reserve(nSurfaces);
+  std::vector<Acts::SourceLink> sourceLinks;
+  sourceLinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
   SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
@@ -301,7 +298,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+    sourceLinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -327,8 +324,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
   Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
   Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
-  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV,
-                                    cov, ParticleHypothesis::pion());
+  BoundTrackParameters rStart = BoundTrackParameters::createCurvilinear(
+      makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV, cov,
+      ParticleHypothesis::pion());
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -364,7 +362,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
+  auto fitRes = kFitter.fit(sourceLinks.begin(), sourceLinks.end(), rStart,
                             kfOptions, tracks);
   if (!fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;

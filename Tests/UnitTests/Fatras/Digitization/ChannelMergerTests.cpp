@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(ChannelMerger1D) {
   ActsFatras::Cell cell1(6, 11.5);
   ActsFatras::Cell cell2(7, 12.5);
 
-  using Channel1D = ActsFatras::Channel<Acts::ActsScalar, 1>;
+  using Channel1D = ActsFatras::Channel<double, 1>;
 
   // Digital clustering test
   std::vector<Channel1D> channels = {{{cell0}, 1., {5}},
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ChannelMerger2D) {
   ActsFatras::Cell cell11(10, 0.5);
   ActsFatras::Cell cell12(11, 1.5);
 
-  using Channel2D = ActsFatras::Channel<Acts::ActsScalar, 2>;
+  using Channel2D = ActsFatras::Channel<double, 2>;
 
   std::vector<Channel2D> channels = {{{cell00, cell10}, 1., {5}},
                                      {{cell01, cell11}, 1., {5}},

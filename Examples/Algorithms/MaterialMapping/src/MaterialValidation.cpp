@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
 
@@ -47,9 +47,9 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Loop over the number of tracks
   for (std::size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
     // Generate a random phi and eta
-    Acts::ActsScalar phi = phiDist(rng);
-    Acts::ActsScalar eta = etaDist(rng);
-    Acts::ActsScalar theta = 2 * std::atan(std::exp(-eta));
+    double phi = phiDist(rng);
+    double eta = etaDist(rng);
+    double theta = 2 * std::atan(std::exp(-eta));
     Acts::Vector3 direction(std::cos(phi) * std::sin(theta),
                             std::sin(phi) * std::sin(theta), std::cos(theta));
 

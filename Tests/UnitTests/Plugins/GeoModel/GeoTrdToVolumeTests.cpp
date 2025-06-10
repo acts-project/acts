@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,16 +30,16 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 // GeoBox conversion test case
 BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
-  auto material = new GeoMaterial("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
   double geoHlX1 = 2, geoHlX2 = 2, geoHlY1 = 50, geoHlY2 = 80, geoHlZ = 60;
-  auto trd = new GeoTrd(geoHlX1, geoHlX1, geoHlY1, geoHlY2, geoHlZ);
-  auto logTrd = new GeoLogVol("Trd", trd, material);
+  auto trd = make_intrusive<GeoTrd>(geoHlX1, geoHlX1, geoHlY1, geoHlY2, geoHlZ);
+  auto logTrd = make_intrusive<GeoLogVol>("Trd", trd, material);
   auto physTrd = make_intrusive<GeoFullPhysVol>(logTrd);
 
   // this should produce an error while converting
-  auto errTrd = new GeoTrd(2, 3, 25, 40, 30);
-  auto errLogTrd = new GeoLogVol("Trd", errTrd, material);
+  auto errTrd = make_intrusive<GeoTrd>(2, 3, 25, 40, 30);
+  auto errLogTrd = make_intrusive<GeoLogVol>("Trd", errTrd, material);
   auto errPhysTrd = make_intrusive<GeoFullPhysVol>(errLogTrd);
 
   // create pars for conversion
@@ -54,13 +54,14 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
 
   // test error case
   BOOST_CHECK_THROW(factory.convertFpv("Trd", errPhysTrd, errCache, gContext),
-                    std::runtime_error);
+                    std::invalid_argument);
   factory.convertFpv("Trd", physTrd, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTrd =
-      gmCache.boundingBoxes[0];
+
+  BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
+  const auto& volumeTrd = std::get<1>(gmCache.volumeBoxFPVs[0]);
   const auto* bounds = dynamic_cast<const Acts::TrapezoidVolumeBounds*>(
       &volumeTrd->volumeBounds());
-  std::vector<Acts::ActsScalar> convHls = bounds->values();
+  std::vector<double> convHls = bounds->values();
   // note: GeoTrd and Acts use different coordinates
   BOOST_CHECK(geoHlX1 == convHls[3]);
   BOOST_CHECK(geoHlX2 == convHls[3]);

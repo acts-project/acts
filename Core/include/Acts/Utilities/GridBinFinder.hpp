@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <variant>
@@ -30,7 +29,7 @@ namespace Acts {
 template <std::size_t DIM>
 class GridBinFinder {
  public:
-  static constexpr std::size_t dimCubed = Acts::detail::ipow(3, DIM);
+  static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
   /// @brief Constructor
   /// @tparam args ... Input parameters provided by the user
   ///
@@ -66,7 +65,7 @@ class GridBinFinder {
   template <typename stored_t, class... Axes>
   boost::container::small_vector<std::size_t, dimCubed> findBins(
       const std::array<std::size_t, DIM>& locPosition,
-      const Acts::Grid<stored_t, Axes...>& grid) const;
+      const Grid<stored_t, Axes...>& grid) const;
 
  private:
   /// @brief Store the values provided by the user for each axis in the grid
@@ -103,7 +102,7 @@ class GridBinFinder {
   /// @param [in] grid The Grid
   /// @return If the GridBinFinder is compatible with the grid
   template <typename stored_t, class... Axes>
-  bool isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const;
+  bool isGridCompatible(const Grid<stored_t, Axes...>& grid) const;
 
  private:
   using stored_values_t =
@@ -122,4 +121,5 @@ class GridBinFinder {
 };
 
 }  // namespace Acts
+
 #include "Acts/Utilities/GridBinFinder.ipp"

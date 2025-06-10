@@ -1,19 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <any>
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -31,10 +29,9 @@ struct ExaTrkXTiming {
 
 class ExaTrkXHook {
  public:
-  virtual ~ExaTrkXHook() {}
-  virtual void operator()(const std::any & /*nodes*/,
-                          const std::any & /*edges*/,
-                          const std::any & /*weights*/) const {};
+  virtual ~ExaTrkXHook() = default;
+  virtual void operator()(const PipelineTensors & /*tensors*/,
+                          const ExecutionContext & /*execCtx*/) const {};
 };
 
 class ExaTrkXPipeline {
@@ -46,7 +43,9 @@ class ExaTrkXPipeline {
       std::unique_ptr<const Acts::Logger> logger);
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
+                                    const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacepointIDs,
+                                    Acts::Device device,
                                     const ExaTrkXHook &hook = {},
                                     ExaTrkXTiming *timing = nullptr) const;
 

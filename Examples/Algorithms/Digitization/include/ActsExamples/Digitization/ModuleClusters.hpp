@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,10 +16,8 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <set>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -29,8 +27,8 @@ struct DigitizedParameters;
 
 struct ModuleValue {
   std::vector<Acts::BoundIndices> paramIndices = {};
-  std::vector<Acts::ActsScalar> paramValues = {};
-  std::vector<Acts::ActsScalar> paramVariances = {};
+  std::vector<double> paramValues = {};
+  std::vector<double> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
   std::set<SimHitContainer::size_type> sources = {};
   Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
@@ -69,4 +67,5 @@ class ModuleClusters {
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };
+
 }  // namespace ActsExamples

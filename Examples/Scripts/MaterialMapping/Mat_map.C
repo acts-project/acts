@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <TROOT.h>
 
@@ -57,7 +57,7 @@ void Draw_ratio(TCanvas* c, TProfile* h1, TProfile* h2, TLegend* leg, std::strin
   h5->SetStats(0);      // No statistics on lower plot
   h5->Divide(h1);
 
-  double maxi = min( max( fabs(h5->GetMinimum()-0.1*h5->GetMinimum()),h5->GetMaximum()+0.1*h5->GetMaximum() ), 10. );
+  double maxi = min( max( std::abs(h5->GetMinimum()-0.1*h5->GetMinimum()),h5->GetMaximum()+0.1*h5->GetMaximum() ), 10. );
 
   h5->SetMinimum( 0.5 );  // Define Y ..
   h5->SetMaximum( 1.1 ); // .. range
@@ -145,7 +145,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
     // 2D map for Validation input
     TCanvas *VM = new TCanvas("VM","Validation Map") ;
-    Val_file->Draw("mat_y:mat_z","fabs(mat_x)<1");
+    Val_file->Draw("mat_y:mat_z","std::abs(mat_x)<1");
 
     eta_0->Draw("Same");
     eta_1p->Draw("Same");
@@ -206,7 +206,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
     // 2D map for Geantino input
     TCanvas *GM = new TCanvas("GM","Geantino Map") ;
-    geantino_file->Draw("mat_y:mat_z","fabs(mat_x)<1");
+    geantino_file->Draw("mat_y:mat_z","std::abs(mat_x)<1");
 
     eta_0->Draw("Same");
     eta_1p->Draw("Same");

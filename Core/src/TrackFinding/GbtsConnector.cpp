@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // TODO: update to C++17 style
 #include "Acts/TrackFinding/GbtsConnector.hpp"
@@ -15,7 +15,7 @@
 #include <set>
 #include <unordered_map>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 GbtsConnection::GbtsConnection(unsigned int s, unsigned int d)
     : m_src(s), m_dst(d) {}
@@ -33,7 +33,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
-    GbtsConnection *pC = new GbtsConnection(src, dst);
+    auto pC = std::make_unique<GbtsConnection>(src, dst);
 
     int dummy{};
 
@@ -46,26 +46,17 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
     int vol_id = src / 1000;
 
     if (vol_id == 13 || vol_id == 12 || vol_id == 14) {
-      delete pC;
       continue;
     }
 
     vol_id = dst / 1000;
 
     if (vol_id == 13 || vol_id == 12 || vol_id == 14) {
-      delete pC;
       continue;
     }
 
-    std::map<int, std::vector<GbtsConnection *>>::iterator it =
-        m_connMap.find(stage);
-
-    if (it == m_connMap.end()) {
-      std::vector<GbtsConnection *> v(1, pC);
-      m_connMap.insert(std::make_pair(stage, v));
-    } else {
-      (*it).second.push_back(pC);
-    }
+    auto &connections = m_connMap[stage];
+    connections.push_back(std::move(pC));
   }
 
   // re-arrange the connection stages
@@ -74,9 +65,10 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
   std::map<int, std::vector<const GbtsConnection *>> newConnMap;
 
-  for (const auto &conn : m_connMap) {
-    std::copy(conn.second.begin(), conn.second.end(),
-              std::back_inserter(lConns));
+  for (const auto &[_, value] : m_connMap) {
+    for (const auto &conn : value) {
+      lConns.push_back(conn.get());
+    }
   }
 
   int stageCounter = 0;
@@ -111,23 +103,22 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
     std::set<unsigned int> zeroLayers;
 
-    for (const auto &layerCounts : mCounter) {
-      if (layerCounts.second.second != 0) {
+    for (const auto &[key, value] : mCounter) {
+      if (value.second != 0) {
         continue;
       }
 
-      zeroLayers.insert(layerCounts.first);
+      zeroLayers.insert(key);
     }
 
     // remove connections which use zeroLayer as destination
 
     std::vector<const GbtsConnection *> theStage;
 
-    std::list<const GbtsConnection *>::iterator cIt = lConns.begin();
+    auto cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
-      if (zeroLayers.find((*cIt)->m_dst) !=
-          zeroLayers.end()) {  // check if contains
+      if (zeroLayers.contains((*cIt)->m_dst)) {
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
         continue;
@@ -145,10 +136,9 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (std::map<int, std::vector<const GbtsConnection *>>::reverse_iterator it =
-           newConnMap.rbegin();
-       it != newConnMap.rend(); ++it, currentStage++) {
-    const std::vector<const GbtsConnection *> &vConn = (*it).second;
+  for (auto it = newConnMap.rbegin(); it != newConnMap.rend();
+       it++, currentStage++) {
+    const auto &[_, vConn] = *it;
 
     // loop over links, extract all connections for the stage, group sources by
     // L1 (dst) index
@@ -158,8 +148,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
     for (const auto *conn : vConn) {
       unsigned int dst = conn->m_dst;
 
-      std::map<unsigned int, std::vector<const GbtsConnection *>>::iterator
-          l1MapIt = l1ConnMap.find(dst);
+      auto l1MapIt = l1ConnMap.find(dst);
       if (l1MapIt != l1ConnMap.end()) {
         (*l1MapIt).second.push_back(conn);
       } else {
@@ -172,8 +161,8 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
     lgv.reserve(l1ConnMap.size());
 
-    for (const auto &l1Group : l1ConnMap) {
-      lgv.push_back(LayerGroup(l1Group.first, l1Group.second));
+    for (const auto &[key, value] : l1ConnMap) {
+      lgv.emplace_back(LayerGroup(key, value));
     }
 
     m_layerGroups.insert(std::make_pair(currentStage, lgv));
@@ -182,15 +171,4 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   newConnMap.clear();
 }
 
-GbtsConnector::~GbtsConnector() {
-  m_layerGroups.clear();
-  for (std::map<int, std::vector<GbtsConnection *>>::iterator it =
-           m_connMap.begin();
-       it != m_connMap.end(); ++it) {
-    for (std::vector<GbtsConnection *>::iterator cIt = (*it).second.begin();
-         cIt != (*it).second.end(); ++cIt) {
-      delete (*cIt);
-    }
-  }
-}
-}  // namespace Acts
+}  // namespace Acts::Experimental

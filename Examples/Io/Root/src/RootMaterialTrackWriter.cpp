@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -23,11 +22,9 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <ios>
 #include <stdexcept>
-#include <type_traits>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -352,11 +349,11 @@ ProcessCode RootMaterialTrackWriter::writeT(
           vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
-          vlayerID.setVolume(0);
-          vlayerID.setBoundary(0);
-          vlayerID.setLayer(0);
-          vlayerID.setApproach(0);
-          vlayerID.setSensitive(0);
+          vlayerID = vlayerID.withVolume(0)
+                         .withBoundary(0)
+                         .withLayer(0)
+                         .withApproach(0)
+                         .withSensitive(0);
           m_vol_id.push_back(vlayerID.value());
         }
       }

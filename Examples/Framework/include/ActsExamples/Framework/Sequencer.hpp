@@ -1,19 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
@@ -22,15 +24,12 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <typeinfo>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
-class DataHandleBase;
 class IAlgorithm;
 class IContextDecorator;
 class IReader;
@@ -46,8 +45,8 @@ class FpeFailure : public std::runtime_error {
 
 class SequenceConfigurationException : public std::runtime_error {
  public:
-  SequenceConfigurationException()
-      : std::runtime_error{"Sequence configuration error"} {}
+  explicit SequenceConfigurationException(const std::string &message)
+      : std::runtime_error{"Sequence configuration error: " + message} {}
 };
 
 /// A simple algorithm sequencer for event processing.
@@ -82,9 +81,6 @@ class Sequencer {
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
-    /// Run data flow consistency checks
-    /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = true;
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
@@ -92,7 +88,7 @@ class Sequencer {
     std::size_t fpeStackTraceLength = 8;
   };
 
-  Sequencer(const Config &cfg);
+  explicit Sequencer(const Config &cfg);
 
   /// Add a context decorator to the set of context decorators.
   ///
@@ -178,12 +174,13 @@ class Sequencer {
   tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
+  std::vector<std::shared_ptr<IWriter>> m_writers;
   std::vector<SequenceElementWithFpeResult> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
+  WhiteBoard::AliasMapType m_whiteboardObjectAliases;
 
-  std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
+  DataHandleBase::StateMapType m_whiteBoardState;
 
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 

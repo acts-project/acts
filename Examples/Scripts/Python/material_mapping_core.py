@@ -157,6 +157,29 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
+        "--geomodel-name-list",
+        type=str,
+        nargs="+",
+        default=[],
+        help="List of Name List for the Surface Factory",
+    )
+
+    p.add_argument(
+        "--geomodel-material-list",
+        type=str,
+        nargs="+",
+        default=[],
+        help="List of Material List for the Surface Factory",
+    )
+
+    p.add_argument(
+        "--geomodel-convert-subvols",
+        help="Convert the children of the top level full phys vol",
+        action="store_true",
+        default=False,
+    )
+
+    p.add_argument(
         "--geomodel-top-node",
         type=str,
         default="",
@@ -189,19 +212,16 @@ if "__main__" == __name__:
             # Read the geometry model from the database
             gmTree = acts.geomodel.readFromDb(args.geomodel_input)
 
-            gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
-            gmFactoryConfig.shapeConverters = [
-                gm.GeoBoxConverter(),
-                gm.GeoTrdConverter(),
-                gm.GeoIntersectionAnnulusConverter(),
-            ]
-
-            gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
+            gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
+            gmFactoryConfig.materialList = args.geomodel_material_list
+            gmFactoryConfig.nameList = args.geomodel_name_list
+            gmFactoryConfig.convertSubVolumes = args.geomodel_convert_subvols
+            gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
             # The options
-            gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
+            gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
             gmFactoryOptions.queries = args.geomodel_queries
             # The Cache & construct call
-            gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
+            gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
             gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
             # All surfaces from GeoModel
@@ -210,7 +230,10 @@ if "__main__" == __name__:
             # Construct the building hierarchy
             gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
             gmBlueprintConfig.detectorSurfaces = gmSurfaces
-            gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
+            gmBlueprintConfig.kdtBinning = [
+                acts.AxisDirection.AxisZ,
+                acts.AxisDirection.AxisR,
+            ]
 
             gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
             gmBlueprintOptions.table = args.geomodel_table_name
@@ -277,7 +300,8 @@ if "__main__" == __name__:
         if args.matconfig != "":
             matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
 
-        [detector, trackingGeometry, decorators] = getOpenDataDetector(matDeco)
+        detector = getOpenDataDetector(matDeco)
+        trackingGeometry = detector.trackingGeometry()
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 

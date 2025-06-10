@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -70,7 +70,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);
   if (!exists(dir_path)) {
-    throw std::runtime_error("'" + dir_path.native() + "' does not exists");
+    throw std::runtime_error("'" + dir_path.native() + "' does not exist");
   }
   if (!is_directory(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' is not a directory");
@@ -110,7 +110,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
 
   // should only occur if no files matched and the initial values persisted.
   if (eventMax < eventMin) {
-    return std::make_pair(0u, 0u);
+    return {0u, 0u};
   }
-  return std::make_pair(eventMin, eventMax + 1);
+  return {eventMin, eventMax + 1};
 }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
@@ -106,6 +106,9 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
+    // Set the geometry and magnetic field context
+    (*mappingState).geoContext = context.geoContext;
+    (*mappingState).magFieldContext = context.magFieldContext;
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
       m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
@@ -115,6 +118,9 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
+    // Set the geometry and magnetic field context
+    (*mappingState).geoContext = context.geoContext;
+    (*mappingState).magFieldContext = context.magFieldContext;
 
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry

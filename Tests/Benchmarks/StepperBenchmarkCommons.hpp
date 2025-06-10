@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -54,7 +54,7 @@ struct BenchmarkStepper {
       po::store(po::parse_command_line(argc, argv, desc), vm);
       po::notify(vm);
 
-      if (vm.count("help") != 0u) {
+      if (vm.contains("help")) {
         std::cout << desc << std::endl;
         return 0;
       }
@@ -108,8 +108,8 @@ struct BenchmarkStepper {
     if (withCov) {
       covOpt = cov;
     }
-    CurvilinearTrackParameters pars(pos4, dir, +1 / ptInGeV, covOpt,
-                                    ParticleHypothesis::pion());
+    BoundTrackParameters pars = BoundTrackParameters::createCurvilinear(
+        pos4, dir, +1 / ptInGeV, covOpt, ParticleHypothesis::pion());
 
     double totalPathLength = 0;
     std::size_t numSteps = 0;
@@ -117,7 +117,12 @@ struct BenchmarkStepper {
     std::size_t numIters = 0;
     const auto propagationBenchResult = Acts::Test::microBenchmark(
         [&] {
-          auto state = propagator.makeState(pars, options);
+          auto state = propagator.makeState(options);
+          auto initRes = propagator.initialize(state, pars);
+          if (!initRes.ok()) {
+            ACTS_ERROR("initialization failed: " << initRes.error());
+            return;
+          }
           auto tmp = propagator.propagate(state);
           auto r = propagator.makeResult(state, tmp, options, true).value();
           if (totalPathLength == 0.) {
@@ -129,7 +134,6 @@ struct BenchmarkStepper {
           numSteps += r.steps;
           numStepTrials += state.stepping.nStepTrials;
           ++numIters;
-          return r;
         },
         1, toys);
 

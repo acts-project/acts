@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -39,13 +39,13 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// - the first 4 vertices are the "top" face
   /// - the second 4 vertices are the "bottom" face
   /// - both faces are given in counter clock wise order
-  GenericCuboidVolumeBounds(
+  explicit GenericCuboidVolumeBounds(
       const std::array<Acts::Vector3, 8>& vertices) noexcept(false);
 
   /// Constructor from a fixed size array
   ///
   /// @param values The input values
-  GenericCuboidVolumeBounds(
+  explicit GenericCuboidVolumeBounds(
       const std::array<double, BoundValues::eSize>& values) noexcept(false);
 
   ~GenericCuboidVolumeBounds() override = default;
@@ -89,13 +89,13 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
-  /// for that fully describe the shape's extent
+  /// Get the canonical direction values, i.e. the axis directions
+  /// that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
-            Acts::BinningValue::binZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisX, AxisY, AxisZ};
   };
 
   /// @param sl is the output stream to be written into

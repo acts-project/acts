@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,6 +22,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
+#include <numbers>
 #include <tuple>
 #include <vector>
 
@@ -53,9 +54,9 @@ struct PlanarSurfaceTestBeds {
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), rectangle);
     Acts::BinUtility pixelated(15, -xhalf, xhalf, Acts::open,
-                               Acts::BinningValue::binX);
+                               Acts::AxisDirection::AxisX);
     pixelated += Acts::BinUtility(26, -yhalf, yhalf, Acts::open,
-                                  Acts::BinningValue::binY);
+                                  Acts::AxisDirection::AxisY);
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
 
     // Cartesian strip test in Trapezoid
@@ -67,9 +68,9 @@ struct PlanarSurfaceTestBeds {
     auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), trapezoid);
     Acts::BinUtility stripsX(35, -xhalfmaxy, xhalfmaxy, Acts::open,
-                             Acts::BinningValue::binX);
+                             Acts::AxisDirection::AxisX);
     stripsX += Acts::BinUtility(1, -yhalf, yhalf, Acts::open,
-                                Acts::BinningValue::binY);
+                                Acts::AxisDirection::AxisY);
     TrapezoidRandom tRandom(xhalfminy * rScale, xhalfmaxy * rScale,
                             yhalf * rScale);
 
@@ -86,24 +87,29 @@ struct PlanarSurfaceTestBeds {
     auto dtSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discTrapezoid);
     Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::open,
-                               Acts::BinningValue::binR);
-    stripsPhi += Acts::BinUtility(25, M_PI_2 - alpha, M_PI_2 + alpha,
-                                  Acts::open, Acts::BinningValue::binPhi);
+                               Acts::AxisDirection::AxisR);
+    stripsPhi += Acts::BinUtility(25, std::numbers::pi / 2. - alpha,
+                                  std::numbers::pi / 2. + alpha, Acts::open,
+                                  Acts::AxisDirection::AxisPhi);
     TrapezoidRandom dtRandom(xmin * rScale, xmax * rScale, rmin * irScale,
                              ymax * rScale);
 
     // Raidal disc test
-    auto discRadial =
-        std::make_shared<Acts::RadialBounds>(rmin, rmax, M_PI_4, M_PI_2);
+    auto discRadial = std::make_shared<Acts::RadialBounds>(
+        rmin, rmax, std::numbers::pi / 4., std::numbers::pi / 2.);
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3::Identity(), discRadial);
     Acts::BinUtility rphiseg(10, rmin, rmax, Acts::open,
-                             Acts::BinningValue::binR);
-    rphiseg += Acts::BinUtility(20, (M_PI_2 - M_PI_4), (M_PI_2 + M_PI_4),
-                                Acts::open, Acts::BinningValue::binPhi);
+                             Acts::AxisDirection::AxisR);
+    rphiseg +=
+        Acts::BinUtility(20, (std::numbers::pi / 2. - std::numbers::pi / 4.),
+                         (std::numbers::pi / 2. + std::numbers::pi / 4.),
+                         Acts::open, Acts::AxisDirection::AxisPhi);
 
-    DiscRandom dRandom(rmin * irScale, rmax * rScale,
-                       (M_PI_2 - M_PI_4) * irScale, (M_PI_2 + M_PI_4) * rScale);
+    DiscRandom dRandom(
+        rmin * irScale, rmax * rScale,
+        (std::numbers::pi / 2. - std::numbers::pi / 4.) * irScale,
+        (std::numbers::pi / 2. + std::numbers::pi / 4.) * rScale);
 
     // Annulus disc test
     rmin = 2.5;
@@ -126,9 +132,9 @@ struct PlanarSurfaceTestBeds {
     });
 
     Acts::BinUtility stripsPhiA(1, rmin, rmax, Acts::open,
-                                Acts::BinningValue::binR);
+                                Acts::AxisDirection::AxisR);
     stripsPhiA += Acts::BinUtility(12, phimin, phimax, Acts::open,
-                                   Acts::BinningValue::binPhi);
+                                   Acts::AxisDirection::AxisPhi);
     AnnulusRandom aRandom(rmin * irScale, rmax * rScale, phimin * rScale,
                           phimax * rScale, aorigin.x(), aorigin.y());
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -146,7 +146,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
-  Acts::ActsScalar necZ = -800.;
+  double necZ = -800.;
   auto necR0Surfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                               42., necZ, 2., 22u);
 
@@ -157,7 +157,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
                                                                 necR1Surfaces};
 
   // Barrel surfaces
-  std::vector<std::array<Acts::ActsScalar, 2u>> innerOuter = {
+  std::vector<std::array<double, 2u>> innerOuter = {
       {25., 35.}, {65., 75.}, {110., 120.}};
   auto b0Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                31., 3., 2., {16, 14});
@@ -172,7 +172,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
       b0Surfaces, b1Surfaces, b2Surfaces};
 
   // Nec surfaces
-  Acts::ActsScalar pecZ = 800.;
+  double pecZ = 800.;
   auto pecR0Surfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                               42., pecZ, 2., 22u);
 

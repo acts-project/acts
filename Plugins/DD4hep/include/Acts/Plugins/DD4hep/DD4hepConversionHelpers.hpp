@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -152,14 +152,14 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
 /// @return a transform extracted from parameters
 inline Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
                                    const std::string& bname,
-                                   const ActsScalar unitConversion = 1.) {
+                                   const double unitConversion = 1.) {
   Transform3 transform = Transform3::Identity();
-  ActsScalar x =
-      unitConversion * getParamOr<ActsScalar>(bname + "_x", dd4hepElement, 0.);
-  ActsScalar y =
-      unitConversion * getParamOr<ActsScalar>(bname + "_y", dd4hepElement, 0.);
-  ActsScalar z =
-      unitConversion * getParamOr<ActsScalar>(bname + "_z", dd4hepElement, 0.);
+  double x =
+      unitConversion * getParamOr<double>(bname + "_x", dd4hepElement, 0.);
+  double y =
+      unitConversion * getParamOr<double>(bname + "_y", dd4hepElement, 0.);
+  double z =
+      unitConversion * getParamOr<double>(bname + "_z", dd4hepElement, 0.);
   transform.pretranslate(Vector3(x, y, z));
   return transform;
 }

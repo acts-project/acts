@@ -1,15 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Plugins/Hashing/HashingAnnoy.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 
 #include <map>
+#include <numbers>
 #include <set>
 #include <vector>
 
@@ -27,8 +32,6 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
                               const unsigned int phiBins,
                               const double layerRMin, const double layerRMax,
                               const double layerZMin, const double layerZMax) {
-  using Scalar = Acts::ActsScalar;
-
   static thread_local std::vector<std::set<external_spacepoint_t>>
       bucketsSetSPMap;
   bucketsSetSPMap.clear();
@@ -60,21 +63,21 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   };
 
   // Functions to get the bin index
-  auto getBinIndexZ = [&zBins, &layerZMin, &layerZMax](Scalar z) {
-    Scalar binSize = (layerZMax - layerZMin) / zBins;
+  auto getBinIndexZ = [&zBins, &layerZMin, &layerZMax](double z) {
+    double binSize = (layerZMax - layerZMin) / zBins;
     auto binIndex = static_cast<int>((z - layerZMin + 0.5 * binSize) / binSize);
     return binIndex;
   };
 
-  auto getBinIndexPhi = [&phiBins](Scalar phi) {
-    Scalar binSize = 2 * M_PI / phiBins;
-    auto binIndex = static_cast<int>((phi + M_PI) / binSize);
+  auto getBinIndexPhi = [&phiBins](double phi) {
+    double binSize = 2 * std::numbers::pi / phiBins;
+    auto binIndex = static_cast<int>((phi + std::numbers::pi) / binSize);
     return binIndex;
   };
 
   // Function pointers to a unified bin index function for z and phi
   auto getBinIndex = [&zBins, &phiBins, &getBinIndexZ, &getBinIndexPhi](
-                         Scalar z, Scalar phi) -> int {
+                         double z, double phi) -> int {
     if (zBins > 0) {
       return getBinIndexZ(z);
     } else if (phiBins > 0) {
@@ -88,16 +91,16 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
   for (unsigned int spacePointIndex = 0; spacePointIndex < spacePoints.size();
        spacePointIndex++) {
     external_spacepoint_t spacePoint = spacePoints[spacePointIndex];
-    Scalar x = spacePoint->x() / Acts::UnitConstants::mm;
-    Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
-    Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
+    double x = spacePoint->x() / Acts::UnitConstants::mm;
+    double y = spacePoint->y() / Acts::UnitConstants::mm;
+    double z = spacePoint->z() / Acts::UnitConstants::mm;
 
     // Helix transform
-    if (Scalar r2 = x * x + y * y; !layerSelection(r2, z)) {
+    if (double r2 = x * x + y * y; !layerSelection(r2, z)) {
       continue;
     }
 
-    Scalar phi = atan2(y, x);
+    double phi = atan2(y, x);
 
     int binIndex = getBinIndex(z, phi);
     if (binIndex < 0 || static_cast<unsigned int>(binIndex) >= nBins) {

@@ -1,15 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -84,7 +85,7 @@ struct GaussianMixture {
       sigma2 *= (1. - (1. - epsilon) * sigma1square) / epsilon;
     }
     // return back to the
-    return M_SQRT2 * std::sqrt(sigma2) * gaussDist(generator);
+    return std::numbers::sqrt2 * std::sqrt(sigma2) * gaussDist(generator);
   }
 };
 

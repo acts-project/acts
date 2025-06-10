@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -49,9 +49,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   struct Config {
     /// Input (fitted) tracks collection
     std::string inputTracks;
-    /// Input particles collection.
+    /// Input particles collection (optional).
     std::string inputParticles;
-    /// Input track-particle matching.
+    /// Input track-particle matching (optional).
     std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "tracksummary.root";
@@ -170,6 +170,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_t_d0;
   /// The extrapolated truth longitudinal impact parameter
   std::vector<float> m_t_z0;
+  /// Production radius of majority particle
+  std::vector<float> m_t_prodR;
 
   /// If the track has fitted parameter
   std::vector<bool> m_hasFittedParams;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,10 +14,10 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <tuple>
 #include <vector>
@@ -62,7 +62,7 @@ class DD4hepDetectorSurfaceFactory {
     /// matching and conversion statistics: materials
     std::size_t convertedMaterials = 0;
     /// The collected binnings
-    std::vector<Experimental::ProtoBinning> binnings = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
     /// The collected supports
     std::vector<Experimental::ProtoSupport> supports = {};
     /// Optionally provide an Extent object to measure the sensitives
@@ -70,9 +70,9 @@ class DD4hepDetectorSurfaceFactory {
     /// Optionally provide an Extent object to measure the passive
     std::optional<Extent> pExtent = std::nullopt;
     /// Optionally provide an Extent constraints to measure the layers
-    std::vector<BinningValue> extentConstraints = {};
-    /// The approximination for extent measuring
-    std::size_t nExtentSegments = 1u;
+    std::vector<AxisDirection> extentConstraints = {};
+    /// The approximination of a circle quarter for extent measuring
+    std::size_t nExtentQSegments = 1u;
   };
 
   /// Nested options struct to steer the conversion
@@ -84,13 +84,13 @@ class DD4hepDetectorSurfaceFactory {
     /// Convert material directly
     bool convertMaterial = false;
     /// New reference material thickness for surfaces
-    ActsScalar surfaceMaterialThickness = 1_mm;
+    double surfaceMaterialThickness = 1_mm;
   };
 
   /// The DD4hep detector element factory
   ///
   /// @param mlogger a screen output logger
-  DD4hepDetectorSurfaceFactory(
+  explicit DD4hepDetectorSurfaceFactory(
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
 
@@ -108,7 +108,7 @@ class DD4hepDetectorSurfaceFactory {
 
  private:
   /// @brief  auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
 
   /// Logging instance
@@ -173,7 +173,7 @@ class DD4hepDetectorSurfaceFactory {
   void attachSurfaceMaterial(const GeometryContext& gctx,
                              const std::string& prefix,
                              const dd4hep::DetElement& dd4hepElement,
-                             Acts::Surface& surface, ActsScalar thickness,
+                             Acts::Surface& surface, double thickness,
                              const Options& options) const;
 };
 

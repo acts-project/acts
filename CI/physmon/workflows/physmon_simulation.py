@@ -8,7 +8,6 @@ import acts
 from acts.examples.simulation import (
     addFatras,
     addGeant4,
-    ParticleSelectorConfig,
     addPythia8,
 )
 
@@ -58,9 +57,26 @@ with tempfile.TemporaryDirectory() as temp:
                     acts.PdgParticle.eElectron,
                 ]
             ],
-            outputParticles="particles_input",
-            outputVertices="vertices_input",
             randomNumbers=rnd,
+            outputEvent="particle_gun_event",
+        )
+    )
+
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.INFO,
+            inputEvent="particle_gun_event",
+            outputParticles="particles_generated",
+            outputVertices="vertices_input",
+            mergePrimaries=False,
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootParticleWriter(
+            level=acts.logging.INFO,
+            inputParticles="particles_generated",
+            filePath=tp / "particles.root",
         )
     )
 
@@ -70,11 +86,8 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         rnd,
         enableInteractions=True,
-        preSelectParticles=None,
-        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
-        inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_fatras",
-        outputParticlesFinal="particles_final_fatras",
+        inputParticles="particles_generated",
+        outputParticles="particles_fatras",
         outputSimHits="simhits_fatras",
         outputDirRoot=tp / "fatras",
     )
@@ -85,14 +98,11 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         rnd,
-        preSelectParticles=None,
-        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         killVolume=setup.trackingGeometry.highestTrackingVolume,
         killAfterTime=25 * u.ns,
         killSecondaries=True,
-        inputParticles="particles_input",
-        outputParticlesInitial="particles_initial_geant4",
-        outputParticlesFinal="particles_final_geant4",
+        inputParticles="particles_generated",
+        outputParticles="particles_geant4",
         outputSimHits="simhits_geant4",
         outputDirRoot=tp / "geant4",
     )
@@ -100,6 +110,7 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
+        (tp / "particles.root", "particles_gun.root"),
         (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
         (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
     ]:
@@ -109,7 +120,7 @@ with tempfile.TemporaryDirectory() as temp:
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=3,
-        numThreads=-1,
+        numThreads=1,  # Pythia8 does not give identical results otherwise
         logLevel=acts.logging.INFO,
     )
 
@@ -135,8 +146,8 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     for file, name in [
-        (tp / "pythia8_particles.root", "particles_ttbar.root"),
-        (tp / "pythia8_vertices.root", "vertices_ttbar.root"),
+        (tp / "particles.root", "particles_ttbar.root"),
+        (tp / "vertices.root", "vertices_ttbar.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)

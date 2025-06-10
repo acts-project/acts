@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
@@ -28,23 +29,22 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
-ActsExamples::Telescope::buildDetector(
-    const typename ActsExamples::Telescope::TelescopeDetectorElement::
-        ContextType& gctx,
-    std::vector<
-        std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
+ActsExamples::buildTelescopeDetector(
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
-    Acts::BinningValue binValue) {
+    double thickness, TelescopeSurfaceType surfaceType,
+    Acts::AxisDirection binValue) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface
@@ -62,14 +62,14 @@ ActsExamples::Telescope::buildDetector(
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
 
   // Construct the rotation
-  // This assumes the binValue is binX, binY or binZ. No reset is necessary in
-  // case of binZ
+  // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
+  // in case of AxisZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
-  if (binValue == Acts::BinningValue::binX) {
+  if (binValue == Acts::AxisDirection::AxisX) {
     rotation.col(0) = Acts::Vector3(0, 0, -1);
     rotation.col(1) = Acts::Vector3(0, 1, 0);
     rotation.col(2) = Acts::Vector3(1, 0, 0);
-  } else if (binValue == Acts::BinningValue::binY) {
+  } else if (binValue == Acts::AxisDirection::AxisY) {
     rotation.col(0) = Acts::Vector3(1, 0, 0);
     rotation.col(1) = Acts::Vector3(0, 0, -1);
     rotation.col(2) = Acts::Vector3(0, 1, 0);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,6 +37,12 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
   // Test Construction
   CuboidVolumeBounds box(hx, hy, hz);
+
+  // Test initilizer list construction
+  CuboidVolumeBounds init(
+      {{CuboidVolumeBounds::BoundValues::eHalfLengthX, hx},
+       {CuboidVolumeBounds::BoundValues::eHalfLengthY, hy},
+       {CuboidVolumeBounds::BoundValues::eHalfLengthZ, hz}});
 
   // Test copy construction
   CuboidVolumeBounds copied(box);
@@ -71,6 +77,11 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeException) {
   BOOST_CHECK_THROW(CuboidVolumeBounds(hx, -hy, -hz), std::logic_error);
   // Other iterations : all
   BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, -hy, -hz), std::logic_error);
+  // Initilizer list with missing bound values
+  BOOST_CHECK_THROW(
+      CuboidVolumeBounds({{CuboidVolumeBounds::BoundValues::eHalfLengthX, hx},
+                          {CuboidVolumeBounds::BoundValues::eHalfLengthZ, hz}}),
+      std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
@@ -104,10 +115,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   }
 
   // Check the binning value positions
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binX), hx, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binY), hy, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binZ), hz, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binR),
+  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisX), hx,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisY), hy,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisZ), hz,
+                  s_epsilon);
+  CHECK_CLOSE_ABS(box.referenceBorder(Acts::AxisDirection::AxisR),
                   std::sqrt(hx * hx + hy * hy), s_epsilon);
 }
 
@@ -181,8 +195,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
   for (auto bValue :
        {CuboidVolumeBounds::eHalfLengthX, CuboidVolumeBounds::eHalfLengthY,
         CuboidVolumeBounds::eHalfLengthZ}) {
-    ActsScalar target = 0.5 * box.get(bValue);
-    ActsScalar previous = box.get(bValue);
+    double target = 0.5 * box.get(bValue);
+    double previous = box.get(bValue);
     BOOST_CHECK_THROW(box.set(bValue, -1), std::logic_error);
     BOOST_CHECK_EQUAL(box.get(bValue), previous);
     box.set(bValue, target);

@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -23,21 +23,16 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
-
-using TrackParameterWriter = WriterT<TrackParametersContainer>;
 
 /// Write out the track parameters from both simulation and those estimated from
 /// reconstructed seeds into a TTree
 ///
 /// Each entry in the TTree corresponds to one seed for optimum writing
 /// speed. The event number is part of the written data.
-class RootTrackParameterWriter final : public TrackParameterWriter {
+class RootTrackParameterWriter final
+    : public WriterT<TrackParametersContainer> {
  public:
   struct Config {
     /// Input estimated track parameters collection.
@@ -64,8 +59,8 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrackParameterWriter(const Config& config,
-                           Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit RootTrackParameterWriter(
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
   ~RootTrackParameterWriter() override;
@@ -90,34 +85,73 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
                                                          "InputProtoTracks"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
-  std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};  ///< The output file
-  TTree* m_outputTree{nullptr};  ///< The output tree
-  int m_eventNr{0};              ///< the event number of
+  /// Mutex used to protect multi-threaded writes
+  std::mutex m_writeMutex;
+  TFile* m_outputFile{nullptr};
+  TTree* m_outputTree{nullptr};
 
-  float m_loc0{NaNfloat};   ///< loc0
-  float m_loc1{NaNfloat};   ///< loc1
-  float m_phi{NaNfloat};    ///< phi
-  float m_theta{NaNfloat};  ///< theta
-  float m_qop{NaNfloat};    ///< q/p
-  float m_time{NaNfloat};   ///< time
-  float m_p{NaNfloat};      ///< p
-  float m_pt{NaNfloat};     ///< pt
-  float m_eta{NaNfloat};    ///< eta
+  int m_eventNr{0};
 
-  int m_t_charge{0};            ///< Truth particle charge
-  float m_t_loc0{NaNfloat};     ///< Truth parameter loc0
-  float m_t_loc1{NaNfloat};     ///< Truth parameter loc1
-  float m_t_phi{NaNfloat};      ///< Truth parameter phi
-  float m_t_theta{NaNfloat};    ///< Truth parameter theta
-  float m_t_qop{NaNfloat};      ///< Truth parameter qop
-  float m_t_time{NaNfloat};     ///< Truth parameter time
-  bool m_truthMatched = false;  ///< Whether the seed is matched with truth
+  int m_volumeId{0};
+  int m_layerId{0};
+  int m_surfaceId{0};
+
+  // Track parameters
+  float m_loc0{NaNfloat};
+  float m_loc1{NaNfloat};
+  float m_phi{NaNfloat};
+  float m_theta{NaNfloat};
+  float m_qop{NaNfloat};
+  float m_time{NaNfloat};
+
+  float m_err_loc0{NaNfloat};
+  float m_err_loc1{NaNfloat};
+  float m_err_phi{NaNfloat};
+  float m_err_theta{NaNfloat};
+  float m_err_qop{NaNfloat};
+  float m_err_time{NaNfloat};
+
+  int m_charge{0};
+  float m_p{NaNfloat};
+  float m_pt{NaNfloat};
+  float m_eta{NaNfloat};
+
+  // Truth parameters
+  /// Whether the seed is matched with truth
+  bool m_t_matched{false};
+  std::uint64_t m_t_particleId{0};
+  unsigned int m_nMajorityHits{0};
+
+  float m_t_loc0{NaNfloat};
+  float m_t_loc1{NaNfloat};
+  float m_t_phi{NaNfloat};
+  float m_t_theta{NaNfloat};
+  float m_t_qop{NaNfloat};
+  float m_t_time{NaNfloat};
+
+  int m_t_charge{0};
+  float m_t_p{NaNfloat};
+  float m_t_pt{NaNfloat};
+  float m_t_eta{NaNfloat};
+
+  float m_res_loc0{NaNfloat};
+  float m_res_loc1{NaNfloat};
+  float m_res_phi{NaNfloat};
+  float m_res_theta{NaNfloat};
+  float m_res_qop{NaNfloat};
+  float m_res_time{NaNfloat};
+
+  float m_pull_loc0{NaNfloat};
+  float m_pull_loc1{NaNfloat};
+  float m_pull_phi{NaNfloat};
+  float m_pull_theta{NaNfloat};
+  float m_pull_qop{NaNfloat};
+  float m_pull_time{NaNfloat};
 };
 
 }  // namespace ActsExamples

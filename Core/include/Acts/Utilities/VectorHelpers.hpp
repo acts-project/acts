@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <limits>
@@ -73,7 +73,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
     assert(v.rows() >= 2 &&
            "Perp function not valid for vectors not at least 2D");
   }
-  return std::hypot(v[0], v[1]);
+  return v.template head<2>().norm();
 }
 
 /// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector
@@ -125,19 +125,19 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
-  const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
-  const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
-  const ActsScalar z = direction(2);  // == cos(theta)
+inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
-  const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::sqrt(1 - z * z);
+  const double cosTheta = z;
+  const double sinTheta = std::sqrt(1 - z * z);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");
-  const ActsScalar invSinTheta = 1. / sinTheta;
-  const ActsScalar cosPhi = x * invSinTheta;
-  const ActsScalar sinPhi = y * invSinTheta;
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
 
   return {cosPhi, sinPhi, cosTheta, sinTheta};
 }
@@ -145,29 +145,35 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
 /// Helper method to extract the binning value from a 3D vector.
 ///
 /// For this method a 3D vector is required to guarantee all potential
-/// binning values.
-inline double cast(const Vector3& position, BinningValue bval) {
-  switch (bval) {
-    case BinningValue::binX:
+/// axis directions to be casted from
+///
+/// @param position is the position in global
+/// @param aDir is the axis direction to be extracted
+///
+/// @return the value of the binning direction
+inline double cast(const Vector3& position, AxisDirection aDir) {
+  using enum AxisDirection;
+  switch (aDir) {
+    case AxisX:
       return position[0];
-    case BinningValue::binY:
+    case AxisY:
       return position[1];
-    case BinningValue::binZ:
+    case AxisZ:
       return position[2];
-    case BinningValue::binR:
+    case AxisR:
       return perp(position);
-    case BinningValue::binPhi:
+    case AxisPhi:
       return phi(position);
-    case BinningValue::binRPhi:
+    case AxisRPhi:
       return perp(position) * phi(position);
-    case BinningValue::binH:
+    case AxisTheta:
       return theta(position);
-    case BinningValue::binEta:
+    case AxisEta:
       return eta(position);
-    case BinningValue::binMag:
+    case AxisMag:
       return position.norm();
     default:
-      assert(false && "Invalid BinningValue enum value");
+      assert(false && "Invalid AxisDirection enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }
@@ -178,8 +184,8 @@ inline double cast(const Vector3& position, BinningValue bval) {
 /// @param [in] m Matrix that will be used for cross products
 /// @param [in] v Vector for cross products
 /// @return Constructed matrix
-inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3& v) {
-  ActsMatrix<3, 3> r;
+inline SquareMatrix3 cross(const SquareMatrix3& m, const Vector3& v) {
+  SquareMatrix3 r;
   r.col(0) = m.col(0).cross(v);
   r.col(1) = m.col(1).cross(v);
   r.col(2) = m.col(2).cross(v);

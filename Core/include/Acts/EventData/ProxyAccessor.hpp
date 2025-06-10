@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -70,11 +70,12 @@ struct ProxyAccessorBase {
 
   /// Create the accessor from an already-hashed string key
   /// @param _key the key
-  constexpr ProxyAccessorBase(HashedString _key) : key{_key} {}
+  explicit constexpr ProxyAccessorBase(HashedString _key) : key{_key} {}
 
   /// Create the accessor from a string key
   /// @param _key the key
-  ProxyAccessorBase(const std::string& _key) : key{hashString(_key)} {}
+  explicit constexpr ProxyAccessorBase(const std::string& _key)
+      : key{hashStringDynamic(_key)} {}
 
   /// Access the stored key on the proxy given as an argument. Mutable version
   /// @tparam proxy_t the type of the proxy

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -33,11 +33,11 @@ namespace detail {
 /// later stage, the surface is referenced counted here.
 struct Step {
   ConstrainedStep stepSize;
-  Direction navDir;
+  Direction navDir = Direction::Forward();
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
-  GeometryIdentifier geoID = 0;
+  GeometryIdentifier geoID;
   /// Note that this is the total number of trials including the previous steps
   std::size_t nTotalTrials = 0;
 };
@@ -68,9 +68,9 @@ struct SteppingLogger {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& /*logger*/) const {
     // Don't log if you have reached the target or are sterile
     if (sterile || state.stage == PropagatorStage::postPropagation) {
       return;

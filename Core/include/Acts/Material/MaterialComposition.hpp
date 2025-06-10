@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <ostream>
 #include <vector>
 
 namespace Acts {
@@ -86,6 +87,13 @@ class ElementFraction {
     return lhs.m_fraction < rhs.m_fraction;
   }
   friend class MaterialComposition;
+
+  /// Stream operator for ElementFraction
+  friend std::ostream& operator<<(std::ostream& os, const ElementFraction& ef) {
+    os << "ElementFraction(Z=" << static_cast<unsigned int>(ef.m_element)
+       << ", f=" << ef.fraction() << ")";
+    return os;
+  }
 };
 
 /// Material composed from multiple elements with varying factions.
@@ -98,7 +106,7 @@ class MaterialComposition {
   /// Constructor from element fractions.
   ///
   /// Rescales the fractions so they all add up to unity within the accuracy.
-  MaterialComposition(std::vector<ElementFraction> elements)
+  explicit MaterialComposition(std::vector<ElementFraction> elements)
       : m_elements(std::move(elements)) {
     std::ranges::sort(m_elements, std::less<ElementFraction>{});
     // compute the total weight first
@@ -125,7 +133,7 @@ class MaterialComposition {
   auto end() const { return m_elements.end(); }
 
   /// Check if the composed material is valid, i.e. it is not vacuum.
-  operator bool() const { return !m_elements.empty(); }
+  explicit operator bool() const { return !m_elements.empty(); }
   /// Return the number of elements.
   std::size_t size() const { return m_elements.size(); }
 
@@ -134,7 +142,21 @@ class MaterialComposition {
 
   friend inline bool operator==(const MaterialComposition& lhs,
                                 const MaterialComposition& rhs) {
-    return (lhs.m_elements == rhs.m_elements);
+    return lhs.m_elements == rhs.m_elements;
+  }
+
+  /// Stream operator for MaterialComposition
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const MaterialComposition& mc) {
+    os << "MaterialComposition(elements=[";
+    for (std::size_t i = 0; i < mc.m_elements.size(); ++i) {
+      if (i > 0) {
+        os << ", ";
+      }
+      os << mc.m_elements[i];
+    }
+    os << "])";
+    return os;
   }
 };
 

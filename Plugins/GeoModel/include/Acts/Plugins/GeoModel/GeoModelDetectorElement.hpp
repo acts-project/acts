@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -51,11 +51,11 @@ class GeoModelDetectorElement : public DetectorElementBase {
   template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
       const PVConstLink& geoPhysVol, const std::shared_ptr<BoundsType> bounds,
-      const Transform3& sfTransform, ActsScalar thickness) {
+      const Transform3& sfTransform, double thickness) {
     // First create the detector element with a nullptr
     auto detElement = std::make_shared<GeoModelDetectorElement>(
         geoPhysVol, nullptr, sfTransform, thickness);
-    auto surface = Surface::makeShared<SurfaceType>(bounds, *detElement.get());
+    auto surface = Surface::makeShared<SurfaceType>(bounds, *detElement);
     detElement->attachSurface(surface);
     return detElement;
   }
@@ -68,7 +68,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(PVConstLink geoPhysVol,
                           std::shared_ptr<Surface> surface,
-                          const Transform3& sfTransform, ActsScalar thickness);
+                          const Transform3& sfTransform, double thickness);
 
   /// Return local to global transform associated with this detector element
   ///
@@ -82,18 +82,32 @@ class GeoModelDetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// Return the thickness of this detector element
-  ActsScalar thickness() const override;
+  double thickness() const override;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;
 
- private:
+  /// Get the name of the logical volume
+  const std::string& logVolName() const;
+
+  /// Get the string identifier of the corresponding database entry
+  /// Note: This is not by defnitition a unique identifier, there can be
+  /// several detector elements created from a single database entry.
+  const std::string& databaseEntryName() const { return m_entryName; };
+
+  /// Set the corresponding database entry string
+  void setDatabaseEntryName(const std::string& n) { m_entryName = n; };
+
+ protected:
   /// Attach a surface
   ///
   /// @param surface The surface to attach
   void attachSurface(std::shared_ptr<Surface> surface) {
     m_surface = std::move(surface);
   }
+
+ private:
+  std::string m_entryName;
 
   /// The GeoModel full physical volume
   PVConstLink m_geoPhysVol{nullptr};
@@ -102,7 +116,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// The global transformation before the volume
   Transform3 m_surfaceTransform;
   ///  Thickness of this detector element
-  ActsScalar m_thickness{0.};
+  double m_thickness{0.};
 };
 
 /// Collect the sensitive surface & detector element

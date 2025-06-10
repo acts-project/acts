@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -35,22 +35,22 @@ class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(const Config& /*cfg*/,
-                             std::unique_ptr<const Logger> logger =
-                                 getDefaultLogger("LayerArrayCreator",
-                                                  Logging::INFO))
+  explicit TrackingVolumeArrayCreator(const Config& /*cfg*/,
+                                      std::unique_ptr<const Logger> logger =
+                                          getDefaultLogger("LayerArrayCreator",
+                                                           Logging::INFO))
       : m_logger(std::move(logger)) {}
 
   /// create a tracking volume array
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] tVolumes is the vector of TrackingVolumes to be
-  /// @param [in] bValue is the binning value
+  /// @param [in] aDir is the axis direction
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
-      BinningValue bValue) const override;
+      AxisDirection aDir) const override;
 
   /// Set logging instance
   ///

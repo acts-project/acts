@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,13 +12,16 @@
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
 #include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
+#include "Acts/Plugins/Detray/DetraySurfaceGridsConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
-#include <detray/io/common/geometry_reader.hpp>
-#include <detray/io/common/material_map_reader.hpp>
+#include <detray/io/backend/geometry_reader.hpp>
+#include <detray/io/backend/material_map_reader.hpp>
+#include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
+#include <detray/utils/consistency_checker.hpp>
 
 namespace Acts {
 
@@ -35,8 +38,9 @@ class DetrayConverter {
   };
 
   /// Constructor with logger
-  DetrayConverter(std::unique_ptr<const Logger> logger =
-                      getDefaultLogger("DetrayConverter", Logging::INFO));
+  explicit DetrayConverter(
+      std::unique_ptr<const Logger> logger = getDefaultLogger("DetrayConverter",
+                                                              Logging::INFO));
 
   /// Convert an Acts::Experimental::Detector to a detray::detector object
   ///
@@ -51,46 +55,59 @@ class DetrayConverter {
                      const Experimental::Detector& detector,
                      vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
-    DetrayConversionUtils::GeometryIdCache geoIdCache;
-
-    typename detector_t::name_map names = {{0u, detector.name()}};
+    DetrayConversionUtils::Cache cCache(detector.volumes());
 
     // build detector
     detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
     // (1) geometry
     detray::io::detector_payload detectorPayload =
-        DetrayGeometryConverter::convertDetector(geoIdCache, gctx, detector,
+        DetrayGeometryConverter::convertDetector(cCache, gctx, detector,
                                                  logger());
-    detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
-                                                     detectorPayload);
+    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
+                                                          detectorPayload);
 
     // (2a) homogeneous material
-    if constexpr (detray::detail::has_homogeneous_material_v<detector_t>) {
+    if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_homogeneous_material_payload materialSlabsPayload =
             DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-                geoIdCache, detector, logger());
-        detray::io::homogeneous_material_reader::convert<detector_t>(
-            detectorBuilder, names, std::move(materialSlabsPayload));
+                cCache, detector, logger());
+        detray::io::homogeneous_material_reader::from_payload<detector_t>(
+            detectorBuilder, std::move(materialSlabsPayload));
       }
     }
 
     // (2b) material grids
-    if constexpr (detray::detail::has_material_grids_v<detector_t>) {
+    if constexpr (detray::concepts::has_material_maps<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>
             materialGridsPayload =
                 DetrayMaterialConverter::convertGridSurfaceMaterial(
-                    geoIdCache, detector, logger());
-        detray::io::material_map_reader<std::integral_constant<
-            std::size_t, 2>>::convert<detector_t>(detectorBuilder, names,
-                                                  std::move(
-                                                      materialGridsPayload));
+                    cCache, detector, logger());
+        detray::io::material_map_reader<
+            std::integral_constant<std::size_t, 2>>::
+            from_payload<detector_t>(detectorBuilder,
+                                     std::move(materialGridsPayload));
       }
     }
 
-    detector_t detrayDetector(detectorBuilder.build(mr));
+    // (3) surface grids
+    if (options.convertSurfaceGrids) {
+      detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
+          surfaceGridsPayload =
+              DetraySurfaceGridsConverter::convertSurfaceGrids(detector);
+
+      // Capacity 0 (dynamic bin size) and dimension 2 (2D grids)
+      detray::io::surface_grid_reader<typename detector_t::surface_type,
+                                      std::integral_constant<std::size_t, 0>,
+                                      std::integral_constant<std::size_t, 2>>::
+          template from_payload<detector_t>(detectorBuilder,
+                                            std::move(surfaceGridsPayload));
+    }
+
+    typename detector_t::name_map names;
+    detector_t detrayDetector(detectorBuilder.build(mr, names));
 
     // Checks and print
     detray::detail::check_consistency(detrayDetector);

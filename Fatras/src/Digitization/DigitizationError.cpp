@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
@@ -31,6 +31,8 @@ class DigitizationErrorCategory : public std::error_category {
         return "Surface undefined for this operation.";
       case DigitizationError::MaskingError:
         return "Surface mask could not be applied.";
+      case DigitizationError::MaximumRetriesExceeded:
+        return "Maximum number of retries exceeded.";
       default:
         return "unknown";
     }

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -21,12 +21,12 @@ namespace Acts {
 /// Surface derived class stub
 class SurfaceStub : public RegularSurface {
  public:
-  SurfaceStub(const Transform3& htrans = Transform3::Identity())
+  explicit SurfaceStub(const Transform3& htrans = Transform3::Identity())
       : GeometryObject(), RegularSurface(htrans) {}
   SurfaceStub(const GeometryContext& gctx, const SurfaceStub& sf,
               const Transform3& transf)
       : GeometryObject(), RegularSurface(gctx, sf, transf) {}
-  SurfaceStub(const DetectorElementBase& detelement)
+  explicit SurfaceStub(const DetectorElementBase& detelement)
       : GeometryObject(), RegularSurface(detelement) {}
 
   ~SurfaceStub() override = default;
@@ -76,9 +76,9 @@ class SurfaceStub : public RegularSurface {
   }
 
   /// Inherited from GeometryObject base
-  Vector3 binningPosition(const GeometryContext& /*txt*/,
-                          BinningValue /*bValue*/) const final {
-    const Vector3 v{0.0, 0.0, 0.0};
+  Vector3 referencePosition(const GeometryContext& /*txt*/,
+                            AxisDirection /*bValue*/) const final {
+    const Vector3 v{0., 0., 0.};
     return v;
   }
 
@@ -87,9 +87,9 @@ class SurfaceStub : public RegularSurface {
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
       const Vector3& /*direction*/,
       const BoundaryTolerance& /*boundaryTolerance*/,
-      const ActsScalar /*tolerance*/) const final {
+      const double /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
-                                    Intersection3D::Status::reachable);
+                                    IntersectionStatus::reachable);
     return SurfaceMultiIntersection(
         {stubIntersection, Intersection3D::invalid()}, this);
   }
@@ -102,7 +102,7 @@ class SurfaceStub : public RegularSurface {
 
   /// Return a Polyhedron for the surfaces
   Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      std::size_t /*lseg */) const final {
+                                      unsigned int /* ignored */) const final {
     std::vector<Vector3> vertices;
     std::vector<std::vector<std::size_t>> faces;
     std::vector<std::vector<std::size_t>> triangularMesh;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -75,7 +75,7 @@ class KDTree {
   ///
   /// @param d The vector of position-value pairs to construct the k-d tree
   /// from.
-  KDTree(vector_t &&d) : m_elems(d) {
+  explicit KDTree(vector_t &&d) : m_elems(d) {
     // To start out, we need to check whether we need to construct a leaf node
     // or an internal node. We create a leaf only if we have at most as many
     // elements as the number of elements that can fit into a leaf node.
