@@ -149,8 +149,13 @@ class BroadTripletSeedFinder {
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
+  /// @param options Configuration options for the seed finder
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
+  /// @param bottomCuts Derived cuts for the bottom space points
+  /// @param topCuts Derived cuts for the top space points
+  /// @param tripletCuts Derived cuts for the triplet space points
+  /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param containerPointers Space point container and its extra columns
   /// @param bottomSps Group of space points to be used as innermost SP in a seed
   /// @param middleSp Space point candidate to be used as middle SP in a seed
