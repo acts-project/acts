@@ -49,14 +49,14 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
 
   m_gridConfig.minPt = m_cfg.minPt;
   // TODO
-  //m_gridConfig.rMin = m_cfg.rMin;
+  // m_gridConfig.rMin = m_cfg.rMin;
   m_gridConfig.rMax = m_cfg.rMax;
   m_gridConfig.zMin = m_cfg.zMin;
   m_gridConfig.zMax = m_cfg.zMax;
   m_gridConfig.deltaRMax = m_cfg.deltaRMax;
   m_gridConfig.cotThetaMax = m_cfg.cotThetaMax;
   // TODO
-  //m_gridConfig.impactMax = m_cfg.impactMax;
+  // m_gridConfig.impactMax = m_cfg.impactMax;
   m_gridConfig.phiMin = m_cfg.phiMin;
   m_gridConfig.phiMax = m_cfg.phiMax;
   m_gridConfig.phiBinDeflectionCoverage = m_cfg.phiBinDeflectionCoverage;
