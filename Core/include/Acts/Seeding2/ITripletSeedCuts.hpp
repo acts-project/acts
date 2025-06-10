@@ -11,7 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @c ITripletSeedCuts can be used to increase or decrease seed weights
 /// based on the space points used in a seed. Seed weights are also
@@ -48,4 +48,4 @@ class ITripletSeedCuts {
       std::span<TripletCandidate2> seedCandidates) const = 0;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

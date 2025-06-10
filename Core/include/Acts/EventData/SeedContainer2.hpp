@@ -13,7 +13,7 @@
 #include <limits>
 #include <span>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 using SeedIndex2 = std::size_t;
 
@@ -353,4 +353,4 @@ inline ConstSeedProxy2 SeedContainer2::at(IndexType index) const {
   return ConstProxyType(*this, index);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

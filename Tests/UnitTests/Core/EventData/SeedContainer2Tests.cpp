@@ -10,10 +10,13 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 
+using namespace Acts;
+using namespace Acts::Experimental;
+
 BOOST_AUTO_TEST_SUITE(EventDataSeedContainer2)
 
 BOOST_AUTO_TEST_CASE(Empty) {
-  Acts::SeedContainer2 container;
+  SeedContainer2 container;
 
   BOOST_CHECK(container.empty());
   BOOST_CHECK_EQUAL(container.size(), 0u);
@@ -24,12 +27,11 @@ BOOST_AUTO_TEST_CASE(Empty) {
 }
 
 BOOST_AUTO_TEST_CASE(Create) {
-  Acts::SeedContainer2 container;
+  SeedContainer2 container;
   container.reserve(1);
 
   {
-    auto seed =
-        container.createSeed(std::array<Acts::SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -47,12 +49,11 @@ BOOST_AUTO_TEST_CASE(Create) {
 }
 
 BOOST_AUTO_TEST_CASE(Iterate) {
-  Acts::SeedContainer2 container;
+  SeedContainer2 container;
   container.reserve(1);
 
   {
-    auto seed =
-        container.createSeed(std::array<Acts::SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
@@ -65,21 +66,20 @@ BOOST_AUTO_TEST_CASE(Iterate) {
 }
 
 BOOST_AUTO_TEST_CASE(CopyAndMove) {
-  Acts::SeedContainer2 container;
+  SeedContainer2 container;
   container.reserve(1);
 
   {
-    auto seed =
-        container.createSeed(std::array<Acts::SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }
 
-  Acts::SeedContainer2 containerCopy = container;
+  SeedContainer2 containerCopy = container;
   BOOST_CHECK(!containerCopy.empty());
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);
 
-  Acts::SeedContainer2 containerMove = std::move(container);
+  SeedContainer2 containerMove = std::move(container);
   BOOST_CHECK(!containerMove.empty());
   BOOST_CHECK_EQUAL(containerMove.size(), 1u);
   // original should be empty after move
@@ -91,12 +91,11 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
 }
 
 BOOST_AUTO_TEST_CASE(Clear) {
-  Acts::SeedContainer2 container;
+  SeedContainer2 container;
   container.reserve(1);
 
   {
-    auto seed =
-        container.createSeed(std::array<Acts::SpacePointIndex2, 3>{0, 1, 2});
+    auto seed = container.createSeed(std::array<SpacePointIndex2, 3>{0, 1, 2});
     seed.quality() = 1.0f;
     seed.vertexZ() = 3.0f;
   }

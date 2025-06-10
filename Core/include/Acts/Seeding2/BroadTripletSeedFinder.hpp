@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief Triplet seeding algorithm front-end
 ///
@@ -239,4 +239,4 @@ class BroadTripletSeedFinder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

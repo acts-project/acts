@@ -18,7 +18,7 @@
 #include <numbers>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 class CylindricalSpacePointGrid2 {
  public:
@@ -147,4 +147,4 @@ class CylindricalSpacePointGrid2 {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

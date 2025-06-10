@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// Collection of pointers to the space point container and its
 /// additional columns. This is used as a basket to pass around
@@ -122,4 +122,4 @@ class SpacePointContainerPointers {
       m_topStripCenterPositionColumn = nullptr;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

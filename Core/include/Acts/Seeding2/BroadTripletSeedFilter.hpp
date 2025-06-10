@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 class ITripletSeedCuts;
 
@@ -162,4 +162,4 @@ class BroadTripletSeedFilter final {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

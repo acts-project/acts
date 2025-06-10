@@ -16,9 +16,9 @@
 
 #include <Eigen/src/Core/Matrix.h>
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
+namespace Acts::Experimental {
 
 BroadTripletSeedFinder::DerivedTripletCuts
 BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
@@ -637,4 +637,4 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
   return true;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

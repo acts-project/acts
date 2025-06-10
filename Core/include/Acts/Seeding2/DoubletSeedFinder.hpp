@@ -15,7 +15,7 @@
 
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 class DoubletSeedFinder {
  public:
@@ -129,4 +129,4 @@ class DoubletSeedFinder {
       DoubletsForMiddleSp& compatibleDoublets);
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

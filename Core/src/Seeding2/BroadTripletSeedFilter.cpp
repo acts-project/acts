@@ -14,9 +14,7 @@
 #include <algorithm>
 #include <numeric>
 
-namespace Acts {
-
-using namespace UnitLiterals;
+namespace Acts::Experimental {
 
 namespace {
 
@@ -309,4 +307,4 @@ void BroadTripletSeedFilter::filter1SpFixed(
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
