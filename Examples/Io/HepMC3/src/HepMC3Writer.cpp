@@ -26,7 +26,7 @@
 #include <HepMC3/WriterGZ.h>
 #endif
 
-#ifdef HEPMC3_ROOT_SUPPORT
+#ifdef ACTS_HEPMC3_ROOT_SUPPORT
 #include <HepMC3/WriterRootTree.h>
 #endif
 
