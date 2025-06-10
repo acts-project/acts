@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/SourceLink.hpp"
-#include <Acts/EventData/SpacePointContainer2.hpp>
+#include "Acts/EventData/SpacePointContainer2.hpp"
 
 BOOST_AUTO_TEST_SUITE(EventDataSpacePointContainer2)
 
