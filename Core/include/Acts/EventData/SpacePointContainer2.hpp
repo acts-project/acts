@@ -211,6 +211,12 @@ class SpacePointContainer2 {
    private:
     ContainerType m_data;
 
+    DenseColumn() = default;
+    DenseColumn(const DenseColumn &other) = default;
+    DenseColumn(DenseColumn &&other) noexcept = default;
+    DenseColumn &operator=(const DenseColumn &other) = default;
+    DenseColumn &operator=(DenseColumn &&other) noexcept = default;
+
     friend class SpacePointContainer2;
   };
 
@@ -320,6 +326,12 @@ class SpacePointContainer2 {
 
    private:
     ContainerType m_data;
+
+    SparseColumn() = default;
+    SparseColumn(const SparseColumn &other) = default;
+    SparseColumn(SparseColumn &&other) noexcept = default;
+    SparseColumn &operator=(const SparseColumn &other) = default;
+    SparseColumn &operator=(SparseColumn &&other) noexcept = default;
 
     friend class SpacePointContainer2;
   };
