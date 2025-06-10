@@ -130,12 +130,6 @@ addHoughVertexFinding(
     outputVertices="fittedHoughVertices"
 )
 
-addHoughSeedFilter(
-    s,
-    # logLevel=acts.logging.VERBOSE,
-    outputDirRoot=outputDir,
-)
-
 addCKFTracks(
     s,
     trackingGeometry,
