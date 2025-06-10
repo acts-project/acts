@@ -41,7 +41,7 @@ set(TRACCC_SETUP_DFELIBS
     CACHE BOOL
     "Do not set up dfelibs as part of Traccc"
 )
-set(TRACCC_SETUP_DETRAY ON CACHE BOOL "Set up Detray as part of Traccc")
+set(TRACCC_SETUP_DETRAY OFF CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
 set(TRACCC_SETUP_BENCHMARKS
