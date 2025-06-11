@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
 
@@ -128,17 +129,16 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Run through the builders
-  std::for_each(
-      m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
-        auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
-        ACTS_VERBOSE("Number of volumes: " << cVolumes.size());
-        // Collect individual components, volumes, containers, roots
-        volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
-        containers.push_back(cContainer);
-        rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
-                           cRoots.volumes.end());
-      });
+  std::ranges::for_each(m_cfg.builders, [&](const auto& builder) {
+    auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
+    atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
+    ACTS_VERBOSE("Number of volumes: " << cVolumes.size());
+    // Collect individual components, volumes, containers, roots
+    volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
+    containers.push_back(cContainer);
+    rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
+                       cRoots.volumes.end());
+  });
   // Navigation level detected, connect volumes (cleaner and faster than
   // connect containers)
   if (atNavigationLevel) {
@@ -161,12 +161,12 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
     ACTS_DEBUG("Assigning geometry ids to the detector");
     auto cache = m_cfg.geoIdGenerator->generateCache();
     if (m_cfg.geoIdReverseGen) {
-      std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
+      std::ranges::for_each(rootVolumes, [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
     } else {
-      std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
+      std::ranges::for_each(rootVolumes, [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
