@@ -164,7 +164,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
-  Transform3 itransform = transform.inverse();
+  Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
   auto globalToLocal = [ftransform](const Vector3& pos) {
     Vector3 loc = ftransform * pos;
