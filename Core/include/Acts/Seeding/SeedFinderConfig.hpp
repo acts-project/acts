@@ -27,7 +27,7 @@ class SeedFilter;
 /// @brief Structure that holds configuration parameters for the seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  std::shared_ptr<SeedFilter<SpacePoint>> seedFilter;
 
   /// Seeding parameters used in the space-point grid creation and bin finding
 
@@ -36,12 +36,12 @@ struct SeedFinderConfig {
   /// creation
   float phiMin = -std::numbers::pi_v<float>;
   float phiMax = std::numbers::pi_v<float>;
-  float zMin = -2800 * Acts::UnitConstants::mm;
-  float zMax = 2800 * Acts::UnitConstants::mm;
-  float rMax = 600 * Acts::UnitConstants::mm;
+  float zMin = -2800 * UnitConstants::mm;
+  float zMax = 2800 * UnitConstants::mm;
+  float rMax = 600 * UnitConstants::mm;
   /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   /// which will make seeding very slow!
-  float rMin = 33 * Acts::UnitConstants::mm;
+  float rMin = 33 * UnitConstants::mm;
 
   /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges;
@@ -50,7 +50,7 @@ struct SeedFinderConfig {
   std::vector<std::size_t> zBinsCustomLooping = {};
 
   /// Radial bin size used in space-point grid
-  float binSizeR = 1. * Acts::UnitConstants::mm;
+  float binSizeR = 1. * UnitConstants::mm;
 
   /// Seeding parameters used to define the region of interest for middle
   /// space-point
@@ -59,8 +59,8 @@ struct SeedFinderConfig {
   /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
-  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+  float rMinMiddle = 60.f * UnitConstants::mm;
+  float rMaxMiddle = 120.f * UnitConstants::mm;
   /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   /// be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
   bool useVariableMiddleSPRange = false;
@@ -69,19 +69,19 @@ struct SeedFinderConfig {
   /// If useVariableMiddleSPRange is true, the radial range will be calculated
   /// based on the maximum and minimum r values of the space-points in the event
   /// and a deltaR (deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange)
-  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
-  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMinSPRange = 10. * UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * UnitConstants::mm;
 
   /// Seeding parameters used to define the cuts on space-point doublets
 
   /// Minimum radial distance between two doublet components (prefer
   /// deltaRMinTopSP and deltaRMinBottomSP to set separate values for outer and
   /// inner space-points)
-  float deltaRMin = 5 * Acts::UnitConstants::mm;
+  float deltaRMin = 5 * UnitConstants::mm;
   /// Maximum radial distance between two doublet components (prefer
   /// deltaRMaxTopSP and deltaRMacBottomSP to set separate values for outer and
   /// inner space-points)
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
+  float deltaRMax = 270 * UnitConstants::mm;
   /// Minimum radial distance between middle-outer doublet components
   float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
   /// Maximum radial distance between middle-outer doublet components
@@ -92,8 +92,7 @@ struct SeedFinderConfig {
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
 
   /// Maximum value of z-distance between space-points in doublet
-  float deltaZMax =
-      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+  float deltaZMax = std::numeric_limits<float>::infinity() * UnitConstants::mm;
 
   /// Maximum allowed cotTheta between two space-points in doublet, used to
   /// check if forward angle is within bounds
@@ -101,8 +100,8 @@ struct SeedFinderConfig {
 
   /// Limiting location of collision region in z-axis used to check if doublet
   /// origin is within reasonable bounds
-  float collisionRegionMin = -150 * Acts::UnitConstants::mm;
-  float collisionRegionMax = +150 * Acts::UnitConstants::mm;
+  float collisionRegionMin = -150 * UnitConstants::mm;
+  float collisionRegionMax = +150 * UnitConstants::mm;
 
   /// Enable cut on the compatibility between interaction point and doublet,
   /// this is an useful approximation to speed up the seeding
@@ -115,7 +114,7 @@ struct SeedFinderConfig {
   /// minimum allowed pT particle) + a certain uncertainty term. Check the
   /// documentation for more information
   /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-  float minPt = 400. * Acts::UnitConstants::MeV;
+  float minPt = 400. * UnitConstants::MeV;
   /// Number of sigmas of scattering angle to be considered in the minimum pT
   /// scattering term
   float sigmaScattering = 5;
@@ -125,9 +124,9 @@ struct SeedFinderConfig {
   /// TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
   /// Maximum transverse momentum for scattering calculation
-  float maxPtScattering = 10 * Acts::UnitConstants::GeV;
+  float maxPtScattering = 10 * UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
-  float impactMax = 20. * Acts::UnitConstants::mm;
+  float impactMax = 20. * UnitConstants::mm;
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
@@ -156,8 +155,8 @@ struct SeedFinderConfig {
   /// will be added to spacepoint measurement uncertainties (and therefore also
   /// multiplied by sigmaError)
   /// FIXME: call align1 and align2
-  float zAlign = 0 * Acts::UnitConstants::mm;
-  float rAlign = 0 * Acts::UnitConstants::mm;
+  float zAlign = 0 * UnitConstants::mm;
+  float rAlign = 0 * UnitConstants::mm;
   /// used for measurement (+alignment) uncertainties.
   /// find seeds within 5sigma error ellipse
   float sigmaError = 5;
@@ -186,7 +185,7 @@ struct SeedFinderConfig {
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules
-  float toleranceParam = 1.1 * Acts::UnitConstants::mm;
+  float toleranceParam = 1.1 * UnitConstants::mm;
 
   // Delegate to apply experiment specific cuts during doublet finding
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
@@ -212,7 +211,7 @@ struct SeedFinderConfig {
           "finder config, is not in internal units.");
     }
 
-    using namespace Acts::UnitLiterals;
+    using namespace UnitLiterals;
     SeedFinderConfig config = *this;
     config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
@@ -257,10 +256,9 @@ struct SeedFinderConfig {
 struct SeedFinderOptions {
   // location of beam in x,y plane.
   // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
+  Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
   // field induction
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
+  float bFieldInZ = 2.08 * UnitConstants::T;
 
   // derived quantities
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
@@ -276,7 +274,7 @@ struct SeedFinderOptions {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFinderOptions");
     }
-    using namespace Acts::UnitLiterals;
+    using namespace UnitLiterals;
     SeedFinderOptions options = *this;
     options.isInInternalUnits = true;
     options.beamPos[0] /= 1_mm;
@@ -288,7 +286,7 @@ struct SeedFinderOptions {
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
-    using namespace Acts::UnitLiterals;
+    using namespace UnitLiterals;
 
     if (!isInInternalUnits) {
       throw std::runtime_error(

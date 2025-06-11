@@ -13,7 +13,6 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
@@ -26,14 +25,12 @@
 using namespace Acts::HashedStringLiteral;
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
-    ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+SeedingAlgorithm::SeedingAlgorithm(SeedingAlgorithm::Config cfg,
+                                   Acts::Logging::Level lvl)
+    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
   // Seed Finder config requires Seed Filter object before conversion to
@@ -181,7 +178,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
@@ -195,8 +192,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
           m_cfg.seedFinderConfig, logger().cloneWithSuffix("SeedFinder"));
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
@@ -225,7 +221,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   spOptions.beamPos = {0., 0.};
 
   // Prepare interface SpacePoint backend-ACTS
-  ActsExamples::SpacePointContainer container(spacePointPtrs);
+  SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
       spContainer(spConfig, spOptions, container);
@@ -299,5 +295,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
 
   m_outputSeeds(ctx, std::move(SeedContainerForStorage));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
