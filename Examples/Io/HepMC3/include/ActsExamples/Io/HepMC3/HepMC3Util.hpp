@@ -33,4 +33,12 @@ std::span<const Compression> availableCompressionModes();
 
 std::string_view compressionExtension(Compression compression);
 
+enum class Format { ascii, root };
+
+std::ostream& operator<<(std::ostream& os, Format format);
+
+std::span<const Format> availableFormats();
+
+Format formatFromFilename(std::string_view filename);
+
 }  // namespace ActsExamples::HepMC3Util
