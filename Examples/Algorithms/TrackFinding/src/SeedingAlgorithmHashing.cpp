@@ -252,7 +252,7 @@ ProcessCode SeedingAlgorithmHashing::execute(
     state.spacePointMutableData.resize(maxNSpacePoints);
 
     // Prepare interface SpacePoint backend-ACTS
-    SpacePointContainer<SpacePointPtrVector> container(bucket);
+    SpacePointContainer container(bucket);
     // Prepare Acts API
     Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
         spContainer(spConfig, spOptions, container);

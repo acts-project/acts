@@ -114,7 +114,7 @@ struct SeedFinderConfig {
   /// minimum allowed pT particle) + a certain uncertainty term. Check the
   /// documentation for more information
   /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-  float minPt = 400. * UnitConstants::MeV;
+  float minPt = 400 * UnitConstants::MeV;
   /// Number of sigmas of scattering angle to be considered in the minimum pT
   /// scattering term
   float sigmaScattering = 5;
@@ -126,7 +126,7 @@ struct SeedFinderConfig {
   /// Maximum transverse momentum for scattering calculation
   float maxPtScattering = 10 * UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
-  float impactMax = 20. * UnitConstants::mm;
+  float impactMax = 20 * UnitConstants::mm;
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
