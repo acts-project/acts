@@ -196,6 +196,8 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     nSpacePoints += (*isp)(ctx).size();
   }
 
+  ACTS_INFO("SeedingAlgorithm: " << nSpacePoints << " spacepoints");
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
