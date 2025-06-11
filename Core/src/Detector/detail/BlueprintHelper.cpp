@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 
 namespace {
 
@@ -112,11 +113,10 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
   if (AxisDirection bVal = node.binning.front(); bVal == AxisDirection::AxisZ) {
     // adjust inner/outer radius
     if (adjustToParent) {
-      std::for_each(node.children.begin(), node.children.end(),
-                    [&](auto& child) {
-                      child->boundaryValues[0] = cInnerR;
-                      child->boundaryValues[1] = cOuterR;
-                    });
+      std::ranges::for_each(node.children, [&](auto& child) {
+        child->boundaryValues[0] = cInnerR;
+        child->boundaryValues[1] = cOuterR;
+      });
     }
     auto [negC, posC] = endPointsXYZ(node, bVal);
     // Assume sorted along the local z axis
@@ -156,11 +156,10 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
   } else if (bVal == AxisDirection::AxisR) {
     // We have binning in R present
     if (adjustToParent) {
-      std::for_each(node.children.begin(), node.children.end(),
-                    [&](auto& child) {
-                      child->transform = node.transform;
-                      child->boundaryValues[2] = cHalfZ;
-                    });
+      std::ranges::for_each(node.children, [&](auto& child) {
+        child->transform = node.transform;
+        child->boundaryValues[2] = cHalfZ;
+      });
     }
     // Fill the gaps in R
     unsigned int igap = 0;
@@ -217,7 +216,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
 
   // adjust non-binned directions
   if (adjustToParent) {
-    std::for_each(node.children.begin(), node.children.end(), [&](auto& child) {
+    std::ranges::for_each(node.children, [&](auto& child) {
       for (auto bv : allowedBinVals) {
         if (bv != binVal) {
           // Both boundary values and translation
