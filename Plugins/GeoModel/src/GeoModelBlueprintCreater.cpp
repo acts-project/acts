@@ -21,7 +21,9 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <ranges>
 
 #include <boost/algorithm/string.hpp>
 
@@ -263,11 +265,9 @@ Acts::GeoModelBlueprintCreater::createNode(
 
     // Create the binnings
     std::vector<Acts::AxisDirection> binnings;
-    std::for_each(
-        entry.binnings.begin(), entry.binnings.end(),
-        [&binnings](const std::string& b) {
-          binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
-        });
+    std::ranges::for_each(entry.binnings, [&binnings](const std::string& b) {
+      binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
+    });
 
     // Complete the children
     auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
