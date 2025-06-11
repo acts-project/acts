@@ -7,7 +7,7 @@ variables:
   SPACK_VERSION: develop-2025-06-08
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v11.0.0
+  DEPENDENCY_TAG: v11.1.0
 
 .ccache_base:
   cache:
