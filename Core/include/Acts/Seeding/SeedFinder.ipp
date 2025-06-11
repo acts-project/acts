@@ -318,8 +318,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
-      if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
-          zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+      // ACTS_INFO("zOrigin1= " << zOriginTimesDeltaR/deltaR);
+      // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
+          // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+        if (zOriginTimesDeltaR < 19.0 * deltaR ||
+            zOriginTimesDeltaR > 21.0 * deltaR) {
         continue;
       }
 
@@ -328,6 +331,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // interactionPointCut is true we apply the curvature cut first because it
       // is more frequent but requires the coordinate transformation
       if (!m_config.interactionPointCut) {
+        // ACTS_INFO("interactionPointCut = " << m_config.interactionPointCut<<", is false");
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
@@ -424,6 +428,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         mutableData.setDeltaR(otherSP->index(),
                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.emplace_back(otherSP);
+        // ACTS_INFO("zOrigin2= " << zOriginTimesDeltaR/deltaR);
         continue;
       }
 
@@ -473,6 +478,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
       mutableData.setDeltaR(otherSP->index(),
                             std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+      // ACTS_INFO("zOrigin3= " << zOriginTimesDeltaR/deltaR);
       outVec.emplace_back(otherSP);
     }
   }

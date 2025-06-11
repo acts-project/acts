@@ -205,6 +205,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     nSpacePoints += (*isp)(ctx).size();
   }
 
+  ACTS_INFO("SeedingAlgorithm: " << nSpacePoints << " spacepoints");
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
