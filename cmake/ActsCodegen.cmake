@@ -28,7 +28,7 @@ if(uv_exe STREQUAL "uv_exe-NOTFOUND")
                 "SHA256=143dba84867f72107048e1f95be8f894d59f456e018a34276d9d2d6bacdf8f99"
             )
         endif()
-    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)|(aarch64)")
         if(APPLE)
             set(UV_URL "${_base_url}/uv-aarch64-apple-darwin.tar.gz")
             set(UV_HASH

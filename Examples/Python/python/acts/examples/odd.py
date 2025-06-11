@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+import warnings
 
 
 def getOpenDataDetectorDirectory():
@@ -16,14 +17,14 @@ def getOpenDataDetectorDirectory():
 
 
 def getOpenDataDetector(
-    mdecorator=None,
+    materialDecorator=None,
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
     ----------
-    mdecorator: Material Decorator, take RootMaterialDecorator if non is given
+    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     """
@@ -86,8 +87,8 @@ def getOpenDataDetector(
 
         return geoid
 
-    if mdecorator is None:
-        mdecorator = acts.examples.RootMaterialDecorator(
+    if materialDecorator is None:
+        materialDecorator = acts.examples.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
@@ -98,7 +99,9 @@ def getOpenDataDetector(
         logLevel=customLogLevel(),
         dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-        materialDecorator=mdecorator,
+        materialDecorator=materialDecorator,
     )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
     return detector

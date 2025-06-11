@@ -420,14 +420,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
 
-    // flag seeds which are covered by the track
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      if (auto it = discoveredSeeds.find(seedIdentifier);
-          it != discoveredSeeds.end()) {
-        it->second = true;
-      }
-    });
-
     // trim the track if requested
     if (m_cfg.trimTracks) {
       Acts::trimTrack(track, true, true, true, true);
@@ -437,6 +429,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
     }
+
+    // flag seeds which are covered by the track
+    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
+      if (auto it = discoveredSeeds.find(seedIdentifier);
+          it != discoveredSeeds.end()) {
+        it->second = true;
+      }
+    });
 
     ++m_nSelectedTracks;
 

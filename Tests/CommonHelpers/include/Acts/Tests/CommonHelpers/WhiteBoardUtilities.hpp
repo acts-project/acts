@@ -23,7 +23,8 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
       const ActsExamples::AlgorithmContext & /*context*/) override {
     return {};
   };
-  std::string name() const override { return {}; };
+  std::string name() const override { return "Dummy"; };
+  std::string_view typeName() const override { return "Dummy"; };
 };
 
 template <typename T>
@@ -68,7 +69,7 @@ struct GenericReadWriteTool {
   template <typename writer_t>
   auto write(writer_t &writer, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, eventId, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board, 0);
 
     auto add = [&](auto &self, auto N) {
       if constexpr (N() < kSize) {
@@ -85,7 +86,7 @@ struct GenericReadWriteTool {
   template <typename reader_t>
   auto read(reader_t &reader, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, eventId, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board, 0);
 
     reader.internalExecute(ctx);
 

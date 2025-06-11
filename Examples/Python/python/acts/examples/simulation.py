@@ -14,6 +14,8 @@ from acts.examples import (
     RootVertexWriter,
 )
 
+import acts.examples.hepmc3
+
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
 MomentumConfig = namedtuple(
@@ -46,8 +48,15 @@ ParticleSelectorConfig = namedtuple(
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
+        "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 10 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 4,
+)
+
+TruthJetConfig = namedtuple(
+    "TruthJetConfig",
+    ["inputTruthParticles", "outputJets", "jetPtMin"],
+    defaults=[None, None],
 )
 
 
@@ -76,6 +85,15 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
         "removeCharged": config.removeCharged,
         "removeNeutral": config.removeNeutral,
         "removeSecondaries": config.removeSecondaries,
+        "measurementCounter": config.nMeasurementsGroupMin,
+    }
+
+
+def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
+    return {
+        "inputTruthParticles": config.inputTruthParticles,
+        "outputJets": config.outputJets,
+        "jetPtMin": config.jetPtMin,
     }
 
 
@@ -154,26 +172,37 @@ def addParticleGun(
                         randomizeCharge=particleConfig.randomizeCharge,
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
+                        # Merging particle gun vertices does not make sense
                     )
                 ),
             )
         ],
-        outputParticles="particles_generated",
-        outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent="particle_gun_event",
     )
     s.addReader(evGen)
 
-    s.addWhiteboardAlias("particles", evGen.config.outputParticles)
-    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
+    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+        level=customLogLevel(),
+        inputEvent=evGen.config.outputEvent,
+        outputParticles="particles_generated",
+        outputVertices="vertices_generated",
+        mergePrimaries=False,
+    )
+    s.addAlgorithm(hepmc3Converter)
 
-    s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
+    s.addWhiteboardAlias("particles", hepmc3Converter.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", hepmc3Converter.config.outputVertices)
+
+    s.addWhiteboardAlias(
+        "particles_generated_selected", hepmc3Converter.config.outputParticles
+    )
 
     if printParticles:
         s.addAlgorithm(
             ParticlesPrinter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
             )
         )
 
@@ -185,7 +214,7 @@ def addParticleGun(
         s.addWriter(
             CsvParticleWriter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
                 outputDir=str(outputDirCsv),
                 outputStem="particles",
             )
@@ -199,7 +228,7 @@ def addParticleGun(
         s.addWriter(
             RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
                 filePath=str(outputDirRoot / "particles.root"),
             )
         )
@@ -207,7 +236,7 @@ def addParticleGun(
         s.addWriter(
             RootVertexWriter(
                 level=customLogLevel(),
-                inputVertices=evGen.config.outputVertices,
+                inputVertices=hepmc3Converter.config.outputVertices,
                 filePath=str(outputDirRoot / "vertices.root"),
             )
         )
@@ -231,6 +260,8 @@ def addPythia8(
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
+    writeHepMC3: Optional[Path] = None,
+    printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -257,6 +288,8 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    writeHepMC3 : Path|None
+        write directly from Pythia8 into HepMC3
     printPythiaEventListing
         None or "short" or "long"
     """
@@ -299,6 +332,7 @@ def addPythia8(
                         settings=hardProcess,
                         printLongEventListing=printLongEventListing,
                         printShortEventListing=printShortEventListing,
+                        writeHepMC3=writeHepMC3,
                     ),
                 ),
             )
@@ -323,22 +357,32 @@ def addPythia8(
     evGen = acts.examples.EventGenerator(
         level=customLogLevel(),
         generators=generators,
-        outputParticles="particles_generated",
-        outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent="pythia8-event",
+        printListing=printListing,
     )
     s.addReader(evGen)
 
-    s.addWhiteboardAlias("particles", evGen.config.outputParticles)
-    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
+    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+        level=customLogLevel(),
+        inputEvent=evGen.config.outputEvent,
+        outputParticles="particles_generated",
+        outputVertices="vertices_generated",
+        printListing=printListing,
+    )
+    s.addAlgorithm(hepmc3Converter)
+    s.addWhiteboardAlias("particles", hepmc3Converter.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", hepmc3Converter.config.outputVertices)
 
-    s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
+    s.addWhiteboardAlias(
+        "particles_generated_selected", hepmc3Converter.config.outputParticles
+    )
 
     if printParticles:
         s.addAlgorithm(
             acts.examples.ParticlesPrinter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
             )
         )
 
@@ -350,7 +394,7 @@ def addPythia8(
         s.addWriter(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
                 outputDir=str(outputDirCsv),
                 outputStem="particles",
             )
@@ -364,7 +408,7 @@ def addPythia8(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles=evGen.config.outputParticles,
+                inputParticles=hepmc3Converter.config.outputParticles,
                 filePath=str(outputDirRoot / "particles.root"),
             )
         )
@@ -372,7 +416,7 @@ def addPythia8(
         s.addWriter(
             acts.examples.RootVertexWriter(
                 level=customLogLevel(),
-                inputVertices=evGen.config.outputVertices,
+                inputVertices=hepmc3Converter.config.outputVertices,
                 filePath=str(outputDirRoot / "vertices.root"),
             )
         )
@@ -797,6 +841,7 @@ def addDigiParticleSelection(
         level=customLogLevel(),
         inputParticles="particles_simulated_selected",
         inputParticleMeasurementsMap="particle_measurements_map",
+        inputMeasurements="measurements",
         outputParticles="tmp_particles_digitized_selected",
     )
     s.addAlgorithm(selector)
@@ -805,3 +850,19 @@ def addDigiParticleSelection(
     s.addWhiteboardAlias(
         "particles_digitized_selected", selector.config.outputParticles
     )
+
+
+def addTruthJetAlg(
+    s: acts.examples.Sequencer,
+    config: TruthJetConfig,
+    loglevel: Optional[acts.logging.Level] = None,
+) -> None:
+    from acts.examples import TruthJetAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, loglevel)
+    truthJetAlg = acts.examples.TruthJetAlgorithm(
+        **acts.examples.defaultKWArgs(**_getTruthJetKWargs(config)),
+        level=customLogLevel(),
+    )
+
+    s.addAlgorithm(truthJetAlg)

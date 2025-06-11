@@ -95,7 +95,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaR=(1 * u.mm, 300 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
@@ -111,10 +111,11 @@ with tempfile.TemporaryDirectory() as temp:
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
-        initialSigmaPtRel=0.01,
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
+        initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=setup.geoSel,
         outputDirRoot=tp,
@@ -172,6 +173,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputVertices="ivf_notime_fittedVertices",
         vertexFinder=VertexFinder.Iterative,
         outputDirRoot=tp / "ivf_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -184,6 +186,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=False,  # Time seeding not implemented for the Gaussian seeder
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gauss_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -196,6 +199,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
+        writeTrackInfo=True,
     )
 
     s.run()

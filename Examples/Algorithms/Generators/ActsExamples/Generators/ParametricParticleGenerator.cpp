@@ -15,21 +15,25 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <limits>
+#include <memory>
 #include <utility>
+
+#include <HepMC3/Attribute.h>
+#include <HepMC3/FourVector.h>
+#include <HepMC3/GenEvent.h>
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenVertex.h>
+
+using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
 ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     : m_cfg(cfg),
-      m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg).value_or(0))),
       m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg).value_or(0))) {
   m_pdgChoices = {
       m_cfg.pdg,
       static_cast<Acts::PdgParticle>(-m_cfg.pdg),
-  };
-  m_qChoices = {
-      m_charge,
-      -m_charge,
   };
 
   // choose between particle/anti-particle if requested
@@ -85,25 +89,30 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
   }
 }
 
-std::pair<SimVertexContainer, SimParticleContainer>
-ParametricParticleGenerator::operator()(RandomEngine& rng) {
-  SimVertexContainer::sequence_type vertices;
-  SimParticleContainer::sequence_type particles;
+std::shared_ptr<HepMC3::GenEvent> ParametricParticleGenerator::operator()(
+    RandomEngine& rng) {
+  auto event = std::make_shared<HepMC3::GenEvent>();
 
-  // create the primary vertex
-  auto& primaryVertex =
-      vertices.emplace_back(SimVertexBarcode{0}, Acts::Vector4(0., 0., 0., 0.));
+  auto primaryVertex = std::make_shared<HepMC3::GenVertex>();
+  primaryVertex->set_position(HepMC3::FourVector(0., 0., 0., 0.));
+  event->add_vertex(primaryVertex);
+
+  primaryVertex->add_attribute("acts",
+                               std::make_shared<HepMC3::BoolAttribute>(true));
+
+  // Produce pseudo beam particles
+  auto beamParticle = std::make_shared<HepMC3::GenParticle>();
+  beamParticle->set_momentum(HepMC3::FourVector(0., 0., 0., 0.));
+  beamParticle->set_generated_mass(0.);
+  beamParticle->set_pid(Acts::PdgParticle::eInvalid);
+  beamParticle->set_status(4);
+  primaryVertex->add_particle_in(beamParticle);
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
-    // all particles are treated as originating from the same primary vertex
-    const auto pid = SimBarcode(0u).setParticle(ip);
-    primaryVertex.outgoing.insert(pid);
-
     // draw parameters
     const unsigned int type = m_particleTypeChoice(rng);
     const Acts::PdgParticle pdg = m_pdgChoices[type];
-    const double q = m_qChoices[type];
     const double phi = m_phiDist(rng);
     const double someP = m_somePDist(rng);
 
@@ -115,18 +124,27 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
 
     // construct the particle;
-    SimParticleState particle(pid, pdg, q, m_mass);
-    particle.setDirection(dir);
-    particle.setAbsoluteMomentum(p);
+    Acts::Vector3 momentum = p * dir;
+    auto particle = std::make_shared<HepMC3::GenParticle>();
+    HepMC3::FourVector hepMcMomentum(momentum.x() / 1_GeV, momentum.y() / 1_GeV,
+                                     momentum.z() / 1_GeV,
+                                     std::hypot(p, m_mass) / 1_GeV);
+    particle->set_momentum(hepMcMomentum);
+    particle->set_generated_mass(m_mass);
+    particle->set_pid(pdg);
+    particle->set_status(1);
 
-    // generated particle ids are already ordered and should end up at the end
-    particles.insert(particles.end(), SimParticle(particle, particle));
+    event->add_particle(particle);
+
+    particle->add_attribute("pg_seq",
+                            std::make_shared<HepMC3::UIntAttribute>(ip));
+    particle->add_attribute("acts",
+                            std::make_shared<HepMC3::BoolAttribute>(true));
+
+    primaryVertex->add_particle_out(particle);
   }
 
-  std::pair<SimVertexContainer, SimParticleContainer> out;
-  out.first.insert(vertices.begin(), vertices.end());
-  out.second.insert(particles.begin(), particles.end());
-  return out;
+  return event;
 }
 
 }  // namespace ActsExamples

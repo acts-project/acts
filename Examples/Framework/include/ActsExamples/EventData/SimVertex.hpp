@@ -22,13 +22,13 @@ class SimVertexBarcode {
 
   constexpr SimVertexBarcode() = default;
   explicit constexpr SimVertexBarcode(Value encoded)
-      : m_id(SimBarcode(encoded)) {}
-  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
-      : m_id(vertexId.setParticle(0).setSubParticle(0)) {
-    if (vertexId != vertexId.vertexId()) {
+      : m_id(SimBarcode(encoded)) {
+    if (m_id != m_id.vertexId()) {
       throw std::invalid_argument("SimVertexBarcode: invalid vertexId");
     }
   }
+  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
+      : SimVertexBarcode(vertexId.vertexId().value()) {}
 
   /// Get the encoded value of all index levels.
   constexpr Value value() const { return m_id.value(); }
@@ -133,3 +133,13 @@ using SimVertexContainer =
     ::boost::container::flat_set<SimVertex, detail::CompareVertexId>;
 
 }  // namespace ActsExamples
+
+// specialize std::hash so Barcode can be used e.g. in an unordered_map
+namespace std {
+template <>
+struct hash<ActsExamples::SimVertexBarcode> {
+  auto operator()(ActsExamples::SimVertexBarcode barcode) const noexcept {
+    return std::hash<ActsExamples::SimVertexBarcode::Value>()(barcode.value());
+  }
+};
+}  // namespace std

@@ -32,6 +32,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -382,6 +383,8 @@ void addGeometry(Context& ctx) {
         .value("Expand", VolumeResizeStrategy::Expand);
   }
 
+  py::class_<PortalShellBase>(m, "PortalShellBase");
+
   addBlueprint(ctx);
 }
 
@@ -463,6 +466,14 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
+        .def(py::init<Acts::AxisBoundaryType, const std::vector<double>&>(),
+             "bType"_a, "e"_a)
+        .def(py::init<Acts::AxisBoundaryType, double, double, std::size_t>(),
+             "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
+        .def(py::init<Acts::AxisBoundaryType, std::size_t>(), "bType"_a,
+             "nbins"_a);
+
+    py::class_<DirectedProtoAxis>(m, "DirectedProtoAxis")
         .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
                       const std::vector<double>&>(),
              "bValue"_a, "bType"_a, "e"_a)
@@ -495,14 +506,8 @@ void addExperimentalGeometry(Context& ctx) {
     auto lsConfig =
         py::class_<LayerStructureBuilder::Config>(lsBuilder, "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(lsConfig, LayerStructureBuilder::Config);
-    ACTS_PYTHON_MEMBER(surfacesProvider);
-    ACTS_PYTHON_MEMBER(supports);
-    ACTS_PYTHON_MEMBER(binnings);
-    ACTS_PYTHON_MEMBER(quarterSegments);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(lsConfig, surfacesProvider, supports, binnings,
+                       quarterSegments, auxiliary);
 
     // The internal layer structure builder
     py::class_<Acts::Experimental::ISurfacesProvider,
@@ -610,13 +615,7 @@ void addExperimentalGeometry(Context& ctx) {
     auto vsConfig =
         py::class_<VolumeStructureBuilder::Config>(vsBuilder, "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(vsConfig, VolumeStructureBuilder::Config);
-    ACTS_PYTHON_MEMBER(boundsType);
-    ACTS_PYTHON_MEMBER(boundValues);
-    ACTS_PYTHON_MEMBER(transform);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(vsConfig, boundsType, boundValues, transform, auxiliary);
   }
 
   {
@@ -641,14 +640,8 @@ void addExperimentalGeometry(Context& ctx) {
         py::class_<Acts::Experimental::GeometryIdGenerator::Config>(geoIdGen,
                                                                     "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(geoIdGenConfig,
-                             Acts::Experimental::GeometryIdGenerator::Config);
-    ACTS_PYTHON_MEMBER(containerMode);
-    ACTS_PYTHON_MEMBER(containerId);
-    ACTS_PYTHON_MEMBER(resetSubCounters);
-    ACTS_PYTHON_MEMBER(overrideExistingIds);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(geoIdGenConfig, containerMode, containerId,
+                       resetSubCounters, overrideExistingIds);
   }
 
   {
@@ -673,14 +666,8 @@ void addExperimentalGeometry(Context& ctx) {
     auto dvConfig =
         py::class_<DetectorVolumeBuilder::Config>(dvBuilder, "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(dvConfig, DetectorVolumeBuilder::Config);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(internalsBuilder);
-    ACTS_PYTHON_MEMBER(externalsBuilder);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(dvConfig, name, internalsBuilder, externalsBuilder,
+                       geoIdGenerator, auxiliary);
   }
 
   {
@@ -716,15 +703,8 @@ void addExperimentalGeometry(Context& ctx) {
     auto ccConfig =
         py::class_<CylindricalContainerBuilder::Config>(ccBuilder, "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
-    ACTS_PYTHON_MEMBER(builders);
-    ACTS_PYTHON_MEMBER(binning);
-    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(geoIdReverseGen);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder,
+                       geoIdGenerator, geoIdReverseGen, auxiliary);
   }
 
   {
@@ -745,15 +725,8 @@ void addExperimentalGeometry(Context& ctx) {
     auto ccConfig =
         py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CuboidalContainerBuilder::Config);
-    ACTS_PYTHON_MEMBER(builders);
-    ACTS_PYTHON_MEMBER(binning);
-    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(geoIdReverseGen);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder,
+                       geoIdGenerator, geoIdReverseGen, auxiliary);
   }
 
   {
@@ -771,14 +744,8 @@ void addExperimentalGeometry(Context& ctx) {
 
     auto dConfig = py::class_<DetectorBuilder::Config>(dBuilder, "Config")
                        .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(dConfig, DetectorBuilder::Config);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(builder);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_MEMBER(auxiliary);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(dConfig, name, builder, geoIdGenerator,
+                       materialDecorator, auxiliary);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,

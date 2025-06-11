@@ -6,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+
 #include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -65,7 +68,7 @@ auto MultiEigenStepperLoop<E, R>::boundState(
 
 template <typename E, typename R>
 auto MultiEigenStepperLoop<E, R>::curvilinearState(
-    State& state, bool transportCov) const -> CurvilinearState {
+    State& state, bool transportCov) const -> BoundState {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>
@@ -84,8 +87,9 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
     accumulatedPathLength += state.components[i].weight * pl;
   }
 
-  return CurvilinearState{
-      MultiComponentCurvilinearTrackParameters(cmps, state.particleHypothesis),
+  return BoundState{
+      MultiComponentBoundTrackParameters::createCurvilinear(
+          state.options.geoContext, cmps, state.particleHypothesis),
       Jacobian::Zero(), accumulatedPathLength};
 }
 

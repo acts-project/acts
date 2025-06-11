@@ -9,30 +9,30 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include <variant>
+namespace Acts {
+class HomogeneousSurfaceMaterial;
 
-namespace Acts::Experimental {
+namespace Experimental {
+
+namespace detail {
+class MaterialDesignatorBlueprintNodeImpl;
+}
 
 /// This node type registers material proxies into its child volume during the
-/// blueprint construction. It is configured ahead of time which volume faces to
-/// mark up, and how do to so.
+/// blueprint construction. It is configured ahead of time which volume faces
+/// to mark up, and how do to so.
 /// @note This node can only have a single child. This is not an error during
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  using BinningConfig = std::variant<
-      std::vector<std::tuple<CylinderVolumeBounds::Face, ProtoAxis, ProtoAxis>>,
-      std::vector<std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>>;
-
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
-  explicit MaterialDesignatorBlueprintNode(const std::string& name)
-      : m_name(name) {}
+  explicit MaterialDesignatorBlueprintNode(const std::string& name);
+
+  ~MaterialDesignatorBlueprintNode() override;
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -41,8 +41,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   void toStream(std::ostream& os) const override;
 
   /// This method participates in the geometry construction.
-  /// It checks that this node only has a single child, is correctly configured,
-  /// and forwards the call.
+  /// It checks that this node only has a single child, is correctly
+  /// configured, and forwards the call.
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
@@ -78,13 +78,24 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cylinder to configure
   /// @param loc0 The first binning configuration along local axis 0
-  /// @param loc1 The second binning configuration along local axis 1
+  /// @param loc1 The first binning configuration along local axis 1
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
-      CylinderVolumeBounds::Face face, const ProtoAxis& loc0,
-      const ProtoAxis& loc1);
+      CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+      const DirectedProtoAxis& loc1);
+
+  /// Configure the designator with a cuboid face and corresponding binning
+  /// information.
+  /// @param face The face of the cylinder to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      CylinderVolumeBounds::Face face,
+      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
@@ -96,35 +107,29 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
-                                                 const ProtoAxis& loc0,
-                                                 const ProtoAxis& loc1);
+                                                 const DirectedProtoAxis& loc0,
+                                                 const DirectedProtoAxis& loc1);
+
+  /// Configure the designator with a cuboid face and a homogeneous surface
+  /// material.
+  /// @param face The face of the cuboid to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      CuboidVolumeBounds::Face face,
+      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
-  void handleCylinderBinning(
-      CylinderPortalShell& cylShell,
-      const std::vector<
-          std::tuple<CylinderPortalShell::Face, ProtoAxis, ProtoAxis>>& binning,
-      const Logger& logger);
+  detail::MaterialDesignatorBlueprintNodeImpl& impl();
+  const detail::MaterialDesignatorBlueprintNodeImpl& impl() const;
 
-  void handleCuboidBinning(
-      CuboidPortalShell& cuboidShell,
-      const std::vector<
-          std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>& binning,
-      const Logger& logger);
-
-  void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
-                                  const ProtoAxis& loc0, const ProtoAxis& loc1,
-                                  const Logger& logger = getDummyLogger());
-
-  void validateCuboidFaceConfig(const ProtoAxis& loc0, const ProtoAxis& loc1,
-                                const Logger& logger = getDummyLogger());
-
-  std::string m_name{};
-
-  std::optional<BinningConfig> m_binning{};
+  std::unique_ptr<detail::MaterialDesignatorBlueprintNodeImpl> m_impl;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Experimental
+}  // namespace Acts

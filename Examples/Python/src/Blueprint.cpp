@@ -12,6 +12,7 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -24,8 +25,10 @@
 
 #include <fstream>
 #include <random>
+#include <stdexcept>
 #include <utility>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -216,6 +219,7 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::BlueprintOptions;
   using Acts::Experimental::CuboidContainerBlueprintNode;
   using Acts::Experimental::CylinderContainerBlueprintNode;
+  using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
@@ -247,9 +251,7 @@ void addBlueprint(Context& ctx) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, envelope);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
@@ -262,10 +264,12 @@ void addBlueprint(Context& ctx) {
         });
   };
 
-  auto addNodeMethods = [&blueprintNode](const std::string& name,
-                                         auto&& callable, auto&&... args) {
-    blueprintNode.def(name.c_str(), callable, args...)
-        .def(("add" + name).c_str(), callable, args...);
+  auto addNodeMethods = [&blueprintNode](
+                            std::initializer_list<std::string> names,
+                            auto&& callable, auto&&... args) {
+    for (const auto& name : names) {
+      blueprintNode.def(name.c_str(), callable, args...);
+    }
   };
 
   blueprintNode
@@ -332,7 +336,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(staticNode);
 
   addNodeMethods(
-      "StaticVolume",
+      {"StaticVolume", "addStaticVolume"},
       [](BlueprintNode& self, const Transform3& transform,
          const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
         auto node = std::make_shared<StaticBlueprintNode>(
@@ -354,16 +358,21 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CylinderContainerBlueprintNode::attachmentStrategy,
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CylinderContainerBlueprintNode::resizeStrategy,
-                        &CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CylinderContainerBlueprintNode::resizeStrategies,
+                        [](CylinderContainerBlueprintNode& self,
+                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                               strategies) {
+                          self.setResizeStrategies(strategies.first,
+                                                   strategies.second);
+                        })
           .def_property("direction", &CylinderContainerBlueprintNode::direction,
                         &CylinderContainerBlueprintNode::setDirection);
 
   addContextManagerProtocol(cylNode);
 
   addNodeMethods(
-      "CylinderContainer",
+      {"CylinderContainer", "addCylinderContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -385,16 +394,16 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CuboidContainerBlueprintNode::attachmentStrategy,
                         &CuboidContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CuboidContainerBlueprintNode::resizeStrategy,
-                        &CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CuboidContainerBlueprintNode::resizeStrategies,
+                        &CuboidContainerBlueprintNode::setResizeStrategies)
           .def_property("direction", &CuboidContainerBlueprintNode::direction,
                         &CuboidContainerBlueprintNode::setDirection);
 
   addContextManagerProtocol(boxNode);
 
   addNodeMethods(
-      "CuboidContainer",
+      {"CuboidContainer", "addCuboidContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -410,19 +419,21 @@ void addBlueprint(Context& ctx) {
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
                           py::overload_cast<CylinderVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
                           py::overload_cast<CuboidVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
-      "Material",
+      {"Material", "addMaterial"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<MaterialDesignatorBlueprintNode>(name);
         self.addChild(child);
@@ -455,13 +466,52 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(layerNode);
 
   addNodeMethods(
-      "Layer",
+      {"Layer", "addLayer"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<LayerBlueprintNode>(name);
         self.addChild(child);
         return child;
       },
       py::arg("name"));
+
+  auto geoIdNode =
+      py::class_<GeometryIdentifierBlueprintNode, BlueprintNode,
+                 std::shared_ptr<GeometryIdentifierBlueprintNode>>(
+          m, "GeometryIdentifierBlueprintNode")
+          .def(py::init<>())
+          .def("setLayerIdTo", &GeometryIdentifierBlueprintNode::setLayerIdTo,
+               py::arg("value"))
+          .def("incrementLayerIds",
+               &GeometryIdentifierBlueprintNode::incrementLayerIds,
+               py::arg("start") = 0)
+          .def("setAllVolumeIdsTo",
+               &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
+               py::arg("value"))
+          // Need to do some massaging to avoid copy issues
+          .def(
+              "sortBy",
+              [](GeometryIdentifierBlueprintNode& self,
+                 const py::function& func) -> GeometryIdentifierBlueprintNode& {
+                if (func.is_none()) {
+                  throw std::invalid_argument(
+                      "sortBy requires a comparison function");
+                }
+                return self.sortBy(
+                    [func](const TrackingVolume& a, const TrackingVolume& b) {
+                      return func(&a, &b).cast<bool>();
+                    });
+              },
+              py::arg("compare"));
+
+  auto geoIdFactory = [](BlueprintNode& self) {
+    auto child = std::make_shared<GeometryIdentifierBlueprintNode>();
+    self.addChild(child);
+    return child;
+  };
+
+  addNodeMethods({"GeometryIdentifier", "withGeometryIdentifier"},
+                 geoIdFactory);
+  addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,

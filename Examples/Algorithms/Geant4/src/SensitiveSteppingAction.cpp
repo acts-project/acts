@@ -117,6 +117,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   // Unit conversions G4->::ACTS
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr auto mappingPrefix = SensitiveSurfaceMapper::mappingPrefix;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
@@ -154,10 +155,9 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
     throw std::runtime_error("No volume found, terminate simulation");
   }
   std::string volumeName = volume->GetName();
-
-  if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
-          std::string::npos &&
-      !m_cfg.stepLogging) {
+  ACTS_VERBOSE("Check whether volume " << volumeName << " is sensitive");
+  if (!m_cfg.stepLogging &&
+      volumeName.find(mappingPrefix) == std::string::npos) {
     return;
   }
 
@@ -218,7 +218,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
       double zDirVtx = track->GetVertexMomentumDirection().z();
       double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
-      PropagationSummary iSummary(Acts::CurvilinearTrackParameters(
+      PropagationSummary iSummary(Acts::BoundTrackParameters::createCurvilinear(
           Acts::Vector4(xVtx, yVtx, zVtx, 0.),
           Acts::Vector3(xDirVtx, yDirVtx, zDirVtx), absCharge / absMomentum,
           std::nullopt, Acts::ParticleHypothesis::pion()));

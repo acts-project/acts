@@ -11,6 +11,7 @@
 #include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
@@ -29,7 +30,8 @@ Volume& StaticBlueprintNode::build(const BlueprintOptions& options,
     throw std::runtime_error("Volume is not built");
   }
 
-  ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
+  ACTS_DEBUG(prefix() << "Building volume (" << name()
+                      << ", id=" << m_volume->geometryId() << ") with "
                       << children().size() << " children");
   for (auto& child : children()) {
     child.build(options, gctx, logger);
@@ -62,6 +64,9 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
 
   } else if (type == VolumeBounds::eCuboid) {
     m_shell = std::make_unique<SingleCuboidPortalShell>(*m_volume);
+
+  } else if (type == VolumeBounds::eTrapezoid) {
+    m_shell = std::make_unique<SingleTrapezoidPortalShell>(*m_volume);
 
   } else {
     throw std::logic_error("Volume type is not supported");

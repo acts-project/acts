@@ -27,6 +27,7 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
                                           const GeoTrd& geoTrd,
                                           const Transform3& absTransform,
+                                          SurfaceBoundFactory& boundFactory,
                                           bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
@@ -83,7 +84,7 @@ Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
   transform.linear() = trotation;
 
   auto trapezoidBounds =
-      std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
+      boundFactory.makeBounds<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
 
   if (!sensitive) {
     auto surface =

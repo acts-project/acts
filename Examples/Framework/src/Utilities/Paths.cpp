@@ -70,7 +70,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);
   if (!exists(dir_path)) {
-    throw std::runtime_error("'" + dir_path.native() + "' does not exists");
+    throw std::runtime_error("'" + dir_path.native() + "' does not exist");
   }
   if (!is_directory(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' is not a directory");
