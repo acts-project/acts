@@ -254,6 +254,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
                              static_cast<int>(value > max));
   };
 
+  const auto outsideRangeCheck = [](const float value, const float min,
+                                    const float max) -> bool {
+    // intentionally using `|` after profiling. faster due to better branch
+    // prediction
+    return static_cast<bool>(static_cast<int>(value < min) |
+                             static_cast<int>(value > max));
+  };
+
   for (auto& otherSPCol : otherSPsNeighbours) {
     const std::vector<const external_spacepoint_t*>& otherSPs =
         grid.at(otherSPCol.index);
@@ -317,14 +325,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
-      // ACTS_INFO("zOrigin1=" << zOriginTimesDeltaR/deltaR);
+      // ACTS_INFO("zOrigin1= " << zOriginTimesDeltaR/deltaR);
       // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
           // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
-        // if (zOriginTimesDeltaR < 19.0 * deltaR ||
-        //     zOriginTimesDeltaR > 21.0 * deltaR) {
-      if (outsideRangeCheck(zOriginTimesDeltaR,
-                            m_config.collisionRegionMin * deltaR,
-                            m_config.collisionRegionMax * deltaR)) {
+        if (zOriginTimesDeltaR < 19.0 * deltaR ||
+            zOriginTimesDeltaR > 21.0 * deltaR) {
         continue;
       }
 
