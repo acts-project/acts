@@ -12,7 +12,6 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <stdexcept>
 
 namespace Acts {
@@ -21,10 +20,10 @@ namespace Acts {
 struct SeedFilterConfig {
   /// Allowed difference in curvature (inverted seed radii) between two
   /// compatible seeds
-  float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
+  float deltaInvHelixDiameter = 0.00003 * 1. / UnitConstants::mm;
   /// Minimum distance between compatible outer space-points to be considered.
   /// This is used to avoid counting space-points from the same layer
-  float deltaRMin = 5. * Acts::UnitConstants::mm;
+  float deltaRMin = 5. * UnitConstants::mm;
   /// Seed weight/score is increased by this value if a compatible seed has been
   /// found. This is the c1 factor in the seed score calculation (w = c1 * Nt -
   /// c2 * d0 - c3 * z0)
@@ -91,7 +90,7 @@ struct SeedFilterConfig {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFilterConfig");
     }
-    using namespace Acts::UnitLiterals;
+    using namespace UnitLiterals;
     SeedFilterConfig config = *this;
     config.isInInternalUnits = true;
     config.deltaRMin /= 1_mm;

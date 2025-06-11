@@ -33,6 +33,8 @@ class DigitizationErrorCategory : public std::error_category {
         return "Surface mask could not be applied.";
       case DigitizationError::DriftError:
         return "Drift error occurred.";
+      case DigitizationError::MaximumRetriesExceeded:
+        return "Maximum number of retries exceeded.";
       default:
         return "unknown";
     }

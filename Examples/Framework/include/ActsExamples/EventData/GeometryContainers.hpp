@@ -41,6 +41,11 @@ struct GeometryIdGetter {
       const std::pair<Acts::GeometryIdentifier, T>& mapItem) const {
     return mapItem.first;
   }
+  // Support pointer
+  template <typename T>
+  constexpr Acts::GeometryIdentifier operator()(const T* thing) const {
+    return thing->geometryId();
+  }
   // support elements that implement `.geometryId()`.
   template <typename T>
   inline auto operator()(const T& thing) const

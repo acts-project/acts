@@ -19,10 +19,17 @@ ContainerBlueprintNode::ContainerBlueprintNode(
     const std::string& name, AxisDirection axis,
     VolumeAttachmentStrategy attachmentStrategy,
     VolumeResizeStrategy resizeStrategy)
+    : ContainerBlueprintNode(name, axis, attachmentStrategy,
+                             {resizeStrategy, resizeStrategy}) {}
+
+ContainerBlueprintNode::ContainerBlueprintNode(
+    const std::string& name, AxisDirection axis,
+    VolumeAttachmentStrategy attachmentStrategy,
+    std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies)
     : m_name(name),
       m_direction(axis),
       m_attachmentStrategy(attachmentStrategy),
-      m_resizeStrategy(resizeStrategy) {}
+      m_resizeStrategies(resizeStrategies) {}
 
 const std::string& ContainerBlueprintNode::name() const {
   return m_name;
@@ -113,7 +120,16 @@ ContainerBlueprintNode& ContainerBlueprintNode::setResizeStrategy(
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
-  m_resizeStrategy = resizeStrategy;
+  m_resizeStrategies = {resizeStrategy, resizeStrategy};
+  return *this;
+}
+
+ContainerBlueprintNode& ContainerBlueprintNode::setResizeStrategies(
+    VolumeResizeStrategy inner, VolumeResizeStrategy outer) {
+  if (m_stack != nullptr) {
+    throw std::runtime_error("Cannot change direction after build");
+  }
+  m_resizeStrategies = {inner, outer};
   return *this;
 }
 
@@ -126,7 +142,17 @@ VolumeAttachmentStrategy ContainerBlueprintNode::attachmentStrategy() const {
 }
 
 VolumeResizeStrategy ContainerBlueprintNode::resizeStrategy() const {
-  return m_resizeStrategy;
+  if (m_resizeStrategies.first != m_resizeStrategies.second) {
+    throw std::runtime_error(
+        "Resize strategy is not the same for inner and outer. Use "
+        "resizeStrategies() instead.");
+  }
+  return m_resizeStrategies.first;
+}
+
+std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+ContainerBlueprintNode::resizeStrategies() const {
+  return m_resizeStrategies;
 }
 
 void ContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
@@ -248,7 +274,7 @@ const std::string& CylinderContainerBlueprintNode::typeName() const {
 std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
     std::vector<Volume*>& volumes, const Logger& logger) {
   return std::make_unique<CylinderVolumeStack>(
-      volumes, m_direction, m_attachmentStrategy, m_resizeStrategy, logger);
+      volumes, m_direction, m_attachmentStrategy, m_resizeStrategies, logger);
 }
 
 PortalShellBase& CuboidContainerBlueprintNode::connect(
@@ -265,8 +291,9 @@ const std::string& CuboidContainerBlueprintNode::typeName() const {
 
 std::unique_ptr<VolumeStack> CuboidContainerBlueprintNode::makeStack(
     std::vector<Volume*>& volumes, const Logger& logger) {
-  return std::make_unique<CuboidVolumeStack>(
-      volumes, m_direction, m_attachmentStrategy, m_resizeStrategy, logger);
+  return std::make_unique<CuboidVolumeStack>(volumes, m_direction,
+                                             m_attachmentStrategy,
+                                             m_resizeStrategies.first, logger);
 }
 
 }  // namespace Acts::Experimental

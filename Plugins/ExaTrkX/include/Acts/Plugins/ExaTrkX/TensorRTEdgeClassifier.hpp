@@ -14,8 +14,6 @@
 #include <memory>
 #include <vector>
 
-#include <torch/torch.h>
-
 namespace nvinfer1 {
 class IRuntime;
 class ICudaEngine;
@@ -39,12 +37,10 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
                          std::unique_ptr<const Logger> logger);
   ~TensorRTEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any, std::any> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(PipelineTensors tensors,
+                             const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
-  torch::Device device() const override { return torch::kCUDA; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

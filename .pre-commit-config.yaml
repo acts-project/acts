@@ -63,7 +63,7 @@ repos:
       name: pragma_once
       language: system
       entry: CI/check_pragma_once.sh
-      files: \.hpp$
+      files: \.(hpp|ipp)$
 
   - repo: local
     hooks:

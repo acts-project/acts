@@ -25,6 +25,7 @@ Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
                                           const GeoBox& geoBox,
                                           const Transform3& absTransform,
+                                          SurfaceBoundFactory& boundFactory,
                                           bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
@@ -55,7 +56,8 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   // Create the surface bounds
   double halfX = unitLength * halfLengths[xIndex];
   double halfY = unitLength * halfLengths[yIndex];
-  auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(halfX, halfY);
+  auto rectangleBounds =
+      boundFactory.makeBounds<Acts::RectangleBounds>(halfX, halfY);
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, rectangleBounds);

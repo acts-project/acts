@@ -9,8 +9,13 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
@@ -19,6 +24,8 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
@@ -26,8 +33,12 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
+#include <actsvg/core/draw.hpp>
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -45,6 +56,17 @@ namespace {
 
 // A cache object
 using PortalCache = std::list<std::string>;
+
+// Helper lambda for view range selection
+bool viewRangeSel(const Svg::ProtoSurface& s, const Extent& vRange) {
+  for (const auto& v : s._vertices) {
+    if (vRange.contains(v)) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 /// @brief helper tuple to define which views and which range to be used
 ///
@@ -80,19 +102,6 @@ actsvg::svg::object drawDetectorVolume(const Svg::ProtoVolume& pVolume,
   // Helper lambda for material selection
   auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
     return (materials && s._decorations.contains("material"));
-  };
-
-  // Helper lambda for view range selection
-  auto viewRangeSel = [](const Svg::ProtoSurface& s,
-                         const Extent& vRange) -> bool {
-    bool accept = false;
-    for (const auto& v : s._vertices) {
-      if (vRange.contains(v)) {
-        accept = true;
-        break;
-      }
-    }
-    return accept;
   };
 
   // -------------------- surface section
@@ -198,22 +207,7 @@ void addSvg(Context& ctx) {
 
   auto svg = m.def_submodule("svg");
 
-  // Some basics
-  py::class_<actsvg::svg::object>(svg, "object");
-
-  py::class_<actsvg::svg::file>(svg, "file")
-      .def(py::init<>())
-      .def("addObject", &actsvg::svg::file::add_object)
-      .def("addObjects", &actsvg::svg::file::add_objects)
-      .def("clip",
-           [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
-             self.set_view_box(box);
-           })
-      .def("write", [](actsvg::svg::file& self, const std::string& filename) {
-        std::ofstream file(filename);
-        file << self;
-        file.close();
-      });
+  svg.def("toFile", &Svg::toFile);
 
   // Core components, added as an acts.svg submodule
   {
@@ -233,6 +227,7 @@ void addSvg(Context& ctx) {
     // Define the proto surface
     py::class_<Svg::ProtoSurface>(svg, "ProtoSurface");
     // Convert an Acts::Surface object into an acts::svg::proto::surface
+
     svg.def("convertSurface", &Svg::SurfaceConverter::convert);
 
     // Define the view functions
@@ -338,13 +333,6 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
                        indexedSurfacesOptions);
 
-    // Define the proto volume & indexed surface grid
-    py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
-    py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
-
-    // Define the proto grid
-    py::class_<Svg::ProtoGrid>(svg, "ProtoGrid");
-
     // Convert an Acts::Experimental::DetectorVolume object into an
     // acts::svg::proto::volume
     svg.def("convertDetectorVolume", &Svg::DetectorVolumeConverter::convert);
@@ -441,5 +429,24 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
                        infoBoxTitle, outputDir);
   }
+
+  svg.def(
+      "drawTrackingGeometry",
+      [](const GeometryContext& gctx, const TrackingGeometry& tGeometry,
+         const std::string& view, bool drawSurfaces, bool highlightMaterial) {
+        std::variant<actsvg::views::x_y, actsvg::views::z_r> v;
+        if (view == "xy") {
+          v = actsvg::views::x_y();
+        } else if (view == "zr") {
+          v = actsvg::views::z_r();
+        } else {
+          throw std::invalid_argument("Unknown view type");
+        }
+
+        return Svg::drawTrackingGeometry(gctx, tGeometry, v, drawSurfaces,
+                                         highlightMaterial);
+      },
+      py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
+      py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
 }
 }  // namespace Acts::Python
