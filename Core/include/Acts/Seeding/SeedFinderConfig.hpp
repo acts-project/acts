@@ -260,7 +260,7 @@ struct SeedFinderOptions {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
   // field induction
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
+  float bFieldInZ = 2 * Acts::UnitConstants::T;
 
   // derived quantities
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
