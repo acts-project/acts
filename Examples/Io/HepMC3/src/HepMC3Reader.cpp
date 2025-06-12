@@ -15,7 +15,6 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
 
@@ -173,31 +172,67 @@ ProcessCode HepMC3Reader::readSingleFile(
     std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading from single file");
-  std::scoped_lock lock(m_mutex);
 
-  if (m_bufferError) {
-    ACTS_ERROR("Buffer error (maybe in other thread), aborting");
-    return ABORT;
-  }
+  std::vector<std::shared_ptr<HepMC3::GenEvent>> events;
+  {
+    std::scoped_lock lock(m_queueMutex);
 
-  // Check if we already read this event on another thread
-  if (!m_events.empty() && ctx.eventNumber < m_nextEvent) {
-    if (readCached(ctx, outputEvent) != SUCCESS) {
-      ACTS_ERROR("Error reading event " << ctx.eventNumber);
+    if (m_bufferError) {
+      ACTS_ERROR("Buffer error (maybe in other thread), aborting");
       return ABORT;
     }
-  } else {
-    if (readBuffer(ctx, outputEvent) != SUCCESS) {
-      ACTS_ERROR("Error reading event " << ctx.eventNumber);
-      return ABORT;
+
+    // Check if we already read this event on another thread
+    if (!m_events.empty() && ctx.eventNumber < m_nextEvent) {
+      if (readCached(ctx, events) != SUCCESS) {
+        ACTS_ERROR("Error reading event " << ctx.eventNumber);
+        return ABORT;
+      }
+    } else {
+      if (readBuffer(ctx, events) != SUCCESS) {
+        ACTS_ERROR("Error reading event " << ctx.eventNumber);
+        return ABORT;
+      }
     }
   }
+
+  if (m_cfg.vertexGenerator != nullptr) {
+    Acts::ScopedTimer timer("Shifting events to vertex", logger(),
+                            Acts::Logging::DEBUG);
+    auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+    for (auto& event : events) {
+      auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
+
+      ACTS_VERBOSE("Shifting event to " << vertexPosition.transpose());
+      // Our internal time unit is ctau, so is HepMC3's, make sure we convert
+      // to mm
+      HepMC3::FourVector vtxPosHepMC(vertexPosition[Acts::eFreePos0] / 1_mm,
+                                     vertexPosition[Acts::eFreePos1] / 1_mm,
+                                     vertexPosition[Acts::eFreePos2] / 1_mm,
+                                     vertexPosition[Acts::eFreeTime] / 1_mm);
+      event->shift_position_to(vtxPosHepMC);
+    }
+  }
+
+  outputEvent = makeEvent();
+
+  std::vector<const HepMC3::GenEvent*> eventPtrs;
+  eventPtrs.reserve(events.size());
+  std::ranges::transform(events, std::back_inserter(eventPtrs),
+                         [](auto& event) { return event.get(); });
+  {
+    Acts::ScopedTimer timer("Merging events", logger(), Acts::Logging::DEBUG);
+    HepMC3Util::mergeEvents(*outputEvent, eventPtrs, logger());
+  }
+
+  outputEvent->set_event_number(events.front()->event_number());
 
   return SUCCESS;
 }
 
-ProcessCode HepMC3Reader::readCached(const ActsExamples::AlgorithmContext& ctx,
-                                     std::shared_ptr<HepMC3::GenEvent>& event) {
+ProcessCode HepMC3Reader::readCached(
+    const ActsExamples::AlgorithmContext& ctx,
+    std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   ACTS_VERBOSE("Already read event " << ctx.eventNumber);
   auto it = std::ranges::find_if(
       m_events, [&ctx](auto& elem) { return elem.first == ctx.eventNumber; });
@@ -220,15 +255,15 @@ ProcessCode HepMC3Reader::readCached(const ActsExamples::AlgorithmContext& ctx,
     return ProcessCode::ABORT;
   }
 
-  auto [num, genEvent] = std::move(*it);
+  auto [num, genEvents] = std::move(*it);
   m_events.erase(it);
-  event = std::move(genEvent);
+  events = std::move(genEvents);
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode HepMC3Reader::readBuffer(
     const ActsExamples::AlgorithmContext& ctx,
-    std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
+    std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents) {
   using enum ProcessCode;
 
   ACTS_VERBOSE("Next event to read is: " << m_nextEvent);
@@ -264,35 +299,7 @@ ProcessCode HepMC3Reader::readBuffer(
       return ABORT;
     }
 
-    if (m_cfg.vertexGenerator != nullptr) {
-      Acts::ScopedTimer timer("Shifting events to vertex", logger(),
-                              Acts::Logging::DEBUG);
-      auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-      for (auto& event : events) {
-        auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
-
-        ACTS_VERBOSE("Shifting event to " << vertexPosition.transpose());
-        // Our internal time unit is ctau, so is HepMC3's, make sure we convert
-        // to mm
-        HepMC3::FourVector vtxPosHepMC(vertexPosition[Acts::eFreePos0] / 1_mm,
-                                       vertexPosition[Acts::eFreePos1] / 1_mm,
-                                       vertexPosition[Acts::eFreePos2] / 1_mm,
-                                       vertexPosition[Acts::eFreeTime] / 1_mm);
-        event->shift_position_to(vtxPosHepMC);
-      }
-    }
-
-    auto genEvent = makeEvent();
-
-    std::vector<const HepMC3::GenEvent*> eventPtrs;
-    eventPtrs.reserve(events.size());
-    std::ranges::transform(events, std::back_inserter(eventPtrs),
-                           [](auto& event) { return event.get(); });
-    HepMC3Util::mergeEvents(*genEvent, eventPtrs, logger());
-
-    genEvent->set_event_number(events.front()->event_number());
-
-    m_events.emplace_back(thisEvent, std::move(genEvent));
+    m_events.emplace_back(thisEvent, std::move(events));
 
   } while (m_nextEvent <= ctx.eventNumber);
 
@@ -308,12 +315,12 @@ ProcessCode HepMC3Reader::readBuffer(
 
   m_maxEventBufferSize = std::max(m_maxEventBufferSize, m_events.size());
 
-  auto [num, genEvent] = std::move(m_events.back());
+  auto [num, genEvents] = std::move(m_events.back());
   m_events.pop_back();
 
   ACTS_VERBOSE("Popping event " << num << " from queue");
 
-  outputEvent = std::move(genEvent);
+  outputEvents = std::move(genEvents);
 
   return SUCCESS;
 }

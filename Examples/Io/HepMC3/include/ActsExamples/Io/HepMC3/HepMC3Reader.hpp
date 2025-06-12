@@ -99,11 +99,13 @@ class HepMC3Reader final : public IReader {
   ProcessCode readSingleFile(const ActsExamples::AlgorithmContext& ctx,
                              std::shared_ptr<HepMC3::GenEvent>& outputEvent);
 
-  ProcessCode readCached(const ActsExamples::AlgorithmContext& ctx,
-                         std::shared_ptr<HepMC3::GenEvent>& event);
+  ProcessCode readCached(
+      const ActsExamples::AlgorithmContext& ctx,
+      std::vector<std::shared_ptr<HepMC3::GenEvent>>& events);
 
-  ProcessCode readBuffer(const ActsExamples::AlgorithmContext& ctx,
-                         std::shared_ptr<HepMC3::GenEvent>& outputEvent);
+  ProcessCode readBuffer(
+      const ActsExamples::AlgorithmContext& ctx,
+      std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents);
 
   ProcessCode readLogicalEvent(
       const ActsExamples::AlgorithmContext& ctx,
@@ -121,7 +123,8 @@ class HepMC3Reader final : public IReader {
   WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
       this, "OutputEvent"};
 
-  std::vector<std::pair<std::size_t, std::shared_ptr<HepMC3::GenEvent>>>
+  std::vector<
+      std::pair<std::size_t, std::vector<std::shared_ptr<HepMC3::GenEvent>>>>
       m_events;
   std::size_t m_nextEvent = 0;
 
@@ -129,7 +132,7 @@ class HepMC3Reader final : public IReader {
 
   bool m_bufferError = false;
 
-  std::mutex m_mutex;
+  std::mutex m_queueMutex;
 
   struct InputConfig {
     std::shared_ptr<HepMC3::Reader> reader;
