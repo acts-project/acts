@@ -22,7 +22,7 @@ env:
   CCACHE_MAXSIZE: 1.25G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v11.1.0
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
