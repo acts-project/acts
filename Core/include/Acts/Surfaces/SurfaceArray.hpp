@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -93,6 +94,9 @@ class SurfaceArray {
     /// @return The axes
     /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*> getAxes() const = 0;
+
+    virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const = 0;
 
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
@@ -312,6 +316,11 @@ class SurfaceArray {
       return std::vector<const IAxis*>(arr.begin(), arr.end());
     }
 
+    std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const override {
+      return AnyGridConstView<SurfaceVector>{m_grid};
+    }
+
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
     std::size_t dimensions() const override { return DIM; }
@@ -445,6 +454,11 @@ class SurfaceArray {
     /// @brief Returns an empty vector of @c AnyAxis
     /// @return empty vector
     std::vector<const IAxis*> getAxes() const override { return {}; }
+
+    std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const override {
+      return std::nullopt;
+    }
 
     /// @brief Get the number of dimensions
     /// @return always 0
