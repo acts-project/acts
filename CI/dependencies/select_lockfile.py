@@ -80,7 +80,7 @@ def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> 
     headers = {}
     token = os.environ.get("GITHUB_TOKEN")
     if token is not None and token != "":
-        headers["Authorization"] = f"token {token}"
+        headers["Authorization"] = f"Bearer {token}"
 
     with contextlib.ExitStack() as stack:
         if cache_dir is not None:
