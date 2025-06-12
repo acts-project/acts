@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -23,6 +25,8 @@
 #include <HepMC3/ReaderFactory.h>
 #include <HepMC3/Units.h>
 #include <boost/algorithm/string/join.hpp>
+
+using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
@@ -65,6 +69,13 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
     m_eventsRange = {0, determineNumEvents(*reader)};
   }
 
+  if (m_cfg.vertexGenerator != nullptr) {
+    if (m_cfg.randomNumbers == nullptr) {
+      throw std::invalid_argument(
+          "randomNumbers must be set if vertexGenerator is set");
+    }
+  }
+
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
                               << m_eventsRange.second << " events");
 }
@@ -80,11 +91,10 @@ std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
 }
 
 std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
-  ACTS_WARNING(
+  ACTS_INFO(
       "HepMC3Reader: Number of events not specified, will read the "
       "whole file to determine the number of events. This might take a while "
-      "and is usually not what you want. Set the numEvents parameter to the "
-      "number of events you want to read.");
+      "and is usually not what you want.");
   std::size_t numEvents = 0;
   auto event =
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
@@ -252,6 +262,22 @@ ProcessCode HepMC3Reader::readBuffer(
     if (events.empty()) {
       ACTS_ERROR("No events read from file, this is a bug");
       return ABORT;
+    }
+
+    if (m_cfg.vertexGenerator != nullptr) {
+      auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+      for (auto& event : events) {
+        auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
+
+        ACTS_VERBOSE("Shifting event to " << vertexPosition.transpose());
+        // Our internal time unit is ctau, so is HepMC3's, make sure we convert
+        // to mm
+        HepMC3::FourVector vtxPosHepMC(vertexPosition[Acts::eFreePos0] / 1_mm,
+                                       vertexPosition[Acts::eFreePos1] / 1_mm,
+                                       vertexPosition[Acts::eFreePos2] / 1_mm,
+                                       vertexPosition[Acts::eFreeTime] / 1_mm);
+        event->shift_position_to(vtxPosHepMC);
+      }
     }
 
     auto genEvent = makeEvent();

@@ -11,6 +11,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <filesystem>
 #include <mutex>
@@ -59,6 +61,11 @@ class HepMC3Reader final : public IReader {
     /// them predictably and in order. This defines the maximum queue size being
     /// used. If this number is exceeded the reader will error out.
     std::size_t maxEventBufferSize = 128;
+
+    /// The random number service. Required if vertexGenerator is set.
+    std::shared_ptr<const RandomNumbers> randomNumbers;
+    /// Position generator that will be used to shift read events
+    std::shared_ptr<PrimaryVertexPositionGenerator> vertexGenerator;
   };
 
   /// Construct the particle reader.
