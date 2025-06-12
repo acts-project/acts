@@ -34,24 +34,15 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   m_outputEvent.initialize(m_cfg.outputEvent);
 
-  if (!m_cfg.perEvent) {
-    // Create a single file reader
-    m_reader = makeReader();
-    if (m_cfg.numEvents.has_value()) {
-      m_eventsRange = {0, m_cfg.numEvents.value()};
-    } else {
-      // Need to make a temporary reader to determine the number of events
-      Acts::ScopedTimer timer("Determining number of events by reading",
-                              logger(), Acts::Logging::DEBUG);
-      m_eventsRange = {0, determineNumEvents(*makeReader())};
-    }
+  // Create a single file reader
+  m_reader = makeReader();
+  if (m_cfg.numEvents.has_value()) {
+    m_eventsRange = {0, m_cfg.numEvents.value()};
   } else {
-    if (m_cfg.numEvents.has_value()) {
-      throw std::invalid_argument(
-          "perEvent and numEvents are mutually exclusive");
-    }
-    m_eventsRange = determineEventFilesRange(
-        m_cfg.inputPath.parent_path(), m_cfg.inputPath.filename().string());
+    // Need to make a temporary reader to determine the number of events
+    Acts::ScopedTimer timer("Determining number of events by reading", logger(),
+                            Acts::Logging::DEBUG);
+    m_eventsRange = {0, determineNumEvents(*makeReader())};
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
@@ -73,9 +64,11 @@ std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
 }
 
 std::size_t HepMC3Reader::determineNumEvents(HepMC3::Reader& reader) const {
-  ACTS_INFO(
+  ACTS_WARNING(
       "HepMC3Reader: Number of events not specified, will read the "
-      "whole file to determine the number of events. This might take a while.");
+      "whole file to determine the number of events. This might take a while "
+      "and is usually not what you want. Set the numEvents parameter to the "
+      "number of events you want to read.");
   std::size_t numEvents = 0;
   auto event =
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
@@ -99,11 +92,6 @@ ProcessCode HepMC3Reader::skip(std::size_t events) {
     return SUCCESS;
   }
 
-  if (m_cfg.perEvent) {
-    // nothing to do as we lookup the target file by filename
-    return SUCCESS;
-  }
-
   ACTS_DEBUG("Skipping " << events << " events");
   if (!m_reader->skip(static_cast<int>(events))) {
     ACTS_ERROR("Error skipping events " << events << " " << m_cfg.inputPath);
@@ -119,14 +107,8 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
 
   using enum ProcessCode;
 
-  if (m_cfg.perEvent) {
-    if (readPerEvent(ctx, event) != SUCCESS) {
-      return ABORT;
-    }
-  } else {
-    if (readSingleFile(ctx, event) != SUCCESS) {
-      return ABORT;
-    }
+  if (readSingleFile(ctx, event) != SUCCESS) {
+    return ABORT;
   }
 
   throw_assert(event != nullptr, "Event should not be null");
@@ -150,25 +132,6 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
   }
 
   m_outputEvent(ctx, std::move(event));
-
-  return SUCCESS;
-}
-
-ProcessCode HepMC3Reader::readPerEvent(
-    const ActsExamples::AlgorithmContext& ctx,
-    std::shared_ptr<HepMC3::GenEvent>& event) {
-  using enum ProcessCode;
-  std::filesystem::path perEventFile =
-      perEventFilepath(m_cfg.inputPath.parent_path(),
-                       m_cfg.inputPath.filename().string(), ctx.eventNumber);
-  ACTS_VERBOSE("Reading per-event file " << perEventFile);
-  HepMC3::ReaderAscii reader(perEventFile);
-  event = makeEvent();
-  reader.read_event(*event);
-  if (reader.failed()) {
-    return ABORT;
-  }
-  reader.close();
 
   return SUCCESS;
 }

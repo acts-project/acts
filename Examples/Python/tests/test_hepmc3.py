@@ -477,14 +477,15 @@ def test_hepmc3_reader(common_writer, rng, compression, format):
     # use multiple threads to test if seeking to the right event works
     s = Sequencer(numThreads=10)
 
-    s.addReader(
-        HepMC3Reader(
-            inputPath=actual_path,
-            level=acts.logging.VERBOSE,
-            perEvent=False,
-            outputEvent="hepmc3_event",
+    with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+        # We expect a warning about missing input event count
+        s.addReader(
+            HepMC3Reader(
+                inputPath=actual_path,
+                level=acts.logging.VERBOSE,
+                outputEvent="hepmc3_event",
+            )
         )
-    )
 
     s.addAlgorithm(
         acts.examples.hepmc3.HepMC3InputConverter(
@@ -538,7 +539,6 @@ def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression, form
             HepMC3Reader(
                 acts.logging.DEBUG,
                 inputPath=actual_path,
-                perEvent=False,
                 outputEvent="hepmc3_event",
                 numEvents=num,
             )
@@ -579,7 +579,6 @@ def test_hepmc3_reader_explicit_num_events_too_large(
         HepMC3Reader(
             acts.logging.DEBUG,
             inputPath=actual_path,
-            perEvent=False,
             outputEvent="hepmc3_event",
             numEvents=nevents + 10,
         )
@@ -607,15 +606,16 @@ def test_hepmc3_reader_skip_events(common_writer, rng, compression, format):
     skip = 100
     s = Sequencer(numThreads=5, skip=skip, events=nevents - skip)
 
-    s.addReader(
-        HepMC3Reader(
-            inputPath=actual_path,
-            level=acts.logging.DEBUG,
-            perEvent=False,
-            outputEvent="hepmc3_event",
-            maxEventBufferSize=10,
+    with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+        # We expect a warning about missing input event count
+        s.addReader(
+            HepMC3Reader(
+                inputPath=actual_path,
+                level=acts.logging.DEBUG,
+                outputEvent="hepmc3_event",
+                maxEventBufferSize=10,
+            )
         )
-    )
 
     class EventNumberCheckerAlg(acts.examples.IAlgorithm):
         events_seen = set()
@@ -646,105 +646,6 @@ def test_hepmc3_reader_skip_events(common_writer, rng, compression, format):
     # read from the event is equal to the event number currently being
     # processed.
     assert alg.events_seen == exp
-
-
-def test_hepmc3_reader_per_event(tmp_path, rng):
-    from acts.examples.hepmc3 import (
-        HepMC3Writer,
-        HepMC3Reader,
-    )
-
-    s = Sequencer(numThreads=10, events=120)
-
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.DEBUG,
-        generators=[
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
-                    mean=acts.Vector4(0, 0, 0, 0),
-                ),
-                particles=acts.examples.ParametricParticleGenerator(
-                    p=(100 * u.GeV, 100 * u.GeV),
-                    eta=(-2, 2),
-                    phi=(0, 360 * u.degree),
-                    randomizeCharge=True,
-                    numParticles=2,
-                ),
-            )
-        ],
-        outputEvent="hepmc3_event",
-        randomNumbers=rng,
-    )
-
-    s.addReader(evGen)
-
-    s.addAlgorithm(
-        acts.examples.hepmc3.HepMC3InputConverter(
-            level=acts.logging.DEBUG,
-            inputEvent="hepmc3_event",
-            outputParticles="particles_generated",
-            outputVertices="vertices_generated",
-        )
-    )
-    alg = AssertCollectionExistsAlg(
-        [
-            "particles_generated",
-            "vertices_generated",
-            "hepmc3_event",
-        ],
-        "check_alg",
-        acts.logging.WARNING,
-    )
-    s.addAlgorithm(alg)
-
-    out = tmp_path / "out" / "pytest.hepmc3"
-    out.parent.mkdir(parents=True, exist_ok=True)
-
-    s.addWriter(
-        HepMC3Writer(
-            acts.logging.DEBUG,
-            inputEvent="hepmc3_event",
-            outputPath=out,
-            perEvent=True,
-        )
-    )
-
-    s.run()
-
-    assert alg.events_seen == s.config.events
-
-    s = Sequencer(numThreads=10)
-
-    s.addReader(
-        HepMC3Reader(
-            acts.logging.DEBUG,
-            inputPath=out,
-            perEvent=True,
-            outputEvent="hepmc3_event",
-        )
-    )
-
-    s.run()
-
-
-def test_hepmc3_reader_per_event_with_num_events():
-    from acts.examples.hepmc3 import (
-        HepMC3Reader,
-    )
-
-    # Test that using both perEvent=True and numEvents raises an error
-    with pytest.raises(ValueError) as excinfo:
-        HepMC3Reader(
-            acts.logging.DEBUG,
-            inputPath="dummy.hepmc3",
-            perEvent=True,
-            outputEvent="hepmc3_event",
-            numEvents=5,
-        )
-
-    assert "perEvent and numEvents are mutually exclusive" in str(excinfo.value)
 
 
 def test_hepmc3_compression_modes():
