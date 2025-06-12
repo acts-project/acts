@@ -265,6 +265,8 @@ ProcessCode HepMC3Reader::readBuffer(
     }
 
     if (m_cfg.vertexGenerator != nullptr) {
+      Acts::ScopedTimer timer("Shifting events to vertex", logger(),
+                              Acts::Logging::DEBUG);
       auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
       for (auto& event : events) {
         auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
@@ -321,6 +323,8 @@ ProcessCode HepMC3Reader::readLogicalEvent(
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading logical event " << ctx.eventNumber);
+  Acts::ScopedTimer timer("Reading logical event", logger(),
+                          Acts::Logging::DEBUG);
 
   // @TODO: Add the index as an attribute to the event and it's content
 
