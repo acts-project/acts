@@ -727,7 +727,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
-        double irMxy = 1 / rMxy;
+        float irMxy = 1 / rMxy;
         float Ax = rMTransf[0] * irMxy;
         float Ay = rMTransf[1] * irMxy;
 
