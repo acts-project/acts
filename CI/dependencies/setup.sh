@@ -188,10 +188,7 @@ time spack -e "${env_dir}" find
 end_section
 
 start_section "Install spack packages"
-NCPUS=4 # set fixes low-ish number to avoid deadlocks
-time "${SCRIPT_DIR}"/parallel.sh "$NCPUS" spack -e "${env_dir}" install --fail-fast --use-buildcache only \
-  | tee install.log \
-  | grep -v "^Waiting\|^\[+\]"
+time spack -e "${env_dir}" install --fail-fast --use-buildcache only --concurrent-packages 10
 end_section
 
 start_section "Patch up Geant4 data directory"
