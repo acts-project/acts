@@ -75,4 +75,20 @@ class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
 
   std::tuple<Policies...> m_policies;
 };
+
+class MultiNavigationPolicyDynamic final : public MultiNavigationPolicyBase {
+ public:
+  explicit MultiNavigationPolicyDynamic(
+      std::vector<std::unique_ptr<INavigationPolicy>>&& policies)
+      : m_policyPtrs(std::move(policies)) {}
+
+  void connect(NavigationDelegate& /*delegate*/) const override {}
+
+  const std::span<const std::unique_ptr<INavigationPolicy>> policies() const {
+    return std::span{m_policyPtrs};
+  }
+
+ private:
+  std::vector<std::unique_ptr<INavigationPolicy>> m_policyPtrs;
+};
 }  // namespace Acts
