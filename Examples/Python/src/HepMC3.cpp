@@ -34,7 +34,8 @@ void addHepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3Reader, hepmc3, "HepMC3Reader",
                              inputPath, inputPaths, outputEvent, printListing,
-                             numEvents, checkEventNumber, maxEventBufferSize);
+                             numEvents, checkEventNumber, maxEventBufferSize,
+                             vertexGenerator, randomNumbers);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
