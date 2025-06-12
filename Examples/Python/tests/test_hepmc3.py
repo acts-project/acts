@@ -689,3 +689,132 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
         )
 
     assert "Compression not supported for Root" in str(excinfo.value)
+
+
+def test_hepmc3_reader_multiple_files(tmp_path, rng):
+    from acts.examples.hepmc3 import HepMC3Writer, HepMC3Reader
+
+    events = 10000
+    n_pileup = 10
+
+    s = Sequencer(numThreads=10, events=events, logLevel=acts.logging.INFO)
+
+    vtxGenZero = acts.examples.FixedVertexGenerator(
+        fixed=acts.Vector4(0, 0, 0, 0),
+    )
+
+    vtxGen = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
+
+    hard_scatter = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=vtxGenZero,
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="hard_scatter_event",
+        randomNumbers=rng,
+    )
+    s.addReader(hard_scatter)
+
+    out_hs = tmp_path / "out" / "events_pytest_hs.hepmc3"
+    out_hs.parent.mkdir(parents=True, exist_ok=True)
+
+    compression = acts.examples.hepmc3.Compression.bzip2
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent=hard_scatter.config.outputEvent,
+            outputPath=out_hs,
+            perEvent=False,
+            compression=compression,
+        )
+    )
+
+    s.run()
+
+    s = Sequencer(numThreads=10, events=events * n_pileup, logLevel=acts.logging.INFO)
+
+    pileup = acts.examples.EventGenerator(
+        level=acts.logging.INFO,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
+                vertex=vtxGenZero,
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputEvent="pileup_event",
+        randomNumbers=rng,
+    )
+    s.addReader(pileup)
+
+    out_pu = tmp_path / "out" / "events_pytest_pu.hepmc3"
+    out_pu.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent=pileup.config.outputEvent,
+            outputPath=out_pu,
+            perEvent=False,
+            compression=compression,
+        )
+    )
+
+    s.run()
+
+    act_hs = handle_path(out_hs, compression)
+    act_pu = handle_path(out_pu, compression)
+
+    shutil.copy(act_hs, Path.cwd() / act_hs.name)
+    shutil.copy(act_pu, Path.cwd() / act_pu.name)
+
+    # do reading including merging and write combined file
+
+    s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
+
+    reader = HepMC3Reader(
+        inputPaths=[(act_hs, 1), (act_pu, 10)],
+        level=acts.logging.VERBOSE,
+        outputEvent="hepmc3_event",
+        vertexGenerator=vtxGen,
+        randomNumbers=rng,
+    )
+    s.addReader(reader)
+
+    out_combined = tmp_path / "out" / "events_pytest_combined.hepmc3"
+    out_combined.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent=reader.config.outputEvent,
+            outputPath=out_combined,
+            perEvent=False,
+            compression=compression,
+        )
+    )
+
+    s.run()
+
+    act_combined = handle_path(out_combined, compression)
+    shutil.copy(act_combined, Path.cwd() / act_combined.name)
