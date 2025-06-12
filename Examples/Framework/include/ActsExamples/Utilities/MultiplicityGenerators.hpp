@@ -9,14 +9,23 @@
 #pragma once
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <random>
 
 namespace ActsExamples {
 
-struct FixedMultiplicityGenerator
-    : public EventGenerator::MultiplicityGenerator {
+/// @brief Generator interface for event multiplicity of vertices
+struct MultiplicityGenerator {
+  /// @brief Virtual destructor required
+  virtual ~MultiplicityGenerator() = default;
+  /// @brief Generate the multiplicity of vertices
+  ///
+  /// @param rng Shared random number generator instance
+  /// @return std::size_t The multiplicity for the event
+  virtual std::size_t operator()(RandomEngine& rng) const = 0;
+};
+
+struct FixedMultiplicityGenerator : public MultiplicityGenerator {
   std::size_t n = 1;
 
   explicit FixedMultiplicityGenerator(std::size_t _n) : n{_n} {}
@@ -25,8 +34,7 @@ struct FixedMultiplicityGenerator
   std::size_t operator()(RandomEngine& /*rng*/) const override { return n; }
 };
 
-struct PoissonMultiplicityGenerator
-    : public EventGenerator::MultiplicityGenerator {
+struct PoissonMultiplicityGenerator : public MultiplicityGenerator {
   double mean = 1;
   explicit PoissonMultiplicityGenerator(double _mean) : mean{_mean} {}
   PoissonMultiplicityGenerator() = default;

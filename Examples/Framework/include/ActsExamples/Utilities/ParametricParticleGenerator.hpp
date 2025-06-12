@@ -10,9 +10,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <array>
 #include <cstddef>
@@ -21,7 +19,24 @@
 #include <optional>
 #include <random>
 
+namespace HepMC3 {
+class GenEvent;
+}
+
 namespace ActsExamples {
+
+/// @brief Generator interface for vertices and particles
+struct ParticlesGenerator {
+  /// @brief Virtual destructor required
+  virtual ~ParticlesGenerator() = default;
+  /// @brief Generate vertices and particles for one interaction
+  /// @note This method cannot be `const` because the Pythia8 generator
+  ///       uses the Pythia8 interfaces, which is non-const
+  ///
+  /// @param rng Shared random number generator instance
+  /// @return The vertex and particle containers
+  virtual std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) = 0;
+};
 
 /// Generate particles from uniform parameter distributions.
 ///
@@ -29,7 +44,7 @@ namespace ActsExamples {
 /// direction is drawn from a uniform distribution on the unit sphere (within
 /// the given limits). Its absolute momentum is drawn from a uniform
 /// distribution. Position and time are always set to zero.
-class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
+class ParametricParticleGenerator : public ParticlesGenerator {
  public:
   struct Config {
     /// Low, high (exclusive) for the transverse direction angle.
