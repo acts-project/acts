@@ -92,5 +92,11 @@ set(DETRAY_SETUP_DFELIBS
 )
 set(DETRAY_SVG_DISPLAY OFF CACHE BOOL "No not build the ActSVG display module")
 
+set(DETRAY_SETUP_NLOHMANN
+    OFF
+    CACHE BOOL
+    "Do not set up nlohmann as part of Detray"
+)
+
 #Now set up its build.
 FetchContent_MakeAvailable(Detray)
