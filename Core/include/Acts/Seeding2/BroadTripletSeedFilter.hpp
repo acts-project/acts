@@ -69,7 +69,7 @@ class BroadTripletSeedFilter final {
 
     /// Use deltaR between top and middle SP instead of top radius to search for
     /// compatible SPs
-    bool useDeltaRorTopRadius = false;
+    bool useDeltaRinsteadOfTopRadius = false;
 
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };

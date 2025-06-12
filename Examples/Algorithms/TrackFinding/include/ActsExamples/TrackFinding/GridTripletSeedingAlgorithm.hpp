@@ -188,6 +188,10 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float seedWeightIncrement = 0;
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
+    /// Use deltaR between top and middle SP instead of top radius to search for
+    /// compatible SPs
+    bool useDeltaRinsteadOfTopRadius = false;
+
     // Seeding parameters used for quality seed confirmation
 
     /// Enable quality seed confirmation, this is different than default seeding
