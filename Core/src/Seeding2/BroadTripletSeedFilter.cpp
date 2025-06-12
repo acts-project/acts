@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/ITripletSeedCuts.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -86,6 +87,13 @@ void BroadTripletSeedFilter::filter2SpFixed(
   // vector containing the radius of all compatible seeds
   cache.compatibleSeedR.reserve(m_cfg.compatSeedLimit);
 
+  const auto getTopR = [&](ConstSpacePointProxy2 spT) {
+    if (m_cfg.useDeltaRinsteadOfTopRadius) {
+      return fastHypot(spT.extra(rColumn), spT.z());
+    }
+    return spT.extra(rColumn);
+  };
+
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache.topSpIndexVec) {
@@ -99,12 +107,10 @@ void BroadTripletSeedFilter::filter2SpFixed(
     float invHelixDiameter = invHelixDiameterVec[topSpIndex];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
-    // use deltaR instead of top radius
-    assert(!m_cfg.useDeltaRorTopRadius && "TODO not implemented");
-    float currentTopR = spT.extra(rColumn);
+    float currentTopR = getTopR(spT);
     float impact = impactParametersVec[topSpIndex];
 
-    float weight = -(impact * m_cfg.impactWeightFactor);
+    float weight = -impact * m_cfg.impactWeightFactor;
 
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
@@ -117,8 +123,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
       }
       auto otherSpT = spacePoints.at(topSpVec[compatibletopSpIndex]);
 
-      assert(!m_cfg.useDeltaRorTopRadius && "TODO not implemented");
-      float otherTopR = otherSpT.extra(rColumn);
+      float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibletopSpIndex] < lowerLimitCurv) {

@@ -884,6 +884,7 @@ def addGridTripletSeeding(
             compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
             seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
             numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,

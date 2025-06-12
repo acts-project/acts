@@ -81,6 +81,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   filterConfig.compatSeedLimit = m_cfg.compatSeedLimit;
   filterConfig.seedWeightIncrement = m_cfg.seedWeightIncrement;
   filterConfig.numSeedIncrement = m_cfg.numSeedIncrement;
+  filterConfig.useDeltaRinsteadOfTopRadius = m_cfg.useDeltaRinsteadOfTopRadius;
 
   m_seedFilter = Acts::Experimental::BroadTripletSeedFilter(
       filterConfig, logger().cloneWithSuffix("Filter"));
