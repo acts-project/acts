@@ -12,6 +12,7 @@
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
@@ -34,23 +35,38 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   m_outputEvent.initialize(m_cfg.outputEvent);
 
-  // Create a single file reader
-  m_reader = makeReader();
+  if (!m_cfg.inputPaths.empty() && !m_cfg.inputPath.empty()) {
+    throw std::invalid_argument(
+        "inputPath and inputPaths are mutually exclusive");
+  }
+
+  if (!m_cfg.inputPath.empty()) {
+    m_cfg.inputPaths.emplace_back(m_cfg.inputPath, 1);
+  }
+
+  if (m_cfg.inputPaths.empty()) {
+    throw std::invalid_argument(
+        "HepMC3 reader was not configured with any input files");
+  }
+
+  for (const auto& [path, numEvents] : m_cfg.inputPaths) {
+    m_inputs.emplace_back(HepMC3::deduce_reader(path), numEvents, path);
+  }
+
   if (m_cfg.numEvents.has_value()) {
     m_eventsRange = {0, m_cfg.numEvents.value()};
   } else {
     // Need to make a temporary reader to determine the number of events
     Acts::ScopedTimer timer("Determining number of events by reading", logger(),
                             Acts::Logging::DEBUG);
-    m_eventsRange = {0, determineNumEvents(*makeReader())};
+    // This uses the first reader that's configured, with the assumption that
+    // this is the hard-scatter event
+    auto reader = HepMC3::deduce_reader(m_inputs.front().path);
+    m_eventsRange = {0, determineNumEvents(*reader)};
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
                               << m_eventsRange.second << " events");
-}
-
-std::shared_ptr<HepMC3::Reader> HepMC3Reader::makeReader() const {
-  return HepMC3::deduce_reader(m_cfg.inputPath);
 }
 
 HepMC3Reader::~HepMC3Reader() = default;
@@ -93,10 +109,16 @@ ProcessCode HepMC3Reader::skip(std::size_t events) {
   }
 
   ACTS_DEBUG("Skipping " << events << " events");
-  if (!m_reader->skip(static_cast<int>(events))) {
-    ACTS_ERROR("Error skipping events " << events << " " << m_cfg.inputPath);
-    return ABORT;
+
+  for (auto& [reader, numEvents, path] : m_inputs) {
+    ACTS_VERBOSE("Skipping " << events << "*" << numEvents << "="
+                             << events * numEvents << " events from " << path);
+    if (!reader->skip(static_cast<int>(events * numEvents))) {
+      ACTS_ERROR("Error skipping events " << events << " " << path);
+      return ABORT;
+    }
   }
+
   m_nextEvent = events;
 
   return SUCCESS;
@@ -138,7 +160,7 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
 
 ProcessCode HepMC3Reader::readSingleFile(
     const ActsExamples::AlgorithmContext& ctx,
-    std::shared_ptr<HepMC3::GenEvent>& event) {
+    std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading from single file");
   std::scoped_lock lock(m_mutex);
@@ -150,12 +172,12 @@ ProcessCode HepMC3Reader::readSingleFile(
 
   // Check if we already read this event on another thread
   if (!m_events.empty() && ctx.eventNumber < m_nextEvent) {
-    if (readCached(ctx, event) != SUCCESS) {
+    if (readCached(ctx, outputEvent) != SUCCESS) {
       ACTS_ERROR("Error reading event " << ctx.eventNumber);
       return ABORT;
     }
   } else {
-    if (readBuffer(ctx, event) != SUCCESS) {
+    if (readBuffer(ctx, outputEvent) != SUCCESS) {
       ACTS_ERROR("Error reading event " << ctx.eventNumber);
       return ABORT;
     }
@@ -173,11 +195,12 @@ ProcessCode HepMC3Reader::readCached(const ActsExamples::AlgorithmContext& ctx,
   if (it == m_events.end()) {
     if (m_cfg.numEvents.has_value()) {
       ACTS_ERROR(
-          "Event " << ctx.eventNumber
-                   << " was not found in the queue. Most likely the manually "
-                      "configured event count of the input file of "
-                   << m_cfg.numEvents.value()
-                   << " is larger than the number of events found in the file");
+          "Event "
+          << ctx.eventNumber
+          << " was not found in the queue. Most likely the manually "
+             "configured event count of the input file(s) of "
+          << m_cfg.numEvents.value()
+          << " is larger than the number of events found in the file(s)");
     } else {
       ACTS_ERROR(
           "Event " << ctx.eventNumber
@@ -193,8 +216,9 @@ ProcessCode HepMC3Reader::readCached(const ActsExamples::AlgorithmContext& ctx,
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode HepMC3Reader::readBuffer(const ActsExamples::AlgorithmContext& ctx,
-                                     std::shared_ptr<HepMC3::GenEvent>& event) {
+ProcessCode HepMC3Reader::readBuffer(
+    const ActsExamples::AlgorithmContext& ctx,
+    std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
   using enum ProcessCode;
 
   ACTS_VERBOSE("Next event to read is: " << m_nextEvent);
@@ -218,16 +242,30 @@ ProcessCode HepMC3Reader::readBuffer(const ActsExamples::AlgorithmContext& ctx,
     std::size_t thisEvent = m_nextEvent;
     m_nextEvent += 1;
 
-    auto genEvent = makeEvent();
-    m_reader->read_event(*genEvent);
-    if (m_reader->failed()) {
-      ACTS_ERROR("HepMC3Reader: Error reading event " << thisEvent << " "
-                                                      << m_cfg.inputPath);
-      m_bufferError = true;
+    std::vector<std::shared_ptr<HepMC3::GenEvent>> events;
+
+    if (readLogicalEvent(ctx, events) != SUCCESS) {
+      ACTS_ERROR("Error reading event " << thisEvent);
       return ABORT;
     }
 
+    if (events.empty()) {
+      ACTS_ERROR("No events read from file, this is a bug");
+      return ABORT;
+    }
+
+    auto genEvent = makeEvent();
+
+    std::vector<const HepMC3::GenEvent*> eventPtrs;
+    eventPtrs.reserve(events.size());
+    std::ranges::transform(events, std::back_inserter(eventPtrs),
+                           [](auto& event) { return event.get(); });
+    HepMC3Util::mergeEvents(*genEvent, eventPtrs, logger());
+
+    genEvent->set_event_number(events.front()->event_number());
+
     m_events.emplace_back(thisEvent, std::move(genEvent));
+
   } while (m_nextEvent <= ctx.eventNumber);
 
   ACTS_VERBOSE("Queue is now: [" << [&]() {
@@ -247,14 +285,42 @@ ProcessCode HepMC3Reader::readBuffer(const ActsExamples::AlgorithmContext& ctx,
 
   ACTS_VERBOSE("Popping event " << num << " from queue");
 
-  event = std::move(genEvent);
+  outputEvent = std::move(genEvent);
+
+  return SUCCESS;
+}
+
+ProcessCode HepMC3Reader::readLogicalEvent(
+    const ActsExamples::AlgorithmContext& ctx,
+    std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
+  using enum ProcessCode;
+  ACTS_VERBOSE("Reading logical event " << ctx.eventNumber);
+
+  // @TODO: Add the index as an attribute to the event and it's content
+
+  for (auto& [reader, numEvents, path] : m_inputs) {
+    ACTS_VERBOSE("Reading " << numEvents << " events from " << path);
+    for (std::size_t i = 0; i < numEvents; ++i) {
+      auto event = makeEvent();
+
+      reader->read_event(*event);
+      if (reader->failed()) {
+        ACTS_ERROR("Error reading event " << i << " from " << path);
+        return ABORT;
+      }
+      events.push_back(std::move(event));
+    }
+  }
+
+  ACTS_VERBOSE("Read " << events.size() << " events in total from all files");
 
   return SUCCESS;
 }
 
 ProcessCode HepMC3Reader::finalize() {
-  if (m_reader) {
-    m_reader->close();
+  ACTS_VERBOSE("Closing " << m_inputs.size() << " input files");
+  for (auto& [reader, numEvents, path] : m_inputs) {
+    reader->close();
   }
 
   ACTS_DEBUG("Maximum event buffer size was: "
