@@ -118,8 +118,7 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   auto policyBase = factory(gctx, volume, *logger);
   auto policyBase2 = factory(gctx, volume, *logger);
 
-  auto& policy =
-      dynamic_cast<MultiNavigationPolicy<APolicy, BPolicy>&>(*policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
 
   NavigationDelegate delegate;
   policy.connect(delegate);
