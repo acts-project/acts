@@ -44,11 +44,7 @@ static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
 /// Check if the PDG belongs to a nucleus
 static constexpr bool isNucleus(PdgParticle pdg) {
   const auto value = static_cast<std::int32_t>(pdg);
-  if (value < -1e9 || value > 1e9) {
-    return true;
-  } else {
-    return false;
-  }
+  return value < -1e9 || value > 1e9;
 }
 
 /// Convert an excited nucleus to its ground state.
@@ -58,7 +54,6 @@ static constexpr PdgParticle makeGroundState(PdgParticle pdg) {
   if (isNucleus(pdg)) {
     return static_cast<PdgParticle>((value / 10) * 10);
   } else {
-    // not a nucleus
     return pdg;
   }
 }

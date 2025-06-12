@@ -155,14 +155,21 @@ std::optional<float> Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
     int A = (pdgNum / 10) % 1000;
     int Z = (pdgNum / 10000) % 1000;
 
+    // https://www.actaphys.uj.edu.pl/R/37/6/1833
     float a_Vol = 15.260f * Acts::UnitConstants::MeV;
     float a_Surf = 16.267f * Acts::UnitConstants::MeV;
     float a_Col = 0.689f * Acts::UnitConstants::MeV;
     float a_Sym = 22.209f * Acts::UnitConstants::MeV;
     float a_Pair =
         (1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076f * Acts::UnitConstants::MeV;
-    float massP = findMass(Acts::PdgParticle::eProton).value();
-    float massN = findMass(Acts::PdgParticle::eNeutron).value();
+
+    auto massPOpt = findMass(Acts::PdgParticle::eProton);
+    auto massNOpt = findMass(Acts::PdgParticle::eNeutron);
+    if (!massPOpt || !massNOpt) {
+      return std::nullopt;
+    }
+    float massP = massPOpt.value();
+    float massN = massNOpt.value();
 
     float bindEnergy = 0.f;
     bindEnergy += a_Vol * A;
