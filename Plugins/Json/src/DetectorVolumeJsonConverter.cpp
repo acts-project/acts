@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <ctime>
+#include <ranges>
 
 nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
@@ -37,11 +38,10 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   jVolume["bounds"] = VolumeBoundsJsonConverter::toJson(volume.volumeBounds());
   // Write the surfaces
   nlohmann::json jSurfaces;
-  std::for_each(
-      volume.surfaces().begin(), volume.surfaces().end(), [&](const auto& s) {
-        jSurfaces.push_back(
-            SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions));
-      });
+  std::ranges::for_each(volume.surfaces(), [&](const auto& s) {
+    jSurfaces.push_back(
+        SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions));
+  });
   jVolume["surfaces"] = jSurfaces;
   // And its surface navigation delegates
   nlohmann::json jSurfacesDelegate =
@@ -50,10 +50,9 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
 
   // Write the sub volumes
   nlohmann::json jVolumes;
-  std::for_each(
-      volume.volumes().begin(), volume.volumes().end(), [&](const auto& v) {
-        jVolumes.push_back(toJson(gctx, *v, detectorVolumes, portals, options));
-      });
+  std::ranges::for_each(volume.volumes(), [&](const auto& v) {
+    jVolumes.push_back(toJson(gctx, *v, detectorVolumes, portals, options));
+  });
   jVolume["volumes"] = jVolumes;
 
   // Write the portals if pre-converted as link
