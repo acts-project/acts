@@ -1,11 +1,11 @@
 from pathlib import Path
-import shutil
 import tempfile
 import sys
 import os
 import time
 import functools
 import warnings
+import numpy
 
 import pytest
 
@@ -694,7 +694,7 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
 def test_hepmc3_reader_multiple_files(tmp_path, rng):
     from acts.examples.hepmc3 import HepMC3Writer, HepMC3Reader
 
-    events = 10000
+    events = 100
     n_pileup = 10
 
     s = Sequencer(numThreads=10, events=events, logLevel=acts.logging.INFO)
@@ -785,9 +785,6 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     act_hs = handle_path(out_hs, compression)
     act_pu = handle_path(out_pu, compression)
 
-    shutil.copy(act_hs, Path.cwd() / act_hs.name)
-    shutil.copy(act_pu, Path.cwd() / act_pu.name)
-
     # do reading including merging and write combined file
 
     s = Sequencer(numThreads=10, logLevel=acts.logging.INFO)
@@ -817,4 +814,35 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
     s.run()
 
     act_combined = handle_path(out_combined, compression)
-    shutil.copy(act_combined, Path.cwd() / act_combined.name)
+
+    @with_pyhepmc
+    def check(pyhepmc):
+        def get_vtx_pos(file: Path):
+            with pyhepmc.open(file) as f:
+                for evt in f:
+                    for vtx in evt.vertices:
+                        yield [vtx.position.x, vtx.position.y, vtx.position.z]
+
+        hs = numpy.vstack(list(get_vtx_pos(act_hs))).T
+        pu = numpy.vstack(list(get_vtx_pos(act_pu))).T
+        combined = numpy.vstack(list(get_vtx_pos(act_combined))).T
+
+        # NO smearing in hs and pu
+        for arr in (hs, pu):
+            vx, vy, vz = numpy.unstack(arr)
+            std = numpy.std(vx)
+            assert std < 1 * u.um
+            std = numpy.std(vy)
+            assert std < 1 * u.um
+            std = numpy.std(vz)
+            assert std < 1 * u.um
+
+        # Configured smearing in combined
+        # Checked values are a bit lower than configured smearing due to limited stats
+        vx, vy, vz = numpy.unstack(combined)
+        std = numpy.std(vx)
+        assert std > 40 * u.um
+        std = numpy.std(vy)
+        assert std > 40 * u.um
+        std = numpy.std(vz)
+        assert std > 140 * u.mm
