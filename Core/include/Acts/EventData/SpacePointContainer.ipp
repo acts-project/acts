@@ -20,23 +20,18 @@ namespace Acts {
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
-    const Acts::SpacePointContainerConfig& config,
-    const Acts::SpacePointContainerOptions& options,
-    const container_t& container)
-    : m_config(config.toInternalUnits()),
-      m_options(options.toInternalUnits()),
-      m_container(container) {
+    const SpacePointContainerConfig& config,
+    const SpacePointContainerOptions& options, const container_t& container)
+    : m_config(config), m_options(options), m_container(container) {
   initialize();
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
-    const Acts::SpacePointContainerConfig& config,
-    const Acts::SpacePointContainerOptions& options, container_t&& container)
-    : m_config(config.toInternalUnits()),
-      m_options(options.toInternalUnits()),
-      m_container(std::move(container)) {
+    const SpacePointContainerConfig& config,
+    const SpacePointContainerOptions& options, container_t&& container)
+    : m_config(config), m_options(options), m_container(std::move(container)) {
   initialize();
 }
 
@@ -60,46 +55,44 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
 
   // Dynamic variables
   if (m_config.useDetailedDoubleMeasurementInfo) {
-    using namespace Acts::HashedStringLiteral;
+    using namespace HashedStringLiteral;
     for (std::size_t i(0); i < size(); ++i) {
       m_data.setTopStripVector(
-          i, std::any_cast<Acts::Vector3>(
+          i, std::any_cast<Vector3>(
                  external_container.component_impl("TopStripVector"_hash, i)));
       m_data.setBottomStripVector(
-          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
+          i, std::any_cast<Vector3>(external_container.component_impl(
                  "BottomStripVector"_hash, i)));
       m_data.setStripCenterDistance(
-          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
+          i, std::any_cast<Vector3>(external_container.component_impl(
                  "StripCenterDistance"_hash, i)));
       m_data.setTopStripCenterPosition(
-          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
+          i, std::any_cast<Vector3>(external_container.component_impl(
                  "TopStripCenterPosition"_hash, i)));
     }
   }
 }
 
 template <typename container_t, template <typename> class holder_t>
-const Acts::Vector3& SpacePointContainer<container_t, holder_t>::topStripVector(
+const Vector3& SpacePointContainer<container_t, holder_t>::topStripVector(
     const std::size_t n) const {
   return m_data.topStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::bottomStripVector(
+const Vector3& SpacePointContainer<container_t, holder_t>::bottomStripVector(
     const std::size_t n) const {
   return m_data.bottomStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::stripCenterDistance(
+const Vector3& SpacePointContainer<container_t, holder_t>::stripCenterDistance(
     const std::size_t n) const {
   return m_data.stripCenterDistance(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-const Acts::Vector3&
+const Vector3&
 SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
     const std::size_t n) const {
   return m_data.topStripCenterPosition(n);
