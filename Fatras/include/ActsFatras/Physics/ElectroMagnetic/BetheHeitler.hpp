@@ -11,9 +11,9 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Utilities/GammaDistribution.hpp"
 
 #include <array>
-#include <cfloat>
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -56,35 +56,15 @@ struct BetheHeitler {
   std::array<Particle, 1> operator()(generator_t &generator,
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
-    std::uniform_real_distribution<double> uDist(0., 1.);
-
     // Take a random gamma-distributed value - depending on t/X0
-    const double alpha = slab.thicknessInX0() / std::numbers::ln2;
-    double u = 0.;
-    if (alpha > 1.) {
-      std::gamma_distribution<double> gDist(alpha, 1.);
-      u = gDist(generator);
-    } else {
-      std::gamma_distribution<double> gDistPlus1(alpha + 1., 1.);
-      // Get a random number using alpha+1
-      const auto uPlus1 = gDistPlus1(generator);
-      double u2;
-      do {
-        u2 = uDist(generator);
-      } while (u2 == 0.);
-      // Check if this would cause underflow
-      if (std::log(u2) / alpha + std::log(uPlus1) < std::log(DBL_MIN)) {
-        // This would be underflow - get 0.0 right away
-        u = 0.;
-      } else {
-        u = uPlus1 * std::pow(u2, 1 / alpha);
-      }
-    }
+    GammaDistribution gDist(slab.thicknessInX0() / std::numbers::ln2, 1.);
 
+    const auto u = gDist(generator);
     const auto z = std::exp(-u);
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
+    std::uniform_real_distribution<double> uDist(0., 1.);
     // Build the produced photon
     Particle photon =
         bremPhoton(particle, sampledEnergyLoss, uDist(generator),
