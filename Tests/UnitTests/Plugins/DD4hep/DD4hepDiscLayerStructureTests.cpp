@@ -141,9 +141,10 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     auto world = lcdd->world();
 
     // Now the test starts ...
+    Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
     auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-        Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                               Acts::Logging::VERBOSE));
+        sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
+                                               Acts::Logging::VERBOSE));
 
     Acts::Experimental::DD4hepLayerStructure discStructure(
         std::move(sFactory),
