@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -30,6 +31,7 @@ namespace Acts {
 class LayerCreator;
 class Logger;
 class Surface;
+class ISurfaceMaterial;
 
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
 ///
@@ -40,6 +42,16 @@ class Surface;
 
 class DD4hepLayerBuilder : public ILayerBuilder {
  public:
+  /// DD4hepDetectorElement construction factory
+  using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
+      const dd4hep::DetElement&, const std::string&, double, bool,
+      std::shared_ptr<const ISurfaceMaterial>)>;
+  /// Default factory for DD4hepDetectorElement
+  static std::shared_ptr<DD4hepDetectorElement> defaultDetectorElementFactory(
+      const dd4hep::DetElement& detElement, const std::string& detAxis,
+      double thickness, bool isDisc,
+      std::shared_ptr<const ISurfaceMaterial> surfaceMaterial);
+
   /// @struct Config
   /// nested configuration struct for steering of the layer builder
   struct Config {
@@ -69,6 +81,9 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     /// @note if the current volume has no endcaps or no layers this parameter
     /// will not be set
     std::vector<dd4hep::DetElement> positiveLayers;
+    /// The factory to create the DD4hepDetectorElement
+    ElementFactory detectorElementFactory = defaultDetectorElementFactory;
+
     /// In case no surfaces (to be contained by the layer) are handed over, the
     /// layer thickness will be set to this value
     /// @note Layers containing surfaces per default are not allowed to be

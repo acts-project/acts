@@ -21,7 +21,9 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
     : m_surface(std::move(surface)),
       m_g4physVol(&g4physVol),
       m_toGlobal(toGlobal),
-      m_thickness(thickness) {}
+      m_thickness(thickness) {
+  m_surface->assignDetectorElement(*this);
+}
 
 const Transform3& Geant4DetectorElement::transform(
     const GeometryContext& /*gctx*/) const {
