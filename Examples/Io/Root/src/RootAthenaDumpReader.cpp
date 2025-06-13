@@ -18,7 +18,6 @@
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
 #include <algorithm>
-#include <ranges>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
