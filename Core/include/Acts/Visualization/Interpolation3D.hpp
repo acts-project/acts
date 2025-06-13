@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 #include <unsupported/Eigen/Splines>
 
