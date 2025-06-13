@@ -29,12 +29,16 @@
 #include <vector>
 
 #include "TBranch.h"
+#include "TEfficiency.h"
 #include "TFile.h"
+#include "TH2F.h"
 #include "TKey.h"
 #include "TList.h"
 #include "TObject.h"
+#include "TProfile.h"
 #include "TTree.h"
 #include "TTreeReader.h"
+#include "TVectorT.h"
 #include "compareRootFiles.hpp"
 
 // Minimal mechanism for assertion checking and comparison
@@ -338,7 +342,7 @@ int compareRootFiles(std::string file1, std::string file2,
         auto branchHarness = BranchComparisonHarness::create(
             treeMetadata, b1BranchName, b1DataType, b1ClassName);
         branchComparisonHarnesses.emplace_back(std::move(branchHarness));
-      } catch (BranchComparisonHarness::UnsupportedBranchType) {
+      } catch (const BranchComparisonHarness::UnsupportedBranchType&) {
         // When encountering an unsupported branch type, we can either skip
         // the branch or abort depending on configuration
         std::cout << "        + Unsupported branch type! "
@@ -470,9 +474,11 @@ int compareRootFiles(std::string file1, std::string file2,
               << std::endl;
 
     std::cout << "    o Comparing efficiency-wide metadata..." << std::endl;
-    const std::size_t e1Size = efficiency1->GetTotalHistogram()->GetEntries();
+    const auto e1Size = static_cast<std::size_t>(
+        efficiency1->GetTotalHistogram()->GetEntries());
     {
-      const std::size_t e2Size = efficiency2->GetTotalHistogram()->GetEntries();
+      const auto e2Size = static_cast<std::size_t>(
+          efficiency2->GetTotalHistogram()->GetEntries());
       ASSERT_EQUAL(e1Size, e2Size, "      ~ Number of entries does not match!");
     }
 
@@ -497,9 +503,9 @@ int compareRootFiles(std::string file1, std::string file2,
               << std::endl;
 
     std::cout << "    o Comparing profile-wide metadata..." << std::endl;
-    const std::size_t p1Size = profile1->GetEntries();
+    const auto p1Size = static_cast<std::size_t>(profile1->GetEntries());
     {
-      const std::size_t p2Size = profile2->GetEntries();
+      const auto p2Size = static_cast<std::size_t>(profile2->GetEntries());
       ASSERT_EQUAL(p1Size, p2Size, "      ~ Number of entries does not match!");
     }
 
@@ -524,9 +530,9 @@ int compareRootFiles(std::string file1, std::string file2,
               << std::endl;
 
     std::cout << "    o Comparing TH2F-wide metadata..." << std::endl;
-    const std::size_t th2f1Size = th2f1->GetEntries();
+    const auto th2f1Size = static_cast<std::size_t>(th2f1->GetEntries());
     {
-      const std::size_t th2f2Size = th2f2->GetEntries();
+      const auto th2f2Size = static_cast<std::size_t>(th2f2->GetEntries());
       ASSERT_EQUAL(th2f1Size, th2f2Size,
                    "      ~ Number of entries does not match!");
     }
@@ -546,3 +552,48 @@ int compareRootFiles(std::string file1, std::string file2,
   std::cout << "* Input files are equal, event order aside!" << std::endl;
   return 0;
 }
+
+#ifndef __CLING__
+int main(int argc, char* argv[]) {
+  std::string file1;
+  std::string file2;
+  bool dumpDataOnFailure = false;
+  bool skipUnsupportedBranches = false;
+
+  std::vector<std::string> args(argv + 1, argv + argc);
+
+  if (args.size() < 2) {
+    std::cerr << "Usage: " << argv[0]
+              << " file1 file2 [--dump-data-on-failure] "
+                 "[--skip-unsupported-branches]\n";
+    return 1;
+  }
+
+  file1 = args[0];
+  file2 = args[1];
+
+  for (size_t i = 2; i < args.size(); ++i) {
+    if (args[i] == "--dump-data-on-failure") {
+      dumpDataOnFailure = true;
+    } else if (args[i] == "--skip-unsupported-branches") {
+      skipUnsupportedBranches = true;
+    } else {
+      std::cerr << "Unknown option: " << args[i] << "\n";
+      return 1;
+    }
+  }
+
+  // Output parsed values (for demonstration)
+  std::cout << "file1: " << file1 << "\n";
+  std::cout << "file2: " << file2 << "\n";
+  std::cout << "dumpDataOnFailure: " << (dumpDataOnFailure ? "true" : "false")
+            << "\n";
+  std::cout << "skipUnsupportedBranches: "
+            << (skipUnsupportedBranches ? "true" : "false") << "\n";
+
+  const int result = compareRootFiles(file1, file2, dumpDataOnFailure,
+                                      skipUnsupportedBranches);
+
+  return result;
+}
+#endif
