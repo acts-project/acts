@@ -20,16 +20,8 @@ CylindricalSpacePointGrid<external_spacepoint_t>
 CylindricalSpacePointGridCreator::createGrid(
     const CylindricalSpacePointGridConfig& config,
     const CylindricalSpacePointGridOptions& options, const Logger& logger) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "CylindricalSpacePointGridConfig not in ACTS internal units in "
-        "CylindricalSpacePointGridCreator::createGrid");
-  }
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "CylindricalSpacePointGridOptions not in ACTS internal units in "
-        "CylindricalSpacePointGridCreator::createGrid");
-  }
+  config.checkConfig();
+
   using AxisScalar = Vector3::Scalar;
   using namespace UnitLiterals;
 
@@ -41,12 +33,9 @@ CylindricalSpacePointGridCreator::createGrid(
         "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
         << phiBins);
   } else {
-    // calculate circle intersections of helix and max detector radius
-    float minHelixRadius =
-        config.minPt /
-        (1_T * 1e6 *
-         options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
-                              // = pT[MeV] / (300 *Bz[kT])
+    // calculate circle intersections of helix and max detector radius in mm.
+    // bFieldInZ is in (pT/radius) natively, no need for conversion
+    float minHelixRadius = config.minPt / options.bFieldInZ;
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax * 0.5) {
@@ -167,16 +156,10 @@ void CylindricalSpacePointGridCreator::fillGrid(
     CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
     external_spacepoint_iterator_t spEnd, const Logger& logger) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
-  }
+  (void)options;
+
   if (config.seedFilter == nullptr) {
     throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
-  }
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
   // Space points are assumed to be ALREADY CORRECTED for beamspot position
