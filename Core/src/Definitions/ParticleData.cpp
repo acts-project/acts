@@ -116,12 +116,15 @@ std::optional<float> Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     return std::nullopt;
   }
-  auto pdgGround = makeGroundState(pdg);
+  auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapCharge.find(pdgGround);
   if (it == kParticlesMapCharge.end()) {
-    // get the charge from PDG
-    auto pdgNum = static_cast<std::int32_t>(pdg);
-    return static_cast<float>((pdgNum / 10000) % 1000);
+    // extract charge from PDG number
+    auto ZandA = extractNucleusZandA(pdg);
+    if (!ZandA) {
+      return std::nullopt;
+    }
+    return static_cast<float>(ZandA.value().first);
   }
   return it->second;
 }
@@ -147,38 +150,11 @@ std::optional<float> Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     return std::nullopt;
   }
-  auto pdgGround = makeGroundState(pdg);
+  auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapMass.find(pdgGround);
   if (it == kParticlesMapMass.end()) {
-    // get the mass from Bethe-Weizsacker formula
-    auto pdgNum = static_cast<std::int32_t>(pdg);
-    int A = (pdgNum / 10) % 1000;
-    int Z = (pdgNum / 10000) % 1000;
-
-    // https://www.actaphys.uj.edu.pl/R/37/6/1833
-    float a_Vol = 15.260f * Acts::UnitConstants::MeV;
-    float a_Surf = 16.267f * Acts::UnitConstants::MeV;
-    float a_Col = 0.689f * Acts::UnitConstants::MeV;
-    float a_Sym = 22.209f * Acts::UnitConstants::MeV;
-    float a_Pair =
-        (1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076f * Acts::UnitConstants::MeV;
-
-    auto massPOpt = findMass(Acts::PdgParticle::eProton);
-    auto massNOpt = findMass(Acts::PdgParticle::eNeutron);
-    if (!massPOpt || !massNOpt) {
-      return std::nullopt;
-    }
-    float massP = massPOpt.value();
-    float massN = massNOpt.value();
-
-    float bindEnergy = 0.f;
-    bindEnergy += a_Vol * A;
-    bindEnergy -= a_Surf * std::pow(A, 2. / 3.);
-    bindEnergy -= a_Col * Z * (Z - 1) * std::pow(A, -1. / 3.);
-    bindEnergy -= a_Sym * std::pow(A - 2 * Z, 2.) / A;
-    bindEnergy -= a_Pair * std::pow(A, -1. / 2.);
-
-    return massP * Z + massN * (A - Z) - bindEnergy;
+    // calculate mass using Bethe-Weizsacker formula
+    return calculateNucleusMass(pdg);
   }
   return it->second;
 }
@@ -205,7 +181,7 @@ std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
     return std::nullopt;
   }
-  auto pdgGround = makeGroundState(pdg);
+  auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapName.find(pdgGround);
   if (it == kParticlesMapName.end()) {
     return std::nullopt;
