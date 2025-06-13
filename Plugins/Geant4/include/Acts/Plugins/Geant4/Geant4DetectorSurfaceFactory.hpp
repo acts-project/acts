@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -35,9 +36,23 @@ class Surface;
 ///
 class Geant4DetectorSurfaceFactory {
  public:
+  using ElementFactory = std::function<std::shared_ptr<Geant4DetectorElement>(
+      std::shared_ptr<Surface>, const G4VPhysicalVolume&, const Transform3&,
+      double)>;
+
   /// Nested configuration struct that holds
   /// global lifetime configuration
-  struct Config {};
+  struct Config {
+    /// @cond
+    /// The detector element factory with default implementation
+    ElementFactory detectorElementFactory =
+        [](std::shared_ptr<Surface> surface, const G4VPhysicalVolume& g4physVol,
+           const Transform3& toGlobal, double thickness) {
+          return std::make_shared<Geant4DetectorElement>(
+              std::move(surface), g4physVol, toGlobal, thickness);
+        };
+    /// @endcond
+  };
 
   // Collect the sensitive surfaces
   using Geant4SensitiveSurface =
@@ -78,7 +93,17 @@ class Geant4DetectorSurfaceFactory {
   };
 
   /// The Geant4 detector element factory
-  Geant4DetectorSurfaceFactory() = default;
+  Geant4DetectorSurfaceFactory() = delete;
+
+  /// The Geant4 detector element factory with a configuration
+  ///
+  /// @param config the configuration of the factory
+  /// @param mlogger a screen output logger
+  explicit Geant4DetectorSurfaceFactory(
+      const Config& config,
+      std::unique_ptr<const Logger> mlogger =
+          getDefaultLogger("Geant4DetectorSurfaceFactory", Acts::Logging::INFO))
+      : m_config(config), m_logger(std::move(mlogger)) {}
 
   /// Construction method of the detector elements
   ///
@@ -89,6 +114,16 @@ class Geant4DetectorSurfaceFactory {
   ///
   void construct(Cache& cache, const G4Transform3D& g4ToGlobal,
                  const G4VPhysicalVolume& g4PhysVol, const Options& option);
+
+ private:
+  /// The configuration of the factory
+  Config m_config = Config{};
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to the logger
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

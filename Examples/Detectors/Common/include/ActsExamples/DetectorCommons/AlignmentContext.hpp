@@ -14,7 +14,7 @@
 
 #include <unordered_map>
 
-namespace Acts {
+namespace ActsExamples {
 
 /// @brief Base class for alignment stores which can retrieve contextual
 /// transforms from specific surfaces.
@@ -22,17 +22,24 @@ namespace Acts {
 /// Possible implementations may take the geometry identifier, access the
 /// detector element or use other means to identify which transform is being
 /// queired.
-class ITransformStore {
+class IAlignmentStore {
  public:
   /// @brief  Virtual destructor
-  virtual ~ITransformStore() = default;
+  virtual ~IAlignmentStore() = default;
 
   /// Retrieve the contextual transform for a given surface
   ///
   /// @param surface the  surface for which the contextual tranfrom is requested
   /// @return a pointer to the transform if found, otherwise nullptr
-  virtual const Transform3* contextualTransform(
-      const Surface& surface) const = 0;
+  virtual const Acts::Transform3* contextualTransform(
+      const Acts::Surface& surface) const = 0;
+};
+
+/// A simple struct holidng a store raw pointer, ownership should not be in the
+/// Context as the store may expand lifetime beyond a context scope
+struct AlignmentContext {
+  /// The store pointer
+  const IAlignmentStore* store{nullptr};
 };
 
 /// One possible implementation with a simple unordered map that relates a
@@ -40,18 +47,20 @@ class ITransformStore {
 ///
 /// To use this store, the GeometryContext of the corresponding geometry must
 /// be decorated with such a store and equipped to use it.
-class TransformStoreGeometryId : public ITransformStore {
+class GeoIdAlignmentStore : public IAlignmentStore {
  public:
   /// Constructor from an unordered map of geometry ids and transforms
   /// @param transformMap the map of geometry ids and transforms
-  explicit TransformStoreGeometryId(
-      std::unordered_map<GeometryIdentifier, Acts::Transform3> transformMap)
-      : m_identifiedTransforms(std::move(transformMap)) {}
+  explicit GeoIdAlignmentStore(
+      std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>
+          transformMap)
+      : m_transformMap(std::move(transformMap)) {}
 
   /// @copydoc ITransformStore::contextualTransform
-  const Transform3* contextualTransform(const Surface& surface) const override {
-    auto it = m_identifiedTransforms.find(surface.geometryId());
-    if (it != m_identifiedTransforms.end()) {
+  const Acts::Transform3* contextualTransform(
+      const Acts::Surface& surface) const override {
+    auto it = m_transformMap.find(surface.geometryId());
+    if (it != m_transformMap.end()) {
       return &(it->second);
     }
     return nullptr;
@@ -59,7 +68,7 @@ class TransformStoreGeometryId : public ITransformStore {
 
  private:
   /// The geometry id map
-  std::unordered_map<GeometryIdentifier, Transform3> m_identifiedTransforms;
+  std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> m_transformMap;
 };
 
-}  // namespace Acts
+}  // namespace ActsExamples
