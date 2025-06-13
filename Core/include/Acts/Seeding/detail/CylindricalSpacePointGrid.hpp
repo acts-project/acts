@@ -93,8 +93,7 @@ struct CylindricalSpacePointGridConfig {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: phiMin (" + std::to_string(phiMin) +
           ") and/or phiMax (" + std::to_string(phiMax) +
-          ") are outside "
-          "the allowed phi range, defined as "
+          ") are outside the allowed phi range, defined as "
           "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
     }
     if (phiMin > phiMax) {
@@ -114,7 +113,7 @@ struct CylindricalSpacePointGridConfig {
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0. * UnitConstants::T;
+  float bFieldInZ = 0 * UnitConstants::T;
 
   bool isInInternalUnits = true;
   //[[deprecated("CylindricalSpacePointGridOptions uses internal units")]]

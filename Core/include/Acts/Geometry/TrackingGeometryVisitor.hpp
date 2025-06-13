@@ -20,6 +20,28 @@ class Layer;
 
 template <typename T>
 class BoundarySurfaceT;
+/// @brief Base class for tracking geometry visitors
+///
+/// This class provides a common interface for both const and mutable visitors
+/// to the tracking geometry hierarchy. It allows decide on the visiting order
+/// based on the visitInDepth flag. If true, the visiting happens from the
+/// outermost volume and goes deeper to the volumes into the hierarchy.
+class ITrackingGeometryVisitor {
+ public:
+  virtual ~ITrackingGeometryVisitor() = 0;
+
+  explicit ITrackingGeometryVisitor(bool visitDepthFirst = false)
+      : m_visitDepthFirst(visitDepthFirst) {}
+
+  /// @brief indicate the order of visiting
+  /// @note default is outermost --> innermost volume visiting
+  bool visitDepthFirst() const { return m_visitDepthFirst; }
+
+ private:
+  /// Flag to indicate if the visitor should follow from the outermost to the
+  /// innermost volume depth
+  bool m_visitDepthFirst{false};
+};
 
 /// @brief Visitor interface for traversing the tracking geometry hierarchy
 ///
@@ -27,9 +49,12 @@ class BoundarySurfaceT;
 /// geometry components without modifying them. It's used for operations like
 /// visualization, validation, or collecting information about the geometry
 /// structure.
-class TrackingGeometryVisitor {
+class TrackingGeometryVisitor : public ITrackingGeometryVisitor {
  public:
-  virtual ~TrackingGeometryVisitor() = 0;
+  /// @brief Constructor from base class
+  using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
+
+  ~TrackingGeometryVisitor() override;
 
   /// @brief Visit a tracking volume in the geometry
   /// @param volume The tracking volume being visited
@@ -64,9 +89,12 @@ class TrackingGeometryVisitor {
 /// This visitor allows for non-const access to traverse and modify the
 /// tracking geometry components. It's used for operations like geometry
 /// construction, material decoration, or geometry ID assignment.
-class TrackingGeometryMutableVisitor {
+class TrackingGeometryMutableVisitor : public ITrackingGeometryVisitor {
  public:
-  virtual ~TrackingGeometryMutableVisitor();
+  /// @brief Constructor
+  using ITrackingGeometryVisitor::ITrackingGeometryVisitor;
+
+  ~TrackingGeometryMutableVisitor() override;
 
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
