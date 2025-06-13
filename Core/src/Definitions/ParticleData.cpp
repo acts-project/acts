@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <iterator>
 #include <limits>
@@ -102,7 +103,28 @@ std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
 
   const auto it = kParticlesMapCharge.find(pdg);
   if (it == kParticlesMapCharge.end()) {
+    if (isNucleus(pdg)) {
+      return Acts::findChargeOfNucleus(pdg);
+    } else {
+      return std::nullopt;
+    }
+  }
+  return it->second;
+}
+
+std::optional<float> Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
+  if (!isNucleus(pdg)) {
     return std::nullopt;
+  }
+  auto pdgGround = makeNucleusGroundState(pdg);
+  const auto it = kParticlesMapCharge.find(pdgGround);
+  if (it == kParticlesMapCharge.end()) {
+    // extract charge from PDG number
+    auto ZandA = extractNucleusZandA(pdg);
+    if (!ZandA) {
+      return std::nullopt;
+    }
+    return static_cast<float>(ZandA.value().first);
   }
   return it->second;
 }
@@ -115,7 +137,24 @@ std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
 
   const auto it = kParticlesMapMass.find(pdg);
   if (it == kParticlesMapMass.end()) {
+    if (isNucleus(pdg)) {
+      return Acts::findMassOfNucleus(pdg);
+    } else {
+      return std::nullopt;
+    }
+  }
+  return it->second;
+}
+
+std::optional<float> Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
+  if (!isNucleus(pdg)) {
     return std::nullopt;
+  }
+  auto pdgGround = makeNucleusGroundState(pdg);
+  const auto it = kParticlesMapMass.find(pdgGround);
+  if (it == kParticlesMapMass.end()) {
+    // calculate mass using Bethe-Weizsacker formula
+    return calculateNucleusMass(pdg);
   }
   return it->second;
 }
@@ -129,22 +168,37 @@ std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
 
   const auto it = kParticlesMapName.find(pdg);
   if (it == kParticlesMapName.end()) {
+    if (isNucleus(pdg)) {
+      return Acts::findNameOfNucleus(pdg);
+    } else {
+      return std::nullopt;
+    }
+  }
+  return it->second;
+}
+
+std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
+  if (!isNucleus(pdg)) {
+    return std::nullopt;
+  }
+  auto pdgGround = makeNucleusGroundState(pdg);
+  const auto it = kParticlesMapName.find(pdgGround);
+  if (it == kParticlesMapName.end()) {
     return std::nullopt;
   }
   return it->second;
 }
 
 std::optional<Acts::ParticleData> Acts::findParticleData(PdgParticle pdg) {
-  const auto itCharge = kParticlesMapCharge.find(pdg);
-  const auto itMass = kParticlesMapMass.find(pdg);
-  const auto itName = kParticlesMapName.find(pdg);
+  auto charge = findCharge(pdg);
+  auto mass = findMass(pdg);
+  auto name = findName(pdg);
 
-  if (itCharge == kParticlesMapCharge.end() ||
-      itMass == kParticlesMapMass.end() || itName == kParticlesMapName.end()) {
-    return std::nullopt;
+  if (charge.has_value() && mass.has_value() && name.has_value()) {
+    return ParticleData{charge.value(), mass.value(), name.value()};
   }
 
-  return ParticleData{itCharge->second, itMass->second, itName->second};
+  return std::nullopt;
 }
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
