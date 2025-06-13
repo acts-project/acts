@@ -87,7 +87,12 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
       ACTS_ERROR("~~> Compression not supported for Root");
       throw std::invalid_argument("Compression not supported for Root");
     }
+#ifdef ACTS_HEPMC3_ROOT_SUPPORT
     return std::make_unique<HepMC3::WriterRootTree>(target);
+#else
+    ACTS_ERROR("~~> Root support not enabled in HepMC3");
+    throw std::runtime_error("Root support not enabled in HepMC3");
+#endif
   } else {
     std::filesystem::path path =
         target.string() +
