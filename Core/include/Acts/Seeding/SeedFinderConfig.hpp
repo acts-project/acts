@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -197,17 +198,7 @@ struct SeedFinderConfig {
 
   SeedFinderConfig calculateDerivedQuantities() const {
     SeedFinderConfig config = *this;
-    // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
-    {
-      const float xOverX0 = config.radLengthPerSeed;
-      const float q2OverBeta2 = 1;  // q^2=1, beta^2~1
-      // RPP2018 eq. 33.15 (treats beta and q² consistently)
-      const float t = std::sqrt(xOverX0 * q2OverBeta2);
-      // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
-      //                          = 2 * log(sqrt(x/X0) * (q/beta))
-      config.highland =
-          13.6 * UnitConstants::MeV * t * (1.0f + 0.038f * 2 * std::log(t));
-    }
+    config.highland = approximateHighlandScattering(config.radLengthPerSeed);
     const float maxScatteringAngle = config.highland / minPt;
     config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
     return config;

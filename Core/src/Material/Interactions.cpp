@@ -526,3 +526,14 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
     return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
   }
 }
+
+float Acts::approximateHighlandScattering(float xOverX0) {
+  // similar to `theta0Highland` but without momentum and charge
+
+  const float q2OverBeta2 = 1;  // q^2=1, beta^2~1
+  // RPP2018 eq. 33.15 (treats beta and q² consistently)
+  const float t = std::sqrt(xOverX0 * q2OverBeta2);
+  // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
+  //                          = 2 * log(sqrt(x/X0) * (q/beta))
+  return 13.6 * UnitConstants::MeV * t * (1.0f + 0.038f * 2 * std::log(t));
+}
