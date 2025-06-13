@@ -53,27 +53,26 @@ jobs:
       - name: 'Determine PR number'
         uses: actions/github-script@v7
         id: get-pr-number
-        if: steps.dl-af.outputs.result != 'false'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            let response = await github.rest.actions.getWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
-            });
-
-            if(response.data.pull_requests.length == 0) {
-              console.log("Could not find a pull request");
+            if(!${{ steps.dl-af.outputs.result }}) {
+              console.log("No artifact => no PR number");
               return false;
             }
-            let pr = response.data.pull_requests[0];
-            let number = pr.number;
-            let sha = pr.head.sha;
+            let fs = require('fs');
+            let file = 'physmon/pr_number';
+            if(!fs.existsSync(file)) {
+              console.log('No file at ' + file);
+              return false;
+            }
 
+
+            let number = Number(fs.readFileSync(file, {encoding: 'utf8'}).trim());
             console.log('PR number is '+number);
             core.exportVariable('PR_NUMBER', number)
 
+            let sha = fs.readFileSync('physmon/sha', {encoding: 'utf8'}).trim();
             console.log('SHA is '+sha);
             core.exportVariable('PR_SHA', sha)
 
