@@ -536,18 +536,6 @@ linux_ubuntu_2404_clang19:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_105:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "105"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
 
 lcg_106a:
   extends: .lcg_base_job
