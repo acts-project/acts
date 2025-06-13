@@ -18,6 +18,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
