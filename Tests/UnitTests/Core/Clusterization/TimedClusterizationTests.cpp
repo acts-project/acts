@@ -11,7 +11,6 @@
 #include "Acts/Clusterization/TimedClusterization.hpp"
 
 #include <algorithm>
-#include <ranges>
 
 namespace Acts::Test {
 
