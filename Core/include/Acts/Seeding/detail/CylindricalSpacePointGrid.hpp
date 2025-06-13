@@ -82,75 +82,42 @@ struct CylindricalSpacePointGridConfig {
   // enable non equidistant binning in z
   std::vector<float> zBinEdges{};
   std::vector<float> rBinEdges{};
-  bool isInInternalUnits = false;
-  CylindricalSpacePointGridConfig toInternalUnits() const {
-    if (isInInternalUnits) {
+
+  bool isInInternalUnits = true;
+  //[[deprecated("CylindricalSpacePointGridConfig uses internal units")]]
+  CylindricalSpacePointGridConfig toInternalUnits() const { return *this; }
+
+  void checkConfig() const {
+    if (phiMin < -std::numbers::pi_v<float> ||
+        phiMax > std::numbers::pi_v<float>) {
       throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "CylindricalSpacePointGridConfig");
-    }
-
-    using namespace UnitLiterals;
-    CylindricalSpacePointGridConfig config = *this;
-    config.isInInternalUnits = true;
-    config.minPt /= 1_MeV;
-    config.rMin /= 1_mm;
-    config.rMax /= 1_mm;
-    config.zMax /= 1_mm;
-    config.zMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
-
-    for (float& val : config.zBinEdges) {
-      val /= 1_mm;
-    }
-    for (float& val : config.rBinEdges) {
-      val /= 1_mm;
-    }
-
-    if (config.phiMin < -std::numbers::pi_v<float> ||
-        config.phiMax > std::numbers::pi_v<float>) {
-      throw std::runtime_error(
-          "CylindricalSpacePointGridConfig: phiMin (" +
-          std::to_string(config.phiMin) + ") and/or phiMax (" +
-          std::to_string(config.phiMax) +
-          ") are outside "
-          "the allowed phi range, defined as "
+          "CylindricalSpacePointGridConfig: phiMin (" + std::to_string(phiMin) +
+          ") and/or phiMax (" + std::to_string(phiMax) +
+          ") are outside the allowed phi range, defined as "
           "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
     }
-    if (config.phiMin > config.phiMax) {
+    if (phiMin > phiMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: phiMin is bigger then phiMax");
     }
-    if (config.rMin > config.rMax) {
+    if (rMin > rMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: rMin is bigger then rMax");
     }
-    if (config.zMin > config.zMax) {
+    if (zMin > zMax) {
       throw std::runtime_error(
           "CylindricalSpacePointGridConfig: zMin is bigger than zMax");
     }
-
-    return config;
   }
 };
 
 struct CylindricalSpacePointGridOptions {
   // magnetic field
-  float bFieldInZ = 0. * UnitConstants::T;
-  bool isInInternalUnits = false;
-  CylindricalSpacePointGridOptions toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "CylindricalSpacePointGridOptions");
-    }
-    using namespace UnitLiterals;
-    CylindricalSpacePointGridOptions options = *this;
-    options.isInInternalUnits = true;
-    options.bFieldInZ /= 1000_T;
+  float bFieldInZ = 0 * UnitConstants::T;
 
-    return options;
-  }
+  bool isInInternalUnits = true;
+  //[[deprecated("CylindricalSpacePointGridOptions uses internal units")]]
+  CylindricalSpacePointGridOptions toInternalUnits() const { return *this; }
 };
 
 /// Instructions on how to create and fill this grid specialization
