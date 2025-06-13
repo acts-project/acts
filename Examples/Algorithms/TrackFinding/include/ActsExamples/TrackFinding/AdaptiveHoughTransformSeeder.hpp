@@ -29,9 +29,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
+#include <list>
 #include <memory>
 #include <numbers>
-#include <list>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -56,7 +56,7 @@ class AccumulatorSection {
                      const std::vector<float> &history = {});
 
   /// @brief keep indices and update parameters of the box
-  /// This method is useful when changing direction of the search                     
+  /// This method is useful when changing direction of the search
   void updateDimensions(float xw, float yw, float xBegin, float yBegin);
 
   /// @brief keep indices and update parameters of the box by scalling
@@ -64,7 +64,6 @@ class AccumulatorSection {
   /// @param ys - scale in y direction
   /// The box is recentred
   void expand(float xs, float ys);
-
 
   inline unsigned count() const { return m_indices.size(); }
   inline const std::vector<unsigned> &indices() const { return m_indices; }
@@ -108,7 +107,7 @@ class AccumulatorSection {
     const float yB = f(m_xBegin);
     const float yE = f(m_xBegin + m_xSize);
     return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
-                      : yB > m_yBegin && yE < m_yBegin + m_ySize;
+                     : yB > m_yBegin && yE < m_yBegin + m_ySize;
   }
 
   /// @brief check if the lines cross inside the section
@@ -149,17 +148,16 @@ class AccumulatorSection {
   /// store additional (arbitrary) info in indexed array
   /// @param index - identifier
   /// @param value - value to store
-  void setHistory(unsigned index, float value) { 
-    m_history.resize(index+1); m_history[index] = value; 
+  void setHistory(unsigned index, float value) {
+    m_history.resize(index + 1);
+    m_history[index] = value;
   }
   /// @brief retrieve history info
   /// @param index - item index
   /// @return value stored by @see setHistory
-  float history(unsigned index) const {
-    return m_history[index];
-  }
+  float history(unsigned index) const { return m_history[index]; }
 
-  private:
+ private:
   float m_xSize = 0;
   float m_ySize = 0;
   float m_xBegin = 0;
@@ -168,7 +166,8 @@ class AccumulatorSection {
       0;  // number of times the starting section was already divided
   std::vector<unsigned>
       m_indices;  // indices of measurements contributing to this section
-  std::vector<float> m_history; // additional record where an arbitrary information can be stored
+  std::vector<float> m_history;  // additional record where an arbitrary
+                                 // information can be stored
 };
 
 // Construct track seeds from space points.
@@ -240,12 +239,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                             // value the sections are not split
     float yMinBinSize = 1;  // minimum bin size in y direction, beyond that
                             // value the sections are not split
-    float expandX = 1.1;    // expand in x direaction (default by 10%) if Expand Decision is made
-    float expandY = 1.1;    // expand in y direaction (default by 10%) if Expand Decision is made
+    float expandX = 1.1;    // expand in x direaction (default by 10%) if Expand
+                            // Decision is made
+    float expandY = 1.1;    // expand in y direaction (default by 10%) if Expand
+                            // Decision is made
     using LineParamFunctor = std::function<float(const M &, float arg)>;
     LineParamFunctor lineParamFunctor;  // pair of functions needed to obtain
-                                          // linear function ax+b parameters,
-                                          // first for a, second for b
+                                        // linear function ax+b parameters,
+                                        // first for a, second for b
 
     enum Decision {
       Discard,  // the section is not to be explored further
@@ -253,9 +254,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                 // exploration
       Drill,  // the section should be expred further by splitting according to
               // binning definition (split into 4 or 2 left-right or top-bottom)
-      DrillAndExpand,  // the section should be source of subsections as in the case of drill &
-                       // but the sections will be made larger 
-                       // size increase is configured in opt by relative factors @see expandX, @see expandY
+      DrillAndExpand,  // the section should be source of subsections as in the
+                       // case of drill & but the sections will be made larger
+      // size increase is configured in opt by relative factors @see expandX, @see expandY
     };
 
     using DecisionFunctor = std::function<Decision(
@@ -267,20 +268,19 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   };
 
   template <typename M>
-  void updateSection(AccumulatorSection &section, 
-    const std::vector<M> &measurements, 
-    const AHTExplorationOptions<M>::LineParamFunctor& lineFunctor) const {
+  void updateSection(
+      AccumulatorSection &section, const std::vector<M> &measurements,
+      const AHTExplorationOptions<M>::LineParamFunctor &lineFunctor) const {
     std::vector<unsigned> selectedIndices;
     for (unsigned index : section.indices()) {
       const PreprocessedMeasurement &m = measurements[index];
       using namespace std::placeholders;
-      if (section.isLineInside( std::bind(lineFunctor, m, _1))) {
+      if (section.isLineInside(std::bind(lineFunctor, m, _1))) {
         selectedIndices.push_back(index);
       }
     }
     section.indices() = std::move(selectedIndices);
   }
-
 
   template <typename M>
   void exploreParametersSpace(std::deque<AccumulatorSection> &sectionsStack,
@@ -326,8 +326,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
           divisions.push_back(std::move(thisSection.right()));
         }
 
-        if ( whatNext == Decision::DrillAndExpand ) {
-          for ( AccumulatorSection& d: divisions ) {
+        if (whatNext == Decision::DrillAndExpand) {
+          for (AccumulatorSection &d : divisions) {
             d.expand(opt.expandX, opt.expandY);
           }
         }
@@ -339,7 +339,6 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       }
     }
   }
-
 
   /// Construct the seeding algorithm.
   ///
@@ -392,17 +391,19 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       std::deque<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
+  using LineParamFunctor =
+      AHTExplorationOptions<PreprocessedMeasurement>::LineParamFunctor;
 
-  using LineParamFunctor = AHTExplorationOptions<PreprocessedMeasurement>::LineParamFunctor;
-
-  LineParamFunctor m_qOverPtPhiLineParams = 
+  LineParamFunctor m_qOverPtPhiLineParams =
       [this](const PreprocessedMeasurement &m, float arg) {
-            return m.invr * config().inverseA*arg - m.invr * m.phi * config().inverseA;
+        return m.invr * config().inverseA * arg -
+               m.invr * m.phi * config().inverseA;
       };
 
-  LineParamFunctor m_zCotThetaLineParams = 
-      [this](const PreprocessedMeasurement &m, float arg) { 
-            return -m.invr * arg + m.z * m.invr; };
+  LineParamFunctor m_zCotThetaLineParams =
+      [this](const PreprocessedMeasurement &m, float arg) {
+        return -m.invr * arg + m.z * m.invr;
+      };
 
   /// @brief check if lines intersect in the section
   /// modifies the section leaving only indices of measurements that do so
@@ -416,7 +417,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const LineParamFunctor &lineParamsAccessor,
       const unsigned threshold) const;
 
-  void deduplicate(std::deque<AccumulatorSection>& input) const;
+  void deduplicate(std::deque<AccumulatorSection> &input) const;
 };
 
 }  // namespace ActsExamples
