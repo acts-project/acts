@@ -112,19 +112,16 @@ std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
   return it->second;
 }
 
-std::optional<float> Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
+float Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
-    return std::nullopt;
+    throw std::invalid_argument("PDG must represent a nucleus");
   }
   auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapCharge.find(pdgGround);
   if (it == kParticlesMapCharge.end()) {
     // extract charge from PDG number
     auto ZandA = extractNucleusZandA(pdg);
-    if (!ZandA) {
-      return std::nullopt;
-    }
-    return static_cast<float>(ZandA.value().first);
+    return static_cast<float>(ZandA.first);
   }
   return it->second;
 }
@@ -146,9 +143,9 @@ std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
   return it->second;
 }
 
-std::optional<float> Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
+float Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
-    return std::nullopt;
+    throw std::invalid_argument("PDG must represent a nucleus");
   }
   auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapMass.find(pdgGround);
@@ -157,6 +154,35 @@ std::optional<float> Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
     return calculateNucleusMass(pdg);
   }
   return it->second;
+}
+
+float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
+  if (!isNucleus(pdg)) {
+    throw std::invalid_argument("PDG must represent a nucleus");
+  }
+
+  auto ZandA = extractNucleusZandA(pdg);
+  int Z = std::abs(ZandA.first);
+  int A = ZandA.second;
+
+  float a_Vol = 15.260f * Acts::UnitConstants::MeV;
+  float a_Surf = 16.267f * Acts::UnitConstants::MeV;
+  float a_Col = 0.689f * Acts::UnitConstants::MeV;
+  float a_Sym = 22.209f * Acts::UnitConstants::MeV;
+  float a_Pair =
+      (1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076f * Acts::UnitConstants::MeV;
+
+  float massP = 0.938272f * Acts::UnitConstants::GeV;
+  float massN = 0.939565f * Acts::UnitConstants::GeV;
+
+  float bindEnergy = 0.f;
+  bindEnergy += a_Vol * A;
+  bindEnergy -= a_Surf * std::pow(A, 2. / 3.);
+  bindEnergy -= a_Col * Z * (Z - 1) * std::pow(A, -1. / 3.);
+  bindEnergy -= a_Sym * std::pow(A - 2 * Z, 2.) / A;
+  bindEnergy -= a_Pair * std::pow(A, -1. / 2.);
+
+  return massP * Z + massN * (A - Z) - bindEnergy;
 }
 
 std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
@@ -179,8 +205,9 @@ std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
 
 std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
   if (!isNucleus(pdg)) {
-    return std::nullopt;
+    throw std::invalid_argument("PDG must represent a nucleus");
   }
+
   auto pdgGround = makeNucleusGroundState(pdg);
   const auto it = kParticlesMapName.find(pdgGround);
   if (it == kParticlesMapName.end()) {

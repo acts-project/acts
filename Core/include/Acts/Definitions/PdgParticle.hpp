@@ -8,11 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-
 #include <cmath>
 #include <cstdint>
-#include <optional>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -54,71 +52,34 @@ static constexpr bool isNucleus(PdgParticle pdg) {
 }
 
 /// Convert an excited nucleus to its ground state. PDG number of a nucleus has
-/// a form 10LZZZAAAI, where I is isomer level; I=0 is the ground state. Leave
-/// other particles as-is. See PDG section "Monte Carlo Particle Numbering
-/// Scheme", point 16:
+/// a form 10LZZZAAAI, where I is isomer level; I=0 is the ground state.
+/// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
 static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
-  if (isNucleus(pdg)) {
-    const auto pdgNum = static_cast<std::int32_t>(pdg);
-    // set isomer level to zero
-    return static_cast<PdgParticle>((pdgNum / 10) * 10);
-  } else {
-    return pdg;
+  if (!isNucleus(pdg)) {
+    throw std::invalid_argument("PDG must represent a nucleus");
   }
+  const auto pdgNum = static_cast<std::int32_t>(pdg);
+  // set isomer level to zero
+  return static_cast<PdgParticle>((pdgNum / 10) * 10);
 }
 
 /// Extract Z and A for a given nucleus. PDG number of a nucleus has a form
 /// 10LZZZAAAI, where L is number of lambdas, ZZZ is proton number, AAA is
-/// atomic number, I is isomer level See PDG section "Monte Carlo Particle
+/// atomic number, I is isomer level. See PDG section "Monte Carlo Particle
 /// Numbering Scheme" , point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
-static constexpr std::optional<std::pair<std::int32_t, std::int32_t>>
-extractNucleusZandA(PdgParticle pdg) {
-  if (isNucleus(pdg)) {
-    const auto pdgNum = static_cast<std::int32_t>(pdg);
-    // proton number respects the charge
-    int Z = (pdgNum / 10000) % 1000;
-    // atomic number is always positive
-    int A = std::abs((pdgNum / 10) % 1000);
-    return std::make_pair(Z, A);
-  } else {
-    return std::nullopt;
+static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
+    PdgParticle pdg) {
+  if (!isNucleus(pdg)) {
+    throw std::invalid_argument("PDG must represent a nucleus");
   }
-}
-
-/// Calculate the mass of a nucleus using Bethe-Weizsacker formula
-/// Parameters obtained from https://www.actaphys.uj.edu.pl/R/37/6/1833
-static constexpr std::optional<float> calculateNucleusMass(PdgParticle pdg) {
-  if (isNucleus(pdg)) {
-    auto ZandA = extractNucleusZandA(pdg);
-    if (!ZandA) {
-      return std::nullopt;
-    }
-    int Z = std::abs(ZandA.value().first);
-    int A = ZandA.value().second;
-
-    float a_Vol = 15.260f * UnitConstants::MeV;
-    float a_Surf = 16.267f * UnitConstants::MeV;
-    float a_Col = 0.689f * UnitConstants::MeV;
-    float a_Sym = 22.209f * UnitConstants::MeV;
-    float a_Pair =
-        (1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076f * UnitConstants::MeV;
-
-    float massP = 0.938272f * UnitConstants::GeV;
-    float massN = 0.939565f * UnitConstants::GeV;
-
-    float bindEnergy = 0.f;
-    bindEnergy += a_Vol * A;
-    bindEnergy -= a_Surf * std::pow(A, 2. / 3.);
-    bindEnergy -= a_Col * Z * (Z - 1) * std::pow(A, -1. / 3.);
-    bindEnergy -= a_Sym * std::pow(A - 2 * Z, 2.) / A;
-    bindEnergy -= a_Pair * std::pow(A, -1. / 2.);
-
-    return massP * Z + massN * (A - Z) - bindEnergy;
-  } else {
-    return std::nullopt;
-  }
+  const auto pdgNum = static_cast<std::int32_t>(pdg);
+  // proton number respects the charge
+  int Z = (pdgNum / 10000) % 1000;
+  // atomic number is always positive
+  int A = std::abs((pdgNum / 10) % 1000);
+  return std::make_pair(Z, A);
 }
 
 }  // namespace Acts

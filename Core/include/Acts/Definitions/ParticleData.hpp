@@ -31,7 +31,7 @@ std::optional<float> findCharge(PdgParticle pdg);
 /// Try its ground state first, and ultimately get the proton number from PDG
 ///
 /// @return Charge in native units.
-std::optional<float> findChargeOfNucleus(PdgParticle pdg);
+float findChargeOfNucleus(PdgParticle pdg);
 
 /// Find the mass for a given PDG particle number.
 ///
@@ -43,7 +43,13 @@ std::optional<float> findMass(PdgParticle pdg);
 /// Bethe-Weizsacker formula
 ///
 /// @return Mass in native units
-std::optional<float> findMassOfNucleus(PdgParticle pdg);
+float findMassOfNucleus(PdgParticle pdg);
+
+/// Calculate the mass of a nucleus using Bethe-Weizsacker formula
+/// Parameters obtained from https://www.actaphys.uj.edu.pl/R/37/6/1833
+///
+/// @return Mass in native units
+float calculateNucleusMass(PdgParticle pdg);
 
 /// Find a descriptive particle name for a given PDG particle number.
 ///
