@@ -174,7 +174,6 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         } else {
           ACTS_ERROR("No mass found for PDG ID " << pdg);
           throw std::bad_optional_access{};
-          continue;
         }
 
         if (auto chargeOpt = Acts::findCharge(pdg); chargeOpt.has_value()) {
@@ -182,7 +181,6 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         } else {
           ACTS_ERROR("No charge found for PDG ID " << pdg);
           throw std::bad_optional_access{};
-          continue;
         }
       }
 
