@@ -12,18 +12,18 @@
 #include <limits>
 #include <random>
 
-namespace ActsFatras {
+namespace ActsFatras::detail {
 
 /// Draw random numbers from a gamma distribution.
 /// Does not generate FPE underflow
 ///
 /// Implements the same interface as the standard library distributions.
-class GammaDistribution {
+class FpeSafeGammaDistribution {
  public:
   /// Parameter struct that contains all distribution parameters.
   struct param_type {
     /// Parameters must link back to the host distribution.
-    using distribution_type = GammaDistribution;
+    using distribution_type = FpeSafeGammaDistribution;
 
     /// Location parameter.
     ///
@@ -50,15 +50,16 @@ class GammaDistribution {
   using result_type = double;
 
   /// Construct directly from the distribution parameters.
-  GammaDistribution(double alpha, double theta) : m_cfg(alpha, theta) {}
+  FpeSafeGammaDistribution(double alpha, double theta) : m_cfg(alpha, theta) {}
   /// Construct from a parameter object.
-  explicit GammaDistribution(const param_type &cfg) : m_cfg(cfg) {}
+  explicit FpeSafeGammaDistribution(const param_type &cfg) : m_cfg(cfg) {}
   // Explicitlely defaulted construction and assignment
-  GammaDistribution() = default;
-  GammaDistribution(const GammaDistribution &) = default;
-  GammaDistribution(GammaDistribution &&) = default;
-  GammaDistribution &operator=(const GammaDistribution &) = default;
-  GammaDistribution &operator=(GammaDistribution &&) = default;
+  FpeSafeGammaDistribution() = default;
+  FpeSafeGammaDistribution(const FpeSafeGammaDistribution &) = default;
+  FpeSafeGammaDistribution(FpeSafeGammaDistribution &&) = default;
+  FpeSafeGammaDistribution &operator=(const FpeSafeGammaDistribution &) =
+      default;
+  FpeSafeGammaDistribution &operator=(FpeSafeGammaDistribution &&) = default;
 
   /// Reset any possible internal state. Noop, since there is no internal state.
   void reset() {}
@@ -85,69 +86,31 @@ class GammaDistribution {
       return gDist(generator);
     } else if (params.alpha <= 0.) {
       return 0.;
+    }
+
+    // This is from libstdc++; libcxx would give a different result
+    std::gamma_distribution<double> gDistPlus1(params.alpha + 1., params.theta);
+    // Get a random number using alpha+1
+    const auto uPlus1 = gDistPlus1(generator);
+    std::uniform_real_distribution<double> uDist(0., 1.);
+    double u2 = uDist(generator);
+    while (u2 == 0.) {
+      u2 = uDist(generator);
+    }
+    // Check if this would cause underflow
+    const double invAlpha = 1. / params.alpha;
+    if (std::log(u2) * invAlpha + std::log(uPlus1) <
+        std::log(std::numeric_limits<double>::min())) {
+      // This would be underflow - get 0.0 right away
+      return 0.;
     } else {
-  #if CMAKE_SYSTEM_NAME == "Linux"
-      // this is for linux
-      std::gamma_distribution<double> gDistPlus1(params.alpha + 1.,
-                                                 params.theta);
-      // Get a random number using alpha+1
-      const auto uPlus1 = gDistPlus1(generator);
-      std::uniform_real_distribution<double> uDist(0., 1.);
-      double u2 = 0.;
-      do {
-        u2 = uDist(generator);
-      } while (u2 == 0.);
-      // Check if this would cause underflow
-      const double invAlpha = 1. / params.alpha;
-      if (std::log(u2) * invAlpha + std::log(uPlus1) <
-          std::log(std::numeric_limits<double>::min())) {
-        // This would be underflow - get 0.0 right away
-        return 0.;
-      } else {
-        return uPlus1 * std::pow(u2, invAlpha);
-      }
-  #endif
-
-  #if CMAKE_SYSTEM_NAME == "Darwin"
-      // this is for MacOS
-      double x=0.;
-      double invAlpha = 1./params.alpha;
-      while (true)
-      {
-        std::uniform_real_distribution<double> uDist(0., 1.);
-        std::exponential_distribution<double> eDist(1.);
-            
-        const double u = uDist(generator);
-        const double es = eDist(generator);
-        if (u <= 1 - params.alpha)
-        {
-          if(std::log(u)*invAlpha < std::log(std::numeric_limits<double>::min())) {
-            x=0.;
-          } else {
-            x = std::pow(u, invAlpha);
-          }
-          if (x <= es) break;
-        } else {
-          const double e = -std::log((1-u)*invAlpha);
-          if(std::log(1 - params.alpha + params.alpha * e)*invAlpha < std::log(std::numeric_limits<double>::min()))
-          {
-            x=0.;
-          } else {
-            x = std::pow(1 - params.alpha + params.alpha * e, invAlpha);
-          }
-          if (x <= e + es) break;
-        }
-      }
-      return x * params.theta;
-  #endif
-
-      return -1.;
+      return uPlus1 * std::pow(u2, invAlpha);
     }
   }
 
   /// Provide standard comparison operators
-  friend bool operator==(const GammaDistribution &lhs,
-                         const GammaDistribution &rhs) {
+  friend bool operator==(const FpeSafeGammaDistribution &lhs,
+                         const FpeSafeGammaDistribution &rhs) {
     return lhs.m_cfg == rhs.m_cfg;
   }
 
@@ -155,4 +118,4 @@ class GammaDistribution {
   param_type m_cfg;
 };
 
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail
