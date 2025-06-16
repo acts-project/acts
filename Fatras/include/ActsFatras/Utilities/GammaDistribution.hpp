@@ -86,6 +86,8 @@ class GammaDistribution {
     } else if (params.alpha <= 0.) {
       return 0.;
     } else {
+  #if CMAKE_SYSTEM_NAME == "Linux"
+      // this is for linux
       std::gamma_distribution<double> gDistPlus1(params.alpha + 1.,
                                                  params.theta);
       // Get a random number using alpha+1
@@ -104,6 +106,42 @@ class GammaDistribution {
       } else {
         return uPlus1 * std::pow(u2, invAlpha);
       }
+  #endif
+
+  #if CMAKE_SYSTEM_NAME == "Darwin"
+      // this is for MacOS
+      double x=0.;
+      double invAlpha = 1./params.alpha;
+      while (true)
+      {
+        std::uniform_real_distribution<double> uDist(0., 1.);
+        std::exponential_distribution<double> eDist(1.);
+            
+        const double u = uDist(generator);
+        const double es = eDist(generator);
+        if (u <= 1 - params.alpha)
+        {
+          if(std::log(u)*invAlpha < std::log(std::numeric_limits<double>::min())) {
+            x=0.;
+          } else {
+            x = std::pow(u, invAlpha);
+          }
+          if (x <= es) break;
+        } else {
+          const double e = -std::log((1-u)*invAlpha);
+          if(std::log(1 - params.alpha + params.alpha * e)*invAlpha < std::log(std::numeric_limits<double>::min()))
+          {
+            x=0.;
+          } else {
+            x = std::pow(1 - params.alpha + params.alpha * e, invAlpha);
+          }
+          if (x <= e + es) break;
+        }
+      }
+      return x * params.theta;
+  #endif
+
+      return -1.;
     }
   }
 

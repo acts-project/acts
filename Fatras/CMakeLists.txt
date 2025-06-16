@@ -1,3 +1,13 @@
+
+# if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#     set(_FATRAS_GAMMA_DIST__MACOSX_)
+#     message(STATUS "Fatras gamma dist - this looks like MacOS X")
+# else()
+#     set(_FATRAS_GAMMA_DIST__LINUX_)
+#     message(STATUS "Fatras gamma dist - this looks like Linux")
+# endif()
+# message(STATUS "Did you get any message?")
+
 add_library(
     ActsFatras
     SHARED
