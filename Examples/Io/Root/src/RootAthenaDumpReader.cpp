@@ -17,6 +17,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
+#include <algorithm>
+
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
 
@@ -45,7 +47,7 @@ inline auto particleVectorToSet(
     return a.particleId().value() == b.particleId().value();
   };
 
-  std::sort(particles.begin(), particles.end(), detail::CompareParticleId{});
+  std::ranges::sort(particles, detail::CompareParticleId{});
   particles.erase(std::unique(particles.begin(), particles.end(), cmp),
                   particles.end());
 
