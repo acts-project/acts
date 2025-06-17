@@ -51,6 +51,11 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     if (relativeSharedMeasurements(a) != relativeSharedMeasurements(b)) {
       return relativeSharedMeasurements(a) < relativeSharedMeasurements(b);
     }
+    if (state.measurementsPerTrack[a].size() !=
+        state.measurementsPerTrack[b].size()) {
+      return state.measurementsPerTrack[a].size() <
+             state.measurementsPerTrack[b].size();
+    }
     return state.trackChi2[a] < state.trackChi2[b];
   };
 
