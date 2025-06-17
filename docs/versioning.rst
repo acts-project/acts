@@ -18,9 +18,9 @@ Public API
 The API surface of ACTS is very large. Everything at the top-level in the ``Acts``-namespace is considered public.
 
 .. note::
-    If a private a symbol, e.g. in a the `Acts::detail` or `Acts::Experimental` namespaces
-    is part of an otherwise public API, this should be **considered a bug**, which we'd
-    appreciate being reported as an issue.
+    If a private symbol, e.g. in the `Acts::detail` or `Acts::Experimental` namespaces,
+    is part of an otherwise public API, this should be **considered a bug**, which we
+    would appreciate being reported as an issue.
 
 There are a number of optional components in the ``Plugins/`` folder, only some of which are considered part of the public API:
 
