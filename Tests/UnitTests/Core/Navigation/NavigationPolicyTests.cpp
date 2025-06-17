@@ -697,7 +697,8 @@ BOOST_DATA_TEST_CASE(
   SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
-  Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
+  Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos),
+                   static_cast<double>(z)};
   Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
   Vector3 direction = (target - position).normalized();
 
