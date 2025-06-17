@@ -152,4 +152,49 @@ std::ostream& HepMC3Util::operator<<(std::ostream& os,
   }
 }
 
+std::ostream& HepMC3Util::operator<<(std::ostream& os,
+                                     HepMC3Util::Format format) {
+  switch (format) {
+    using enum HepMC3Util::Format;
+    case ascii:
+      return os << "ascii";
+    case root:
+      return os << "root";
+    default:
+      throw std::invalid_argument{"Unknown format value"};
+  }
+}
+
+std::span<const HepMC3Util::Format> HepMC3Util::availableFormats() {
+  using enum Format;
+  static const auto values = []() -> std::vector<HepMC3Util::Format> {
+    return {
+        ascii,
+#ifdef HEPMC3_ROOT_SUPPORT
+        root,
+#endif
+    };
+  }();
+  return values;
+}
+
+HepMC3Util::Format HepMC3Util::formatFromFilename(std::string_view filename) {
+  using enum Format;
+
+  for (auto compression : availableCompressionModes()) {
+    auto ext = compressionExtension(compression);
+
+    if (filename.ends_with(".hepmc3" + std::string(ext)) ||
+        filename.ends_with(".hepmc" + std::string(ext))) {
+      return ascii;
+    }
+  }
+  if (filename.ends_with(".root")) {
+    return root;
+  }
+
+  throw std::invalid_argument{"Unknown format extension: " +
+                              std::string{filename}};
+}
+
 }  // namespace ActsExamples
