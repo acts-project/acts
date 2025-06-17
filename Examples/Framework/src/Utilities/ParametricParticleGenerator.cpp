@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <limits>
 #include <memory>
