@@ -138,7 +138,7 @@ class BoundaryTolerance {
   static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) noexcept {
     Chi2BoundParams tolerance{maxChi2, {}};
     tolerance.weightMatrix() = weight;
-    return tolerance;
+    return BoundaryTolerance{tolerance};
   }
 
   BoundaryTolerance(const BoundaryTolerance& other) noexcept = default;
