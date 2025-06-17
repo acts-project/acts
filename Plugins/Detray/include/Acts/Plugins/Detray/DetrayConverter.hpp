@@ -57,16 +57,14 @@ class DetrayConverter {
     // The building cache object
     DetrayConversionUtils::Cache cCache(detector.volumes());
 
-    typename detector_t::name_map names = {{0u, detector.name()}};
-
     // build detector
     detray::detector_builder<typename detector_t::metadata> detectorBuilder{};
     // (1) geometry
     detray::io::detector_payload detectorPayload =
         DetrayGeometryConverter::convertDetector(cCache, gctx, detector,
                                                  logger());
-    detray::io::geometry_reader::from_payload<detector_t>(
-        detectorBuilder, names, detectorPayload);
+    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
+                                                          detectorPayload);
 
     // (2a) homogeneous material
     if constexpr (detray::concepts::has_homogeneous_material<detector_t>) {
@@ -75,7 +73,7 @@ class DetrayConverter {
             DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
                 cCache, detector, logger());
         detray::io::homogeneous_material_reader::from_payload<detector_t>(
-            detectorBuilder, names, std::move(materialSlabsPayload));
+            detectorBuilder, std::move(materialSlabsPayload));
       }
     }
 
@@ -89,7 +87,7 @@ class DetrayConverter {
                     cCache, detector, logger());
         detray::io::material_map_reader<
             std::integral_constant<std::size_t, 2>>::
-            from_payload<detector_t>(detectorBuilder, names,
+            from_payload<detector_t>(detectorBuilder,
                                      std::move(materialGridsPayload));
       }
     }
@@ -104,11 +102,12 @@ class DetrayConverter {
       detray::io::surface_grid_reader<typename detector_t::surface_type,
                                       std::integral_constant<std::size_t, 0>,
                                       std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder, names,
+          template from_payload<detector_t>(detectorBuilder,
                                             std::move(surfaceGridsPayload));
     }
 
-    detector_t detrayDetector(detectorBuilder.build(mr));
+    typename detector_t::name_map names;
+    detector_t detrayDetector(detectorBuilder.build(mr, names));
 
     // Checks and print
     detray::detail::check_consistency(detrayDetector);

@@ -6,6 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Vertexing/HoughVertexFinder.hpp"
+
+#include "Acts/Seeding/HoughTransformUtils.hpp"
+
+#include <numeric>
+
 template <typename spacepoint_t>
 Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
     Config cfg, std::unique_ptr<const Logger> lgr)

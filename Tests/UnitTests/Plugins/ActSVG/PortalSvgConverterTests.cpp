@@ -18,8 +18,10 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <memory>
+#include <ranges>
 #include <vector>
 
 Acts::GeometryContext tContext;
@@ -60,16 +62,15 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
 
   std::vector<Acts::Svg::ProtoPortal> protoPortals;
 
-  std::for_each(cylinderVolume->portals().begin(),
-                cylinderVolume->portals().end(), [&](const auto& p) {
-                  protoPortals.push_back(Acts::Svg::PortalConverter::convert(
-                      tContext, *p, portalOptions));
-                });
+  std::ranges::for_each(cylinderVolume->portals(), [&](const auto& p) {
+    protoPortals.push_back(
+        Acts::Svg::PortalConverter::convert(tContext, *p, portalOptions));
+  });
 
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
   std::size_t ip = 0;
-  std::for_each(protoPortals.begin(), protoPortals.end(), [&](const auto& p) {
+  std::ranges::for_each(protoPortals, [&](const auto& p) {
     zrPortals.push_back(
         Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
   });
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
   // xy view
   std::vector<actsvg::svg::object> xyPortals;
   ip = 0;
-  std::for_each(protoPortals.begin(), protoPortals.end(), [&](const auto& p) {
+  std::ranges::for_each(protoPortals, [&](const auto& p) {
     xyPortals.push_back(
         Acts::Svg::View::xy(p, "Portal_xy" + std::to_string(ip++)));
   });
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
   std::size_t ip = 0;
-  std::for_each(protoPortals.begin(), protoPortals.end(), [&](const auto& p) {
+  std::ranges::for_each(protoPortals, [&](const auto& p) {
     zrPortals.push_back(
         Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
   });
