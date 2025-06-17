@@ -48,7 +48,7 @@ class MultiWireVolumeBuilder {
   /// @brief Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume
   std::unique_ptr<Acts::TrackingVolume> buildVolume(
-      Acts::GeometryContext& gctx) const;
+      const Acts::GeometryContext& gctx) const;
 
  private:
   Config m_config;
