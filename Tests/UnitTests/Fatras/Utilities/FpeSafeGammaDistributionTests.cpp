@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_CASE(FpeSafeGammaDistributionSequence) {
   std::mt19937 rnd{30059};
 
   const int num = 20;
+#ifdef __GLIBCXX__
   // results from std::gamma_distribution<double>, in libstdc++
   double results[num] = {1.4631785,
                          4.3811862e-01,
@@ -43,6 +44,35 @@ BOOST_AUTO_TEST_CASE(FpeSafeGammaDistributionSequence) {
                          0.,
                          0.,
                          0.};
+#elif define _LIBCPP_VERSION
+  // results from std::gamma_distribution<double>, in libc++
+  double results[num] = {3.3655543,
+                         6.7167479e-01,
+                         1.3436782,
+                         8.9406670e-04,
+                         7.4754048e-05,
+                         9.8973516e-20,
+                         2.9430952e-08,
+                         8.4810760e-07,
+                         7.2823453e-41,
+                         0.,
+                         0.,
+                         3.0934012e-14,
+                         0.,
+                         0.,
+                         0.,
+                         0.,
+                         0.,
+                         0.,
+                         0.,
+                         0.};
+#else
+  // unknown library, will fail
+  double results[num];
+  for (int i = 0; i < num; ++i) {
+    results[i] = -1.0;
+  }
+#endif
 
   double alpha = 3.0;
   for (int i = 0; i < num; ++i) {
