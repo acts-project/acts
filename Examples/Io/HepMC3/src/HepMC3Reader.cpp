@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 
+#include <filesystem>
 #include <memory>
 
 #include <HepMC3/GenEvent.h>
@@ -53,7 +54,8 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
   }
 
   for (const auto& [path, numEvents] : m_cfg.inputPaths) {
-    m_inputs.emplace_back(HepMC3::deduce_reader(path), numEvents, path);
+    InputConfig input{HepMC3::deduce_reader(path), numEvents, path};
+    m_inputs.push_back(std::move(input));
   }
 
   if (m_cfg.numEvents.has_value()) {
