@@ -42,8 +42,8 @@ HepMC3InputConverter::HepMC3InputConverter(const Config& config,
 ProcessCode HepMC3InputConverter::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("HepMC3InputConverter::execute");
   const auto& genEvent = *m_inputEvent(ctx);
-  ACTS_DEBUG("Have " << genEvent.vertices_size() << " vertices");
-  ACTS_DEBUG("Have " << genEvent.particles_size() << " particles");
+  ACTS_DEBUG("Have " << genEvent.vertices().size() << " vertices");
+  ACTS_DEBUG("Have " << genEvent.particles().size() << " particles");
   ACTS_DEBUG("Have " << genEvent.event_number() << " event number");
 
   convertHepMC3ToInternalEdm(ctx, genEvent);
@@ -212,8 +212,8 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     const AlgorithmContext& ctx, const HepMC3::GenEvent& genEvent) const {
   ACTS_DEBUG("Converting HepMC3 event to internal EDM");
 
-  ACTS_VERBOSE("Have " << genEvent.vertices_size() << " vertices");
-  ACTS_VERBOSE("Have " << genEvent.particles_size() << " particles");
+  ACTS_VERBOSE("Have " << genEvent.vertices().size() << " vertices");
+  ACTS_VERBOSE("Have " << genEvent.particles().size() << " particles");
 
   using VertexCluster = std::vector<HepMC3::ConstGenVertexPtr>;
   std::vector<VertexCluster> vertexClusters;
@@ -271,7 +271,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
   std::vector<SimParticle> particlesUnordered;
 
   std::vector<bool> seenVertices;
-  seenVertices.resize(genEvent.vertices_size());
+  seenVertices.resize(genEvent.vertices().size());
 
   for (const auto& cluster : vertexClusters) {
     for (const auto& vertex : cluster) {
@@ -292,9 +292,10 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
     }
     ACTS_DEBUG("Found " << nUndecayedParticles
                         << " undecayed particles in the event");
-    ACTS_DEBUG("Reserving " << genEvent.vertices_size() / 2 << " vertices and "
-                            << nUndecayedParticles << " particles");
-    verticesUnordered.reserve(genEvent.vertices_size() / 2);
+    ACTS_DEBUG("Reserving " << genEvent.vertices().size() / 2
+                            << " vertices and " << nUndecayedParticles
+                            << " particles");
+    verticesUnordered.reserve(genEvent.vertices().size() / 2);
     particlesUnordered.reserve(nUndecayedParticles);
 
     for (auto& cluster : vertexClusters) {
