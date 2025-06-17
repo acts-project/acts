@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(FpeSafeGammaDistributionSequence) {
                          0.,
                          0.,
                          0.};
-#elif define _LIBCPP_VERSION
+#elif defined _LIBCPP_VERSION
   // results from std::gamma_distribution<double>, in libc++
   double results[num] = {3.3655543,
                          6.7167479e-01,
