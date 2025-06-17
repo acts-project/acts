@@ -78,9 +78,6 @@ def prune_cache(cache_dir: Optional[Path], size_limit: int):
 
 def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> bytes:
     headers = {}
-    token = os.environ.get("GITHUB_TOKEN")
-    if token is not None and token != "":
-        headers["Authorization"] = f"Bearer {token}"
 
     with contextlib.ExitStack() as stack:
         if cache_dir is not None:
