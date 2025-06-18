@@ -47,9 +47,19 @@ void setBestSeedQuality(
     middle = spacePoints.at(middle).extra(*copyFromIndexColumn);
     bottom = spacePoints.at(bottom).extra(*copyFromIndexColumn);
   }
-  bestSeedQualityMap[top] = quality;
-  bestSeedQualityMap[middle] = quality;
-  bestSeedQualityMap[bottom] = quality;
+
+  const auto set = [&](SpacePointIndex2 sp) {
+    auto it = bestSeedQualityMap.find(sp);
+    if (it != bestSeedQualityMap.end()) {
+      it->second = std::max(quality, it->second);
+    } else {
+      bestSeedQualityMap.emplace(sp, quality);
+    }
+  };
+
+  set(top);
+  set(middle);
+  set(bottom);
 }
 
 }  // namespace
@@ -59,8 +69,7 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(
     : m_cfg(config), m_logger(std::move(logger)) {}
 
 void BroadTripletSeedFilter::filter2SpFixed(
-    const Options& options, State& state, Cache& cache,
-    const SpacePointContainer2& spacePoints,
+    State& state, Cache& cache, const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<float>& rColumn,
     const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
         copyFromIndexColumn,
@@ -71,6 +80,23 @@ void BroadTripletSeedFilter::filter2SpFixed(
     CandidatesForMiddleSp2& candidatesCollector) const {
   auto spB = spacePoints.at(bottomSp);
   auto spM = spacePoints.at(middleSp);
+
+  // seed confirmation
+  SeedConfirmationRangeConfig seedConfRange;
+  std::size_t nTopSeedConf = 0;
+  if (m_cfg.seedConfirmation) {
+    // check if bottom SP is in the central or forward region
+    seedConfRange =
+        (spB.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+         spB.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_cfg.forwardSeedConfirmationRange
+            : m_cfg.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the bottom SP is
+    // in the central or forward region
+    nTopSeedConf = spB.extra(rColumn) > seedConfRange.rMaxSeedConf
+                       ? seedConfRange.nTopForLargeR
+                       : seedConfRange.nTopForSmallR;
+  }
 
   std::size_t maxWeightTopSp = 0;
   bool maxWeightSeed = false;
@@ -89,7 +115,8 @@ void BroadTripletSeedFilter::filter2SpFixed(
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (m_cfg.useDeltaRinsteadOfTopRadius) {
-      return fastHypot(spT.extra(rColumn), spT.z());
+      return fastHypot(spT.extra(rColumn) - spM.extra(rColumn),
+                       spT.z() - spM.z());
     }
     return spT.extra(rColumn);
   };
@@ -175,23 +202,22 @@ void BroadTripletSeedFilter::filter2SpFixed(
       weight += m_cfg.seedWeightIncrement;
     }
 
-    if (options.seedConfirmation) {
+    if (m_cfg.seedConfirmation) {
       // seed confirmation cuts - keep seeds if they have specific values of
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf =
-          cache.compatibleSeedR.size() + 1 - options.nTopSeedConf;
+      int deltaSeedConf = cache.compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
         continue;
       }
       bool seedRangeCuts =
-          spB.extra(rColumn) < options.seedConfRange.seedConfMinBottomRadius ||
-          std::abs(zOrigin) > options.seedConfRange.seedConfMaxZOrigin;
+          spB.extra(rColumn) < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts && deltaSeedConf == 0 &&
-          impact > options.seedConfRange.minImpactSeedConf) {
+          impact > seedConfRange.minImpactSeedConf) {
         continue;
       }
 
@@ -237,7 +263,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
 
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
-  if (options.seedConfirmation && maxWeightSeed &&
+  if (m_cfg.seedConfirmation && maxWeightSeed &&
       candidatesCollector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
@@ -248,8 +274,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
 }
 
 void BroadTripletSeedFilter::filter1SpFixed(
-    const Options& options, State& state,
-    const SpacePointContainer2& spacePoints,
+    State& state, const SpacePointContainer2& spacePoints,
     const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
         copyFromIndexColumn,
     std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
@@ -275,7 +300,7 @@ void BroadTripletSeedFilter::filter1SpFixed(
       break;
     }
 
-    if (options.seedConfirmation) {
+    if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;

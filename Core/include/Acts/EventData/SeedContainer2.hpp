@@ -75,8 +75,8 @@ class SeedContainer2 {
   /// @param index The index of the seed.
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
-  std::span<std::size_t> spacePointIndices(IndexType index) {
-    return std::span<std::size_t>(
+  std::span<SpacePointIndex2> spacePointIndices(IndexType index) {
+    return std::span<SpacePointIndex2>(
         m_spacePoints.data() + m_entries[index].spacePointOffset,
         m_spacePoints.data() + m_entries[index].spacePointOffset +
             m_entries[index].seedSize);
@@ -94,8 +94,8 @@ class SeedContainer2 {
   /// @param index The index of the seed.
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
-  std::span<const std::size_t> spacePointIndices(IndexType index) const {
-    return std::span<const std::size_t>(
+  std::span<const SpacePointIndex2> spacePointIndices(IndexType index) const {
+    return std::span<const SpacePointIndex2>(
         m_spacePoints.data() + m_entries[index].spacePointOffset,
         m_spacePoints.data() + m_entries[index].spacePointOffset +
             m_entries[index].seedSize);
@@ -203,7 +203,11 @@ class SeedProxy2 {
 
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
-  SeedContainer2 &container() { return *m_container; }
+  SeedContainer2 &container()
+    requires(ReadOnly)
+  {
+    return *m_container;
+  }
   /// Gets the container holding the seed.
   /// @return A const reference to the container holding the seed.
   const SeedContainer2 &container() const { return *m_container; }
@@ -226,7 +230,9 @@ class SeedProxy2 {
 
   /// Mutable access to the space point indices of the seed.
   /// @return A mutable span of space point indices associated with the seed.
-  std::span<std::size_t> spacePointIndices() {
+  std::span<SpacePointIndex2> spacePointIndices()
+    requires(!ReadOnly)
+  {
     return m_container->spacePointIndices(m_index);
   }
   /// Mutable access to the quality of the seed.
@@ -247,7 +253,7 @@ class SeedProxy2 {
   /// Const access to the space point indices of the seed.
   /// @return A span of space point indices associated with the seed.
   ///         This span is read-only and cannot be modified.
-  std::span<const std::size_t> spacePointIndices() const {
+  std::span<const SpacePointIndex2> spacePointIndices() const {
     return m_container->spacePointIndices(m_index);
   }
   /// Const access to the quality of the seed.
@@ -265,7 +271,7 @@ class SeedProxy2 {
 
     SpacePointIterator() = default;
     SpacePointIterator(const SpacePointContainer2 &spacePointContainer,
-                       const std::size_t *indexPointer)
+                       const SpacePointIndex2 *indexPointer)
         : m_spacePointContainer{&spacePointContainer},
           m_indexPointer{indexPointer} {}
 
@@ -293,13 +299,13 @@ class SeedProxy2 {
 
    private:
     const SpacePointContainer2 *m_spacePointContainer{nullptr};
-    const std::size_t *m_indexPointer{nullptr};
+    const SpacePointIndex2 *m_indexPointer{nullptr};
   };
 
   class SpacePointRange {
    public:
     SpacePointRange(const SpacePointContainer2 &spacePointContainer,
-                    std::span<const std::size_t> spacePointIndices)
+                    std::span<const SpacePointIndex2> spacePointIndices)
         : m_spacePointContainer{&spacePointContainer},
           m_spacePointIndices{spacePointIndices} {}
 
@@ -322,7 +328,7 @@ class SeedProxy2 {
 
    private:
     const SpacePointContainer2 *m_spacePointContainer{nullptr};
-    std::span<const std::size_t> m_spacePointIndices;
+    std::span<const SpacePointIndex2> m_spacePointIndices;
   };
 
   SpacePointRange spacePoints(

@@ -523,16 +523,16 @@ class SpacePointContainer2 {
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<Holder &>(*it->second);
+    auto &holder = dynamic_cast<Holder &>(*it->second);
     return holder.column;
   }
   template <typename Holder>
-  auto &extraColumn(const std::string &name) const {
+  const auto &extraColumn(const std::string &name) const {
     auto it = m_extraColumns.find(name);
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<const Holder &>(*it->second);
+    const auto &holder = dynamic_cast<const Holder &>(*it->second);
     return holder.column;
   }
 };
