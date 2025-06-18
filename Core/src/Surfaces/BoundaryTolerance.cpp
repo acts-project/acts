@@ -15,8 +15,7 @@
 
 namespace Acts {
 
-BoundaryTolerance::BoundaryTolerance(Variant variant)
-    : m_variant{std::move(variant)} {}
+BoundaryTolerance::BoundaryTolerance(Variant variant) : m_variant{variant} {}
 
 bool BoundaryTolerance::isInfinite() const {
   return holdsVariant<InfiniteParams>();
