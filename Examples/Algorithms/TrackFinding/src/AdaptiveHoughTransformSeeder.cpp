@@ -179,9 +179,8 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     Acts::ScopedTimer st("splitInQuadrants", logger());
     const int nSplits = 8;
     float wedgeWidth = 2.0 * std::numbers::pi / nSplits;
-    std::vector<int> phiIndices(nSplits);
-    std::iota(phiIndices.begin(), phiIndices.end(), 0);
-    for (float phiIndex : phiIndices) {
+
+    for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
       const float startPhi = wedgeWidth * phiIndex - std::numbers::pi;
       stack1.push_back(AccumulatorSection(1.05 * wedgeWidth,
                                           2.0 * config().qOverPtMin, startPhi,
@@ -195,12 +194,12 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
       updateSection(stack1.back(), measurements, m_qOverPtPhiLineParams);
       ACTS_DEBUG("Initial split " << stack1.back().count()
                                   << " for region starting from " << startPhi);
-      // for ( unsigned index: stack1.back().indices()) {
-      //   const PreprocessedMeasurement &m = measurements[index];
-      //   ACTS_DEBUG("phi section " << startPhi << " x: " <<
-      //   std::cos(m.phi)/m.invr << " y: " << std::sin(m.phi)/m.invr << " z: "
-      //   << m.z);
-      // }
+      for (unsigned index : stack1.back().indices()) {
+        const PreprocessedMeasurement &m = measurements[index];
+        ACTS_DEBUG("phi section "
+                   << startPhi << " x: " << std::cos(m.phi) / m.invr
+                   << " y: " << std::sin(m.phi) / m.invr << " z: " << m.z);
+      }
     }
   }
 
@@ -244,7 +243,6 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 
   if (m_cfg.deduplicate) {
     Acts::ScopedTimer st("deduplication", logger());
-
     deduplicate(stack1);
     ACTS_DEBUG("past deduplication " << stack1.size());
   }
@@ -254,8 +252,6 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     Acts::ScopedTimer st("secondPhase", logger());
 
     for (auto &section : stack1) {
-      // section.updateDimensions(2.0*config().zRange, 2.*config().cotThetaRange,
-      // -config().zRange, -config().cotThetaRange );
       section.updateDimensions(section.history(zSplitWidthIndex),
                                section.history(cotThetaSplitWidthIndex),
                                section.history(zSplitMinIndex),
@@ -264,6 +260,12 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     processStackZCotTheta(stack1, stack2, measurements);
     ACTS_DEBUG("past StackZCotTheta stack1 size "
                << stack1.size() << " stack2 size " << stack2.size());
+
+    if (m_cfg.deduplicate) {
+      Acts::ScopedTimer st2("deduplication", logger());
+      deduplicate(stack2);
+      ACTS_DEBUG("past second deduplication " << stack2.size());
+    }
   }
 
   std::deque<AccumulatorSection> &solutions =
@@ -342,39 +344,50 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
     std::deque<AccumulatorSection> &input,
     std::deque<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
+  struct Stats {
+    double area{};
+    int nSections{};
+    int nLines{};
+    int discardedByThresholdCut{};
+    int discardedByCrossingCut{};
+  };
+
+  std::map<int, Stats> sStat;
   AHTExplorationOptions opt;
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg, &opt, this](
+  opt.decisionFunctor = [&m_cfg = m_cfg, &opt, &sStat, this](
                             const AccumulatorSection &section,
-                            const std::vector<PreprocessedMeasurement> &) {
+                            const std::vector<PreprocessedMeasurement> &mes) {
+    if (section.divisionLevel() <= 8) {
+      return AHTExplorationOptions<PreprocessedMeasurement>::Drill;
+    }
+
     if (section.count() < m_cfg.threshold) {
+      sStat[section.divisionLevel()].discardedByThresholdCut += 1;
       return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
     }
-    // if (!passIntersectionsCheck(section, mes, m_qOverPtPhiLineParams,
-    //                             m_cfg.threshold + 1)) {
-    //   return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
+    if (section.count() < 3 * m_cfg.threshold) {
+      if (!passIntersectionsCheck(section, mes, m_qOverPtPhiLineParams,
+                                  m_cfg.threshold * (m_cfg.threshold - 1))) {
+        sStat[section.divisionLevel()].discardedByCrossingCut += 1;
+        return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
+      }
+    }
+    // if (section.count() == m_cfg.threshold) {
+
     // }
 
-    // count lines skipping first pixel layers, only when we are deep enough
-    // if (section.count() < 2 * m_cfg.threshold) {
-    //   std::size_t countNoPix = 0;
-    //   for (unsigned i : section.indices()) {
-    //     const PreprocessedMeasurement &m = mes[i];
-    //     if (m.invr < 1. / 300.)
-    //       countNoPix++;
-    //   }
-    //   // this threshold could be made configurable as well
-    //   if (countNoPix < m_cfg.threshold - 2) {
-    //     return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
-    //   }
-    // }
     if (section.count() >= m_cfg.threshold &&
+        section.count() <= m_cfg.noiseThreshold &&
         section.xSize() <= m_cfg.phiMinBinSize &&
         section.ySize() <= m_cfg.qOverPtMinBinSize) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Accept;
     }
+    sStat[section.divisionLevel()].area += section.xSize() * section.ySize();
+    sStat[section.divisionLevel()].nSections += 1;
+    sStat[section.divisionLevel()].nLines += section.count();
     return AHTExplorationOptions<PreprocessedMeasurement>::Drill;
   };
 
@@ -384,6 +397,17 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
                       [](unsigned sum, const AccumulatorSection &s) {
                         return sum + s.count();
                       });
+  ACTS_DEBUG("size " << sStat.size());
+  for (const auto &data : sStat) {
+    ACTS_DEBUG("Area in used by div: "
+               << data.first << " area: " << data.second.area << " avglines: "
+               << (data.second.nSections > 0
+                       ? data.second.nLines / data.second.nSections
+                       : 0)
+               << " n sections: " << data.second.nSections
+               << " thresholdCut: " << data.second.discardedByThresholdCut
+               << " crossingCut: " << data.second.discardedByCrossingCut);
+  }
   ACTS_DEBUG("Phi - qOverPt scan finds "
              << output.size() << " solutions, included measurements " << nl);
 }
@@ -453,28 +477,27 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 }
 
 bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
-    const AccumulatorSection &, const std::vector<PreprocessedMeasurement> &,
-    const LineParamFunctor &, unsigned) const {
-  return false;
-  // unsigned inside = 0;
-  // for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
-  //   const auto &m1 = measurements[section.indices()[idx1]];
-  //   const double a1 = lineParams.first(m1);
-  //   const double b1 = lineParams.second(m1);
-  //   for (std::size_t idx2 = idx1 + 1; idx2 < section.count(); ++idx2) {
-  //     const auto &m2 = measurements[section.indices()[idx2]];
-  //     const double a2 = lineParams.first(m2);
-  //     const double b2 = lineParams.second(m2);
-  //     if (section.isCrossingInside(a1, b1, a2, b2)) {
-  //       inside++;
-  //       if (inside >= threshold) {
-  //         return true;
-  //       }
-  //     }
-  //   }
-  // }
-  // ACTS_VERBOSE("Number of crossings inside of section " << inside);
-  // return inside >= threshold;
+    const AccumulatorSection &section,
+    const std::vector<PreprocessedMeasurement> &measurements,
+    const LineParamFunctor &lineFunctor, unsigned threshold) const {
+  using namespace std::placeholders;
+  unsigned inside = 0;
+  for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
+    const auto &m1 = measurements[section.indices()[idx1]];
+    std::function<float(float)> line1 = std::bind(lineFunctor, m1, _1);
+    for (std::size_t idx2 = idx1 + 1; idx2 < section.count(); ++idx2) {
+      const auto &m2 = measurements[section.indices()[idx2]];
+      std::function<float(float)> line2 = std::bind(lineFunctor, m2, _1);
+      if (section.isCrossingInside(line1, line2)) {
+        inside++;
+        if (inside >= threshold) {
+          return true;
+        }
+      }
+    }
+  }
+  ACTS_VERBOSE("Number of crossings inside of section " << inside);
+  return inside >= threshold;
 }
 void AdaptiveHoughTransformSeeder::deduplicate(
     std::deque<AccumulatorSection> &input) const {

@@ -111,25 +111,41 @@ class AccumulatorSection {
   }
 
   /// @brief check if the lines cross inside the section
-  /// @param a1 line 1 parameter a
-  /// @param b1 line 1 parameter b
-  /// @param a2 line 2 parameter a
-  /// @param b2 line 2 parameter b
+  /// @brief line1 - functional form of line 1
+  /// @brief line1 - functional form of line 2
+  /// @warning note that this function is assuming that these are lines
+  /// It may be incorrect assumption for rapidly changing fuction or large
+  /// sections
   /// @return true if the lines cross in the section
-  inline bool isCrossingInside(float a1, float b1, float a2, float b2) const {
-    const double adif = a1 - a2;
-    if (std::abs(adif) < 1e-3) {  // nearly Parallel lines, never cross
-      return false;
-    }
-    const double bdif = b2 - b1;
-    const double solX = bdif / adif;
-    if (xBegin() <= solX && solX <= xBegin() + xSize()) {
-      const double y = std::fma(a1, bdif / adif, b1);
-      if (yBegin() <= y && y <= yBegin() + ySize()) {
-        return true;
-      }
-    }
-    return false;
+  inline bool isCrossingInside(std::function<float(float)> line1,
+                               std::function<float(float)> line2) const {
+    // this microalgorithm idea is illustrated below
+    // section left section right
+    // example with crossing
+    //                                       |            +2
+    // line 1 crossing left section edge     +1          _|
+    // left edge mid point                   |_           |
+    //                                       |            +1
+    // line 2crossing left section           +2           |
+    //
+    // example with no crossing
+    //                                       |            +1
+    // line 1 crossing left section edge     +1          _|
+    // left edge mid point                   |_           |
+    //                                       |            +2
+    // line 2crossing left section           +2           |
+    //
+    // if for any of the two lines the condition
+    // (line1_left_y-middle_on_the_left_y)*(line1_right_y-middle_on_the_right_y)
+    // < 0 means that there is crossing
+
+    float line1_left_y = line1(xBegin());
+    float line1_right_y = line1(xBegin() + xSize());
+    float line2_left_y = line2(xBegin());
+    float line2_right_y = line2(xBegin() + xSize());
+    float left_mid = 0.5 * (line1_left_y + line2_left_y);
+    float right_mid = 0.5 * (line1_right_y + line2_right_y);
+    return (line1_left_y - left_mid) * (line1_right_y - right_mid) < 0;
   }
 
   // counter clock wise distance from upper left corner
@@ -206,6 +222,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                      // the algorithm should not go beyond
     unsigned threshold =
         4;  // number of lines passing section for it to be still considered
+    unsigned noiseThreshold = 12;  // number of lines passing section at the
+                                   // final split to consider it noise
+
     bool doSecondPhase = true;  // do the second pass in z-cot(theta) space to
                                 // find less solutions
     bool deduplicate = true;    // when adding solutions try avoiding duplicates
