@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -114,7 +115,7 @@ struct SeedFinderConfig {
   /// minimum allowed pT particle) + a certain uncertainty term. Check the
   /// documentation for more information
   /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-  float minPt = 400 * UnitConstants::MeV;
+  float minPt = 400. * UnitConstants::MeV;
   /// Number of sigmas of scattering angle to be considered in the minimum pT
   /// scattering term
   float sigmaScattering = 5;
@@ -126,7 +127,7 @@ struct SeedFinderConfig {
   /// Maximum transverse momentum for scattering calculation
   float maxPtScattering = 10 * UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
-  float impactMax = 20 * UnitConstants::mm;
+  float impactMax = 20. * UnitConstants::mm;
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
@@ -191,62 +192,13 @@ struct SeedFinderConfig {
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
-  bool isInInternalUnits = false;
+  bool isInInternalUnits = true;
+  //[[deprecated("SeedFinderConfig uses internal units")]]
+  SeedFinderConfig toInternalUnits() const { return *this; }
 
-  SeedFinderConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for SeedFinderConfig");
-    }
-    // Make sure the shared ptr to the seed filter is not a nullptr
-    // And make sure the seed filter config is in internal units as well
-    if (!seedFilter) {
-      throw std::runtime_error(
-          "Invalid values for the seed filter inside the seed filter config: "
-          "nullptr");
-    }
-    if (!seedFilter->getSeedFilterConfig().isInInternalUnits) {
-      throw std::runtime_error(
-          "The internal Seed Filter configuration, contained in the seed "
-          "finder config, is not in internal units.");
-    }
-
-    using namespace UnitLiterals;
-    SeedFinderConfig config = *this;
-    config.isInInternalUnits = true;
-    config.minPt /= 1_MeV;
-    config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
-    config.binSizeR /= 1_mm;
-    config.deltaRMinTopSP /= 1_mm;
-    config.deltaRMaxTopSP /= 1_mm;
-    config.deltaRMinBottomSP /= 1_mm;
-    config.deltaRMaxBottomSP /= 1_mm;
-    config.deltaRMiddleMinSPRange /= 1_mm;
-    config.deltaRMiddleMaxSPRange /= 1_mm;
-    config.impactMax /= 1_mm;
-    config.maxPtScattering /= 1_MeV;  // correct?
-    config.collisionRegionMin /= 1_mm;
-    config.collisionRegionMax /= 1_mm;
-    config.zMin /= 1_mm;
-    config.zMax /= 1_mm;
-    config.rMax /= 1_mm;
-    config.rMin /= 1_mm;
-    config.deltaZMax /= 1_mm;
-
-    config.zAlign /= 1_mm;
-    config.rAlign /= 1_mm;
-
-    config.toleranceParam /= 1_mm;
-
-    return config;
-  }
   SeedFinderConfig calculateDerivedQuantities() const {
     SeedFinderConfig config = *this;
-    // calculation of scattering using the highland formula
-    // convert pT to p once theta angle is known
-    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
-                      (1 + 0.038 * std::log(radLengthPerSeed));
+    config.highland = approximateHighlandScattering(config.radLengthPerSeed);
     const float maxScatteringAngle = config.highland / minPt;
     config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
     return config;
@@ -258,7 +210,7 @@ struct SeedFinderOptions {
   // used as offset for Space Points
   Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
   // field induction
-  float bFieldInZ = 2 * Acts::UnitConstants::T;
+  float bFieldInZ = 2.08 * UnitConstants::T;
 
   // derived quantities
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
@@ -267,37 +219,17 @@ struct SeedFinderOptions {
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
   float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
-  bool isInInternalUnits = false;
-
-  SeedFinderOptions toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for SeedFinderOptions");
-    }
-    using namespace UnitLiterals;
-    SeedFinderOptions options = *this;
-    options.isInInternalUnits = true;
-    options.beamPos[0] /= 1_mm;
-    options.beamPos[1] /= 1_mm;
-
-    options.bFieldInZ /= 1000. * 1_T;
-    return options;
-  }
+  bool isInInternalUnits = true;
+  //[[deprecated("SeedFinderOptions uses internal units")]]
+  SeedFinderOptions toInternalUnits() const { return *this; }
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
     using namespace UnitLiterals;
 
-    if (!isInInternalUnits) {
-      throw std::runtime_error(
-          "Derived quantities in SeedFinderOptions can only be calculated from "
-          "Acts internal units");
-    }
     SeedFinderOptions options = *this;
-    // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-    // millimeter
-    // TODO: change using ACTS units
-    options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
+    // bFieldInZ is in (pT/radius) natively, no need for conversion
+    options.pTPerHelixRadius = options.bFieldInZ;
     options.minHelixDiameter2 =
         std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2) *
         config.helixCutTolerance;

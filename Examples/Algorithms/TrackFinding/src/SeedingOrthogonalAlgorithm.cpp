@@ -22,12 +22,9 @@ namespace ActsExamples {
 SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     SeedingOrthogonalAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
-  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
-  m_cfg.seedFinderConfig =
-      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-  m_cfg.seedFinderOptions =
-      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
-          m_cfg.seedFinderConfig);
+  m_cfg.seedFinderConfig = m_cfg.seedFinderConfig.calculateDerivedQuantities();
+  m_cfg.seedFinderOptions = m_cfg.seedFinderOptions.calculateDerivedQuantities(
+      m_cfg.seedFinderConfig);
 
   printOptions();
   printConfig<SimSpacePoint>();

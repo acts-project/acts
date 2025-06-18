@@ -34,18 +34,13 @@ SeedingAlgorithmHashing::SeedingAlgorithmHashing(
 
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
-  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
           m_cfg.seedFilterConfig);
 
-  m_cfg.seedFinderConfig =
-      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-  m_cfg.seedFinderOptions =
-      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
-          m_cfg.seedFinderConfig);
-  m_cfg.gridConfig = m_cfg.gridConfig.toInternalUnits();
-  m_cfg.gridOptions = m_cfg.gridOptions.toInternalUnits();
+  m_cfg.seedFinderConfig = m_cfg.seedFinderConfig.calculateDerivedQuantities();
+  m_cfg.seedFinderOptions = m_cfg.seedFinderOptions.calculateDerivedQuantities(
+      m_cfg.seedFinderConfig);
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
