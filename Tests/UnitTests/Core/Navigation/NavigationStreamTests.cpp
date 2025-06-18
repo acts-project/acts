@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 namespace {
 
@@ -252,16 +254,16 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
       gContext, {Vector3(0., 0., 0.), Vector3(1., 1., 0.).normalized()},
       BoundaryTolerance::Infinite()));
 
-  // We should have 5 candidates, as one cylinder is reachable twice
-  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 5u);
+  // We should have 4 candidates, as one cylinder is reachable twice
+  // Technically, the surface at 20,20,0 is hit twice, but we deduplicate them
+  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   // First one is inner candidate
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+  BOOST_CHECK_EQUAL(&nStream.candidates().at(0u).surface(),
                     surfaces.at(2).get());
-  // Surface of 2nd and 3rd candidate should be the same
   BOOST_CHECK_EQUAL(&nStream.candidates().at(1u).surface(),
                     surfaces.at(1).get());
   BOOST_CHECK_EQUAL(&nStream.candidates().at(2u).surface(),
-                    surfaces.at(1).get());
+                    surfaces.at(0).get());
 
   // (2) Run an initial update - from a position/direction where only
   // the concentric ones are reachable
