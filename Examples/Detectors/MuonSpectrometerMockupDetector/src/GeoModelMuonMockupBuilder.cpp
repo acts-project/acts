@@ -62,9 +62,9 @@ std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 GeoModelMuonMockupBuilder::buildBarrelNode(
     const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
     Acts::VolumeBoundFactory& boundFactory) const {
-  /** Assume a station paradigm. MDT multilayers and complementary strip
-   * detectors are residing under a common parent node representing a muon
-   * station envelope. Group the passed boxes under by their parent */
+  // Assume a station paradigm. MDT multilayers and complementary strip
+  // detectors are residing under a common parent node representing a muon
+  // station envelope. Group the passed boxes under by their parent */
   std::map<PVConstLink, GeoModelVolumeFPVsVec> commonStations{};
   for (const auto& box : boundingBoxes) {
     if (std::get<1>(box)->name().find(name) == std::string::npos) {
@@ -86,7 +86,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         parentPhysVol->getX(), parentPhysVol->getLogVol()->getShape(),
         boundFactory);
 
-    std::unique_ptr<Acts::TrackingVolume> chamberVolume =
+    auto chamberVolume =
         std::make_unique<Acts::TrackingVolume>(
             *parentVolume, "Chamber_" + std::to_string(stationNum++));
     chamberVolume->assignGeometryId(
