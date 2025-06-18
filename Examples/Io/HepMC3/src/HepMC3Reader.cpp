@@ -54,8 +54,8 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
   }
 
   for (const auto& [path, numEvents] : m_cfg.inputPaths) {
-    InputConfig input{HepMC3::deduce_reader(path), numEvents, path};
-    m_inputs.push_back(std::move(input));
+    m_inputs.push_back(
+        InputConfig{HepMC3::deduce_reader(path), numEvents, path});
   }
 
   if (m_cfg.numEvents.has_value()) {
