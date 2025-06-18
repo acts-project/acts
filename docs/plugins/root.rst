@@ -1,10 +1,16 @@
-TGeo plugin
+ROOT plugin
 ===========
 
 General
 -------
 
-The ``TGeo`` plugin connects a geometry described with the ``ROOT::Geom`` module with Acts. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects.
+The ``Root`` plutin provides geometry and I/O components to ACTS from the ROOT framework.
+
+
+Geometry
+--------
+
+The ``Root`` plugin connects a geometry described with the ``ROOT::Geom`` module with Acts. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects.
 ACTS detector elements are represented by surfaces with dedicated shapes, hence a conversion of the volume based ``TGeoNode`` description into ``Acts::Surface`` objects needs to take place.
 
 An example use of the ``TGeo`` plugin can be found in the ``TGeoDetector`` example.
@@ -30,7 +36,7 @@ The nomenclature/convention is the following:
 
 In case a translation request is malformed, a ``std::exception`` is thrown, indicating the problem.
 
-Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects can be found in the ``Tests/UnitTests/Plugins/TGeo`` unit test suite, a summary of the output can be seen below.
+Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects can be found in the ``Tests/UnitTests/Plugins/Root`` unit test suite, a summary of the output can be seen below.
 
 Additionally, an option exists to split surfaces after the transformation
 has taken place by adding a splitter implementation to the ``Acts::TGeoLayerBuilder``, like the ``Acts::TGeoCylinderDiscSplitter``. This can be useful to describe e.g. a cylindrical detector with tangential planar surfaces.

@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
+#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <string>
