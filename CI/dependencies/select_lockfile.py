@@ -14,24 +14,29 @@ from typing import Tuple, Dict, Optional, Callable, TypeVar, Any
 import contextlib
 import time
 import functools
+from contextvars import ContextVar
 
 # Modify the default cache dir to use a temporary directory
 DEFAULT_CACHE_SIZE_LIMIT = 1 * 1024 * 1024  # 1MB
 
 T = TypeVar("T")
+remaining_retries: ContextVar[int] = ContextVar("remaining_retries", default=0)
 
 
-def retry_on_403(max_retries: int = 3, base_delay: float = 1.0):
+def retry_on_http_error(max_retries: int = 3, base_delay: float = 1.0):
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
             for attempt in range(max_retries):
+                remaining_retries.set(max_retries - attempt - 1)
                 try:
                     return func(*args, **kwargs)
                 except urllib.error.HTTPError as e:
-                    if e.code == 403 and attempt < max_retries - 1:
+                    if attempt < max_retries - 1:
                         delay = base_delay * (2**attempt)
-                        print(f"Got 403 error, retrying in {delay} seconds...")
+                        print(
+                            f"Got HTTP error {e.code}, retrying in {delay} seconds..."
+                        )
                         time.sleep(delay)
                         continue
                     raise
@@ -101,13 +106,16 @@ def prune_cache(cache_dir: Optional[Path], size_limit: int):
     update_cache_digest(cache_dir)
 
 
-@retry_on_403()
+@retry_on_http_error()
 def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> bytes:
     headers = {}
     token = os.environ.get("GITHUB_TOKEN")
-    if token is not None and token != "":
+
+    # Only add auth header if we have retries left
+    if token is not None and token != "" and remaining_retries.get() > 0:
         headers["Authorization"] = f"Bearer {token}"
 
+    print(f"Remaining retries: {remaining_retries.get()} for {base_url}")
     print(headers)
 
     with contextlib.ExitStack() as stack:
