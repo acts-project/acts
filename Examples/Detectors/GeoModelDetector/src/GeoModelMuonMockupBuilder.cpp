@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GeoModelMuonMockupBuilder/GeoModelMuonMockupBuilder.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
@@ -44,7 +44,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   cyl.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
 
   if (boundingBoxes.empty()) {
-    THROW_EXCEPTION("No bounding boxes found ");
+    THROW_EXCEPTION(
+        "No converted bounding boxes in the configuration - provide volumes "
+        "(e.g from the GeModelDetectorObjectFactory) ");
   }
 
   // Add the station nodes as static cylidner nodes
@@ -62,9 +64,11 @@ std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 GeoModelMuonMockupBuilder::buildBarrelNode(
     const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
     Acts::VolumeBoundFactory& boundFactory) const {
-  // Assume a station paradigm. MDT multilayers and complementary strip
-  // detectors are residing under a common parent node representing a muon
-  // station envelope. Group the passed boxes under by their parent */
+  using enum Acts::TrapezoidVolumeBounds::BoundValues;
+
+  /** Assume a station paradigm. MDT multilayers and complementary strip
+   * detectors are residing under a common parent node representing a muon
+   * station envelope. Group the passed boxes under by their parent */
   std::map<PVConstLink, GeoModelVolumeFPVsVec> commonStations{};
   for (const auto& box : boundingBoxes) {
     if (std::get<1>(box)->name().find(name) == std::string::npos) {
@@ -81,6 +85,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
   volChambers.reserve(commonStations.size());
   std::size_t stationNum = 0;
+  double maxZ = std::numeric_limits<double>::lowest();
   for (const auto& [parentPhysVol, childrenTrkVols] : commonStations) {
     std::shared_ptr<Acts::Volume> parentVolume = Acts::GeoModel::convertVolume(
         parentPhysVol->getX(), parentPhysVol->getLogVol()->getShape(),
@@ -101,7 +106,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
                                                  std::get<1>(child)->name());
       trVol->assignGeometryId(Acts::GeometryIdentifier{}
                                   .withVolume(stationNum)
-                                  .withLayer(childVol++));
+                                  .withLayer(++childVol));
 
       // add the sensitives (tubes) in the constructed tracking volume
       auto sensitives = std::get<1>(child)->surfacePtrs();
@@ -113,20 +118,26 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       chamberVolume->addVolume(std::move(trVol));
     }
     volChambers.push_back(std::move(chamberVolume));
+    maxZ = std::max(
+        maxZ, volChambers.back()->center().z() +
+                  volChambers.back()->volumeBounds().values()[eHalfLengthY]);
   }
 
   const Acts::Vector3& cent{volChambers.front()->center()};
-  double rmincyl = Acts::fastHypot(cent.x(), cent.y()) -
-                   volChambers.front()->volumeBounds().values()[0];
+  double rmincyl =
+      Acts::fastHypot(cent.x(), cent.y()) -
+      volChambers.front()->volumeBounds().values()[eHalfLengthXnegY];
   double rmaxcyl = Acts::fastHypot(
-      rmincyl + 2 * volChambers.front()->volumeBounds().values()[0],
-      volChambers.front()->volumeBounds().values()[1]);
+      rmincyl +
+          2 * volChambers.front()->volumeBounds().values()[eHalfLengthXnegY],
+      volChambers.front()->volumeBounds().values()[eHalfLengthXposY]);
+  double halfZ = maxZ;
 
   // Create the barrel node with the attached cylinder volume
   auto barrelNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::make_unique<Acts::TrackingVolume>(
           Acts::Transform3::Identity(),
-          std::make_shared<Acts::CylinderVolumeBounds>(rmincyl, rmaxcyl, 4_m),
+          std::make_shared<Acts::CylinderVolumeBounds>(rmincyl, rmaxcyl, halfZ),
           name + "_Barrel"));
 
   // create the bluprint nodes for the chambers and add them as children to the

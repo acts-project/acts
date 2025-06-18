@@ -9,9 +9,16 @@ from acts import (
     GeometryIdGenerator,
 )
 
-from acts.examples import ObjTrackingGeometryWriter
+from acts.examples import (
+    AlgorithmContext,
+    WhiteBoard,
+    ObjTrackingGeometryWriter,
+) 
 from acts import geomodel as gm
 from acts import examples
+
+from pathlib import Path
+
 
 
 def runGeant4(
@@ -26,7 +33,7 @@ def runGeant4(
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
     from pathlib import Path
 
-    s = s or acts.examples.Sequencer(events=100, numThreads=1)
+    s = s or acts.examples.Sequencer(events=1, numThreads=1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
     addParticleGun(
@@ -36,6 +43,7 @@ def runGeant4(
     )
     outputDir = Path(outputDir)
     addGeant4(
+
         s,
         detector,
         trackingGeometry,
@@ -50,10 +58,14 @@ def runGeant4(
     return s
 
 
+
+
 def main():
     from argparse import ArgumentParser
 
     u = acts.UnitConstants
+
+   
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -97,24 +109,31 @@ def main():
 
     # Create the tracking geometry builder for the muon system
     gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
-    gmBuilderConfig.sensitivesNames = ["Tube"]
-    gmBuilderConfig.geoModel = gmTree
+    gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
     gmBuilderConfig.stationNames = ["BIL"]
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE
     )
 
-    trackingGeometry = detector.buildMuonMockupTrackingGeometry(
+    trackingGeometry = detector.buildTrackingGeometry(
         gContext, trackingGeometryBuilder
     )
 
-    writer = ObjTrackingGeometryWriter(
-        level=acts.logging.INFO, outputDir=os.path.join(args.outDir, "obj")
-    )
-    writer.write(gContext, trackingGeometry)
+    #runGeant4(detector, trackingGeometry, field, args.outDir).run()
 
-    runGeant4(detector, trackingGeometry, field, args.outDir).run()
+    wb = WhiteBoard(acts.logging.INFO)
+
+    context = AlgorithmContext(0, 0, wb,1)
+    obj_dir = Path(args.outDir) / "obj"
+    obj_dir.mkdir(exist_ok=True)
+
+    writer = ObjTrackingGeometryWriter(
+        level=acts.logging.INFO,  outputDir=str(obj_dir))
+  
+    writer.write(context, trackingGeometry)
+ 
+
 
 
 if __name__ == "__main__":

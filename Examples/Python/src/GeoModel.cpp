@@ -29,7 +29,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
-#include "ActsExamples/GeoModelMuonMockupBuilder/GeoModelMuonMockupBuilder.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 
 #include <string>
@@ -50,6 +50,12 @@ void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
   auto gm = m.def_submodule("geomodel");
+
+  py::class_<GeoIntrusivePtr<const GeoVFullPhysVol>>(
+      gm, "GeoIntrusivePtrGeoVFullPhysVol")
+      .def(py::init<>())
+      .def("get", &GeoIntrusivePtr<const GeoVFullPhysVol>::get,
+           py::return_value_policy::reference);
 
   py::class_<Acts::GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
 
