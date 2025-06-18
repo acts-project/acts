@@ -14,7 +14,6 @@
 #include <sstream>
 #include <vector>
 
-#include "TDictionary.h"
 #include "TTreeReaderValue.h"
 
 // Pairs of elements of the same type
@@ -336,7 +335,7 @@ struct BranchComparisonHarness {
         if (className.substr(0, 6) == "vector") {
           std::string elementType = className.substr(7, className.size() - 8);
           return BranchComparisonHarness::createVector(treeMetadata, branchName,
-                                                       std::move(elementType));
+                                                       elementType);
         } else {
           throw UnsupportedBranchType();
         }

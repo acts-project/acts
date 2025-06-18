@@ -33,7 +33,6 @@
 #include "TFile.h"
 #include "TH2F.h"
 #include "TKey.h"
-#include "TList.h"
 #include "TObject.h"
 #include "TProfile.h"
 #include "TTree.h"
@@ -64,7 +63,7 @@
 // unsupported branch types in the input file instead of aborting.
 //
 
-int compareRootFiles(std::string file1, std::string file2,
+int compareRootFiles(const std::string& file1, const std::string& file2,
                      bool dump_data_on_failure = false,
                      bool skip_unsupported_branches = false) {
   std::cout << "Comparing ROOT files " << file1 << " and " << file2
@@ -196,56 +195,56 @@ int compareRootFiles(std::string file1, std::string file2,
                      "  - Object type does not match!");
 
     // Check if the object is a TTree
-    bool isTTree = strcmp(obj1->ClassName(), "TTree") == 0;
+    bool isTTree = (strcmp(obj1->ClassName(), "TTree") == 0);
 
     if (isTTree) {
       TTree* tree1 = dynamic_cast<TTree*>(obj1);
       TTree* tree2 = dynamic_cast<TTree*>(obj2);
-      if (tree1 && tree2) {
+      if (tree1 != nullptr && tree2 != nullptr) {
         treePairs.emplace_back(tree1, tree2);
       }
       continue;  // Skip the rest of the loop
     }
 
-    bool isTVector = strcmp(obj1->ClassName(), "TVectorT<float>") == 0;
+    bool isTVector = (strcmp(obj1->ClassName(), "TVectorT<float>") == 0);
 
     if (isTVector) {
       TVectorT<float>* vector1 = dynamic_cast<TVectorT<float>*>(obj1);
       TVectorT<float>* vector2 = dynamic_cast<TVectorT<float>*>(obj2);
-      if (vector1 && vector2) {
+      if (vector1 != nullptr && vector2 != nullptr) {
         vectorPairs.emplace_back(vector1, vector2);
       }
       continue;  // Skip the rest of the loop
     }
 
-    bool isTEfficiency = strcmp(obj1->ClassName(), "TEfficiency") == 0;
+    bool isTEfficiency = (strcmp(obj1->ClassName(), "TEfficiency") == 0);
 
     if (isTEfficiency) {
       TEfficiency* efficiency1 = dynamic_cast<TEfficiency*>(obj1);
       TEfficiency* efficiency2 = dynamic_cast<TEfficiency*>(obj2);
-      if (efficiency1 && efficiency2) {
+      if (efficiency1 != nullptr && efficiency2 != nullptr) {
         efficiencyPairs.emplace_back(efficiency1, efficiency2);
       }
       continue;  // Skip the rest of the loop
     }
 
-    bool isTProfile = strcmp(obj1->ClassName(), "TProfile") == 0;
+    bool isTProfile = (strcmp(obj1->ClassName(), "TProfile") == 0);
 
     if (isTProfile) {
       TProfile* profile1 = dynamic_cast<TProfile*>(obj1);
       TProfile* profile2 = dynamic_cast<TProfile*>(obj2);
-      if (profile1 && profile2) {
+      if (profile1 != nullptr && profile2 != nullptr) {
         profilePairs.emplace_back(profile1, profile2);
       }
       continue;  // Skip the rest of the loop
     }
 
-    bool isTH2F = strcmp(obj1->ClassName(), "TH2F") == 0;
+    bool isTH2F = (strcmp(obj1->ClassName(), "TH2F") == 0);
 
     if (isTH2F) {
       TH2F* th2f1 = dynamic_cast<TH2F*>(obj1);
       TH2F* th2f2 = dynamic_cast<TH2F*>(obj2);
-      if (th2f1 && th2f2) {
+      if (th2f1 != nullptr && th2f2 != nullptr) {
         th2fPairs.emplace_back(th2f1, th2f2);
       }
       continue;  // Skip the rest of the loop
@@ -309,11 +308,11 @@ int compareRootFiles(std::string file1, std::string file2,
 
       std::cout << "      ~ Checking branch metadata..." << std::endl;
       std::string b1ClassName, b1BranchName;
-      EDataType b1DataType;
+      EDataType b1DataType{};
       {
         std::string b2ClassName, b2BranchName;
-        EDataType b2DataType;
-        TClass* unused;
+        EDataType b2DataType{};
+        TClass* unused = nullptr;
 
         b1ClassName = branch1->GetClassName();
         b2ClassName = branch2->GetClassName();
@@ -555,8 +554,8 @@ int compareRootFiles(std::string file1, std::string file2,
 
 #ifndef __CLING__
 int main(int argc, char* argv[]) {
-  std::string file1;
-  std::string file2;
+  std::string file1{};
+  std::string file2{};
   bool dumpDataOnFailure = false;
   bool skipUnsupportedBranches = false;
 
