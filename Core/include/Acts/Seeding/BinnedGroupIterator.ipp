@@ -6,13 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Binned SP Group Iterator
+#pragma once
+
+#include "Acts/Seeding/BinnedGroupIterator.hpp"
+
+namespace Acts {
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t>::BinnedGroupIterator(
-    const Acts::BinnedGroup<grid_t>& group,
-    std::array<std::size_t, Acts::BinnedGroupIterator<grid_t>::DIM> index,
-    std::array<std::vector<std::size_t>, Acts::BinnedGroupIterator<grid_t>::DIM>
+BinnedGroupIterator<grid_t>::BinnedGroupIterator(
+    const BinnedGroup<grid_t>& group,
+    std::array<std::size_t, BinnedGroupIterator<grid_t>::DIM> index,
+    std::array<std::vector<std::size_t>, BinnedGroupIterator<grid_t>::DIM>
         navigation)
     : m_group(group), m_gridItr(group.grid(), index, navigation) {
   std::array<std::size_t, DIM> endline{};
@@ -25,26 +29,24 @@ Acts::BinnedGroupIterator<grid_t>::BinnedGroupIterator(
 }
 
 template <typename grid_t>
-bool Acts::BinnedGroupIterator<grid_t>::operator==(
-    const Acts::BinnedGroupIterator<grid_t>& other) const {
+bool BinnedGroupIterator<grid_t>::operator==(
+    const BinnedGroupIterator<grid_t>& other) const {
   return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t>&
-Acts::BinnedGroupIterator<grid_t>::operator++() {
+BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
   ++m_gridItr;
   findNotEmptyBin();
   return *this;
 }
 
 template <typename grid_t>
-std::tuple<boost::container::small_vector<std::size_t,
-                                          Acts::detail::ipow(3, grid_t::DIM)>,
-           std::size_t,
-           boost::container::small_vector<std::size_t,
-                                          Acts::detail::ipow(3, grid_t::DIM)>>
-Acts::BinnedGroupIterator<grid_t>::operator*() const {
+std::tuple<
+    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
+    std::size_t,
+    boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
+BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
   std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
@@ -52,10 +54,9 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
       m_group->grid().globalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
-      bottoms =
-          m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)> tops =
+  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> bottoms =
+      m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
+  boost::container::small_vector<std::size_t, detail::ipow(3, DIM)> tops =
       m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.
@@ -71,7 +72,7 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
 }
 
 template <typename grid_t>
-void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
+void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
   if (m_gridItr == m_gridItrEnd) {
     return;
   }
@@ -94,3 +95,5 @@ void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
     passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
   }
 }
+
+}  // namespace Acts

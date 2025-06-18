@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TransformStore.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepGeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -85,6 +87,24 @@ const char* trapezoid_xml =
         </detector>
     </detectors>
 )"""";
+
+namespace Acts {
+// Mockup delegate
+struct DD4hepAlignmentStore {
+  explicit DD4hepAlignmentStore(Acts::TransformStoreGeometryId transformStore)
+      : m_transformStore(std::move(transformStore)) {}
+
+  Acts::TransformStoreGeometryId m_transformStore;
+  /// Return the contextual transform for a given surface (from detector
+  /// element)
+  /// @param detElem the dd4hep detector element
+  /// @return a Transform3 pointer if found, otherwise nullptr
+  const Acts::Transform3* call(const DD4hepDetectorElement& detElem) const {
+    // Mockup implementation
+    return m_transformStore.contextualTransform(detElem.surface());
+  }
+};
+}  // namespace Acts
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
@@ -248,7 +268,9 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
 
-  const auto& surface = rectangleElement->surface();
+  Acts::Surface& surface = rectangleElement->surface();
+  surface.assignGeometryId(
+      Acts::GeometryIdentifier().withVolume(1).withLayer(2));
   BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
 
   auto sTransform = surface.transform(tContext);
@@ -265,6 +287,30 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   CHECK_CLOSE_ABS(boundValues[2u], 50, 1e-10);
   CHECK_CLOSE_ABS(boundValues[3u], 450, 1e-10);
 
+  // Test with DD4hep contextual transform
+  Acts::Transform3 contextualTransform =
+      Acts::Transform3::Identity() * Acts::Translation3(11., 21., 31.);
+  Acts::TransformStoreGeometryId transformStore(
+      {{surface.geometryId(), contextualTransform}});
+
+  Acts::DD4hepAlignmentStore alignmentStore(transformStore);
+
+  Acts::DD4hepGeometryContext::Alignment alignmentDelegate;
+  alignmentDelegate.connect<&Acts::DD4hepAlignmentStore::call>(&alignmentStore);
+
+  // Create the geometry context
+  Acts::DD4hepGeometryContext dd4HepAlignedContext(alignmentDelegate);
+
+  Acts::GeometryContext alignedContext(dd4HepAlignedContext);
+  Acts::GeometryContext nominalContext = tContext;
+
+  const Acts::Transform3& nominalTransform = surface.transform(nominalContext);
+  const Acts::Transform3& alignedTransform = surface.transform(alignedContext);
+
+  BOOST_CHECK(alignedTransform.isApprox(contextualTransform));
+  BOOST_CHECK(nominalTransform.isApprox(sTransform));
+
+  // memory cleanup
   lcdd->destroyInstance();
 }
 

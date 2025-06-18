@@ -317,7 +317,7 @@ def full_chain(args):
         args.bf_constant = True
         detector = getOpenDataDetector(
             odd_dir=geo_dir,
-            mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
+            materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()

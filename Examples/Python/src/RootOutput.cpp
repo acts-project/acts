@@ -63,7 +63,7 @@ void addRootOutput(Context& ctx) {
         .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
              "varBinning"_a);
 
-    py::class_<FakeRatePlotTool::Config>(mex, "FakeRatePlotToolConfig")
+    py::class_<FakePlotTool::Config>(mex, "FakePlotToolConfig")
         .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
              "varBinning"_a);
 
@@ -175,8 +175,9 @@ void addRootOutput(Context& ctx) {
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSpacepointWriter, mex,
-                             "RootSpacepointWriter", inputSpacepoints, filePath,
-                             fileMode, treeName);
+                             "RootSpacepointWriter", inputSpacepoints,
+                             inputMeasurementParticlesMap, filePath, fileMode,
+                             treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
@@ -200,9 +201,8 @@ void addRootOutput(Context& ctx) {
       "TrackFinderPerformanceWriter", inputTracks, inputParticles,
       inputTrackParticleMatching, inputParticleTrackMatching,
       inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
-      fakeRatePlotToolConfig, duplicationPlotToolConfig,
-      trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
-      writeMatchingDetails);
+      fakePlotToolConfig, duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+      subDetectorTrackSummaryVolumes, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

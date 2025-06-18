@@ -13,21 +13,22 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace Acts {
 
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
-  BoostTrackBuilding(std::unique_ptr<const Logger> logger)
-      : m_logger(std::move(logger)) {}
+  struct Config {};
+
+  BoostTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edge_weights,
-      std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
+  const Config &config() const { return m_cfg; }
 
  private:
+  Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
 };
