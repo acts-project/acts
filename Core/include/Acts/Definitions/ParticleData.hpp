@@ -27,15 +27,40 @@ struct ParticleData {
 /// @return Charge in native units.
 std::optional<float> findCharge(PdgParticle pdg);
 
+/// Find the charge for a given PDG particle number of a nucleus.
+/// Try its ground state first, and ultimately get the proton number from PDG
+///
+/// @return Charge in native units.
+float findChargeOfNucleus(PdgParticle pdg);
+
 /// Find the mass for a given PDG particle number.
 ///
 /// @return Mass in native units.
 std::optional<float> findMass(PdgParticle pdg);
 
+/// Find the mass for a given PDG particle number of a nucleus.
+/// Try its ground state first, and ultimately get the mass from
+/// Bethe-Weizsacker formula
+///
+/// @return Mass in native units
+float findMassOfNucleus(PdgParticle pdg);
+
+/// Calculate the mass of a nucleus using Bethe-Weizsacker formula
+/// Parameters obtained from https://www.actaphys.uj.edu.pl/R/37/6/1833
+///
+/// @return Mass in native units
+float calculateNucleusMass(PdgParticle pdg);
+
 /// Find a descriptive particle name for a given PDG particle number.
 ///
 /// @return Particle name.
 std::optional<std::string_view> findName(PdgParticle pdg);
+
+/// Find a descriptive particle name for a given PDG particle number of a
+/// nucleus. Try to get the name from its ground state.
+///
+/// @return Particle name.
+std::optional<std::string_view> findNameOfNucleus(PdgParticle pdg);
 
 /// Find all known particle data for a given PDG particle number.
 ///
