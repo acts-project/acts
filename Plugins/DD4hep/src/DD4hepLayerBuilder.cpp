@@ -19,7 +19,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"

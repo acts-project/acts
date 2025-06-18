@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"

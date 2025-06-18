@@ -6,17 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
-#include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
-#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoParser.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Plugins/Root/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/Root/ITGeoIdentifierProvider.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoParser.hpp"
+#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <ostream>
