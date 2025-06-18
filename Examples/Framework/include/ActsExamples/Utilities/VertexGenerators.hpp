@@ -71,11 +71,11 @@ struct GaussianDisplacedVertexPositionGenerator
     double min_value = -std::numbers::pi;
     double max_value = std::numbers::pi;
 
-    std::uniform_real_distribution<> uniform(min_value, max_value);
+    std::uniform_real_distribution uniform(min_value, max_value);
 
-    std::normal_distribution<double> rDist(rMean, rStdDev);
-    std::normal_distribution<double> zDist(zMean, zStdDev);
-    std::normal_distribution<double> tDist(tMean, tStdDev);
+    std::normal_distribution rDist(rMean, rStdDev);
+    std::normal_distribution zDist(zMean, zStdDev);
+    std::normal_distribution tDist(tMean, tStdDev);
 
     // Generate random values from normal distributions
     double r = rDist(rng);

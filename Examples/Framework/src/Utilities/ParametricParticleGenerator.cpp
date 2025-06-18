@@ -74,16 +74,14 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     // distributes p or pt uniformly in log space
     UniformReal dist(std::log(m_cfg.pMin), std::log(m_cfg.pMax));
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+    m_somePDist = [=](RandomEngine& rng) mutable {
       return std::exp(dist(rng));
     };
   } else {
     // distributes p or pt uniformly
     UniformReal dist(m_cfg.pMin, m_cfg.pMax);
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
-      return dist(rng);
-    };
+    m_somePDist = [=](RandomEngine& rng) mutable { return dist(rng); };
   }
 }
 

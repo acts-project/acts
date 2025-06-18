@@ -55,7 +55,7 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
 
   for (const auto& [path, numEvents] : m_cfg.inputPaths) {
     auto reader = HepMC3::deduce_reader(path);
-    m_inputs.push_back(InputConfig{reader, numEvents, path});
+    m_inputs.emplace_back(reader, numEvents, path);
   }
 
   if (m_cfg.numEvents.has_value()) {
@@ -70,11 +70,9 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
     m_eventsRange = {0, determineNumEvents(*reader)};
   }
 
-  if (m_cfg.vertexGenerator != nullptr) {
-    if (m_cfg.randomNumbers == nullptr) {
-      throw std::invalid_argument(
-          "randomNumbers must be set if vertexGenerator is set");
-    }
+  if (m_cfg.vertexGenerator != nullptr && m_cfg.randomNumbers == nullptr) {
+    throw std::invalid_argument(
+        "randomNumbers must be set if vertexGenerator is set");
   }
 
   ACTS_DEBUG("HepMC3Reader: " << m_eventsRange.first << " - "
@@ -121,7 +119,7 @@ ProcessCode HepMC3Reader::skip(std::size_t events) {
 
   ACTS_DEBUG("Skipping " << events << " events");
 
-  for (auto& [reader, numEvents, path] : m_inputs) {
+  for (const auto& [reader, numEvents, path] : m_inputs) {
     ACTS_VERBOSE("Skipping " << events << "*" << numEvents << "="
                              << events * numEvents << " events from " << path);
     if (!reader->skip(static_cast<int>(events * numEvents))) {
@@ -337,7 +335,7 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
   // @TODO: Add the index as an attribute to the event and it's content
 
-  for (auto& [reader, numEvents, path] : m_inputs) {
+  for (const auto& [reader, numEvents, path] : m_inputs) {
     ACTS_VERBOSE("Reading " << numEvents << " events from " << path);
     for (std::size_t i = 0; i < numEvents; ++i) {
       auto event = makeEvent();
@@ -358,7 +356,7 @@ ProcessCode HepMC3Reader::readLogicalEvent(
 
 ProcessCode HepMC3Reader::finalize() {
   ACTS_VERBOSE("Closing " << m_inputs.size() << " input files");
-  for (auto& [reader, numEvents, path] : m_inputs) {
+  for (const auto& [reader, numEvents, path] : m_inputs) {
     reader->close();
   }
 
