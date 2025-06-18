@@ -8,12 +8,29 @@
 
 #pragma once
 
+#include <Acts/Plugins/ExaTrkX/Tensor.hpp>
+
 #include <cstdint>
 #include <vector>
 
 #include <torch/torch.h>
 
 namespace Acts::detail {
+
+struct TensorDetails {
+  const torch::Tensor &tensor;
+  TensorDetails(const torch::Tensor &t) : tensor(t) {}
+};
+
+inline std::ostream &operator<<(std::ostream &os, const TensorDetails &t) {
+  os << t.tensor.dtype() << ", " << t.tensor.sizes();
+  if (at::isnan(t.tensor).any().item<bool>()) {
+    os << ", contains NaNs";
+  } else {
+    os << ", no NaNs";
+  }
+  return os;
+}
 
 /// So far this is only needed for integers
 template <typename T>
@@ -85,6 +102,41 @@ std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
       transformedTensor.template data_ptr<T>() + transformedTensor.numel());
 
   return edgeIndex;
+}
+
+template <typename T>
+torch::Tensor actsToNonOwningTorchTensor(Acts::Tensor<T> &tensor) {
+  const auto device = tensor.device().type == Acts::Device::Type::eCUDA
+                          ? torch::Device(torch::kCUDA, tensor.device().index)
+                          : torch::kCPU;
+  return torch::from_blob(
+      tensor.data(),
+      {static_cast<long>(tensor.shape().at(0)),
+       static_cast<long>(tensor.shape().at(1))},
+      torch::TensorOptions{}.device(device).dtype(TorchTypeMap<T>::type));
+}
+
+template <typename T>
+Tensor<T> torchToActsTensor(const at::Tensor &tensor,
+                            const ExecutionContext &execContext) {
+  assert(tensor.is_contiguous());
+  assert(tensor.dim() == 1 || tensor.dim() == 2);
+  assert(tensor.dtype() == TorchTypeMap<T>::type);
+
+  std::array<std::size_t, 2> shape{};
+  shape[0] = tensor.size(0);
+  if (tensor.dim() == 2) {
+    shape[1] = tensor.size(1);
+  } else {
+    shape[1] = 1;
+  }
+  auto actsTensor = Acts::Tensor<T>::Create(shape, execContext);
+  // Create a non owning torch tensor and copy the data
+  auto tmpTensor =
+      torch::from_blob(actsTensor.data(), tensor.sizes(), tensor.options());
+  tmpTensor.copy_(tensor);
+
+  return actsTensor;
 }
 
 }  // namespace Acts::detail

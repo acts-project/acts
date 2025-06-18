@@ -31,12 +31,14 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   }
 
   // Portals
-  std::for_each(dVolume.portalPtrs().begin(), dVolume.portalPtrs().end(),
-                [&](auto& portal) { assignGeometryId(cache, *portal); });
+  std::ranges::for_each(dVolume.portalPtrs(), [&](auto& portal) {
+    assignGeometryId(cache, *portal);
+  });
 
   // Surfaces
-  std::for_each(dVolume.surfacePtrs().begin(), dVolume.surfacePtrs().end(),
-                [&](auto& surface) { assignGeometryId(cache, *surface); });
+  std::ranges::for_each(dVolume.surfacePtrs(), [&](auto& surface) {
+    assignGeometryId(cache, *surface);
+  });
 
   if (m_cfg.resetSubCounters) {
     ccache.portalCount = 0u;
@@ -45,8 +47,9 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   }
 
   // Sub volumes
-  std::for_each(dVolume.volumePtrs().begin(), dVolume.volumePtrs().end(),
-                [&](auto& volume) { assignGeometryId(cache, *volume); });
+  std::ranges::for_each(dVolume.volumePtrs(), [&](auto& volume) {
+    assignGeometryId(cache, *volume);
+  });
 }
 
 void Acts::Experimental::GeometryIdGenerator::assignGeometryId(

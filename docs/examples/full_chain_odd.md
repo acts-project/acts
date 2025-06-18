@@ -8,12 +8,12 @@ The first step is to load the ODD detector description and to construct the dete
 
 ```python
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-oddDir = getOpenDataDetectorDirectory()
+geoDir = getOpenDataDetectorDirectory()
 
-oddMaterialMap = oddDir / "data/odd-material-maps.root"
+oddMaterialMap = geoDir / "data/odd-material-maps.root"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(materialDecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 ```

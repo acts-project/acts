@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace Acts {
 
 class CudaTrackBuilding final : public Acts::TrackBuildingBase {
@@ -28,8 +26,7 @@ class CudaTrackBuilding final : public Acts::TrackBuildingBase {
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edge_weights,
-      std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) override;
   const Config &config() const { return m_cfg; }
 

@@ -4,10 +4,10 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-04-20
+  SPACK_VERSION: develop-2025-06-08
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v11.1.0
 
 .ccache_base:
   cache:
@@ -155,14 +155,6 @@ build_exatrkx:
     expire_in: 6 hours
 
   script:
-    # For now, we need to build boost to get the dependencies for the libraries
-    - curl --silent https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2 --output boost_1_87_0.tar.bz2
-    - tar --bzip2 -xf boost_1_87_0.tar.bz2
-    - cd boost_1_87_0
-    - ./bootstrap.sh --prefix=${CI_PROJECT_DIR}/boost-install --with-libraries=regex,graph,program_options,test
-    - ./b2 install
-    - cd ..
-    - rm -rf boost_1_87_0*
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - echo $PATH
@@ -177,7 +169,6 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DBoost_DIR=${CI_PROJECT_DIR}/boost-install/lib/cmake/Boost-1.87.0
 
     - ccache -z
     - cmake --build build -- -j6
@@ -545,18 +536,6 @@ linux_ubuntu_2404_clang19:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_105:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "105"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
 
 lcg_106a:
   extends: .lcg_base_job

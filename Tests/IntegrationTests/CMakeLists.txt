@@ -42,4 +42,3 @@ add_integrationtest(PropagationCompareEigenStraightLine PropagationCompareEigenS
 add_integrationtest(PropagationBentTracks PropagationBentTracks.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
-add_subdirectory_if(Legacy ACTS_BUILD_PLUGIN_LEGACY)

@@ -14,7 +14,6 @@
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "ON",
-                "ACTS_BUILD_PLUGIN_LEGACY": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
@@ -57,7 +56,6 @@
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
-                "ACTS_BUILD_PLUGIN_CUDA": "OFF",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_PODIO": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
@@ -68,12 +66,14 @@
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_TGEO": "ON",
+                "ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "OFF",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
-                "ACTS_BUILD_EXAMPLES_HASHING": "ON"
+                "ACTS_BUILD_EXAMPLES_HASHING": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         },
         {
@@ -116,7 +116,6 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
             }
         },

@@ -14,6 +14,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 Acts::Experimental::DetectorBuilder::DetectorBuilder(
@@ -41,7 +42,7 @@ Acts::Experimental::DetectorBuilder::construct(
   if (m_cfg.geoIdGenerator != nullptr) {
     ACTS_DEBUG("Assigning geometry ids to the detector");
     auto cache = m_cfg.geoIdGenerator->generateCache();
-    std::for_each(roots.volumes.begin(), roots.volumes.end(), [&](auto& v) {
+    std::ranges::for_each(roots.volumes, [&](auto& v) {
       ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
     });
@@ -50,7 +51,7 @@ Acts::Experimental::DetectorBuilder::construct(
   // Decorate the volumes with material - Surface material only at this moment
   if (m_cfg.materialDecorator != nullptr) {
     ACTS_DEBUG("Decorating the detector with material");
-    std::for_each(volumes.begin(), volumes.end(), [&](auto& v) {
+    std::ranges::for_each(volumes, [&](auto& v) {
       // Assign to surfaces
       for (auto& sf : v->surfacePtrs()) {
         m_cfg.materialDecorator->decorate(*sf);

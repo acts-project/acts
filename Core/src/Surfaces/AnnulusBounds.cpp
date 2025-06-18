@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <ranges>
 #include <stdexcept>
 
 namespace Acts {
@@ -163,8 +164,8 @@ std::vector<Vector2> AnnulusBounds::vertices(
             quarterSegments);
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
-    std::for_each(rvertices.begin(), rvertices.end(),
-                  [&](Vector2& rv) { rv += m_moduleOrigin; });
+    std::ranges::for_each(rvertices,
+                          [&](Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
   }
   return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
