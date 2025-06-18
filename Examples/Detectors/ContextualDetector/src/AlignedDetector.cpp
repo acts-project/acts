@@ -16,16 +16,13 @@
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-#include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 
 namespace ActsExamples {
 
 AlignedDetector::AlignedDetector(const Config& cfg)
-    : Detector(Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
-      m_cfg(cfg) {
+    : GenericDetector(cfg, NoBuildTag{}), m_cfg(cfg) {
   if (m_cfg.mode == Config::Mode::External) {
-    InternallyAlignedDetectorElement::ContextType nominalContext;
+    ExternallyAlignedDetectorElement::ContextType nominalContext;
     m_nominalGeometryContext = Acts::GeometryContext(nominalContext);
   } else {
     InternallyAlignedDetectorElement::ContextType nominalContext;
@@ -72,10 +69,8 @@ AlignedDetector::AlignedDetector(const Config& cfg)
       return detElem;
     };
 
-    m_trackingGeometry = Generic::buildDetector(
-        m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
-        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    buildTrackingGeometry(detectorElementFactory);
+
     agcsConfig.trackingGeometry = m_trackingGeometry;
 
     m_contextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
@@ -100,10 +95,7 @@ AlignedDetector::AlignedDetector(const Config& cfg)
       return detElem;
     };
 
-    m_trackingGeometry = Generic::buildDetector(
-        m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
-        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    buildTrackingGeometry(detectorElementFactory);
 
     m_contextDecorators.push_back(std::make_shared<InternalAlignmentDecorator>(
         std::move(agcsConfig),

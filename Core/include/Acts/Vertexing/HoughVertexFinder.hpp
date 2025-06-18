@@ -10,22 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <functional>
-#include <iterator>
-#include <numeric>
-#include <stdexcept>
 #include <string>
-#include <system_error>
-#include <utility>
 #include <vector>
 
 namespace Acts {

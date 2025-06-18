@@ -17,8 +17,8 @@ message(STATUS "Building ModuleMapGraph as part of the Acts project")
 # Declare where to get traccc from.
 FetchContent_Declare(
     ModuleMapGraph
-    GIT_REPOSITORY https://gitlab.cern.ch/bhuth/ModuleMapGraph
-    GIT_TAG 802dd6ec736683c83385bf4e11661fe67fa8c96a
+    GIT_REPOSITORY https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph
+    GIT_TAG v1.0.10
     OVERRIDE_FIND_PACKAGE
 )
 

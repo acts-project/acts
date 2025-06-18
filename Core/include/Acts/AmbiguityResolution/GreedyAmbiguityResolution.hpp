@@ -8,11 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
