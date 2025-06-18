@@ -21,13 +21,13 @@
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
-  auto material = new GeoMaterial("Material", 1.0);
+  auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   // Let's create a GeoFullPhysVol object
 
   // (BOX object)
-  auto boxXY = new GeoBox(100, 200, 2);
-  auto logXY = new GeoLogVol("LogVolumeXY", boxXY, material);
-  auto fphysXY = new GeoFullPhysVol(logXY);
+  auto boxXY = make_intrusive<GeoBox>(100, 200, 2);
+  auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
+  auto fphysXY = make_intrusive<GeoFullPhysVol>(logXY);
   auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
 
   PVConstLink physXY{fphysXY};

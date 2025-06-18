@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
@@ -164,6 +163,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     std::vector<Accumulator> classifierTimes;
     Accumulator trackBuildingTime;
     Accumulator postprocessingTime;
+    Accumulator fullTime;
   } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,

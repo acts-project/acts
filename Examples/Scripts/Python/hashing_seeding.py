@@ -112,7 +112,7 @@ class Config:
         return outDir
 
     def getDetectorInfo(self):
-        actsExamplesDir = getActsExamplesDirectory()
+        actsExamplesDir = Path(__file__).parent.parent.parent
 
         if self.detector == DetectorName.ODD:
             from acts.examples.odd import (
@@ -123,11 +123,13 @@ class Config:
             geoDir = getOpenDataDetectorDirectory()
 
             oddMaterialMap = geoDir / "data/odd-material-maps.root"
-            oddDigiConfig = geoDir / "config/odd-digi-smearing-config.json"
-            oddSeedingSel = geoDir / "config/odd-seeding-config.json"
+            oddDigiConfig = actsExamplesDir / "Configs/odd-digi-smearing-config.json"
+            oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+            detector = getOpenDataDetector(
+                odd_dir=geoDir, materialDecorator=oddMaterialDeco
+            )
             trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
@@ -139,13 +141,9 @@ class Config:
 
             detector = acts.examples.GenericDetector()
             trackingGeometry = detector.trackingGeometry()
-            digiConfig = (
-                actsExamplesDir
-                / "Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
+            digiConfig = actsExamplesDir / "Configs/generic-digi-smearing-config.json"
             geoSelectionConfigFile = (
-                actsExamplesDir
-                / "Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+                actsExamplesDir / "Configs/generic-seeding-config.json"
             )
         else:
             exit("Detector not supported")
@@ -155,10 +153,6 @@ class Config:
 
 def extractEnumName(enumvar):
     return str(enumvar).split(".")[-1]
-
-
-def getActsExamplesDirectory():
-    return Path(__file__).parent.parent.parent
 
 
 def runHashingSeeding(

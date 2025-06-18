@@ -209,23 +209,6 @@ void addSvg(Context& ctx) {
 
   svg.def("toFile", &Svg::toFile);
 
-  // Some basics
-  py::class_<actsvg::svg::object>(svg, "object");
-
-  py::class_<actsvg::svg::file>(svg, "file")
-      .def(py::init<>())
-      .def("addObject", &actsvg::svg::file::add_object)
-      .def("addObjects", &actsvg::svg::file::add_objects)
-      .def("clip",
-           [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
-             self.set_view_box(box);
-           })
-      .def("write", [](actsvg::svg::file& self, const std::string& filename) {
-        std::ofstream file(filename);
-        file << self;
-        file.close();
-      });
-
   // Core components, added as an acts.svg submodule
   {
     auto c = py::class_<Svg::Style>(svg, "Style").def(py::init<>());
@@ -349,13 +332,6 @@ void addSvg(Context& ctx) {
 
     ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
                        indexedSurfacesOptions);
-
-    // Define the proto volume & indexed surface grid
-    py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
-    py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
-
-    // Define the proto grid
-    py::class_<Svg::ProtoGrid>(svg, "ProtoGrid");
 
     // Convert an Acts::Experimental::DetectorVolume object into an
     // acts::svg::proto::volume

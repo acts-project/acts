@@ -10,9 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/HoughTransformUtils.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 #include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
@@ -23,14 +21,9 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "TCanvas.h"
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}
+class TCanvas;
 
 namespace ActsExamples {
 
@@ -56,6 +49,7 @@ class MuonHoughSeeder final : public IAlgorithm {
   };
 
   MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
+  ~MuonHoughSeeder() override;
 
   /// Run the seeding algorithm.
   ///

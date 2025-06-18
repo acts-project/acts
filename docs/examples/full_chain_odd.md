@@ -7,12 +7,13 @@ Our full chain ODD example is written in Python and can be found [here](https://
 The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our preferred material map and provide it to the detector construction `getOpenDataDetector`.
 
 ```python
-oddDir = getOpenDataDetectorDirectory()
+actsDir = pathlib.Path(__file__).parent.parent.parent.parent
+geoDir = getOpenDataDetectorDirectory()
 
-oddMaterialMap = oddDir / "data/odd-material-maps.root"
+oddMaterialMap = geoDir / "data/odd-material-maps.root"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(mdecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 ```
@@ -71,7 +72,7 @@ The last step in the simulation is the digitization. Here we simulate the readou
 In the simplest case we use a gaussian smearing of the true hit and displace it slightly.
 
 ```python
-oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
+oddDigiConfig = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 
 addDigitization(
     s,
@@ -88,7 +89,7 @@ With the last step we completed the simulation and switch the focus to the actua
 The first step in our reconstruction is the track seeding. Here we try to find tracks and estimate their parameters.
 
 ```python
-oddSeedingSel = oddDir / "config/odd-seeding-config.json"
+oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 
 addSeeding(
     s,
