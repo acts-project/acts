@@ -37,7 +37,9 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   DD4hepDetectorElement::Store detectorStore;
 
   // Set up the tools
+  DD4hepDetectorSurfaceFactory::Config surfaceFactoryConfig;
   auto surfaceFactory = std::make_shared<DD4hepDetectorSurfaceFactory>(
+      surfaceFactoryConfig,
       getDefaultLogger("DD4hepDetectorSurfaceFactory", options.logLevel));
 
   auto layerStructure = std::make_shared<DD4hepLayerStructure>(

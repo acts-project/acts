@@ -256,9 +256,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
                 : TGeoDetectorElement::Identifier();
 
-        auto tgElement =
-            m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
-                                 layerCfg.localAxes, m_cfg.unit, nullptr);
+        auto tgElement = m_cfg.detectorElementFactory(
+            identifier, *snode.node, *snode.transform, layerCfg.localAxes,
+            m_cfg.unit, nullptr);
 
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
