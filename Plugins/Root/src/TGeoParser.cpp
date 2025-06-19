@@ -35,7 +35,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     // Daughter node iteration
     TIter iObj(daughters);
     while (TObject* obj = iObj()) {
-      TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
+      auto node = dynamic_cast<TGeoNode*>(obj);
       if (node != nullptr) {
         state.volume = nullptr;
         state.node = node;
@@ -82,9 +82,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
             for (auto y : std::vector<double>{-dy, dy}) {
               for (auto z : std::vector<double>{-dz, dz}) {
                 Vector3 edge = etrf * Vector3(x, y, z);
-                for (auto& check : options.parseRanges) {
-                  double val = VectorHelpers::cast(edge, check.first);
-                  if (val < check.second.first || val > check.second.second) {
+                for (auto& [axisDir, checkRange] : options.parseRanges) {
+                  double val = VectorHelpers::cast(edge, axisDir);
+                  if (val < checkRange.first || val > checkRange.second) {
                     accept = false;
                     break;
                   }
