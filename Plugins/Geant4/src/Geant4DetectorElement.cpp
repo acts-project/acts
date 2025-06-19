@@ -22,6 +22,15 @@ Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
       m_g4physVol(&g4physVol),
       m_toGlobal(toGlobal),
       m_thickness(thickness) {
+  if (m_surface == nullptr) {
+    throw std::invalid_argument(
+        "Geant4DetectorElement: Surface cannot be nullptr");
+  }
+  if (m_surface->associatedDetectorElement() != nullptr) {
+    throw std::logic_error(
+        "Geant4DetectorElement: Surface already has an associated detector "
+        "element");
+  }
   m_surface->assignDetectorElement(*this);
 }
 
