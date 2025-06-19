@@ -56,8 +56,8 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
     ++cache.matchedG4Volumes;
     ACTS_VERBOSE("Matched Geant4 physical volume "
                  << g4PhysVol.GetName() << " with "
-                 << (sensitive ? "sensitive" : "")
-                 << (passive ? " passive" : "") << " surface selector.");
+                 << (sensitive ? "sensitive " : "")
+                 << (passive ? "passive " : "") << "surface selector.");
     // Attempt the conversion
     auto surface = Acts::Geant4PhysicalVolumeConverter{}.surface(
         g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
