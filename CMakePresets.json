@@ -14,7 +14,6 @@
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "ON",
-                "ACTS_BUILD_PLUGIN_LEGACY": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
@@ -57,7 +56,6 @@
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
-                "ACTS_BUILD_PLUGIN_CUDA": "OFF",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_PODIO": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
@@ -68,12 +66,14 @@
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_TGEO": "ON",
+                "ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "OFF",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
-                "ACTS_BUILD_EXAMPLES_HASHING": "ON"
+                "ACTS_BUILD_EXAMPLES_HASHING": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         },
         {
@@ -116,7 +116,6 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
             }
         },
@@ -131,6 +130,8 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
+                "CMAKE_CUDA_ARCHITECTURES": "86",
+                "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
@@ -138,6 +139,7 @@
                 "ACTS_EXATRKX_ENABLE_TORCH": "ON",
                 "ACTS_EXATRKX_ENABLE_ONNX": "ON",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
+                "ACTS_EXATRKX_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
             }
@@ -149,10 +151,13 @@
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_CUDA_ARCHITECTURES": "86",
+                "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON"
+                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON",
+                "ACTS_EXATRKX_ENABLE_MODULEMAP": "OFF"
             }
         }
     ]

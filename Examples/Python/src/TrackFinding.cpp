@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
@@ -15,7 +14,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
@@ -31,7 +29,6 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
 
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <tuple>
@@ -40,15 +37,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-class SimSpacePoint;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -60,9 +48,10 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
-      outputSpacePoints, trackingGeometry, geometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
+                                "SpacePointMaker", inputMeasurements,
+                                outputSpacePoints, trackingGeometry,
+                                geometrySelection, stripGeometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -197,8 +186,9 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
                                 "TrackParamsLookupEstimation", refLayers, bins,

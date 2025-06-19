@@ -52,7 +52,6 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
-        ActsExamplesDetectorContextual
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoCsv
@@ -256,6 +255,13 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_FASTJET)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
+    target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_HASHING)

@@ -73,6 +73,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   data.boundary_id = surface.geometryId().boundary();
   data.layer_id = surface.geometryId().layer();
   data.module_id = surface.geometryId().sensitive();
+  data.extra_id = surface.geometryId().extra();
   // center position
   auto center = surface.center(geoCtx);
   data.cx = center.x() / Acts::UnitConstants::mm;

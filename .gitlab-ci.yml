@@ -4,10 +4,10 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-04-20
+  SPACK_VERSION: develop-2025-06-08
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v11.1.0
 
 .ccache_base:
   cache:
@@ -111,7 +111,6 @@ build_exatrkx_cpu:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
@@ -127,6 +126,7 @@ build_exatrkx_cpu:
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
+      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
 
     - ccache -z
     - cmake --build build -- -j6
@@ -147,6 +147,7 @@ build_exatrkx:
 
   artifacts:
     paths:
+      - boost-install/
       - build/
     exclude:
       - build/**/*.o
@@ -156,7 +157,6 @@ build_exatrkx:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
@@ -169,7 +169,6 @@ build_exatrkx:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
     - cmake --build build -- -j6
@@ -198,7 +197,7 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda)"
+    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -229,6 +228,7 @@ test_exatrkx_python:
     - which python3
     - python3 --version
     - python3 -c "import acts"
+    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
     - pytest -rfExw -k torch -v --collect-only
     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -257,7 +257,6 @@ build_gnn_tensorrt:
     - mkdir build
     - >
       cmake -B build -S src --preset gitlab-ci-tensorrt
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
     - ccache -z
     - cmake --build build -- -j6
     - ccache -s
@@ -537,18 +536,6 @@ linux_ubuntu_2404_clang19:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_105:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "105"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
 
 lcg_106a:
   extends: .lcg_base_job
