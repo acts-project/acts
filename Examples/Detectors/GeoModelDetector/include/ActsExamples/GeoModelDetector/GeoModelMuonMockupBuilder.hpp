@@ -57,7 +57,8 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> buildBarrelNode(
       const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
-      Acts::VolumeBoundFactory& boundFactory) const;
+      Acts::VolumeBoundFactory& boundFactory,
+      const Acts::GeometryIdentifier& geoId) const;
 
   /// Private access method to the logger
   const Acts::Logger& logger() const { return *m_logger; }

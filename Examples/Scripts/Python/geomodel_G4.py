@@ -33,7 +33,7 @@ def runGeant4(
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
     from pathlib import Path
 
-    s = s or acts.examples.Sequencer(events=1, numThreads=1)
+    s = s or acts.examples.Sequencer(events=1000, numThreads=1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
     addParticleGun(
@@ -63,9 +63,7 @@ def runGeant4(
 def main():
     from argparse import ArgumentParser
 
-    u = acts.UnitConstants
-
-   
+    u = acts.UnitConstants   
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -110,7 +108,7 @@ def main():
     # Create the tracking geometry builder for the muon system
     gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
     gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
-    gmBuilderConfig.stationNames = ["BIL"]
+    gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE
@@ -124,7 +122,7 @@ def main():
 
     wb = WhiteBoard(acts.logging.INFO)
 
-    context = AlgorithmContext(0, 0, wb,1)
+    context = AlgorithmContext(0, 0, wb,10)
     obj_dir = Path(args.outDir) / "obj"
     obj_dir.mkdir(exist_ok=True)
 

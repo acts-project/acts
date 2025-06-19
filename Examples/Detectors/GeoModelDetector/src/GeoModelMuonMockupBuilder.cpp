@@ -50,8 +50,13 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   }
 
   // Add the station nodes as static cylidner nodes
+  std::size_t layerId = 0;
+
   for (const auto& str : m_cfg.stationNames) {
-    auto node = buildBarrelNode(boundingBoxes, str, *m_cfg.volumeBoundFactory);
+    Acts::GeometryIdentifier geoIdNode =
+        Acts::GeometryIdentifier().withLayer(++layerId);
+    auto node = buildBarrelNode(boundingBoxes, str, *m_cfg.volumeBoundFactory,
+                                geoIdNode);
     cyl.addChild(std::move(node));
   }
 
@@ -63,18 +68,19 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 GeoModelMuonMockupBuilder::buildBarrelNode(
     const GeoModelVolumeFPVsVec& boundingBoxes, const std::string& name,
-    Acts::VolumeBoundFactory& boundFactory) const {
+    Acts::VolumeBoundFactory& boundFactory,
+    const Acts::GeometryIdentifier& geoId) const {
   using enum Acts::TrapezoidVolumeBounds::BoundValues;
 
   /** Assume a station paradigm. MDT multilayers and complementary strip
    * detectors are residing under a common parent node representing a muon
    * station envelope. Group the passed boxes under by their parent */
-  std::map<PVConstLink, GeoModelVolumeFPVsVec> commonStations{};
+  std::map<const GeoVPhysVol*, GeoModelVolumeFPVsVec> commonStations{};
   for (const auto& box : boundingBoxes) {
     if (std::get<1>(box)->name().find(name) == std::string::npos) {
       continue;  // skip boxes that do not match the station name
     }
-    auto parent = std::get<2>(box)->getParent();
+    auto parent = std::get<2>(box)->getParent().get();
 
     if (!parent) {
       THROW_EXCEPTION("No parent found for " << name);
@@ -91,11 +97,9 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         parentPhysVol->getX(), parentPhysVol->getLogVol()->getShape(),
         boundFactory);
 
-    auto chamberVolume =
-        std::make_unique<Acts::TrackingVolume>(
-            *parentVolume, "Chamber_" + std::to_string(stationNum++));
-    chamberVolume->assignGeometryId(
-        Acts::GeometryIdentifier{}.withVolume(stationNum));
+    auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
+        *parentVolume, name + "Chamber_" + std::to_string(stationNum++));
+    chamberVolume->assignGeometryId(geoId.withVolume(stationNum));
 
     std::size_t childVol = 0;
     for (const auto& child : childrenTrkVols) {
@@ -104,9 +108,8 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       std::unique_ptr<Acts::TrackingVolume> trVol =
           std::make_unique<Acts::TrackingVolume>(*vol,
                                                  std::get<1>(child)->name());
-      trVol->assignGeometryId(Acts::GeometryIdentifier{}
-                                  .withVolume(stationNum)
-                                  .withLayer(++childVol));
+      trVol->assignGeometryId(
+          geoId.withVolume(stationNum).withExtra(++childVol));
 
       // add the sensitives (tubes) in the constructed tracking volume
       auto sensitives = std::get<1>(child)->surfacePtrs();
