@@ -357,20 +357,20 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg, &sStat, this](
+  opt.decisionFunctor = [&sStat, this](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &mes) {
     if (section.divisionLevel() <= 8) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Drill;
     }
 
-    if (section.count() < m_cfg.threshold) {
+    if (section.count() < this->m_cfg.threshold) {
       sStat[section.divisionLevel()].discardedByThresholdCut += 1;
       return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
     }
-    if (section.count() < 3 * m_cfg.threshold) {
+    if (section.count() < 3 * this->m_cfg.threshold) {
       if (!passIntersectionsCheck(section, mes, m_qOverPtPhiLineParams,
-                                  m_cfg.threshold * (m_cfg.threshold - 1))) {
+                                  this->m_cfg.threshold * (this->m_cfg.threshold - 1))) {
         sStat[section.divisionLevel()].discardedByCrossingCut += 1;
         return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
       }
@@ -379,10 +379,10 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
 
     // }
 
-    if (section.count() >= m_cfg.threshold &&
-        section.count() <= m_cfg.noiseThreshold &&
-        section.xSize() <= m_cfg.phiMinBinSize &&
-        section.ySize() <= m_cfg.qOverPtMinBinSize) {
+    if (section.count() >= this->m_cfg.threshold &&
+        section.count() <= this->m_cfg.noiseThreshold &&
+        section.xSize() <= this->m_cfg.phiMinBinSize &&
+        section.ySize() <= this->m_cfg.qOverPtMinBinSize) {
       return AHTExplorationOptions<PreprocessedMeasurement>::Accept;
     }
     sStat[section.divisionLevel()].area += section.xSize() * section.ySize();
