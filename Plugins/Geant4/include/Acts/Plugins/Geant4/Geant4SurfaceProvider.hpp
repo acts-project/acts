@@ -128,8 +128,11 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     /// Find and store surfaces in the cache object
     auto g4ToWorldConsistent = G4Transform3D(
         m_g4ToWorld.getRotation().inverse(), m_g4ToWorld.getTranslation());
-    Acts::Geant4DetectorSurfaceFactory{}.construct(
-        g4SurfaceCache, g4ToWorldConsistent, *m_g4World, g4SurfaceOptions);
+
+    Acts::Geant4DetectorSurfaceFactory::Config surfaceConfig;
+    Acts::Geant4DetectorSurfaceFactory(surfaceConfig)
+        .construct(g4SurfaceCache, g4ToWorldConsistent, *m_g4World,
+                   g4SurfaceOptions);
 
     auto surfaces = g4SurfaceCache.passiveSurfaces;
 
