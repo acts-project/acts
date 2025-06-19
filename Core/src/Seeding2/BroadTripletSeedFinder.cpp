@@ -69,8 +69,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
     std::span<const SpacePointIndex2> topSps,
     SeedContainer2& outputSeeds) const {
   cache.candidatesCollector.setMaxElements(
-      options.filter.maxSeedsPerSpMConf,
-      options.filter.maxQualitySeedsPerSpMConf);
+      filter.config().maxSeedsPerSpMConf,
+      filter.config().maxQualitySeedsPerSpMConf);
 
   auto spM = containerPointers.spacePoints().at(middleSp);
 
@@ -86,6 +86,32 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
   if (cache.topDoublets.empty()) {
     ACTS_VERBOSE("No compatible Tops, returning");
     return;
+  }
+
+  // apply cut on the number of top SP if seedConfirmation is true
+  float rMaxSeedConf = 0;
+  if (filter.config().seedConfirmation) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (spM.z() > filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
+         spM.z() < filter.config().centralSeedConfirmationRange.zMinSeedConf)
+            ? filter.config().forwardSeedConfirmationRange
+            : filter.config().centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    std::size_t nTopSeedConf =
+        spM.extra(containerPointers.rColumn()) > seedConfRange.rMaxSeedConf
+            ? seedConfRange.nTopForLargeR
+            : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
+    if (cache.topDoublets.size() < nTopSeedConf) {
+      ACTS_VERBOSE("Number of top SPs is "
+                   << cache.topDoublets.size()
+                   << " and is smaller than minimum, returning");
+      return;
+    }
   }
 
   // create middle-bottom doublets
@@ -109,11 +135,11 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
   cache.candidatesCollector.clear();
   if (options.useDetailedDoubleMeasurementInfo) {
     createTripletsDetailed(
-        tripletCuts, filter, options.filter, state.filter, cache.filter,
+        tripletCuts, rMaxSeedConf, filter, state.filter, cache.filter,
         containerPointers, spM, cache.bottomDoublets, cache.topDoublets,
         cache.tripletTopCandidates, cache.candidatesCollector);
   } else {
-    createTriplets(cache.tripletCache, tripletCuts, filter, options.filter,
+    createTriplets(cache.tripletCache, tripletCuts, rMaxSeedConf, filter,
                    state.filter, cache.filter, containerPointers, spM,
                    cache.bottomDoublets, cache.topDoublets,
                    cache.tripletTopCandidates, cache.candidatesCollector);
@@ -125,16 +151,14 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
       cache.candidatesCollector.nHighQualityCandidates();
   cache.candidatesCollector.toSortedCandidates(containerPointers.spacePoints(),
                                                cache.sortedCandidates);
-  filter.filter1SpFixed(options.filter, state.filter,
-                        containerPointers.spacePoints(),
+  filter.filter1SpFixed(state.filter, containerPointers.spacePoints(),
                         containerPointers.copiedFromIndexColumn,
                         cache.sortedCandidates, numQualitySeeds, outputSeeds);
 }
 
 void BroadTripletSeedFinder::createTriplets(
-    TripletCache& cache, const DerivedTripletCuts& cuts,
+    TripletCache& cache, const DerivedTripletCuts& cuts, float rMaxSeedConf,
     const BroadTripletSeedFilter& filter,
-    const BroadTripletSeedFilter::Options& filterOptions,
     BroadTripletSeedFilter::State& filterState,
     BroadTripletSeedFilter::Cache& filterCache,
     const SpacePointContainerPointers& containerPointers,
@@ -207,12 +231,11 @@ void BroadTripletSeedFinder::createTriplets(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
-    if (!filterOptions.seedConfirmation ||
-        spB.extra(containerPointers.rColumn()) >
-            filterOptions.seedConfRange.rMaxSeedConf) {
+    if (!filter.config().seedConfirmation ||
+        spB.extra(containerPointers.rColumn()) > rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (filterOptions.seedConfirmation &&
+    if (filter.config().seedConfirmation &&
         candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
@@ -304,7 +327,7 @@ void BroadTripletSeedFinder::createTriplets(
         if (cotThetaB < cotThetaT) {
           break;
         }
-        t0 = indexSortedTop + 1;
+        t0 = indexSortedTop;
         continue;
       }
 
@@ -322,23 +345,23 @@ void BroadTripletSeedFinder::createTriplets(
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (tripletTopCandidates.topSpacePoints.size() < minCompatibleTopSPs) {
+    if (tripletTopCandidates.size() < minCompatibleTopSPs) {
       continue;
     }
 
     float zOrigin = spM.z() - rM * lb.cotTheta;
     filter.filter2SpFixed(
-        filterOptions, filterState, filterCache,
-        containerPointers.spacePoints(), containerPointers.rColumn(),
-        containerPointers.copiedFromIndexColumn, spB.index(), spM.index(),
-        tripletTopCandidates.topSpacePoints, tripletTopCandidates.curvatures,
-        tripletTopCandidates.impactParameters, zOrigin, candidatesCollector);
+        filterState, filterCache, containerPointers.spacePoints(),
+        containerPointers.rColumn(), containerPointers.copiedFromIndexColumn,
+        spB.index(), spM.index(), tripletTopCandidates.topSpacePoints,
+        tripletTopCandidates.curvatures, tripletTopCandidates.impactParameters,
+        zOrigin, candidatesCollector);
   }  // loop on bottoms
 }
 
 void BroadTripletSeedFinder::createTripletsDetailed(
-    const DerivedTripletCuts& cuts, const BroadTripletSeedFilter& filter,
-    const BroadTripletSeedFilter::Options& filterOptions,
+    const DerivedTripletCuts& cuts, float rMaxSeedConf,
+    const BroadTripletSeedFilter& filter,
     BroadTripletSeedFilter::State& filterState,
     BroadTripletSeedFilter::Cache& filterCache,
     const SpacePointContainerPointers& containerPointers,
@@ -400,12 +423,11 @@ void BroadTripletSeedFinder::createTripletsDetailed(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     std::size_t minCompatibleTopSPs = 2;
-    if (!filterOptions.seedConfirmation ||
-        spB.extra(containerPointers.rColumn()) >
-            filterOptions.seedConfRange.rMaxSeedConf) {
+    if (!filter.config().seedConfirmation ||
+        spB.extra(containerPointers.rColumn()) > rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (filterOptions.seedConfirmation &&
+    if (filter.config().seedConfirmation &&
         candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
@@ -576,17 +598,17 @@ void BroadTripletSeedFinder::createTripletsDetailed(
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (tripletTopCandidates.topSpacePoints.size() < minCompatibleTopSPs) {
+    if (tripletTopCandidates.size() < minCompatibleTopSPs) {
       continue;
     }
 
     float zOrigin = spM.z() - rM * lb.cotTheta;
     filter.filter2SpFixed(
-        filterOptions, filterState, filterCache,
-        containerPointers.spacePoints(), containerPointers.rColumn(),
-        containerPointers.copiedFromIndexColumn, spB.index(), spM.index(),
-        tripletTopCandidates.topSpacePoints, tripletTopCandidates.curvatures,
-        tripletTopCandidates.impactParameters, zOrigin, candidatesCollector);
+        filterState, filterCache, containerPointers.spacePoints(),
+        containerPointers.rColumn(), containerPointers.copiedFromIndexColumn,
+        spB.index(), spM.index(), tripletTopCandidates.topSpacePoints,
+        tripletTopCandidates.curvatures, tripletTopCandidates.impactParameters,
+        zOrigin, candidatesCollector);
   }  // loop on bottoms
 }
 

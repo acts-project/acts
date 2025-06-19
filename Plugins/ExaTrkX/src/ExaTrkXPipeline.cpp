@@ -10,7 +10,20 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <algorithm>
+#ifdef ACTS_EXATRKX_WITH_CUDA
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+
+namespace {
+struct CudaStreamGuard {
+  cudaStream_t stream{};
+  CudaStreamGuard() { ACTS_CUDA_CHECK(cudaStreamCreate(&stream)); }
+  ~CudaStreamGuard() {
+    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_CUDA_CHECK(cudaStreamDestroy(stream));
+  }
+};
+}  // namespace
+#endif
 
 namespace Acts {
 
@@ -20,9 +33,9 @@ ExaTrkXPipeline::ExaTrkXPipeline(
     std::shared_ptr<TrackBuildingBase> trackBuilder,
     std::unique_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)),
-      m_graphConstructor(graphConstructor),
-      m_edgeClassifiers(edgeClassifiers),
-      m_trackBuilder(trackBuilder) {
+      m_graphConstructor(std::move(graphConstructor)),
+      m_edgeClassifiers(std::move(edgeClassifiers)),
+      m_trackBuilder(std::move(trackBuilder)) {
   if (!m_graphConstructor) {
     throw std::invalid_argument("Missing graph construction module");
   }
@@ -41,15 +54,17 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifdef ACTS_EXATRKX_WITH_CUDA
+  std::optional<CudaStreamGuard> streamGuard;
   if (ctx.device.type == Acts::Device::Type::eCUDA) {
-    ctx.stream = c10::cuda::getStreamFromPool(true, ctx.device.index);
+    streamGuard.emplace();
+    ctx.stream = streamGuard->stream;
   }
 #endif
 
   try {
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [nodeFeatures, edgeIndex, edgeFeatures] =
+    auto tensors =
         (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -57,33 +72,26 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
       timing->graphBuildingTime = t1 - t0;
     }
 
-    hook(nodeFeatures, edgeIndex, {});
+    hook(tensors, ctx);
 
-    std::any edgeScores;
-    timing->classifierTimes.clear();
+    if (timing != nullptr) {
+      timing->classifierTimes.clear();
+    }
 
-    for (auto edgeClassifier : m_edgeClassifiers) {
+    for (const auto &edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();
-      auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =
-          (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeIndex),
-                            std::move(edgeFeatures), ctx);
+      tensors = (*edgeClassifier)(std::move(tensors), ctx);
       t1 = std::chrono::high_resolution_clock::now();
 
       if (timing != nullptr) {
         timing->classifierTimes.push_back(t1 - t0);
       }
 
-      nodeFeatures = std::move(newNodeFeatures);
-      edgeFeatures = std::move(newEdgeFeatures);
-      edgeIndex = std::move(newEdgeIndex);
-      edgeScores = std::move(newEdgeScores);
-
-      hook(nodeFeatures, edgeIndex, edgeScores);
+      hook(tensors, ctx);
     }
 
     t0 = std::chrono::high_resolution_clock::now();
-    auto res = (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
-                                 std::move(edgeScores), spacepointIDs, ctx);
+    auto res = (*m_trackBuilder)(std::move(tensors), spacepointIDs, ctx);
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {

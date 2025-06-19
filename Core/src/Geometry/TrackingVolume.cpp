@@ -715,12 +715,22 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
 }
 
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  // if the visitor is configured for inner--->outer volume visiting we visit
+  // the children first
+  if (visitor.visitDepthFirst()) {
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
+  }
+
   visitor.visitVolume(*this);
 
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
+
   // @TODO: Remove this when Gen1 is remoeved
+
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
@@ -771,8 +781,12 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
+  if (!visitor.visitDepthFirst()) {
+    // if the visitor is configured for outer--->inner volume visiting we visit
+    // the children last
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
   }
 }
 

@@ -65,21 +65,19 @@ class BroadTripletSeedFilter final {
     float seedWeightIncrement = 0;
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
-    // Other parameters
+    /// Seeding parameters used for quality seed confirmation
 
-    /// Use deltaR between top and middle SP instead of top radius to search for
-    /// compatible SPs
-    bool useDeltaRinsteadOfTopRadius = false;
-
-    std::shared_ptr<ITripletSeedCuts> experimentCuts;
-  };
-
-  struct Options {
+    /// Enable quality seed confirmation, this is different than default seeding
+    /// confirmation because it can also be defined for different (r, z) regions
+    /// of the detector (e.g. forward or central region) by
+    /// SeedConfirmationRange. Seeds are classified as "high-quality" seeds and
+    /// normal quality seeds. Normal quality seeds are only selected if no other
+    /// "high-quality" seed has been found for that inner-middle doublet.
     bool seedConfirmation = false;
-
-    SeedConfirmationRangeConfig seedConfRange;
-
-    std::size_t nTopSeedConf = 0;
+    /// Contains parameters for central seed confirmation
+    SeedConfirmationRangeConfig centralSeedConfirmationRange;
+    /// Contains parameters for forward seed confirmation
+    SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
     /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
     /// Seeds that are not confirmed as "high-quality" are only selected if no
@@ -92,6 +90,14 @@ class BroadTripletSeedFilter final {
     /// normal quality seed to be replaced
     std::size_t maxQualitySeedsPerSpMConf =
         std::numeric_limits<std::size_t>::max();
+
+    // Other parameters
+
+    /// Use deltaR between top and middle SP instead of top radius to search for
+    /// compatible SPs
+    bool useDeltaRinsteadOfTopRadius = false;
+
+    std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };
 
   struct State {
@@ -108,10 +114,11 @@ class BroadTripletSeedFilter final {
                                       getDefaultLogger("BroadTripletSeedFilter",
                                                        Logging::Level::INFO));
 
+  const Config& config() const { return m_cfg; }
+
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.
   ///
-  /// @param options Frequently changing configuration
   /// @param state Mutable state that is used to store intermediate results
   /// @param cache Cache object to store intermediate results
   /// @param spacePoints Container with all space points
@@ -126,7 +133,7 @@ class BroadTripletSeedFilter final {
   /// @param impactParametersVec Vector containing the impact parameters
   /// @param zOrigin Z origin of the detector, used for z0 calculation
   /// @param candidatesCollector Container for the seed candidates
-  void filter2SpFixed(const Options& options, State& state, Cache& cache,
+  void filter2SpFixed(State& state, Cache& cache,
                       const SpacePointContainer2& spacePoints,
                       const SpacePointContainer2::DenseColumn<float>& rColumn,
                       const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
@@ -139,15 +146,13 @@ class BroadTripletSeedFilter final {
 
   /// Create final seeds for all candidates with the same middle space point
   ///
-  /// @param options Frequently changing configuration
   /// @param state Mutable state that is used to store intermediate results
   /// @param spacePoints Container with all space points
   /// @param copyFromIndexColumn Optional dense column of original space point indices
   /// @param candidates Collection of seed candidates
   /// @param numQualitySeeds Number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
-  void filter1SpFixed(const Options& options, State& state,
-                      const SpacePointContainer2& spacePoints,
+  void filter1SpFixed(State& state, const SpacePointContainer2& spacePoints,
                       const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
                           copyFromIndexColumn,
                       std::span<TripletCandidate2> candidates,

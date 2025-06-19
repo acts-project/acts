@@ -1,5 +1,4 @@
 add_subdirectory_if(ActSVG ACTS_BUILD_PLUGIN_ACTSVG)
-add_subdirectory_if(Cuda ACTS_BUILD_PLUGIN_CUDA)
 add_subdirectory_if(Detray ACTS_BUILD_PLUGIN_TRACCC)
 add_subdirectory_if(DD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_subdirectory_if(ExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)

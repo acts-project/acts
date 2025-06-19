@@ -17,7 +17,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -48,8 +47,6 @@ class BroadTripletSeedFinder {
     /// produced when combining measurement from strips on back-to-back modules.
     /// Enables setting of the following delegates.
     bool useDetailedDoubleMeasurementInfo = false;
-
-    BroadTripletSeedFilter::Options filter;
   };
 
   struct DerivedTripletCuts;
@@ -102,6 +99,8 @@ class BroadTripletSeedFinder {
     std::vector<SpacePointIndex2> topSpacePoints;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
+
+    std::size_t size() const { return topSpacePoints.size(); }
 
     void resize(std::size_t size) {
       topSpacePoints.resize(size);
@@ -178,7 +177,6 @@ class BroadTripletSeedFinder {
   /// @param cache Cache object to store intermediate results
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param filterOptions Options for the triplet seed filter
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
   /// @param containerPointers Space point container and its extra columns
@@ -188,9 +186,8 @@ class BroadTripletSeedFinder {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTriplets(
-      TripletCache& cache, const DerivedTripletCuts& cuts,
+      TripletCache& cache, const DerivedTripletCuts& cuts, float rMaxSeedConf,
       const BroadTripletSeedFilter& filter,
-      const BroadTripletSeedFilter::Options& filterOptions,
       BroadTripletSeedFilter::State& filterState,
       BroadTripletSeedFilter::Cache& filterCache,
       const SpacePointContainerPointers& containerPointers,
@@ -204,7 +201,6 @@ class BroadTripletSeedFinder {
   ///
   /// @param cuts Triplet cuts that define the compatibility of space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param filterOptions Options for the triplet seed filter
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
   /// @param containerPointers Space point container and its extra columns
@@ -214,8 +210,8 @@ class BroadTripletSeedFinder {
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
   static void createTripletsDetailed(
-      const DerivedTripletCuts& cuts, const BroadTripletSeedFilter& filter,
-      const BroadTripletSeedFilter::Options& filterOptions,
+      const DerivedTripletCuts& cuts, float rMaxSeedConf,
+      const BroadTripletSeedFilter& filter,
       BroadTripletSeedFilter::State& filterState,
       BroadTripletSeedFilter::Cache& filterCache,
       const SpacePointContainerPointers& containerPointers,
