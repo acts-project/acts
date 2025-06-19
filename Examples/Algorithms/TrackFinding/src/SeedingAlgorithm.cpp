@@ -197,6 +197,7 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   ACTS_INFO("SeedingAlgorithm: " << nSpacePoints << " spacepoints");
+  m_seedFinder.setCustomcCollisionRegion(-123.4, +123.4);
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
