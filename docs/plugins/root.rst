@@ -10,7 +10,7 @@ The ``Root`` plutin provides geometry and I/O components to ACTS from the ROOT f
 Geometry
 --------
 
-The ``Root`` plugin connects a geometry described with the ``ROOT::Geom`` module with Acts. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects.
+The ``Root`` plugin connects a geometry described with the ``ROOT::Geom`` module with ACTS. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects.
 ACTS detector elements are represented by surfaces with dedicated shapes, hence a conversion of the volume based ``TGeoNode`` description into ``Acts::Surface`` objects needs to take place.
 
 An example use of the ``TGeo`` plugin can be found in the ``TGeoDetector`` example.
