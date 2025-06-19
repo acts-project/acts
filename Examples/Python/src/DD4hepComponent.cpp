@@ -13,12 +13,15 @@
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include <memory>
 #include <utility>
 
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Fields.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -31,6 +34,16 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     py::class_<Acts::DD4hepDetectorElement, Acts::DetectorElementBase,
                std::shared_ptr<Acts::DD4hepDetectorElement>>(
         m, "DD4hepDetectorElement");
+
+    py::class_<ActsExamples::AlignedDD4hepDetectorElement,
+               Acts::DD4hepDetectorElement,
+               std::shared_ptr<ActsExamples::AlignedDD4hepDetectorElement>>(
+        m, "AlignedDD4hepDetectorElement");
+  }
+
+  {
+    py::class_<dd4hep::DetElement, std::shared_ptr<dd4hep::DetElement>>(
+        m, "DD4hepDetElement");
   }
 
   {
@@ -44,9 +57,11 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
                        bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
                        defaultLayerThickness, materialDecorator,
-                       geometryIdentifierHook);
-
+                       geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
+
+    m.def("alignedDD4hepDetectorElementFactory",
+          &ActsExamples::alignedDD4hepDetectorElementFactory);
   }
 
   {

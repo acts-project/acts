@@ -143,6 +143,19 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
         .def(py::init<Acts::GeometryIdentifier::Value>())
+        .def(py::init([](int volume, int boundary, int layer, int approach,
+                         int sensitive, int extra) {
+               return Acts::GeometryIdentifier()
+                   .withVolume(volume)
+                   .withBoundary(boundary)
+                   .withLayer(layer)
+                   .withApproach(approach)
+                   .withSensitive(sensitive)
+                   .withExtra(extra);
+             }),
+             py::arg("volume") = 0, py::arg("boundary") = 0,
+             py::arg("layer") = 0, py::arg("approach") = 0,
+             py::arg("sensitive") = 0, py::arg("extra") = 0)
         .def_property(
             "layer", &Acts::GeometryIdentifier::layer,
             [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
