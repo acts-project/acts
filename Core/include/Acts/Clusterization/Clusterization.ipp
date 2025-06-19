@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <vector>
 
 #include <boost/pending/disjoint_sets.hpp>
@@ -89,7 +90,7 @@ template <std::size_t BufSize>
 struct ConnectionsBase {
   std::size_t nconn{0};
   std::array<Label, BufSize> buf;
-  ConnectionsBase() { std::fill(buf.begin(), buf.end(), NO_LABEL); }
+  ConnectionsBase() { std::ranges::fill(buf, NO_LABEL); }
 };
 
 template <std::size_t GridDim>

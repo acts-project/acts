@@ -49,13 +49,10 @@ pytestmark = [
     pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available"),
 ]
 
-try:
-    cm = acts.examples.hepmc3.Compression
-    from acts.examples.hepmc3 import availableCompressionModes
+cm = acts.examples.hepmc3.Compression
+from acts.examples.hepmc3 import availableCompressionModes
 
-    _available_compression_modes = availableCompressionModes()
-except ImportError:
-    _available_compression_modes = []
+_available_compression_modes = availableCompressionModes()
 
 
 compression_modes = pytest.mark.parametrize(
@@ -83,9 +80,49 @@ def handle_path(out, compression):
     return actual_path
 
 
-@pytest.mark.parametrize("per_event", [True, False], ids=["per_event", "combined"])
-@compression_modes
-def test_hepmc3_writer(tmp_path, rng, per_event, compression):
+all_formats = []
+all_format_ids = []
+
+for compression in acts.examples.hepmc3.availableCompressionModes():
+    for value, id in [(True, "per_event"), (False, "combined")]:
+        all_formats.append(
+            (
+                value,
+                "hepmc3",
+                compression,
+            )
+        )
+        all_format_ids.append(
+            f"{id}-hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
+        )
+
+all_formats.append((False, "root", cm.none))
+all_format_ids.append("root")
+
+all_formats = pytest.mark.parametrize(
+    "per_event,format,compression", all_formats, ids=all_format_ids
+)
+
+main_formats = []
+main_format_ids = []
+
+for compression in acts.examples.hepmc3.availableCompressionModes():
+    main_formats.append(("hepmc3", compression))
+    main_format_ids.append(
+        f"hepmc3-{compression.name if compression != cm.none else 'uncompressed'}"
+    )
+
+main_formats.append(("root", cm.none))
+main_format_ids.append("root")
+
+
+main_formats = pytest.mark.parametrize(
+    "format,compression", main_formats, ids=main_format_ids
+)
+
+
+@all_formats
+def test_hemc3_writer(tmp_path, rng, per_event, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -134,7 +171,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
     )
     s.addAlgorithm(alg)
 
-    out = tmp_path / "out" / "pytest.hepmc3"
+    out = tmp_path / "out" / f"pytest.{format}"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     s.addWriter(
@@ -167,7 +204,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
         actual_path = handle_path(out, compression)
 
         # pyhepmc does not support zstd
-        if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
+        if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
             @with_pyhepmc
             def check(pyhepmc):
@@ -232,13 +269,13 @@ def common_evgen(rng):
 
 
 @pytest.fixture
-def common_writer(tmp_path, common_evgen, rng):
-    def func(s: Sequencer, compression: acts.examples.hepmc3.Compression):
+def common_writer(tmp_path, common_evgen):
+    def func(s: Sequencer, compression: acts.examples.hepmc3.Compression, format: str):
         from acts.examples.hepmc3 import HepMC3Writer
 
         evGen = common_evgen(s)
 
-        out = tmp_path / "out" / "events_pytest.hepmc3"
+        out = tmp_path / "out" / f"events_pytest.{format}"
         out.parent.mkdir(parents=True, exist_ok=True)
 
         s.addWriter(
@@ -351,8 +388,8 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
         ), "Event numbers are different"
 
 
-@compression_modes
-def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
+@main_formats
+def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -377,7 +414,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
         vtxGen=vtxGen,
     )
 
-    out = tmp_path / "events.hepmc3"
+    out = tmp_path / f"events.{format}"
 
     s.addWriter(
         HepMC3Writer(
@@ -407,7 +444,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
 
     assert actual_path.exists(), f"File {actual_path} does not exist"
 
-    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib) and format != "root":
 
         @with_pyhepmc
         def check(pyhepmc):
@@ -420,8 +457,8 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
             assert nevts == s.config.events
 
 
-@compression_modes
-def test_hepmc3_reader(common_writer, rng, compression):
+@main_formats
+def test_hepmc3_reader(common_writer, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Reader,
     )
@@ -430,7 +467,7 @@ def test_hepmc3_reader(common_writer, rng, compression):
 
     s = Sequencer(numThreads=10, events=nevents)
 
-    out = common_writer(s, compression)
+    out = common_writer(s, compression, format)
 
     s.run()
 
@@ -474,8 +511,8 @@ def test_hepmc3_reader(common_writer, rng, compression):
     assert alg.events_seen == nevents
 
 
-@compression_modes
-def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression):
+@main_formats
+def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression, format):
     """
     The HepMC3Reader can be configured to read a specific number of events. If
     the explicit number of events is lower or equal to the actual number of
@@ -487,7 +524,7 @@ def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression):
 
     nevents = 1200
     s = Sequencer(numThreads=10, events=nevents)
-    out = common_writer(s, compression)
+    out = common_writer(s, compression, format)
     s.run()
     actual_path = handle_path(out, compression)
 
@@ -517,8 +554,10 @@ def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression):
         assert alg.events_seen == num
 
 
-@compression_modes
-def test_hepmc3_reader_explicit_num_events_too_large(common_writer, rng, compression):
+@main_formats
+def test_hepmc3_reader_explicit_num_events_too_large(
+    common_writer, rng, compression, format
+):
     """
     The HepMC3Reader can be configured to read a specific number of events. If
     the explicit number of events is larger than the actual number of events,
@@ -530,7 +569,7 @@ def test_hepmc3_reader_explicit_num_events_too_large(common_writer, rng, compres
 
     nevents = 1200
     s = Sequencer(numThreads=10, events=nevents)
-    out = common_writer(s, compression)
+    out = common_writer(s, compression, format)
     s.run()
     actual_path = handle_path(out, compression)
 
@@ -553,15 +592,15 @@ def test_hepmc3_reader_explicit_num_events_too_large(common_writer, rng, compres
     assert "Failed to process event" in str(excinfo.value)
 
 
-@compression_modes
-def test_hepmc3_reader_skip_events(common_writer, rng, compression):
+@main_formats
+def test_hepmc3_reader_skip_events(common_writer, rng, compression, format):
     from acts.examples.hepmc3 import (
         HepMC3Reader,
     )
 
     nevents = 1200
     s = Sequencer(numThreads=10, events=nevents)
-    out = common_writer(s, compression)
+    out = common_writer(s, compression, format)
     s.run()
     actual_path = handle_path(out, compression)
 
@@ -690,7 +729,7 @@ def test_hepmc3_reader_per_event(tmp_path, rng):
     s.run()
 
 
-def test_hepmc3_reader_per_event_with_num_events(tmp_path, rng):
+def test_hepmc3_reader_per_event_with_num_events():
     from acts.examples.hepmc3 import (
         HepMC3Reader,
     )
@@ -710,3 +749,42 @@ def test_hepmc3_reader_per_event_with_num_events(tmp_path, rng):
 
 def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
+
+
+def test_hepmc3_writer_per_event_root_warning(tmp_path, capfd):
+    """Test that a warning is emitted when using per-event output with ROOT format"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    out = tmp_path / "out" / "events.root"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with acts.logging.ScopedFailureThreshold(acts.logging.MAX):
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            perEvent=True,
+        )
+
+    out, err = capfd.readouterr()
+    assert "Per-event output is enabled and the output format is ROOT" in out
+
+
+def test_hepmc3_writer_root_compression_error(tmp_path):
+    """Test that an error is raised when trying to use compression with ROOT format"""
+    from acts.examples.hepmc3 import HepMC3Writer
+
+    out = tmp_path / "out" / "events.root"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with acts.logging.ScopedFailureThreshold(acts.logging.MAX), pytest.raises(
+        ValueError
+    ) as excinfo:
+        HepMC3Writer(
+            acts.logging.INFO,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            compression=acts.examples.hepmc3.Compression.zlib,
+        )
+
+    assert "Compression not supported for Root" in str(excinfo.value)

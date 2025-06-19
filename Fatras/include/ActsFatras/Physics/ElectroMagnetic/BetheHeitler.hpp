@@ -11,6 +11,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Utilities/detail/FpeSafeGammaDistribution.hpp"
 
 #include <array>
 #include <cmath>
@@ -56,11 +57,11 @@ struct BetheHeitler {
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
-    std::gamma_distribution<double> gDist(
+    detail::FpeSafeGammaDistribution gDist(
         slab.thicknessInX0() / std::numbers::ln2, 1.);
 
     const auto u = gDist(generator);
-    const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)
+    const auto z = std::exp(-u);
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 

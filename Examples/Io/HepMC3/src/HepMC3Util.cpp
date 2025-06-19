@@ -32,8 +32,8 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   std::size_t nParticles = 0;
   std::size_t nVertices = 0;
   for (const auto& genEvent : genEvents) {
-    nParticles += genEvent->particles_size();
-    nVertices += genEvent->vertices_size();
+    nParticles += genEvent->particles().size();
+    nVertices += genEvent->vertices().size();
   }
 
   event->reserve(nParticles, nVertices);
@@ -41,7 +41,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   for (const auto& genEvent : genEvents) {
     auto sample = mergeTimer.sample();
     particles.clear();
-    particles.reserve(genEvent->particles_size());
+    particles.reserve(genEvent->particles().size());
 
     auto copyAttributes = [&](const auto& src, auto& dst) {
       for (const auto& attr : src.attribute_names()) {
@@ -150,6 +150,51 @@ std::ostream& HepMC3Util::operator<<(std::ostream& os,
     default:
       throw std::invalid_argument{"Unknown compression value"};
   }
+}
+
+std::ostream& HepMC3Util::operator<<(std::ostream& os,
+                                     HepMC3Util::Format format) {
+  switch (format) {
+    using enum HepMC3Util::Format;
+    case ascii:
+      return os << "ascii";
+    case root:
+      return os << "root";
+    default:
+      throw std::invalid_argument{"Unknown format value"};
+  }
+}
+
+std::span<const HepMC3Util::Format> HepMC3Util::availableFormats() {
+  using enum Format;
+  static const auto values = []() -> std::vector<HepMC3Util::Format> {
+    return {
+        ascii,
+#ifdef HEPMC3_ROOT_SUPPORT
+        root,
+#endif
+    };
+  }();
+  return values;
+}
+
+HepMC3Util::Format HepMC3Util::formatFromFilename(std::string_view filename) {
+  using enum Format;
+
+  for (auto compression : availableCompressionModes()) {
+    auto ext = compressionExtension(compression);
+
+    if (filename.ends_with(".hepmc3" + std::string(ext)) ||
+        filename.ends_with(".hepmc" + std::string(ext))) {
+      return ascii;
+    }
+  }
+  if (filename.ends_with(".root")) {
+    return root;
+  }
+
+  throw std::invalid_argument{"Unknown format extension: " +
+                              std::string{filename}};
 }
 
 }  // namespace ActsExamples
