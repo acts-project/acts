@@ -369,8 +369,9 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
       return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
     }
     if (section.count() < 3 * this->m_cfg.threshold) {
-      if (!passIntersectionsCheck(section, mes, m_qOverPtPhiLineParams,
-                                  this->m_cfg.threshold * (this->m_cfg.threshold - 1))) {
+      if (!passIntersectionsCheck(
+              section, mes, m_qOverPtPhiLineParams,
+              this->m_cfg.threshold * (this->m_cfg.threshold - 1))) {
         sStat[section.divisionLevel()].discardedByCrossingCut += 1;
         return AHTExplorationOptions<PreprocessedMeasurement>::Discard;
       }
