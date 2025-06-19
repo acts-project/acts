@@ -420,7 +420,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       };
 
   LineParamFunctor m_zCotThetaLineParams =
-      [this](const PreprocessedMeasurement &m, float arg) {
+      [](const PreprocessedMeasurement &m, float arg) {
         return -m.invr * arg + m.z * m.invr;
       };
 
