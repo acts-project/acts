@@ -94,7 +94,7 @@ class SeedingAlgorithm final : public IAlgorithm {
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::SpacePointProxyType;
 
-  Acts::SeedFinder<SpacePointProxy_t,
+  mutable Acts::SeedFinder<SpacePointProxy_t,
                    Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};

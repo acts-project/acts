@@ -106,6 +106,10 @@ class SeedFinder {
                            const std::size_t middleSPs,
                            const sp_range_t& topSPs,
                            const Range1D<float>& rMiddleSPRange) const;
+  void setCustomcCollisionRegion(float min, float max){
+    m_config.collisionRegionMin=min;
+    m_config.collisionRegionMax=max;
+  }
 
  private:
   /// Given a middle space point candidate, get the proper radius validity range
