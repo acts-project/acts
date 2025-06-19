@@ -28,7 +28,6 @@ import acts
 from acts.examples import (
     Sequencer,
     GenericDetector,
-    AlignedDetector,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
