@@ -23,6 +23,7 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Plugins/Root/RootMaterialDecorator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
