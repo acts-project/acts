@@ -1,4 +1,9 @@
-add_library(ActsExamplesDetectorDD4hep SHARED src/DD4hepDetector.cpp)
+add_library(
+    ActsExamplesDetectorDD4hep
+    SHARED
+    src/DD4hepDetector.cpp
+    src/AlignedDD4hepDetectorElement.cpp
+)
 
 target_include_directories(
     ActsExamplesDetectorDD4hep
