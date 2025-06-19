@@ -114,7 +114,7 @@ class AccumulatorSection {
   /// @brief line1 - functional form of line 1
   /// @brief line1 - functional form of line 2
   /// @warning note that this function is assuming that these are lines
-  /// It may be incorrect assumption for rapidly changing fuction or large
+  /// It may be incorrect assumption for rapidly changing function or large
   /// sections
   /// @return true if the lines cross in the section
   inline bool isCrossingInside(std::function<float(float)> line1,
