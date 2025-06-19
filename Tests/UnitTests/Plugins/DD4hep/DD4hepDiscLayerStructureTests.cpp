@@ -45,7 +45,7 @@ const char* tail_xml =
     </detectors>
 )"""";
 
-const char* indent_12_xml = "            ";
+const std::string indent_12_xml(12, ' ');
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 

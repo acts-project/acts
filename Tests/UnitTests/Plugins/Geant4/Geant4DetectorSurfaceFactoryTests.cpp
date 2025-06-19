@@ -157,6 +157,8 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
   auto center = surface->center(gctx);
   auto normal = surface->normal(gctx, center, Acts::Vector3(1, 0, 0));
 
+  // The following numbers represent the transforms above:
+  //
   // 0.836516 -0.224144       0.5   45.9808
   //  0.524519  0.591506 -0.612372   137.886
   // -0.158494  0.774519  0.612372   144.957

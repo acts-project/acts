@@ -13,22 +13,20 @@
 #include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <c10/cuda/CUDAGuard.h>
-#include <c10/cuda/CUDAStream.h>
-#include <torch/torch.h>
-
 namespace Acts {
 
 std::vector<std::vector<int>> CudaTrackBuilding::operator()(
-    std::any /*nodes*/, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, const ExecutionContext& execContext) {
+    PipelineTensors tensors, std::vector<int>& spacepointIDs,
+    const ExecutionContext& execContext) {
   ACTS_VERBOSE("Start CUDA track building");
-
-  const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCUDA);
-  assert(edgeTensor.size(0) == 2);
+  if (!(tensors.edgeIndex.device().isCuda() &&
+        tensors.edgeScores.value().device().isCuda())) {
+    throw std::runtime_error(
+        "CudaTrackBuilding expects tensors to be on CUDA!");
+  }
 
   const auto numSpacepoints = spacepointIDs.size();
-  auto numEdges = static_cast<std::size_t>(edgeTensor.size(1));
+  auto numEdges = static_cast<std::size_t>(tensors.edgeIndex.shape().at(1));
 
   if (numEdges == 0) {
     ACTS_DEBUG("No edges remained after edge classification");
@@ -37,8 +35,8 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
 
   auto stream = execContext.stream.value();
 
-  auto cudaSrcPtr = edgeTensor.data_ptr<std::int64_t>();
-  auto cudaTgtPtr = edgeTensor.data_ptr<std::int64_t>() + numEdges;
+  auto cudaSrcPtr = tensors.edgeIndex.data();
+  auto cudaTgtPtr = tensors.edgeIndex.data() + numEdges;
 
   auto ms = [](auto t0, auto t1) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0)
@@ -46,10 +44,9 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   };
 
   if (m_cfg.doJunctionRemoval) {
-    const auto scoreTensor =
-        std::any_cast<torch::Tensor>(weights).to(torch::kCUDA);
-    assert(scoreTensor.size(0) == edgeTensor.size(1));
-    auto cudaScorePtr = scoreTensor.data_ptr<float>();
+    assert(tensors.edgeScores->shape().at(0) ==
+           tensors.edgeIndex.shape().at(1));
+    auto cudaScorePtr = tensors.edgeScores->data();
 
     ACTS_DEBUG("Do junction removal...");
     auto t0 = std::chrono::high_resolution_clock::now();

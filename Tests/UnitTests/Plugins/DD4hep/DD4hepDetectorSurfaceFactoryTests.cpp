@@ -130,9 +130,9 @@ const char* plugin_xml =
   </plugins>
   )""";
 
-const char* indent_4_xml = "    ";
-const char* indent_8_xml = "        ";
-const char* indent_12_xml = "            ";
+const std::string indent_4_xml(4, ' ');
+const std::string indent_8_xml(8, ' ');
+const std::string indent_12_xml(12, ' ');
 
 namespace {
 

@@ -41,10 +41,10 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<std::uint64_t> &moduleIds,
-      const ExecutionContext &execContext = {}) override;
+  PipelineTensors operator()(std::vector<float> &inputValues,
+                             std::size_t numNodes,
+                             const std::vector<std::uint64_t> &moduleIds,
+                             const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
 

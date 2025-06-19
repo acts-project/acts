@@ -48,8 +48,8 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<const external_spacepoint_t*> compatBottomSp{};
-    std::vector<const external_spacepoint_t*> compatTopSp{};
+    std::vector<const external_spacepoint_t*> compatBottomSP{};
+    std::vector<const external_spacepoint_t*> compatTopSP{};
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom{};

@@ -28,6 +28,7 @@ template <typename ContainedShape, typename Converter, typename Surface,
 Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
+                                      SurfaceBoundFactory& boundFactory,
                                       bool sensitive) {
   auto trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
 
@@ -39,7 +40,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
   const Transform3& shift = geoShift.getX();
 
   const auto& conversionRes =
-      Converter{}(geoPV, *trd, absTransform * shift, sensitive);
+      Converter{}(geoPV, *trd, absTransform * shift, boundFactory, sensitive);
   if (!conversionRes.ok()) {
     return conversionRes.error();
   }
@@ -47,7 +48,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 
   // Use knowledge from GeoTrdConverter to make shared bounds object
   const auto& bounds = static_cast<const Bounds&>(surface->bounds());
-  auto sharedBounds = std::make_shared<const Bounds>(bounds);
+  auto sharedBounds = boundFactory.makeBounds<Bounds>(bounds);
 
   // TODO this procedure could be stripped from all converters because it is
   // pretty generic
@@ -67,16 +68,17 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeShift& geoShift,
-    const Transform3& absTransform, bool sensitive) const {
+    const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
+    bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
-      geoPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, boundFactory, sensitive);
 
   if (r.ok()) {
     return r;
   }
 
   r = impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
-      geoPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, boundFactory, sensitive);
 
   if (r.ok()) {
     return r;
@@ -84,7 +86,7 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
 
   // For now this does straw by default
   r = impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
-      geoPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, boundFactory, sensitive);
 
   if (r.ok()) {
     return r;
