@@ -28,7 +28,7 @@ class BoundarySurfaceT;
 /// outermost volume and goes deeper to the volumes into the hierarchy.
 class ITrackingGeometryVisitor {
  public:
-  virtual ~ITrackingGeometryVisitor() = default;
+  virtual ~ITrackingGeometryVisitor() = 0;
 
   explicit ITrackingGeometryVisitor(bool visitDepthFirst = false)
       : m_visitDepthFirst(visitDepthFirst) {}
