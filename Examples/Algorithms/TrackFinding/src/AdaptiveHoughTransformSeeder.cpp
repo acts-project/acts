@@ -357,7 +357,7 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg, &opt, &sStat, this](
+  opt.decisionFunctor = [&m_cfg = m_cfg, &sStat, this](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &mes) {
     if (section.divisionLevel() <= 8) {

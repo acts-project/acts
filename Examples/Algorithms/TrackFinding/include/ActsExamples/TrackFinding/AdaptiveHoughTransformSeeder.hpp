@@ -330,19 +330,19 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         if (thisSection.xSize() > opt.xMinBinSize &&
             thisSection.ySize() > opt.yMinBinSize) {
           // need 4 subdivisions
-          divisions.push_back(std::move(thisSection.topLeft()));
-          divisions.push_back(std::move(thisSection.topRight()));
-          divisions.push_back(std::move(thisSection.bottomLeft()));
-          divisions.push_back(std::move(thisSection.bottomRight()));
+          divisions.push_back(thisSection.topLeft());
+          divisions.push_back(thisSection.topRight());
+          divisions.push_back(thisSection.bottomLeft());
+          divisions.push_back(thisSection.bottomRight());
         } else if (thisSection.xSize() <= opt.xMinBinSize &&
                    thisSection.ySize() > opt.yMinBinSize) {
           // only split in y
-          divisions.push_back(std::move(thisSection.top()));
-          divisions.push_back(std::move(thisSection.bottom()));
+          divisions.push_back(thisSection.top());
+          divisions.push_back(thisSection.bottom());
         } else {
           // only split in x
-          divisions.push_back(std::move(thisSection.left()));
-          divisions.push_back(std::move(thisSection.right()));
+          divisions.push_back(thisSection.left());
+          divisions.push_back(thisSection.right());
         }
 
         if (whatNext == Decision::DrillAndExpand) {
@@ -419,10 +419,10 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                m.invr * m.phi * config().inverseA;
       };
 
-  LineParamFunctor m_zCotThetaLineParams =
-      [](const PreprocessedMeasurement &m, float arg) {
-        return -m.invr * arg + m.z * m.invr;
-      };
+  LineParamFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
+                                              float arg) {
+    return -m.invr * arg + m.z * m.invr;
+  };
 
   /// @brief check if lines intersect in the section
   /// modifies the section leaving only indices of measurements that do so
