@@ -35,9 +35,9 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   }
 
   int phiBins = 0;
-  // for no magnetic field, create 100 phi-bins
   if (m_cfg.bFieldInZ == 0) {
-    phiBins = 100;
+    // for no magnetic field, use the maximum number of phi bins
+    phiBins = m_cfg.maxPhiBins;
     ACTS_VERBOSE(
         "B-Field is 0 (z-coordinate), setting the number of bins in phi to "
         << phiBins);

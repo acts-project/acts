@@ -48,8 +48,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   }
 
   m_gridConfig.minPt = m_cfg.minPt;
-  // TODO
-  // m_gridConfig.rMin = m_cfg.rMin;
+  m_gridConfig.rMin = 0;
   m_gridConfig.rMax = m_cfg.rMax;
   m_gridConfig.zMin = m_cfg.zMin;
   m_gridConfig.zMax = m_cfg.zMax;
@@ -157,7 +156,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
   auto derivedTripletOptions = tripletCuts.derive(m_cfg.bFieldInZ);
 
-  /// variable middle SP radial region of interest
+  // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {
       std::floor(rRange.min() / 2) * 2 + m_cfg.deltaRMiddleMinSPRange,
       std::floor(rRange.max() / 2) * 2 - m_cfg.deltaRMiddleMaxSPRange};
@@ -283,11 +282,11 @@ GridTripletSeedingAlgorithm::retrieveRadiusRangeForMiddle(
     return {m_cfg.rMinMiddle, m_cfg.rMaxMiddle};
   }
 
-  /// get zBin position of the middle SP
+  // get zBin position of the middle SP
   auto pVal =
       std::lower_bound(m_cfg.zBinEdges.begin(), m_cfg.zBinEdges.end(), spM.z());
   int zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
-  /// protects against zM at the limit of zBinEdges
+  // protects against zM at the limit of zBinEdges
   zBin == 0 ? zBin : --zBin;
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};
 }
