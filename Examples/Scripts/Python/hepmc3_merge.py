@@ -99,6 +99,7 @@ def main():
             ],
             level=acts.logging.INFO,
             outputEvent="hepmc3_event",
+            checkEventNumber=False,  # This is not generally guaranteed for arbitrary inputs
             randomNumbers=rng,
             vertexGenerator=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
