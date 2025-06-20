@@ -30,117 +30,12 @@ using namespace pybind11::literals;
 
 namespace Acts::Python {
 
-struct AnyNavigationPolicyFactory : public Acts::NavigationPolicyFactory {
-  virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllNavigationPolicy> /*type*/) = 0;
-
-  virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<SurfaceArrayNavigationPolicy> /*type*/,
-      SurfaceArrayNavigationPolicy::Config config) = 0;
-
-  virtual std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllNavigationPolicy> /*type*/,
-      TryAllNavigationPolicy::Config config) = 0;
-};
-
-template <typename Factory = detail::NavigationPolicyFactoryImpl<>,
-          typename... Policies>
-struct NavigationPolicyFactoryT : public AnyNavigationPolicyFactory {
-  explicit NavigationPolicyFactoryT(Factory impl)
-    requires(sizeof...(Policies) > 0)
-      : m_impl(std::move(impl)) {}
-
-  NavigationPolicyFactoryT()
-    requires(sizeof...(Policies) == 0)
-      : m_impl{} {}
-
-  std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllNavigationPolicy> /*type*/) override {
-    return add<TryAllNavigationPolicy>();
-  }
-
-  std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<SurfaceArrayNavigationPolicy> /*type*/,
-      SurfaceArrayNavigationPolicy::Config config) override {
-    return add<SurfaceArrayNavigationPolicy>(std::move(config));
-  }
-
-  std::unique_ptr<AnyNavigationPolicyFactory> add(
-      TypeTag<TryAllNavigationPolicy> /*type*/,
-      TryAllNavigationPolicy::Config config) override {
-    return add<TryAllNavigationPolicy>(config);
-  }
-
-  std::unique_ptr<INavigationPolicy> build(
-      const GeometryContext& gctx, const TrackingVolume& volume,
-      const Logger& logger) const override {
-    if constexpr (sizeof...(Policies) > 0) {
-      return m_impl.build(gctx, volume, logger);
-    } else {
-      throw std::runtime_error("No policies added to the factory");
-    }
-  }
-
- private:
-  template <typename T, typename... Args>
-  std::unique_ptr<AnyNavigationPolicyFactory> add(Args&&... args) {
-    if constexpr (!(std::is_same_v<T, Policies> || ...)) {
-      auto impl =
-          std::move(m_impl).template add<T>(std::forward<Args>(args)...);
-      return std::make_unique<
-          NavigationPolicyFactoryT<decltype(impl), Policies..., T>>(
-          std::move(impl));
-    } else {
-      throw std::invalid_argument("Policy already added to the factory");
-    }
-  }
-
-  Factory m_impl;
-};
-
-class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
- public:
-  // This overload is for all the navigation policies that don't have extra
-  // arguments
-  NavigationPolicyFactory& addNoArguments(const py::object& cls) {
-    auto m = py::module_::import("acts");
-    if (py::object o = m.attr("TryAllNavigationPolicy"); cls.is(o)) {
-      m_impl = m_impl->add(Type<TryAllNavigationPolicy>);
-    }
-    // Add other policies here
-    return *this;
-  }
-
-  NavigationPolicyFactory& addSurfaceArray(
-      const py::object& /*cls*/,
-      const SurfaceArrayNavigationPolicy::Config& config) {
-    m_impl = m_impl->add(Type<SurfaceArrayNavigationPolicy>, config);
-    return *this;
-  }
-
-  NavigationPolicyFactory& addTryAll(
-      const py::object& /*cls*/, const TryAllNavigationPolicy::Config& config) {
-    m_impl = m_impl->add(Type<TryAllNavigationPolicy>, config);
-    return *this;
-  }
-
-  std::unique_ptr<INavigationPolicy> build(
-      const GeometryContext& gctx, const TrackingVolume& volume,
-      const Logger& logger) const override {
-    return m_impl->build(gctx, volume, logger);
-  }
-
- private:
-  std::unique_ptr<AnyNavigationPolicyFactory> m_impl =
-      std::make_unique<NavigationPolicyFactoryT<>>();
-};
-
 namespace Test {
 class DetectorElementStub : public DetectorElementBase {
  public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  const Transform3& transform(const GeometryContext&) const override {
+  const Transform3& transform(const GeometryContext& /*gctx*/) const override {
     return m_transform;
   }
 
@@ -177,32 +72,79 @@ void addNavigation(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, portals, sensitives);
   }
 
-  py::class_<NavigationPolicyFactory, Acts::NavigationPolicyFactory,
-             std::shared_ptr<NavigationPolicyFactory>>(
+  py::class_<Acts::detail::NavigationPolicyFactoryDynamic,
+             Acts::NavigationPolicyFactory,
+             std::shared_ptr<Acts::detail::NavigationPolicyFactoryDynamic>>(
       m, "NavigationPolicyFactory")
       // only to mirror the C++ API
-      .def_static("make", []() { return NavigationPolicyFactory{}; })
-      .def("add", &NavigationPolicyFactory::addNoArguments)
-      .def("add", &NavigationPolicyFactory::addSurfaceArray)
-      .def("add", &NavigationPolicyFactory::addTryAll)
-      .def("_buildTest", [](NavigationPolicyFactory& self) {
-        auto vol1 = std::make_shared<TrackingVolume>(
-            Transform3::Identity(),
-            std::make_shared<CylinderVolumeBounds>(30, 40, 100));
-        vol1->setVolumeName("TestVolume");
+      .def_static(
+          "make",
+          []() { return Acts::detail::NavigationPolicyFactoryDynamic{}; })
+      .def("add",
+           [](Acts::detail::NavigationPolicyFactoryDynamic* self,
+              const py::object& cls) {
+             auto m = py::module_::import("acts");
+             if (py::object o = m.attr("TryAllNavigationPolicy"); cls.is(o)) {
+               self->template add<TryAllNavigationPolicy>();
+             } else {
+               throw std::invalid_argument(
+                   "Unknown navigation policy class: " +
+                   cls.attr("__name__").cast<std::string>());
+             }
+             return self;
+           })
 
-        auto detElem = std::make_unique<Test::DetectorElementStub>();
+      .def("add",
+           [](Acts::detail::NavigationPolicyFactoryDynamic* self,
+              const py::object& cls,
+              const SurfaceArrayNavigationPolicy::Config& config) {
+             auto m = py::module_::import("acts");
+             if (py::object o = m.attr("SurfaceArrayNavigationPolicy");
+                 !cls.is(o)) {
+               throw std::invalid_argument(
+                   "Unknown navigation policy class: " +
+                   cls.attr("__name__").cast<std::string>());
+             }
 
-        auto surface = Surface::makeShared<CylinderSurface>(
-            Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
-        surface->assignDetectorElement(*detElem);
+             self->template add<SurfaceArrayNavigationPolicy>(config);
+             return self;
+           })
 
-        vol1->addSurface(std::move(surface));
+      .def("add",
+           [](Acts::detail::NavigationPolicyFactoryDynamic* self,
+              const py::object& cls,
+              const TryAllNavigationPolicy::Config& config) {
+             auto m = py::module_::import("acts");
+             if (py::object o = m.attr("TryAllNavigationPolicy"); !cls.is(o)) {
+               throw std::invalid_argument(
+                   "Unknown navigation policy class: " +
+                   cls.attr("__name__").cast<std::string>());
+             }
 
-        std::unique_ptr<INavigationPolicy> result =
-            self.build(GeometryContext{}, *vol1,
-                       *getDefaultLogger("Test", Logging::VERBOSE));
-      });
+             self->template add<TryAllNavigationPolicy>(config);
+             return self;
+           })
+
+      .def("_buildTest",
+           [](Acts::detail::NavigationPolicyFactoryDynamic* self) {
+             auto vol1 = std::make_shared<TrackingVolume>(
+                 Transform3::Identity(),
+                 std::make_shared<CylinderVolumeBounds>(30, 40, 100));
+             vol1->setVolumeName("TestVolume");
+
+             auto detElem = std::make_unique<Test::DetectorElementStub>();
+
+             auto surface = Surface::makeShared<CylinderSurface>(
+                 Transform3::Identity(),
+                 std::make_shared<CylinderBounds>(30, 40));
+             surface->assignDetectorElement(*detElem);
+
+             vol1->addSurface(std::move(surface));
+
+             std::unique_ptr<INavigationPolicy> result =
+                 self->build(GeometryContext{}, *vol1,
+                             *getDefaultLogger("Test", Logging::VERBOSE));
+           });
 
   {
     auto saPolicy = py::class_<SurfaceArrayNavigationPolicy>(

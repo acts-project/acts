@@ -16,79 +16,61 @@ namespace Acts {
 class MultiNavigationPolicyBase : public INavigationPolicy {};
 
 /// Combined navigation policy that calls all contained other navigation
-/// policies. This class only works with policies complying with
-/// `NavigationPolicyConcept`, which means that they have a conventional
-/// `updateState` method.
-///
-/// Internally, this uses a delegate chain factory to produce an unrolled
-/// delegate chain.
-///
-/// @tparam Policies The navigation policies to be combined
-template <NavigationPolicyConcept... Policies>
-  requires(sizeof...(Policies) > 0)
-class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
- public:
-  /// Constructor from a set of child policies.
-  /// @param policies The child policies
-  explicit MultiNavigationPolicy(Policies&&... policies)
-      : m_policies{std::move(policies)...} {}
-
-  /// Implementation of the connection to a navigation delegate.
-  /// It uses the delegate chain factory to produce a delegate chain and stores
-  /// that chain in the owning navigation delegate.
-  /// @param delegate The navigation delegate to connect to
-  void connect(NavigationDelegate& delegate) const override {
-    auto factory = add(DelegateChainBuilder{delegate},
-                       std::index_sequence_for<Policies...>{});
-
-    factory.store(delegate);
-  }
-
-  /// Access the contained policies
-  /// @return The contained policies
-  const std::tuple<Policies...>& policies() const { return m_policies; }
-
- private:
-  /// Internal helper to build the delegate chain
-  template <std::size_t... Is>
-  constexpr auto add(
-      auto factory,
-      std::integer_sequence<std::size_t, Is...> /*unused*/) const {
-    return add<Is...>(factory);
-  }
-
-  /// Internal helper to build the delegate chain
-  template <std::size_t I, std::size_t... Is>
-  constexpr auto add(auto factory) const {
-    using policy_type = std::tuple_element_t<I, decltype(m_policies)>;
-    auto* policy = &std::get<I>(m_policies);
-
-    auto added =
-        factory.template add<&policy_type::initializeCandidates>(policy);
-
-    if constexpr (sizeof...(Is) > 0) {
-      return add<Is...>(added);
-    } else {
-      return added;
-    }
-  }
-
-  std::tuple<Policies...> m_policies;
-};
+/// policies.
 
 class MultiNavigationPolicyDynamic final : public MultiNavigationPolicyBase {
  public:
+  template <typename... Policies>
+  explicit MultiNavigationPolicyDynamic(std::unique_ptr<Policies>... policies)
+      : MultiNavigationPolicyDynamic{[](auto... args) {
+          std::vector<std::unique_ptr<INavigationPolicy>> policyPtrs;
+          auto fill = [&policyPtrs](auto& policy) {
+            policyPtrs.push_back(std::move(policy));
+          };
+
+          (fill(args), ...);
+
+          return policyPtrs;
+        }(std::move(policies)...)} {}
+
   explicit MultiNavigationPolicyDynamic(
       std::vector<std::unique_ptr<INavigationPolicy>>&& policies)
-      : m_policyPtrs(std::move(policies)) {}
+      : m_policyPtrs(std::move(policies)) {
+    m_delegates.reserve(m_policyPtrs.size());
+    for (auto& policy : m_policyPtrs) {
+      auto& delegate = m_delegates.emplace_back();
+      policy->connect(delegate);
+      if (!delegate.connected()) {
+        throw std::runtime_error(
+            "Failed to connect policy in MultiNavigationPolicyDynamic");
+      }
+    }
+  }
 
-  void connect(NavigationDelegate& /*delegate*/) const override {}
+  void connect(NavigationDelegate& delegate) const override {
+    if (!std::ranges::all_of(m_delegates,
+                             [](const auto& d) { return d.connected(); })) {
+      throw std::runtime_error(
+          "Not all delegates are connected to MultiNavigationPolicyDynamic");
+    }
+    delegate.connect<&MultiNavigationPolicyDynamic::initializeCandidates>(this);
+  }
 
   const std::span<const std::unique_ptr<INavigationPolicy>> policies() const {
     return std::span{m_policyPtrs};
   }
 
  private:
+  void initializeCandidates(const NavigationArguments& args,
+                            AppendOnlyNavigationStream& stream,
+                            const Logger& logger) const {
+    for (const auto& delegate : m_delegates) {
+      delegate(args, stream, logger);
+    }
+  }
+
   std::vector<std::unique_ptr<INavigationPolicy>> m_policyPtrs;
+
+  std::vector<NavigationDelegate> m_delegates;
 };
 }  // namespace Acts
