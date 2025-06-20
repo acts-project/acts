@@ -56,7 +56,7 @@ class GeoIdAlignmentStore : public IAlignmentStore {
           transformMap)
       : m_transformMap(std::move(transformMap)) {}
 
-  /// @copydoc ITransformStore::contextualTransform
+  /// @copydoc IAlignmentStore::contextualTransform
   const Acts::Transform3* contextualTransform(
       const Acts::Surface& surface) const override {
     auto it = m_transformMap.find(surface.geometryId());
