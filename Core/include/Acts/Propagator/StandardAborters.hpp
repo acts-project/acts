@@ -209,8 +209,7 @@ struct VolumeConstraintAborter {
         static_cast<std::uint32_t>(currentVolume->geometryId().volume());
 
     if (!constrainToVolumeIds.empty() &&
-        std::ranges::find(constrainToVolumeIds, currentVolumeId) ==
-            constrainToVolumeIds.end()) {
+        !rangeContainsValue(constrainToVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with volume constrain "
           << currentVolumeId);
