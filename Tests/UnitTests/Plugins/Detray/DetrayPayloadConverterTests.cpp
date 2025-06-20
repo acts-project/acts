@@ -29,6 +29,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,6 +44,7 @@
 auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
 
 using namespace Acts;
+using namespace Acts::Test;
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
@@ -436,6 +438,13 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
     BOOST_CHECK(payload.type == detray::volume_id::e_unknown);
     BOOST_CHECK_EQUAL(payload.name, "TestUnknown");
   }
+}
+
+BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
+  GeometryContext gctx;
+
+  CylindricalTrackingGeometry cGeometry(gctx);
+  auto tGeometry = cGeometry();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
