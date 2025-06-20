@@ -27,8 +27,8 @@ class Aligned : public DetectorElement {
   using DetectorElement::DetectorElement;
 
   /// An alignment aware transform call
-  /// @param gctx the geometry context which is - if possible - unpacked to an AlignemntContext
-  /// @return
+  /// @param gctx the geometry context which is - if possible - unpacked to an AlignementContext
+  /// @return The alignment-corrected transform if available, otherwise the nominal transform.
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const final {
     if (gctx.hasValue()) {
