@@ -20,32 +20,6 @@ class GeometryContext;
 class Logger;
 class INavigationPolicy;
 
-/// Base class for navigation policy factories. The factory can be assembled
-/// iteratively by using `make` followed by a number of calls to the `add`
-/// function of the helper type. Example:
-///
-/// ```cpp
-/// auto factory = NavigationPolicyFactory::make()
-///  .add<NavigationPolicy1>(arg1, arg2)
-///  .add<NavigationPolicy2>(/*no args*/)
-///  .asUniquePtr();
-/// ```
-class NavigationPolicyFactory {
- public:
-  virtual ~NavigationPolicyFactory() = default;
-
-  // This needs to be listed here, but the return type cannot be spelled out
-  // yet.
-  static auto make();
-
-  // This will potentially get serialization interface and deserialization
-  // functionality
-
-  virtual std::unique_ptr<INavigationPolicy> build(
-      const GeometryContext& gctx, const TrackingVolume& volume,
-      const Logger& logger) const = 0;
-};
-
 namespace detail {
 
 template <typename F, typename... Args>
@@ -58,24 +32,44 @@ concept NavigationPolicyIsolatedFactoryConcept = requires(
 
   requires(std::is_copy_constructible_v<Args> && ...);
 };
+}  // namespace detail
 
-class NavigationPolicyFactoryDynamic : public NavigationPolicyFactory {
+/// Base class for navigation policy factories. The factory can be assembled
+/// iteratively by using `make` followed by a number of calls to the `add`
+/// function of the helper type. Example:
+///
+/// ```cpp
+/// auto factory = NavigationPolicyFactory{}
+///  .add<NavigationPolicy1>(arg1, arg2)
+///  .add<NavigationPolicy2>(/*no args*/)
+///  .asUniquePtr();
+/// ```
+class NavigationPolicyFactory {
  private:
   using factory_type = std::function<std::unique_ptr<INavigationPolicy>(
       const GeometryContext&, const TrackingVolume&, const Logger&)>;
 
-  explicit NavigationPolicyFactoryDynamic(std::vector<factory_type>&& factories)
+  explicit NavigationPolicyFactory(std::vector<factory_type>&& factories)
       : m_factories(std::move(factories)) {}
 
  public:
-  NavigationPolicyFactoryDynamic() = default;
+  NavigationPolicyFactory() = default;
+  NavigationPolicyFactory(NavigationPolicyFactory&& other) = default;
+  NavigationPolicyFactory(const NavigationPolicyFactory& other) = default;
+
+  // This needs to be listed here, but the return type cannot be spelled out
+  // yet.
+  [[deprecated("Use the default constructor")]]
+  static auto make() {
+    return NavigationPolicyFactory{};
+  }
 
   template <NavigationPolicyConcept P, typename... Args>
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
-  constexpr auto add(Args&&... args) {
+  constexpr NavigationPolicyFactory& add(Args&&... args) {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       return std::make_unique<P>(gctx, volume, logger, args...);
@@ -92,8 +86,8 @@ class NavigationPolicyFactoryDynamic : public NavigationPolicyFactory {
   ///       able to execute multiple times.
   /// @return A new policy factory including the function
   template <typename Fn, typename... Args>
-    requires(NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
-  constexpr auto add(Fn&& fn, Args&&... args) {
+    requires(detail::NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
+  constexpr NavigationPolicyFactory& add(Fn&& fn, Args&&... args) {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       using policy_type = decltype(fn(gctx, volume, logger, args...));
@@ -108,8 +102,8 @@ class NavigationPolicyFactoryDynamic : public NavigationPolicyFactory {
   /// Move the factory into a unique pointer
   /// @note Only callable on rvalue references
   /// @return A unique pointer to the factory
-  std::unique_ptr<NavigationPolicyFactoryDynamic> asUniquePtr() {
-    return std::make_unique<NavigationPolicyFactoryDynamic>(std::move(*this));
+  std::unique_ptr<NavigationPolicyFactory> asUniquePtr() {
+    return std::make_unique<NavigationPolicyFactory>(std::move(*this));
   }
 
   /// Construct a navigation policy using the factories
@@ -137,20 +131,14 @@ class NavigationPolicyFactoryDynamic : public NavigationPolicyFactory {
   /// @param gctx The geometry context
   /// @param volume The tracking volume
   /// @param logger The logger
-  std::unique_ptr<INavigationPolicy> build(
-      const GeometryContext& gctx, const TrackingVolume& volume,
-      const Logger& logger) const override {
+  std::unique_ptr<INavigationPolicy> build(const GeometryContext& gctx,
+                                           const TrackingVolume& volume,
+                                           const Logger& logger) const {
     return operator()(gctx, volume, logger);
   }
 
  private:
   std::vector<factory_type> m_factories;
 };
-}  // namespace detail
-
-inline auto NavigationPolicyFactory::make() {
-  return detail::NavigationPolicyFactoryDynamic{};
-  // return detail::NavigationPolicyFactoryImpl<>{};
-}
 
 }  // namespace Acts
