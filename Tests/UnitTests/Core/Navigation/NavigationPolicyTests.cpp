@@ -84,8 +84,10 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
       std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
       "PixelLayer3"};
 
-  MultiNavigationPolicy policy{APolicy{gctx, volume, *logger},
-                               BPolicy{gctx, volume, *logger, {.value = 4242}}};
+  MultiNavigationPolicyDynamic policy{
+      std::make_unique<APolicy>(gctx, volume, *logger),
+      std::make_unique<BPolicy>(gctx, volume, *logger,
+                                BPolicy::Config{.value = 4242})};
 
   NavigationDelegate delegate;
   policy.connect(delegate);
@@ -96,9 +98,13 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
                                .direction = Vector3::Zero()},
            stream, *logger);
 
-  BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
-  BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
-  BOOST_CHECK_EQUAL(std::get<BPolicy>(policy.policies()).value, 4242);
+  BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
+  const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
+  const auto& policyB = dynamic_cast<const BPolicy&>(*policy.policies()[1]);
+
+  BOOST_CHECK(policyA.executed);
+  BOOST_CHECK(policyB.executed);
+  BOOST_CHECK_EQUAL(policyB.value, 4242);
 }
 
 BOOST_AUTO_TEST_CASE(FactoryTest) {
@@ -129,12 +135,15 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
                                .direction = Vector3::Zero()},
            stream, *logger);
 
-  BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
-  BOOST_CHECK(std::get<BPolicy>(policy.policies()).executed);
-  BOOST_CHECK_EQUAL(std::get<BPolicy>(policy.policies()).value, 42);
+  BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
+  const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
+  const auto& policyB = dynamic_cast<const BPolicy&>(*policy.policies()[1]);
 
-  auto& policy2 =
-      dynamic_cast<MultiNavigationPolicy<APolicy, BPolicy>&>(*policyBase2);
+  BOOST_CHECK(policyA.executed);
+  BOOST_CHECK(policyB.executed);
+  BOOST_CHECK_EQUAL(policyB.value, 42);
+
+  auto& policy2 = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase2);
 
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
@@ -143,9 +152,13 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
                                 .direction = Vector3::Zero()},
             stream, *logger);
 
-  BOOST_CHECK(std::get<APolicy>(policy2.policies()).executed);
-  BOOST_CHECK(std::get<BPolicy>(policy2.policies()).executed);
-  BOOST_CHECK_EQUAL(std::get<BPolicy>(policy2.policies()).value, 42);
+  BOOST_REQUIRE_EQUAL(policy2.policies().size(), 2);
+  const auto& policy2A = dynamic_cast<const APolicy&>(*policy2.policies()[0]);
+  const auto& policy2B = dynamic_cast<const BPolicy&>(*policy2.policies()[1]);
+
+  BOOST_CHECK(policy2A.executed);
+  BOOST_CHECK(policy2B.executed);
+  BOOST_CHECK_EQUAL(policy2B.value, 42);
 }
 
 BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
@@ -158,7 +171,7 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
       NavigationPolicyFactory::make().add<APolicy>().asUniquePtr();
 
   auto policyBase = factory->build(gctx, volume, *logger);
-  auto& policy = dynamic_cast<MultiNavigationPolicy<APolicy>&>(*policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
 
   NavigationDelegate delegate;
   policyBase->connect(delegate);
@@ -169,7 +182,8 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
                                .direction = Vector3::Zero()},
            stream, *logger);
 
-  BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
+  BOOST_REQUIRE_EQUAL(policy.policies().size(), 1);
+  BOOST_CHECK(dynamic_cast<const APolicy&>(*policy.policies()[0]).executed);
 }
 
 struct CPolicy : public INavigationPolicy {};
@@ -226,9 +240,7 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
       NavigationPolicyFactory::make().add(makeCPolicy, config).add<APolicy>();
 
   auto policyBase = factory(gctx, volume, *logger);
-  auto& policy =
-      dynamic_cast<MultiNavigationPolicy<APolicy, CPolicySpecialized<int>>&>(
-          *policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
 
   NavigationDelegate delegate;
   policyBase->connect(delegate);
@@ -239,10 +251,15 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
                                .direction = Vector3::Zero()},
            stream, *logger);
 
-  BOOST_CHECK(std::get<APolicy>(policy.policies()).executed);
-  BOOST_CHECK(std::get<CPolicySpecialized<int>>(policy.policies()).executed);
-  BOOST_CHECK_EQUAL(std::get<CPolicySpecialized<int>>(policy.policies()).value,
-                    44);
+  BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
+
+  const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
+  const auto& cPolicy =
+      dynamic_cast<const CPolicySpecialized<int>&>(*policy.policies()[1]);
+
+  BOOST_CHECK(policyA.executed);
+  BOOST_CHECK(cPolicy.executed);
+  BOOST_CHECK_EQUAL(cPolicy.value, 44);
 }
 
 namespace {
