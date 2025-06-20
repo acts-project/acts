@@ -14,7 +14,7 @@ target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
         ActsCore
-        ActsPluginTGeo
+        ActsPluginRoot
         ActsPluginJson
         ActsExamplesFramework
         ActsExamplesDetectorGeneric
