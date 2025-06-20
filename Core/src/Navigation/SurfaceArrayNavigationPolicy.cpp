@@ -70,6 +70,10 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
     const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
+  if (!args.wantsSurfaces) {
+    return;
+  }
+
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
   const std::vector<const Surface*>& sensitiveSurfaces =
       m_surfaceArray->neighbors(args.position);
