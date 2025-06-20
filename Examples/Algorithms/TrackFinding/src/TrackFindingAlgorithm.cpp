@@ -226,8 +226,7 @@ class BranchStopper {
         if (std::ranges::find(m_cfg.pixelVolumeIds, volumeId) !=
             m_cfg.pixelVolumeIds.end()) {
           ++branchState.nPixelHoles;
-        } else if (std::ranges::find(m_cfg.stripVolumeIds, volumeId) !=
-                   m_cfg.stripVolumeIds.end()) {
+        } else if (rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
           ++branchState.nStripHoles;
         }
       }
