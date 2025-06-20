@@ -33,6 +33,7 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <memory>
 #include <numbers>
@@ -453,6 +454,12 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   CylindricalTrackingGeometry cGeometry(gctx, true);
   auto tGeometry = cGeometry();
 
+  ObjVisualization3D obj;
+
+  tGeometry->visualize(obj, gctx);
+
+  obj.write("cylindrical.obj");
+
   vecmem::host_memory_resource mr;
 
   DetrayPayloadConverter::Config cfg;
@@ -525,7 +532,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   illustrator.hide_eta_lines(true);
   illustrator.show_info(true);
 
-  illustrator.draw_detector(actsvg::views::z_r{});
   const auto svg_zr = illustrator.draw_detector(actsvg::views::z_r{});
   actsvg::style::stroke stroke_black = actsvg::style::stroke();
   auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
@@ -533,6 +539,14 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   detray::svgtools::write_svg("test_svgtools_detector_zr", {
                                                                zr_axis,
                                                                svg_zr,
+                                                           });
+
+  const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
+  auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
+                                        stroke_black, "x", "y");
+  detray::svgtools::write_svg("test_svgtools_detector_xy", {
+                                                               xy_axis,
+                                                               svg_xy,
                                                            });
 
   auto writer_cfg = detray::io::detector_writer_config{}
