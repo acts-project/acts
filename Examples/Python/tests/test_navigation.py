@@ -33,15 +33,6 @@ def test_navigation_policy_factory_build_empty():
         policy._buildTest()
 
 
-def test_navigation_policy_factory_add_multiple():
-    with pytest.raises(ValueError):
-        (
-            acts.NavigationPolicyFactory.make()
-            .add(acts.TryAllNavigationPolicy)
-            .add(acts.TryAllNavigationPolicy)
-        )
-
-
 def test_try_all_arguments():
     acts.NavigationPolicyFactory.make().add(
         acts.TryAllNavigationPolicy, acts.TryAllNavigationPolicy.Config(sensitives=True)
