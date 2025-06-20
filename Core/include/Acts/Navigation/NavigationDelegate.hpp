@@ -29,7 +29,7 @@ struct NavigationArguments {
 
 /// Central alias for the navigation delegate. This type is owning to support
 /// (type-erased) navigation delegate chains (i.e. multiple policies).
-using NavigationDelegate = OwningDelegate<void(
+using NavigationDelegate = Delegate<void(
     const NavigationArguments&, AppendOnlyNavigationStream&, const Logger&)>;
 
 }  // namespace Acts

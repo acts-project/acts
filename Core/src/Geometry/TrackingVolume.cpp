@@ -52,9 +52,7 @@ TrackingVolume::TrackingVolume(
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
 
-  DelegateChainBuilder{m_navigationDelegate}
-      .add<&INavigationPolicy::noopInitializeCandidates>()
-      .store(m_navigationDelegate);
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
@@ -683,12 +681,10 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   // Visit the boundary surfaces
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(*bs);
-    visitor.visitSurface(bs->surfaceRepresentation());
   }
 
   for (const auto& portal : portals()) {
     visitor.visitPortal(portal);
-    visitor.visitSurface(portal.surface());
   }
 
   // Internal structure
