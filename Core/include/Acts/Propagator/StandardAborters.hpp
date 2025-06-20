@@ -217,8 +217,7 @@ struct VolumeConstraintAborter {
     }
 
     if (!endOfWorldVolumeIds.empty() &&
-        std::ranges::find(endOfWorldVolumeIds, currentVolumeId) !=
-            endOfWorldVolumeIds.end()) {
+        rangeContainsValue(endOfWorldVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with additional end of "
           "world volume "
