@@ -10,15 +10,25 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <numbers>
 #include <random>
 
 namespace ActsExamples {
 
+/// @brief Generator interface for a vertex position
+struct PrimaryVertexPositionGenerator {
+  /// @brief Virtual destructor required
+  virtual ~PrimaryVertexPositionGenerator() = default;
+  /// @brief Generate a vertex position
+  ///
+  /// @param rng Shared random number generator instance
+  /// @return Acts::Vector4 The vertex position
+  virtual Acts::Vector4 operator()(RandomEngine& rng) const = 0;
+};
+
 struct FixedPrimaryVertexPositionGenerator
-    : public EventGenerator::PrimaryVertexPositionGenerator {
+    : public PrimaryVertexPositionGenerator {
   /// The fixed vertex position and time.
   Acts::Vector4 fixed = Acts::Vector4::Zero();
 
@@ -28,7 +38,7 @@ struct FixedPrimaryVertexPositionGenerator
 };
 
 struct GaussianPrimaryVertexPositionGenerator
-    : public EventGenerator::PrimaryVertexPositionGenerator {
+    : public PrimaryVertexPositionGenerator {
   // standard deviation comes first, since it is more likely to be modified
   /// Vertex position and time standard deviation.
   Acts::Vector4 stddev = {0.0, 0.0, 0.0, 0.0};
@@ -49,7 +59,7 @@ struct GaussianPrimaryVertexPositionGenerator
 
 //
 struct GaussianDisplacedVertexPositionGenerator
-    : public EventGenerator::PrimaryVertexPositionGenerator {
+    : public PrimaryVertexPositionGenerator {
   double rMean = 0;
   double rStdDev = 1;
   double zMean = 0;
@@ -61,11 +71,11 @@ struct GaussianDisplacedVertexPositionGenerator
     double min_value = -std::numbers::pi;
     double max_value = std::numbers::pi;
 
-    std::uniform_real_distribution<> uniform(min_value, max_value);
+    std::uniform_real_distribution uniform(min_value, max_value);
 
-    std::normal_distribution<double> rDist(rMean, rStdDev);
-    std::normal_distribution<double> zDist(zMean, zStdDev);
-    std::normal_distribution<double> tDist(tMean, tStdDev);
+    std::normal_distribution rDist(rMean, rStdDev);
+    std::normal_distribution zDist(zMean, zStdDev);
+    std::normal_distribution tDist(tMean, tStdDev);
 
     // Generate random values from normal distributions
     double r = rDist(rng);

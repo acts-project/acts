@@ -11,6 +11,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <filesystem>
 #include <mutex>
@@ -28,21 +30,15 @@ class HepMC3Reader final : public IReader {
  public:
   struct Config {
     /// The input file path for reading HepMC3 events.
-    ///
-    /// This path is handled differently based on the perEvent flag:
-    /// - If perEvent is false: The path points to a single file containing all
-    /// events
-    /// - If perEvent is true: The path is used as a template for finding
-    /// per-event files
-    ///   in the format "event{number}-{filename}" in the parent directory
-    ///
-    /// When in per-event mode, the reader uses determineEventFilesRange() to
-    /// scan the directory for matching files and determine the available event
-    /// range.
+    /// This is a helper to simplify the most basic configuration, which is
+    /// reading single events from a single input file
     std::filesystem::path inputPath;
 
-    /// If true, one file per event is read
-    bool perEvent = false;
+    /// This configuration option is used to read multiple files in a single
+    /// run. For each file, a specific number of events is read per requested
+    /// event. This can be used to read e.g. hard-scatter events from one file
+    /// and pileup events from another.
+    std::vector<std::pair<std::filesystem::path, std::size_t>> inputPaths;
 
     /// The output collection
     std::string outputEvent;
@@ -65,6 +61,11 @@ class HepMC3Reader final : public IReader {
     /// them predictably and in order. This defines the maximum queue size being
     /// used. If this number is exceeded the reader will error out.
     std::size_t maxEventBufferSize = 128;
+
+    /// The random number service. Required if vertexGenerator is set.
+    std::shared_ptr<const RandomNumbers> randomNumbers;
+    /// Position generator that will be used to shift read events
+    std::shared_ptr<PrimaryVertexPositionGenerator> vertexGenerator;
   };
 
   /// Construct the particle reader.
@@ -93,21 +94,22 @@ class HepMC3Reader final : public IReader {
  private:
   std::size_t determineNumEvents(HepMC3::Reader& reader) const;
 
-  std::shared_ptr<HepMC3::Reader> makeReader() const;
-
   static std::shared_ptr<HepMC3::GenEvent> makeEvent();
 
-  ProcessCode readPerEvent(const ActsExamples::AlgorithmContext& ctx,
-                           std::shared_ptr<HepMC3::GenEvent>& event);
-
   ProcessCode readSingleFile(const ActsExamples::AlgorithmContext& ctx,
-                             std::shared_ptr<HepMC3::GenEvent>& event);
+                             std::shared_ptr<HepMC3::GenEvent>& outputEvent);
 
-  ProcessCode readCached(const ActsExamples::AlgorithmContext& ctx,
-                         std::shared_ptr<HepMC3::GenEvent>& event);
+  ProcessCode readCached(
+      const ActsExamples::AlgorithmContext& ctx,
+      std::vector<std::shared_ptr<HepMC3::GenEvent>>& events);
 
-  ProcessCode readBuffer(const ActsExamples::AlgorithmContext& ctx,
-                         std::shared_ptr<HepMC3::GenEvent>& event);
+  ProcessCode readBuffer(
+      const ActsExamples::AlgorithmContext& ctx,
+      std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents);
+
+  ProcessCode readLogicalEvent(
+      const ActsExamples::AlgorithmContext& ctx,
+      std::vector<std::shared_ptr<HepMC3::GenEvent>>& events);
 
   /// The configuration of this writer
   Config m_cfg;
@@ -121,7 +123,8 @@ class HepMC3Reader final : public IReader {
   WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
       this, "OutputEvent"};
 
-  std::vector<std::pair<std::size_t, std::shared_ptr<HepMC3::GenEvent>>>
+  std::vector<
+      std::pair<std::size_t, std::vector<std::shared_ptr<HepMC3::GenEvent>>>>
       m_events;
   std::size_t m_nextEvent = 0;
 
@@ -129,9 +132,15 @@ class HepMC3Reader final : public IReader {
 
   bool m_bufferError = false;
 
-  std::mutex m_mutex;
+  std::mutex m_queueMutex;
 
-  std::shared_ptr<HepMC3::Reader> m_reader;
+  struct InputConfig {
+    std::shared_ptr<HepMC3::Reader> reader;
+    std::size_t numEvents;
+    std::filesystem::path path;
+  };
+
+  std::vector<InputConfig> m_inputs;
 };
 
 }  // namespace ActsExamples
