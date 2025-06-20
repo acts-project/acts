@@ -80,6 +80,14 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   filterConfig.compatSeedLimit = m_cfg.compatSeedLimit;
   filterConfig.seedWeightIncrement = m_cfg.seedWeightIncrement;
   filterConfig.numSeedIncrement = m_cfg.numSeedIncrement;
+  filterConfig.seedConfirmation = m_cfg.seedConfirmation;
+  filterConfig.centralSeedConfirmationRange =
+      m_cfg.centralSeedConfirmationRange;
+  filterConfig.forwardSeedConfirmationRange =
+      m_cfg.forwardSeedConfirmationRange;
+  filterConfig.maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
+  filterConfig.maxQualitySeedsPerSpMConf =
+      std::numeric_limits<std::size_t>::max();
   filterConfig.useDeltaRinsteadOfTopRadius = m_cfg.useDeltaRinsteadOfTopRadius;
 
   m_seedFilter = Acts::Experimental::BroadTripletSeedFilter(
@@ -124,10 +132,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
-
-  Acts::Experimental::BroadTripletSeedFilter::Options filterOptions;
-  filterOptions.seedConfirmation = m_cfg.seedConfirmation;
-  filterOptions.seedConfRange = m_cfg.centralSeedConfirmationRange;
 
   Acts::Experimental::DoubletSeedFinder::Cuts doubletCuts;
   doubletCuts.deltaRMin = m_cfg.deltaRMin;
@@ -208,7 +212,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     for (Acts::Experimental::SpacePointIndex2 middleSp : middleSps) {
       auto spM = coreSpacePoints.at(middleSp);
-      const float zM = spM.z();
       const float rM = spM.extra(rColumn);
 
       // check if spM is outside our radial region of interest
@@ -218,22 +221,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       if (rM > maxRadiusRangeForMiddle) {
         // break because SPs are sorted in r
         break;
-      }
-
-      // apply cut on the number of top SP if seedConfirmation is true
-      if (m_cfg.seedConfirmation) {
-        // check if middle SP is in the central or forward region
-        filterOptions.seedConfRange =
-            (zM > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-             zM < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-                ? m_cfg.forwardSeedConfirmationRange
-                : m_cfg.centralSeedConfirmationRange;
-        // set the minimum number of top SP depending on whether the middle SP
-        // is in the central or forward region
-        filterOptions.nTopSeedConf =
-            rM > filterOptions.seedConfRange.rMaxSeedConf
-                ? filterOptions.seedConfRange.nTopForLargeR
-                : filterOptions.seedConfRange.nTopForSmallR;
       }
 
       m_seedFinder->createSeedsFromGroup(
