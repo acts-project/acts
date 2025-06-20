@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 
 class TGeoNode;
 
@@ -20,6 +20,9 @@ namespace Acts {
 /// Interface class that provides an Identifier from a TGeoNode
 class ITGeoIdentifierProvider {
  public:
+  /// Virtual destructor
+  virtual ~ITGeoIdentifierProvider() = default;
+
   /// Take a geometry context and a TGeoNode and provide an identifier
   ///
   /// @param gctx is a geometry context object

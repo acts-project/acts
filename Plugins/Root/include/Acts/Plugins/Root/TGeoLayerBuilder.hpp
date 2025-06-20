@@ -15,7 +15,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
-#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
+#include "Acts/Plugins/Root/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -81,12 +81,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::vector<std::pair<int, BinningType>> binning1 = {{-1, equidistant}};
 
     // Default constructor
-    LayerConfig()
-        : volumeName(""),
-          sensorNames({}),
-          localAxes("XZY"),
-          envelope(std::pair<double, double>(1 * UnitConstants::mm,
-                                             1 * UnitConstants::mm)) {}
+    LayerConfig() = default;
   };
 
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
@@ -213,7 +208,7 @@ inline void TGeoLayerBuilder::registerSplit(
   range.first = std::min(range.first, test);
   range.second = std::max(range.second, test);
   // Loop and find the split parameters
-  for (auto& splitPar : parameters) {
+  for (const auto& splitPar : parameters) {
     if (std::abs(test - splitPar) < tolerance) {
       found = true;
     }

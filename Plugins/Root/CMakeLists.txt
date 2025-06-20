@@ -18,19 +18,19 @@ else()
     )
 endif()
 
-add_library(ActsPluginTGeo SHARED ${library_sources})
+add_library(ActsPluginRoot SHARED ${library_sources})
 
 target_include_directories(
-    ActsPluginTGeo
+    ActsPluginRoot
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginTGeo PUBLIC ActsCore ROOT::Geom)
+target_link_libraries(ActsPluginRoot PUBLIC ActsCore ROOT::Geom)
 
 install(
-    TARGETS ActsPluginTGeo
-    EXPORT ActsPluginTGeoTargets
+    TARGETS ActsPluginRoot
+    EXPORT ActsPluginRootTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
