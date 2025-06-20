@@ -52,7 +52,6 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
-        ActsExamplesDetectorContextual
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoCsv
