@@ -35,7 +35,7 @@ class IAlignmentStore {
       const Acts::Surface& surface) const = 0;
 };
 
-/// A simple struct holidng a store raw pointer, ownership should not be in the
+/// A simple struct holding a store raw pointer, ownership should not be in the
 /// Context as the store may expand lifetime beyond a context scope
 struct AlignmentContext {
   /// The store pointer
