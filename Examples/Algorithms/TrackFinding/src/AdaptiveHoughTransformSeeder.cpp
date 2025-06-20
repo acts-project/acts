@@ -298,8 +298,9 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                               5. * Acts::UnitConstants::mm) {
         spIndex++;
       }
-      if (spIndex >= sp.size())
+      if (spIndex >= sp.size()) {
         break;
+      }
     }
     if (sp[2] == nullptr) {
       ACTS_VERBOSE("this solution has less than 3 SP, ignoring");
@@ -522,7 +523,7 @@ void AdaptiveHoughTransformSeeder::deduplicate(
       std::unique(std::begin(op), std::end(op), binaryPredUnique);
   std::deque<AccumulatorSection> temp;
   for (auto sPtr = std::begin(op); sPtr != endOfUniqueSections; ++sPtr) {
-    temp.push_back(std::move(**sPtr));
+    temp.push_back(**sPtr);
   }
   input = std::move(temp);
 }

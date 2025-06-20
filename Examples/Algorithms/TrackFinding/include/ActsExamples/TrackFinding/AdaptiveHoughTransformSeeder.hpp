@@ -103,7 +103,7 @@ class AccumulatorSection {
 
   ///  @brief true if the line defined by given parameters passes the section
   /// a and b are line parameters y = ax + b
-  inline bool isLineInside(std::function<float(float)> f) const {
+  inline bool isLineInside(const std::function<float(float)> &f) const {
     const float yB = f(m_xBegin);
     const float yE = f(m_xBegin + m_xSize);
     return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
@@ -117,8 +117,8 @@ class AccumulatorSection {
   /// It may be incorrect assumption for rapidly changing function or large
   /// sections
   /// @return true if the lines cross in the section
-  inline bool isCrossingInside(std::function<float(float)> line1,
-                               std::function<float(float)> line2) const {
+  inline bool isCrossingInside(const std::function<float(float)> &line1,
+                               const std::function<float(float)> &line2) const {
     // this microalgorithm idea is illustrated below
     // section left section right
     // example with crossing
@@ -433,8 +433,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   bool passIntersectionsCheck(
       const AccumulatorSection &section,
       const std::vector<PreprocessedMeasurement> &measurements,
-      const LineParamFunctor &lineParamsAccessor,
-      const unsigned threshold) const;
+      const LineParamFunctor &lineFunctor, const unsigned threshold) const;
 
   void deduplicate(std::deque<AccumulatorSection> &input) const;
 };
