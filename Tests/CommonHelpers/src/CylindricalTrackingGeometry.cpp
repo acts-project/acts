@@ -350,7 +350,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
           using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
 
           layer.setNavigationPolicyFactory(
-              Acts::NavigationPolicyFactory::make()
+              Acts::NavigationPolicyFactory{}
                   .add<Acts::TryAllNavigationPolicy>(
                       Acts::TryAllNavigationPolicy::Config{.sensitives = false})
                   .add<SrfArrayNavPol>(SrfArrayNavPol::Config{
