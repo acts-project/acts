@@ -290,13 +290,13 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackPayload::read() const {
   rmTrack.second.materialInL0 = 0.;
 
   for (std::size_t is = 0; is < msteps; ++is) {
-    double s = m_stepLength[is];
-    if (s == 0) {
+    float s = m_stepLength[is];
+    if (s == 0.) {
       continue;
     }
 
-    double mX0 = m_stepMatX0[is];
-    double mL0 = m_stepMatL0[is];
+    float mX0 = m_stepMatX0[is];
+    float mL0 = m_stepMatL0[is];
 
     rmTrack.second.materialInX0 += s / mX0;
     rmTrack.second.materialInL0 += s / mL0;
