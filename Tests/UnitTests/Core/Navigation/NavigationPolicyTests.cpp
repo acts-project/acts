@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   std::function<std::unique_ptr<INavigationPolicy>(
       const GeometryContext&, const TrackingVolume&, const Logger&)>
-      factory = NavigationPolicyFactory::make()
+      factory = NavigationPolicyFactory{}
                     .add<APolicy>()         // no arguments
                     .add<BPolicy>(config);  // config struct as argument
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
       "PixelLayer3"};
 
   std::unique_ptr<NavigationPolicyFactory> factory =
-      NavigationPolicyFactory::make().add<APolicy>().asUniquePtr();
+      NavigationPolicyFactory{}.add<APolicy>().asUniquePtr();
 
   auto policyBase = factory->build(gctx, volume, *logger);
   auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   IsolatedConfig config{.value = 44};
   auto factory =
-      NavigationPolicyFactory::make().add<APolicy>().add(makeCPolicy, config);
+      NavigationPolicyFactory{}.add<APolicy>().add(makeCPolicy, config);
 
   auto factory2 =
-      NavigationPolicyFactory::make().add(makeCPolicy, config).add<APolicy>();
+      NavigationPolicyFactory{}.add(makeCPolicy, config).add<APolicy>();
 
   auto policyBase = factory(gctx, volume, *logger);
   auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
