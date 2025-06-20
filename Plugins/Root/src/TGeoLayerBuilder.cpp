@@ -32,7 +32,7 @@ class ISurfaceMaterial;
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,
     std::unique_ptr<const Logger> logger)
-    : m_cfg(), m_logger(std::move(logger)) {
+    : m_logger(std::move(logger)) {
   setConfiguration(config);
 }
 
@@ -104,9 +104,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
   // Helper function to fill the layer
   auto fillLayer = [&](const LayerSurfaceVector& lSurfaces,
-                       const LayerConfig& lCfg,
-                       unsigned int pl_id = 0) -> void {
-    int nb0 = 0, nt0 = 0;
+                       const LayerConfig& lCfg, unsigned int pl_id = 0) {
+    int nb0 = 0;
+    int nt0 = 0;
     bool is_autobinning = ((lCfg.binning0.size() == 1) &&
                            (std::get<int>(lCfg.binning0.at(0)) <= 0));
     if (!is_autobinning && std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
@@ -126,7 +126,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
     }
 
-    int nb1 = 0, nt1 = 0;
+    int nb1 = 0;
+    int nt1 = 0;
     is_autobinning = (lCfg.binning1.size() == 1) &&
                      (std::get<int>(lCfg.binning1.at(0)) <= 0);
     if (!is_autobinning && std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
@@ -190,18 +191,17 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ACTS_DEBUG("  - sensor: " << sensor);
     }
     if (!layerCfg.parseRanges.empty()) {
-      for (const auto& pRange : layerCfg.parseRanges) {
+      for (const auto& [axisDir, pRange] : layerCfg.parseRanges) {
         ACTS_DEBUG("- layer parsing restricted in "
-                   << axisDirectionName(pRange.first) << " to ["
-                   << pRange.second.first << "/" << pRange.second.second
-                   << "].");
+                   << axisDirectionName(axisDir) << " to [" << pRange.first
+                   << "/" << pRange.second << "].");
       }
     }
     if (!layerCfg.splitConfigs.empty()) {
-      for (const auto& sConfig : layerCfg.splitConfigs) {
-        ACTS_DEBUG("- layer splitting attempt in "
-                   << axisDirectionName(sConfig.first) << " with tolerance "
-                   << sConfig.second << ".");
+      for (const auto& [axisDir, tConfig] : layerCfg.splitConfigs) {
+        ACTS_DEBUG("- layer splitting attempt in " << axisDirectionName(axisDir)
+                                                   << " with tolerance "
+                                                   << tConfig << ".");
       }
     }
 
@@ -239,10 +239,10 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
                                 << " search restrictions.");
-      for (const auto& prange : layerCfg.parseRanges) {
-        ACTS_VERBOSE(" - range " << axisDirectionName(prange.first)
-                                 << " within [ " << prange.second.first << ", "
-                                 << prange.second.second << "]");
+      for (const auto& [axisDir, pRange] : layerCfg.parseRanges) {
+        ACTS_VERBOSE(" - range " << axisDirectionName(axisDir) << " within [ "
+                                 << pRange.first << ", " << pRange.second
+                                 << "]");
       }
 
       TGeoParser::select(tgpState, tgpOptions, gmatrix);
@@ -256,9 +256,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
                 : TGeoDetectorElement::Identifier();
 
-        auto tgElement =
-            m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
-                                 layerCfg.localAxes, m_cfg.unit, nullptr);
+        auto tgElement = m_cfg.detectorElementFactory(
+            identifier, *snode.node, *snode.transform, layerCfg.localAxes,
+            m_cfg.unit, nullptr);
 
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
