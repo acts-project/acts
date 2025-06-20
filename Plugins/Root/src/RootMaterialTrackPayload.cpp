@@ -15,36 +15,6 @@
 #include <TChain.h>
 #include <TTree.h>
 
-Acts::RootMaterialTrackPayload::~RootMaterialTrackPayload() {
-  delete m_stepXs;
-  delete m_stepYs;
-  delete m_stepZs;
-  delete m_stepXe;
-  delete m_stepYe;
-  delete m_stepZe;
-  delete m_stepX;
-  delete m_stepY;
-  delete m_stepZ;
-  delete m_stepR;
-  delete m_stepDx;
-  delete m_stepDy;
-  delete m_stepDz;
-  delete m_stepLength;
-  delete m_stepMatX0;
-  delete m_stepMatL0;
-  delete m_stepMatA;
-  delete m_stepMatZ;
-  delete m_stepMatRho;
-  delete m_surfaceId;
-  delete m_surfaceX;
-  delete m_surfaceY;
-  delete m_surfaceZ;
-  delete m_surfaceR;
-  delete m_surfaceDistance;
-  delete m_surfacePathCorrection;
-  delete m_volumeId;
-}
-
 void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_vX);
@@ -57,25 +27,25 @@ void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("v_eta", &m_vEta);
   materialChain.SetBranchAddress("t_X0", &m_tX0);
   materialChain.SetBranchAddress("t_L0", &m_tL0);
-  materialChain.SetBranchAddress("mat_x", &m_stepX);
-  materialChain.SetBranchAddress("mat_y", &m_stepY);
-  materialChain.SetBranchAddress("mat_z", &m_stepZ);
-  materialChain.SetBranchAddress("mat_dx", &m_stepDx);
-  materialChain.SetBranchAddress("mat_dy", &m_stepDy);
-  materialChain.SetBranchAddress("mat_dz", &m_stepDz);
-  materialChain.SetBranchAddress("mat_step_length", &m_stepLength);
-  materialChain.SetBranchAddress("mat_X0", &m_stepMatX0);
-  materialChain.SetBranchAddress("mat_L0", &m_stepMatL0);
-  materialChain.SetBranchAddress("mat_A", &m_stepMatA);
-  materialChain.SetBranchAddress("mat_Z", &m_stepMatZ);
-  materialChain.SetBranchAddress("mat_rho", &m_stepMatRho);
+  materialChain.SetBranchAddress("mat_x", &m_stepXPtr);
+  materialChain.SetBranchAddress("mat_y", &m_stepYPtr);
+  materialChain.SetBranchAddress("mat_z", &m_stepZPtr);
+  materialChain.SetBranchAddress("mat_dx", &m_stepDxPtr);
+  materialChain.SetBranchAddress("mat_dy", &m_stepDyPtr);
+  materialChain.SetBranchAddress("mat_dz", &m_stepDzPtr);
+  materialChain.SetBranchAddress("mat_step_length", &m_stepLengthPtr);
+  materialChain.SetBranchAddress("mat_X0", &m_stepMatX0Ptr);
+  materialChain.SetBranchAddress("mat_L0", &m_stepMatL0Ptr);
+  materialChain.SetBranchAddress("mat_A", &m_stepMatAPtr);
+  materialChain.SetBranchAddress("mat_Z", &m_stepMatZPtr);
+  materialChain.SetBranchAddress("mat_rho", &m_stepMatRhoPtr);
   if (m_surfaceInfo) {
-    materialChain.SetBranchAddress("sur_id", &m_surfaceId);
-    materialChain.SetBranchAddress("sur_x", &m_surfaceX);
-    materialChain.SetBranchAddress("sur_y", &m_surfaceY);
-    materialChain.SetBranchAddress("sur_z", &m_surfaceZ);
+    materialChain.SetBranchAddress("sur_id", &m_surfaceIdPtr);
+    materialChain.SetBranchAddress("sur_x", &m_surfaceXPtr);
+    materialChain.SetBranchAddress("sur_y", &m_surfaceYPtr);
+    materialChain.SetBranchAddress("sur_z", &m_surfaceZPtr);
     materialChain.SetBranchAddress("sur_pathCorrection",
-                                   &m_surfacePathCorrection);
+                                   &m_surfacePathCorrectionPtr);
   }
 }
 
@@ -134,69 +104,69 @@ void Acts::RootMaterialTrackPayload::write(
     const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
   // Clearing the vector first
-  m_stepXs->clear();
-  m_stepYs->clear();
-  m_stepZs->clear();
-  m_stepX->clear();
-  m_stepY->clear();
-  m_stepZ->clear();
-  m_stepR->clear();
-  m_stepXe->clear();
-  m_stepYe->clear();
-  m_stepZe->clear();
-  m_stepDx->clear();
-  m_stepDy->clear();
-  m_stepDz->clear();
-  m_stepLength->clear();
-  m_stepMatX0->clear();
-  m_stepMatL0->clear();
-  m_stepMatA->clear();
-  m_stepMatZ->clear();
-  m_stepMatRho->clear();
+  m_stepXs.clear();
+  m_stepYs.clear();
+  m_stepZs.clear();
+  m_stepX.clear();
+  m_stepY.clear();
+  m_stepZ.clear();
+  m_stepR.clear();
+  m_stepXe.clear();
+  m_stepYe.clear();
+  m_stepZe.clear();
+  m_stepDx.clear();
+  m_stepDy.clear();
+  m_stepDz.clear();
+  m_stepLength.clear();
+  m_stepMatX0.clear();
+  m_stepMatL0.clear();
+  m_stepMatA.clear();
+  m_stepMatZ.clear();
+  m_stepMatRho.clear();
 
-  m_surfaceId->clear();
-  m_surfaceX->clear();
-  m_surfaceY->clear();
-  m_surfaceZ->clear();
-  m_surfaceR->clear();
-  m_surfaceDistance->clear();
-  m_surfacePathCorrection->clear();
+  m_surfaceId.clear();
+  m_surfaceX.clear();
+  m_surfaceY.clear();
+  m_surfaceZ.clear();
+  m_surfaceR.clear();
+  m_surfaceDistance.clear();
+  m_surfacePathCorrection.clear();
 
-  m_volumeId->clear();
+  m_volumeId.clear();
 
   auto materialInteractions = materialTrack.second.materialInteractions;
 
   // Reserve the vector then
   std::size_t mints = materialInteractions.size();
-  m_stepXs->reserve(mints);
-  m_stepYs->reserve(mints);
-  m_stepZs->reserve(mints);
-  m_stepX->reserve(mints);
-  m_stepY->reserve(mints);
-  m_stepZ->reserve(mints);
-  m_stepR->reserve(mints);
-  m_stepXe->reserve(mints);
-  m_stepYe->reserve(mints);
-  m_stepZe->reserve(mints);
-  m_stepDx->reserve(mints);
-  m_stepDy->reserve(mints);
-  m_stepDz->reserve(mints);
-  m_stepLength->reserve(mints);
-  m_stepMatX0->reserve(mints);
-  m_stepMatL0->reserve(mints);
-  m_stepMatA->reserve(mints);
-  m_stepMatZ->reserve(mints);
-  m_stepMatRho->reserve(mints);
+  m_stepXs.reserve(mints);
+  m_stepYs.reserve(mints);
+  m_stepZs.reserve(mints);
+  m_stepX.reserve(mints);
+  m_stepY.reserve(mints);
+  m_stepZ.reserve(mints);
+  m_stepR.reserve(mints);
+  m_stepXe.reserve(mints);
+  m_stepYe.reserve(mints);
+  m_stepZe.reserve(mints);
+  m_stepDx.reserve(mints);
+  m_stepDy.reserve(mints);
+  m_stepDz.reserve(mints);
+  m_stepLength.reserve(mints);
+  m_stepMatX0.reserve(mints);
+  m_stepMatL0.reserve(mints);
+  m_stepMatA.reserve(mints);
+  m_stepMatZ.reserve(mints);
+  m_stepMatRho.reserve(mints);
 
-  m_surfaceId->reserve(mints);
-  m_surfaceX->reserve(mints);
-  m_surfaceY->reserve(mints);
-  m_surfaceZ->reserve(mints);
-  m_surfaceR->reserve(mints);
-  m_surfaceDistance->reserve(mints);
-  m_surfacePathCorrection->reserve(mints);
+  m_surfaceId.reserve(mints);
+  m_surfaceX.reserve(mints);
+  m_surfaceY.reserve(mints);
+  m_surfaceZ.reserve(mints);
+  m_surfaceR.reserve(mints);
+  m_surfaceDistance.reserve(mints);
+  m_surfacePathCorrection.reserve(mints);
 
-  m_volumeId->reserve(mints);
+  m_volumeId.reserve(mints);
 
   // reset the global counter
   if (m_recalculateTotals) {
@@ -222,13 +192,13 @@ void Acts::RootMaterialTrackPayload::write(
     auto direction = mint.direction.normalized();
 
     // The material step position information
-    m_stepX->push_back(mint.position.x());
-    m_stepY->push_back(mint.position.y());
-    m_stepZ->push_back(mint.position.z());
-    m_stepR->push_back(VectorHelpers::perp(mint.position));
-    m_stepDx->push_back(direction.x());
-    m_stepDy->push_back(direction.y());
-    m_stepDz->push_back(direction.z());
+    m_stepX.push_back(mint.position.x());
+    m_stepY.push_back(mint.position.y());
+    m_stepZ.push_back(mint.position.z());
+    m_stepR.push_back(VectorHelpers::perp(mint.position));
+    m_stepDx.push_back(direction.x());
+    m_stepDy.push_back(direction.y());
+    m_stepDz.push_back(direction.z());
 
     if (m_prePostStepInfo) {
       Acts::Vector3 prePos =
@@ -236,43 +206,42 @@ void Acts::RootMaterialTrackPayload::write(
       Acts::Vector3 posPos =
           mint.position + 0.5 * mint.pathCorrection * direction;
 
-      m_stepXs->push_back(prePos.x());
-      m_stepYs->push_back(prePos.y());
-      m_stepZs->push_back(prePos.z());
-      m_stepXe->push_back(posPos.x());
-      m_stepYe->push_back(posPos.y());
-      m_stepZe->push_back(posPos.z());
+      m_stepXs.push_back(prePos.x());
+      m_stepYs.push_back(prePos.y());
+      m_stepZs.push_back(prePos.z());
+      m_stepXe.push_back(posPos.x());
+      m_stepYe.push_back(posPos.y());
+      m_stepZe.push_back(posPos.z());
     }
 
     // Store surface information
     if (m_surfaceInfo) {
       const Acts::Surface* surface = mint.surface;
       if (mint.intersectionID.value() != 0) {
-        m_surfaceId->push_back(mint.intersectionID.value());
-        m_surfacePathCorrection->push_back(mint.pathCorrection);
-        m_surfaceX->push_back(mint.intersection.x());
-        m_surfaceY->push_back(mint.intersection.y());
-        m_surfaceZ->push_back(mint.intersection.z());
-        m_surfaceR->push_back(VectorHelpers::perp(mint.intersection));
-        m_surfaceDistance->push_back(
-            (mint.position - mint.intersection).norm());
+        m_surfaceId.push_back(mint.intersectionID.value());
+        m_surfacePathCorrection.push_back(mint.pathCorrection);
+        m_surfaceX.push_back(mint.intersection.x());
+        m_surfaceY.push_back(mint.intersection.y());
+        m_surfaceZ.push_back(mint.intersection.z());
+        m_surfaceR.push_back(VectorHelpers::perp(mint.intersection));
+        m_surfaceDistance.push_back((mint.position - mint.intersection).norm());
       } else if (surface != nullptr) {
         auto sfIntersection =
             surface
                 ->intersect(gctx, mint.position, mint.direction,
                             Acts::BoundaryTolerance::None())
                 .closest();
-        m_surfaceId->push_back(surface->geometryId().value());
-        m_surfacePathCorrection->push_back(1.0);
-        m_surfaceX->push_back(sfIntersection.position().x());
-        m_surfaceY->push_back(sfIntersection.position().y());
-        m_surfaceZ->push_back(sfIntersection.position().z());
+        m_surfaceId.push_back(surface->geometryId().value());
+        m_surfacePathCorrection.push_back(1.0);
+        m_surfaceX.push_back(sfIntersection.position().x());
+        m_surfaceY.push_back(sfIntersection.position().y());
+        m_surfaceZ.push_back(sfIntersection.position().z());
       } else {
-        m_surfaceId->push_back(Acts::GeometryIdentifier().value());
-        m_surfaceX->push_back(0);
-        m_surfaceY->push_back(0);
-        m_surfaceZ->push_back(0);
-        m_surfacePathCorrection->push_back(1.0);
+        m_surfaceId.push_back(Acts::GeometryIdentifier().value());
+        m_surfaceX.push_back(0);
+        m_surfaceY.push_back(0);
+        m_surfaceZ.push_back(0);
+        m_surfacePathCorrection.push_back(1.0);
       }
     }
 
@@ -281,25 +250,25 @@ void Acts::RootMaterialTrackPayload::write(
       Acts::GeometryIdentifier vlayerID;
       if (!mint.volume.empty()) {
         vlayerID = mint.volume.geometryId();
-        m_volumeId->push_back(vlayerID.value());
+        m_volumeId.push_back(vlayerID.value());
       } else {
         vlayerID = vlayerID.withVolume(0)
                        .withBoundary(0)
                        .withLayer(0)
                        .withApproach(0)
                        .withSensitive(0);
-        m_volumeId->push_back(vlayerID.value());
+        m_volumeId.push_back(vlayerID.value());
       }
     }
 
     // the material information
     const auto& mprops = mint.materialSlab;
-    m_stepLength->push_back(mprops.thickness());
-    m_stepMatX0->push_back(mprops.material().X0());
-    m_stepMatL0->push_back(mprops.material().L0());
-    m_stepMatA->push_back(mprops.material().Ar());
-    m_stepMatZ->push_back(mprops.material().Z());
-    m_stepMatRho->push_back(mprops.material().massDensity());
+    m_stepLength.push_back(mprops.thickness());
+    m_stepMatX0.push_back(mprops.material().X0());
+    m_stepMatL0.push_back(mprops.material().L0());
+    m_stepMatA.push_back(mprops.material().Ar());
+    m_stepMatZ.push_back(mprops.material().Z());
+    m_stepMatRho.push_back(mprops.material().massDensity());
     // re-calculate if defined to do so
     if (m_recalculateTotals) {
       m_tX0 += mprops.thicknessInX0();
@@ -315,40 +284,39 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackPayload::read() const {
   rmTrack.first.second = Acts::Vector3(m_vPx, m_vPy, m_vPz);
 
   // Fill the individual steps
-  std::size_t msteps = m_stepLength->size();
+  std::size_t msteps = m_stepLength.size();
   rmTrack.second.materialInteractions.reserve(msteps);
   rmTrack.second.materialInX0 = 0.;
   rmTrack.second.materialInL0 = 0.;
 
   for (std::size_t is = 0; is < msteps; ++is) {
-    double s = (*m_stepLength)[is];
+    double s = m_stepLength[is];
     if (s == 0) {
       continue;
     }
 
-    double mX0 = (*m_stepMatX0)[is];
-    double mL0 = (*m_stepMatL0)[is];
+    double mX0 = m_stepMatX0[is];
+    double mL0 = m_stepMatL0[is];
 
     rmTrack.second.materialInX0 += s / mX0;
     rmTrack.second.materialInL0 += s / mL0;
     /// Fill the position & the material
     Acts::MaterialInteraction mInteraction;
     mInteraction.position =
-        Acts::Vector3((*m_stepX)[is], (*m_stepY)[is], (*m_stepZ)[is]);
+        Acts::Vector3(m_stepX[is], m_stepY[is], m_stepZ[is]);
     mInteraction.direction =
-        Acts::Vector3((*m_stepDx)[is], (*m_stepDy)[is], (*m_stepDz)[is]);
+        Acts::Vector3(m_stepDx[is], m_stepDy[is], m_stepDz[is]);
     mInteraction.materialSlab = Acts::MaterialSlab(
-        Acts::Material::fromMassDensity(mX0, mL0, (*m_stepMatA)[is],
-                                        (*m_stepMatZ)[is], (*m_stepMatRho)[is]),
+        Acts::Material::fromMassDensity(mX0, mL0, m_stepMatA[is],
+                                        m_stepMatZ[is], m_stepMatRho[is]),
         s);
     if (m_surfaceInfo) {
       // add the surface information to the interaction this allows the
       // mapping to be speed up
-      mInteraction.intersectionID =
-          Acts::GeometryIdentifier((*m_surfaceId)[is]);
-      mInteraction.intersection = Acts::Vector3(
-          (*m_surfaceX)[is], (*m_surfaceY)[is], (*m_surfaceZ)[is]);
-      mInteraction.pathCorrection = (*m_surfacePathCorrection)[is];
+      mInteraction.intersectionID = Acts::GeometryIdentifier(m_surfaceId[is]);
+      mInteraction.intersection =
+          Acts::Vector3(m_surfaceX[is], m_surfaceY[is], m_surfaceZ[is]);
+      mInteraction.pathCorrection = m_surfacePathCorrection[is];
     } else {
       mInteraction.intersectionID = Acts::GeometryIdentifier();
       mInteraction.intersection = Acts::Vector3(0, 0, 0);

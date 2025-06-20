@@ -82,7 +82,6 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
     // Default constructor
     LayerConfig() = default;
-
   };
 
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
