@@ -21,7 +21,7 @@ namespace ActsExamples {
 ///
 /// Possible implementations may take the geometry identifier, access the
 /// detector element or use other means to identify which transform is being
-/// queired.
+/// queried.
 class IAlignmentStore {
  public:
   /// @brief  Virtual destructor
