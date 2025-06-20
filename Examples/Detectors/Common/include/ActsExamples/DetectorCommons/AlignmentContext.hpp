@@ -29,7 +29,7 @@ class IAlignmentStore {
 
   /// Retrieve the contextual transform for a given surface
   ///
-  /// @param surface the  surface for which the contextual tranfrom is requested
+  /// @param surface the  surface for which the contextual transform is requested
   /// @return a pointer to the transform if found, otherwise nullptr
   virtual const Acts::Transform3* contextualTransform(
       const Acts::Surface& surface) const = 0;
