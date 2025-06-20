@@ -14,8 +14,8 @@
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
+#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
 

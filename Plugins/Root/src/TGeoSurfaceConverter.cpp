@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -290,10 +290,10 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   std::shared_ptr<const PlanarBounds> bounds = nullptr;
 
   // Check if it's a box - always true, hence last ressort
-  const TGeoBBox* box = dynamic_cast<const TGeoBBox*>(&tgShape);
+  auto box = dynamic_cast<const TGeoBBox*>(&tgShape);
 
   // Check if it's a trapezoid2
-  const TGeoTrd1* trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
+  auto trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
   if ((trapezoid1 != nullptr) && !boost::istarts_with(axes, "XZ")) {
     throw std::invalid_argument(
         "TGeoTrd1 -> PlaneSurface: can only be converted with '(x/X)(z/Z)(*)' "
@@ -301,7 +301,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   }
 
   // Check if it's a trapezoid2
-  const TGeoTrd2* trapezoid2 = dynamic_cast<const TGeoTrd2*>(&tgShape);
+  auto trapezoid2 = dynamic_cast<const TGeoTrd2*>(&tgShape);
   if (trapezoid2 != nullptr) {
     if (!boost::istarts_with(axes, "X") &&
         std::abs(trapezoid2->GetDx1() - trapezoid2->GetDx2()) > s_epsilon) {
@@ -324,7 +324,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   }
 
   // Check if it's a Arb8
-  const TGeoArb8* polygon8c = dynamic_cast<const TGeoArb8*>(&tgShape);
+  auto polygon8c = dynamic_cast<const TGeoArb8*>(&tgShape);
   TGeoArb8* polygon8 = nullptr;
   if (polygon8c != nullptr) {
     // Needed otherwise you can access GetVertices
