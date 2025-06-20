@@ -19,7 +19,6 @@
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
-/// TEST
 #include <functional>
 #include <memory>
 #include <string>
