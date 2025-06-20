@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-/// A detector element that is aligned with the Acts framework
+/// A detector element that is aligned with the ACTS framework
 /// This class is a wrapper around the DetectorElement class
 /// for different detectors and can be used with the same alignment
 /// showcase infrastructure.
