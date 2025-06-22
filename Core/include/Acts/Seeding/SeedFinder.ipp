@@ -325,6 +325,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
+      // ACTS_INFO("zOrigin1=" << zOriginTimesDeltaR/deltaR);
+      // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
+          // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+        // if (zOriginTimesDeltaR < 19.0 * deltaR ||
+        //     zOriginTimesDeltaR > 21.0 * deltaR) {
       // ACTS_INFO("zOrigin1= " << zOriginTimesDeltaR/deltaR);
       // if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
           // zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
