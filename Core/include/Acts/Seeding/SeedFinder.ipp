@@ -370,6 +370,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         mutableData.setDeltaR(otherSP->index(),
                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP);
+        // ACTS_INFO("zOrigin4=" << zOriginTimesDeltaR/deltaR);
         continue;
       }
 
@@ -426,7 +427,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         mutableData.setDeltaR(otherSP->index(),
                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.emplace_back(otherSP);
-        // ACTS_INFO("zOrigin2= " << zOriginTimesDeltaR/deltaR);
+        // ACTS_INFO("zOrigin2=" << zOriginTimesDeltaR/deltaR);
         continue;
       }
 
@@ -476,7 +477,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
       mutableData.setDeltaR(otherSP->index(),
                             std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-      // ACTS_INFO("zOrigin3= " << zOriginTimesDeltaR/deltaR);
+      // ACTS_INFO("zOrigin3=" << zOriginTimesDeltaR/deltaR);
       outVec.emplace_back(otherSP);
     }
   }
