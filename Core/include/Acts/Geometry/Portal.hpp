@@ -88,8 +88,8 @@ class Portal {
     };
 
     /// Entry for the link along normal
-    /// Entry for the link opposite normal
     Link alongNormal{};
+    /// Entry for the link opposite normal
     Link oppositeNormal{};
   };
 
