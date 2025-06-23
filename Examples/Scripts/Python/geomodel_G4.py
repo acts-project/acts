@@ -115,7 +115,7 @@ def main():
 
     # runGeant4(detector, trackingGeometry, field, args.outDir).run()
 
-    #runPropagation(trackingGeometry, field, args.outDir).run()
+    # runPropagation(trackingGeometry, field, args.outDir).run()
 
     wb = WhiteBoard(acts.logging.INFO)
 

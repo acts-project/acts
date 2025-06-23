@@ -1299,6 +1299,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
 
     assert_root_hash(root_file, rfp)
 
+
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 def test_geomodel_G4(tmp_path):
@@ -1311,14 +1312,16 @@ def test_geomodel_G4(tmp_path):
     )
     assert script.exists()
     # Prepare arguments for the script
-    input_file = "/eos/user/c/cimuonsw/GeometryFiles/MockUp.db"  
+    input_file = "/eos/user/c/cimuonsw/GeometryFiles/MockUp.db"
     out_dir = tmp_path / "geomodel_g4_out"
     out_dir.mkdir()
     args = [
         "python3",
         str(script),
-        "--input", str(input_file),
-        "--outDir", str(out_dir),
+        "--input",
+        str(input_file),
+        "--outDir",
+        str(out_dir),
     ]
     subprocess.check_call(args)
 

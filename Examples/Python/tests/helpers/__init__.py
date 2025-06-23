@@ -32,8 +32,8 @@ except ImportError:
 
 try:
     from acts import geomodel
-    
-    geomodelEnabled = True  
+
+    geomodelEnabled = True
 except ImportError:
     geomodelEnabled = False
 

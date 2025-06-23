@@ -31,16 +31,14 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
 else()
     target_sources(
         ActsExamplesDetectorGeoModel
-        PUBLIC 
-        src/GeoModelDetectorGeant4Stub.cpp
+        PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()
 
 target_sources(
-        ActsExamplesDetectorGeoModel
-        PUBLIC 
-        src/GeoModelMuonMockupBuilder.cpp
-    )
+    ActsExamplesDetectorGeoModel
+    PUBLIC src/GeoModelMuonMockupBuilder.cpp
+)
 
 install(
     TARGETS ActsExamplesDetectorGeoModel
