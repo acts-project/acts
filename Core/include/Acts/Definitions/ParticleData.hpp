@@ -31,7 +31,7 @@ std::optional<float> findCharge(std::int32_t pdg);
 /// Try its ground state first, and ultimately get the proton number from PDG
 /// @param pdg PDG particle number for the nucleus
 /// @return Charge in native units.
-float findChargeOfNucleus(PdgParticle pdg);
+float findChargeOfNucleus(std::int32_t pdg);
 
 /// Find the mass for a given PDG particle number.
 /// @param pdg PDG particle number
@@ -61,7 +61,7 @@ std::optional<std::string_view> findName(std::int32_t pdg);
 /// nucleus. Try to get the name from its ground state.
 /// @param pdg PDG particle number for the nucleus
 /// @return Particle name.
-std::optional<std::string_view> findNameOfNucleus(PdgParticle pdg);
+std::optional<std::string_view> findNameOfNucleus(std::int32_t pdg);
 
 /// Find all known particle data for a given PDG particle number.
 /// @param pdg PDG particle number

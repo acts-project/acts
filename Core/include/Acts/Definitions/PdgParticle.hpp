@@ -47,7 +47,7 @@ static constexpr PdgParticle makeAbsolutePdgParticle(PdgParticle pdg) {
 /// Check if the PDG belongs to a nucleus, i.e. if it has 10 digits.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
-static constexpr bool isNucleus(PdgParticle pdg) {
+static constexpr bool isNucleus(std::int32_t pdg) {
   const auto pdgNum = static_cast<std::int32_t>(pdg);
   return std::abs(pdgNum) > 1e9;
 }
@@ -56,7 +56,7 @@ static constexpr bool isNucleus(PdgParticle pdg) {
 /// a form 10LZZZAAAI, where I is isomer level; I=0 is the ground state.
 /// See PDG section "Monte Carlo Particle Numbering Scheme", point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
-static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
+static constexpr PdgParticle makeNucleusGroundState(std::int32_t pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
@@ -71,7 +71,7 @@ static constexpr PdgParticle makeNucleusGroundState(PdgParticle pdg) {
 /// Numbering Scheme" , point 16:
 /// https://pdg.lbl.gov/2025/reviews/rpp2024-rev-monte-carlo-numbering.pdf
 static constexpr std::pair<std::int32_t, std::int32_t> extractNucleusZandA(
-    PdgParticle pdg) {
+    std::int32_t pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }

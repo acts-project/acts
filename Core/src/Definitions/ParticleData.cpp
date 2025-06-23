@@ -11,16 +11,11 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <iterator>
-#include <limits>
 #include <optional>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 
 #include "ParticleDataTable.hpp"
@@ -113,7 +108,7 @@ std::optional<float> Acts::findCharge(std::int32_t pdg) {
   return it->second;
 }
 
-float Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
+float Acts::findChargeOfNucleus(std::int32_t pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
@@ -204,7 +199,7 @@ std::optional<std::string_view> Acts::findName(std::int32_t pdg) {
   return it->second;
 }
 
-std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
+std::optional<std::string_view> Acts::findNameOfNucleus(std::int32_t pdg) {
   if (!isNucleus(pdg)) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
