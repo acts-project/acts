@@ -43,11 +43,12 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
         std::make_shared<Acts::VolumeBoundFactory>();
   };
 
-  GeoModelMuonMockupBuilder(
+  explicit GeoModelMuonMockupBuilder(
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "GeoModelMuonMockupBuilder", Acts::Logging::DEBUG));
-  ~GeoModelMuonMockupBuilder() = default;
+
+  ~GeoModelMuonMockupBuilder() override = default;
 
   std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry(
       const Acts::GeometryContext& gctx) const override;

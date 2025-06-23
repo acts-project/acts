@@ -37,11 +37,12 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   // Blue print construction for the tracking geometry
   Acts::Experimental::Blueprint::Config bpCfg;
   bpCfg.envelope[Acts::AxisDirection::AxisZ] = {20_mm, 20_mm};
-  bpCfg.envelope[Acts::AxisDirection::AxisR] = {2_mm, 20_mm};
+  bpCfg.envelope[Acts::AxisDirection::AxisR] = {5008.87000_mm, 12_mm};
   Acts::Experimental::Blueprint root{bpCfg};
   auto& cyl = root.addCylinderContainer("MuonMockupBarrelContainer",
                                         Acts::AxisDirection::AxisR);
   cyl.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+  cyl.setResizeStrategy(Acts::VolumeResizeStrategy::Gap);
 
   if (boundingBoxes.empty()) {
     THROW_EXCEPTION(
@@ -82,7 +83,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     }
     auto parent = std::get<2>(box)->getParent().get();
 
-    if (!parent) {
+    if (parent == nullptr) {
       THROW_EXCEPTION("No parent found for " << name);
     }
     commonStations[parent].push_back(box);
@@ -100,6 +101,9 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
         *parentVolume, name + "Chamber_" + std::to_string(stationNum++));
     chamberVolume->assignGeometryId(geoId.withVolume(stationNum));
+
+    std::cout << "Boundaries of the chamber volume: "
+              << chamberVolume->boundarySurfaces().size() << std::endl;
 
     std::size_t childVol = 0;
     for (const auto& child : childrenTrkVols) {

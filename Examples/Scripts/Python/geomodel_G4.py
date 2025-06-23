@@ -13,12 +13,12 @@ from acts.examples import (
     AlgorithmContext,
     WhiteBoard,
     ObjTrackingGeometryWriter,
-) 
+)
 from acts import geomodel as gm
 from acts import examples
 
 from pathlib import Path
-
+from propagation import runPropagation
 
 
 def runGeant4(
@@ -43,7 +43,6 @@ def runGeant4(
     )
     outputDir = Path(outputDir)
     addGeant4(
-
         s,
         detector,
         trackingGeometry,
@@ -58,12 +57,10 @@ def runGeant4(
     return s
 
 
-
-
 def main():
     from argparse import ArgumentParser
 
-    u = acts.UnitConstants   
+    u = acts.UnitConstants
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -103,7 +100,7 @@ def main():
     gmDetectorCfg.geoModelTree = gmTree
     detector = gm.GeoModelDetector(gmDetectorCfg)
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     # Create the tracking geometry builder for the muon system
     gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
@@ -114,24 +111,21 @@ def main():
         gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE
     )
 
-    trackingGeometry = detector.buildTrackingGeometry(
-        gContext, trackingGeometryBuilder
-    )
+    trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
-    #runGeant4(detector, trackingGeometry, field, args.outDir).run()
+    # runGeant4(detector, trackingGeometry, field, args.outDir).run()
+
+    #runPropagation(trackingGeometry, field, args.outDir).run()
 
     wb = WhiteBoard(acts.logging.INFO)
 
-    context = AlgorithmContext(0, 0, wb,10)
+    context = AlgorithmContext(0, 0, wb, 10)
     obj_dir = Path(args.outDir) / "obj"
     obj_dir.mkdir(exist_ok=True)
 
-    writer = ObjTrackingGeometryWriter(
-        level=acts.logging.INFO,  outputDir=str(obj_dir))
-  
-    writer.write(context, trackingGeometry)
- 
+    writer = ObjTrackingGeometryWriter(level=acts.logging.INFO, outputDir=str(obj_dir))
 
+    writer.write(context, trackingGeometry)
 
 
 if __name__ == "__main__":
