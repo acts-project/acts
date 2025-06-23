@@ -206,7 +206,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     mos << Acts::VectorHelpers::perp(momentum) << ",";
     mos << Acts::VectorHelpers::eta(momentum) << ",";
     mos << Acts::VectorHelpers::phi(momentum) << ",";
-    mos << ip(1) << ","; 
+    mos << ip(1) << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType << ",";
     mos << "\"[";
