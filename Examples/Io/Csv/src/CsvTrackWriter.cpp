@@ -171,7 +171,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   mos << "track_id,seed_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
       << "chi2,ndf,chi2/ndf,"
-      << "pT,eta,phi,"
+      << "pT,eta,phi,z,"
       << "truthMatchProbability,"
       << "good/duplicate/fake,"
       << "Hits_ID";
@@ -189,7 +189,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     const auto& params = *trajState.fittedParameters;
     const auto momentum = params.momentum();
-
+    const auto ip = params.impactParameters();
     // write the track info
     mos << trajState.trackId << ",";
     mos << trajState.seedID << ",";
@@ -206,6 +206,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     mos << Acts::VectorHelpers::perp(momentum) << ",";
     mos << Acts::VectorHelpers::eta(momentum) << ",";
     mos << Acts::VectorHelpers::phi(momentum) << ",";
+    mos << ip(1); 
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType << ",";
     mos << "\"[";
