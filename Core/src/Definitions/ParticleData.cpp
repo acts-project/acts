@@ -35,7 +35,7 @@ enum class Type {
 
 // Template function depending on the PDG and *type* of data
 // so we can use statically cached values
-template <typename T, Acts::PdgParticle pdg, Type type>
+template <typename T, std::int32_t pdg, Type type>
 std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
   const static std::optional<T> value = [&map]() -> std::optional<T> {
     const auto it = map.find(pdg);
@@ -51,7 +51,7 @@ std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
 // Cache lookup for particle data
 // Uses a switch statement to map the PDG code to the correct cached value
 template <typename T, Type type>
-std::optional<T> findCached(Acts::PdgParticle pdg,
+std::optional<T> findCached(std::int32_t pdg,
                             const std::map<std::int32_t, T>& map) {
   using enum Acts::PdgParticle;
   switch (pdg) {
@@ -96,7 +96,7 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
 
 }  // namespace
 
-std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
+std::optional<float> Acts::findCharge(std::int32_t pdg) {
   if (auto cached = findCached<float, Type::Charge>(pdg, kParticlesMapCharge);
       cached) {
     return cached;
@@ -186,7 +186,7 @@ float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
   return massP * Z + massN * (A - Z) - bindEnergy;
 }
 
-std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
+std::optional<std::string_view> Acts::findName(std::int32_t pdg) {
   if (auto cached =
           findCached<const char* const, Type::Name>(pdg, kParticlesMapName);
       cached) {
