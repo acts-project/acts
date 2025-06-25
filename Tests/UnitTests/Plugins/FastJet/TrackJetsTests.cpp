@@ -29,7 +29,7 @@ class Track {
   Acts::Vector4 fourMomentum() const { return m_fourMom; }
 
  private:
-  Acts::Vector4 m_fourMom;
+  Acts::Vector4 m_fourMom{};
 };
 
 bool operator==(Track const& lhs, Track const& rhs) {
@@ -40,7 +40,7 @@ class TrackContainer {
  public:
   using TrackProxy = Track;
 
-  TrackContainer() {}
+  TrackContainer() = default;
   void insert(Track track) { m_vec.push_back(std::move(track)); }
   std::size_t size() { return m_vec.size(); }
 
@@ -53,7 +53,7 @@ class TrackContainer {
   }
 
  private:
-  std::vector<Track> m_vec;
+  std::vector<Track> m_vec{};
 };
 
 BOOST_AUTO_TEST_CASE(SingleTrack) {

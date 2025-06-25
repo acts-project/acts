@@ -28,7 +28,7 @@ class InputTracks {
  public:
   /// Constructor; saves a reference to the container
   /// @param tracks the TrackContainer
-  InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
+  explicit InputTracks(TrackContainer& tracks) : m_tracks{tracks} {}
 
   /// Get vector for 4-momenta from the track collection
   /// @return vector of fastjet::PseudoJet, one per track
@@ -60,7 +60,7 @@ class TrackJetSequence {
   static TrackJetSequence create(
       std::vector<fastjet::PseudoJet>&& fourMomenta,
       fastjet::JetDefinition jetDef = DefaultJetDefinition) {
-    return create(fourMomenta, jetDef);
+    return create(fourMomenta, std::move(jetDef));
   }
 
   /// Get all the track jets passing the pT & eta cuts
@@ -77,10 +77,10 @@ class TrackJetSequence {
   /// Main constructor. Users should call "TrackJetSequence::create" instead
   ///
   /// @param clusterSeq the fastjet::ClusterSequence object
-  TrackJetSequence(fastjet::ClusterSequence clusterSeq)
-      : m_clusterSeq{std::move(clusterSeq)} {}
+  explicit TrackJetSequence(const fastjet::ClusterSequence& clusterSeq)
+      : m_clusterSeq{clusterSeq} {}
 
-  fastjet::ClusterSequence m_clusterSeq;
+  fastjet::ClusterSequence m_clusterSeq{};
 };
 
 }  // namespace Acts::FastJet
