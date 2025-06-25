@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
+#include "Acts/Utilities/BoundFactory.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -20,14 +21,16 @@ namespace Acts::detail {
 template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
   Acts::Result<Acts::GeoModelSensitiveSurface> toSensitiveSurface(
-      PVConstLink geoPV, const Transform3& transform) const override {
+      PVConstLink geoPV, const Transform3& transform,
+      SurfaceBoundFactory& boundFactory) const override {
     // Retrieve logical volume and absolute transform
     const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
       const GeoShape* geoShape = logVol->getShape();
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
-        return Converter{}(geoPV, *concreteShape, transform, true);
+        return Converter{}(geoPV, *concreteShape, transform, boundFactory,
+                           true);
       }
       return Result<GeoModelSensitiveSurface>::failure(
           GeoModelConversionError::WrongShapeForConverter);
@@ -37,7 +40,8 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
   }
 
   Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
-      PVConstLink geoPV, const Transform3& transform) const override {
+      PVConstLink geoPV, const Transform3& transform,
+      SurfaceBoundFactory& boundFactory) const override {
     // Retrieve logical volume and absolute transform
     const GeoLogVol* logVol = geoPV->getLogVol();
     if (logVol != nullptr) {
@@ -46,7 +50,8 @@ struct GenericGeoShapeConverter : public IGeoShapeConverter {
       auto concreteShape = dynamic_cast<const Shape*>(geoShape);
       if (concreteShape != nullptr) {
         // Conversion function call with sensitive = false
-        auto res = Converter{}(geoPV, *concreteShape, transform, false);
+        auto res =
+            Converter{}(geoPV, *concreteShape, transform, boundFactory, false);
         if (!res.ok()) {
           return res.error();
         }

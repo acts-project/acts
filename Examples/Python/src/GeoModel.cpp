@@ -70,7 +70,7 @@ void addGeoModel(Context& ctx) {
 
     auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, path, logLevel);
+    ACTS_PYTHON_STRUCT(c, geoModelTree, logLevel, path);
 
     // patch the constructor
     patchKwargsConstructor(c);
@@ -161,7 +161,7 @@ void addGeoModel(Context& ctx) {
             &Acts::GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
         .def_readwrite(
             "boundingBoxes",
-            &Acts::GeoModelDetectorObjectFactory::Cache::boundingBoxes);
+            &Acts::GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs);
 
     py::class_<Acts::GeoModelDetectorObjectFactory::Options>(a, "Options")
         .def(py::init<>())

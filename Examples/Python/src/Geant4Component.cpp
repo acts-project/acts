@@ -26,7 +26,9 @@
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -270,6 +272,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
               passiveMatches, false);
 
+      Acts::Geant4DetectorSurfaceFactory::Config config;
       Acts::Geant4DetectorSurfaceFactory::Cache cache;
       Acts::Geant4DetectorSurfaceFactory::Options options;
       options.sensitiveSurfaceSelector = sensitiveSelectors;
@@ -277,7 +280,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       options.convertMaterial = convertMaterial;
 
       G4Transform3D nominal;
-      Acts::Geant4DetectorSurfaceFactory factory;
+      Acts::Geant4DetectorSurfaceFactory factory(config);
       factory.construct(cache, nominal, *world, options);
 
       // Capture the sensitive elements and the surfaces
@@ -288,11 +291,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
       Surfaces surfaces;
       surfaces.reserve(cache.sensitiveSurfaces.size());
-      std::for_each(cache.sensitiveSurfaces.begin(),
-                    cache.sensitiveSurfaces.end(), [&](const auto& sensitive) {
-                      detectorElements.push_back(std::get<0>(sensitive));
-                      surfaces.push_back(std::get<1>(sensitive));
-                    });
+      std::ranges::for_each(
+          cache.sensitiveSurfaces, [&](const auto& sensitive) {
+            detectorElements.push_back(std::get<0>(sensitive));
+            surfaces.push_back(std::get<1>(sensitive));
+          });
 
       // Capture the passive surfaces
       Surfaces passiveSurfaces;

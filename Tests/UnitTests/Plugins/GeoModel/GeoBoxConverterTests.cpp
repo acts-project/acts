@@ -42,8 +42,9 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 
   PVConstLink physXY{make_intrusive<GeoFullPhysVol>(logXY)};
 
+  Acts::SurfaceBoundFactory boundFactory{};
   auto converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      physXY, Acts::Transform3::Identity());
+      physXY, Acts::Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      fphysYZ, Acts::Transform3::Identity());
+      fphysYZ, Acts::Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto fphysXZ = make_intrusive<GeoFullPhysVol>(logXZ);
 
   converted = Acts::GeoBoxConverter{}.toSensitiveSurface(
-      fphysXZ, Acts::Transform3::Identity());
+      fphysXZ, Acts::Transform3::Identity(), boundFactory);
 
   BOOST_CHECK(converted.ok());
 
