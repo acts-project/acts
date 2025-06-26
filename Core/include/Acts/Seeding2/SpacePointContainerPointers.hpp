@@ -42,9 +42,9 @@ class SpacePointContainerPointers {
       const SpacePointContainer2::DenseColumn<float>& varianceRColumn,
       const SpacePointContainer2::DenseColumn<float>& varianceZColumn,
       const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
-          topStripDirectionColumn,
+          topStripVectorColumn,
       const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
-          bottomStripDirectionColumn,
+          bottomStripVectorColumn,
       const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
           stripCenterDistanceColumn,
       const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
@@ -53,8 +53,8 @@ class SpacePointContainerPointers {
         m_rColumn(&rColumn),
         m_varianceRColumn(&varianceRColumn),
         m_varianceZColumn(&varianceZColumn),
-        m_topStripDirectionColumn(&topStripDirectionColumn),
-        m_bottomStripDirectionColumn(&bottomStripDirectionColumn),
+        m_topStripVectorColumn(&topStripVectorColumn),
+        m_bottomStripVectorColumn(&bottomStripVectorColumn),
         m_stripCenterDistanceColumn(&stripCenterDistanceColumn),
         m_topStripCenterColumn(&topStripCenterColumn) {}
 
@@ -78,12 +78,12 @@ class SpacePointContainerPointers {
     return *m_varianceZColumn;
   }
   [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
-  topStripDirectionColumn() const {
-    return *m_topStripDirectionColumn;
+  topStripVectorColumn() const {
+    return *m_topStripVectorColumn;
   }
   [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
-  bottomStripDirectionColumn() const {
-    return *m_bottomStripDirectionColumn;
+  bottomStripVectorColumn() const {
+    return *m_bottomStripVectorColumn;
   }
   [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
   stripCenterDistanceColumn() const {
@@ -98,8 +98,8 @@ class SpacePointContainerPointers {
     return m_varianceRColumn != nullptr && m_varianceZColumn != nullptr;
   }
   [[nodiscard]] bool hasStripColumns() const {
-    return m_topStripDirectionColumn != nullptr &&
-           m_bottomStripDirectionColumn != nullptr &&
+    return m_topStripVectorColumn != nullptr &&
+           m_bottomStripVectorColumn != nullptr &&
            m_stripCenterDistanceColumn != nullptr &&
            m_topStripCenterColumn != nullptr;
   }
@@ -115,9 +115,9 @@ class SpacePointContainerPointers {
   const SpacePointContainer2::DenseColumn<float>* m_varianceZColumn = nullptr;
 
   const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
-      m_topStripDirectionColumn = nullptr;
+      m_topStripVectorColumn = nullptr;
   const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
-      m_bottomStripDirectionColumn = nullptr;
+      m_bottomStripVectorColumn = nullptr;
   const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
       m_stripCenterDistanceColumn = nullptr;
   const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*

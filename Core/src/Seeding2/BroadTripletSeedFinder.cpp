@@ -773,18 +773,18 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
     const SpacePointContainerPointers& containerPointers,
     const Eigen::Vector3f& spacePointPosition,
     Eigen::Vector3f& outputCoordinates) {
-  const Eigen::Vector3f& topStripDirection =
-      sp.extra(containerPointers.topStripDirectionColumn());
-  const Eigen::Vector3f& bottomStripDirection =
-      sp.extra(containerPointers.bottomStripDirectionColumn());
+  const Eigen::Vector3f& topStripVector =
+      sp.extra(containerPointers.topStripVectorColumn());
+  const Eigen::Vector3f& bottomStripVector =
+      sp.extra(containerPointers.bottomStripVectorColumn());
   const Eigen::Vector3f& stripCenterDistance =
       sp.extra(containerPointers.stripCenterDistanceColumn());
 
   // cross product between top strip vector and spacepointPosition
-  Eigen::Vector3f d1 = topStripDirection.cross(spacePointPosition);
+  Eigen::Vector3f d1 = topStripVector.cross(spacePointPosition);
 
   // scalar product between bottom strip vector and d1
-  float bd1 = bottomStripDirection.dot(d1);
+  float bd1 = bottomStripVector.dot(d1);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
@@ -794,7 +794,7 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  Eigen::Vector3f d0 = bottomStripDirection.cross(spacePointPosition);
+  Eigen::Vector3f d0 = bottomStripVector.cross(spacePointPosition);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
@@ -812,7 +812,7 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates = topStripCenter + topStripDirection * s0;
+  outputCoordinates = topStripCenter + topStripVector * s0;
   return true;
 }
 
