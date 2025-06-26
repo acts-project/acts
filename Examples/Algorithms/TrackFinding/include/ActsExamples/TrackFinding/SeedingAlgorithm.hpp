@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 #include <memory>
 #include <string>
@@ -61,6 +62,8 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
+    
+    float tolerance = 10;
 
     // vector containing the map of z bins in the top and bottom layers
     std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -106,6 +109,7 @@ class SeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  ReadDataHandle<std::vector<Acts::Vertex>> m_inputVertex{this, "fittedHoughVertices"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     static float rMin = 45.;

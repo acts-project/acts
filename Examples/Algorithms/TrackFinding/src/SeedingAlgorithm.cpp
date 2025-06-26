@@ -65,6 +65,8 @@ SeedingAlgorithm::SeedingAlgorithm(SeedingAlgorithm::Config cfg,
   }
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_inputVertex.initialize("fittedHoughVertices");
+
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
       m_cfg.allowSeparateRMax == false) {
@@ -200,8 +202,14 @@ ProcessCode SeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     nSpacePoints += (*isp)(ctx).size();
   }
 
+  auto houghVertex = m_inputVertex(ctx);
+  float z_position = houghVertex.at(0).position()[2];
+
   ACTS_INFO("SeedingAlgorithm: " << nSpacePoints << " spacepoints");
-  m_seedFinder.setCustomcCollisionRegion(20.2309 -30.0, 20.2309 +30.0);
+  ACTS_INFO("tolerance " << m_cfg.tolerance );
+  ACTS_INFO("z_position " << z_position);
+
+  m_seedFinder.setCustomcCollisionRegion(z_position -m_cfg.tolerance, z_position + m_cfg.tolerance);
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
