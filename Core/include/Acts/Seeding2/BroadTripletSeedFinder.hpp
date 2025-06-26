@@ -242,7 +242,8 @@ class BroadTripletSeedFinder {
   static bool stripCoordinateCheck(
       float tolerance, const ConstSpacePointProxy2& sp,
       const SpacePointContainerPointers& containerPointers,
-      const Vector3& spacePointPosition, Vector3& outputCoordinates);
+      const Eigen::Vector3f& spacePointPosition,
+      Eigen::Vector3f& outputCoordinates);
 
  private:
   const Logger& logger() const { return *m_logger; }

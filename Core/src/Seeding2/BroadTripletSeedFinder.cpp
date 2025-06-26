@@ -235,8 +235,8 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
 
     // no top SP found -> try next spM
     if (cache.topDoublets.empty()) {
-      ACTS_VERBOSE("No compatible Tops, returning");
-      return;
+      ACTS_VERBOSE("No compatible Tops, moving to next middle candidate");
+      continue;
     }
 
     // apply cut on the number of top SP if seedConfirmation is true
@@ -259,10 +259,11 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
       rMaxSeedConf = seedConfRange.rMaxSeedConf;
       // continue if number of top SPs is smaller than minimum
       if (cache.topDoublets.size() < nTopSeedConf) {
-        ACTS_VERBOSE("Number of top SPs is "
-                     << cache.topDoublets.size()
-                     << " and is smaller than minimum, returning");
-        return;
+        ACTS_VERBOSE(
+            "Number of top SPs is "
+            << cache.topDoublets.size()
+            << " and is smaller than minimum, moving to next middle candidate");
+        continue;
       }
     }
 
@@ -276,8 +277,8 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
 
     // no bottom SP found -> try next spM
     if (cache.bottomDoublets.empty()) {
-      ACTS_VERBOSE("No compatible Bottoms, returning");
-      return;
+      ACTS_VERBOSE("No compatible Bottoms, moving to next middle candidate");
+      continue;
     }
 
     ACTS_VERBOSE("Candidates: " << cache.bottomDoublets.size()
@@ -604,12 +605,12 @@ void BroadTripletSeedFinder::createTripletsDetailed(
 
       // position of Middle SP converted from UV to XY assuming cotTheta
       // evaluated from the Bottom and Middle SPs double
-      Vector3 positionMiddle = {
+      Eigen::Vector3f positionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
           zPositionMiddle};
 
-      Vector3 rMTransf;
+      Eigen::Vector3f rMTransf;
       if (!stripCoordinateCheck(cuts.toleranceParam, spM, containerPointers,
                                 positionMiddle, rMTransf)) {
         continue;
@@ -619,12 +620,12 @@ void BroadTripletSeedFinder::createTripletsDetailed(
       float B0 = 2. * (Vb - A0 * Ub);
       float Cb = 1. - B0 * lb.y;
       float Sb = A0 + B0 * lb.x;
-      Vector3 positionBottom = {
+      Eigen::Vector3f positionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
 
-      Vector3 rBTransf;
+      Eigen::Vector3f rBTransf;
       if (!stripCoordinateCheck(cuts.toleranceParam, spB, containerPointers,
                                 positionBottom, rBTransf)) {
         continue;
@@ -633,12 +634,12 @@ void BroadTripletSeedFinder::createTripletsDetailed(
       // coordinate transformation and checks for top spacepoint
       float Ct = 1. - B0 * lt.y;
       float St = A0 + B0 * lt.x;
-      Vector3 positionTop = {
+      Eigen::Vector3f positionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zPositionMiddle};
 
-      Vector3 rTTransf;
+      Eigen::Vector3f rTTransf;
       if (!stripCoordinateCheck(cuts.toleranceParam, spT, containerPointers,
                                 positionTop, rTTransf)) {
         continue;
@@ -770,19 +771,20 @@ void BroadTripletSeedFinder::createTripletsDetailed(
 bool BroadTripletSeedFinder::stripCoordinateCheck(
     float tolerance, const ConstSpacePointProxy2& sp,
     const SpacePointContainerPointers& containerPointers,
-    const Vector3& spacePointPosition, Vector3& outputCoordinates) {
-  const Vector3& topStripVector =
-      sp.extra(containerPointers.topStripVectorColumn());
-  const Vector3& bottomStripVector =
-      sp.extra(containerPointers.bottomStripVectorColumn());
-  const Vector3& stripCenterDistance =
+    const Eigen::Vector3f& spacePointPosition,
+    Eigen::Vector3f& outputCoordinates) {
+  const Eigen::Vector3f& topStripDirection =
+      sp.extra(containerPointers.topStripDirectionColumn());
+  const Eigen::Vector3f& bottomStripDirection =
+      sp.extra(containerPointers.bottomStripDirectionColumn());
+  const Eigen::Vector3f& stripCenterDistance =
       sp.extra(containerPointers.stripCenterDistanceColumn());
 
   // cross product between top strip vector and spacepointPosition
-  Vector3 d1 = topStripVector.cross(spacePointPosition);
+  Eigen::Vector3f d1 = topStripDirection.cross(spacePointPosition);
 
   // scalar product between bottom strip vector and d1
-  float bd1 = bottomStripVector.dot(d1);
+  float bd1 = bottomStripDirection.dot(d1);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
@@ -792,7 +794,7 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  Vector3 d0 = bottomStripVector.cross(spacePointPosition);
+  Eigen::Vector3f d0 = bottomStripDirection.cross(spacePointPosition);
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
@@ -804,13 +806,13 @@ bool BroadTripletSeedFinder::stripCoordinateCheck(
   // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Vector3& topStripCenterPosition =
-      sp.extra(containerPointers.topStripCenterPositionColumn());
+  const Eigen::Vector3f& topStripCenter =
+      sp.extra(containerPointers.topStripCenterColumn());
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates = topStripCenterPosition + topStripVector * s0;
+  outputCoordinates = topStripCenter + topStripDirection * s0;
   return true;
 }
 

@@ -41,20 +41,22 @@ class SpacePointContainerPointers {
       const SpacePointContainer2::DenseColumn<float>& rColumn,
       const SpacePointContainer2::DenseColumn<float>& varianceRColumn,
       const SpacePointContainer2::DenseColumn<float>& varianceZColumn,
-      const SpacePointContainer2::DenseColumn<Vector3>& topStripVectorColumn,
-      const SpacePointContainer2::DenseColumn<Vector3>& bottomStripVectorColumn,
-      const SpacePointContainer2::DenseColumn<Vector3>&
+      const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+          topStripDirectionColumn,
+      const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+          bottomStripDirectionColumn,
+      const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
           stripCenterDistanceColumn,
-      const SpacePointContainer2::DenseColumn<Vector3>&
-          topStripCenterPositionColumn)
+      const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+          topStripCenterColumn)
       : m_spacePoints(&spacePoints),
         m_rColumn(&rColumn),
         m_varianceRColumn(&varianceRColumn),
         m_varianceZColumn(&varianceZColumn),
-        m_topStripVectorColumn(&topStripVectorColumn),
-        m_bottomStripVectorColumn(&bottomStripVectorColumn),
+        m_topStripDirectionColumn(&topStripDirectionColumn),
+        m_bottomStripDirectionColumn(&bottomStripDirectionColumn),
         m_stripCenterDistanceColumn(&stripCenterDistanceColumn),
-        m_topStripCenterPositionColumn(&topStripCenterPositionColumn) {}
+        m_topStripCenterColumn(&topStripCenterColumn) {}
 
   /// Pointer to the copied-from index column, if available.
   const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
@@ -75,31 +77,31 @@ class SpacePointContainerPointers {
   varianceZColumn() const {
     return *m_varianceZColumn;
   }
-  [[nodiscard]] const SpacePointContainer2::DenseColumn<Vector3>&
-  topStripVectorColumn() const {
-    return *m_topStripVectorColumn;
+  [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+  topStripDirectionColumn() const {
+    return *m_topStripDirectionColumn;
   }
-  [[nodiscard]] const SpacePointContainer2::DenseColumn<Vector3>&
-  bottomStripVectorColumn() const {
-    return *m_bottomStripVectorColumn;
+  [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+  bottomStripDirectionColumn() const {
+    return *m_bottomStripDirectionColumn;
   }
-  [[nodiscard]] const SpacePointContainer2::DenseColumn<Vector3>&
+  [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
   stripCenterDistanceColumn() const {
     return *m_stripCenterDistanceColumn;
   }
-  [[nodiscard]] const SpacePointContainer2::DenseColumn<Vector3>&
-  topStripCenterPositionColumn() const {
-    return *m_topStripCenterPositionColumn;
+  [[nodiscard]] const SpacePointContainer2::DenseColumn<Eigen::Vector3f>&
+  topStripCenterColumn() const {
+    return *m_topStripCenterColumn;
   }
 
   [[nodiscard]] bool hasVarianceColumns() const {
     return m_varianceRColumn != nullptr && m_varianceZColumn != nullptr;
   }
   [[nodiscard]] bool hasStripColumns() const {
-    return m_topStripVectorColumn != nullptr &&
-           m_bottomStripVectorColumn != nullptr &&
+    return m_topStripDirectionColumn != nullptr &&
+           m_bottomStripDirectionColumn != nullptr &&
            m_stripCenterDistanceColumn != nullptr &&
-           m_topStripCenterPositionColumn != nullptr;
+           m_topStripCenterColumn != nullptr;
   }
   [[nodiscard]] bool hasCopiedFromIndexColumn() const {
     return copiedFromIndexColumn != nullptr;
@@ -112,14 +114,14 @@ class SpacePointContainerPointers {
   const SpacePointContainer2::DenseColumn<float>* m_varianceRColumn = nullptr;
   const SpacePointContainer2::DenseColumn<float>* m_varianceZColumn = nullptr;
 
-  const SpacePointContainer2::DenseColumn<Vector3>* m_topStripVectorColumn =
-      nullptr;
-  const SpacePointContainer2::DenseColumn<Vector3>* m_bottomStripVectorColumn =
-      nullptr;
-  const SpacePointContainer2::DenseColumn<Vector3>*
+  const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
+      m_topStripDirectionColumn = nullptr;
+  const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
+      m_bottomStripDirectionColumn = nullptr;
+  const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
       m_stripCenterDistanceColumn = nullptr;
-  const SpacePointContainer2::DenseColumn<Vector3>*
-      m_topStripCenterPositionColumn = nullptr;
+  const SpacePointContainer2::DenseColumn<Eigen::Vector3f>*
+      m_topStripCenterColumn = nullptr;
 };
 
 }  // namespace Acts::Experimental
