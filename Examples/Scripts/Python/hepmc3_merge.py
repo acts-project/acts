@@ -26,6 +26,12 @@ def main():
         "--hard-scatter", "--hs", type=Path, help="Hard scatter file", required=True
     )
     parser.add_argument(
+        "--hs-input-events",
+        type=int,
+        default=None,
+        help="If None, the HepMC3 will read the entire file to determine the number of available events.",
+    )
+    parser.add_argument(
         "--pileup", "--pu", type=Path, help="Pileup file", required=True
     )
     parser.add_argument("--output", "-o", type=Path, help="Output file", required=True)
@@ -88,7 +94,7 @@ def main():
                 f"Output file {args.output} already exists, run with --force to overwrite"
             )
 
-    s = acts.examples.Sequencer(numThreads=args.jobs, logLevel=acts.logging.INFO)
+    s = acts.examples.Sequencer(numThreads=args.jobs, logLevel=acts.logging.WARNING)
 
     rng = acts.examples.RandomNumbers(seed=42)
     s.addReader(
@@ -100,6 +106,7 @@ def main():
             level=acts.logging.INFO,
             outputEvent="hepmc3_event",
             checkEventNumber=False,  # This is not generally guaranteed for arbitrary inputs
+            numEvents=args.hs_input_events,
             randomNumbers=rng,
             vertexGenerator=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
