@@ -156,9 +156,21 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   m_binnedGroup.emplace(std::move(grid), m_cfg.bottomBinFinder.value(),
                         m_cfg.topBinFinder.value(), m_cfg.navigation);
   m_grid = &m_binnedGroup->grid();
+}
 
-  m_usedBinIndex = std::vector<bool>(m_grid->size(), false);
-  m_rBinsIndex.reserve(m_grid->size());
+void CylindricalSpacePointGrid2::insert(
+    const ConstSpacePointProxy2& sp,
+    const SpacePointContainer2::DenseColumn<float>& phiColumn,
+    const SpacePointContainer2::DenseColumn<float>& rColumn) {
+  Vector3 position(sp.extra(phiColumn), sp.z(), sp.extra(rColumn));
+  if (!grid().isInside(position)) {
+    return;
+  }
+
+  std::size_t globIndex = grid().globalBinFromPosition(position);
+  auto& bin = grid().at(globIndex);
+  bin.push_back(sp.index());
+  ++m_counter;
 }
 
 void CylindricalSpacePointGrid2::extend(
@@ -186,15 +198,12 @@ void CylindricalSpacePointGrid2::sort(
     const SpacePointContainer2::DenseColumn<float>& rColumn) {
   ACTS_VERBOSE("Sorting the grid");
 
-  for (std::size_t binIndex : m_rBinsIndex) {
-    auto& rbin = grid().atPosition(binIndex);
-    std::ranges::sort(rbin, {}, [&](const auto& sp) {
-      return spacePoints.at(sp).extra(rColumn);
+  for (std::size_t i = 0; i < grid().size(); ++i) {
+    auto& bin = grid().at(i);
+    std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
+      return spacePoints.at(spIndex).extra(rColumn);
     });
   }
-
-  m_usedBinIndex.assign(grid().size(), false);
-  m_rBinsIndex.clear();
 
   ACTS_VERBOSE(
       "Number of space points inserted (within grid range): " << m_counter);

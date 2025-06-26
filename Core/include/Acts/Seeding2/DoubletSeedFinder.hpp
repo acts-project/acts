@@ -19,8 +19,6 @@ namespace Acts::Experimental {
 
 class DoubletSeedFinder {
  public:
-  enum SpacePointCandidateType { eBottom, eTop };
-
   struct DerivedCuts;
 
   struct Cuts {
@@ -111,8 +109,6 @@ class DoubletSeedFinder {
   /// Iterates over dublets and tests the compatibility by applying a series of
   /// cuts that can be tested with only two SPs.
   ///
-  /// @tparam candidate_type Type of space point candidate (e.g. Bottom or Top)
-  ///
   /// @param cuts Doublet cuts that define the compatibility of space points
   /// @param containerPointers Space point container and its extra columns
   /// @param middleSp Space point candidate to be used as middle SP in a seed
@@ -120,13 +116,33 @@ class DoubletSeedFinder {
   /// @param candidateSps Group of space points to be used as candidates for
   ///                     middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  template <SpacePointCandidateType candidate_type>
-  static void createDoublets(
+  static void createBottomDoublets(
       const DerivedCuts& cuts,
       const SpacePointContainerPointers& containerPointers,
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
       DoubletsForMiddleSp& compatibleDoublets);
+
+  static void createTopDoublets(
+      const DerivedCuts& cuts,
+      const SpacePointContainerPointers& containerPointers,
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointIndex2> candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets);
+
+  static void createSortedBottomDoublets(
+      const DerivedCuts& cuts,
+      const SpacePointContainerPointers& containerPointers,
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointIndex2> candidateSps,
+      std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets);
+
+  static void createSortedTopDoublets(
+      const DerivedCuts& cuts,
+      const SpacePointContainerPointers& containerPointers,
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      std::span<const SpacePointIndex2> candidateSps,
+      std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets);
 };
 
 }  // namespace Acts::Experimental

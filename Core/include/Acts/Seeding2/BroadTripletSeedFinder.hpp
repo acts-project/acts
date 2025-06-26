@@ -123,13 +123,16 @@ class BroadTripletSeedFinder {
   };
 
   struct Cache {
-    BroadTripletSeedFilter::Cache filter;
+    std::vector<std::size_t> bottomSpOffsets;
+    std::vector<std::size_t> topSpOffsets;
 
     DoubletSeedFinder::DoubletsForMiddleSp bottomDoublets;
     DoubletSeedFinder::DoubletsForMiddleSp topDoublets;
 
     TripletCache tripletCache;
     TripletTopCandidates tripletTopCandidates;
+
+    BroadTripletSeedFilter::Cache filter;
 
     CandidatesForMiddleSp2 candidatesCollector;
     std::vector<TripletCandidate2> sortedCandidates;
@@ -169,6 +172,19 @@ class BroadTripletSeedFinder {
       const SpacePointContainerPointers& containerPointers,
       std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
       std::span<const SpacePointIndex2> topSps,
+      SeedContainer2& outputSeeds) const;
+
+  void createSeedsFromGroups(
+      const Options& options, State& state, Cache& cache,
+      const DoubletSeedFinder::DerivedCuts& bottomCuts,
+      const DoubletSeedFinder::DerivedCuts& topCuts,
+      const DerivedTripletCuts& tripletCuts,
+      const BroadTripletSeedFilter& filter,
+      const SpacePointContainerPointers& containerPointers,
+      const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,
+      std::span<const SpacePointIndex2> middleSps,
+      const std::vector<std::span<const SpacePointIndex2>>& topSpGroups,
+      const std::pair<float, float>& radiusRangeForMiddle,
       SeedContainer2& outputSeeds) const;
 
  private:

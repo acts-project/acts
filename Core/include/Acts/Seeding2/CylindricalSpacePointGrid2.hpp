@@ -89,25 +89,7 @@ class CylindricalSpacePointGrid2 {
 
   void insert(const ConstSpacePointProxy2& sp,
               const SpacePointContainer2::DenseColumn<float>& phiColumn,
-              const SpacePointContainer2::DenseColumn<float>& rColumn) {
-    // fill rbins into grid
-    Vector3 position(sp.extra(phiColumn), sp.z(), sp.extra(rColumn));
-    if (!grid().isInside(position)) {
-      return;
-    }
-
-    std::size_t globIndex = grid().globalBinFromPosition(position);
-    auto& rbin = grid().at(globIndex);
-    rbin.push_back(sp.index());
-    ++m_counter;
-
-    // keep track of the bins we modify so that we can later sort the SPs in
-    // those bins only
-    if (rbin.size() > 1 && !m_usedBinIndex[globIndex]) {
-      m_usedBinIndex[globIndex] = true;
-      m_rBinsIndex.push_back(globIndex);
-    }
-  }
+              const SpacePointContainer2::DenseColumn<float>& rColumn);
 
   void extend(const SpacePointContainer2::ConstRange& spacePoints,
               const SpacePointContainer2::DenseColumn<float>& phiColumn,
@@ -141,8 +123,6 @@ class CylindricalSpacePointGrid2 {
   std::optional<BinnedGroupType> m_binnedGroup;
 
   std::size_t m_counter{};
-  std::vector<bool> m_usedBinIndex;
-  std::vector<std::size_t> m_rBinsIndex;
 
   const Logger& logger() const { return *m_logger; }
 };
