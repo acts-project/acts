@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/GNNTrackFitterCPU.hpp"
+#include "Acts/Plugins/ExaTrkX/GnnTrackFitterCPU.hpp"
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 
 namespace Acts {
 
-std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
+std::optional<BoundTrackParameters> GnnParametersBuilderCPU::buildParameters(
     std::span<const float> spacepointFeatures,
     std::span<const Acts::GeometryIdentifier> geoIds,
     const std::vector<int> &candidate,

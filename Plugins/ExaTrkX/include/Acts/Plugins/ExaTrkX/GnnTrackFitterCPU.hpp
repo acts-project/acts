@@ -27,7 +27,7 @@ namespace Acts {
 /// Simple struct encapsulating the parameter estimation for GNN tracks
 /// on the CPU. Mainly extracted from Acts::GNNTrackFitterCPU to allow it
 /// to be compiled in a source file.
-struct GNNParametersBuilderCPU {
+struct GnnParametersBuilderCPU {
   struct Config {
     std::shared_ptr<const Acts::MagneticFieldProvider> bField;
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry;
@@ -61,7 +61,7 @@ struct GNNParametersBuilderCPU {
     bool buildTightSeeds = true;
   };
 
-  GNNParametersBuilderCPU(const Config &cfg,
+  GnnParametersBuilderCPU(const Config &cfg,
                           std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -99,7 +99,7 @@ struct GNNParametersBuilderCPU {
 /// Class to encapsulate the track fit for the GNN output on CPU.
 /// Mainly a wrapper around ACTS Core tools.
 template <typename track_container_t>
-class GNNTrackFitterCPU {
+class GnnTrackFitterCPU {
  public:
   using TCBackend = typename track_container_t::TrackContainerBackend;
   using TSBackend = typename track_container_t::TrackStateContainerBackend;
@@ -107,7 +107,7 @@ class GNNTrackFitterCPU {
   struct Config {
     std::shared_ptr<const Acts::TrackingGeometry> geometry;
     std::shared_ptr<const Acts::MagneticFieldProvider> bfield;
-    GNNParametersBuilderCPU::Config paramBuilderCfg;
+    GnnParametersBuilderCPU::Config paramBuilderCfg;
   };
 
   struct Options {
@@ -121,7 +121,7 @@ class GNNTrackFitterCPU {
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using Fitter = Acts::KalmanFitter<Propagator, TSBackend>;
 
-  GNNTrackFitterCPU(const Config &cfg,
+  GnnTrackFitterCPU(const Config &cfg,
                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -133,7 +133,7 @@ class GNNTrackFitterCPU {
     if (!m_cfg.bfield) {
       throw std::invalid_argument("Missing bfield!");
     }
-    m_paramBuilder = std::make_unique<GNNParametersBuilderCPU>(
+    m_paramBuilder = std::make_unique<GnnParametersBuilderCPU>(
         cfg.paramBuilderCfg, m_logger->clone());
     Acts::Navigator::Config navCfg;
     navCfg.trackingGeometry = m_cfg.geometry;
@@ -209,7 +209,7 @@ class GNNTrackFitterCPU {
 
  private:
   Config m_cfg;
-  std::unique_ptr<GNNParametersBuilderCPU> m_paramBuilder;
+  std::unique_ptr<GnnParametersBuilderCPU> m_paramBuilder;
   std::unique_ptr<Fitter> m_fitter;
 
   std::unique_ptr<const Acts::Logger> m_logger;
