@@ -379,6 +379,9 @@ def addSeeding(
         spacePoints = addSpacePointsMaking(
             s, trackingGeometry, geoSelectionConfigFile, logLevel
         )
+        
+        addHoughVertexFinding(s, outputDirRoot=outputDirRoot)
+
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
@@ -811,6 +814,7 @@ def addStandardSeeding(
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+            tolerance=20,
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,
