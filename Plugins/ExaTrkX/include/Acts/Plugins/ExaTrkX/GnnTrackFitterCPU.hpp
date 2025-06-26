@@ -18,9 +18,9 @@
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/MagneticFieldProvider.hpp>
 
-#include <boost/container/static_vector.hpp>
-
 #include <span>
+
+#include <boost/container/static_vector.hpp>
 
 namespace Acts {
 
@@ -56,7 +56,7 @@ struct GnnParametersBuilderCPU {
     /// Used in parameter estimation
     double bFieldMin = 0.0;
 
-    /// Wether to use the first three spacepoints (tight), or the
+    /// Whether to use the first three spacepoints (tight), or the
     /// first, middle and last spacepoint to build the seed.
     bool buildTightSeeds = true;
   };
@@ -158,12 +158,13 @@ class GnnTrackFitterCPU {
       const std::vector<std::vector<int>> &candidates,
       std::span<const float> spacepointFeatures,
       std::span<const Acts::GeometryIdentifier> geoIds,
-      std::span<const boost::container::static_vector<Acts::SourceLink, 2>> sourceLinks,
+      std::span<const boost::container::static_vector<Acts::SourceLink, 2>>
+          sourceLinks,
       const Options &options) const {
     assert(spacepointFeatures.size() ==
            geoIds.size() * m_paramBuilder->m_cfg.nFeatures);
     assert(spacepointFeatures.size() ==
-            sourceLinks.size() * m_paramBuilder->m_cfg.nFeatures);
+           sourceLinks.size() * m_paramBuilder->m_cfg.nFeatures);
 
     auto bCache = m_cfg.bfield->makeCache(options.mctx);
 

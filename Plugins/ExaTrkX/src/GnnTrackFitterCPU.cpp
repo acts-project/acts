@@ -29,14 +29,12 @@ std::optional<BoundTrackParameters> GnnParametersBuilderCPU::buildParameters(
     return {};
   }
 
-  // Accessors to spacepoint features from the feature span 
+  // Accessors to spacepoint features from the feature span
   auto getR = [&](int sp) {
-    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.rIdx] *
-           m_cfg.rScale;
+    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.rIdx] * m_cfg.rScale;
   };
   auto getZ = [&](int sp) {
-    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.zIdx] *
-           m_cfg.zScale;
+    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.zIdx] * m_cfg.zScale;
   };
   auto getPhi = [&](int sp) {
     return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.phiIdx] *
@@ -93,7 +91,8 @@ std::optional<BoundTrackParameters> GnnParametersBuilderCPU::buildParameters(
     return {};
   }
 
-  // Clean the seed from close-by spacepoints as configured via minSpacepointDist
+  // Clean the seed from close-by spacepoints as configured via
+  // minSpacepointDist
   Acts::Vector2 prevZR{getZ(tmpCand.front()), getR(tmpCand.front())};
   tmpCand.erase(std::remove_if(std::next(tmpCand.begin()), tmpCand.end(),
                                [&](auto &a) {
