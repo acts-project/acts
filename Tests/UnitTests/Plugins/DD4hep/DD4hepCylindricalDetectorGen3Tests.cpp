@@ -8,28 +8,27 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 #include <Acts/Geometry/VolumeAttachmentStrategy.hpp>
 #include <Acts/Navigation/SurfaceArrayNavigationPolicy.hpp>
 #include <Acts/Navigation/TryAllNavigationPolicy.hpp>
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <fstream>
 #include <string>
@@ -43,18 +42,18 @@
 #include "DD4hepTestsHelper.hpp"
 
 // ---------------------------------------------------------------
-//#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-//#include "Acts/Detector/DetectorBuilder.hpp"
-//#include "Acts/Detector/detail/BlueprintDrawer.hpp"
-//#include "Acts/Detector/detail/BlueprintHelper.hpp"
-//#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-//#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
-//#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-//#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
-//#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-//#include "Acts/Geometry/Extent.hpp"
-//#include "Acts/Geometry/ProtoLayer.hpp"
-//#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+// #include "Acts/Detector/CylindricalContainerBuilder.hpp"
+// #include "Acts/Detector/DetectorBuilder.hpp"
+// #include "Acts/Detector/detail/BlueprintDrawer.hpp"
+// #include "Acts/Detector/detail/BlueprintHelper.hpp"
+// #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
+// #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
+// #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+// #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+// #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+// #include "Acts/Geometry/Extent.hpp"
+// #include "Acts/Geometry/ProtoLayer.hpp"
+// #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 // ---------------------------------------------------------------
 
 Acts::GeometryContext tContext;
@@ -164,7 +163,7 @@ const char* indent_12_xml = "            ";
 
 namespace {
 
-Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
+void generateXML(const std::filesystem::path& xmlPath) {
   Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
@@ -206,7 +205,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
 
   // Create an XML from it
   std::ofstream cxml;
-  cxml.open("CylindricalDetector.xml");
+  cxml.open(xmlPath);
   cxml << head_xml;
   cxml << segmentation_xml;
 
@@ -304,13 +303,9 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   cxml << plugin_xml << '\n';
   cxml << end_xml << '\n';
   cxml.close();
-
-  return dStore;
 }
 
 }  // namespace
-
-auto store = generateXML();
 
 using namespace dd4hep;
 using namespace Acts::UnitLiterals;
@@ -324,30 +319,29 @@ using ResizeStrategy = Acts::VolumeResizeStrategy;
 
 // --------- Helper functions --------------
 // Print Element Tree
-void print_elements(const DetElement& el, unsigned int level=0)
-{
-  for(const auto& [name,child] : el.children()) {
-    for(unsigned int i=0; i<level; ++i) std::cout << "\t";
+void print_elements(const DetElement& el, unsigned int level = 0) {
+  for (const auto& [name, child] : el.children()) {
+    for (unsigned int i = 0; i < level; ++i)
+      std::cout << "\t";
     std::cout << "-> " << name << std::endl;
-    print_elements(child, level+1);
+    print_elements(child, level + 1);
   }
 }
 
 // Find the first element with a given name
-const DetElement* find_element(const DetElement& el
-    , const std::string& el_name
-    , unsigned int search_depth = 0)
-{
-  static unsigned int level=0;
-  static bool abort_search=false;
-  for(const auto& [name,child] : el.children()) {
-    if(el_name==name) {
-      abort_search=true;
+const DetElement* find_element(const DetElement& el, const std::string& el_name,
+                               unsigned int search_depth = 0) {
+  static unsigned int level = 0;
+  static bool abort_search = false;
+  for (const auto& [name, child] : el.children()) {
+    if (el_name == name) {
+      abort_search = true;
       return &child;
     }
-    if(++level<=search_depth) {
-      auto el_child = find_element(child,el_name,search_depth);
-      if(abort_search) return el_child;
+    if (++level <= search_depth) {
+      auto el_child = find_element(child, el_name, search_depth);
+      if (abort_search)
+        return el_child;
     }
   }
   return nullptr;
@@ -357,27 +351,32 @@ const DetElement* find_element(const DetElement& el
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
 BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
+  Acts::Test::TemporaryDirectory tempDir{};
+  auto xmlPath = tempDir.path() / "CylindricalDetector.xml";
+  generateXML(xmlPath);
+
   auto lcdd = &(dd4hep::Detector::getInstance());
-  lcdd->fromCompact("CylindricalDetector.xml");
+  lcdd->fromCompact(xmlPath.string());
   lcdd->volumeManager();
   lcdd->apply("DD4hepVolumeManager", 0, nullptr);
-  
-  constexpr std::size_t s_beamPipeVolumeId = 1; // where do volume IDs come from?
+
+  constexpr std::size_t s_beamPipeVolumeId =
+      1;  // where do volume IDs come from?
   constexpr std::size_t s_pixelVolumeId = 10;
 
   DetElement world = lcdd->world();
-  
-  //std::cout << "DD4Hep Elements: " << std::endl;
-  //print_elements(world);
 
-  auto worldSolidDim = lcdd->worldVolume().solid().dimensions(); // better way?
+  // std::cout << "DD4Hep Elements: " << std::endl;
+  // print_elements(world);
+
+  auto worldSolidDim = lcdd->worldVolume().solid().dimensions();  // better way?
 
   Acts::Experimental::Blueprint::Config cfg;
   // Is the following correct?
   cfg.envelope[AxisX] = {worldSolidDim[0], worldSolidDim[0]};
   cfg.envelope[AxisY] = {worldSolidDim[1], worldSolidDim[1]};
   cfg.envelope[AxisZ] = {worldSolidDim[2], worldSolidDim[2]};
-  //cfg.envelope[AxisR] = {0_mm, worldSolidDim[1]};
+  // cfg.envelope[AxisR] = {0_mm, worldSolidDim[1]};
 
   auto blueprint = std::make_unique<Acts::Experimental::Blueprint>(cfg);
   auto& cylinder = blueprint->addCylinderContainer("Detector", AxisR);
@@ -389,100 +388,110 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   Acts::Transform3 beamPipeTransform;
   beamPipeTransform.setIdentity();
-  beamPipeTransform = Acts::Translation3(bpipe_top_position.x(),bpipe_top_position.y(),bpipe_top_position.z());
+  beamPipeTransform = Acts::Translation3(
+      bpipe_top_position.x(), bpipe_top_position.y(), bpipe_top_position.z());
 
   auto beamPipeDim = bpipe_top.solid().dimensions();
   // Do I use the values retrieved from DD4Hep correctly?
-  double beamPipeRMax = beamPipeDim[1]*1_cm;
-  double beamPipeHalfZ = beamPipeDim[2]*1_cm;
+  double beamPipeRMax = beamPipeDim[1] * 1_cm;
+  double beamPipeHalfZ = beamPipeDim[2] * 1_cm;
+
+  std::vector<std::shared_ptr<Acts::DD4hepDetectorElement>> detectorElements;
 
   cylinder.withGeometryIdentifier([&](auto& geoId) {
     geoId.setAllVolumeIdsTo(s_beamPipeVolumeId);
     geoId.addMaterial("BeamPipe_Material", [&](auto& mat) {
-      mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20},  // Where do these 20-s come from? (here and on the next line)
-        {AxisZ, Bound, 20});
-      mat.addStaticVolume(beamPipeTransform
-        , std::make_shared<Acts::CylinderVolumeBounds>(0, beamPipeRMax, beamPipeHalfZ)
-        , "BeamPipe");
-      }
-    );
-    }
-  );
+      mat.configureFace(
+          OuterCylinder,
+          {AxisRPhi, Bound,
+           20},  // Where do these 20-s come from? (here and on the next line)
+          {AxisZ, Bound, 20});
+      mat.addStaticVolume(beamPipeTransform,
+                          std::make_shared<Acts::CylinderVolumeBounds>(
+                              0, beamPipeRMax, beamPipeHalfZ),
+                          "BeamPipe");
+    });
+  });
   // ------- Add Beam Pipe to Blueprint -------
 
   // ------- Add Pixel to Blueprint -------
-  auto pixelElement = find_element(world,"Pixel");
-  auto pixelBarrelElement = find_element(*pixelElement,"PixelBarrel");
+  auto pixelElement = find_element(world, "Pixel");
+  auto pixelBarrelElement = find_element(*pixelElement, "PixelBarrel");
 
   cylinder.addMaterial("Pixel_Material", [&](auto& mat) {
     mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
     auto& pixelContainer = mat.addCylinderContainer("Pixel", AxisZ);
-    
+
     // Add barrel container
     auto& barrelGeoId = pixelContainer.withGeometryIdentifier();
     barrelGeoId.setAllVolumeIdsTo(s_pixelVolumeId)
         .incrementLayerIds(1)
         .sortBy([](auto& a, auto& b) {
-          auto& boundsA = dynamic_cast<const Acts::CylinderVolumeBounds&>(a.volumeBounds());
-          auto& boundsB = dynamic_cast<const Acts::CylinderVolumeBounds&>(b.volumeBounds());
+          auto& boundsA =
+              dynamic_cast<const Acts::CylinderVolumeBounds&>(a.volumeBounds());
+          auto& boundsB =
+              dynamic_cast<const Acts::CylinderVolumeBounds&>(b.volumeBounds());
           using enum Acts::CylinderVolumeBounds::BoundValues;
           double aMidR = (boundsA.get(eMinR) + boundsA.get(eMaxR)) / 2.0;
           double bMidR = (boundsB.get(eMinR) + boundsB.get(eMaxR)) / 2.0;
           return aMidR < bMidR;
         });
-        
+
     auto& barrel = barrelGeoId.addCylinderContainer("Pixel_Barrel", AxisR);
     barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
     barrel.setResizeStrategy(ResizeStrategy::Gap);
 
     std::map<int, std::vector<std::shared_ptr<Acts::Surface>>> layers{};
     int layerId{0};
-    for(const auto& [nameLayer,layer] : pixelBarrelElement->children()) {
-      for(const auto& [nameModule,module] : layer.children()) {
-        std::string detAxis = Acts::getParamOr<std::string>("axis_definitions", module, "XYZ");
-        Acts::DD4hepDetectorElement dd4hepDetEl{module, detAxis, 1_cm, false, nullptr};
-        layers[layerId].push_back(dd4hepDetEl.surface().getSharedPtr());
+    for (const auto& [nameLayer, layer] : pixelBarrelElement->children()) {
+      for (const auto& [nameModule, module] : layer.children()) {
+        std::string detAxis =
+            Acts::getParamOr<std::string>("axis_definitions", module, "XYZ");
+        auto dd4hepDetEl = std::make_shared<Acts::DD4hepDetectorElement>(
+            module, detAxis, 1_cm, false, nullptr);
+        detectorElements.push_back(dd4hepDetEl);
+        layers[layerId].push_back(dd4hepDetEl->surface().getSharedPtr());
       }
       layerId++;
     }
 
     for (const auto& [ilayer, surfaces] : layers) {
       barrel.addMaterial(
-        "Pixel_Barrel_" + std::to_string(ilayer) + "_Material",
-        [&](auto& lmat) {
-          lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40}, {AxisZ, Bound, 20});
-          // Add layer with surfaces
-          auto& layer = lmat.addLayer("Pixel_Barrel_" + std::to_string(ilayer));
+          "Pixel_Barrel_" + std::to_string(ilayer) + "_Material",
+          [&](auto& lmat) {
+            lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40},
+                               {AxisZ, Bound, 20});
+            // Add layer with surfaces
+            auto& layer =
+                lmat.addLayer("Pixel_Barrel_" + std::to_string(ilayer));
 
-          // Set navigation policy for efficient surface lookup
-          layer.setNavigationPolicyFactory(
-            Acts::NavigationPolicyFactory::make()
-              .add<Acts::SurfaceArrayNavigationPolicy>(
-                Acts::SurfaceArrayNavigationPolicy::Config{
-                  .layerType = Cylinder,
-                  .bins = {30, 10}})
-              .add<Acts::TryAllNavigationPolicy>(
-                Acts::TryAllNavigationPolicy::Config{.sensitives = false})
-              .asUniquePtr()
-          );
+            // Set navigation policy for efficient surface lookup
+            layer.setNavigationPolicyFactory(
+                Acts::NavigationPolicyFactory::make()
+                    .add<Acts::SurfaceArrayNavigationPolicy>(
+                        Acts::SurfaceArrayNavigationPolicy::Config{
+                            .layerType = Cylinder, .bins = {30, 10}})
+                    .add<Acts::TryAllNavigationPolicy>(
+                        Acts::TryAllNavigationPolicy::Config{.sensitives =
+                                                                 false})
+                    .asUniquePtr());
 
-          layer.setSurfaces(surfaces);
-          layer.setEnvelope(Acts::ExtentEnvelope{{
-            .z = {5_mm, 5_mm}, // ???
-            .r = {2_mm, 2_mm}, // ???
-          }});
-        }
-      );
+            layer.setSurfaces(surfaces);
+            layer.setEnvelope(Acts::ExtentEnvelope{{
+                .z = {5_mm, 5_mm},  // ???
+                .r = {2_mm, 2_mm},  // ???
+            }});
+          });
     }
-  }); 
+  });
   // ------- Add Pixel to Blueprint -------
 
   // Final step
   Acts::GeometryContext gctx;
-  auto trackingGeometry = blueprint->construct({},gctx);
+  auto trackingGeometry = blueprint->construct({}, gctx);
 
   BOOST_REQUIRE_NE(&world, nullptr);
-  BOOST_REQUIRE_NE(trackingGeometry.get(),nullptr);
+  BOOST_REQUIRE_NE(trackingGeometry.get(), nullptr);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
