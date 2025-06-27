@@ -6,13 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
+#include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <limits>
 #include <memory>
@@ -76,16 +74,14 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     // distributes p or pt uniformly in log space
     UniformReal dist(std::log(m_cfg.pMin), std::log(m_cfg.pMax));
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+    m_somePDist = [=](RandomEngine& rng) mutable {
       return std::exp(dist(rng));
     };
   } else {
     // distributes p or pt uniformly
     UniformReal dist(m_cfg.pMin, m_cfg.pMax);
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
-      return dist(rng);
-    };
+    m_somePDist = [=](RandomEngine& rng) mutable { return dist(rng); };
   }
 }
 
