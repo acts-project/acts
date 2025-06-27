@@ -109,11 +109,9 @@ BOOST_AUTO_TEST_CASE(KnownExtraColumns) {
   BOOST_CHECK(container.hasExtraColumns(SpacePointContainer2::R |
                                         SpacePointContainer2::Phi));
 
-  auto rColumn = container.rColumn();
-
   auto sp = container.createSpacePoint(
       std::array<SourceLink, 1>{SourceLink(42)}, 1, 2, 3);
-  sp.extra(rColumn) = 100;
+  sp.r() = 100;
 
   BOOST_CHECK_EQUAL(sp.r(), 100);
   BOOST_CHECK_EQUAL(sp.phi(), 0);
