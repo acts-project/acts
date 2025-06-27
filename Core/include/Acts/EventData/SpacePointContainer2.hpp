@@ -124,7 +124,7 @@ class SpacePointContainer2 {
 
   /// Returns the number of space points in the container.
   /// @return The number of space points in the container.
-  std::size_t size() const { return m_xyz.size(); }
+  std::size_t size() const { return m_sourceLinkOffsets.size(); }
   /// Checks if the container is empty.
   /// @return True if the container is empty, false otherwise.
   [[nodiscard]] bool empty() const { return size() == 0; }
