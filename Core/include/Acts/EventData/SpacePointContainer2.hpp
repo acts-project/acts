@@ -52,8 +52,9 @@ class SpacePointContainer2 {
     StripCenterDistance = 128,  ///< Distance to the strip center
     TopStripCenter = 256,       ///< Center of the top strip
 
+    /// All strip-related columns
     Strip = TopStripVector | BottomStripVector | StripCenterDistance |
-            TopStripCenter  ///< All strip related columns
+            TopStripCenter
   };
 
   /// Constructs and empty space point container.
