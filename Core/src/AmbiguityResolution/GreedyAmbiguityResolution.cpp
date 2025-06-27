@@ -53,7 +53,7 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     }
     if (state.measurementsPerTrack[a].size() !=
         state.measurementsPerTrack[b].size()) {
-      return state.measurementsPerTrack[a].size() <
+      return state.measurementsPerTrack[a].size() >
              state.measurementsPerTrack[b].size();
     }
     return state.trackChi2[a] < state.trackChi2[b];
