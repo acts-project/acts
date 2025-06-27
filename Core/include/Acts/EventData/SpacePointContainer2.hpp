@@ -11,11 +11,13 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <cassert>
 #include <iterator>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -147,6 +149,7 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A mutable reference to the source link at the given index.
   std::span<SourceLink> sourceLinks(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
     return std::span<SourceLink>(
         m_sourceLinks.data() + m_entries[index].sourceLinkOffset,
         m_entries[index].sourceLinkCount);
@@ -154,20 +157,30 @@ class SpacePointContainer2 {
   /// Mutable access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the x coordinate of the space point.
-  float &x(IndexType index) { return m_xyz[index * 3]; }
+  float &x(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3];
+  }
   /// Mutable access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the y coordinate of the space point.
-  float &y(IndexType index) { return m_xyz[index * 3 + 1]; }
+  float &y(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3 + 1];
+  }
   /// Mutable access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the z coordinate of the space point.
-  float &z(IndexType index) { return m_xyz[index * 3 + 2]; }
+  float &z(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3 + 2];
+  }
 
   /// Const access to the source links at the given index.
   /// @param index The index of the space point.
   /// @return A const span to the source links at the given index.
   std::span<const SourceLink> sourceLinks(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
     return std::span<const SourceLink>(
         m_sourceLinks.data() + m_entries[index].sourceLinkOffset,
         m_entries[index].sourceLinkCount);
@@ -175,15 +188,24 @@ class SpacePointContainer2 {
   /// Const access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the x coordinate of the space point.
-  float x(IndexType index) const { return m_xyz[index * 3]; }
+  float x(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3];
+  }
   /// Const access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the y coordinate of the space point.
-  float y(IndexType index) const { return m_xyz[index * 3 + 1]; }
+  float y(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3 + 1];
+  }
   /// Const access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the z coordinate of the space point.
-  float z(IndexType index) const { return m_xyz[index * 3 + 2]; }
+  float z(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_xyz[index * 3 + 2];
+  }
 
   /// Additional dense column of data that can be added to the space point
   /// container. The column is indexed by the space point index.
@@ -610,7 +632,7 @@ class SpacePointProxy2 {
   /// @return A mutable reference to the value in the extra column for the space
   ///         point.
   template <typename column_type>
-  column_type::ValueType &extra(column_type &column)
+  typename column_type::ValueType &extra(column_type &column)
     requires(!ReadOnly)
   {
     return column.at(m_index);
@@ -631,7 +653,8 @@ class SpacePointProxy2 {
   /// @return A const reference to the value in the extra column for the space
   ///         point.
   template <typename column_type>
-  const column_type::ValueType &extra(const column_type &column) const {
+  const typename column_type::ValueType &extra(
+      const column_type &column) const {
     return column.at(m_index);
   }
 

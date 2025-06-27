@@ -10,8 +10,11 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 
+#include <cassert>
 #include <limits>
 #include <span>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -77,6 +80,7 @@ class SeedContainer2 {
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
   std::span<SpacePointIndex2> spacePointIndices(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
     return std::span<SpacePointIndex2>(
         m_spacePoints.data() + m_entries[index].spacePointOffset,
         m_spacePoints.data() + m_entries[index].spacePointOffset +
@@ -85,17 +89,24 @@ class SeedContainer2 {
   /// Mutable access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the quality of the seed at the given index.
-  float &quality(IndexType index) { return m_entries[index].quality; }
+  float &quality(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_entries[index].quality;
+  }
   /// Mutable access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed at the
-  float &vertexZ(IndexType index) { return m_entries[index].vertexZ; }
+  float &vertexZ(IndexType index) {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_entries[index].vertexZ;
+  }
 
   /// Const access to the space point indices of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
   std::span<const SpacePointIndex2> spacePointIndices(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
     return std::span<const SpacePointIndex2>(
         m_spacePoints.data() + m_entries[index].spacePointOffset,
         m_spacePoints.data() + m_entries[index].spacePointOffset +
@@ -104,12 +115,18 @@ class SeedContainer2 {
   /// Const access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the quality of the seed at the given index.
-  float quality(IndexType index) const { return m_entries[index].quality; }
+  float quality(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_entries[index].quality;
+  }
   /// Const access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the vertex Z coordinate of the seed at the
   ///         given index.
-  float vertexZ(IndexType index) const { return m_entries[index].vertexZ; }
+  float vertexZ(IndexType index) const {
+    assert(index < m_entries.size() && "Index out of bounds");
+    return m_entries[index].vertexZ;
+  }
 
   template <bool read_only>
   class SeedIterator {
@@ -353,10 +370,16 @@ inline MutableSeedProxy2 SeedContainer2::createSeed(
 }
 
 inline MutableSeedProxy2 SeedContainer2::at(IndexType index) {
+  if (index >= size()) {
+    throw std::out_of_range("Index out of range in SeedContainer2");
+  }
   return MutableProxyType(*this, index);
 }
 
 inline ConstSeedProxy2 SeedContainer2::at(IndexType index) const {
+  if (index >= size()) {
+    throw std::out_of_range("Index out of range in SeedContainer2");
+  }
   return ConstProxyType(*this, index);
 }
 
