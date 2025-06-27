@@ -123,7 +123,6 @@ class BroadTripletSeedFilter final {
   /// @param cache Cache object to store intermediate results
   /// @param spacePoints Container with all space points
   /// @param rColumn Dense column of space point radii
-  /// @param copyFromIndexColumn Optional dense column of original space point indices
   /// @param bottomSp Fixed bottom space point
   /// @param middleSp Fixed middle space point
   /// @param topSpVec Vector containing all space points that may be compatible
@@ -135,9 +134,6 @@ class BroadTripletSeedFilter final {
   /// @param candidatesCollector Container for the seed candidates
   void filter2SpFixed(State& state, Cache& cache,
                       const SpacePointContainer2& spacePoints,
-                      const SpacePointContainer2::DenseColumn<float>& rColumn,
-                      const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
-                          copyFromIndexColumn,
                       SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
                       std::span<const SpacePointIndex2> topSpVec,
                       std::span<const float> invHelixDiameterVec,
@@ -148,13 +144,10 @@ class BroadTripletSeedFilter final {
   ///
   /// @param state Mutable state that is used to store intermediate results
   /// @param spacePoints Container with all space points
-  /// @param copyFromIndexColumn Optional dense column of original space point indices
   /// @param candidates Collection of seed candidates
   /// @param numQualitySeeds Number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
   void filter1SpFixed(State& state, const SpacePointContainer2& spacePoints,
-                      const SpacePointContainer2::DenseColumn<SpacePointIndex2>*
-                          copyFromIndexColumn,
                       std::span<TripletCandidate2> candidates,
                       std::size_t numQualitySeeds,
                       SeedContainer2& outputCollection) const;

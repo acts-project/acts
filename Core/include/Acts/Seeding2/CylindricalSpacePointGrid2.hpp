@@ -87,24 +87,16 @@ class CylindricalSpacePointGrid2 {
 
   void clear();
 
-  void insert(const ConstSpacePointProxy2& sp,
-              const SpacePointContainer2::DenseColumn<float>& phiColumn,
-              const SpacePointContainer2::DenseColumn<float>& rColumn);
+  void insert(const ConstSpacePointProxy2& sp);
 
-  void extend(const SpacePointContainer2::ConstRange& spacePoints,
-              const SpacePointContainer2::DenseColumn<float>& phiColumn,
-              const SpacePointContainer2::DenseColumn<float>& rColumn);
+  void extend(const SpacePointContainer2::ConstRange& spacePoints);
 
-  void fill(const SpacePointContainer2& spacePoints,
-            const SpacePointContainer2::DenseColumn<float>& phiColumn,
-            const SpacePointContainer2::DenseColumn<float>& rColumn);
+  void fill(const SpacePointContainer2& spacePoints);
 
-  void sort(const SpacePointContainer2& spacePoints,
-            const SpacePointContainer2::DenseColumn<float>& rColumn);
+  void sort(const SpacePointContainer2& spacePoints);
 
   Range1D<float> computeRadiusRange(
-      const SpacePointContainer2& spacePoints,
-      const SpacePointContainer2::DenseColumn<float>& rColumn) const;
+      const SpacePointContainer2& spacePoints) const;
 
   auto& at(std::size_t index) { return grid().at(index); }
   const auto& at(std::size_t index) const { return grid().at(index); }

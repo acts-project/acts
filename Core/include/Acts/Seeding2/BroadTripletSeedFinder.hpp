@@ -12,7 +12,6 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Seeding2/SpacePointContainerPointers.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -158,21 +157,21 @@ class BroadTripletSeedFinder {
   /// @param topCuts Derived cuts for the top space points
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param bottomSps Group of space points to be used as innermost SP in a seed
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param topSps Group of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
-  void createSeedsFromGroup(
-      const Options& options, State& state, Cache& cache,
-      const DoubletSeedFinder::DerivedCuts& bottomCuts,
-      const DoubletSeedFinder::DerivedCuts& topCuts,
-      const DerivedTripletCuts& tripletCuts,
-      const BroadTripletSeedFilter& filter,
-      const SpacePointContainerPointers& containerPointers,
-      std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
-      std::span<const SpacePointIndex2> topSps,
-      SeedContainer2& outputSeeds) const;
+  void createSeedsFromGroup(const Options& options, State& state, Cache& cache,
+                            const DoubletSeedFinder::DerivedCuts& bottomCuts,
+                            const DoubletSeedFinder::DerivedCuts& topCuts,
+                            const DerivedTripletCuts& tripletCuts,
+                            const BroadTripletSeedFilter& filter,
+                            const SpacePointContainer2& spacePoints,
+                            std::span<const SpacePointIndex2> bottomSps,
+                            SpacePointIndex2 middleSp,
+                            std::span<const SpacePointIndex2> topSps,
+                            SeedContainer2& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
@@ -183,7 +182,7 @@ class BroadTripletSeedFinder {
   /// @param topCuts Derived cuts for the top space points
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param bottomSpGroups Groups of space points to be used as innermost SP in a seed
   /// @param middleSps Group of space points to be used as middle SP in a seed
   /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
@@ -195,7 +194,7 @@ class BroadTripletSeedFinder {
       const DoubletSeedFinder::DerivedCuts& topCuts,
       const DerivedTripletCuts& tripletCuts,
       const BroadTripletSeedFilter& filter,
-      const SpacePointContainerPointers& containerPointers,
+      const SpacePointContainer2& spacePoints,
       const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,
       std::span<const SpacePointIndex2> middleSps,
       const std::vector<std::span<const SpacePointIndex2>>& topSpGroups,
@@ -211,7 +210,7 @@ class BroadTripletSeedFinder {
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublets Bottom doublets to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
@@ -222,8 +221,7 @@ class BroadTripletSeedFinder {
       const BroadTripletSeedFilter& filter,
       BroadTripletSeedFilter::State& filterState,
       BroadTripletSeedFilter::Cache& filterCache,
-      const SpacePointContainerPointers& containerPointers,
-      const ConstSpacePointProxy2& spM,
+      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
       const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
@@ -236,7 +234,7 @@ class BroadTripletSeedFinder {
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublets Bottom doublets to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
@@ -247,8 +245,7 @@ class BroadTripletSeedFinder {
       const BroadTripletSeedFilter& filter,
       BroadTripletSeedFilter::State& filterState,
       BroadTripletSeedFilter::Cache& filterCache,
-      const SpacePointContainerPointers& containerPointers,
-      const ConstSpacePointProxy2& spM,
+      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
       const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
@@ -256,11 +253,10 @@ class BroadTripletSeedFinder {
 
   /// Check the compatibility of strip space point coordinates in xyz assuming
   /// the Bottom-Middle direction with the strip measurement details
-  static bool stripCoordinateCheck(
-      float tolerance, const ConstSpacePointProxy2& sp,
-      const SpacePointContainerPointers& containerPointers,
-      const Eigen::Vector3f& spacePointPosition,
-      Eigen::Vector3f& outputCoordinates);
+  static bool stripCoordinateCheck(float tolerance,
+                                   const ConstSpacePointProxy2& sp,
+                                   const Eigen::Vector3f& spacePointPosition,
+                                   Eigen::Vector3f& outputCoordinates);
 
  private:
   const Logger& logger() const { return *m_logger; }

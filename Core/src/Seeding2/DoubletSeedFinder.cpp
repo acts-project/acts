@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
+
 namespace Acts::Experimental {
 
 namespace {
@@ -22,7 +24,7 @@ enum SpacePointCandidateType { eBottom, eTop };
 /// @tparam sorted_in_r Whether the space points are sorted in radius
 ///
 /// @param cuts Doublet cuts that define the compatibility of space points
-/// @param containerPointers Space point container and its extra columns
+/// @param spacePoints Space point container to be used
 /// @param middleSp Space point candidate to be used as middle SP in a seed
 /// @param middleSpInfo Information about the middle space point
 /// @param candidateSps Group of space points to be used as candidates for
@@ -33,7 +35,7 @@ template <SpacePointCandidateType candidateType, bool interactionPointCut,
           bool sortedInR>
 void createDoublets(
     const DoubletSeedFinder::DerivedCuts& cuts,
-    const SpacePointContainerPointers& containerPointers,
+    const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp,
     const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
@@ -47,7 +49,7 @@ void createDoublets(
   const float xM = middleSp.x();
   const float yM = middleSp.y();
   const float zM = middleSp.z();
-  const float rM = middleSp.extra(containerPointers.rColumn());
+  const float rM = middleSp.r();
 
   // equivalent to impactMax / (rM * rM);
   float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -66,18 +68,22 @@ void createDoublets(
   const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
                                   float iDeltaR2, float cotTheta) {
     // TOD use some reasonable defaults
-    float varianceZM = containerPointers.hasVarianceColumns()
-                           ? middleSp.extra(containerPointers.varianceZColumn())
-                           : 0;
-    float varianceZO = containerPointers.hasVarianceColumns()
-                           ? otherSp.extra(containerPointers.varianceZColumn())
-                           : 0;
-    float varianceRM = containerPointers.hasVarianceColumns()
-                           ? middleSp.extra(containerPointers.varianceRColumn())
-                           : 0;
-    float varianceRO = containerPointers.hasVarianceColumns()
-                           ? otherSp.extra(containerPointers.varianceRColumn())
-                           : 0;
+    float varianceZM =
+        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+            ? middleSp.varianceZ()
+            : 0;
+    float varianceZO =
+        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+            ? otherSp.varianceZ()
+            : 0;
+    float varianceRM =
+        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+            ? middleSp.varianceR()
+            : 0;
+    float varianceRO =
+        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+            ? otherSp.varianceR()
+            : 0;
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
@@ -88,16 +94,16 @@ void createDoublets(
     // the iterator so we don't need to look at the other SPs again
     for (; candidateOffset < candidateSps.size(); ++candidateOffset) {
       ConstSpacePointProxy2 otherSp =
-          containerPointers.spacePoints().at(candidateSps[candidateOffset]);
+          spacePoints.at(candidateSps[candidateOffset]);
 
       if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
-        if (rM - otherSp.extra(containerPointers.rColumn()) <= cuts.deltaRMax) {
+        if (rM - otherSp.r() <= cuts.deltaRMax) {
           break;
         }
       } else {
         // if r-distance is too small, try next SP in bin
-        if (otherSp.extra(containerPointers.rColumn()) - rM >= cuts.deltaRMin) {
+        if (otherSp.r() - rM >= cuts.deltaRMin) {
           break;
         }
       }
@@ -105,11 +111,10 @@ void createDoublets(
   }
 
   for (SpacePointIndex2 otherSpIndex : candidateSps.subspan(candidateOffset)) {
-    ConstSpacePointProxy2 otherSp =
-        containerPointers.spacePoints().at(otherSpIndex);
+    ConstSpacePointProxy2 otherSp = spacePoints.at(otherSpIndex);
 
     if constexpr (isBottomCandidate) {
-      deltaR = rM - otherSp.extra(containerPointers.rColumn());
+      deltaR = rM - otherSp.r();
 
       if constexpr (sortedInR) {
         // if r-distance is too small we are done
@@ -118,7 +123,7 @@ void createDoublets(
         }
       }
     } else {
-      deltaR = otherSp.extra(containerPointers.rColumn()) - rM;
+      deltaR = otherSp.r() - rM;
 
       if constexpr (sortedInR) {
         // if r-distance is too big we are done
@@ -235,8 +240,7 @@ void createDoublets(
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
         if (cuts.experimentCuts.connected() &&
-            !cuts.experimentCuts(otherSp.extra(containerPointers.rColumn()),
-                                 cotTheta)) {
+            !cuts.experimentCuts(otherSp.r(), cotTheta)) {
           continue;
         }
       }
@@ -281,8 +285,7 @@ void createDoublets(
     // to detector specific cuts
     if constexpr (isBottomCandidate) {
       if (cuts.experimentCuts.connected() &&
-          !cuts.experimentCuts(otherSp.extra(containerPointers.rColumn()),
-                               cotTheta)) {
+          !cuts.experimentCuts(otherSp.r(), cotTheta)) {
         continue;
       }
     }
@@ -312,9 +315,8 @@ DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
 }
 
 DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
-    const ConstSpacePointProxy2& spM,
-    const SpacePointContainer2::DenseColumn<float>& rColumn) {
-  const float rM = spM.extra(rColumn);
+    const ConstSpacePointProxy2& spM) {
+  const float rM = spM.r();
   const float uIP = -1. / rM;
   const float cosPhiM = -spM.x() * uIP;
   const float sinPhiM = -spM.y() * uIP;
@@ -324,71 +326,67 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 }
 
 void DoubletSeedFinder::createBottomDoublets(
-    const DerivedCuts& cuts,
-    const SpacePointContainerPointers& containerPointers,
+    const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets) {
   std::size_t candidateOffset = 0;
   if (cuts.interactionPointCut) {
     return createDoublets<SpacePointCandidateType::eBottom, true, false>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
     return createDoublets<SpacePointCandidateType::eBottom, false, false>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
 }
 
 void DoubletSeedFinder::createTopDoublets(
-    const DerivedCuts& cuts,
-    const SpacePointContainerPointers& containerPointers,
+    const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets) {
   std::size_t candidateOffset = 0;
   if (cuts.interactionPointCut) {
     return createDoublets<SpacePointCandidateType::eTop, true, false>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
     return createDoublets<SpacePointCandidateType::eTop, false, false>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
 }
 
 void DoubletSeedFinder::createSortedBottomDoublets(
-    const DerivedCuts& cuts,
-    const SpacePointContainerPointers& containerPointers,
+    const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets) {
   if (cuts.interactionPointCut) {
     return createDoublets<SpacePointCandidateType::eBottom, true, true>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
     return createDoublets<SpacePointCandidateType::eBottom, false, true>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
 }
 
 void DoubletSeedFinder::createSortedTopDoublets(
-    const DerivedCuts& cuts,
-    const SpacePointContainerPointers& containerPointers,
+    const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets) {
   if (cuts.interactionPointCut) {
     return createDoublets<SpacePointCandidateType::eTop, true, true>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
     return createDoublets<SpacePointCandidateType::eTop, false, true>(
-        cuts, containerPointers, middleSp, middleSpInfo, candidateSps,
+        cuts, spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
 }

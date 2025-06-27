@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding2/SpacePointContainerPointers.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <vector>
@@ -102,23 +101,20 @@ class DoubletSeedFinder {
     float sinPhiM{};
   };
 
-  static MiddleSpInfo computeMiddleSpInfo(
-      const ConstSpacePointProxy2& spM,
-      const SpacePointContainer2::DenseColumn<float>& rColumn);
+  static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
   /// Creates compatible bottom dublets by applying a series of cuts that can be
   /// tested with only two SPs.
   ///
   /// @param cuts Doublet cuts that define the compatibility of space points
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
   ///                     middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   static void createBottomDoublets(
-      const DerivedCuts& cuts,
-      const SpacePointContainerPointers& containerPointers,
+      const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
       DoubletsForMiddleSp& compatibleDoublets);
@@ -127,24 +123,24 @@ class DoubletSeedFinder {
   /// tested with only two SPs.
   ///
   /// @param cuts Doublet cuts that define the compatibility of space points
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
   ///                     middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  static void createTopDoublets(
-      const DerivedCuts& cuts,
-      const SpacePointContainerPointers& containerPointers,
-      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-      std::span<const SpacePointIndex2> candidateSps,
-      DoubletsForMiddleSp& compatibleDoublets);
+  static void createTopDoublets(const DerivedCuts& cuts,
+                                const SpacePointContainer2& spacePoints,
+                                const ConstSpacePointProxy2& middleSp,
+                                const MiddleSpInfo& middleSpInfo,
+                                std::span<const SpacePointIndex2> candidateSps,
+                                DoubletsForMiddleSp& compatibleDoublets);
 
   /// Creates compatible bottom dublets by applying a series of cuts that can be
   /// tested with only two SPs. Input space points need to be sorted by radius.
   ///
   /// @param cuts Doublet cuts that define the compatibility of space points
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
@@ -152,8 +148,7 @@ class DoubletSeedFinder {
   /// @param candidateOffset Offset in the candidateSps span to start from
   /// @param compatibleDoublets Output container for compatible doublets
   static void createSortedBottomDoublets(
-      const DerivedCuts& cuts,
-      const SpacePointContainerPointers& containerPointers,
+      const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
       std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets);
@@ -162,7 +157,7 @@ class DoubletSeedFinder {
   /// tested with only two SPs. Input space points need to be sorted by radius.
   ///
   /// @param cuts Doublet cuts that define the compatibility of space points
-  /// @param containerPointers Space point container and its extra columns
+  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
@@ -170,8 +165,7 @@ class DoubletSeedFinder {
   /// @param candidateOffset Offset in the candidateSps span to start from
   /// @param compatibleDoublets Output container for compatible doublets
   static void createSortedTopDoublets(
-      const DerivedCuts& cuts,
-      const SpacePointContainerPointers& containerPointers,
+      const DerivedCuts& cuts, const SpacePointContainer2& spacePoints,
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       std::span<const SpacePointIndex2> candidateSps,
       std::size_t& candidateOffset, DoubletsForMiddleSp& compatibleDoublets);

@@ -14,7 +14,6 @@
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Seeding2/SpacePointContainerPointers.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -99,12 +98,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints;
-  auto& rColumn = coreSpacePoints.createDenseExtraColumn<float>("r");
-  auto& phiColumn = coreSpacePoints.createDenseExtraColumn<float>("phi");
-  auto& varianceRColumn =
-      coreSpacePoints.createDenseExtraColumn<float>("varianceR");
-  auto& varianceZColumn =
-      coreSpacePoints.createDenseExtraColumn<float>("varianceZ");
+  coreSpacePoints.createExtraColumns(
+      Acts::Experimental::SpacePointContainer2::R |
+      Acts::Experimental::SpacePointContainer2::Phi |
+      Acts::Experimental::SpacePointContainer2::VarianceR |
+      Acts::Experimental::SpacePointContainer2::VarianceZ);
   coreSpacePoints.reserve(spacePoints.size());
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
@@ -112,23 +110,22 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       auto newSp = coreSpacePoints.createSpacePoint(
           std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)}, sp.x(),
           sp.y(), sp.z());
-      newSp.extra(rColumn) = sp.r();
-      newSp.extra(phiColumn) = std::atan2(sp.y(), sp.x());
-      newSp.extra(varianceRColumn) = sp.varianceR();
-      newSp.extra(varianceZColumn) = sp.varianceZ();
+      newSp.r() = sp.r();
+      newSp.phi() = std::atan2(sp.y(), sp.x());
+      newSp.varianceR() = sp.varianceR();
+      newSp.varianceZ() = sp.varianceZ();
     }
   }
 
   Acts::Experimental::CylindricalSpacePointGrid2 grid(
       m_gridConfig, logger().cloneWithSuffix("Grid"));
 
-  grid.fill(coreSpacePoints, phiColumn, rColumn);
+  grid.fill(coreSpacePoints);
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies
   // with a sorting in the radius
-  const Acts::Range1D<float> rRange =
-      grid.computeRadiusRange(coreSpacePoints, rColumn);
+  const Acts::Range1D<float> rRange = grid.computeRadiusRange(coreSpacePoints);
 
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
@@ -190,15 +187,15 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     std::ranges::sort(bottomSps, {},
                       [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).extra(rColumn);
+                        return coreSpacePoints.at(spIndex).r();
                       });
     std::ranges::sort(middleSps, {},
                       [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).extra(rColumn);
+                        return coreSpacePoints.at(spIndex).r();
                       });
     std::ranges::sort(topSps, {},
                       [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).extra(rColumn);
+                        return coreSpacePoints.at(spIndex).r();
                       });
 
     // we compute this here since all middle space point candidates belong to
@@ -212,7 +209,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     for (Acts::Experimental::SpacePointIndex2 middleSp : middleSps) {
       auto spM = coreSpacePoints.at(middleSp);
-      const float rM = spM.extra(rColumn);
+      const float rM = spM.r();
 
       // check if spM is outside our radial region of interest
       if (rM < minRadiusRangeForMiddle) {
@@ -226,9 +223,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       m_seedFinder->createSeedsFromGroup(
           finderOptions, state, cache, derivedDoubletOptions,
           derivedDoubletOptions, derivedTripletOptions, *m_seedFilter,
-          Acts::Experimental::SpacePointContainerPointers(
-              coreSpacePoints, rColumn, varianceRColumn, varianceZColumn),
-          bottomSps, middleSp, topSps, seeds);
+          coreSpacePoints, bottomSps, middleSp, topSps, seeds);
     }  // loop on middle space points
   }
 
