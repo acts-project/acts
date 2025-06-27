@@ -30,9 +30,9 @@ using MutableSpacePointProxy2 = SpacePointProxy2<false>;
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
 
 /// A container for space points, which can hold additional columns of data
-/// (both dense and sparse) and allows for efficient access to space points
-/// and their associated source links. Individual space points are addressed
-/// via index. A proxy object simplifies the handling.
+/// and allows for efficient access to space points and their associated source
+/// links. Individual space points are addressed via index. A proxy object
+/// simplifies the handling.
 class SpacePointContainer2 {
  public:
   using IndexType = SpacePointIndex2;
@@ -47,8 +47,9 @@ class SpacePointContainer2 {
   /// The extra columns are copied as well.
   /// @param other The space point container to copy.
   SpacePointContainer2(const SpacePointContainer2 &other)
-      : m_entries(other.m_entries),
-        m_xyz(other.m_xyz),
+      : m_xyz(other.m_xyz),
+        m_sourceLinkOffsets(other.m_sourceLinkOffsets),
+        m_sourceLinkCounts(other.m_sourceLinkCounts),
         m_sourceLinks(other.m_sourceLinks) {
     for (const auto &column : other.m_extraColumns) {
       m_extraColumns[column.first] = column.second->copy();
@@ -72,8 +73,9 @@ class SpacePointContainer2 {
       return *this;
     }
 
-    m_entries = other.m_entries;
     m_xyz = other.m_xyz;
+    m_sourceLinkOffsets = other.m_sourceLinkOffsets;
+    m_sourceLinkCounts = other.m_sourceLinkCounts;
     m_sourceLinks = other.m_sourceLinks;
 
     m_extraColumns.clear();
@@ -92,7 +94,7 @@ class SpacePointContainer2 {
 
   /// Returns the number of space points in the container.
   /// @return The number of space points in the container.
-  std::size_t size() const { return m_entries.size(); }
+  std::size_t size() const { return m_xyz.size(); }
   /// Checks if the container is empty.
   /// @return True if the container is empty, false otherwise.
   [[nodiscard]] bool empty() const { return size() == 0; }
@@ -103,8 +105,9 @@ class SpacePointContainer2 {
   /// @param size The number of space points to reserve space for.
   /// @param averageSourceLinks The average number of source links per space point.
   void reserve(std::size_t size, float averageSourceLinks = 1) {
-    m_entries.reserve(size);
     m_xyz.reserve(size * 3);
+    m_sourceLinkOffsets.reserve(size);
+    m_sourceLinkCounts.reserve(size);
     m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
 
     for (auto &column : m_extraColumns) {
@@ -113,8 +116,9 @@ class SpacePointContainer2 {
   }
   /// Clears the container, removing all space points and extra columns.
   void clear() {
-    m_entries.clear();
     m_xyz.clear();
+    m_sourceLinkOffsets.clear();
+    m_sourceLinkCounts.clear();
     m_sourceLinks.clear();
 
     for (auto &column : m_extraColumns) {
@@ -149,30 +153,30 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A mutable reference to the source link at the given index.
   std::span<SourceLink> sourceLinks(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return std::span<SourceLink>(
-        m_sourceLinks.data() + m_entries[index].sourceLinkOffset,
-        m_entries[index].sourceLinkCount);
+        m_sourceLinks.data() + m_sourceLinkOffsets[index],
+        m_sourceLinkCounts[index]);
   }
   /// Mutable access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the x coordinate of the space point.
   float &x(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3];
   }
   /// Mutable access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the y coordinate of the space point.
   float &y(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3 + 1];
   }
   /// Mutable access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the z coordinate of the space point.
   float &z(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3 + 2];
   }
 
@@ -180,37 +184,37 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A const span to the source links at the given index.
   std::span<const SourceLink> sourceLinks(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return std::span<const SourceLink>(
-        m_sourceLinks.data() + m_entries[index].sourceLinkOffset,
-        m_entries[index].sourceLinkCount);
+        m_sourceLinks.data() + m_sourceLinkOffsets[index],
+        m_sourceLinkCounts[index]);
   }
   /// Const access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the x coordinate of the space point.
   float x(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3];
   }
   /// Const access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the y coordinate of the space point.
   float y(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3 + 1];
   }
   /// Const access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the z coordinate of the space point.
   float z(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_xyz.size() && "Index out of bounds");
     return m_xyz[index * 3 + 2];
   }
 
-  /// Additional dense column of data that can be added to the space point
-  /// container. The column is indexed by the space point index.
+  /// Additional column of data that can be added to the space point container.
+  /// The column is indexed by the space point index.
   template <typename T>
-  class DenseColumn {
+  class ExtraColumn {
    public:
     using ValueType = T;
     using ContainerType = std::vector<ValueType>;
@@ -234,158 +238,42 @@ class SpacePointContainer2 {
    private:
     ContainerType m_data;
 
-    DenseColumn() = default;
-    DenseColumn(const DenseColumn &other) = default;
-    DenseColumn(DenseColumn &&other) noexcept = default;
-    DenseColumn &operator=(const DenseColumn &other) = default;
-    DenseColumn &operator=(DenseColumn &&other) noexcept = default;
+    ExtraColumn() = default;
+    ExtraColumn(const ExtraColumn &other) = default;
+    ExtraColumn(ExtraColumn &&other) noexcept = default;
+    ExtraColumn &operator=(const ExtraColumn &other) = default;
+    ExtraColumn &operator=(ExtraColumn &&other) noexcept = default;
 
     friend class SpacePointContainer2;
   };
 
-  /// Creates a new dense column with the given name.
+  /// Creates a new column with the given name.
   /// If a column with the same name already exists, an exception is thrown.
   /// @param name The name of the column.
-  /// @return A reference to the newly created dense column.
+  /// @return A reference to the newly created column.
   /// @throws std::runtime_error if a column with the same name already exists.
   template <typename T>
-  DenseColumn<T> &createDenseExtraColumn(const std::string &name) {
-    return createExtraColumn<DenseColumnHolder<T>>(name);
+  ExtraColumn<T> &createExtraColumn(const std::string &name) {
+    return createExtraColumnImpl<ExtraColumnHolder<T>>(name);
   }
 
-  /// Returns a mutable reference to the dense extra column with the given name.
+  /// Returns a mutable reference to the extra column with the given name.
   /// If the column does not exist, an exception is thrown.
   /// @param name The name of the column.
-  /// @return A mutable reference to the dense extra column.
+  /// @return A mutable reference to the extra column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  DenseColumn<T> &denseExtraColumn(const std::string &name) {
-    return extraColumn<DenseColumnHolder<T>>(name);
+  ExtraColumn<T> &extraColumn(const std::string &name) {
+    return extraColumn<ExtraColumnHolder<T>>(name);
   }
-  /// Returns a const reference to the dense extra column with the given name.
+  /// Returns a const reference to the extra column with the given name.
   /// If the column does not exist, an exception is thrown.
   /// @param name The name of the column.
-  /// @return A const reference to the dense extra column.
+  /// @return A const reference to the extra column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  const DenseColumn<T> &denseExtraColumn(const std::string &name) const {
-    return extraColumn<DenseColumnHolder<T>>(name);
-  }
-
-  /// Additional sparse column of data that can be added to the space point
-  /// container. The column is indexed by the space point index, but only
-  /// contains values for space points that have a value set for that index.
-  template <typename T>
-  class SparseColumn {
-   public:
-    using ValueType = T;
-    using ContainerType = std::unordered_map<IndexType, ValueType>;
-
-    /// Returns the number of elements in the sparse column.
-    /// @return The number of elements in the sparse column.
-    std::size_t size() const { return m_data.size(); }
-    /// Checks if the sparse column is empty.
-    /// @return True if the sparse column is empty, false otherwise.
-    [[nodiscard]]
-    bool empty() const {
-      return m_data.empty();
-    }
-    /// Reserves space for the given number of elements in the sparse column.
-    /// @param size The number of elements to reserve space for.
-    void reserve(std::size_t size) { m_data.reserve(size); }
-    /// Clears the sparse column, removing all elements.
-    void clear() { m_data.clear(); }
-
-    /// Checks if the sparse column has a value for the given index.
-    /// @param index The index to check.
-    /// @return True if the sparse column has a value for the given index,
-    ///         false otherwise.
-    [[nodiscard]]
-    bool has(IndexType index) const {
-      return m_data.find(index) != m_data.end();
-    }
-
-    /// Mutable access to the value at the given index.
-    /// @param index The index of the value to access.
-    /// @return A mutable reference to the value at the given index.
-    T &at(IndexType index) { return m_data[index]; }
-    /// Const access to the value at the given index.
-    /// @param index The index of the value to access.
-    /// @return A const reference to the value at the given index.
-    const T &at(IndexType index) const { return m_data[index]; }
-
-    /// Inserts a value at the given index. If the index already exists, the
-    /// value is overwritten.
-    /// @param index The index to insert the value at.
-    /// @param value The value to insert.
-    void insert(IndexType index, const T &value) { m_data[index] = value; }
-    /// Inserts a value at the given index, moving the value into the column.
-    /// If the index already exists, the value is overwritten.
-    /// @param index The index to insert the value at.
-    /// @param value The value to insert, moved into the column.
-    void insert(IndexType index, T &&value) {
-      m_data[index] = std::move(value);
-    }
-
-    /// Erases the value at the given index from the sparse column.
-    /// @param index The index of the value to erase.
-    void erase(IndexType index) { m_data.erase(index); }
-
-    auto begin() { return m_data.begin(); }
-    auto end() { return m_data.end(); }
-    auto begin() const { return m_data.begin(); }
-    auto end() const { return m_data.end(); }
-    auto cbegin() const { return m_data.cbegin(); }
-    auto cend() const { return m_data.cend(); }
-
-    /// Finds the value at the given index in the sparse column.
-    /// @param index The index of the value to find.
-    /// @return An iterator to the found value, or end() if not found.
-    auto find(IndexType index) { return m_data.find(index); }
-    /// Finds the value at the given index in the sparse column.
-    /// @param index The index of the value to find.
-    /// @return A const iterator to the found value, or end() if not found.
-    auto find(IndexType index) const { return m_data.find(index); }
-
-   private:
-    ContainerType m_data;
-
-    SparseColumn() = default;
-    SparseColumn(const SparseColumn &other) = default;
-    SparseColumn(SparseColumn &&other) noexcept = default;
-    SparseColumn &operator=(const SparseColumn &other) = default;
-    SparseColumn &operator=(SparseColumn &&other) noexcept = default;
-
-    friend class SpacePointContainer2;
-  };
-
-  /// Creates a new sparse column with the given name.
-  /// If a column with the same name already exists, an exception is thrown.
-  /// @param name The name of the column.
-  /// @return A reference to the newly created sparse column.
-  /// @throws std::runtime_error if a column with the same name already exists.
-  template <typename T>
-  SparseColumn<T> &createSparseExtraColumn(const std::string &name) {
-    return createExtraColumn<SparseColumnHolder<T>>(name);
-  }
-
-  /// Returns a mutable reference to the sparse extra column with the given
-  /// name. If the column does not exist, an exception is thrown.
-  /// @param name The name of the column.
-  /// @return A mutable reference to the sparse extra column.
-  /// @throws std::runtime_error if the column does not exist.
-  template <typename T>
-  SparseColumn<T> &sparseExtraColumn(const std::string &name) {
-    return extraColumn<SparseColumnHolder<T>>(name);
-  }
-  /// Returns a const reference to the sparse extra column with the given name.
-  /// If the column does not exist, an exception is thrown.
-  /// @param name The name of the column.
-  /// @return A const reference to the sparse extra column.
-  /// @throws std::runtime_error if the column does not exist.
-  template <typename T>
-  const SparseColumn<T> &sparseExtraColumn(const std::string &name) const {
-    return extraColumn<SparseColumnHolder<T>>(name);
+  const ExtraColumn<T> &extraColumn(const std::string &name) const {
+    return extraColumn<ExtraColumnHolder<T>>(name);
   }
 
   template <bool read_only>
@@ -473,16 +361,6 @@ class SpacePointContainer2 {
   }
 
  private:
-  struct Entry {
-    std::size_t sourceLinkOffset{};
-    std::size_t sourceLinkCount{};
-
-    Entry() = default;
-    Entry(std::size_t sourceLinkOffset_, std::size_t sourceLinkCount_)
-        : sourceLinkOffset(sourceLinkOffset_),
-          sourceLinkCount(sourceLinkCount_) {}
-  };
-
   struct ColumnHolderBase {
     virtual ~ColumnHolderBase() = default;
 
@@ -494,11 +372,11 @@ class SpacePointContainer2 {
     virtual void emplace_back() = 0;
   };
   template <typename T>
-  struct DenseColumnHolder final : public ColumnHolderBase {
-    DenseColumn<T> column;
+  struct ExtraColumnHolder final : public ColumnHolderBase {
+    ExtraColumn<T> column;
 
     std::unique_ptr<ColumnHolderBase> copy() const final {
-      return std::make_unique<DenseColumnHolder<T>>(*this);
+      return std::make_unique<ExtraColumnHolder<T>>(*this);
     }
 
     void reserve(std::size_t size) final { column.m_data.reserve(size); }
@@ -506,30 +384,17 @@ class SpacePointContainer2 {
     void resize(std::size_t size) final { column.m_data.resize(size); }
     void emplace_back() final { column.m_data.emplace_back(); }
   };
-  template <typename T>
-  struct SparseColumnHolder final : public ColumnHolderBase {
-    SparseColumn<T> column;
 
-    std::unique_ptr<ColumnHolderBase> copy() const final {
-      return std::make_unique<SparseColumnHolder<T>>(*this);
-    }
-
-    void reserve(std::size_t size) final { column.reserve(size); }
-    void clear() final { column.clear(); }
-    void resize([[maybe_unused]] std::size_t size)
-        final { /* No-op for sparse columns */ }
-    void emplace_back() final { /* No-op for sparse columns */ }
-  };
-
-  std::vector<Entry> m_entries;
   std::vector<float> m_xyz;
+  std::vector<std::size_t> m_sourceLinkOffsets;
+  std::vector<std::uint8_t> m_sourceLinkCounts;
   std::vector<SourceLink> m_sourceLinks;
 
   std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
       m_extraColumns;
 
   template <typename Holder>
-  auto &createExtraColumn(const std::string &name) {
+  auto &createExtraColumnImpl(const std::string &name) {
     auto it = m_extraColumns.find(name);
     if (it != m_extraColumns.end()) {
       throw std::runtime_error("Extra column already exists: " + name);
@@ -665,11 +530,11 @@ class SpacePointProxy2 {
 
 inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
     std::span<const SourceLink> sourceLinks, float x, float y, float z) {
-  m_entries.emplace_back<std::size_t, std::size_t>(m_sourceLinks.size(),
-                                                   sourceLinks.size());
   m_xyz.push_back(x);
   m_xyz.push_back(y);
   m_xyz.push_back(z);
+  m_sourceLinkOffsets.push_back(m_sourceLinks.size());
+  m_sourceLinkCounts.push_back(static_cast<std::uint8_t>(sourceLinks.size()));
   m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
                        sourceLinks.end());
 

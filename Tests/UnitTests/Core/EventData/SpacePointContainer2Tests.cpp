@@ -99,20 +99,16 @@ BOOST_AUTO_TEST_CASE(Clear) {
 
 BOOST_AUTO_TEST_CASE(ExtraColumns) {
   SpacePointContainer2 container;
-  auto &dense1 = container.createDenseExtraColumn<int>("dense1");
-  auto &sparse1 = container.createSparseExtraColumn<int>("sparse1");
+  auto &extra1 = container.createExtraColumn<int>("extra1");
 
   auto sp = container.createSpacePoint(
       std::array<SourceLink, 1>{SourceLink(42)}, 1, 2, 3);
-  sp.extra(dense1) = 100;
+  sp.extra(extra1) = 100;
 
-  auto &dense2 = container.createDenseExtraColumn<int>("dense2");
-  auto &sparse2 = container.createSparseExtraColumn<int>("sparse2");
+  auto &extra2 = container.createExtraColumn<int>("extra2");
 
-  BOOST_CHECK_EQUAL(dense1.at(0), 100);
-  BOOST_CHECK_EQUAL(dense2.at(0), 0);
-  BOOST_CHECK(sparse1.empty());
-  BOOST_CHECK(sparse2.empty());
+  BOOST_CHECK_EQUAL(extra1.at(0), 100);
+  BOOST_CHECK_EQUAL(extra2.at(0), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
