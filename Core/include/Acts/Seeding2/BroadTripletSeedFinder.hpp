@@ -192,6 +192,7 @@ class BroadTripletSeedFinder {
   ///
   /// @param cache Cache object to store intermediate results
   /// @param cuts Triplet cuts that define the compatibility of space points
+  /// @param rMaxSeedConf Maximum radius of bottom space point to use seed confirmation
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
@@ -216,6 +217,7 @@ class BroadTripletSeedFinder {
   /// Create triplets from the bottom, middle, and top space points.
   ///
   /// @param cuts Triplet cuts that define the compatibility of space points
+  /// @param rMaxSeedConf Maximum radius of bottom space point to use seed confirmation
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param filterState State object that holds the state of the filter
   /// @param filterCache Cache object that holds memory used in SeedFilter
