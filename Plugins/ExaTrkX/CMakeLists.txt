@@ -1,7 +1,6 @@
 add_library(
     ActsPluginExaTrkX
     SHARED
-    src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
     src/GnnTrackFitterCpu.cpp
     src/Tensor.cpp
