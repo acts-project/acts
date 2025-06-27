@@ -43,9 +43,9 @@ class SeedContainer2 {
 
   /// Reserves space for the given number of seeds.
   /// @param size The number of seeds to reserve space for.
-  void reserve(std::size_t size) {
+  void reserve(std::size_t size, float averageSpacePoints = 3) {
     m_entries.reserve(size);
-    m_spacePoints.reserve(size * 3);
+    m_spacePoints.reserve(static_cast<std::size_t>(size * averageSpacePoints));
   }
   /// Clears the seed container, removing all seeds and space points.
   void clear() {

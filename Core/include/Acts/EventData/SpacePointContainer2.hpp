@@ -99,10 +99,10 @@ class SpacePointContainer2 {
   /// This will reserve space for the source links and the extra columns as
   /// well.
   /// @param size The number of space points to reserve space for.
-  void reserve(std::size_t size) {
+  void reserve(std::size_t size, float averageSourceLinks = 1) {
     m_entries.reserve(size);
     m_xyz.reserve(size * 3);
-    m_sourceLinks.reserve(size);
+    m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
 
     for (auto &column : m_extraColumns) {
       column.second->reserve(size);
