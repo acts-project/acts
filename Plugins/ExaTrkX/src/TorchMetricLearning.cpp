@@ -65,7 +65,7 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
 TorchMetricLearning::~TorchMetricLearning() {}
 
-std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
+PipelineTensors TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<std::uint64_t> & /*moduleIds*/,
     const ExecutionContext &execContext) {
@@ -81,10 +81,8 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
-  std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (device.is_cuda()) {
     device_guard.emplace(device.index());
-    streamGuard.emplace(execContext.stream.value());
   }
 #endif
 
@@ -148,9 +146,9 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  // TODO add real edge features for this workflow later
-  std::any edgeFeatures;
-  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList),
-          std::move(edgeFeatures)};
+  // Note: this unfortunately makes a copy right now
+  return {detail::torchToActsTensor<float>(inputTensor, execContext),
+          detail::torchToActsTensor<std::int64_t>(edgeList, execContext),
+          std::nullopt, std::nullopt};
 }
 }  // namespace Acts

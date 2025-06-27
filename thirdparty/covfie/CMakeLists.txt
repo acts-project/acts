@@ -25,11 +25,6 @@ set(COVFIE_BUILD_TESTS OFF CACHE BOOL "Build covfie tests")
 set(COVFIE_BUILD_BENCHMARKS OFF CACHE BOOL "Build covfie benchmarks")
 
 set(COVFIE_PLATFORM_CPU ON CACHE BOOL "Enable covfie CPU platform")
-set(COVFIE_PLATFORM_CUDA
-    ${ACTS_BUILD_PLUGIN_CUDA}
-    CACHE BOOL
-    "Enable covfie CUDA platform"
-)
 
 set(COVFIE_REQUIRE_CXX20 OFF CACHE BOOL "Enable covfie C++20 requirement")
 set(COVFIE_QUIET ON CACHE BOOL "Quiet covfie feature warnings")

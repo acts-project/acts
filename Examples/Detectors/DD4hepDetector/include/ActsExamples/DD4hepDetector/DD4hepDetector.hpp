@@ -13,14 +13,18 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "AlignedDD4hepDetectorElement.hpp"
 
 class TGeoNode;
 
@@ -73,11 +77,17 @@ class DD4hepDetector : public Detector {
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
-    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator = nullptr;
+    /// Alignment decorator
+    std::shared_ptr<IContextDecorator> alignmentDecorator = nullptr;
 
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<const Acts::GeometryIdentifierHook>();
+
+    /// Detector element factory
+    Acts::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
+        Acts::DD4hepLayerBuilder::defaultDetectorElementFactory;
   };
 
   explicit DD4hepDetector(const Config& cfg);

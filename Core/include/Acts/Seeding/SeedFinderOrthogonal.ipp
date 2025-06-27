@@ -6,20 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Seeding/SeedFinderOrthogonal.hpp"
+
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <functional>
-#include <numeric>
 #include <type_traits>
 
 namespace Acts {
+
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
     const external_spacepoint_t &low) const -> typename tree_t::range_t {
@@ -246,13 +248,7 @@ template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
     std::unique_ptr<const Acts::Logger> logger)
-    : m_config(config), m_logger(std::move(logger)) {
-  if (!config.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOrthogonalConfig not in ACTS internal units in "
-        "SeedFinderOrthogonal");
-  }
-}
+    : m_config(config), m_logger(std::move(logger)) {}
 
 template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
@@ -716,11 +712,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const Acts::SeedFinderOptions &options,
     const input_container_t &spacePoints, output_container_t &out_cont) const {
   ACTS_VERBOSE("Creating seeds with Orthogonal strategy");
-  if (!options.isInInternalUnits) {
-    throw std::runtime_error(
-        "SeedFinderOptions not in ACTS internal units in "
-        "SeedFinderOrthogonal");
-  }
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value

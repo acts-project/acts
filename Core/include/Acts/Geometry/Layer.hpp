@@ -23,7 +23,6 @@
 
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
@@ -299,4 +298,4 @@ using LayerArray = BinnedArray<LayerPtr>;
 
 }  // namespace Acts
 
-#include "Acts/Geometry/detail/Layer.ipp"
+#include "Acts/Geometry/Layer.ipp"
