@@ -18,29 +18,50 @@
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/MagneticFieldProvider.hpp>
 
+#include <span>
+
 #include <boost/container/static_vector.hpp>
 
 namespace Acts {
 
-struct GNNParametersBuilderCPU {
+/// Simple struct encapsulating the parameter estimation for GNN tracks
+/// on the CPU. Mainly extracted from Acts::GNNTrackFitterCPU to allow it
+/// to be compiled in a source file.
+struct GnnParametersBuilderCpu {
   struct Config {
     std::shared_ptr<const Acts::MagneticFieldProvider> bField;
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry;
 
+    /// Column in the spacepoint features where r, phi, z are located
     std::size_t rIdx{}, phiIdx{}, zIdx{};
+
+    /// Scale that is applied to r, phi, z
     float rScale{1.f}, phiScale{1.f}, zScale{1.f};
+
+    /// Total number of columns in the spacepoint features
     std::size_t nFeatures{};
+
+    /// Strip volumes
     std::set<std::size_t> stripVolumes;
 
+    /// Covariance matrix creation config
     EstimateTrackParamCovarianceConfig covCfg;
+
+    /// Particle hypothesis to use
     ParticleHypothesis partHypot = ParticleHypothesis::pion();
 
-    double minSpacepointDist{};
+    /// Clean the track candidate from close-by spacepoints
+    double minSpacepointDist = 0.0;
+
+    /// Used in parameter estimation
     double bFieldMin = 0.0;
+
+    /// Whether to use the first three spacepoints (tight), or the
+    /// first, middle and last spacepoint to build the seed.
     bool buildTightSeeds = true;
   };
 
-  GNNParametersBuilderCPU(const Config &cfg,
+  GnnParametersBuilderCpu(const Config &cfg,
                           std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -63,8 +84,8 @@ struct GNNParametersBuilderCPU {
   }
 
   std::optional<BoundTrackParameters> buildParameters(
-      const std::vector<float> &spacepointFeatures,
-      const std::vector<Acts::GeometryIdentifier> &geoIds,
+      std::span<const float> spacepointFeatures,
+      std::span<const Acts::GeometryIdentifier> geoIds,
       const std::vector<int> &candidate,
       Acts::MagneticFieldProvider::Cache &bCache,
       const Acts::GeometryContext &gctx) const;
@@ -75,8 +96,10 @@ struct GNNParametersBuilderCPU {
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
+/// Class to encapsulate the track fit for the GNN output on CPU.
+/// Mainly a wrapper around ACTS Core tools.
 template <typename track_container_t>
-class GNNTrackFitterCPU {
+class GnnTrackFitterCpu {
  public:
   using TCBackend = typename track_container_t::TrackContainerBackend;
   using TSBackend = typename track_container_t::TrackStateContainerBackend;
@@ -84,7 +107,7 @@ class GNNTrackFitterCPU {
   struct Config {
     std::shared_ptr<const Acts::TrackingGeometry> geometry;
     std::shared_ptr<const Acts::MagneticFieldProvider> bfield;
-    GNNParametersBuilderCPU::Config paramBuilderCfg;
+    GnnParametersBuilderCpu::Config paramBuilderCfg;
   };
 
   struct Options {
@@ -98,7 +121,7 @@ class GNNTrackFitterCPU {
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using Fitter = Acts::KalmanFitter<Propagator, TSBackend>;
 
-  GNNTrackFitterCPU(const Config &cfg,
+  GnnTrackFitterCpu(const Config &cfg,
                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -110,7 +133,7 @@ class GNNTrackFitterCPU {
     if (!m_cfg.bfield) {
       throw std::invalid_argument("Missing bfield!");
     }
-    m_paramBuilder = std::make_unique<GNNParametersBuilderCPU>(
+    m_paramBuilder = std::make_unique<GnnParametersBuilderCpu>(
         cfg.paramBuilderCfg, m_logger->clone());
     Acts::Navigator::Config navCfg;
     navCfg.trackingGeometry = m_cfg.geometry;
@@ -120,18 +143,32 @@ class GNNTrackFitterCPU {
     m_fitter = std::make_unique<Fitter>(std::move(prop), m_logger->clone());
   }
 
+  /// Fit tracks and fill them into the track container
+  ///
+  /// @param tracks The track container to fill
+  /// @param candidates The track candidates, each candidate is a vector of
+  /// indices into the spacepoint features and geoIds
+  /// @param spacepointFeatures The flattened spacepoint features. The number
+  /// of features is given by the GNNParametersBuilderCPU::Config::nFeatures
+  /// @param geoIds The geometry identifiers for the spacepoints
+  /// @param sourceLinks The source links for the spacepoints
+  /// @param options The options (contexts, extensions, etc.) for the fit
   void operator()(
       track_container_t &tracks,
       const std::vector<std::vector<int>> &candidates,
-      const std::vector<float> &spacepointFeatures,
-      const std::vector<Acts::GeometryIdentifier> &geoIds,
-      const std::vector<boost::container::static_vector<Acts::SourceLink, 2>>
-          &sourceLinks,
-      Options options) const {
+      std::span<const float> spacepointFeatures,
+      std::span<const Acts::GeometryIdentifier> geoIds,
+      std::span<const boost::container::static_vector<Acts::SourceLink, 2>>
+          sourceLinks,
+      const Options &options) const {
+    assert(spacepointFeatures.size() ==
+           geoIds.size() * m_paramBuilder->m_cfg.nFeatures);
+    assert(spacepointFeatures.size() ==
+           sourceLinks.size() * m_paramBuilder->m_cfg.nFeatures);
+
     auto bCache = m_cfg.bfield->makeCache(options.mctx);
 
     for (const auto &candidate : candidates) {
-      ACTS_VERBOSE("Build parameters...");
       auto params = m_paramBuilder->buildParameters(
           spacepointFeatures, geoIds, candidate, bCache, options.gctx);
 
@@ -140,7 +177,10 @@ class GNNTrackFitterCPU {
         continue;
       }
 
-      ACTS_VERBOSE("Build options...");
+      ACTS_VERBOSE(
+          "Initial params: " << params.value().parameters().transpose());
+      ACTS_VERBOSE("Initial cov:\n" << params.value().covariance().value());
+
       Acts::PropagatorPlainOptions popts(options.gctx, options.mctx);
       Acts::KalmanFitterOptions<TSBackend> kfOpts(
           options.gctx, options.mctx, options.cctx, options.extensions, popts);
@@ -148,31 +188,38 @@ class GNNTrackFitterCPU {
       kfOpts.referenceSurfaceStrategy =
           Acts::KalmanFitterTargetSurfaceStrategy::first;
 
-      ACTS_VERBOSE("Collect source links...");
       std::vector<Acts::SourceLink> sls;
       for (auto i : candidate) {
-        for (const auto &sl : sourceLinks.at(i)) {
+        for (const auto &sl : sourceLinks[i]) {
           sls.push_back(sl);
         }
       }
 
-      ACTS_VERBOSE("Start fit...");
       auto res = m_fitter->fit(sls.begin(), sls.end(), *params, kfOpts, tracks);
       if (!res.ok()) {
         ACTS_DEBUG("Track fit failed!");
         continue;
       }
 
+      auto &track = *res;
+
+      Acts::calculateTrackQuantities(track);
+      ACTS_VERBOSE("Track: nStates=" << track.nTrackStates()
+                                     << " nMeasurements="
+                                     << track.nMeasurements()
+                                     << " nOutliers=" << track.nOutliers()
+                                     << " nHoles=" << track.nHoles());
+      ACTS_VERBOSE("Final params: " << track.parameters().transpose());
+
       if (!res->hasReferenceSurface()) {
         ACTS_DEBUG("Fit successful, but no reference surface");
-        continue;
       }
     }
   }
 
  private:
   Config m_cfg;
-  std::unique_ptr<GNNParametersBuilderCPU> m_paramBuilder;
+  std::unique_ptr<GnnParametersBuilderCpu> m_paramBuilder;
   std::unique_ptr<Fitter> m_fitter;
 
   std::unique_ptr<const Acts::Logger> m_logger;

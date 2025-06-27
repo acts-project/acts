@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/GNNTrackFitterCPU.hpp"
+#include "Acts/Plugins/ExaTrkX/GnnTrackFitterCpu.hpp"
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 
 namespace Acts {
 
-std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
-    const std::vector<float> &spacepointFeatures,
-    const std::vector<Acts::GeometryIdentifier> &geoIds,
+std::optional<BoundTrackParameters> GnnParametersBuilderCpu::buildParameters(
+    std::span<const float> spacepointFeatures,
+    std::span<const Acts::GeometryIdentifier> geoIds,
     const std::vector<int> &candidate,
     Acts::MagneticFieldProvider::Cache &bCache,
     const Acts::GeometryContext &gctx) const {
@@ -29,16 +29,15 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
     return {};
   }
 
+  // Accessors to spacepoint features from the feature span
   auto getR = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.rIdx) *
-           m_cfg.rScale;
+    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.rIdx] * m_cfg.rScale;
   };
   auto getZ = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.zIdx) *
-           m_cfg.zScale;
+    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.zIdx] * m_cfg.zScale;
   };
   auto getPhi = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.phiIdx) *
+    return spacepointFeatures[sp * m_cfg.nFeatures + m_cfg.phiIdx] *
            m_cfg.phiScale;
   };
   auto getXYZ = [&](int sp) {
@@ -76,9 +75,12 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
   }());
 
   auto tmpCand = candidate;
+
+  // Sort by sqrt(r**2 + z**2)
   std::ranges::sort(
       tmpCand, {}, [&](const auto &t) { return std::hypot(getR(t), getZ(t)); });
 
+  // TODO is this necessary? For now keep it
   tmpCand.erase(
       std::unique(tmpCand.begin(), tmpCand.end(),
                   [&](auto &a, auto &b) { return getR(a) == getR(b); }),
@@ -89,6 +91,8 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
     return {};
   }
 
+  // Clean the seed from close-by spacepoints as configured via
+  // minSpacepointDist
   Acts::Vector2 prevZR{getZ(tmpCand.front()), getR(tmpCand.front())};
   tmpCand.erase(std::remove_if(std::next(tmpCand.begin()), tmpCand.end(),
                                [&](auto &a) {
@@ -110,18 +114,25 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
     return {};
   }
 
-  const auto bottomGeoId = geoIds.at(tmpCand.at(0));
+  const auto bottomGeoId = geoIds[tmpCand.at(0)];
   if (m_cfg.stripVolumes.contains(bottomGeoId.volume())) {
     ACTS_VERBOSE("Bottom spacepoint is in strips, skip it!");
     return {};
   }
 
+  // Build seed and check if the parameters are valid
   const auto s = tmpCand.size();
   auto seed = m_cfg.buildTightSeeds
                   ? std::array{getXYZ(tmpCand.at(0)), getXYZ(tmpCand.at(1)),
                                getXYZ(tmpCand.at(2))}
                   : std::array{getXYZ(tmpCand.at(0)), getXYZ(tmpCand.at(s / 2)),
                                getXYZ(tmpCand.at(s - 1))};
+
+  ACTS_VERBOSE("Seed from GNN candidate:\n"
+               << "- sp1: " << seed[0].transpose() << "  [ " << bottomGeoId
+               << " ]\n"
+               << "- sp2: " << seed[1].transpose() << "\n"
+               << "- sp3: " << seed[2].transpose());
 
   Acts::Vector3 field = Acts::Vector3::Zero();
   try {
