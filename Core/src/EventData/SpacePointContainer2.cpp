@@ -95,7 +95,7 @@ void SpacePointContainer2::createExtraColumns(
     m_extraColumns.push_back(&*m_phiColumn);
   }
   if ((columns & Time) != None && !m_timeColumn.has_value()) {
-    m_timeColumn.emplace();
+    m_timeColumn.emplace(NoTime);
     m_timeColumn->resize(size());
     m_extraColumns.push_back(&*m_timeColumn);
   }

@@ -26,6 +26,8 @@
 
 namespace Acts::Experimental {
 
+static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
+
 template <bool read_only>
 class SpacePointProxy2;
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
@@ -185,7 +187,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the time information of the space point.
-  std::optional<float> &time(IndexType index) {
+  float &time(IndexType index) {
     assert(m_timeColumn.has_value() && "Extra column 'time' does not exist");
     assert(index < m_xyz.size() && "Index out of bounds");
     return extra(m_timeColumn->proxy(), index);
@@ -314,7 +316,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the time information of the space point.
-  std::optional<float> time(IndexType index) const {
+  float time(IndexType index) const {
     assert(m_timeColumn.has_value() && "Extra column 'time' does not exist");
     assert(index < m_xyz.size() && "Index out of bounds");
     return extra(m_timeColumn->proxy(), index);
@@ -459,7 +461,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra time column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<std::optional<float>> timeColumn() const {
+  ExtraColumnProxy<float> timeColumn() const {
     if (!m_timeColumn.has_value()) {
       throw std::runtime_error("Extra column 'time' does not exist");
     }
@@ -668,6 +670,9 @@ class SpacePointContainer2 {
     using ContainerType = std::vector<ValueType>;
     using ProxyType = ExtraColumnProxy<ValueType>;
 
+    explicit ExtraColumnHolder(ValueType defaultValue = {})
+        : m_default(std::move(defaultValue)) {}
+
     std::unique_ptr<ColumnHolderBase> copy() const final {
       return std::make_unique<ExtraColumnHolder<T>>(*this);
     }
@@ -675,10 +680,11 @@ class SpacePointContainer2 {
 
     void reserve(std::size_t size) final { m_data.reserve(size); }
     void clear() final { m_data.clear(); }
-    void resize(std::size_t size) final { m_data.resize(size); }
-    void emplace_back() final { m_data.emplace_back(); }
+    void resize(std::size_t size) final { m_data.resize(size, m_default); }
+    void emplace_back() final { m_data.emplace_back(m_default); }
 
    private:
+    ValueType m_default;
     ContainerType m_data;
   };
 
@@ -691,7 +697,7 @@ class SpacePointContainer2 {
   std::optional<ExtraColumnHolder<float>> m_rColumn;
   std::optional<ExtraColumnHolder<float>> m_phiColumn;
   // time information
-  std::optional<ExtraColumnHolder<std::optional<float>>> m_timeColumn;
+  std::optional<ExtraColumnHolder<float>> m_timeColumn;
   // covariance information
   std::optional<ExtraColumnHolder<float>> m_varianceZColumn;
   std::optional<ExtraColumnHolder<float>> m_varianceRColumn;
