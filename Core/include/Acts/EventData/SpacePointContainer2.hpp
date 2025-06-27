@@ -371,7 +371,7 @@ class SpacePointContainer2 {
     ExtraColumnProxy &operator=(ExtraColumnProxy &&other) noexcept = default;
 
    private:
-    const ContainerType *m_data;
+    const ContainerType *m_data{};
 
     explicit ExtraColumnProxy(const ContainerType &data) : m_data(&data) {}
 
