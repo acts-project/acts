@@ -149,6 +149,7 @@ class DoubletSeedFinder {
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
   ///                     middle SP in a seed
+  /// @param candidateOffset Offset in the candidateSps span to start from
   /// @param compatibleDoublets Output container for compatible doublets
   static void createSortedBottomDoublets(
       const DerivedCuts& cuts,
@@ -166,6 +167,7 @@ class DoubletSeedFinder {
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Group of space points to be used as candidates for
   ///                     middle SP in a seed
+  /// @param candidateOffset Offset in the candidateSps span to start from
   /// @param compatibleDoublets Output container for compatible doublets
   static void createSortedTopDoublets(
       const DerivedCuts& cuts,
