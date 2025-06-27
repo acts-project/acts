@@ -18,9 +18,8 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -404,7 +403,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
-  auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
+  auto dd4hepDetElement = m_cfg.detectorElementFactory(
       detElement, detAxis, UnitConstants::cm, isDisc, nullptr);
 
   detElement.addExtension<DD4hepDetectorElementExtension>(
@@ -427,4 +426,13 @@ Acts::Transform3 Acts::DD4hepLayerBuilder::convertTransform(
       Acts::Vector3(translation[0] * UnitConstants::cm,
                     translation[1] * UnitConstants::cm,
                     translation[2] * UnitConstants::cm));
+}
+
+std::shared_ptr<Acts::DD4hepDetectorElement>
+Acts::DD4hepLayerBuilder::defaultDetectorElementFactory(
+    const dd4hep::DetElement& detElement, const std::string& detAxis,
+    double thickness, bool isDisc,
+    std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial) {
+  return std::make_shared<DD4hepDetectorElement>(
+      detElement, detAxis, thickness, isDisc, std::move(surfaceMaterial));
 }
