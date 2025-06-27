@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <optional>
@@ -19,6 +19,8 @@
 #include <Eigen/Core>
 
 namespace Acts::Experimental {
+
+class SpacePointContainer2;
 
 /// A proxy class for accessing individual space points.
 template <bool read_only>

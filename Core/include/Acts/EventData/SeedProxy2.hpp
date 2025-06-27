@@ -8,12 +8,14 @@
 
 #pragma once
 
-#include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 
 namespace Acts::Experimental {
+
+class SeedContainer2;
 
 /// A proxy class for accessing individual seeds.
 template <bool read_only>

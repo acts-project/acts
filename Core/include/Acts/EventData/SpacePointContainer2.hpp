@@ -670,7 +670,8 @@ class SpacePointContainer2 {
     using ContainerType = std::vector<ValueType>;
     using ProxyType = ExtraColumnProxy<ValueType>;
 
-    explicit ExtraColumnHolder(ValueType defaultValue = {})
+    ExtraColumnHolder() = default;
+    explicit ExtraColumnHolder(ValueType defaultValue)
         : m_default(std::move(defaultValue)) {}
 
     std::unique_ptr<ColumnHolderBase> copy() const override {
