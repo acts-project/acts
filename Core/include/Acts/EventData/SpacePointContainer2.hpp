@@ -397,49 +397,59 @@ class SpacePointContainer2 {
   void createExtraColumns(std::uint32_t columns) {
     if ((columns & KnownExtraColumn::R) != 0 && !m_rColumn.has_value()) {
       m_rColumn.emplace();
+      m_rColumn->resize(size());
       m_extraColumns.push_back(&*m_rColumn);
     }
     if ((columns & KnownExtraColumn::Phi) != 0 && !m_phiColumn.has_value()) {
       m_phiColumn.emplace();
+      m_phiColumn->resize(size());
       m_extraColumns.push_back(&*m_phiColumn);
     }
     if ((columns & KnownExtraColumn::Time) != 0 && !m_timeColumn.has_value()) {
       m_timeColumn.emplace();
+      m_timeColumn->resize(size());
       m_extraColumns.push_back(&*m_timeColumn);
     }
     if ((columns & KnownExtraColumn::VarianceZ) != 0 &&
         !m_varianceZColumn.has_value()) {
       m_varianceZColumn.emplace();
+      m_varianceZColumn->resize(size());
       m_extraColumns.push_back(&*m_varianceZColumn);
     }
     if ((columns & KnownExtraColumn::VarianceR) != 0 &&
         !m_varianceRColumn.has_value()) {
       m_varianceRColumn.emplace();
+      m_varianceRColumn->resize(size());
       m_extraColumns.push_back(&*m_varianceRColumn);
     }
     if ((columns & KnownExtraColumn::TopStripVector) != 0 &&
         !m_topStripVectorColumn.has_value()) {
       m_topStripVectorColumn.emplace();
+      m_topStripVectorColumn->resize(size());
       m_extraColumns.push_back(&*m_topStripVectorColumn);
     }
     if ((columns & KnownExtraColumn::BottomStripVector) != 0 &&
         !m_bottomStripVectorColumn.has_value()) {
       m_bottomStripVectorColumn.emplace();
+      m_bottomStripVectorColumn->resize(size());
       m_extraColumns.push_back(&*m_bottomStripVectorColumn);
     }
     if ((columns & KnownExtraColumn::StripCenterDistance) != 0 &&
         !m_stripCenterDistanceColumn.has_value()) {
       m_stripCenterDistanceColumn.emplace();
+      m_stripCenterDistanceColumn->resize(size());
       m_extraColumns.push_back(&*m_stripCenterDistanceColumn);
     }
     if ((columns & KnownExtraColumn::TopStripCenter) != 0 &&
         !m_topStripCenterColumn.has_value()) {
       m_topStripCenterColumn.emplace();
+      m_topStripCenterColumn->resize(size());
       m_extraColumns.push_back(&*m_topStripCenterColumn);
     }
     if ((columns & KnownExtraColumn::CopyFromIndex) != 0 &&
         !m_copyFromIndexColumn.has_value()) {
       m_copyFromIndexColumn.emplace();
+      m_copyFromIndexColumn->resize(size());
       m_extraColumns.push_back(&*m_copyFromIndexColumn);
     }
   }
