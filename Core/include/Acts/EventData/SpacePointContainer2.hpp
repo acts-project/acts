@@ -99,6 +99,7 @@ class SpacePointContainer2 {
   /// This will reserve space for the source links and the extra columns as
   /// well.
   /// @param size The number of space points to reserve space for.
+  /// @param averageSourceLinks The average number of source links per space
   void reserve(std::size_t size, float averageSourceLinks = 1) {
     m_entries.reserve(size);
     m_xyz.reserve(size * 3);
