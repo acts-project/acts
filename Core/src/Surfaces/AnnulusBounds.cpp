@@ -250,7 +250,7 @@ bool AnnulusBounds::inside(const Vector2& lposition,
   double O_x = m_shiftXY[0];
   double O_y = m_shiftXY[1];
 
-  auto closestPointDistanceBound = [&](const SquareMatrix2& weight) {
+  auto closestPointDistanceBound = [&](const auto& weight) {
     // For a transformation from cartesian into polar coordinates
     //
     //              [         _________      ]
@@ -389,7 +389,7 @@ bool AnnulusBounds::inside(const Vector2& lposition,
     // Calculate minDist based on weight from the boundary tolerance object.
     // That weight matrix is in STRIP PC
     auto [delta, minDist] =
-        closestPointDistanceBound(boundaryToleranceChi2.weight);
+        closestPointDistanceBound(boundaryToleranceChi2.weightMatrix());
 
     // compare resulting Mahalanobis distance to configured "number of sigmas"
     // we square it b/c we never took the square root of the distance
