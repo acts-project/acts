@@ -85,10 +85,11 @@ namespace ActsExamples{
         const unsigned nChambers = 2*m_cfg.nSectors * m_cfg.nEtaStations * MuonLayer::nLayers;
         const unsigned nMultiLayers = 2*nChambers;
         const unsigned nTubes = nMultiLayers * m_cfg.nTubeLayers * m_cfg.nTubes;
-        const unsigned nRpc = nChambers * m_cfg.nRpcAlongZ * m_cfg.nRpcAlongPhi;
+        const unsigned nRpc =  2* nChambers * m_cfg.nRpcAlongZ * m_cfg.nRpcAlongPhi;
         ACTS_INFO("Constructed a muon system with "<<nChambers<<" muon stations containing in total "
-                <<nMultiLayers<<" Mdt multilayers & "<<nRpc<<" Rpc chambers");
-        ACTS_INFO("Each multilayer contains "<<m_cfg.nTubeLayers<<" with "<<m_cfg.nTubes<<" each giving in total "<<nTubes<<" placed tubes.");
+                <<nMultiLayers<<" Mdt multilayers & "<<nRpc<<" Rpc chambers. Total: "<<(nMultiLayers + nRpc));
+        ACTS_INFO("Each multilayer contains "<<m_cfg.nTubeLayers<<" tube-layers with "<<m_cfg.nTubes
+                <<" tubes each giving in total "<<nTubes<<" placed tubes.");
 
         world->add(nameTag(m_publisher.getName()));
         world->add(muonEnvelope);
@@ -108,6 +109,7 @@ namespace ActsExamples{
         GeoModelIO::WriteGeoModel writeGeoDB{db};
         world->exec(&writeGeoDB);  // visit all GeoModel nodes
         writeGeoDB.saveToDB(&m_publisher);
+        clearSharedCaches();
 
         return world;
     }
@@ -157,16 +159,16 @@ namespace ActsExamples{
         appendMaterial("Forex", {{"Carbon", 0.3843626433635827},
                                  {"Hydrogen", 0.0483830941493594},
                                  {"Chlorine", 0.5672542624870579}}, 0.7);
-        matMan->printAll();
+        if (logger().level() == Acts::Logging::Level::DEBUG) { 
+            matMan->printAll();
+        }
     }
     PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
                                                           const unsigned int sector,
                                                           const int etaIdx) {
         
-       
-        
         const double envelopeWidth  =  2.*(m_cfg.barrelRadii[layer] - 0.5*m_muonStationHeight) * std::sin(0.5*m_sectorSize);
-        
+ 
         auto box = make_intrusive<GeoBox>(0.5*m_muonStationHeight, 0.5*envelopeWidth, 0.5*m_chamberLength + 0.1 * GeoModelKernelUnits::mm);
         auto logVol = make_intrusive<GeoLogVol>("MuonBarrelLogVol", cacheShape(box), MaterialManager::getManager()->getMaterial("std::air"));
         auto envelopeVol = make_intrusive<GeoPhysVol>(cacheVolume(logVol));
@@ -182,7 +184,7 @@ namespace ActsExamples{
         };
 
         /// add the rpc at doubletR = 1
-        auto placeRpc = [&] (const double currentX){
+        auto placeRpc = [&] (const double currentX, unsigned dRIdx){
             const double stepdZ = m_chamberLength / m_cfg.nRpcAlongZ;
             const double stepdY = envelopeWidth / m_cfg.nRpcAlongPhi;
             
@@ -191,26 +193,28 @@ namespace ActsExamples{
                     envelopeVol->add(makeTransform(GeoTrf::Translate3D(currentX,
                                                                        -0.5*envelopeWidth + stepdY * (dY + 0.5),
                                                                        -0.5*m_chamberLength + stepdZ * (dZ + 0.5) )));
-                    publishFPV("Kuchen", assembleRpcChamber(envelopeWidth));
+                    std::string publishName = to_string(layer)+"_RPC_"+std::to_string(etaIdx)+"_"+ std::to_string(sector)
+                                            +"_"+std::to_string(dRIdx) + "_"+ std::to_string(dY)+"_" + std::to_string(dZ);
+                    publishFPV(publishName, assembleRpcChamber(envelopeWidth));
                 }
             }
         };
 
         double currentX = -box->getXHalfLength();
         currentX += 0.5 *m_rpcChamberHeight;
-        placeRpc(currentX);
+        placeRpc(currentX, 1);
         currentX += m_rpcChamberHeight + s_rpcMdtDistance;
         currentX += 0.5*m_multiLayerHeight;      
         envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
-        publishFPV("MDT_" +to_string(layer)+"_" + std::to_string(etaIdx) + "_" + std::to_string(sector) + "_1",
+        publishFPV(to_string(layer)+"_MDT_" + std::to_string(etaIdx) + "_" + std::to_string(sector) + "_1",
                    assembleMultilayerBarrel(1, envelopeWidth));
         currentX += 0.5*m_multiLayerHeight + m_cfg.multiLayerSeparation + 0.5*m_multiLayerHeight;
         envelopeVol->add(makeTransform(GeoTrf::TranslateX3D(currentX)));
-        publishFPV("MDT_" +to_string(layer)+"_" + std::to_string(etaIdx) + "_" + std::to_string(sector) + "_2",
+        publishFPV(to_string(layer)+"_MDT_" + std::to_string(etaIdx) + "_" + std::to_string(sector) + "_2",
                    assembleMultilayerBarrel(2, envelopeWidth));
         currentX += m_rpcChamberHeight + s_rpcMdtDistance;
         currentX += 0.5*m_multiLayerHeight;      
-        placeRpc(currentX);
+        placeRpc(currentX, 2);
         return envelopeVol;
     }
     PVLink GeoMuonMockupExperiment::buildTubes(const double envelopeWidth) {

@@ -1,4 +1,6 @@
-add_library(ActsExamplesDetectorGeoModel SHARED src/GeoModelDetector.cpp)
+add_library(ActsExamplesDetectorGeoModel SHARED 
+                    src/GeoModelDetector.cpp
+                    src/GeoMuonMockupExperiment.cpp)
 
 target_include_directories(
     ActsExamplesDetectorGeoModel
@@ -12,6 +14,7 @@ target_link_libraries(
         ActsExamplesFramework
         ActsPluginGeoModel
         ActsExamplesDetectorsCommon
+        GeoModelIO::GeoModelWrite
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)

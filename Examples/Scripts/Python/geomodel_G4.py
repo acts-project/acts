@@ -94,7 +94,7 @@ def main():
 
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+    #gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree

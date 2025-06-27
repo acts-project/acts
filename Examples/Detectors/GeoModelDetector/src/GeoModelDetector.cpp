@@ -13,11 +13,15 @@
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
+#include "ActsExamples/GeoModelDetector/GeoMuonMockupExperiment.hpp"
 namespace ActsExamples {
 
 GeoModelDetector::GeoModelDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GeoModelDetector", cfg.logLevel)),
       m_cfg(cfg) {
+  
+  GeoMuonMockupExperiment{GeoMuonMockupExperiment::Config{}}.constructMS();
+
   if (!m_cfg.geoModelTree.worldVolume) {
     m_cfg.geoModelTree = Acts::GeoModelReader::readFromDb(m_cfg.path);
   }
@@ -26,6 +30,8 @@ GeoModelDetector::GeoModelDetector(const Config& cfg)
         "GeoModelDetector() - Failed to load geometry from '" + m_cfg.path +
         "'");
   }
+ 
+
 }
 
 }  // namespace ActsExamples
