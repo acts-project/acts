@@ -87,51 +87,71 @@ class SpacePointProxy2 {
     return m_container->z(m_index);
   }
 
+  /// Mutable access to the extra r coordinate of the space point.
+  /// @return A mutable reference to the r coordinate of the space point.
   float &r()
     requires(!ReadOnly)
   {
     return m_container->r(m_index);
   }
+  /// Mutable access to the extra phi coordinate of the space point.
+  /// @return A mutable reference to the phi coordinate of the space point.
   float &phi()
     requires(!ReadOnly)
   {
     return m_container->phi(m_index);
   }
+  /// Mutable access to the extra time information of the space point.
+  /// @return A mutable reference to the time information of the space point.
   std::optional<float> &time()
     requires(!ReadOnly)
   {
     return m_container->time(m_index);
   }
+  /// Mutable access to the variance in Z direction of the space point.
+  /// @return A mutable reference to the variance in Z direction of the space point.
   float &varianceZ()
     requires(!ReadOnly)
   {
     return m_container->varianceZ(m_index);
   }
+  /// Mutable access to the variance in R direction of the space point.
+  /// @return A mutable reference to the variance in R direction of the space point.
   float &varianceR()
     requires(!ReadOnly)
   {
     return m_container->varianceR(m_index);
   }
+  /// Mutable access to the extra top strip vector of the space point.
+  /// @return A mutable reference to the top strip vector of the space point.
   Eigen::Vector3f &topStripVector()
     requires(!ReadOnly)
   {
     return m_container->topStripVector(m_index);
   }
+  /// Mutable access to the extra bottom strip vector of the space point.
+  /// @return A mutable reference to the bottom strip vector of the space point.
   Eigen::Vector3f &bottomStripVector()
     requires(!ReadOnly)
   {
     return m_container->bottomStripVector(m_index);
   }
+  /// Mutable access to the extra strip center distance of the space point.
+  /// @return A mutable reference to the strip center distance of the space point.
   Eigen::Vector3f &stripCenterDistance()
     requires(!ReadOnly)
   {
     return m_container->stripCenterDistance(m_index);
   }
+  /// Mutable access to the extra top strip center of the space point.
+  /// @return A mutable reference to the top strip center of the space point.
   Eigen::Vector3f &topStripCenter()
     requires(!ReadOnly)
   {
     return m_container->topStripCenter(m_index);
   }
+  /// Mutable access to the copy from index of the space point.
+  /// @return A mutable reference to the copy from index of the space point.
   std::size_t &copyFromIndex()
     requires(!ReadOnly)
   {
@@ -159,23 +179,43 @@ class SpacePointProxy2 {
   /// @return The z coordinate of the space point.
   float z() const { return m_container->z(m_index); }
 
+  /// Const access to the r coordinate of the space point.
+  /// @return The r coordinate of the space point.
   float r() const { return m_container->r(m_index); }
+  /// Const access to the phi coordinate of the space point.
+  /// @return The phi coordinate of the space point.
   float phi() const { return m_container->phi(m_index); }
+  /// Const access to the time information of the space point.
+  /// @return An optional containing the time information of the space point, or
   std::optional<float> time() const { return m_container->time(m_index); }
+  /// Const access to the variance in Z direction of the space point.
+  /// @return The variance in Z direction of the space point.
   float varianceZ() const { return m_container->varianceZ(m_index); }
+  /// Const access to the variance in R direction of the space point.
+  /// @return The variance in R direction of the space point.
   float varianceR() const { return m_container->varianceR(m_index); }
+  /// Const access to the extra top strip vector of the space point.
+  /// @return A const reference to the top strip vector of the space point.
   const Eigen::Vector3f &topStripVector() const {
     return m_container->topStripVector(m_index);
   }
+  /// Const access to the extra bottom strip vector of the space point.
+  /// @return A const reference to the bottom strip vector of the space point.
   const Eigen::Vector3f &bottomStripVector() const {
     return m_container->bottomStripVector(m_index);
   }
+  /// Const access to the extra strip center distance of the space point.
+  /// @return A const reference to the strip center distance of the space point.
   const Eigen::Vector3f &stripCenterDistance() const {
     return m_container->stripCenterDistance(m_index);
   }
+  /// Const access to the extra top strip center of the space point.
+  /// @return A const reference to the top strip center of the space point.
   const Eigen::Vector3f &topStripCenter() const {
     return m_container->topStripCenter(m_index);
   }
+  /// Const access to the copy from index of the space point.
+  /// @return A const reference to the copy from index of the space point.
   std::size_t copyFromIndex() const {
     return m_container->copyFromIndex(m_index);
   }
