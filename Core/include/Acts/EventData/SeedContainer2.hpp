@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <limits>
@@ -79,6 +79,7 @@ class SeedContainer2 {
         m_spacePoints.data() + m_entries[index].spacePointOffset +
             m_entries[index].seedSize);
   }
+
   /// Mutable access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the quality of the seed at the given index.
@@ -105,6 +106,7 @@ class SeedContainer2 {
         m_spacePoints.data() + m_entries[index].spacePointOffset +
             m_entries[index].seedSize);
   }
+
   /// Const access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the quality of the seed at the given index.

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 
 #include <cassert>
 
