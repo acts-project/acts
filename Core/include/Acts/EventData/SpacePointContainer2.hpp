@@ -99,10 +99,11 @@ class SpacePointContainer2 {
   /// This will reserve space for the source links and the extra columns as
   /// well.
   /// @param size The number of space points to reserve space for.
-  void reserve(std::size_t size) {
+  /// @param averageSourceLinks The average number of source links per space point.
+  void reserve(std::size_t size, float averageSourceLinks = 1) {
     m_entries.reserve(size);
     m_xyz.reserve(size * 3);
-    m_sourceLinks.reserve(size);
+    m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
 
     for (auto &column : m_extraColumns) {
       column.second->reserve(size);
@@ -523,16 +524,16 @@ class SpacePointContainer2 {
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<Holder &>(*it->second);
+    auto &holder = dynamic_cast<Holder &>(*it->second);
     return holder.column;
   }
   template <typename Holder>
-  auto &extraColumn(const std::string &name) const {
+  const auto &extraColumn(const std::string &name) const {
     auto it = m_extraColumns.find(name);
     if (it == m_extraColumns.end()) {
       throw std::runtime_error("Extra column not found: " + name);
     }
-    auto holder = dynamic_cast<const Holder &>(*it->second);
+    const auto &holder = dynamic_cast<const Holder &>(*it->second);
     return holder.column;
   }
 };
