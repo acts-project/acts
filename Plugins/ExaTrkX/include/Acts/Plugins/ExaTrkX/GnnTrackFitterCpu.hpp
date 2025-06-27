@@ -27,7 +27,7 @@ namespace Acts {
 /// Simple struct encapsulating the parameter estimation for GNN tracks
 /// on the CPU. Mainly extracted from Acts::GNNTrackFitterCPU to allow it
 /// to be compiled in a source file.
-struct GnnParametersBuilderCPU {
+struct GnnParametersBuilderCpu {
   struct Config {
     std::shared_ptr<const Acts::MagneticFieldProvider> bField;
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry;
@@ -61,7 +61,7 @@ struct GnnParametersBuilderCPU {
     bool buildTightSeeds = true;
   };
 
-  GnnParametersBuilderCPU(const Config &cfg,
+  GnnParametersBuilderCpu(const Config &cfg,
                           std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -99,7 +99,7 @@ struct GnnParametersBuilderCPU {
 /// Class to encapsulate the track fit for the GNN output on CPU.
 /// Mainly a wrapper around ACTS Core tools.
 template <typename track_container_t>
-class GnnTrackFitterCPU {
+class GnnTrackFitterCpu {
  public:
   using TCBackend = typename track_container_t::TrackContainerBackend;
   using TSBackend = typename track_container_t::TrackStateContainerBackend;
@@ -107,7 +107,7 @@ class GnnTrackFitterCPU {
   struct Config {
     std::shared_ptr<const Acts::TrackingGeometry> geometry;
     std::shared_ptr<const Acts::MagneticFieldProvider> bfield;
-    GnnParametersBuilderCPU::Config paramBuilderCfg;
+    GnnParametersBuilderCpu::Config paramBuilderCfg;
   };
 
   struct Options {
@@ -121,7 +121,7 @@ class GnnTrackFitterCPU {
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
   using Fitter = Acts::KalmanFitter<Propagator, TSBackend>;
 
-  GnnTrackFitterCPU(const Config &cfg,
+  GnnTrackFitterCpu(const Config &cfg,
                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     if (!m_logger) {
@@ -133,7 +133,7 @@ class GnnTrackFitterCPU {
     if (!m_cfg.bfield) {
       throw std::invalid_argument("Missing bfield!");
     }
-    m_paramBuilder = std::make_unique<GnnParametersBuilderCPU>(
+    m_paramBuilder = std::make_unique<GnnParametersBuilderCpu>(
         cfg.paramBuilderCfg, m_logger->clone());
     Acts::Navigator::Config navCfg;
     navCfg.trackingGeometry = m_cfg.geometry;
@@ -169,7 +169,6 @@ class GnnTrackFitterCPU {
     auto bCache = m_cfg.bfield->makeCache(options.mctx);
 
     for (const auto &candidate : candidates) {
-      ACTS_VERBOSE("Build parameters...");
       auto params = m_paramBuilder->buildParameters(
           spacepointFeatures, geoIds, candidate, bCache, options.gctx);
 
@@ -178,7 +177,10 @@ class GnnTrackFitterCPU {
         continue;
       }
 
-      ACTS_VERBOSE("Build options...");
+      ACTS_VERBOSE(
+          "Initial params: " << params.value().parameters().transpose());
+      ACTS_VERBOSE("Initial cov:\n" << params.value().covariance().value());
+
       Acts::PropagatorPlainOptions popts(options.gctx, options.mctx);
       Acts::KalmanFitterOptions<TSBackend> kfOpts(
           options.gctx, options.mctx, options.cctx, options.extensions, popts);
@@ -186,7 +188,6 @@ class GnnTrackFitterCPU {
       kfOpts.referenceSurfaceStrategy =
           Acts::KalmanFitterTargetSurfaceStrategy::first;
 
-      ACTS_VERBOSE("Collect source links...");
       std::vector<Acts::SourceLink> sls;
       for (auto i : candidate) {
         for (const auto &sl : sourceLinks[i]) {
@@ -194,23 +195,31 @@ class GnnTrackFitterCPU {
         }
       }
 
-      ACTS_VERBOSE("Start fit...");
       auto res = m_fitter->fit(sls.begin(), sls.end(), *params, kfOpts, tracks);
       if (!res.ok()) {
         ACTS_DEBUG("Track fit failed!");
         continue;
       }
 
+      auto &track = *res;
+
+      Acts::calculateTrackQuantities(track);
+      ACTS_VERBOSE("Track: nStates=" << track.nTrackStates()
+                                     << " nMeasurements="
+                                     << track.nMeasurements()
+                                     << " nOutliers=" << track.nOutliers()
+                                     << " nHoles=" << track.nHoles());
+      ACTS_VERBOSE("Final params: " << track.parameters().transpose());
+
       if (!res->hasReferenceSurface()) {
         ACTS_DEBUG("Fit successful, but no reference surface");
-        continue;
       }
     }
   }
 
  private:
   Config m_cfg;
-  std::unique_ptr<GnnParametersBuilderCPU> m_paramBuilder;
+  std::unique_ptr<GnnParametersBuilderCpu> m_paramBuilder;
   std::unique_ptr<Fitter> m_fitter;
 
   std::unique_ptr<const Acts::Logger> m_logger;

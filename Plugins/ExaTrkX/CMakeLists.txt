@@ -3,7 +3,7 @@ add_library(
     SHARED
     src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
-    src/GnnTrackFitterCPU.cpp
+    src/GnnTrackFitterCpu.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)

@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/GnnTrackFitterCPU.hpp"
+#include "Acts/Plugins/ExaTrkX/GnnTrackFitterCpu.hpp"
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 
 namespace Acts {
 
-std::optional<BoundTrackParameters> GnnParametersBuilderCPU::buildParameters(
+std::optional<BoundTrackParameters> GnnParametersBuilderCpu::buildParameters(
     std::span<const float> spacepointFeatures,
     std::span<const Acts::GeometryIdentifier> geoIds,
     const std::vector<int> &candidate,
@@ -127,6 +127,12 @@ std::optional<BoundTrackParameters> GnnParametersBuilderCPU::buildParameters(
                                getXYZ(tmpCand.at(2))}
                   : std::array{getXYZ(tmpCand.at(0)), getXYZ(tmpCand.at(s / 2)),
                                getXYZ(tmpCand.at(s - 1))};
+
+  ACTS_VERBOSE("Seed from GNN candidate:\n"
+               << "- sp1: " << seed[0].transpose() << "  [ " << bottomGeoId
+               << " ]\n"
+               << "- sp2: " << seed[1].transpose() << "\n"
+               << "- sp3: " << seed[2].transpose());
 
   Acts::Vector3 field = Acts::Vector3::Zero();
   try {
