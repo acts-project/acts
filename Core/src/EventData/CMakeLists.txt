@@ -9,4 +9,6 @@ target_sources(
         VectorMultiTrajectory.cpp
         VectorTrackContainer.cpp
         TrackParameterHelpers.cpp
+        SeedContainer2.cpp
+        SpacePointContainer2.cpp
 )

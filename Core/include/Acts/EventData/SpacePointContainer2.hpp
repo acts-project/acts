@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -24,13 +26,31 @@
 
 namespace Acts::Experimental {
 
-using SpacePointIndex2 = std::size_t;
-using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
-
 template <bool read_only>
 class SpacePointProxy2;
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
+
+enum class SpacePointKnownExtraColumn : std::uint32_t {
+  None = 0,  ///< No extra columns
+
+  R = 1 << 0,                    ///< Radial coordinate
+  Phi = 1 << 1,                  ///< Azimuthal angle
+  Time = 1 << 2,                 ///< Time information
+  VarianceZ = 1 << 3,            ///< Variance in Z direction
+  VarianceR = 1 << 4,            ///< Variance in radial direction
+  TopStripVector = 1 << 5,       ///< Vector for the top strip
+  BottomStripVector = 1 << 6,    ///< Vector for the bottom strip
+  StripCenterDistance = 1 << 7,  ///< Distance to the strip center
+  TopStripCenter = 1 << 8,       ///< Center of the top strip
+  CopyFromIndex = 1 << 9,        ///< Copy from index
+
+  /// All strip-related columns
+  Strip =
+      TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter
+};
+
+ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointKnownExtraColumn);
 
 /// A container for space points, which can hold additional columns of data
 /// and allows for efficient access to space points and their associated source
@@ -43,48 +63,13 @@ class SpacePointContainer2 {
   using MutableProxyType = MutableSpacePointProxy2;
   using ConstProxyType = ConstSpacePointProxy2;
 
-  enum KnownExtraColumn : std::uint32_t {
-    R = 1,                      ///< Radial coordinate
-    Phi = 2,                    ///< Azimuthal angle
-    Time = 4,                   ///< Time information
-    VarianceZ = 8,              ///< Variance in Z direction
-    VarianceR = 16,             ///< Variance in radial direction
-    TopStripVector = 32,        ///< Vector for the top strip
-    BottomStripVector = 64,     ///< Vector for the bottom strip
-    StripCenterDistance = 128,  ///< Distance to the strip center
-    TopStripCenter = 256,       ///< Center of the top strip
-    CopyFromIndex = 512,        ///< Copy from index
-
-    /// All strip-related columns
-    Strip = TopStripVector | BottomStripVector | StripCenterDistance |
-            TopStripCenter
-  };
-
   /// Constructs and empty space point container.
   SpacePointContainer2() = default;
 
   /// Constructs a copy of the given space point container.
   /// The extra columns are copied as well.
   /// @param other The space point container to copy.
-  SpacePointContainer2(const SpacePointContainer2 &other)
-      : m_xyz(other.m_xyz),
-        m_sourceLinkOffsets(other.m_sourceLinkOffsets),
-        m_sourceLinkCounts(other.m_sourceLinkCounts),
-        m_sourceLinks(other.m_sourceLinks),
-        m_rColumn(other.m_rColumn),
-        m_phiColumn(other.m_phiColumn),
-        m_timeColumn(other.m_timeColumn),
-        m_varianceZColumn(other.m_varianceZColumn),
-        m_varianceRColumn(other.m_varianceRColumn),
-        m_topStripVectorColumn(other.m_topStripVectorColumn),
-        m_bottomStripVectorColumn(other.m_bottomStripVectorColumn),
-        m_stripCenterDistanceColumn(other.m_stripCenterDistanceColumn),
-        m_topStripCenterColumn(other.m_topStripCenterColumn),
-        m_copyFromIndexColumn(other.m_copyFromIndexColumn) {
-    for (const auto &[name, column] : other.m_namedExtraColumns) {
-      m_namedExtraColumns.emplace(name, column->copy());
-    }
-  }
+  SpacePointContainer2(const SpacePointContainer2 &other);
 
   /// Move constructs a space point container.
   /// The extra columns are moved as well.
@@ -98,22 +83,7 @@ class SpacePointContainer2 {
   /// The extra columns are copied as well.
   /// @param other The space point container to copy.
   /// @return A reference to this space point container.
-  SpacePointContainer2 &operator=(const SpacePointContainer2 &other) {
-    if (this == &other) {
-      return *this;
-    }
-
-    m_xyz = other.m_xyz;
-    m_sourceLinkOffsets = other.m_sourceLinkOffsets;
-    m_sourceLinkCounts = other.m_sourceLinkCounts;
-    m_sourceLinks = other.m_sourceLinks;
-
-    m_extraColumns.clear();
-    for (const auto &[name, column] : other.m_namedExtraColumns) {
-      m_namedExtraColumns.emplace(name, column->copy());
-    }
-    return *this;
-  }
+  SpacePointContainer2 &operator=(const SpacePointContainer2 &other);
 
   /// Move assignment operator for a space point container.
   /// The extra columns are moved as well.
@@ -134,27 +104,10 @@ class SpacePointContainer2 {
   /// well.
   /// @param size The number of space points to reserve space for.
   /// @param averageSourceLinks The average number of source links per space point.
-  void reserve(std::size_t size, float averageSourceLinks = 1) {
-    m_xyz.reserve(size * 3);
-    m_sourceLinkOffsets.reserve(size);
-    m_sourceLinkCounts.reserve(size);
-    m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
+  void reserve(std::size_t size, float averageSourceLinks = 1);
 
-    for (auto &column : m_extraColumns) {
-      column->reserve(size);
-    }
-  }
   /// Clears the container, removing all space points and extra columns.
-  void clear() {
-    m_xyz.clear();
-    m_sourceLinkOffsets.clear();
-    m_sourceLinkCounts.clear();
-    m_sourceLinks.clear();
-
-    for (auto &column : m_extraColumns) {
-      column->clear();
-    }
-  }
+  void clear();
 
   /// Emplaces a new space point with the given source links and coordinates.
   /// This will create a new space point at the end of the container.
@@ -394,110 +347,13 @@ class SpacePointContainer2 {
   /// Creates extra columns based on the specified known extra columns.
   /// This will create the columns if they do not already exist.
   /// @param columns The known extra columns to create.
-  void createExtraColumns(std::uint32_t columns) {
-    if ((columns & KnownExtraColumn::R) != 0 && !m_rColumn.has_value()) {
-      m_rColumn.emplace();
-      m_rColumn->resize(size());
-      m_extraColumns.push_back(&*m_rColumn);
-    }
-    if ((columns & KnownExtraColumn::Phi) != 0 && !m_phiColumn.has_value()) {
-      m_phiColumn.emplace();
-      m_phiColumn->resize(size());
-      m_extraColumns.push_back(&*m_phiColumn);
-    }
-    if ((columns & KnownExtraColumn::Time) != 0 && !m_timeColumn.has_value()) {
-      m_timeColumn.emplace();
-      m_timeColumn->resize(size());
-      m_extraColumns.push_back(&*m_timeColumn);
-    }
-    if ((columns & KnownExtraColumn::VarianceZ) != 0 &&
-        !m_varianceZColumn.has_value()) {
-      m_varianceZColumn.emplace();
-      m_varianceZColumn->resize(size());
-      m_extraColumns.push_back(&*m_varianceZColumn);
-    }
-    if ((columns & KnownExtraColumn::VarianceR) != 0 &&
-        !m_varianceRColumn.has_value()) {
-      m_varianceRColumn.emplace();
-      m_varianceRColumn->resize(size());
-      m_extraColumns.push_back(&*m_varianceRColumn);
-    }
-    if ((columns & KnownExtraColumn::TopStripVector) != 0 &&
-        !m_topStripVectorColumn.has_value()) {
-      m_topStripVectorColumn.emplace();
-      m_topStripVectorColumn->resize(size());
-      m_extraColumns.push_back(&*m_topStripVectorColumn);
-    }
-    if ((columns & KnownExtraColumn::BottomStripVector) != 0 &&
-        !m_bottomStripVectorColumn.has_value()) {
-      m_bottomStripVectorColumn.emplace();
-      m_bottomStripVectorColumn->resize(size());
-      m_extraColumns.push_back(&*m_bottomStripVectorColumn);
-    }
-    if ((columns & KnownExtraColumn::StripCenterDistance) != 0 &&
-        !m_stripCenterDistanceColumn.has_value()) {
-      m_stripCenterDistanceColumn.emplace();
-      m_stripCenterDistanceColumn->resize(size());
-      m_extraColumns.push_back(&*m_stripCenterDistanceColumn);
-    }
-    if ((columns & KnownExtraColumn::TopStripCenter) != 0 &&
-        !m_topStripCenterColumn.has_value()) {
-      m_topStripCenterColumn.emplace();
-      m_topStripCenterColumn->resize(size());
-      m_extraColumns.push_back(&*m_topStripCenterColumn);
-    }
-    if ((columns & KnownExtraColumn::CopyFromIndex) != 0 &&
-        !m_copyFromIndexColumn.has_value()) {
-      m_copyFromIndexColumn.emplace();
-      m_copyFromIndexColumn->resize(size());
-      m_extraColumns.push_back(&*m_copyFromIndexColumn);
-    }
-  }
+  void createExtraColumns(SpacePointKnownExtraColumn columns);
 
   /// Checks if the container has the given extra columns.
   /// @param columns The extra columns to check for.
   /// @return True if the container has all the specified extra columns, false
   ///         otherwise.
-  bool hasExtraColumns(std::uint32_t columns) const {
-    if ((columns & KnownExtraColumn::R) != 0 && !m_rColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::Phi) != 0 && !m_phiColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::Time) != 0 && !m_timeColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::VarianceZ) != 0 &&
-        !m_varianceZColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::VarianceR) != 0 &&
-        !m_varianceRColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::TopStripVector) != 0 &&
-        !m_topStripVectorColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::BottomStripVector) != 0 &&
-        !m_bottomStripVectorColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::StripCenterDistance) != 0 &&
-        !m_stripCenterDistanceColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::TopStripCenter) != 0 &&
-        !m_topStripCenterColumn.has_value()) {
-      return false;
-    }
-    if ((columns & KnownExtraColumn::CopyFromIndex) != 0 &&
-        !m_copyFromIndexColumn.has_value()) {
-      return false;
-    }
-    return true;
-  }
+  bool hasExtraColumns(SpacePointKnownExtraColumn columns) const;
 
   ExtraColumnProxy<float> rColumn() const {
     if (!m_rColumn.has_value()) {
@@ -756,210 +612,6 @@ class SpacePointContainer2 {
   }
 };
 
-/// A proxy class for accessing individual space points.
-template <bool read_only>
-class SpacePointProxy2 {
- public:
-  /// Indicates whether this space point proxy is read-only or data can be
-  /// modified
-  static constexpr bool ReadOnly = read_only;
-
-  using IndexType = SpacePointIndex2;
-
-  using ContainerType = const_if_t<ReadOnly, SpacePointContainer2>;
-
-  /// Constructs a space point proxy for the given container and index.
-  /// @param container The container holding the space point.
-  /// @param index The index of the space point in the container.
-  SpacePointProxy2(ContainerType &container, IndexType index)
-      : m_container(&container), m_index(index) {}
-
-  /// Copy construct a space point proxy.
-  /// @param other The space point proxy to copy.
-  SpacePointProxy2(const SpacePointProxy2 &other) = default;
-
-  /// Copy construct a mutable space point proxy.
-  /// @param other The mutable space point proxy to copy.
-  SpacePointProxy2(const SpacePointProxy2<false> &other)
-    requires(ReadOnly)
-      : m_container(&other.container()), m_index(other.index()) {}
-
-  /// Gets the container holding the space point.
-  /// @return A reference to the container holding the space point.
-  SpacePointContainer2 &container() { return *m_container; }
-  /// Gets the container holding the space point.
-  /// @return A const reference to the container holding the space point.
-  const SpacePointContainer2 &container() const { return *m_container; }
-  /// Gets the index of the space point in the container.
-  /// @return The index of the space point in the container.
-  IndexType index() const { return m_index; }
-
-  /// Mutable access to the source links of the space point.
-  /// @return A mutable span of source links associated with the space point.
-  std::span<SourceLink> sourceLinks()
-    requires(!ReadOnly)
-  {
-    return m_container->sourceLinks(m_index);
-  }
-  /// Mutable access to the x coordinate of the space point.
-  /// @return A mutable reference to the x coordinate of the space point.
-  float &x()
-    requires(!ReadOnly)
-  {
-    return m_container->x(m_index);
-  }
-  /// Mutable access to the y coordinate of the space point.
-  /// @return A mutable reference to the y coordinate of the space point.
-  float &y()
-    requires(!ReadOnly)
-  {
-    return m_container->y(m_index);
-  }
-  /// Mutable access to the z coordinate of the space point.
-  /// @return A mutable reference to the z coordinate of the space point.
-  float &z()
-    requires(!ReadOnly)
-  {
-    return m_container->z(m_index);
-  }
-
-  float &r()
-    requires(!ReadOnly)
-  {
-    return m_container->r(m_index);
-  }
-  float &phi()
-    requires(!ReadOnly)
-  {
-    return m_container->phi(m_index);
-  }
-  std::optional<float> &time()
-    requires(!ReadOnly)
-  {
-    return m_container->time(m_index);
-  }
-  float &varianceZ()
-    requires(!ReadOnly)
-  {
-    return m_container->varianceZ(m_index);
-  }
-  float &varianceR()
-    requires(!ReadOnly)
-  {
-    return m_container->varianceR(m_index);
-  }
-  Eigen::Vector3f &topStripVector()
-    requires(!ReadOnly)
-  {
-    return m_container->topStripVector(m_index);
-  }
-  Eigen::Vector3f &bottomStripVector()
-    requires(!ReadOnly)
-  {
-    return m_container->bottomStripVector(m_index);
-  }
-  Eigen::Vector3f &stripCenterDistance()
-    requires(!ReadOnly)
-  {
-    return m_container->stripCenterDistance(m_index);
-  }
-  Eigen::Vector3f &topStripCenter()
-    requires(!ReadOnly)
-  {
-    return m_container->topStripCenter(m_index);
-  }
-  std::size_t &copyFromIndex()
-    requires(!ReadOnly)
-  {
-    return m_container->copyFromIndex(m_index);
-  }
-
-  /// Mutable access to the extra column of data for the space point.
-  /// @param column The extra column to access.
-  /// @return A mutable reference to the value in the extra column for the space
-  ///         point.
-  template <typename column_proxy>
-  typename column_proxy::ValueType &extra(column_proxy column)
-    requires(!ReadOnly)
-  {
-    return m_container->extra(column, m_index);
-  }
-
-  /// Const access to the x coordinate of the space point.
-  /// @return The x coordinate of the space point.
-  float x() const { return m_container->x(m_index); }
-  /// Const access to the y coordinate of the space point.
-  /// @return The y coordinate of the space point.
-  float y() const { return m_container->y(m_index); }
-  /// Const access to the z coordinate of the space point.
-  /// @return The z coordinate of the space point.
-  float z() const { return m_container->z(m_index); }
-
-  float r() const { return m_container->r(m_index); }
-  float phi() const { return m_container->phi(m_index); }
-  std::optional<float> time() const { return m_container->time(m_index); }
-  float varianceZ() const { return m_container->varianceZ(m_index); }
-  float varianceR() const { return m_container->varianceR(m_index); }
-  const Eigen::Vector3f &topStripVector() const {
-    return m_container->topStripVector(m_index);
-  }
-  const Eigen::Vector3f &bottomStripVector() const {
-    return m_container->bottomStripVector(m_index);
-  }
-  const Eigen::Vector3f &stripCenterDistance() const {
-    return m_container->stripCenterDistance(m_index);
-  }
-  const Eigen::Vector3f &topStripCenter() const {
-    return m_container->topStripCenter(m_index);
-  }
-  std::size_t copyFromIndex() const {
-    return m_container->copyFromIndex(m_index);
-  }
-
-  /// Const access to the extra column of data for the space point.
-  /// @param column The extra column to access.
-  /// @return A const reference to the value in the extra column for the space
-  ///         point.
-  template <typename column_proxy>
-  const typename column_proxy::ValueType &extra(
-      const column_proxy &column) const {
-    return m_container->extra(column, m_index);
-  }
-
- private:
-  ContainerType *m_container{};
-  IndexType m_index{};
-};
-
-inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
-    std::span<const SourceLink> sourceLinks, float x, float y, float z) {
-  m_xyz.push_back(x);
-  m_xyz.push_back(y);
-  m_xyz.push_back(z);
-  m_sourceLinkOffsets.push_back(m_sourceLinks.size());
-  m_sourceLinkCounts.push_back(static_cast<std::uint8_t>(sourceLinks.size()));
-  m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
-                       sourceLinks.end());
-
-  for (auto &column : m_extraColumns) {
-    column->emplace_back();
-  }
-
-  return MutableProxyType(*this, size() - 1);
-}
-
-inline MutableSpacePointProxy2 SpacePointContainer2::at(IndexType index) {
-  if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
-  }
-  return MutableProxyType(*this, index);
-}
-
-inline ConstSpacePointProxy2 SpacePointContainer2::at(IndexType index) const {
-  if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
-  }
-  return ConstProxyType(*this, index);
-}
-
 }  // namespace Acts::Experimental
+
+#include "Acts/EventData/SpacePointContainer2.ipp"
