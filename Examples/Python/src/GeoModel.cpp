@@ -31,6 +31,7 @@
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
 #include <string>
 

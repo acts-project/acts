@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GeoModelDetector/GeoMuonMockupExperiment.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
 
 #include "GeoModelHelpers/MaterialManager.h"
@@ -49,14 +49,14 @@ namespace ActsExamples{
     GeoMuonMockupExperiment::GeoMuonMockupExperiment(const Config& cfg,
                                                      std::unique_ptr<const Acts::Logger> logger) :
         m_cfg{cfg}, m_logger{std::move(logger)} {}
-    PVConstLink GeoMuonMockupExperiment::constructMS() {
+    Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
         
         const double worldR = m_cfg.barrelRadii[2] + 0.5*GeoModelKernelUnits::m;
         const double worldZ = (m_cfg.nEtaStations + 1) * (m_chamberLength + m_cfg.stationDistInZ) + 0.5*GeoModelKernelUnits::m;
        
         PVLink world = createGeoWorld(worldR, worldR, worldZ);
         setupMaterials();
-        m_publisher.setName("Muon");
+        m_publisher->setName("Muon");
         
         auto envelopeCylinder = make_intrusive<GeoTube>((m_cfg.barrelRadii[0] - 0.5*m_muonStationHeight),
                                                         (m_cfg.barrelRadii[2] + 0.5*m_muonStationHeight),
@@ -91,27 +91,41 @@ namespace ActsExamples{
         ACTS_INFO("Each multilayer contains "<<m_cfg.nTubeLayers<<" tube-layers with "<<m_cfg.nTubes
                 <<" tubes each giving in total "<<nTubes<<" placed tubes.");
 
-        world->add(nameTag(m_publisher.getName()));
+        world->add(nameTag(m_publisher->getName()));
         world->add(muonEnvelope);
 
         ACTS_VERBOSE("Printout of the  entire world \n "<<printVolume(world));
      
-     
-        // open the DB connection
-        GMDBManager db{m_cfg.dbName};
-
-        // check the DB connection
-        if (!db.checkIsDBOpen()) {
-            THROW_EXCEPTION("It was not possible to open the DB correctly!");
+        if (m_cfg.dumpTree) {
+            // open the DB connection
+            GMDBManager db{m_cfg.dbName};
+            // check the DB connection
+            if (!db.checkIsDBOpen()) {
+                THROW_EXCEPTION("It was not possible to open the DB correctly!");
+            }
+            // init the GeoModel node action
+            GeoModelIO::WriteGeoModel writeGeoDB{db};
+            world->exec(&writeGeoDB);  // visit all GeoModel nodes
+            writeGeoDB.saveToDB(m_publisher.get());
         }
-
-        // init the GeoModel node action
-        GeoModelIO::WriteGeoModel writeGeoDB{db};
-        world->exec(&writeGeoDB);  // visit all GeoModel nodes
-        writeGeoDB.saveToDB(&m_publisher);
         clearSharedCaches();
-
-        return world;
+        Acts::GeoModelTree outTree{};
+        outTree.worldVolume  = world;
+        
+        using VolumeMap_t =  Acts::GeoModelTree::VolumePublisher::VolumeMap_t;
+        VolumeMap_t publishedVol{};
+        for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()){           
+            try{
+                const auto key = std::any_cast<std::string>(pubKey);
+                if (!publishedVol.insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV))).second) {
+                    throw std::invalid_argument("GeoMuonMockupExperiment() - Key "+key+" is no longer unique");
+                }
+            } catch (const std::bad_any_cast& e) {
+                throw std::domain_error("GeoMuonMockupExperiment() - Failed to cast the key to string "+std::string{e.what()});
+            }
+        }
+        m_publisher.reset();
+        return outTree;
     }
 
     void GeoMuonMockupExperiment::setupMaterials() {
@@ -177,7 +191,7 @@ namespace ActsExamples{
         auto publishFPV = [this, &envelopeVol](const std::string& publishName, 
                                                FPVLink publishMe) {
             
-            m_publisher.publishNode(static_cast<GeoVFullPhysVol*>(publishMe.get()), publishName);
+            m_publisher->publishNode(static_cast<GeoVFullPhysVol*>(publishMe.get()), publishName);
             envelopeVol->add(nameTag(publishName));
             envelopeVol->add(publishMe);
 

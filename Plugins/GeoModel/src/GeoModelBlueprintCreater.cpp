@@ -46,8 +46,7 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
         "GeoModelBlueprintCreater: GeoModelTree has no dbMgr");
   }
 
-  auto blueprintTable =
-      gmTree.dbMgr->getTableRecords_String(options.table);
+  auto blueprintTable = gmTree.dbMgr->getTableRecords_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;

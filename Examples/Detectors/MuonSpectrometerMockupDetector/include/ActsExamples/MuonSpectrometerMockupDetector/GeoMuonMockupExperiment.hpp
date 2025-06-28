@@ -1,10 +1,18 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 
 #include "Acts/Definitions/Algebra.hpp"
 ///
-#include "GeoModelKernel/GeoVPhysVol.h"
-#include "GeoModelKernel/GeoFullPhysVol.h"
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+
 #include "GeoModelKernel/Units.h"
 #include "GeoModelHelpers/GeoDeDuplicator.h"
 #include "GeoModelKernel/GeoPublisher.h"
@@ -14,6 +22,7 @@
 #include <map>
 #include <cmath>
 namespace ActsExamples{
+    /** @brief  */
     class GeoMuonMockupExperiment: public GeoDeDuplicator {
         public:
 
@@ -21,6 +30,9 @@ namespace ActsExamples{
                 Inner, Middle, Outer, nLayers
             };
             struct Config{
+                /// @brief Switch toggling whether the built detector should be persitified to SQLite
+                bool dumpTree{true};
+                /// @brief Name of the output database file
                 std::string dbName{"MuonMockUp.db"};
                 /// @brief Inner tube radius corresponding to the drift gas volume
                 double innerTubeRadius = 14.6 * GeoModelKernelUnits::mm;
@@ -66,10 +78,11 @@ namespace ActsExamples{
                                     std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger("GeoMuonMockupExperiment", Acts::Logging::DEBUG));
 
             /** @brief  */
-            PVConstLink constructMS();
+            Acts::GeoModelTree constructMS();
 
-            using FPVLink = GeoIntrusivePtr<GeoFullPhysVol>;
-            using FPVConstLink = GeoIntrusivePtr<const GeoFullPhysVol>;
+            
+            using FPVLink = Acts::GeoModelTree::FPVLink;
+            using FPVConstLink = Acts::GeoModelTree::FPVConstLink;
         private:
             Config m_cfg{};
             /// @brief Total radius of a Mdt drift tube 
@@ -89,8 +102,6 @@ namespace ActsExamples{
             double m_tubeLayersHeight = m_tubePitch * (1. + (m_cfg.nTubeLayers -1)  * std::sin(60. * GeoModelKernelUnits::deg));
             /// @brief Total height of a multi layer volume (tubelayers + foam)
             double m_multiLayerHeight = s_mdtFoamTubeDistance + m_tubeLayersHeight + m_cfg.mdtFoamThickness;
-
-
             /// @brief Height of a Rpc gasGap 
             constexpr static double s_rpcGasHeight = 0.5* GeoModelKernelUnits::cm;
             /// @brief Distance between two gasGaps
@@ -105,10 +116,7 @@ namespace ActsExamples{
                                                           2.*(m_rpcChamberHeight + s_rpcMdtDistance);
             
             /// @brief Angular coverage of each sector 
-           double m_sectorSize = 2.* M_PI / m_cfg.nSectors;
-
-
-
+            double m_sectorSize = 2.* M_PI / m_cfg.nSectors;
 
             void setupMaterials();
             /** @brief Construct the subvolume containing the tubes. Tubes are arranged in four 
@@ -137,7 +145,7 @@ namespace ActsExamples{
             FPVLink assembleRpcChamber(const double chamberWidth);
 
             //// @brief list of published full physical volumes
-            GeoPublisher m_publisher{};
+            std::unique_ptr<GeoPublisher> m_publisher{std::make_unique<GeoPublisher>()};
             /// @brief Logger object
             std::unique_ptr<const Acts::Logger> m_logger{};
             /// @brief Private access method to the logger
