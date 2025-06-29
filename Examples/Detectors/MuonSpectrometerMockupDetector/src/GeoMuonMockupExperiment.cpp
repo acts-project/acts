@@ -37,6 +37,7 @@ std::string to_string(GeoMuonMockupExperiment::MuonLayer layer) {
     case nLayers:
       return "nLayers";
   }
+  return "UNKNOWN";
 }
 
 using FPVLink = GeoMuonMockupExperiment::FPVLink;
