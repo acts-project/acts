@@ -39,3 +39,5 @@ codegen/src/codegen.egg-info/
 !.gitlab-ci.yml
 !.clang-tidy
 !.oclint
+
+itk/
