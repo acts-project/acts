@@ -67,14 +67,16 @@ def main():
         "-i",
         "--input",
         type=str,
-        default="", #"/eos/user/c/cimuonsw/GeometryFiles/MockUp.db",
+        default="",  # "/eos/user/c/cimuonsw/GeometryFiles/MockUp.db",
         help="Input SQL file",
     )
-    parser.add_argument("--mockupDetector",
-                        type = str,
-                        choices= ["Muon"],
-                        help="Predefined mockup detector which is built transiently",
-                        default="Muon")
+    parser.add_argument(
+        "--mockupDetector",
+        type=str,
+        choices=["Muon"],
+        help="Predefined mockup detector which is built transiently",
+        default="Muon",
+    )
     parser.add_argument("--outDir", default="./", help="Output")
 
     args = parser.parse_args()
@@ -82,7 +84,6 @@ def main():
     gContext = acts.GeometryContext()
     logLevel = logging.INFO
 
-  
     # Create the tracking geometry builder for the muon system
     gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
 
@@ -101,10 +102,10 @@ def main():
         mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
 
-        gmTree  = mockUpBuilder.constructMS()
+        gmTree = mockUpBuilder.constructMS()
     else:
         raise RuntimeError(f"{args.mockupDetector} not implemented yet")
-    
+
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
     gmFactoryConfig.nameList = [
         "RpcGasGap",
@@ -129,7 +130,6 @@ def main():
     detector = gm.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
-
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE

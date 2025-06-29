@@ -78,7 +78,8 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
    * station envelope. Group the passed boxes under by their parent */
   std::map<const GeoVPhysVol*, GeoModelVolumeFPVsVec> commonStations{};
   for (const auto& box : boundingBoxes) {
-    ACTS_VERBOSE("Test whether "<<std::get<1>(box)->name()<<" contains '"<<name<<"' as substring");
+    ACTS_VERBOSE("Test whether " << std::get<1>(box)->name() << " contains '"
+                                 << name << "' as substring");
     if (std::get<1>(box)->name().find(name) == std::string::npos) {
       continue;  // skip boxes that do not match the station name
     }
@@ -92,8 +93,8 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
   // Create a vector to hold the chambers
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
 
-  if (commonStations.empty()){
-     throw std::invalid_argument("No barrel stations could be found.");
+  if (commonStations.empty()) {
+    throw std::invalid_argument("No barrel stations could be found.");
   }
   volChambers.reserve(commonStations.size());
   std::size_t stationNum = 0;

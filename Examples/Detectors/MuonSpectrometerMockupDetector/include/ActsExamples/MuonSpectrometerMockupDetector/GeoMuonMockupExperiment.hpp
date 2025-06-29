@@ -81,7 +81,6 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /** @brief  */
   Acts::GeoModelTree constructMS();
 
-
  private:
   Config m_cfg{};
   /// @brief Total radius of a Mdt drift tube
