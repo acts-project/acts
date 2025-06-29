@@ -25,9 +25,13 @@ namespace ActsExamples {
 class GeoMuonMockupExperiment : public GeoDeDuplicator {
  public:
   enum MuonLayer { Inner, Middle, Outer, nLayers };
+
+  using FPVLink = Acts::GeoModelTree::FPVLink;
+  using FPVConstLink = Acts::GeoModelTree::FPVConstLink;
+
   struct Config {
     /// @brief Switch toggling whether the built detector should be persitified to SQLite
-    bool dumpTree{true};
+    bool dumpTree{false};
     /// @brief Name of the output database file
     std::string dbName{"MuonMockUp.db"};
     /// @brief Inner tube radius corresponding to the drift gas volume
@@ -77,8 +81,6 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /** @brief  */
   Acts::GeoModelTree constructMS();
 
-  using FPVLink = Acts::GeoModelTree::FPVLink;
-  using FPVConstLink = Acts::GeoModelTree::FPVConstLink;
 
  private:
   Config m_cfg{};

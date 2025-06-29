@@ -67,9 +67,14 @@ def main():
         "-i",
         "--input",
         type=str,
-        default="/eos/user/c/cimuonsw/GeometryFiles/MockUp.db",
+        default="", #"/eos/user/c/cimuonsw/GeometryFiles/MockUp.db",
         help="Input SQL file",
     )
+    parser.add_argument("--mockupDetector",
+                        type = str,
+                        choices= ["Muon"],
+                        help="Predefined mockup detector which is built transiently",
+                        default="Muon")
     parser.add_argument("--outDir", default="./", help="Output")
 
     args = parser.parse_args()
@@ -77,8 +82,29 @@ def main():
     gContext = acts.GeometryContext()
     logLevel = logging.INFO
 
+  
+    # Create the tracking geometry builder for the muon system
+    gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
+
     # Read the geometry model from the database
-    gmTree = gm.readFromDb(args.input)
+    gmTree = None
+    ### Use an external geo model file
+    if len(args.input):
+        gmTree = gm.readFromDb(args.input)
+        gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
+
+    elif args.mockupDetector == "Muon":
+        mockUpCfg = gm.GeoMuonMockupExperiment.Config()
+        mockUpCfg.dumpTree = True
+        mockUpCfg.dbName = "ActsGeoMS.db"
+        mockUpCfg.nSectors = 8
+        mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
+        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+
+        gmTree  = mockUpBuilder.constructMS()
+    else:
+        raise RuntimeError(f"{args.mockupDetector} not implemented yet")
+    
     gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
     gmFactoryConfig.nameList = [
         "RpcGasGap",
@@ -94,7 +120,9 @@ def main():
 
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    # gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+
+    gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
 
     gmDetectorCfg = gm.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
@@ -102,10 +130,6 @@ def main():
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
-    # Create the tracking geometry builder for the muon system
-    gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
-    gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
-    gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.VERBOSE

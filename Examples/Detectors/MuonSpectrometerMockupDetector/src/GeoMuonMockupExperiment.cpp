@@ -104,18 +104,6 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
 
   ACTS_VERBOSE("Printout of the  entire world \n " << printVolume(world));
 
-  if (m_cfg.dumpTree) {
-    // open the DB connection
-    GMDBManager db{m_cfg.dbName};
-    // check the DB connection
-    if (!db.checkIsDBOpen()) {
-      THROW_EXCEPTION("It was not possible to open the DB correctly!");
-    }
-    // init the GeoModel node action
-    GeoModelIO::WriteGeoModel writeGeoDB{db};
-    world->exec(&writeGeoDB);  // visit all GeoModel nodes
-    writeGeoDB.saveToDB(m_publisher.get());
-  }
   clearSharedCaches();
   Acts::GeoModelTree outTree{};
   outTree.worldVolume = world;
@@ -137,6 +125,21 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
           std::string{e.what()});
     }
   }
+  outTree.publisher.publishVolumes(m_publisher->getName(), std::move(publishedVol));
+
+  if (m_cfg.dumpTree) {
+    // open the DB connection
+    GMDBManager db{m_cfg.dbName};
+    // check the DB connection
+    if (!db.checkIsDBOpen()) {
+      THROW_EXCEPTION("It was not possible to open the DB correctly!");
+    }
+    // init the GeoModel node action
+    GeoModelIO::WriteGeoModel writeGeoDB{db};
+    world->exec(&writeGeoDB);  // visit all GeoModel nodes
+    writeGeoDB.saveToDB(m_publisher.get());
+  }
+
   m_publisher.reset();
   return outTree;
 }
