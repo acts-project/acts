@@ -396,7 +396,8 @@ FPVLink GeoMuonMockupExperiment::assembleMultilayerBarrel(
   }
   PVLink tubeVol = buildTubes(envelopeWidth);
   currentX += 0.5 * m_tubeLayersHeight;
-  envelopeVol->add(makeTransform(GeoTrf::RotateX3D(0.5 * M_PI) *
+  constexpr double rot90deg = 90. * GeoModelKernelUnits::deg;
+  envelopeVol->add(makeTransform(GeoTrf::RotateX3D(rot90deg) *
                                  GeoTrf::TranslateX3D(currentX)));
   envelopeVol->add(tubeVol);
   if (ml == 2 && m_cfg.mdtFoamThickness > 0.) {

@@ -21,14 +21,20 @@
 #include "GeoModelKernel/GeoPublisher.h"
 #include "GeoModelKernel/Units.h"
 namespace ActsExamples {
-/** @brief  */
+/// @brief Simple Muonspectrometer geometry of an HEP experiment. The geometry is inspired by
+///        the ATLAS' MuonSpectrometer. It consists out of three concentric
+///        rings of so-called muon stations. Each station is made up out of two
+///        multilayers of drift-tubes sandwiched by Rpc-like gaseous detectors
+///        with n gas gaps each.
 class GeoMuonMockupExperiment : public GeoDeDuplicator {
  public:
   enum MuonLayer { Inner, Middle, Outer, nLayers };
 
+  /// @brief Abrivation of the memory-managed FullPhysVols
   using FPVLink = Acts::GeoModelTree::FPVLink;
+  /// @brief Abrivation of the memory-managed const FullPhysVols
   using FPVConstLink = Acts::GeoModelTree::FPVConstLink;
-
+  /// @brief Configuration object to steer the geometry building
   struct Config {
     /// @brief Switch toggling whether the built detector should be persitified to SQLite
     bool dumpTree{false};
@@ -72,7 +78,10 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     double stationDistInZ = 15. * GeoModelKernelUnits::cm;
   };
 
-  /// @brief Default constructor
+  /// @brief Standard constructor taking a configuration to steer the MS geometry building
+  ///        and the logger object.
+  /// @param cfg: Configuration object to steer the geometry layout
+  /// @param logger: Acts logging object
   GeoMuonMockupExperiment(const Config& cfg,
                           std::unique_ptr<const Acts::Logger> logger =
                               Acts::getDefaultLogger("GeoMuonMockupExperiment",
@@ -120,7 +129,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                                2. * (m_rpcChamberHeight + s_rpcMdtDistance);
 
   /// @brief Angular coverage of each sector
-  double m_sectorSize = 2. * M_PI / m_cfg.nSectors;
+  double m_sectorSize = 360. * GeoModelKernelUnits::deg / m_cfg.nSectors;
 
   void setupMaterials();
   /** @brief Construct the subvolume containing the tubes. Tubes are arranged in four
