@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-awkward==2.8.3
+awkward==2.8.4
     # via
     #   -r Examples/Scripts/requirements.in
     #   uproot
@@ -14,7 +14,7 @@ awkward-cpp==46
     # via awkward
 boost-histogram==1.5.2
     # via hist
-click==8.1.8
+click==8.2.1
     # via
     #   histoprint
     #   typer
@@ -24,9 +24,9 @@ cramjam==2.10.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.58.0
+fonttools==4.58.4
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2025.5.1
     # via
     #   awkward
     #   uproot
@@ -48,7 +48,7 @@ mplhep==0.3.59
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.4
     # via mplhep
-numpy==2.2.6
+numpy==2.3.1
     # via
     #   awkward
     #   awkward-cpp
@@ -68,15 +68,15 @@ packaging==25.0
     #   matplotlib
     #   mplhep
     #   uproot
-pandas==2.2.3
+pandas==2.3.0
     # via -r Examples/Scripts/requirements.in
 pillow==11.2.1
     # via matplotlib
-pydantic==2.11.4
+pydantic==2.11.7
     # via -r Examples/Scripts/requirements.in
 pydantic-core==2.33.2
     # via pydantic
-pygments==2.19.1
+pygments==2.19.2
     # via rich
 pyparsing==3.2.3
     # via matplotlib
@@ -92,21 +92,21 @@ rich==14.0.0
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
-scipy==1.15.3
+scipy==1.16.0
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.15.4
+typer==0.16.0
     # via -r Examples/Scripts/requirements.in
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   pydantic
     #   pydantic-core
     #   typer
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via pydantic
 tzdata==2025.2
     # via pandas
