@@ -9,7 +9,8 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
 namespace Acts {
-GeoModelTree::VolumePublisher::VolumePublisher(const    std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept
+GeoModelTree::VolumePublisher::VolumePublisher(
+    const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept
     : m_reader{std::move(geoReader)} {}
 
 GeoModelTree::VolumePublisher::VolumePublisher(
