@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
 
 #include <memory>
