@@ -6,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
+#pragma once
+
+#include "Acts/Utilities/Ray.hpp"
+
 template <typename value_t, std::size_t DIM>
 Acts::Ray<value_t, DIM>::Ray(const VertexType& origin, const VertexType& dir)
     : m_origin(origin), m_dir(dir.normalized()), m_idir(1 / m_dir.array()) {}

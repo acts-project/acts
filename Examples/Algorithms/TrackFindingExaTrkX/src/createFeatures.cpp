@@ -14,8 +14,7 @@
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer& spacepoints,
-    const std::optional<ClusterContainer>& clusters,
+    const SimSpacePointContainer& spacepoints, const ClusterContainer* clusters,
     const std::vector<TrackFindingAlgorithmExaTrkX::NodeFeature>& nodeFeatures,
     const std::vector<float>& featureScales) {
   using namespace ActsExamples;
@@ -33,12 +32,13 @@ std::vector<float> createFeatures(
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
     // This should be fine, because check in constructor
-    const Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;
+    const Cluster* cl1 =
+        clusters != nullptr ? &clusters->at(sl1.index()) : nullptr;
     const Cluster* cl2 = cl1;
 
     if (sp.sourceLinks().size() == 2) {
       const auto& sl2 = sp.sourceLinks()[1].template get<IndexSourceLink>();
-      cl2 = clusters ? &clusters->at(sl2.index()) : nullptr;
+      cl2 = clusters != nullptr ? &clusters->at(sl2.index()) : nullptr;
     }
 
     // I would prefer to use a std::span or boost::span here once available

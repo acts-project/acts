@@ -134,4 +134,11 @@ float computeMultipleScatteringTheta0(const MaterialSlab& slab,
                                       PdgParticle absPdg, float m, float qOverP,
                                       float absQ);
 
+/// Approximate the core width of the projected planar scattering distribution
+/// with highland's formula.
+///
+/// @param xOverX0  The thickness of the material in radiation lengths
+/// @return         The approximate scattering angle times momentum in radians*GeV
+float approximateHighlandScattering(float xOverX0);
+
 }  // namespace Acts

@@ -20,7 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v11.1.0
 
 jobs:
   linux_ubuntu:
@@ -189,13 +189,6 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
-      - name: Save PR number
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          mkdir -p physmon
-          echo ${{ github.event.number }} > physmon/pr_number
-          echo ${{ github.event.pull_request.head.sha }} > physmon/sha
-
       - name: Physics performance checks
         shell: bash
         run: |
@@ -217,7 +210,9 @@ jobs:
 
       - name: Post step summary
         if: always()
-        run: cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
+        run: |
+          mkdir -p physmon
+          cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -339,7 +334,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -349,6 +344,11 @@ jobs:
         with:
           submodules: true
           lfs: true
+
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.3.0"
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies

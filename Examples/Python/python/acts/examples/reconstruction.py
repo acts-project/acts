@@ -277,6 +277,7 @@ def addSeeding(
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
+    initialSigmaQoverPt: Optional[float] = None,
     initialSigmaPtRel: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
@@ -368,6 +369,7 @@ def addSeeding(
             selectedParticles=selectedParticles,
             trackSmearingSigmas=trackSmearingSigmas,
             initialSigmas=initialSigmas,
+            initialSigmaQoverPt=initialSigmaQoverPt,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
@@ -457,6 +459,7 @@ def addSeeding(
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialSigmas=initialSigmas,
+                initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
@@ -545,6 +548,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     trackSmearingSigmas: TrackSmearingSigmas,
     initialSigmas: Optional[List[float]],
+    initialSigmaQoverPt: Optional[float],
     initialSigmaPtRel: Optional[float],
     initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
@@ -582,6 +586,7 @@ def addTruthSmearedSeeding(
             sigmaTheta=trackSmearingSigmas.theta,
             sigmaPtRel=trackSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
+            initialSigmaQoverPt=initialSigmaQoverPt,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
@@ -1181,6 +1186,7 @@ def addSeedPerformanceWriters(
             inputParticles=selectedParticles,
             inputTrackParticleMatching="seed_particle_matching",
             inputParticleTrackMatching="particle_seed_matching",
+            inputParticleMeasurementsMap="particle_measurements_map",
             filePath=str(outputDirRoot / f"performance_seeding.root"),
         )
     )
@@ -1704,6 +1710,7 @@ def addTrackWriters(
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
+                inputParticleMeasurementsMap="particle_measurements_map",
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)
@@ -2179,8 +2186,7 @@ def addVertexFitting(
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
             inputTracks=tracks,
-            inputParticles=selectedParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )
