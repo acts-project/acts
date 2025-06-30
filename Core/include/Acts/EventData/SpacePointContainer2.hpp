@@ -54,6 +54,72 @@ enum class SpacePointKnownExtraColumn : std::uint32_t {
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointKnownExtraColumn);
 
+/// Additional column of data that can be added to the space point container.
+/// The column is indexed by the space point index.
+template <typename T>
+class SpacePointExtraColumnProxy {
+ public:
+  using ValueType = T;
+  using ContainerType = std::vector<ValueType>;
+
+  explicit SpacePointExtraColumnProxy(const ContainerType &data)
+      : m_data(&data) {}
+  SpacePointExtraColumnProxy(const SpacePointExtraColumnProxy &other) = default;
+  SpacePointExtraColumnProxy(SpacePointExtraColumnProxy &&other) noexcept =
+      default;
+  SpacePointExtraColumnProxy &operator=(
+      const SpacePointExtraColumnProxy &other) = default;
+  SpacePointExtraColumnProxy &operator=(
+      SpacePointExtraColumnProxy &&other) noexcept = default;
+
+ private:
+  const ContainerType *m_data{};
+
+  ContainerType &data() { return const_cast<ContainerType &>(*m_data); }
+  const ContainerType &data() const { return *m_data; }
+
+  friend class SpacePointContainer2;
+};
+
+class SpacePointColumnHolderBase {
+ public:
+  virtual ~SpacePointColumnHolderBase() = default;
+
+  virtual std::unique_ptr<SpacePointColumnHolderBase> copy() const = 0;
+
+  virtual void reserve(std::size_t size) = 0;
+  virtual void resize(std::size_t size) = 0;
+  virtual void clear() = 0;
+  virtual void emplace_back() = 0;
+};
+
+template <typename T>
+class SpacePointExtraColumnHolder final : public SpacePointColumnHolderBase {
+ public:
+  using ValueType = T;
+  using ContainerType = std::vector<ValueType>;
+  using ProxyType = SpacePointExtraColumnProxy<ValueType>;
+
+  SpacePointExtraColumnHolder() = default;
+  explicit SpacePointExtraColumnHolder(ValueType defaultValue)
+      : m_default(std::move(defaultValue)) {}
+
+  ProxyType proxy() const { return ProxyType(m_data); }
+
+  std::unique_ptr<SpacePointColumnHolderBase> copy() const override {
+    return std::make_unique<SpacePointExtraColumnHolder<T>>(*this);
+  }
+
+  void reserve(std::size_t size) override { m_data.reserve(size); }
+  void clear() override { m_data.clear(); }
+  void resize(std::size_t size) override { m_data.resize(size, m_default); }
+  void emplace_back() override { m_data.emplace_back(m_default); }
+
+ private:
+  ValueType m_default{};
+  ContainerType m_data;
+};
+
 /// A container for space points, which can hold additional columns of data
 /// and allows for efficient access to space points and their associated source
 /// links. Individual space points are addressed via index. A proxy object
@@ -392,37 +458,14 @@ class SpacePointContainer2 {
     return extra(m_copyFromIndexColumn->proxy(), index);
   }
 
-  /// Additional column of data that can be added to the space point container.
-  /// The column is indexed by the space point index.
   template <typename T>
-  class ExtraColumnProxy {
-   public:
-    using ValueType = T;
-    using ContainerType = std::vector<ValueType>;
-
-    ExtraColumnProxy(const ExtraColumnProxy &other) = default;
-    ExtraColumnProxy(ExtraColumnProxy &&other) noexcept = default;
-    ExtraColumnProxy &operator=(const ExtraColumnProxy &other) = default;
-    ExtraColumnProxy &operator=(ExtraColumnProxy &&other) noexcept = default;
-
-   private:
-    const ContainerType *m_data{};
-
-    explicit ExtraColumnProxy(const ContainerType &data) : m_data(&data) {}
-
-    ContainerType &data() { return const_cast<ContainerType &>(*m_data); }
-    const ContainerType &data() const { return *m_data; }
-
-    friend class SpacePointContainer2;
-  };
-
-  template <typename T>
-  T &extra(ExtraColumnProxy<T> column, IndexType index) {
+  T &extra(SpacePointExtraColumnProxy<T> column, IndexType index) {
     return column.data()[index];
   }
 
   template <typename T>
-  const T &extra(const ExtraColumnProxy<T> &column, IndexType index) const {
+  const T &extra(const SpacePointExtraColumnProxy<T> &column,
+                 IndexType index) const {
     return column.data()[index];
   }
 
@@ -441,7 +484,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra r coordinate column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<float> rColumn() const {
+  SpacePointExtraColumnProxy<float> rColumn() const {
     if (!m_rColumn.has_value()) {
       throw std::runtime_error("Extra column 'r' does not exist");
     }
@@ -451,7 +494,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra phi coordinate column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<float> phiColumn() const {
+  SpacePointExtraColumnProxy<float> phiColumn() const {
     if (!m_phiColumn.has_value()) {
       throw std::runtime_error("Extra column 'phi' does not exist");
     }
@@ -461,7 +504,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra time column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<float> timeColumn() const {
+  SpacePointExtraColumnProxy<float> timeColumn() const {
     if (!m_timeColumn.has_value()) {
       throw std::runtime_error("Extra column 'time' does not exist");
     }
@@ -471,7 +514,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra variance in Z direction column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<float> varianceZColumn() const {
+  SpacePointExtraColumnProxy<float> varianceZColumn() const {
     if (!m_varianceZColumn.has_value()) {
       throw std::runtime_error("Extra column 'varianceZ' does not exist");
     }
@@ -481,7 +524,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra variance in R direction column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<float> varianceRColumn() const {
+  SpacePointExtraColumnProxy<float> varianceRColumn() const {
     if (!m_varianceRColumn.has_value()) {
       throw std::runtime_error("Extra column 'varianceR' does not exist");
     }
@@ -491,7 +534,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra top strip vector column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<Eigen::Vector3f> topStripVectorColumn() const {
+  SpacePointExtraColumnProxy<Eigen::Vector3f> topStripVectorColumn() const {
     if (!m_topStripVectorColumn.has_value()) {
       throw std::runtime_error("Extra column 'topStripVector' does not exist");
     }
@@ -501,7 +544,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra bottom strip vector column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<Eigen::Vector3f> bottomStripVectorColumn() const {
+  SpacePointExtraColumnProxy<Eigen::Vector3f> bottomStripVectorColumn() const {
     if (!m_bottomStripVectorColumn.has_value()) {
       throw std::runtime_error(
           "Extra column 'bottomStripVector' does not exist");
@@ -512,7 +555,8 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra strip center distance column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<Eigen::Vector3f> stripCenterDistanceColumn() const {
+  SpacePointExtraColumnProxy<Eigen::Vector3f> stripCenterDistanceColumn()
+      const {
     if (!m_stripCenterDistanceColumn.has_value()) {
       throw std::runtime_error(
           "Extra column 'stripCenterDistance' does not exist");
@@ -523,7 +567,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra top strip center column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<Eigen::Vector3f> topStripCenterColumn() const {
+  SpacePointExtraColumnProxy<Eigen::Vector3f> topStripCenterColumn() const {
     if (!m_topStripCenterColumn.has_value()) {
       throw std::runtime_error("Extra column 'topStripCenter' does not exist");
     }
@@ -533,7 +577,7 @@ class SpacePointContainer2 {
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the extra copy from index column.
   /// @throws std::runtime_error if the column does not exist.
-  ExtraColumnProxy<std::size_t> copyFromIndexColumn() const {
+  SpacePointExtraColumnProxy<std::size_t> copyFromIndexColumn() const {
     if (!m_copyFromIndexColumn.has_value()) {
       throw std::runtime_error("Extra column 'copyFromIndex' does not exist");
     }
@@ -546,8 +590,8 @@ class SpacePointContainer2 {
   /// @return A reference to the newly created column.
   /// @throws std::runtime_error if a column with the same name already exists.
   template <typename T>
-  ExtraColumnProxy<T> createExtraColumn(const std::string &name) {
-    return createExtraColumnImpl<ExtraColumnHolder<T>>(name);
+  SpacePointExtraColumnProxy<T> createExtraColumn(const std::string &name) {
+    return createExtraColumnImpl<SpacePointExtraColumnHolder<T>>(name);
   }
 
   /// Checks if an extra column with the given name exists.
@@ -563,8 +607,8 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the extra column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  ExtraColumnProxy<T> extraColumn(const std::string &name) const {
-    return extraColumnImpl<ExtraColumnHolder<T>>(name);
+  SpacePointExtraColumnProxy<T> extraColumn(const std::string &name) const {
+    return extraColumnImpl<SpacePointExtraColumnHolder<T>>(name);
   }
 
   template <bool read_only>
@@ -654,76 +698,35 @@ class SpacePointContainer2 {
   }
 
  private:
-  class ColumnHolderBase {
-   public:
-    virtual ~ColumnHolderBase() = default;
-
-    virtual std::unique_ptr<ColumnHolderBase> copy() const = 0;
-
-    virtual void reserve(std::size_t size) = 0;
-    virtual void resize(std::size_t size) = 0;
-    virtual void clear() = 0;
-    virtual void emplace_back() = 0;
-  };
-  template <typename T>
-  class ExtraColumnHolder final : public ColumnHolderBase {
-   public:
-    using ValueType = T;
-    using ContainerType = std::vector<ValueType>;
-    using ProxyType = ExtraColumnProxy<ValueType>;
-
-    ExtraColumnHolder() = default;
-    explicit ExtraColumnHolder(ValueType defaultValue)
-        : m_default(std::move(defaultValue)) {}
-
-    ProxyType proxy() const { return ProxyType(m_data); }
-
-    __attribute__((used, weak)) std::unique_ptr<ColumnHolderBase> copy()
-        const override {
-      return std::make_unique<ExtraColumnHolder<T>>(*this);
-    }
-
-    __attribute__((used, weak)) void reserve(std::size_t size) override {
-      m_data.reserve(size);
-    }
-    __attribute__((used, weak)) void clear() override { m_data.clear(); }
-    __attribute__((used, weak)) void resize(std::size_t size) override {
-      m_data.resize(size, m_default);
-    }
-    __attribute__((used, weak)) void emplace_back() override {
-      m_data.emplace_back(m_default);
-    }
-
-   private:
-    ContainerType m_data;
-    ValueType m_default{};
-  };
-
   std::vector<float> m_xyz;
   std::vector<std::size_t> m_sourceLinkOffsets;
   std::vector<std::uint8_t> m_sourceLinkCounts;
   std::vector<SourceLink> m_sourceLinks;
 
   // cylindrical coordinates
-  std::optional<ExtraColumnHolder<float>> m_rColumn;
-  std::optional<ExtraColumnHolder<float>> m_phiColumn;
+  std::optional<SpacePointExtraColumnHolder<float>> m_rColumn;
+  std::optional<SpacePointExtraColumnHolder<float>> m_phiColumn;
   // time information
-  std::optional<ExtraColumnHolder<float>> m_timeColumn;
+  std::optional<SpacePointExtraColumnHolder<float>> m_timeColumn;
   // covariance information
-  std::optional<ExtraColumnHolder<float>> m_varianceZColumn;
-  std::optional<ExtraColumnHolder<float>> m_varianceRColumn;
+  std::optional<SpacePointExtraColumnHolder<float>> m_varianceZColumn;
+  std::optional<SpacePointExtraColumnHolder<float>> m_varianceRColumn;
   // strip information
-  std::optional<ExtraColumnHolder<Eigen::Vector3f>> m_topStripVectorColumn;
-  std::optional<ExtraColumnHolder<Eigen::Vector3f>> m_bottomStripVectorColumn;
-  std::optional<ExtraColumnHolder<Eigen::Vector3f>> m_stripCenterDistanceColumn;
-  std::optional<ExtraColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
+  std::optional<SpacePointExtraColumnHolder<Eigen::Vector3f>>
+      m_topStripVectorColumn;
+  std::optional<SpacePointExtraColumnHolder<Eigen::Vector3f>>
+      m_bottomStripVectorColumn;
+  std::optional<SpacePointExtraColumnHolder<Eigen::Vector3f>>
+      m_stripCenterDistanceColumn;
+  std::optional<SpacePointExtraColumnHolder<Eigen::Vector3f>>
+      m_topStripCenterColumn;
   // copy information
-  std::optional<ExtraColumnHolder<std::size_t>> m_copyFromIndexColumn;
+  std::optional<SpacePointExtraColumnHolder<std::size_t>> m_copyFromIndexColumn;
 
-  std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
+  std::unordered_map<std::string, std::unique_ptr<SpacePointColumnHolderBase>>
       m_namedExtraColumns;
 
-  std::vector<ColumnHolderBase *> m_extraColumns;
+  std::vector<SpacePointColumnHolderBase *> m_extraColumns;
 
   template <typename Holder>
   auto createExtraColumnImpl(const std::string &name) {
