@@ -9,16 +9,21 @@ find_path(
     fastjet/version.hh
     DOC "The FastJet include directory"
 )
+
 if(${FastJet_INCLUDE_DIR} STREQUAL "FastJet_INCLUDE_DIR-NOTFOUND")
     message(FATAL_ERROR "FastJet include directory not found")
 endif()
+
 file(READ "${FastJet_INCLUDE_DIR}/fastjet/config_auto.h" FastJet_VERSION_FILE)
 string(
     REGEX MATCH
-    "#define FASTJET_PACKAGE_VERSION  \"([0-9]+\.[0-9]+\.[0-9]+)\""
+    "#define[ \t]+FASTJET_PACKAGE_VERSION[ \t]+\"([0-9]+\.[0-9]+\.[0-9]+)\""
     _
     ${FastJet_VERSION_FILE}
 )
+if(NOT CMAKE_MATCH_1)
+    message(FATAL_ERROR "Failed to extract FastJet version from config_auto.h")
+endif()
 
 set(FastJet_VERSION ${CMAKE_MATCH_1})
 
@@ -29,6 +34,8 @@ find_package_handle_standard_args(
 )
 
 add_library(FastJet SHARED IMPORTED)
+add_library(FastJet::FastJet ALIAS FastJet)
+
 set_property(TARGET FastJet PROPERTY IMPORTED_LOCATION ${FastJet_LIBRARY})
 set_property(
     TARGET FastJet
@@ -37,8 +44,10 @@ set_property(
 
 mark_as_advanced(FastJet_FOUND FastJet_INCLUDE_DIR FastJet_LIBRARY)
 
-if(FastJet_FOUND)
-    message(STATUS "Found FastJet ${FastJet_VERSION} at ${FastJet_LIBRARY}")
-else()
-    message(FATAL_ERROR "FastJet not found")
+if(NOT FastJet_FIND_QUIETLY)
+    if(FastJet_FOUND)
+        message(STATUS "Found FastJet ${FastJet_VERSION} at ${FastJet_LIBRARY}")
+    else()
+        message(FATAL_ERROR "FastJet not found")
+    endif()
 endif()
