@@ -11,12 +11,18 @@
 namespace Acts::Experimental {
 
 void SeedContainer2::reserve(std::size_t size, float averageSpacePoints) {
-  m_entries.reserve(size);
+  m_sizes.reserve(size);
+  m_spacePointOffsets.reserve(size);
+  m_qualities.reserve(size);
+  m_vertexZs.reserve(size);
   m_spacePoints.reserve(static_cast<std::size_t>(size * averageSpacePoints));
 }
 
 void SeedContainer2::clear() {
-  m_entries.clear();
+  m_sizes.clear();
+  m_spacePointOffsets.clear();
+  m_qualities.clear();
+  m_vertexZs.clear();
   m_spacePoints.clear();
 }
 

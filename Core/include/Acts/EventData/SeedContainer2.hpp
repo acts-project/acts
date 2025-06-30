@@ -12,7 +12,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
-#include <limits>
 #include <span>
 #include <vector>
 
@@ -37,7 +36,7 @@ class SeedContainer2 {
   /// Returns the size of the seed container, i.e., the number of seeds
   /// contained in it.
   /// @return The number of seeds in the container.
-  std::size_t size() const { return m_entries.size(); }
+  std::size_t size() const { return m_sizes.size(); }
   /// Checks if the seed container is empty.
   /// @return True if the container is empty, false otherwise.
   bool empty() const { return size() == 0; }
@@ -73,26 +72,26 @@ class SeedContainer2 {
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
   std::span<SpacePointIndex2> spacePointIndices(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_sizes.size() && "Index out of bounds");
+    assert(index < m_spacePointOffsets.size() && "Index out of bounds");
     return std::span<SpacePointIndex2>(
-        m_spacePoints.data() + m_entries[index].spacePointOffset,
-        m_spacePoints.data() + m_entries[index].spacePointOffset +
-            m_entries[index].seedSize);
+        m_spacePoints.data() + m_spacePointOffsets[index],
+        m_spacePoints.data() + m_spacePointOffsets[index] + m_sizes[index]);
   }
 
   /// Mutable access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the quality of the seed at the given index.
   float &quality(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
-    return m_entries[index].quality;
+    assert(index < m_qualities.size() && "Index out of bounds");
+    return m_qualities[index];
   }
   /// Mutable access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed at the
   float &vertexZ(IndexType index) {
-    assert(index < m_entries.size() && "Index out of bounds");
-    return m_entries[index].vertexZ;
+    assert(index < m_vertexZs.size() && "Index out of bounds");
+    return m_vertexZs[index];
   }
 
   /// Const access to the space point indices of the seed at the given index.
@@ -100,27 +99,27 @@ class SeedContainer2 {
   /// @return A span of space point indices associated with the seed at the given
   ///         index.
   std::span<const SpacePointIndex2> spacePointIndices(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
+    assert(index < m_sizes.size() && "Index out of bounds");
+    assert(index < m_spacePointOffsets.size() && "Index out of bounds");
     return std::span<const SpacePointIndex2>(
-        m_spacePoints.data() + m_entries[index].spacePointOffset,
-        m_spacePoints.data() + m_entries[index].spacePointOffset +
-            m_entries[index].seedSize);
+        m_spacePoints.data() + m_spacePointOffsets[index],
+        m_spacePoints.data() + m_spacePointOffsets[index] + m_sizes[index]);
   }
 
   /// Const access to the quality of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the quality of the seed at the given index.
   float quality(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
-    return m_entries[index].quality;
+    assert(index < m_qualities.size() && "Index out of bounds");
+    return m_qualities[index];
   }
   /// Const access to the vertex Z coordinate of the seed at the given index.
   /// @param index The index of the seed.
   /// @return A const reference to the vertex Z coordinate of the seed at the
   ///         given index.
   float vertexZ(IndexType index) const {
-    assert(index < m_entries.size() && "Index out of bounds");
-    return m_entries[index].vertexZ;
+    assert(index < m_vertexZs.size() && "Index out of bounds");
+    return m_vertexZs[index];
   }
 
   template <bool read_only>
@@ -171,19 +170,11 @@ class SeedContainer2 {
   const_iterator end() const { return const_iterator(*this, size()); }
 
  private:
-  struct Entry {
-    std::size_t seedSize{};
-    std::size_t spacePointOffset{};
-    float quality{-std::numeric_limits<float>::infinity()};
-    float vertexZ{};
-
-    Entry() = default;
-    Entry(std::size_t size, std::size_t offset, float q, float vz)
-        : seedSize(size), spacePointOffset(offset), quality(q), vertexZ(vz) {}
-  };
-
-  std::vector<Entry> m_entries{};
-  std::vector<SpacePointIndex2> m_spacePoints{};
+  std::vector<std::uint8_t> m_sizes;
+  std::vector<std::size_t> m_spacePointOffsets;
+  std::vector<float> m_qualities;
+  std::vector<float> m_vertexZs;
+  std::vector<SpacePointIndex2> m_spacePoints;
 };
 
 }  // namespace Acts::Experimental

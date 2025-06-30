@@ -12,12 +12,16 @@
 
 #include "Acts/EventData/SeedProxy2.hpp"
 
+#include <limits>
+
 namespace Acts::Experimental {
 
 inline MutableSeedProxy2 SeedContainer2::createSeed(
     std::span<const SpacePointIndex2> spacePoints) {
-  m_entries.emplace_back(spacePoints.size(), m_spacePoints.size(),
-                         -std::numeric_limits<float>::infinity(), 0.f);
+  m_sizes.push_back(static_cast<std::uint8_t>(spacePoints.size()));
+  m_spacePointOffsets.push_back(m_spacePoints.size());
+  m_qualities.push_back(-std::numeric_limits<float>::infinity());
+  m_vertexZs.push_back(0.f);
   m_spacePoints.insert(m_spacePoints.end(), spacePoints.begin(),
                        spacePoints.end());
   return MutableProxyType(*this, size() - 1);
