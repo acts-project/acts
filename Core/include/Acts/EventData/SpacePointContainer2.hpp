@@ -666,7 +666,7 @@ class SpacePointContainer2 {
     virtual void emplace_back() = 0;
   };
   template <typename T>
-  class ExtraColumnHolder final : public ColumnHolderBase {
+  class ExtraColumnHolder : public ColumnHolderBase {
    public:
     using ValueType = T;
     using ContainerType = std::vector<ValueType>;
@@ -681,12 +681,10 @@ class SpacePointContainer2 {
     }
     ProxyType proxy() const { return ProxyType(m_data); }
 
-    inline void reserve(std::size_t size) override { m_data.reserve(size); }
-    inline void clear() override { m_data.clear(); }
-    inline void resize(std::size_t size) override {
-      m_data.resize(size, m_default);
-    }
-    inline void emplace_back() override { m_data.emplace_back(m_default); }
+    void reserve(std::size_t size) override { m_data.reserve(size); }
+    void clear() override { m_data.clear(); }
+    void resize(std::size_t size) override { m_data.resize(size, m_default); }
+    void emplace_back() override { m_data.emplace_back(m_default); }
 
    private:
     ContainerType m_data;
