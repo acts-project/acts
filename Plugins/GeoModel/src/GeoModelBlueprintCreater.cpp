@@ -41,13 +41,12 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   Acts::GeoModelBlueprintCreater::Blueprint blueprint;
 
   // The GeoModel tree must have a reader
-  if (gmTree.geoReader == nullptr) {
+  if (gmTree.dbMgr == nullptr) {
     throw std::invalid_argument(
-        "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
+        "GeoModelBlueprintCreater: GeoModelTree has no dbMgr");
   }
 
-  auto blueprintTable =
-      gmTree.geoReader->getTableFromTableName_String(options.table);
+  auto blueprintTable = gmTree.dbMgr->getTableRecords_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;

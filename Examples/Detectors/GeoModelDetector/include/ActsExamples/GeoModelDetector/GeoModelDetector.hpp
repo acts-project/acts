@@ -41,7 +41,8 @@ struct GeoModelDetector : public Detector {
       const Geant4ConstructionOptions& options) const override;
 
   /// @brief Instantiate the building of the tracking geometry from an external builder
-  ///        The builder should
+  ///        The tracking geometry builder should contain the surfaces built
+  ///        from the same GeoModelTree as the GeoModelDetector itself.
   /// @param gctx: Geometry context to access the aligned transform of the volumes
   /// @param builder: Reference to the TrackingGeometry builder interpreting the GeoModelTree
   /// @return A constructed tracking geometry
