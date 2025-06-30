@@ -20,8 +20,7 @@ ActsExamples::AlignedGenericDetector::AlignedGenericDetector(const Config& cfg)
         auto id = static_cast<GenericDetectorElement::Identifier>(
             m_detectorStore.size());
         auto detElem = std::make_shared<AlignedGenericDetectorElement>(
-            id, transform, std::move(bounds), thickness,
-            std::move(material));
+            id, transform, std::move(bounds), thickness, std::move(material));
         m_detectorStore.push_back(detElem);
         return detElem;
       };
