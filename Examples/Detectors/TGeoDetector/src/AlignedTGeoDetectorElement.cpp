@@ -15,5 +15,5 @@ ActsExamples::alignedTGeoDetectorElementFactory(
     const std::string& axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<AlignedTGeoDetectorElement>(
-      identifier, tGeoNode, tGeoMatrix, axes, scalor, material);
+      identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));
 };
