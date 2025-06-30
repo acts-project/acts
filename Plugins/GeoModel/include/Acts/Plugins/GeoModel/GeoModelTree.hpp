@@ -20,8 +20,8 @@ namespace Acts {
 ///        volumes inside the tree representing the sensors and chambers in a
 ///        detector.
 struct GeoModelTree {
-  using FPVLink = GeoIntrusivePtr<GeoFullPhysVol>;
-  using FPVConstLink = GeoIntrusivePtr<const GeoFullPhysVol>;
+  using FpvLink = GeoIntrusivePtr<GeoFullPhysVol>;
+  using FpvConstLink = GeoIntrusivePtr<const GeoFullPhysVol>;
   /// @brief Helper struct to manage the list of published full physical volumes.
   ///        These volumes have unique name tags and seed the construction of
   ///        tracking volumes. The list of published full physical volumes are
@@ -33,7 +33,7 @@ struct GeoModelTree {
   ///        provides the mechanism to store and return the published volumes.
   struct VolumePublisher {
     /// @brief Abrivation of the published full physical volumes
-    using VolumeMap_t = std::map<std::string, FPVConstLink>;
+    using VolumeMap_t = std::map<std::string, FpvConstLink>;
     /// @brief Abrivation of the published map per system
     using PublisherMap_t = std::unordered_map<std::string, VolumeMap_t>;
     /// @brief Default constructor

@@ -51,7 +51,7 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
 
     /** Full physical volumes represent  logical detector units.*/
     for (const auto &[name, fpv] : qFPV) {
-      FPVConstLink physVol{fpv};
+      FpvConstLink physVol{fpv};
       ACTS_INFO("Convert volume " << name);
       convertFpv(name, physVol, cache, gctx);
     }
@@ -134,7 +134,7 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
 }
 
 void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
-                                               const FPVConstLink &fpv,
+                                               const FpvConstLink &fpv,
                                                Cache &cache,
                                                const GeometryContext &gctx) {
   const std::size_t prevSize = cache.sensitiveSurfaces.size();
