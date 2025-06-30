@@ -19,6 +19,7 @@ enum class DigitizationError {
   SmearingError,
   UndefinedSurface,
   MaskingError,
+  DriftError,
   MaximumRetriesExceeded,
 };
 
