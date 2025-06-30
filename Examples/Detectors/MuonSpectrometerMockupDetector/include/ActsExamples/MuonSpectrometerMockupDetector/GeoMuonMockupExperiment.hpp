@@ -41,17 +41,17 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     /// @brief Name of the output database file
     std::string dbName{"MuonMockUp.db"};
     /// @brief Inner tube radius corresponding to the drift gas volume
-    double innerTubeRadius = 14.6 * GeoModelKernelUnits::mm;
+    double innerTubeRadius{14.6 * GeoModelKernelUnits::mm};
     /// @brief  Thickness of the aluminium tube walls
-    double tubeWallThickness = 0.3 * GeoModelKernelUnits::mm;
+    double tubeWallThickness{0.3 * GeoModelKernelUnits::mm};
     /// @brief Number of tube layers per multilayer
-    double nTubeLayers = 4;
+    unsigned nTubeLayers{4};
     /// @brief Number of tubes in a tube layer
-    double nTubes = 64;
+    unsigned nTubes{64};
     /// @brief Thickness of foam absorber material in front / behind a multilayer
-    double mdtFoamThickness = 1. * GeoModelKernelUnits::cm;
+    double mdtFoamThickness{1. * GeoModelKernelUnits::cm};
     /// @brief Distance between two multi layers in a station
-    double multiLayerSeparation = 30. * GeoModelKernelUnits::cm;
+    double multiLayerSeparation{30. * GeoModelKernelUnits::cm};
 
     ///  @brief Barrel stations are also equipped with fast Rpc detectors
     ///         below & above the sandwich of the 2 Mdt multilayers. The
@@ -73,9 +73,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     ///        nSectors muon stations are placed at equal distance
     unsigned nSectors{24};
     /// @brief How many eta stations are placed along z
-    unsigned int nEtaStations = 12;
+    unsigned nEtaStations{12};
     /// @brief Separation between two stations
-    double stationDistInZ = 15. * GeoModelKernelUnits::cm;
+    double stationDistInZ{15. * GeoModelKernelUnits::cm};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -98,38 +98,38 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   double m_tubePitch{2. * m_outerTubeRadius + 0.1 * GeoModelKernelUnits::mm};
 
   /// @brief  Separation between absorber & tube layer
-  constexpr static double s_mdtFoamTubeDistance = 5. * GeoModelKernelUnits::mm;
+  constexpr static double s_mdtFoamTubeDistance{5. * GeoModelKernelUnits::mm};
 
   /// @brief Length of the envelope volume around the rube layers.
   ///        The extra factor 0.5 stemms from the relative displacement between
   ///        tubes from the odd & even layers
-  double m_chamberLength = (1. * m_cfg.nTubes + 0.5) * m_tubePitch;
+  double m_chamberLength{(1. * m_cfg.nTubes + 0.5) * m_tubePitch};
 
   /// @brief Total height of the tube layers stacked over each other.
-  double m_tubeLayersHeight =
-      m_tubePitch *
-      (1. + (m_cfg.nTubeLayers - 1) * std::sin(60. * GeoModelKernelUnits::deg));
+  double m_tubeLayersHeight{
+      m_tubePitch * (1. + (m_cfg.nTubeLayers - 1) *
+                              std::sin(60. * GeoModelKernelUnits::deg))};
   /// @brief Total height of a multi layer volume (tubelayers + foam)
-  double m_multiLayerHeight =
-      s_mdtFoamTubeDistance + m_tubeLayersHeight + m_cfg.mdtFoamThickness;
+  double m_multiLayerHeight{s_mdtFoamTubeDistance + m_tubeLayersHeight +
+                            m_cfg.mdtFoamThickness};
   /// @brief Height of a Rpc gasGap
-  constexpr static double s_rpcGasHeight = 0.5 * GeoModelKernelUnits::cm;
+  constexpr static double s_rpcGasHeight{0.5 * GeoModelKernelUnits::cm};
   /// @brief Distance between two gasGaps
-  constexpr static double s_rpcGasSingletSeparation =
-      2. * GeoModelKernelUnits::cm;
+  constexpr static double s_rpcGasSingletSeparation{2. *
+                                                    GeoModelKernelUnits::cm};
 
   /// @brief Total height of a rpc station
-  double m_rpcChamberHeight =
-      m_cfg.nRpcGasGaps * (s_rpcGasHeight + s_rpcGasSingletSeparation);
+  double m_rpcChamberHeight = {m_cfg.nRpcGasGaps *
+                               (s_rpcGasHeight + s_rpcGasSingletSeparation)};
   /// @brief Separation between Rpc & Mdt detectors
   constexpr static double s_rpcMdtDistance = 3.5 * GeoModelKernelUnits::cm;
   /// @brief Height of muon station
-  double m_muonStationHeight = 2. * m_multiLayerHeight +
-                               m_cfg.multiLayerSeparation +
-                               2. * (m_rpcChamberHeight + s_rpcMdtDistance);
+  double m_muonStationHeight{2. * m_multiLayerHeight +
+                             m_cfg.multiLayerSeparation +
+                             2. * (m_rpcChamberHeight + s_rpcMdtDistance)};
 
   /// @brief Angular coverage of each sector
-  double m_sectorSize = 360. * GeoModelKernelUnits::deg / m_cfg.nSectors;
+  double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
 
   void setupMaterials();
   /** @brief Construct the subvolume containing the tubes. Tubes are arranged in four
