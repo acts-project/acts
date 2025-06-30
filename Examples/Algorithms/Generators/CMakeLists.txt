@@ -2,7 +2,6 @@ add_library(
     ActsExamplesGenerators
     SHARED
     ActsExamples/Generators/EventGenerator.cpp
-    ActsExamples/Generators/ParametricParticleGenerator.cpp
 )
 target_include_directories(
     ActsExamplesGenerators

@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 namespace {
 
@@ -108,7 +110,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
                                  BoundaryTolerance::Infinite()));
 
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(1u).get());
 
   // (2) Run an initial update
   // - from a position where all but one are reachable
@@ -118,7 +121,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
                                  {Vector3(0., 0., 0.), Vector3(0., 0., 1.)},
                                  BoundaryTolerance::Infinite()));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 3u);
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[3u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(3u).get());
 
   // (3) Run an initial update
   // - from a position where all would be reachable, but
@@ -174,7 +178,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   BOOST_CHECK(
       nStream.initialize(gContext, qPoint, BoundaryTolerance::Infinite()));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(1u).get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 10.,
                   std::numeric_limits<double>::epsilon());
 
@@ -182,7 +187,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   qPoint.position = Vector3(0., 0., -22.);
   BOOST_CHECK(nStream.update(gContext, qPoint));
   // Surface unchanged, but the intersection should be closer
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(1u).get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 2.,
                   std::numeric_limits<double>::epsilon());
 
@@ -190,7 +196,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   qPoint.position = Vector3(0., 0., -19.5);
   BOOST_CHECK(nStream.update(gContext, qPoint));
   // Surface still unchanged, but pathLength is now negative
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(1u).get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), -0.5,
                   std::numeric_limits<double>::epsilon());
 
@@ -199,7 +206,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   BOOST_CHECK(nStream.update(gContext, qPoint));
   // Surface still unchanged, however, now withL
   // - pathlength smaller on surface tolerance, intersection status onSurface
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(1u).get());
   CHECK_CLOSE_ABS(
       nStream.currentCandidate().pathLength(), s_onSurfaceTolerance,
       std::numeric_limits<double>::epsilon() + s_onSurfaceTolerance);
@@ -208,7 +216,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Let's say the stepper confirms this
   BOOST_CHECK(nStream.switchToNextCandidate());
   // Surface is now surfaceB
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[3u].get());
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(3u).get());
   // Distance should be the initial estimate from the intialializeStream() call
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 130.,
                   std::numeric_limits<double>::epsilon());
@@ -244,13 +253,17 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   BOOST_CHECK(nStream.initialize(
       gContext, {Vector3(0., 0., 0.), Vector3(1., 1., 0.).normalized()},
       BoundaryTolerance::Infinite()));
-  // We should have 5 candidates, as one cylinder is reachable twice
-  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 5u);
+
+  // We should have 4 candidates, as one cylinder is reachable twice
+  // Technically, the surface at 20,20,0 is hit twice, but we deduplicate them
+  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   // First one is inner candidate
-  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[2].get());
-  // Surface of 2nd and 3rd candidate should be the same
-  BOOST_CHECK_EQUAL(&nStream.candidates()[1u].surface(), surfaces[1].get());
-  BOOST_CHECK_EQUAL(&nStream.candidates()[2u].surface(), surfaces[1].get());
+  BOOST_CHECK_EQUAL(&nStream.candidates().at(0u).surface(),
+                    surfaces.at(2).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates().at(1u).surface(),
+                    surfaces.at(1).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates().at(2u).surface(),
+                    surfaces.at(0).get());
 
   // (2) Run an initial update - from a position/direction where only
   // the concentric ones are reachable

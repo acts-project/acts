@@ -24,7 +24,7 @@ class GeometryContext;
 
 /// PortalLinkBase is the abstract base class for all portal links.
 /// A portal link is a mapping between a surface and a point on the surface and
-/// a destination tracking volum.
+/// a destination tracking volume.
 /// The derived classes implement different ways to resolve a volume
 class PortalLinkBase {
  protected:

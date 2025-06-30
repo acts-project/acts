@@ -272,6 +272,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
               passiveMatches, false);
 
+      Acts::Geant4DetectorSurfaceFactory::Config config;
       Acts::Geant4DetectorSurfaceFactory::Cache cache;
       Acts::Geant4DetectorSurfaceFactory::Options options;
       options.sensitiveSurfaceSelector = sensitiveSelectors;
@@ -279,7 +280,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       options.convertMaterial = convertMaterial;
 
       G4Transform3D nominal;
-      Acts::Geant4DetectorSurfaceFactory factory;
+      Acts::Geant4DetectorSurfaceFactory factory(config);
       factory.construct(cache, nominal, *world, options);
 
       // Capture the sensitive elements and the surfaces

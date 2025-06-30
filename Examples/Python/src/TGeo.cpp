@@ -7,9 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
-#include "Acts/Plugins/TGeo/TGeoParser.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
+#include "Acts/Plugins/Root/TGeoParser.hpp"
 
 #include <vector>
 

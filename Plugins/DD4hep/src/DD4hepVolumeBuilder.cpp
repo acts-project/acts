@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <stdexcept>

@@ -26,7 +26,7 @@ There are a number of optional components in the ``Plugins/`` folder, only some 
 
 - DD4hep
 - Json
-- TGeo
+- Root
 - FpeMonitoring
 
 Private API

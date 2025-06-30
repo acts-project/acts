@@ -14,18 +14,16 @@
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
+#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
 
 using namespace Acts::detail;
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
-    std::unique_ptr<const Logger> mlogger)
-    : m_logger(std::move(mlogger)) {
-  ACTS_DEBUG("UnitLength conversion factor (DD4hep -> Acts): " << unitLength);
-}
+    const Config& config, std::unique_ptr<const Logger> mlogger)
+    : m_config(config), m_logger(std::move(mlogger)) {}
 
 void Acts::DD4hepDetectorSurfaceFactory::construct(
     Cache& cache, const GeometryContext& gctx,
@@ -101,7 +99,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial = nullptr;
 
   // Create the corresponding detector element
-  auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
+  auto dd4hepDetElement = m_config.detectorElementFactory(
       dd4hepElement, detAxis, unitLength, false, nullptr);
   auto sSurface = dd4hepDetElement->surface().getSharedPtr();
   // Measure if configured to do so

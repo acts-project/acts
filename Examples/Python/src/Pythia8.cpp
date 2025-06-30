@@ -6,17 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -33,10 +29,11 @@ void addPythia8(Context& ctx) {
   ctx.modules["pythia8"] = p8;
 
   using Gen = ActsExamples::Pythia8Generator;
-  auto gen = py::class_<Gen, ActsExamples::EventGenerator::ParticlesGenerator,
-                        std::shared_ptr<Gen>>(p8, "Pythia8Generator")
-                 .def(py::init<const Gen::Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
+  auto gen =
+      py::class_<Gen, ActsExamples::ParticlesGenerator, std::shared_ptr<Gen>>(
+          p8, "Pythia8Generator")
+          .def(py::init<const Gen::Config&, Acts::Logging::Level>(),
+               py::arg("config"), py::arg("level"));
 
   py::class_<Gen::Config>(gen, "Config")
       .def(py::init<>())

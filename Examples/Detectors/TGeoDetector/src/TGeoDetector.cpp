@@ -22,8 +22,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
@@ -59,7 +59,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     Acts::TGeoLayerBuilder::Config layerBuilderConfig;
     layerBuilderConfig.configurationName = volume.name;
     layerBuilderConfig.unit = config.unitScalor;
-    layerBuilderConfig.elementFactory = config.elementFactory;
+    layerBuilderConfig.detectorElementFactory = config.detectorElementFactory;
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(

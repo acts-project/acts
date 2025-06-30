@@ -92,7 +92,7 @@ option(ACTS_EXATRKX_ENABLE_MODULEMAP "Enable Module-Map-based graph construction
 option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
-option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # fatras related options
@@ -176,13 +176,13 @@ set_option_if(
     ACTS_BUILD_EXAMPLES_GEANT4
 )
 set_option_if(
-  ACTS_BUILD_PLUGIN_TGEO
+  ACTS_BUILD_PLUGIN_ROOT
   ACTS_BUILD_PLUGIN_DD4HEP OR
   ACTS_BUILD_EXAMPLES
 )
 set_option_if(
   ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_TGEO OR
+  ACTS_BUILD_PLUGIN_ROOT OR
   ACTS_BUILD_PLUGIN_PODIO OR
   ACTS_BUILD_EXAMPLES
 )
@@ -422,7 +422,7 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
     # find other GeoModel components of EXACT same version
     find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
-if(ACTS_BUILD_PLUGIN_TGEO)
+if(ACTS_BUILD_PLUGIN_ROOT)
     find_package(
         ROOT
         ${_acts_root_version}

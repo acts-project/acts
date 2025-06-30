@@ -23,29 +23,39 @@ void fillGridIndices2D(
         rootVolumes,
     const std::array<std::vector<double>, 2u>& boundaries,
     const std::array<Acts::AxisDirection, 2u>& casts) {
+  if (casts != std::array<Acts::AxisDirection, 2u>{
+                   Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR}) {
+    return;
+  }
+
   // Brute force loop over all bins & all volumes
   for (const auto [ic0, c0] : Acts::enumerate(boundaries[0u])) {
-    if (ic0 > 0) {
-      double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
-      for (const auto [ic1, c1] : Acts::enumerate(boundaries[1u])) {
-        if (ic1 > 0) {
-          double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
-          if (casts ==
-              std::array<Acts::AxisDirection, 2u>{Acts::AxisDirection::AxisZ,
-                                                  Acts::AxisDirection::AxisR}) {
-            Acts::Vector3 zrPosition{v1, 0., v0};
-            for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
-              if (v->inside(gctx, zrPosition)) {
-                typename Grid2D::point_t p{v0, v1};
-                grid.atPosition(p) = iv;
-              }
-            }
-          }
+    if (ic0 == 0) {
+      continue;
+    }
+
+    const double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
+
+    for (const auto [ic1, c1] : Acts::enumerate(boundaries[1u])) {
+      if (ic1 == 0) {
+        continue;
+      }
+
+      const double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
+      const Acts::Vector3 zrPosition{v1, 0., v0};
+
+      for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
+        if (!v->inside(gctx, zrPosition)) {
+          continue;
         }
+
+        typename Grid2D::point_t p{v0, v1};
+        grid.atPosition(p) = iv;
       }
     }
   }
 }
+
 }  // namespace
 
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
