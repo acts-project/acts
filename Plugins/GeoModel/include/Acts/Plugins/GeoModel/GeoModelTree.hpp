@@ -27,7 +27,7 @@ struct GeoModelTree {
   ///        tracking volumes. The list of published full physical volumes are
   ///        the name tags associated with a particular node in the GeoModel
   ///        tree. The lists are usually separated by subdetector and are
-  ///        shipped together with the SQLite database. The latter is querried,
+  ///        shipped together with the SQLite database. The latter is queried,
   ///        if the geometry is constructed from an external file. If the
   ///        geometry is built dynamically in memory, the VolumePublisher
   ///        provides the mechanism to store and return the published volumes.
