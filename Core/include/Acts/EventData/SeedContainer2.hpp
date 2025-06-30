@@ -147,18 +147,18 @@ class SeedContainer2 {
       return tmp;
     }
 
-    bool operator==(const SeedIterator &other) const {
-      return m_index == other.m_index && m_container == other.m_container;
-    }
-    bool operator!=(const SeedIterator &other) const {
-      return !(*this == other);
-    }
-
     value_type operator*() const { return value_type(*m_container, m_index); }
 
    private:
     ContainerType *m_container{};
     IndexType m_index{};
+
+    friend bool operator==(const SeedIterator &a, const SeedIterator &b) {
+      return a.m_index == b.m_index && a.m_container == b.m_container;
+    }
+    friend bool operator!=(const SeedIterator &a, const SeedIterator &b) {
+      return !(a == b);
+    }
   };
   using iterator = SeedIterator<false>;
   using const_iterator = SeedIterator<true>;

@@ -592,16 +592,18 @@ class SpacePointContainer2 {
       return tmp;
     }
 
-    bool operator==(const Iterator &other) const {
-      return m_index == other.m_index && m_container == other.m_container;
-    }
-    bool operator!=(const Iterator &other) const { return !(*this == other); }
-
     value_type operator*() const { return value_type(*m_container, m_index); }
 
    private:
     ContainerType *m_container{};
     IndexType m_index{};
+
+    friend bool operator==(const Iterator &a, const Iterator &b) {
+      return a.m_index == b.m_index && a.m_container == b.m_container;
+    }
+    friend bool operator!=(const Iterator &a, const Iterator &b) {
+      return !(a == b);
+    }
   };
   using iterator = Iterator<false>;
   using const_iterator = Iterator<true>;

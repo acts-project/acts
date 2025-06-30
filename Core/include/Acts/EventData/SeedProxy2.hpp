@@ -130,13 +130,6 @@ class SeedProxy2 {
       return tmp;
     }
 
-    bool operator==(const SpacePointIterator &other) const {
-      return m_indexPointer == other.m_indexPointer;
-    }
-    bool operator!=(const SpacePointIterator &other) const {
-      return !(*this == other);
-    }
-
     value_type operator*() const {
       return m_spacePointContainer->at(*m_indexPointer);
     }
@@ -144,6 +137,15 @@ class SeedProxy2 {
    private:
     const SpacePointContainer2 *m_spacePointContainer{nullptr};
     const SpacePointIndex2 *m_indexPointer{nullptr};
+
+    friend bool operator==(const SpacePointIterator &a,
+                           const SpacePointIterator &b) {
+      return a.m_indexPointer == b.m_indexPointer;
+    }
+    friend bool operator!=(const SpacePointIterator &a,
+                           const SpacePointIterator &b) {
+      return !(a == b);
+    }
   };
 
   class SpacePointRange {
