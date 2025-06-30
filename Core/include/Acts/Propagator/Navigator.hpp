@@ -230,9 +230,12 @@ class Navigator {
   explicit Navigator(Config cfg,
                      std::shared_ptr<const Logger> _logger =
                          getDefaultLogger("Navigator", Logging::Level::INFO))
-      : m_cfg{std::move(cfg)},
-        m_geometryVersion{m_cfg.trackingGeometry->geometryVersion()},
-        m_logger{std::move(_logger)} {}
+      : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
+    if (m_cfg.trackingGeometry == nullptr) {
+      throw std::invalid_argument("Navigator: No tracking geometry provided.");
+    }
+    m_geometryVersion = m_cfg.trackingGeometry->geometryVersion();
+  }
 
   State makeState(const Options& options) const {
     State state(options);
