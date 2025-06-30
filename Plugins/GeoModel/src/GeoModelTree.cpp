@@ -13,14 +13,16 @@ GeoModelTree::VolumePublisher::VolumePublisher(
     std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept
     : m_reader{std::move(geoReader)} {}
 
-GeoModelTree::VolumePublisher::VolumePublisher(const VolumePublisher& other) noexcept{
+GeoModelTree::VolumePublisher::VolumePublisher(
+    const VolumePublisher& other) noexcept {
   (*this) = other;
 }
-GeoModelTree::VolumePublisher::VolumePublisher(VolumePublisher&& other) noexcept{
+GeoModelTree::VolumePublisher::VolumePublisher(
+    VolumePublisher&& other) noexcept {
   (*this) = std::move(other);
 }
 GeoModelTree::VolumePublisher& GeoModelTree::VolumePublisher::operator=(
-    const VolumePublisher& other) noexcept{
+    const VolumePublisher& other) noexcept {
   if (&other != this) {
     std::scoped_lock guard{m_mutex, other.m_mutex};
     m_reader = other.m_reader;

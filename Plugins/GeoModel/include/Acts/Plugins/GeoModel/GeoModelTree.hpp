@@ -41,7 +41,8 @@ struct GeoModelTree {
     /// @brief Constructor taking an instance to the GeoModelReader.
     ///        If the publisher does not know yet about the system,
     ///        the published volumes are queried from the database
-    explicit VolumePublisher(std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept;
+    explicit VolumePublisher(
+        std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept;
     /// @brief Copy constructor
     VolumePublisher(const VolumePublisher& other) noexcept;
     /// @brief Move constructor

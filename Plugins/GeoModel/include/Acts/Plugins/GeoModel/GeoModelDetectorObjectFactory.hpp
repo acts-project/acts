@@ -47,8 +47,7 @@ class GeoModelDetectorObjectFactory {
   ///          a Gen-2 volume and the pointer to the full physical volume
   using GeoModelVolumeFPVTuple =
       std::tuple<std::shared_ptr<Volume>,
-                 std::shared_ptr<Experimental::DetectorVolume>, 
-                 FpvConstLink>;
+                 std::shared_ptr<Experimental::DetectorVolume>, FpvConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
