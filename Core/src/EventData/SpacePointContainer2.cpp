@@ -11,7 +11,9 @@
 namespace Acts::Experimental {
 
 SpacePointContainer2::SpacePointContainer2(const SpacePointContainer2 &other)
-    : m_xyz(other.m_xyz),
+    : m_x(other.m_x),
+      m_y(other.m_y),
+      m_z(other.m_z),
       m_sourceLinkOffsets(other.m_sourceLinkOffsets),
       m_sourceLinkCounts(other.m_sourceLinkCounts),
       m_sourceLinks(other.m_sourceLinks),
@@ -36,7 +38,9 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
-  m_xyz = other.m_xyz;
+  m_x = other.m_x;
+  m_y = other.m_y;
+  m_z = other.m_z;
   m_sourceLinkOffsets = other.m_sourceLinkOffsets;
   m_sourceLinkCounts = other.m_sourceLinkCounts;
   m_sourceLinks = other.m_sourceLinks;
@@ -59,7 +63,9 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
 }
 
 void SpacePointContainer2::reserve(std::size_t size, float averageSourceLinks) {
-  m_xyz.reserve(size * 3);
+  m_x.reserve(size);
+  m_y.reserve(size);
+  m_z.reserve(size);
   m_sourceLinkOffsets.reserve(size);
   m_sourceLinkCounts.reserve(size);
   m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
@@ -70,7 +76,9 @@ void SpacePointContainer2::reserve(std::size_t size, float averageSourceLinks) {
 }
 
 void SpacePointContainer2::clear() {
-  m_xyz.clear();
+  m_x.clear();
+  m_y.clear();
+  m_z.clear();
   m_sourceLinkOffsets.clear();
   m_sourceLinkCounts.clear();
   m_sourceLinks.clear();
