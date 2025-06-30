@@ -41,15 +41,15 @@ struct GeoModelTree {
     /// @brief Constructor taking an instance to the GeoModelReader.
     ///        If the publisher does not know yet about the system,
     ///        the published volumes are queried from the database
-    VolumePublisher(std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader);
+    explicit VolumePublisher(std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept;
     /// @brief Copy constructor
-    VolumePublisher(const VolumePublisher& other);
+    VolumePublisher(const VolumePublisher& other) noexcept;
     /// @brief Move constructor
-    VolumePublisher(VolumePublisher&& other);
+    VolumePublisher(VolumePublisher&& other) noexcept;
     /// @brief Copy assignment operator
-    VolumePublisher& operator=(const VolumePublisher& other);
+    VolumePublisher& operator=(const VolumePublisher& other) noexcept;
     /// @brief Move assignment operator
-    VolumePublisher& operator=(VolumePublisher&& other);
+    VolumePublisher& operator=(VolumePublisher&& other) noexcept;
     /// @brief Returns the list of published full physical volume for a given subsystem
     /// @param systemName: System of interest (e.g. Tracker, MS)
     const VolumeMap_t& getPublishedVol(const std::string& systemName) const;
@@ -77,7 +77,7 @@ struct GeoModelTree {
   /// @brief Constructor taking a shared pointer to an opened
   ///        SQLite DB session.
   /// @param db: Valid pointer to a GeoModel database manager
-  GeoModelTree(std::shared_ptr<GMDBManager> db);
+  explicit GeoModelTree(std::shared_ptr<GMDBManager> db);
 
   /// @brief Database manager used to construct the Root node and
   ///        also to query information from additional tables

@@ -10,30 +10,28 @@
 
 namespace Acts {
 GeoModelTree::VolumePublisher::VolumePublisher(
-    std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader)
+    std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept
     : m_reader{std::move(geoReader)} {}
 
-GeoModelTree::VolumePublisher::VolumePublisher(const VolumePublisher& other) {
+GeoModelTree::VolumePublisher::VolumePublisher(const VolumePublisher& other) noexcept{
   (*this) = other;
 }
-GeoModelTree::VolumePublisher::VolumePublisher(VolumePublisher&& other) {
+GeoModelTree::VolumePublisher::VolumePublisher(VolumePublisher&& other) noexcept{
   (*this) = std::move(other);
 }
 GeoModelTree::VolumePublisher& GeoModelTree::VolumePublisher::operator=(
-    const VolumePublisher& other) {
+    const VolumePublisher& other) noexcept{
   if (&other != this) {
-    std::lock_guard guardT{m_mutex};
-    std::lock_guard guardO{other.m_mutex};
+    std::scoped_lock guard{m_mutex, other.m_mutex};
     m_reader = other.m_reader;
     m_publishedVols = other.m_publishedVols;
   }
   return (*this);
 }
 GeoModelTree::VolumePublisher& GeoModelTree::VolumePublisher::operator=(
-    VolumePublisher&& other) {
+    VolumePublisher&& other) noexcept {
   if (&other != this) {
-    std::lock_guard guardT{m_mutex};
-    std::lock_guard guardO{other.m_mutex};
+    std::scoped_lock guard{m_mutex, other.m_mutex};
     m_reader = std::move(other.m_reader);
     m_publishedVols = std::move(other.m_publishedVols);
   }
