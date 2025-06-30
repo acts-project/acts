@@ -11,7 +11,7 @@
 namespace Acts {
 GeoModelTree::VolumePublisher::VolumePublisher(
     const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept
-    : m_reader{std::move(geoReader)} {}
+    : m_reader{geoReader} {}
 
 GeoModelTree::VolumePublisher::VolumePublisher(
     const VolumePublisher& other) noexcept {
