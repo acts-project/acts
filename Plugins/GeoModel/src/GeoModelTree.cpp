@@ -76,7 +76,7 @@ void GeoModelTree::VolumePublisher::publishVolumes(
                             systemName + " has already published volumes.");
   }
 }
-GeoModelTree::GeoModelTree(std::shared_ptr<GMDBManager> db)
+GeoModelTree::GeoModelTree(const std::shared_ptr<GMDBManager>& db)
     : dbMgr{db},
       publisher{std::make_shared<GeoModelIO::ReadGeoModel>(db.get())},
       worldVolume{publisher.reader()->buildGeoModel()} {}

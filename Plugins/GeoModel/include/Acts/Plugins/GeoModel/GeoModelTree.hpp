@@ -42,7 +42,7 @@ struct GeoModelTree {
     ///        If the publisher does not know yet about the system,
     ///        the published volumes are queried from the database
     explicit VolumePublisher(
-        std::shared_ptr<GeoModelIO::ReadGeoModel> geoReader) noexcept;
+        const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept;
     /// @brief Copy constructor
     VolumePublisher(const VolumePublisher& other) noexcept;
     /// @brief Move constructor
@@ -78,7 +78,7 @@ struct GeoModelTree {
   /// @brief Constructor taking a shared pointer to an opened
   ///        SQLite DB session.
   /// @param db: Valid pointer to a GeoModel database manager
-  explicit GeoModelTree(std::shared_ptr<GMDBManager> db);
+  explicit GeoModelTree(const std::shared_ptr<GMDBManager>& db);
 
   /// @brief Database manager used to construct the Root node and
   ///        also to query information from additional tables
