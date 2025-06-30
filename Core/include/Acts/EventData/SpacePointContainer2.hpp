@@ -685,8 +685,8 @@ class SpacePointContainer2 {
     void emplace_back() override { m_data.emplace_back(m_default); }
 
    private:
-    ValueType m_default;
     ContainerType m_data;
+    ValueType m_default{};
   };
 
   std::vector<float> m_xyz;

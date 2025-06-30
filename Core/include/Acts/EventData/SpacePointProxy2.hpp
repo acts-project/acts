@@ -46,7 +46,7 @@ class SpacePointProxy2 {
 
   /// Copy construct a mutable space point proxy.
   /// @param other The mutable space point proxy to copy.
-  SpacePointProxy2(const SpacePointProxy2<false> &other)
+  explicit SpacePointProxy2(const SpacePointProxy2<false> &other)
     requires(ReadOnly)
       : m_container(&other.container()), m_index(other.index()) {}
 

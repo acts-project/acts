@@ -41,7 +41,7 @@ class SeedProxy2 {
 
   /// Copy construct a mutable seed proxy.
   /// @param other The mutable seed proxy to copy.
-  SeedProxy2(const SeedProxy2<false> &other)
+  explicit SeedProxy2(const SeedProxy2<false> &other)
     requires(ReadOnly)
       : m_container(&other.container()), m_index(other.index()) {}
 
