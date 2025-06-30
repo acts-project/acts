@@ -34,13 +34,13 @@ void TryAllNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
-  if (m_cfg.portals) {
+  if (m_cfg.portals && args.wantsPortals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
     }
   }
 
-  if (m_cfg.sensitives) {
+  if (m_cfg.sensitives && args.wantsSurfaces) {
     for (const auto& surface : m_volume->surfaces()) {
       stream.addSurfaceCandidate(surface, args.tolerance);
     };
