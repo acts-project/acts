@@ -676,15 +676,23 @@ class SpacePointContainer2 {
     explicit ExtraColumnHolder(ValueType defaultValue)
         : m_default(std::move(defaultValue)) {}
 
-    std::unique_ptr<ColumnHolderBase> copy() const final {
-      return std::make_unique<ExtraColumnHolder<T>>(*this);
-    }
     ProxyType proxy() const { return ProxyType(m_data); }
 
-    void reserve(std::size_t size) final { m_data.reserve(size); }
-    void clear() final { m_data.clear(); }
-    void resize(std::size_t size) final { m_data.resize(size, m_default); }
-    void emplace_back() final { m_data.emplace_back(m_default); }
+    __attribute__((used, weak)) std::unique_ptr<ColumnHolderBase> copy()
+        const override {
+      return std::make_unique<ExtraColumnHolder<T>>(*this);
+    }
+
+    __attribute__((used, weak)) void reserve(std::size_t size) override {
+      m_data.reserve(size);
+    }
+    __attribute__((used, weak)) void clear() override { m_data.clear(); }
+    __attribute__((used, weak)) void resize(std::size_t size) override {
+      m_data.resize(size, m_default);
+    }
+    __attribute__((used, weak)) void emplace_back() override {
+      m_data.emplace_back(m_default);
+    }
 
    private:
     ContainerType m_data;
