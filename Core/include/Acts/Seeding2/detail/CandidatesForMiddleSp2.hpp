@@ -8,16 +8,16 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
+
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief A description of a triplet candidate.
-/// @tparam external_space_point_t  The external spacepoint type.
-template <typename external_space_point_t>
-struct TripletCandidate {
+struct TripletCandidate2 {
   /// @brief Default Constructor
-  TripletCandidate() = default;
+  TripletCandidate2() = default;
 
   /// @brief constructor
   /// @param b The bottom space point
@@ -26,37 +26,20 @@ struct TripletCandidate {
   /// @param w The quality of the candidate
   /// @param z The z coordinate of the origin
   /// @param q Whether the candidate is high or low quality
-  TripletCandidate(external_space_point_t& b, external_space_point_t& m,
-                   external_space_point_t& t, float w, float z, bool q)
-      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q) {}
+  TripletCandidate2(SpacePointIndex2 b, SpacePointIndex2 m, SpacePointIndex2 t,
+                    float w, float z, bool q)
+      : bottom(b), middle(m), top(t), weight(w), zOrigin(z), isQuality(q) {}
 
-  external_space_point_t* bottom{nullptr};
-  external_space_point_t* middle{nullptr};
-  external_space_point_t* top{nullptr};
+  SpacePointIndex2 bottom{};
+  SpacePointIndex2 middle{};
+  SpacePointIndex2 top{};
   float weight{0.};
   float zOrigin{0.};
   bool isQuality{false};
 };
 
-/// @class CandidatesForMiddleSp
-/// The CandidatesForMiddleSp collects the triplet candidates given a
-/// fixed middle spacepoint. It internally stores the triplet candidates
-/// keeping only those with the higher quality.
-///
-/// @tparam external_space_point_t The external spacepoint type.
-
-template <typename external_space_point_t>
-concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
-  { spacePoint.x() } -> std::convertible_to<float>;
-  { spacePoint.y() } -> std::convertible_to<float>;
-  { spacePoint.z() } -> std::convertible_to<float>;
-};
-
-template <SatisfyCandidateConcept external_space_point_t>
-class CandidatesForMiddleSp {
+class CandidatesForMiddleSp2 {
  public:
-  using value_type = TripletCandidate<external_space_point_t>;
-
   std::size_t size() const { return m_storage.size(); }
 
   /// @brief Setting maximum number of candidates to keep
@@ -64,10 +47,16 @@ class CandidatesForMiddleSp {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   void setMaxElements(std::size_t nLow, std::size_t nHigh);
 
-  /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
-  /// elements with higher quality first
-  /// @returns Vector of triplet candidates
-  std::vector<value_type> storage();
+  /// @brief Clear the internal storage
+  void clear();
+
+  /// @brief Retrieve the number of Low quality candidates
+  /// @returns The number of Low quality candidates
+  std::size_t nLowQualityCandidates() const { return m_nLow; }
+
+  /// @brief Retrieve the number of High quality candidates
+  /// @returns The number of High quality candidates
+  std::size_t nHighQualityCandidates() const { return m_nHigh; }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -78,34 +67,33 @@ class CandidatesForMiddleSp {
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
-  bool push(external_space_point_t& spB, external_space_point_t& spM,
-            external_space_point_t& spT, float weight, float zOrigin,
-            bool isQuality);
+  bool push(SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
+            float weight, float zOrigin, bool isQuality);
 
-  /// @brief Clear the internal storage
-  void clear();
-
-  /// @brief A function for sorting the triplet candidates from higher to lower quality
-  /// @param i1 First triplet candidate
-  /// @param i2 Second triplet candidate
-  /// @returns The comparison result
-  static bool descendingByQuality(const value_type& i1, const value_type& i2);
-
-  /// @brief A function for sorting the triplet candidates from lower to higher quality
-  /// @param i1 First triplet candidate
-  /// @param i2 Second triplet candidate
-  /// @returns The comparison result
-  static bool ascendingByQuality(const value_type& i1, const value_type& i2);
-
-  /// @brief Retrieve the number of Low quality candidates
-  /// @returns The number of Low quality candidates
-  std::size_t nLowQualityCandidates() const;
-
-  /// @brief Retrieve the number of High quality candidates
-  /// @returns The number of High quality candidates
-  std::size_t nHighQualityCandidates() const;
+  /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
+  /// elements with higher quality first
+  void toSortedCandidates(const SpacePointContainer2& spacePoints,
+                          std::vector<TripletCandidate2>& output);
 
  private:
+  /// @brief A function for sorting the triplet candidates from higher to lower quality
+  /// @param spacePoints The input spacepoints from which to create seeds.
+  /// @param i1 First triplet candidate
+  /// @param i2 Second triplet candidate
+  /// @returns The comparison result
+  static bool descendingByQuality(const SpacePointContainer2& spacePoints,
+                                  const TripletCandidate2& i1,
+                                  const TripletCandidate2& i2);
+
+  /// @brief A function for sorting the triplet candidates from lower to higher quality
+  /// @param spacePoints The input spacepoints from which to create seeds.
+  /// @param i1 First triplet candidate
+  /// @param i2 Second triplet candidate
+  /// @returns The comparison result
+  static bool ascendingByQuality(const SpacePointContainer2& spacePoints,
+                                 const TripletCandidate2& i1,
+                                 const TripletCandidate2& i2);
+
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
   /// @param indices The collection into which the candidate should be stored
@@ -119,9 +107,8 @@ class CandidatesForMiddleSp {
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
   bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t nMax, external_space_point_t& spB,
-            external_space_point_t& spM, external_space_point_t& spT,
-            float weight, float zOrigin, bool isQuality);
+            const std::size_t nMax, SpacePointIndex2 spB, SpacePointIndex2 spM,
+            SpacePointIndex2 spT, float weight, float zOrigin, bool isQuality);
 
   /// @brief Check if an element exists in the collection. The element to be checked
   /// is supposed to be in the n position of the collection.
@@ -169,7 +156,8 @@ class CandidatesForMiddleSp {
   /// @param nMax The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
   void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
-                       const std::size_t nMax, value_type&& element);
+                       const std::size_t nMax,
+                       const TripletCandidate2& element);
 
  private:
   // sizes
@@ -183,7 +171,7 @@ class CandidatesForMiddleSp {
   std::size_t m_nLow{0};
 
   // storage contains the collection of the candidates
-  std::vector<value_type> m_storage{};
+  std::vector<TripletCandidate2> m_storage{};
 
   // The following vectors store indexes to elements in the storage
   // They are sorted as a min heap tree, in which
@@ -200,6 +188,4 @@ class CandidatesForMiddleSp {
   std::vector<std::size_t> m_indicesLow{};
 };
 
-}  // namespace Acts
-
-#include "Acts/Seeding/CandidatesForMiddleSp.ipp"
+}  // namespace Acts::Experimental
