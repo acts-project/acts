@@ -3,7 +3,7 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector
+from acts.examples import GenericDetector, AlignedGenericDetector
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -84,6 +84,9 @@ if "__main__" == __name__:
 
     ## Generic detector: Default
     detector = GenericDetector(materialDecorator=matDeco)
+
+    ## Alternative: Aligned Generic detector
+    # detector = AlignedGenericDetector(materialDecorator=matDeco)
 
     ## Alternative: DD4hep detector
     # detector = getOpenDataDetector()
