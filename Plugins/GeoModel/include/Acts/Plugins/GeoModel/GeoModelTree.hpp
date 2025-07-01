@@ -43,17 +43,10 @@ struct GeoModelTree {
     ///        the published volumes are queried from the database
     explicit VolumePublisher(
         const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept;
-    /// @brief Copy constructor
-    VolumePublisher(const VolumePublisher& other) noexcept;
-    /// @brief Move constructor
-    VolumePublisher(VolumePublisher&& other) noexcept;
-    /// @brief Copy assignment operator
-    VolumePublisher& operator=(const VolumePublisher& other) noexcept;
-    /// @brief Move assignment operator
-    VolumePublisher& operator=(VolumePublisher&& other) noexcept;
+
     /// @brief Returns the list of published full physical volume for a given subsystem
     /// @param systemName: System of interest (e.g. Tracker, MS)
-    const VolumeMap_t& getPublishedVol(const std::string& systemName) const;
+    const VolumeMap_t& getPublishedVol(const std::string& systemName);
     /// @brief  Publish a list of full physical volumes for a given subsystem
     /// @param systemName: Subsystem name under which the list will be registered
     /// @param publishedVols: List of volumes to publish.
@@ -68,9 +61,7 @@ struct GeoModelTree {
     /// @brief Pointer to the ReadGeoModel instance
     std::shared_ptr<GeoModelIO::ReadGeoModel> m_reader{};
     /// @brief Map of all published full phyical volumes per subsytstem
-    mutable PublisherMap_t m_publishedVols{};
-    /// @brief Mutex for thread-safe access of the published volumes
-    mutable std::mutex m_mutex{};
+    PublisherMap_t m_publishedVols{};
   };
 
   /// @brief Empty default constructor
@@ -84,7 +75,7 @@ struct GeoModelTree {
   ///        also to query information from additional tables
   std::shared_ptr<GMDBManager> dbMgr{};
   /// @brief Manager class of the published volumes per subsystem
-  VolumePublisher publisher{};
+  std::shared_ptr<VolumePublisher> publisher{std::make_shared<VolumePublisher>()};
   /// @brief Root node of the GeoModel world
   PVConstLink worldVolume{};
   /// @brief Name of the Root node

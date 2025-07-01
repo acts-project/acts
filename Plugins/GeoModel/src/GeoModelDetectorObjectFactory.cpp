@@ -47,11 +47,10 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
   for (const std::string &q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
     // load data from database according to querie (Muon)
-    auto qFPV = geoModelTree.publisher.getPublishedVol(q);
+    auto qFPV = geoModelTree.publisher->getPublishedVol(q);
 
     /** Full physical volumes represent  logical detector units.*/
-    for (const auto &[name, fpv] : qFPV) {
-      FpvConstLink physVol{fpv};
+    for (const auto &[name, physVol] : qFPV) {
       ACTS_INFO("Convert volume " << name);
       convertFpv(name, physVol, cache, gctx);
     }
