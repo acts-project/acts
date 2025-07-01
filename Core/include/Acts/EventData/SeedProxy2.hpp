@@ -42,13 +42,13 @@ class SeedProxy2 {
   /// Copy construct a mutable seed proxy.
   /// @param other The mutable seed proxy to copy.
   explicit SeedProxy2(const SeedProxy2<false> &other)
-    requires(ReadOnly)
+    requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container()
-    requires(ReadOnly)
+    requires ReadOnly
   {
     return *m_container;
   }
@@ -141,10 +141,6 @@ class SeedProxy2 {
     friend bool operator==(const SpacePointIterator &a,
                            const SpacePointIterator &b) {
       return a.m_indexPointer == b.m_indexPointer;
-    }
-    friend bool operator!=(const SpacePointIterator &a,
-                           const SpacePointIterator &b) {
-      return !(a == b);
     }
   };
 

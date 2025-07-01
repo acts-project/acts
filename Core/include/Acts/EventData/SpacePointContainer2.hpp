@@ -603,7 +603,7 @@ class SpacePointContainer2 {
   /// @param name The name of the column.
   /// @return True if the column exists, false otherwise.
   bool hasExtraColumn(const std::string &name) const {
-    return m_namedExtraColumns.find(name) != m_namedExtraColumns.end();
+    return m_namedExtraColumns.contains(name);
   }
 
   /// Returns a mutable reference to the extra column with the given name.
@@ -649,9 +649,6 @@ class SpacePointContainer2 {
 
     friend bool operator==(const Iterator &a, const Iterator &b) {
       return a.m_index == b.m_index && a.m_container == b.m_container;
-    }
-    friend bool operator!=(const Iterator &a, const Iterator &b) {
-      return !(a == b);
     }
   };
   using iterator = Iterator<false>;
@@ -737,8 +734,7 @@ class SpacePointContainer2 {
 
   template <typename Holder>
   auto createExtraColumnImpl(const std::string &name) {
-    auto it = m_namedExtraColumns.find(name);
-    if (it != m_namedExtraColumns.end()) {
+    if (hasExtraColumn(name)) {
       throw std::runtime_error("Extra column already exists: " + name);
     }
     auto holder = std::make_unique<Holder>();

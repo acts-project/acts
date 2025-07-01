@@ -156,9 +156,6 @@ class SeedContainer2 {
     friend bool operator==(const SeedIterator &a, const SeedIterator &b) {
       return a.m_index == b.m_index && a.m_container == b.m_container;
     }
-    friend bool operator!=(const SeedIterator &a, const SeedIterator &b) {
-      return !(a == b);
-    }
   };
   using iterator = SeedIterator<false>;
   using const_iterator = SeedIterator<true>;

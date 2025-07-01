@@ -28,7 +28,7 @@ SpacePointContainer2::SpacePointContainer2(const SpacePointContainer2 &other)
       m_topStripCenterColumn(other.m_topStripCenterColumn),
       m_copyFromIndexColumn(other.m_copyFromIndexColumn) {
   for (const auto &[name, column] : other.m_namedExtraColumns) {
-    m_namedExtraColumns.emplace(name, column->copy());
+    m_namedExtraColumns.try_emplace(name, column->copy());
   }
 }
 
@@ -57,7 +57,7 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
 
   m_extraColumns.clear();
   for (const auto &[name, column] : other.m_namedExtraColumns) {
-    m_namedExtraColumns.emplace(name, column->copy());
+    m_namedExtraColumns.try_emplace(name, column->copy());
   }
   return *this;
 }
