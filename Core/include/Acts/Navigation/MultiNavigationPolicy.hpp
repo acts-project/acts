@@ -12,17 +12,13 @@
 
 namespace Acts {
 
-/// Base class for multi navigation policies
-class MultiNavigationPolicyBase : public INavigationPolicy {};
-
 /// Combined navigation policy that calls all contained other navigation
 /// policies.
-
-class MultiNavigationPolicyDynamic final : public MultiNavigationPolicyBase {
+class MultiNavigationPolicy final : public INavigationPolicy {
  public:
   template <typename... Policies>
-  explicit MultiNavigationPolicyDynamic(std::unique_ptr<Policies>... policies)
-      : MultiNavigationPolicyDynamic{[](auto... args) {
+  explicit MultiNavigationPolicy(std::unique_ptr<Policies>... policies)
+      : MultiNavigationPolicy{[](auto... args) {
           std::vector<std::unique_ptr<INavigationPolicy>> policyPtrs;
           auto fill = [&policyPtrs](auto& policy) {
             policyPtrs.push_back(std::move(policy));
@@ -33,7 +29,7 @@ class MultiNavigationPolicyDynamic final : public MultiNavigationPolicyBase {
           return policyPtrs;
         }(std::move(policies)...)} {}
 
-  explicit MultiNavigationPolicyDynamic(
+  explicit MultiNavigationPolicy(
       std::vector<std::unique_ptr<INavigationPolicy>>&& policies)
       : m_policyPtrs(std::move(policies)) {
     m_delegates.reserve(m_policyPtrs.size());
@@ -53,7 +49,7 @@ class MultiNavigationPolicyDynamic final : public MultiNavigationPolicyBase {
       throw std::runtime_error(
           "Not all delegates are connected to MultiNavigationPolicyDynamic");
     }
-    delegate.connect<&MultiNavigationPolicyDynamic::initializeCandidates>(this);
+    delegate.connect<&MultiNavigationPolicy::initializeCandidates>(this);
   }
 
   const std::span<const std::unique_ptr<INavigationPolicy>> policies() const {
