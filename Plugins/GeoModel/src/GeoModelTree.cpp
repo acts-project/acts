@@ -14,9 +14,7 @@ GeoModelTree::VolumePublisher::VolumePublisher(
     : m_reader{geoReader} {}
 
 const GeoModelTree::VolumePublisher::VolumeMap_t&
-GeoModelTree::VolumePublisher::getPublishedVol(
-    const std::string& systemName){
-
+GeoModelTree::VolumePublisher::getPublishedVol(const std::string& systemName) {
   PublisherMap_t::const_iterator find_itr = m_publishedVols.find(systemName);
   if (find_itr != m_publishedVols.end()) {
     return find_itr->second;
@@ -49,7 +47,8 @@ void GeoModelTree::VolumePublisher::publishVolumes(
 }
 GeoModelTree::GeoModelTree(const std::shared_ptr<GMDBManager>& db)
     : dbMgr{db},
-      publisher{std::make_shared<VolumePublisher>(std::make_shared<GeoModelIO::ReadGeoModel>(db.get()))},
+      publisher{std::make_shared<VolumePublisher>(
+          std::make_shared<GeoModelIO::ReadGeoModel>(db.get()))},
       worldVolume{publisher->reader()->buildGeoModel()} {}
 
 }  // namespace Acts

@@ -75,7 +75,8 @@ struct GeoModelTree {
   ///        also to query information from additional tables
   std::shared_ptr<GMDBManager> dbMgr{};
   /// @brief Manager class of the published volumes per subsystem
-  std::shared_ptr<VolumePublisher> publisher{std::make_shared<VolumePublisher>()};
+  std::shared_ptr<VolumePublisher> publisher{
+      std::make_shared<VolumePublisher>()};
   /// @brief Root node of the GeoModel world
   PVConstLink worldVolume{};
   /// @brief Name of the Root node
