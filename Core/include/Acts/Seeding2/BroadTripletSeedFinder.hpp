@@ -45,7 +45,7 @@ class BroadTripletSeedFinder {
     /// that produced the space point. This is mainly referring to space points
     /// produced when combining measurement from strips on back-to-back modules.
     /// Enables setting of the following delegates.
-    bool useDetailedDoubleMeasurementInfo = false;
+    bool useStripMeasurementInfo = false;
   };
 
   struct DerivedTripletCuts;
@@ -148,7 +148,8 @@ class BroadTripletSeedFinder {
 
   const Config& config() const { return m_cfg; }
 
-  /// Create all possible seeds from bottom, middle, and top space points.
+  /// Create all possible seeds from bottom, middle, and top space points. No
+  /// assumptions on the order of the space points are made.
   ///
   /// @param options Configuration options for the seed finder
   /// @param state State of the seed finder
@@ -173,7 +174,8 @@ class BroadTripletSeedFinder {
                             std::span<const SpacePointIndex2> topSps,
                             SeedContainer2& outputSeeds) const;
 
-  /// Create all possible seeds from bottom, middle, and top space points.
+  /// Create all possible seeds from bottom, middle, and top space points. This
+  /// requires all space points within their groups to be sorted by radius.
   ///
   /// @param options Configuration options for the seed finder
   /// @param state State of the seed finder
@@ -188,7 +190,7 @@ class BroadTripletSeedFinder {
   /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
   /// @param radiusRangeForMiddle Range of radii for the middle space points
   /// @param outputSeeds Output container for the seeds
-  void createSeedsFromGroups(
+  void createSeedsFromSortedGroups(
       const Options& options, State& state, Cache& cache,
       const DoubletSeedFinder::DerivedCuts& bottomCuts,
       const DoubletSeedFinder::DerivedCuts& topCuts,
@@ -240,7 +242,7 @@ class BroadTripletSeedFinder {
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
   /// @param candidatesCollector Collector for candidates for middle space points
-  static void createTripletsDetailed(
+  static void createStripTriplets(
       const DerivedTripletCuts& cuts, float rMaxSeedConf,
       const BroadTripletSeedFilter& filter,
       BroadTripletSeedFilter::State& filterState,
@@ -250,13 +252,6 @@ class BroadTripletSeedFinder {
       const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
-
-  /// Check the compatibility of strip space point coordinates in xyz assuming
-  /// the Bottom-Middle direction with the strip measurement details
-  static bool stripCoordinateCheck(float tolerance,
-                                   const ConstSpacePointProxy2& sp,
-                                   const Eigen::Vector3f& spacePointPosition,
-                                   Eigen::Vector3f& outputCoordinates);
 
  private:
   const Logger& logger() const { return *m_logger; }

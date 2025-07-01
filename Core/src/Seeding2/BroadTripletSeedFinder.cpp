@@ -20,6 +20,54 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Experimental {
 
+namespace {
+
+/// Check the compatibility of strip space point coordinates in xyz assuming
+/// the Bottom-Middle direction with the strip measurement details
+bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
+                          const Eigen::Vector3f& spacePointPosition,
+                          Eigen::Vector3f& outputCoordinates) {
+  const Eigen::Vector3f& topStripVector = sp.topStripVector();
+  const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
+  const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
+
+  // cross product between top strip vector and spacepointPosition
+  Eigen::Vector3f d1 = topStripVector.cross(spacePointPosition);
+
+  // scalar product between bottom strip vector and d1
+  float bd1 = bottomStripVector.dot(d1);
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the bottom detector element
+  float s1 = stripCenterDistance.dot(d1);
+  if (std::abs(s1) > std::abs(bd1) * tolerance) {
+    return false;
+  }
+
+  // cross product between bottom strip vector and spacepointPosition
+  Eigen::Vector3f d0 = bottomStripVector.cross(spacePointPosition);
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the top detector element
+  float s0 = stripCenterDistance.dot(d0);
+  if (std::abs(s0) > std::abs(bd1) * tolerance) {
+    return false;
+  }
+
+  // if arrive here spacepointPosition is compatible with strip directions and
+  // detector elements
+
+  const Eigen::Vector3f& topStripCenter = sp.topStripCenter();
+
+  // spacepointPosition corrected with respect to the top strip position and
+  // direction and the distance between the strips
+  s0 = s0 / bd1;
+  outputCoordinates = topStripCenter + topStripVector * s0;
+  return true;
+}
+
+}  // namespace
+
 BroadTripletSeedFinder::DerivedTripletCuts
 BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
   DerivedTripletCuts result;
@@ -132,11 +180,11 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
   // combine doublets to triplets
   cache.candidatesCollector.clear();
-  if (options.useDetailedDoubleMeasurementInfo) {
-    createTripletsDetailed(tripletCuts, rMaxSeedConf, filter, state.filter,
-                           cache.filter, spacePoints, spM, cache.bottomDoublets,
-                           cache.topDoublets, cache.tripletTopCandidates,
-                           cache.candidatesCollector);
+  if (options.useStripMeasurementInfo) {
+    createStripTriplets(tripletCuts, rMaxSeedConf, filter, state.filter,
+                        cache.filter, spacePoints, spM, cache.bottomDoublets,
+                        cache.topDoublets, cache.tripletTopCandidates,
+                        cache.candidatesCollector);
   } else {
     createTriplets(cache.tripletCache, tripletCuts, rMaxSeedConf, filter,
                    state.filter, cache.filter, spacePoints, spM,
@@ -154,7 +202,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
                         numQualitySeeds, outputSeeds);
 }
 
-void BroadTripletSeedFinder::createSeedsFromGroups(
+void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     const Options& options, State& state, Cache& cache,
     const DoubletSeedFinder::DerivedCuts& bottomCuts,
     const DoubletSeedFinder::DerivedCuts& topCuts,
@@ -284,11 +332,11 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
 
     // combine doublets to triplets
     cache.candidatesCollector.clear();
-    if (options.useDetailedDoubleMeasurementInfo) {
-      createTripletsDetailed(
-          tripletCuts, rMaxSeedConf, filter, state.filter, cache.filter,
-          spacePoints, spM, cache.bottomDoublets, cache.topDoublets,
-          cache.tripletTopCandidates, cache.candidatesCollector);
+    if (options.useStripMeasurementInfo) {
+      createStripTriplets(tripletCuts, rMaxSeedConf, filter, state.filter,
+                          cache.filter, spacePoints, spM, cache.bottomDoublets,
+                          cache.topDoublets, cache.tripletTopCandidates,
+                          cache.candidatesCollector);
     } else {
       createTriplets(cache.tripletCache, tripletCuts, rMaxSeedConf, filter,
                      state.filter, cache.filter, spacePoints, spM,
@@ -507,7 +555,7 @@ void BroadTripletSeedFinder::createTriplets(
   }  // loop on bottoms
 }
 
-void BroadTripletSeedFinder::createTripletsDetailed(
+void BroadTripletSeedFinder::createStripTriplets(
     const DerivedTripletCuts& cuts, float rMaxSeedConf,
     const BroadTripletSeedFilter& filter,
     BroadTripletSeedFilter::State& filterState,
@@ -755,49 +803,6 @@ void BroadTripletSeedFinder::createTripletsDetailed(
         tripletTopCandidates.topSpacePoints, tripletTopCandidates.curvatures,
         tripletTopCandidates.impactParameters, zOrigin, candidatesCollector);
   }  // loop on bottoms
-}
-
-bool BroadTripletSeedFinder::stripCoordinateCheck(
-    float tolerance, const ConstSpacePointProxy2& sp,
-    const Eigen::Vector3f& spacePointPosition,
-    Eigen::Vector3f& outputCoordinates) {
-  const Eigen::Vector3f& topStripVector = sp.topStripVector();
-  const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
-  const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
-
-  // cross product between top strip vector and spacepointPosition
-  Eigen::Vector3f d1 = topStripVector.cross(spacePointPosition);
-
-  // scalar product between bottom strip vector and d1
-  float bd1 = bottomStripVector.dot(d1);
-
-  // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the bottom detector element
-  float s1 = stripCenterDistance.dot(d1);
-  if (std::abs(s1) > std::abs(bd1) * tolerance) {
-    return false;
-  }
-
-  // cross product between bottom strip vector and spacepointPosition
-  Eigen::Vector3f d0 = bottomStripVector.cross(spacePointPosition);
-
-  // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the top detector element
-  float s0 = stripCenterDistance.dot(d0);
-  if (std::abs(s0) > std::abs(bd1) * tolerance) {
-    return false;
-  }
-
-  // if arrive here spacepointPosition is compatible with strip directions and
-  // detector elements
-
-  const Eigen::Vector3f& topStripCenter = sp.topStripCenter();
-
-  // spacepointPosition corrected with respect to the top strip position and
-  // direction and the distance between the strips
-  s0 = s0 / bd1;
-  outputCoordinates = topStripCenter + topStripVector * s0;
-  return true;
 }
 
 }  // namespace Acts::Experimental
