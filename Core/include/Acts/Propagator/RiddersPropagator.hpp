@@ -17,15 +17,13 @@
 
 namespace Acts {
 
-template <typename stepper_options_t, typename navigator_options_t,
-          typename actor_list_t = ActorList<>>
+template <typename propagator_t, typename actor_list_t = ActorList<>>
 struct RidderPropagatorOptions
-    : public PropagatorOptions<stepper_options_t, navigator_options_t,
-                               actor_list_t> {
-  using base_type =
-      PropagatorOptions<stepper_options_t, navigator_options_t, actor_list_t>;
-  using stepper_options_type = stepper_options_t;
-  using navigator_options_type = navigator_options_t;
+    : public propagator_t::template Options<actor_list_t> {
+  using base_type = propagator_t::template Options<actor_list_t>;
+
+  using stepper_options_type = typename base_type::stepper_options_type;
+  using navigator_options_type = typename base_type::navigator_options_type;
   using actor_list_type = actor_list_t;
 
   /// PropagatorOptions with context
@@ -45,25 +43,14 @@ struct RidderPropagatorOptions
   ///
   /// @param extendedActorList The new actor list to be used (internally)
   template <typename extended_actor_list_t>
-  RidderPropagatorOptions<stepper_options_t, navigator_options_t,
-                          extended_actor_list_t>
-  extend(extended_actor_list_t extendedActorList) const {
-    RidderPropagatorOptions<stepper_options_t, navigator_options_t,
-                            extended_actor_list_t>
-        eoptions(base_type::geoContext, base_type::magFieldContext);
+  RidderPropagatorOptions<propagator_t, extended_actor_list_t> extend(
+      extended_actor_list_t extendedActorList) const {
+    RidderPropagatorOptions<propagator_t, extended_actor_list_t> eoptions(
+        base_type::geoContext, base_type::magFieldContext);
 
-    // Copy the base options
-    static_cast<detail::PurePropagatorPlainOptions&>(eoptions) =
-        static_cast<const detail::PurePropagatorPlainOptions&>(*this);
+    static_cast<decltype(eoptions)::base_type&>(eoptions) =
+        base_type::extend(std::move(extendedActorList));
 
-    // Stepper / Navigator options
-    eoptions.stepping = base_type::stepping;
-    eoptions.navigation = base_type::navigation;
-
-    // Action / Abort list
-    eoptions.actorList = extendedActorList;
-
-    // And return the options
     return eoptions;
   }
 
@@ -153,8 +140,7 @@ class RiddersPropagator {
   using NavigatorOptions = typename Navigator::Options;
 
   template <typename actor_list_t = ActorList<>>
-  using Options =
-      RidderPropagatorOptions<StepperOptions, NavigatorOptions, actor_list_t>;
+  using Options = RidderPropagatorOptions<propagator_t, actor_list_t>;
 
   /// @brief Constructor using a config
   ///
