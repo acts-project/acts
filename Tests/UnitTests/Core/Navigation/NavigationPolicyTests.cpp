@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
       std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
       "PixelLayer3"};
 
-  MultiNavigationPolicyDynamic policy{
+  MultiNavigationPolicy policy{
       std::make_unique<APolicy>(gctx, volume, *logger),
       std::make_unique<BPolicy>(gctx, volume, *logger,
                                 BPolicy::Config{.value = 4242})};
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   auto policyBase = factory(gctx, volume, *logger);
   auto policyBase2 = factory(gctx, volume, *logger);
 
-  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);
 
   NavigationDelegate delegate;
   policy.connect(delegate);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   BOOST_CHECK(policyB.executed);
   BOOST_CHECK_EQUAL(policyB.value, 42);
 
-  auto& policy2 = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase2);
+  auto& policy2 = dynamic_cast<MultiNavigationPolicy&>(*policyBase2);
 
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
       NavigationPolicyFactory{}.add<APolicy>().asUniquePtr();
 
   auto policyBase = factory->build(gctx, volume, *logger);
-  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);
 
   NavigationDelegate delegate;
   policyBase->connect(delegate);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
       NavigationPolicyFactory{}.add(makeCPolicy, config).add<APolicy>();
 
   auto policyBase = factory(gctx, volume, *logger);
-  auto& policy = dynamic_cast<MultiNavigationPolicyDynamic&>(*policyBase);
+  auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);
 
   NavigationDelegate delegate;
   policyBase->connect(delegate);

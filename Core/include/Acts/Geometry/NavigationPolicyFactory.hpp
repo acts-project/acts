@@ -110,7 +110,7 @@ class NavigationPolicyFactory {
   /// @param gctx The geometry context
   /// @param volume The tracking volume
   /// @param logger The logger
-  std::unique_ptr<MultiNavigationPolicyDynamic> operator()(
+  std::unique_ptr<MultiNavigationPolicy> operator()(
       const GeometryContext& gctx, const TrackingVolume& volume,
       const Logger& logger) const {
     if (m_factories.empty()) {
@@ -124,7 +124,7 @@ class NavigationPolicyFactory {
       policies.push_back(factory(gctx, volume, logger));
     }
 
-    return std::make_unique<MultiNavigationPolicyDynamic>(std::move(policies));
+    return std::make_unique<MultiNavigationPolicy>(std::move(policies));
   }
 
   /// Construct a navigation policy using the factories
