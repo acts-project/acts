@@ -23,8 +23,6 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
@@ -108,8 +106,8 @@ BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 
 // TODO does not seem to work as-is
 BOOST_DATA_TEST_CASE(ForwardBackward,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest<Propagator>(
       makePropagator(bz), geoCtx, magCtx,
@@ -130,8 +128,8 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
 }
 
 BOOST_DATA_TEST_CASE(ToDisc,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest<Propagator, DiscSurfaceBuilder>(
       makePropagator(bz), geoCtx, magCtx,
@@ -140,8 +138,8 @@ BOOST_DATA_TEST_CASE(ToDisc,
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest<Propagator, PlaneSurfaceBuilder>(
       makePropagator(bz), geoCtx, magCtx,
@@ -169,7 +167,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
   runForwardComparisonTest<Propagator, RiddersPropagator>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov);
+      epsDir, epsMom, epsCov, CovarianceCheck::Full);
 }
 
 // limit theta to ignore the covariance mismatches at high theta for now
@@ -181,7 +179,8 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
                              ZCylinderSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToDisc,
@@ -191,7 +190,8 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
   runToSurfaceComparisonTest<Propagator, RiddersPropagator, DiscSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 // Covariance transport does not work for theta close to poles
@@ -203,7 +203,8 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
                              PlaneSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 // limit theta to ignore the covariance mismatches at high theta for now
@@ -215,7 +216,8 @@ BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
                              ZStrawSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

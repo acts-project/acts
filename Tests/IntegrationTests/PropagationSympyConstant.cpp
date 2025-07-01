@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_SUITE(PropagationEigenConstant)
 // check that the propagation is reversible and self-consistent
 
 BOOST_DATA_TEST_CASE(ForwardBackward,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
@@ -79,8 +79,8 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
 }
 
 BOOST_DATA_TEST_CASE(ToDisc,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
@@ -88,8 +88,8 @@ BOOST_DATA_TEST_CASE(ToDisc,
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
@@ -115,7 +115,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
   runForwardComparisonTest(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov);
+      epsDir, epsMom, epsCov, CovarianceCheck::UpperTriangular);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -126,7 +126,8 @@ BOOST_DATA_TEST_CASE(
   runToSurfaceComparisonTest(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::UpperTriangular);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToDisc,
@@ -136,7 +137,8 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
   runToSurfaceComparisonTest(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::UpperTriangular);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
@@ -146,7 +148,8 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
   runToSurfaceComparisonTest(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::UpperTriangular);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
@@ -158,7 +161,8 @@ BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
   runToSurfaceComparisonTest(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125,
+      CovarianceCheck::UpperTriangular);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

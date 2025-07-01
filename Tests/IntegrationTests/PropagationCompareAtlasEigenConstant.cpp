@@ -16,7 +16,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
-#include <limits>
 #include <utility>
 
 #include "PropagationDatasets.hpp"
@@ -61,7 +60,7 @@ BOOST_DATA_TEST_CASE(Forward,
   runForwardComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov);
+      epsDir, epsMom, epsCov, CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
@@ -72,7 +71,8 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -84,7 +84,8 @@ BOOST_DATA_TEST_CASE(
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
@@ -95,7 +96,8 @@ BOOST_DATA_TEST_CASE(ToPlane,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
@@ -106,7 +108,8 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

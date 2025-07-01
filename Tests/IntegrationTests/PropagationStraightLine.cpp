@@ -15,8 +15,6 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
@@ -48,10 +46,10 @@ BOOST_AUTO_TEST_SUITE(PropagationStraightLine)
 
 // check that the propagation is reversible and self-consistent
 
-BOOST_DATA_TEST_CASE(
-    ForwardBackward,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ForwardBackward,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runForwardBackwardTest(propagator, geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
                          epsDir, epsMom);
@@ -69,19 +67,19 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                    ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom);
 }
 
-BOOST_DATA_TEST_CASE(
-    ToDisc,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ToDisc,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    DiscSurfaceBuilder(), epsPos, epsDir, epsMom);
 }
 
-BOOST_DATA_TEST_CASE(
-    ToPlane,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    PlaneSurfaceBuilder(), epsPos, epsDir, epsMom);
@@ -106,7 +104,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
   runForwardComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov);
+      epsDir, epsMom, epsCov, CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
@@ -116,7 +114,8 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
   runToSurfaceComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToDisc,
@@ -126,7 +125,8 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
   runToSurfaceComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
@@ -136,7 +136,8 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
   runToSurfaceComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
+      CovarianceCheck::Full);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
@@ -148,7 +149,8 @@ BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
   runToSurfaceComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125,
+      CovarianceCheck::Full);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

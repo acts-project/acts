@@ -21,7 +21,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <numbers>
 #include <utility>
 
 // parameter construction helpers
@@ -33,12 +32,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinear(double phi,
                                                             double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
@@ -53,19 +46,13 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
-
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 80_um;
-  stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 1_degree;
-  stddev[eBoundTheta] = 1.5_degree;
+  stddev[eBoundTime] = 20_ps;
+  stddev[eBoundPhi] = 20_mrad;
+  stddev[eBoundTheta] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
   BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
@@ -89,12 +76,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
     double phi, double theta, double absMom) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   return BoundTrackParameters::createCurvilinear(
@@ -137,12 +118,19 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
 
+enum class CovarianceCheck {
+  Full,
+  UpperTriangular,
+  LowerTriangular,
+};
+
 /// Check that two parameters covariances are consistent within the tolerances.
 ///
 /// \warning Does not check that the parameters value itself are consistent.
 inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
                                        const Acts::BoundTrackParameters& ref,
-                                       double relativeTolerance) {
+                                       double relativeTolerance,
+                                       CovarianceCheck checkType) {
   // either both or none have covariance set
   if (cmp.covariance().has_value()) {
     // comparison parameters have covariance but the reference does not
@@ -153,8 +141,24 @@ inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
     BOOST_CHECK(cmp.covariance().has_value());
   }
   if (cmp.covariance().has_value() && ref.covariance().has_value()) {
-    CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
-                           relativeTolerance);
+    Acts::BoundMatrix cmpCov = cmp.covariance().value();
+    Acts::BoundMatrix refCov = ref.covariance().value();
+
+    if (checkType == CovarianceCheck::UpperTriangular) {
+      // copy the upper triangular part to the lower triangular part
+      cmpCov.triangularView<Eigen::Lower>() =
+          cmpCov.triangularView<Eigen::Upper>().transpose();
+      refCov.triangularView<Eigen::Lower>() =
+          refCov.triangularView<Eigen::Upper>().transpose();
+    } else if (checkType == CovarianceCheck::LowerTriangular) {
+      // copy the lower triangular part to the upper triangular part
+      cmpCov.triangularView<Eigen::Upper>() =
+          cmpCov.triangularView<Eigen::Lower>().transpose();
+      refCov.triangularView<Eigen::Upper>() =
+          refCov.triangularView<Eigen::Lower>().transpose();
+    }
+
+    CHECK_CLOSE_COVARIANCE(cmpCov, refCov, relativeTolerance);
   }
 }
 
@@ -357,7 +361,8 @@ inline void runForwardComparisonTest(
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
-    double epsPos, double epsDir, double epsMom, double tolCov) {
+    double epsPos, double epsDir, double epsMom, double tolCov,
+    CovarianceCheck checkType) {
   // propagate twice using the two different propagators
   auto [cmpParams, cmpPath] = transportFreely<cmp_propagator_t>(
       cmpPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -366,7 +371,7 @@ inline void runForwardComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);
-  checkCovarianceConsistency(cmpParams, refParams, tolCov);
+  checkCovarianceConsistency(cmpParams, refParams, tolCov, checkType);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
@@ -384,7 +389,7 @@ inline void runToSurfaceComparisonTest(
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
     surface_builder_t&& buildTargetSurface, double epsPos, double epsDir,
-    double epsMom, double tolCov) {
+    double epsMom, double tolCov, CovarianceCheck checkType) {
   // free propagation with the reference propagator for the given path length
   auto [freeParams, freePathLength] = transportFreely<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -403,7 +408,7 @@ inline void runToSurfaceComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);
-  checkCovarianceConsistency(cmpParams, refParams, tolCov);
+  checkCovarianceConsistency(cmpParams, refParams, tolCov, checkType);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
