@@ -142,9 +142,9 @@ class RiddersPropagator {
   template <typename actor_list_t = ActorList<>>
   using Options = RidderPropagatorOptions<propagator_t, actor_list_t>;
 
-  /// @brief Constructor using a config
+  /// @brief Constructor using a propagator
   ///
-  /// @param [in] config Config for the Ridders propagation
+  /// @param [in] propagator The propagator to use
   explicit RiddersPropagator(propagator_t propagator)
       : m_propagator(std::move(propagator)) {}
 
