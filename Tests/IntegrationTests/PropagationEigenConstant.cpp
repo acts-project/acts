@@ -16,8 +16,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
@@ -48,9 +46,7 @@ inline Propagator makePropagator(double bz) {
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
-  Stepper stepper(std::move(magField));
-  return RiddersPropagator(std::move(stepper));
+  return RiddersPropagator(makePropagator(bz));
 }
 
 }  // namespace

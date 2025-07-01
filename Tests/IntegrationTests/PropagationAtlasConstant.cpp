@@ -15,9 +15,6 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
-#include <limits>
 
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
@@ -42,16 +39,14 @@ constexpr auto epsCov = 0.025;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double Bz) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
+inline Propagator makePropagator(double bz) {
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
 
-inline RiddersPropagator makeRiddersPropagator(double Bz) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
-  Stepper stepper(std::move(magField));
-  return RiddersPropagator(std::move(stepper));
+inline RiddersPropagator makeRiddersPropagator(double bz) {
+  return RiddersPropagator(makePropagator(bz));
 }
 
 }  // namespace

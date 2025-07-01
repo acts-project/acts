@@ -15,8 +15,6 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
@@ -40,7 +38,7 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 const Stepper stepper;
 const Propagator propagator(stepper);
-const RiddersPropagator riddersPropagator(stepper);
+const RiddersPropagator riddersPropagator(propagator);
 
 }  // namespace
 

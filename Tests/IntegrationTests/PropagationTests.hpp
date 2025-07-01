@@ -63,9 +63,9 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   // TODO use momentum-dependent resolutions
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 80_um;
-  stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 1_degree;
-  stddev[eBoundTheta] = 1.5_degree;
+  stddev[eBoundTime] = 20_ps;
+  stddev[eBoundPhi] = 20_mrad;
+  stddev[eBoundTheta] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
   BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
