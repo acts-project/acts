@@ -22,7 +22,6 @@ from acts.examples.simulation import (
     addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
-    SeedingAlgorithm,
     addSeeding,
     CkfConfig,
     addCKFTracks,
@@ -179,7 +178,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args.events,
     skip=args.skip,
-    numThreads=1,
+    numThreads=1 if args.geant4 else -1,
     outputDir=str(outputDir),
 )
 
@@ -324,7 +323,6 @@ if args.reco:
         s,
         trackingGeometry,
         field,
-        seedingAlgorithm=SeedingAlgorithm.GridTriplet,
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
@@ -339,7 +337,6 @@ if args.reco:
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
-        logLevel=acts.logging.VERBOSE,
     )
 
     if seedFilter_ML:
