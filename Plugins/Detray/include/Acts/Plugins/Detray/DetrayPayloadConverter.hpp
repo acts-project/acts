@@ -66,6 +66,10 @@ class DetrayPayloadConverter {
     std::unique_ptr<detray::io::detector_grids_payload<
         detray::io::material_slab_payload, detray::io::material_id>>
         materialGrids;
+
+    std::unique_ptr<
+        detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>>
+        surfaceGrids;
   };
 
   Payloads convertTrackingGeometry(const GeometryContext& gctx,
