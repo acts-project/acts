@@ -6,4 +6,5 @@ target_sources(
         SurfaceArrayNavigationPolicy.cpp
         CylinderNavigationPolicy.cpp
         MultiLayerNavigationPolicy.cpp
+        MultiNavigationPolicy.cpp
 )

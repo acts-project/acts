@@ -30,40 +30,16 @@ class MultiNavigationPolicy final : public INavigationPolicy {
         }(std::move(policies)...)} {}
 
   explicit MultiNavigationPolicy(
-      std::vector<std::unique_ptr<INavigationPolicy>>&& policies)
-      : m_policyPtrs(std::move(policies)) {
-    m_delegates.reserve(m_policyPtrs.size());
-    for (auto& policy : m_policyPtrs) {
-      auto& delegate = m_delegates.emplace_back();
-      policy->connect(delegate);
-      if (!delegate.connected()) {
-        throw std::runtime_error(
-            "Failed to connect policy in MultiNavigationPolicyDynamic");
-      }
-    }
-  }
+      std::vector<std::unique_ptr<INavigationPolicy>>&& policies);
 
-  void connect(NavigationDelegate& delegate) const override {
-    if (!std::ranges::all_of(m_delegates,
-                             [](const auto& d) { return d.connected(); })) {
-      throw std::runtime_error(
-          "Not all delegates are connected to MultiNavigationPolicyDynamic");
-    }
-    delegate.connect<&MultiNavigationPolicy::initializeCandidates>(this);
-  }
+  void connect(NavigationDelegate& delegate) const override;
 
-  const std::span<const std::unique_ptr<INavigationPolicy>> policies() const {
-    return std::span{m_policyPtrs};
-  }
+  const std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
  private:
   void initializeCandidates(const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
-                            const Logger& logger) const {
-    for (const auto& delegate : m_delegates) {
-      delegate(args, stream, logger);
-    }
-  }
+                            const Logger& logger) const;
 
   std::vector<std::unique_ptr<INavigationPolicy>> m_policyPtrs;
 
