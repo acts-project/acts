@@ -52,7 +52,7 @@ struct GeometryIdGetter {
       -> decltype(thing.geometryId(), Acts::GeometryIdentifier()) {
     return thing.geometryId();
   }
-  // support pointer type elements that implement `geometryId()`.
+  // support pointer type elements that implements `geometryId()`.
   template <typename T>
   inline auto operator()(const T& thing) const
       -> decltype(thing->geometryId(), Acts::GeometryIdentifier()) {
