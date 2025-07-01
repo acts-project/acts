@@ -122,7 +122,6 @@ class BroadTripletSeedFilter final {
   /// @param state Mutable state that is used to store intermediate results
   /// @param cache Cache object to store intermediate results
   /// @param spacePoints Container with all space points
-  /// @param rColumn Dense column of space point radii
   /// @param bottomSp Fixed bottom space point
   /// @param middleSp Fixed middle space point
   /// @param topSpVec Vector containing all space points that may be compatible
