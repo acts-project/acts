@@ -56,10 +56,10 @@ BOOST_AUTO_TEST_SUITE(PropagationCompareEigenStraightLine)
 BOOST_DATA_TEST_CASE(NeutralZeroMagneticField,
                      ds::phi* ds::thetaCentral* ds::absMomentum* ds::pathLength,
                      phi, theta, p, s) {
-  runForwardComparisonTest(
-      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
-      makeParametersCurvilinearNeutral(phi, theta, p), s, epsPos, epsDir,
-      epsMom, epsCov, CovarianceCheck::Full);
+  runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
+                           magCtx,
+                           makeParametersCurvilinearNeutral(phi, theta, p), s,
+                           epsPos, epsDir, epsMom, epsCov);
 }
 
 // TODO https://github.com/acts-project/acts/issues/4375
@@ -79,8 +79,7 @@ BOOST_DATA_TEST_CASE(ChargedZeroMagneticField,
                      phi, theta, p, q, s) {
   runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
                            magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov,
-                           CovarianceCheck::Full);
+                           s, epsPos, epsDir, epsMom, epsCov);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for

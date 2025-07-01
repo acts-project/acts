@@ -167,7 +167,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
   runForwardComparisonTest<Propagator, RiddersPropagator>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov, CovarianceCheck::Full);
+      epsDir, epsMom, epsCov);
 }
 
 // limit theta to ignore the covariance mismatches at high theta for now
@@ -179,8 +179,7 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
                              ZCylinderSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
-      CovarianceCheck::Full);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToDisc,
@@ -190,8 +189,7 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
   runToSurfaceComparisonTest<Propagator, RiddersPropagator, DiscSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
-      CovarianceCheck::Full);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 // Covariance transport does not work for theta close to poles
@@ -203,8 +201,7 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
                              PlaneSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
-      CovarianceCheck::Full);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 // limit theta to ignore the covariance mismatches at high theta for now
@@ -216,8 +213,7 @@ BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
                              ZStrawSurfaceBuilder>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov,
-      CovarianceCheck::Full);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

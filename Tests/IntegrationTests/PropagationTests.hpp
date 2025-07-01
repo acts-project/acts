@@ -118,19 +118,12 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
 
-enum class CovarianceCheck {
-  Full,
-  UpperTriangular,
-  LowerTriangular,
-};
-
 /// Check that two parameters covariances are consistent within the tolerances.
 ///
 /// \warning Does not check that the parameters value itself are consistent.
 inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
                                        const Acts::BoundTrackParameters& ref,
-                                       double relativeTolerance,
-                                       CovarianceCheck checkType) {
+                                       double relativeTolerance) {
   // either both or none have covariance set
   if (cmp.covariance().has_value()) {
     // comparison parameters have covariance but the reference does not
@@ -141,24 +134,8 @@ inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
     BOOST_CHECK(cmp.covariance().has_value());
   }
   if (cmp.covariance().has_value() && ref.covariance().has_value()) {
-    Acts::BoundMatrix cmpCov = cmp.covariance().value();
-    Acts::BoundMatrix refCov = ref.covariance().value();
-
-    if (checkType == CovarianceCheck::UpperTriangular) {
-      // copy the upper triangular part to the lower triangular part
-      cmpCov.triangularView<Eigen::Lower>() =
-          cmpCov.triangularView<Eigen::Upper>().transpose();
-      refCov.triangularView<Eigen::Lower>() =
-          refCov.triangularView<Eigen::Upper>().transpose();
-    } else if (checkType == CovarianceCheck::LowerTriangular) {
-      // copy the lower triangular part to the upper triangular part
-      cmpCov.triangularView<Eigen::Upper>() =
-          cmpCov.triangularView<Eigen::Lower>().transpose();
-      refCov.triangularView<Eigen::Upper>() =
-          refCov.triangularView<Eigen::Lower>().transpose();
-    }
-
-    CHECK_CLOSE_COVARIANCE(cmpCov, refCov, relativeTolerance);
+    CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
+                           relativeTolerance);
   }
 }
 
@@ -361,8 +338,7 @@ inline void runForwardComparisonTest(
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
-    double epsPos, double epsDir, double epsMom, double tolCov,
-    CovarianceCheck checkType) {
+    double epsPos, double epsDir, double epsMom, double tolCov) {
   // propagate twice using the two different propagators
   auto [cmpParams, cmpPath] = transportFreely<cmp_propagator_t>(
       cmpPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -371,7 +347,7 @@ inline void runForwardComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);
-  checkCovarianceConsistency(cmpParams, refParams, tolCov, checkType);
+  checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
@@ -389,7 +365,7 @@ inline void runToSurfaceComparisonTest(
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
     surface_builder_t&& buildTargetSurface, double epsPos, double epsDir,
-    double epsMom, double tolCov, CovarianceCheck checkType) {
+    double epsMom, double tolCov) {
   // free propagation with the reference propagator for the given path length
   auto [freeParams, freePathLength] = transportFreely<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -408,7 +384,7 @@ inline void runToSurfaceComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);
-  checkCovarianceConsistency(cmpParams, refParams, tolCov, checkType);
+  checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
