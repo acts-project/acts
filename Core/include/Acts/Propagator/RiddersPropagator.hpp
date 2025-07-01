@@ -77,20 +77,20 @@ struct RidderPropagatorOptions
 /// @brief This class performs the Ridders algorithm to estimate the propagation
 /// of the covariance to a certain point in space.
 ///
-/// The algorithm is based on the small deviations of the start parameters
-/// based on their uncertainty at the beginning of the propgation. This
-/// deviation is represented here by a vector of relative deviations of these
-/// parameters and fix for all parameters. So, a common choice has to be found
-/// that is able to actually fit into the order of magnitude of the
-/// uncertainty of each parameter. Using these deviations, the propagation is
-/// repeated multiple times and the final covariance matrix at a given target
-/// surface is afterwards evaluated by first order derivatives of the final
-/// state parameters wrt. the initial parameters. Therefore this evaluation
-/// represents a first order approximation of the transport jacobian. Since
-/// performing multiple propagations and a numerical evaluation of the
-/// covariance requires more time than a single propagation towards a target +
-/// a common propagation of the covariance, this class just serves to verify
-/// the results of the latter classes.
+/// The algorithm is based on the small deviations of the start parameters based
+/// on their uncertainty at the beginning of the propgation. This deviation is
+/// represented here by a vector of relative deviations of these parameters and
+/// fix for all parameters. So, a common choice has to be found that is able to
+/// actually fit into the order of magnitude of the uncertainty of each
+/// parameter. Using these deviations, the propagation is repeated multiple
+/// times and the final covariance matrix at a given target surface is
+/// afterwards evaluated by first order derivatives of the final state
+/// parameters wrt. the initial parameters. Therefore this evaluation represents
+/// a first order approximation of the transport jacobian. Since performing
+/// multiple propagations and a numerical evaluation of the covariance requires
+/// more time than a single propagation towards a target + a common propagation
+/// of the covariance, this class just serves to verify the results of the
+/// latter classes.
 template <typename propagator_t>
 class RiddersPropagator {
   ///
@@ -221,8 +221,8 @@ class RiddersPropagator {
           nominalResult) const;
 
   /// @brief This function wiggles one dimension of the starting parameters,
-  /// performs the propagation to a surface and collects for each change of
-  /// the start parameters the slope
+  /// performs the propagation to a surface and collects for each change of the
+  /// start parameters the slope
   ///
   /// @tparam options_t PropagatorOptions object
   /// @tparam parameters_t Type of the parameters to start the propagation with
