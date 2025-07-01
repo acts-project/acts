@@ -138,6 +138,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     return path;
   }
 
+  std::unique_ptr<DetraySurfaceGrids> toDetrayPayload() const override;
+
  private:
   // The tracking volume
   const TrackingVolume& m_volume;

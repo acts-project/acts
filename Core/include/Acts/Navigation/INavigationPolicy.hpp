@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/DelegateChainBuilder.hpp"
@@ -57,7 +58,7 @@ class INavigationPolicy {
   /// @param delegate The delegate to connect to
   virtual void connect(NavigationDelegate& delegate) const = 0;
 
-  // virtual void toDetrayPayload();
+  virtual std::unique_ptr<DetraySurfaceGrids> toDetrayPayload() const = 0;
 
  protected:
   /// Internal helper function for derived classes that conform to the concept
