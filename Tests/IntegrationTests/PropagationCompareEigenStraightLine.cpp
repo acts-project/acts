@@ -16,6 +16,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
+#include <limits>
+
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 

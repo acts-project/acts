@@ -23,6 +23,8 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <limits>
+
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
@@ -100,7 +102,7 @@ inline RiddersPropagator makeRiddersPropagator(double bz) {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PropagationEigenDenseConstant)
+BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 
 // check that the propagation is reversible and self-consistent
 

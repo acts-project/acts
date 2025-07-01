@@ -16,6 +16,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
+#include <limits>
 #include <utility>
 
 #include "PropagationDatasets.hpp"
