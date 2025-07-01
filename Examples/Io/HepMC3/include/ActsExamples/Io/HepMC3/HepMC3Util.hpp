@@ -22,8 +22,13 @@ class Logger;
 
 namespace ActsExamples::HepMC3Util {
 
-std::shared_ptr<HepMC3::GenEvent> mergeEvents(
-    std::span<const HepMC3::GenEvent*> genEvents, const Acts::Logger& logger);
+void mergeEvents(HepMC3::GenEvent& event,
+                 std::span<const HepMC3::GenEvent*> genEvents,
+                 const Acts::Logger& logger);
+
+void mergeEvents(HepMC3::GenEvent& event,
+                 std::span<std::shared_ptr<const HepMC3::GenEvent>> genEvents,
+                 const Acts::Logger& logger);
 
 enum class Compression { none, zlib, lzma, bzip2, zstd };
 
@@ -32,5 +37,13 @@ std::ostream& operator<<(std::ostream& os, HepMC3Util::Compression compression);
 std::span<const Compression> availableCompressionModes();
 
 std::string_view compressionExtension(Compression compression);
+
+enum class Format { ascii, root };
+
+std::ostream& operator<<(std::ostream& os, Format format);
+
+std::span<const Format> availableFormats();
+
+Format formatFromFilename(std::string_view filename);
 
 }  // namespace ActsExamples::HepMC3Util

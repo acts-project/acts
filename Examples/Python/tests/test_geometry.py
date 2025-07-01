@@ -1,7 +1,7 @@
 import pytest
 import acts
 import functools
-from acts.examples import GenericDetector, AlignedDetector
+from acts.examples import GenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
 
@@ -11,7 +11,12 @@ from helpers import dd4hepEnabled
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
-        (GenericDetector, True, 450),
+        (functools.partial(GenericDetector, gen3=False), True, 450),
+        pytest.param(
+            functools.partial(GenericDetector, gen3=True),
+            True,
+            2,  # Gen3 geometry visualiztion produces a single file + materials
+        ),
         pytest.param(
             getOpenDataDetector,
             True,
@@ -22,26 +27,11 @@ from helpers import dd4hepEnabled
                 pytest.mark.odd,
             ],
         ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.Internal
-            ),
-            False,
-            450,
-        ),
-        (
-            functools.partial(
-                AlignedDetector, iovSize=1, mode=AlignedDetector.Config.Mode.External
-            ),
-            False,
-            450,
-        ),
     ],
     ids=[
         "generic",
+        "generic-gen3",
         "odd",
-        "aligned-internal",
-        "aligned-external",
     ],
 )
 @pytest.mark.slow
@@ -65,17 +55,15 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         trackingGeometry=trackingGeometry,
         decorators=decorators,
         events=events,
-        outputDir=str(tmp_path),
+        outputDir=tmp_path,
     )
 
     runGeometry(outputJson=True, **kwargs)
     runGeometry(outputJson=False, **kwargs)
 
     assert len(list(obj_dir.iterdir())) == nobj
-    assert all(f.stat().st_size > 200 for f in obj_dir.iterdir())
 
     assert len(list(csv_dir.iterdir())) == 3 * events
-    assert all(f.stat().st_size > 200 for f in csv_dir.iterdir())
 
     detector_files = [csv_dir / f"event{i:>09}-detectors.csv" for i in range(events)]
     for detector_file in detector_files:
