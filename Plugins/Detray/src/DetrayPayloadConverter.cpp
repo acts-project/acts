@@ -569,22 +569,32 @@ DetrayPayloadConverter::convertTrackingGeometry(
   }
 
   if (m_cfg.beampipeVolume == nullptr) {
-    throw std::runtime_error("Beampipe volume not set");
+    throw std::runtime_error(
+        "Beampipe volume not set. This is needed to ensure detray receives the "
+        "beampip volume where it expects it");
   }
 
   Payloads payloads;
   payloads.detector = std::make_unique<detray::io::detector_payload>();
+  detray::io::detector_payload& detPayload = *payloads.detector;
+
   payloads.homogeneousMaterial =
       std::make_unique<detray::io::detector_homogeneous_material_payload>();
+  detray::io::detector_homogeneous_material_payload& dthmPayload =
+      *payloads.homogeneousMaterial;
+
   payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
       detray::io::material_slab_payload, detray::io::material_id>>();
 
-  detray::io::detector_payload& detPayload = *payloads.detector;
-  detray::io::detector_homogeneous_material_payload& dthmPayload =
-      *payloads.homogeneousMaterial;
   detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                      detray::io::material_id>& materialGrids =
       *payloads.materialGrids;
+
+  payloads.surfaceGrids = std::make_unique<
+      detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>>();
+
+  detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>&
+      surfaceGrids = *payloads.surfaceGrids;
 
   std::unordered_map<const TrackingVolume*, std::size_t> volumeIds;
 
@@ -676,7 +686,6 @@ DetrayPayloadConverter::convertTrackingGeometry(
   });
 
   // HACK: Beampipe MUST have index 0
-  // Find beampipe volume by name
   std::size_t beampipeIdx = volumeIds.at(m_cfg.beampipeVolume);
   ACTS_DEBUG("Beampipe volume (" << m_cfg.beampipeVolume->volumeName()
                                  << ") index: " << beampipeIdx);
@@ -710,12 +719,6 @@ DetrayPayloadConverter::convertTrackingGeometry(
       worldGridIt != materialGrids.grids.end()) {
     // BOTH world and beampipe have grid specifiers: swap them
     ACTS_DEBUG("Swapping beampipe and world grid specifiers");
-    // auto beampipeGrid = std::move(beampipeGridIt->second);
-    // materialGrids.grids.erase(beampipeGridIt);
-    // auto worldGrid = std::move(worldGridIt->second);
-    // materialGrids.grids.erase(worldGridIt);
-    // materialGrids.grids[0] = std::move(beampipeGrid);
-    // materialGrids.grids[beampipeIdx] = std::move(worldGrid);
     std::swap(beampipeGridIt->second, worldGridIt->second);
   } else if (beampipeGridIt != materialGrids.grids.end()) {
     // ONLY beampipe has grid specifier: move it to world

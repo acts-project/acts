@@ -27,6 +27,8 @@ enum class material_id : unsigned int;
 template <typename, typename>
 struct detector_grids_payload;
 
+enum class accel_id : unsigned int;
+
 }  // namespace detray::io
 
 namespace Acts {
@@ -34,5 +36,8 @@ using DetraySurfaceMaterial =
     std::variant<detray::io::grid_payload<detray::io::material_slab_payload,
                                           detray::io::material_id>,
                  detray::io::material_slab_payload>;
+
+using DetraySurfaceGrids =
+    detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>;
 
 }  // namespace Acts
