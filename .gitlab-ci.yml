@@ -100,7 +100,7 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:pr-137
   tags:
     - large
 
@@ -137,7 +137,7 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:pr-137
   tags:
     - large
 
@@ -181,7 +181,7 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:pr-137
   tags:
     - docker-gpu-nvidia
 
@@ -206,7 +206,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:pr-137
   tags:
     - docker-gpu-nvidia
 
