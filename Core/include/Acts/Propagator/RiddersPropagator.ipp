@@ -90,52 +90,19 @@ auto RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<actor_list_t_result_t<
         BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
-  // Remove the covariance from our start parameters in order to skip jacobian
-  // transport for the nominal propagation
-  BoundTrackParameters startWithoutCov = start;
-  startWithoutCov.covariance() = std::nullopt;
-
-  // Propagate the nominal parameters
-  auto result = m_propagator.propagate(start, options);
-
-  return riddersPropagate(std::move(result), start, startWithoutCov, options);
-}
-
-template <typename propagator_t>
-template <typename parameters_t, typename propagator_options_t>
-auto RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
-    -> Result<actor_list_t_result_t<
-        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
-  // Remove the covariance from our start parameters in order to skip jacobian
-  // transport for the nominal propagation
-  BoundTrackParameters startWithoutCov = start;
-  startWithoutCov.covariance() = std::nullopt;
-
-  // Propagate the nominal parameters
-  auto result = m_propagator.propagate(startWithoutCov, target, options);
-
-  return riddersPropagate(std::move(result), start, startWithoutCov, options);
-}
-
-template <typename propagator_t>
-template <typename parameters_t, typename propagator_options_t>
-auto RiddersPropagator<propagator_t>::riddersPropagate(
-    Result<actor_list_t_result_t<
-        BoundTrackParameters, typename propagator_options_t::actor_list_type>>
-        result,
-    const parameters_t& start, const parameters_t& startWithoutCov,
-    const propagator_options_t& options) const
-    -> Result<actor_list_t_result_t<
-        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
   using ThisResult = Result<actor_list_t_result_t<
       BoundTrackParameters, typename propagator_options_t::actor_list_type>>;
 
+  // Remove the covariance from our start parameters in order to skip jacobian
+  // transport for the nominal propagation
+  BoundTrackParameters startWithoutCov = start;
+  startWithoutCov.covariance() = std::nullopt;
+
+  // Propagate the nominal parameters
+  auto result = m_propagator.propagate(startWithoutCov, options);
   if (!result.ok()) {
     return ThisResult::failure(result.error());
   }
-
   // Extract results from the nominal propagation
   auto nominalResult = result.value();
   assert(nominalResult.endParameters);
@@ -152,7 +119,49 @@ auto RiddersPropagator<propagator_t>::riddersPropagate(
     nominalResult.endParameters = BoundTrackParameters::createCurvilinear(
         nominalFinalParameters.fourPosition(options.geoContext),
         nominalFinalParameters.direction(), nominalFinalParameters.qOverP(),
-        cov, nominalFinalParameters.particleHypothesis());
+        std::move(cov), nominalFinalParameters.particleHypothesis());
+  }
+
+  return ThisResult::success(std::move(nominalResult));
+}
+
+template <typename propagator_t>
+template <typename parameters_t, typename propagator_options_t>
+auto RiddersPropagator<propagator_t>::propagate(
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
+    -> Result<actor_list_t_result_t<
+        BoundTrackParameters, typename propagator_options_t::actor_list_type>> {
+  using ThisResult = Result<actor_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::actor_list_type>>;
+
+  // Remove the covariance from our start parameters in order to skip jacobian
+  // transport for the nominal propagation
+  BoundTrackParameters startWithoutCov = start;
+  startWithoutCov.covariance() = std::nullopt;
+
+  // Propagate the nominal parameters
+  auto result = m_propagator.propagate(startWithoutCov, target, options);
+  if (!result.ok()) {
+    return ThisResult::failure(result.error());
+  }
+  // Extract results from the nominal propagation
+  auto nominalResult = result.value();
+  assert(nominalResult.endParameters);
+  const auto& nominalFinalParameters = *nominalResult.endParameters;
+
+  BoundMatrix jacobian =
+      wiggleAndCalculateJacobian(startWithoutCov, options, nominalResult);
+  nominalResult.transportJacobian = jacobian;
+
+  if (start.covariance()) {
+    // use nominal parameters and Ridders covariance
+    BoundMatrix cov = jacobian * (*start.covariance()) * jacobian.transpose();
+    // replace the covariance of the nominal result w/ the ridders covariance
+    nominalResult.endParameters = BoundTrackParameters(
+        nominalFinalParameters.referenceSurface().getSharedPtr(),
+        nominalFinalParameters.parameters(), std::move(cov),
+        nominalFinalParameters.particleHypothesis());
   }
 
   return ThisResult::success(std::move(nominalResult));

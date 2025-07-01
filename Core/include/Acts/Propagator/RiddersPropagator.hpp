@@ -182,16 +182,6 @@ class RiddersPropagator {
             const propagator_options_t& options) const;
 
  private:
-  template <typename parameters_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<BoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  riddersPropagate(
-      Result<actor_list_t_result_t<
-          BoundTrackParameters, typename propagator_options_t::actor_list_type>>
-          result,
-      const parameters_t& start, const parameters_t& startWithoutCov,
-      const propagator_options_t& options) const;
-
   /// Does the actual ridders propagation by wiggling the parameters and
   /// propagating again. This function is called from the different
   /// propagation overloads in order to deduplicate code.
