@@ -69,19 +69,19 @@ void createDoublets(
                                   float iDeltaR2, float cotTheta) {
     // TOD use some reasonable defaults
     float varianceZM =
-        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
             ? middleSp.varianceZ()
             : 0;
     float varianceZO =
-        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
             ? otherSp.varianceZ()
             : 0;
     float varianceRM =
-        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
             ? middleSp.varianceR()
             : 0;
     float varianceRO =
-        spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
             ? otherSp.varianceR()
             : 0;
 

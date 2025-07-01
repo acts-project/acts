@@ -525,40 +525,38 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
     for (std::size_t i = 1; i <= nBinsB; ++i) {
       mergedView.atLocalBins({nBinsA + i}) = bView.atLocalBins({i});
     }
+  } else if (a.direction() == direction) {
+    std::size_t nBinsA = locBinsA.at(0);
+    std::size_t nBinsB = locBinsB.at(0);
+    std::size_t nBinsCommon = locBinsB.at(1);
+
+    for (std::size_t i = 1; i <= nBinsA; ++i) {
+      for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+        mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
+      }
+    }
+
+    for (std::size_t i = 1; i <= nBinsB; ++i) {
+      for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+        std::size_t ti = i + nBinsA;
+        mergedView.atLocalBins({ti, j}) = bView.atLocalBins({i, j});
+      }
+    }
   } else {
-    if (a.direction() == direction) {
-      std::size_t nBinsA = locBinsA.at(0);
-      std::size_t nBinsB = locBinsB.at(0);
-      std::size_t nBinsCommon = locBinsB.at(1);
+    std::size_t nBinsA = locBinsA.at(1);
+    std::size_t nBinsB = locBinsB.at(1);
+    std::size_t nBinsCommon = locBinsB.at(0);
 
-      for (std::size_t i = 1; i <= nBinsA; ++i) {
-        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
-          mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
-        }
+    for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+      for (std::size_t j = 1; j <= nBinsA; ++j) {
+        mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
       }
+    }
 
-      for (std::size_t i = 1; i <= nBinsB; ++i) {
-        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
-          std::size_t ti = i + nBinsA;
-          mergedView.atLocalBins({ti, j}) = bView.atLocalBins({i, j});
-        }
-      }
-    } else {
-      std::size_t nBinsA = locBinsA.at(1);
-      std::size_t nBinsB = locBinsB.at(1);
-      std::size_t nBinsCommon = locBinsB.at(0);
-
-      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
-        for (std::size_t j = 1; j <= nBinsA; ++j) {
-          mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
-        }
-      }
-
-      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
-        for (std::size_t j = 1; j <= nBinsB; ++j) {
-          std::size_t tj = j + nBinsA;
-          mergedView.atLocalBins({i, tj}) = bView.atLocalBins({i, j});
-        }
+    for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+      for (std::size_t j = 1; j <= nBinsB; ++j) {
+        std::size_t tj = j + nBinsA;
+        mergedView.atLocalBins({i, tj}) = bView.atLocalBins({i, j});
       }
     }
   }

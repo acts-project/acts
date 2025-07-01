@@ -320,11 +320,11 @@ void BroadTripletSeedFinder::createTriplets(
   const float rM = spM.r();
   // TOD use some reasonable defaults
   const float varianceRM =
-      spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+      spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()
           : 0;
   const float varianceZM =
-      spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+      spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
           ? spM.varianceZ()
           : 0;
 
@@ -522,11 +522,11 @@ void BroadTripletSeedFinder::createTripletsDetailed(
   const float sinPhiM = spM.y() / rM;
   // TOD use some reasonable defaults
   const float varianceRM =
-      spacePoints.hasExtraColumns(SpacePointContainer2::VarianceR)
+      spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()
           : 0;
   const float varianceZM =
-      spacePoints.hasExtraColumns(SpacePointContainer2::VarianceZ)
+      spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
           ? spM.varianceZ()
           : 0;
 

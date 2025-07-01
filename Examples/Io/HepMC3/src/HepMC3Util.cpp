@@ -18,30 +18,29 @@
 
 namespace ActsExamples {
 
-std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
-    std::span<const HepMC3::GenEvent*> genEvents, const Acts::Logger& logger) {
-  Acts::AveragingScopedTimer mergeTimer("Merging generator events", logger(),
+namespace {
+template <typename T>
+void mergeEventsImpl(HepMC3::GenEvent& event, std::span<T> genEvents,
+                     const Acts::Logger& logger) {
+  Acts::AveragingScopedTimer mergeTimer("Merging HepMC3 events", logger(),
                                         Acts::Logging::DEBUG);
 
   std::vector<std::shared_ptr<HepMC3::GenParticle>> particles;
-
-  auto event = std::make_shared<HepMC3::GenEvent>();
-  event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
 
   // Loop once to find the total size we'll need
   std::size_t nParticles = 0;
   std::size_t nVertices = 0;
   for (const auto& genEvent : genEvents) {
-    nParticles += genEvent->particles_size();
-    nVertices += genEvent->vertices_size();
+    nParticles += genEvent->particles().size();
+    nVertices += genEvent->vertices().size();
   }
 
-  event->reserve(nParticles, nVertices);
+  event.reserve(nParticles, nVertices);
 
   for (const auto& genEvent : genEvents) {
     auto sample = mergeTimer.sample();
     particles.clear();
-    particles.reserve(genEvent->particles_size());
+    particles.reserve(genEvent->particles().size());
 
     auto copyAttributes = [&](const auto& src, auto& dst) {
       for (const auto& attr : src.attribute_names()) {
@@ -51,7 +50,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
       }
     };
 
-    copyAttributes(*genEvent, *event);
+    copyAttributes(*genEvent, event);
 
     // Add to combined event
     for (const auto& srcParticle : genEvent->particles()) {
@@ -65,7 +64,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
       particle->set_status(srcParticle->status());
 
       particles.push_back(particle);
-      event->add_particle(particle);
+      event.add_particle(particle);
 
       copyAttributes(*srcParticle, *particle);
     }
@@ -74,7 +73,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
       auto vertex = std::make_shared<HepMC3::GenVertex>(srcVertex->position());
       vertex->set_status(srcVertex->status());
 
-      event->add_vertex(vertex);
+      event.add_vertex(vertex);
 
       copyAttributes(*srcVertex, *vertex);
 
@@ -88,8 +87,20 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
       }
     }
   }
+}
+}  // namespace
 
-  return event;
+void HepMC3Util::mergeEvents(HepMC3::GenEvent& event,
+                             std::span<const HepMC3::GenEvent*> genEvents,
+                             const Acts::Logger& logger) {
+  mergeEventsImpl(event, genEvents, logger);
+}
+
+void HepMC3Util::mergeEvents(
+    HepMC3::GenEvent& event,
+    std::span<std::shared_ptr<const HepMC3::GenEvent>> genEvents,
+    const Acts::Logger& logger) {
+  mergeEventsImpl(event, genEvents, logger);
 }
 
 std::string_view HepMC3Util::compressionExtension(Compression compression) {

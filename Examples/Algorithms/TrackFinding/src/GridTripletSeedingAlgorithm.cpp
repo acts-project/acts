@@ -99,10 +99,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints;
   coreSpacePoints.createExtraColumns(
-      Acts::Experimental::SpacePointContainer2::R |
-      Acts::Experimental::SpacePointContainer2::Phi |
-      Acts::Experimental::SpacePointContainer2::VarianceR |
-      Acts::Experimental::SpacePointContainer2::VarianceZ);
+      Acts::Experimental::SpacePointKnownExtraColumn::R |
+      Acts::Experimental::SpacePointKnownExtraColumn::Phi |
+      Acts::Experimental::SpacePointKnownExtraColumn::VarianceR |
+      Acts::Experimental::SpacePointKnownExtraColumn::VarianceZ);
   coreSpacePoints.reserve(spacePoints.size());
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
@@ -167,9 +167,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFinder::State state;
   static thread_local Acts::Experimental::BroadTripletSeedFinder::Cache cache;
 
-  std::vector<Acts::Experimental::SpacePointIndex2> bottomSps;
-  std::vector<Acts::Experimental::SpacePointIndex2> middleSps;
-  std::vector<Acts::Experimental::SpacePointIndex2> topSps;
+  std::vector<Acts::SpacePointIndex2> bottomSps;
+  std::vector<Acts::SpacePointIndex2> middleSps;
+  std::vector<Acts::SpacePointIndex2> topSps;
 
   for (const auto [bottom, middle, top] : grid.binnedGround()) {
     ACTS_VERBOSE("Process middle " << middle);
@@ -185,29 +185,28 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       topSps.insert(topSps.end(), grid.at(t).begin(), grid.at(t).end());
     }
 
-    std::ranges::sort(bottomSps, {},
-                      [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).r();
-                      });
-    std::ranges::sort(middleSps, {},
-                      [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).r();
-                      });
-    std::ranges::sort(topSps, {},
-                      [&](Acts::Experimental::SpacePointIndex2 spIndex) {
-                        return coreSpacePoints.at(spIndex).r();
-                      });
+    std::ranges::sort(bottomSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
+      return coreSpacePoints.at(spIndex).r();
+    });
+    std::ranges::sort(middleSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
+      return coreSpacePoints.at(spIndex).r();
+    });
+    std::ranges::sort(topSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
+      return coreSpacePoints.at(spIndex).r();
+    });
 
     // we compute this here since all middle space point candidates belong to
     // the same z-bin
     auto firstMiddleSp = coreSpacePoints.at(middleSps.front());
     auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-        retrieveRadiusRangeForMiddle(firstMiddleSp, rMiddleSpRange);
+        retrieveRadiusRangeForMiddle(
+            Acts::Experimental::ConstSpacePointProxy2(firstMiddleSp),
+            rMiddleSpRange);
     ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                  << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
                  << "]");
 
-    for (Acts::Experimental::SpacePointIndex2 middleSp : middleSps) {
+    for (Acts::SpacePointIndex2 middleSp : middleSps) {
       auto spM = coreSpacePoints.at(middleSp);
       const float rM = spM.r();
 
