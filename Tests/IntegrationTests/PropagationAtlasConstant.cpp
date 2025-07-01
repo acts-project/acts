@@ -17,8 +17,6 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
