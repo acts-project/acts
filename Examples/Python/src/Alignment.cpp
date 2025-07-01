@@ -11,10 +11,10 @@
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h>
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -41,8 +41,8 @@ void addAlignment(Context& ctx) {
   }
 
   {
-    py::class_<IAlignmentStore, std::shared_ptr<IAlignmentStore>>(mex,
-                                                                  "IAlignmentStore");
+    py::class_<IAlignmentStore, std::shared_ptr<IAlignmentStore>>(
+        mex, "IAlignmentStore");
   }
 
   {
