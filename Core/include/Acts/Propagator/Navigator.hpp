@@ -306,6 +306,8 @@ class Navigator {
 
     state.reset();
 
+    // Empirical pre-allocation of candidates for the next navigation iteration.
+    // @TODO: Make this user configurable through the configuration
     state.stream.candidates().reserve(50);
 
     state.startSurface = state.options.startSurface;
@@ -476,8 +478,8 @@ class Navigator {
         }
         if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-          return NavigationTarget(*std::get<0>(state.navBoundary()).object(),
-                                  std::get<0>(state.navBoundary()).index(),
+          return NavigationTarget(*state.navBoundary().intersection.object(),
+                                  state.navBoundary().intersection.index(),
                                   BoundaryTolerance::None());
         } else {
           // This was the last boundary, we have to leave the volume somehow,
@@ -590,17 +592,17 @@ class Navigator {
     }
 
     if (state.navigationStage == Stage::boundaryTarget &&
-        std::get<0>(state.navBoundary()).object() == &surface) {
+        state.navBoundary().intersection.object() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling boundary status.");
 
       if (m_geometryVersion == GeometryVersion::Gen1) {
         // Switch to the next volume using the boundary
-        const BoundarySurface* boundary = std::get<1>(state.navBoundary());
+        const BoundarySurface* boundary = state.navBoundary().boundarySurface;
         assert(boundary != nullptr && "Retrieved boundary surface is nullptr");
         state.currentVolume = boundary->attachedVolume(state.options.geoContext,
                                                        position, direction);
       } else {
-        const Portal* portal = std::get<2>(state.navBoundary());
+        const Portal* portal = state.navBoundary().portal;
         assert(portal != nullptr && "Retrieved portal is nullptr");
         auto res = portal->resolveVolume(state.options.geoContext, position,
                                          direction);
@@ -807,8 +809,8 @@ class Navigator {
       state.navBoundaries = state.currentVolume->compatibleBoundaries(
           state.options.geoContext, position, direction, navOpts, logger());
       std::ranges::sort(state.navBoundaries, [](const auto& a, const auto& b) {
-        return SurfaceIntersection::pathLengthOrder(std::get<0>(a),
-                                                    std::get<0>(b));
+        return SurfaceIntersection::pathLengthOrder(a.intersection,
+                                                    b.intersection);
       });
     } else {
       // Gen 3 !
@@ -849,7 +851,7 @@ class Navigator {
       os << state.navBoundaries.size();
       os << " boundary candidates found at path(s): ";
       for (auto& bc : state.navBoundaries) {
-        os << std::get<0>(bc).pathLength() << "  ";
+        os << bc.intersection.pathLength() << "  ";
       }
       logger().log(Logging::VERBOSE, os.str());
     }
@@ -867,11 +869,6 @@ class Navigator {
   ///
   /// @return True if the navigator is inactive
   bool inactive(const State& state) const {
-    // Void behavior in case no tracking geometry is present
-    if (m_cfg.trackingGeometry == nullptr) {
-      return true;
-    }
-
     // Turn the navigator into void when you are instructed to do nothing
     if (!m_cfg.resolveSensitive && !m_cfg.resolveMaterial &&
         !m_cfg.resolvePassive) {

@@ -16,7 +16,6 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -833,15 +832,7 @@ void propagator_instatiation_test_function() {
   auto bField = std::make_shared<NullBField>();
   multi_stepper_t multi_stepper(bField);
 
-  auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(10, 20, 20);
-  auto tvol = std::make_shared<TrackingVolume>(Transform3::Identity(), bounds,
-                                               "Undefined");
-
-  auto tgeo = std::make_shared<Acts::TrackingGeometry>(tvol);
-
-  Propagator<multi_stepper_t, Navigator> propagator(
-      std::move(multi_stepper),
-      Navigator{Navigator::Config{.trackingGeometry = tgeo}});
+  Propagator propagator(std::move(multi_stepper), VoidNavigator{});
 
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})

@@ -421,7 +421,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                           options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (std::get<0>(intersection).isValid()) {
+      if (intersection.intersection.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
