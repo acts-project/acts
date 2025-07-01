@@ -5,4 +5,5 @@ target_sources(
         TryAllNavigationPolicy.cpp
         SurfaceArrayNavigationPolicy.cpp
         MultiLayerNavigationPolicy.cpp
+        MultiNavigationPolicy.cpp
 )
