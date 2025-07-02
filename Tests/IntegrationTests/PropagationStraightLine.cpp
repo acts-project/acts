@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_SUITE(PropagationStraightLine)
 
 // check that the propagation is reversible and self-consistent
 
-BOOST_DATA_TEST_CASE(
-    ForwardBackward,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ForwardBackward,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runForwardBackwardTest(propagator, geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
                          epsDir, epsMom);
@@ -67,19 +67,19 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                    ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom);
 }
 
-BOOST_DATA_TEST_CASE(
-    ToDisc,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ToDisc,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    DiscSurfaceBuilder(), epsPos, epsDir, epsMom);
 }
 
-BOOST_DATA_TEST_CASE(
-    ToPlane,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    PlaneSurfaceBuilder(), epsPos, epsDir, epsMom);

@@ -21,7 +21,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <numbers>
 #include <utility>
 
 // parameter construction helpers
@@ -33,12 +32,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinear(double phi,
                                                             double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
@@ -52,12 +45,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
     double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
@@ -89,12 +76,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
     double phi, double theta, double absMom) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   return BoundTrackParameters::createCurvilinear(
