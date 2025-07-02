@@ -542,7 +542,7 @@ linux_ubuntu_2404_clang19:
     - cmake --install build > install.log
 
     # Install Python dependencies
-    - source ${INSTALL_DIR}/python/setup.sh
+    - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
     - cd src
     - pytest -rfExw -k "not exatrkx" -v -n1
