@@ -46,12 +46,22 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
     /// maximum impact parameter in mm
     float impactMax = 20 * Acts::UnitConstants::mm;
-    /// Minimum distance between compatible outer space-points to be considered.
-    /// This is used to avoid counting space-points from the same layer
+    /// Minimum radial distance between two doublet components (prefer
+    /// deltaRMinTop and deltaRMinBottom to set separate values for top and
+    /// bottom space points)
     float deltaRMin = 5 * Acts::UnitConstants::mm;
-    /// maximum distance in r from middle space point to bottom or top
-    /// spacepoint
+    /// Maximum radial distance between two doublet components (prefer
+    /// deltaRMaxTop and deltaRMacBottom to set separate values for top and
+    /// bottom space points)
     float deltaRMax = 270 * Acts::UnitConstants::mm;
+    /// Minimum radial distance between middle-top doublet components
+    float deltaRMinTop = std::numeric_limits<float>::quiet_NaN();
+    /// Maximum radial distance between middle-outer doublet components
+    float deltaRMaxTop = std::numeric_limits<float>::quiet_NaN();
+    /// Minimum radial distance between bottom-middle doublet components
+    float deltaRMinBottom = std::numeric_limits<float>::quiet_NaN();
+    /// Maximum radial distance between bottom-middle doublet components
+    float deltaRMaxBottom = std::numeric_limits<float>::quiet_NaN();
 
     // Seeding parameters used in the space-point grid creation and bin finding
 

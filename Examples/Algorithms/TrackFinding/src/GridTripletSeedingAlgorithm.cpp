@@ -54,8 +54,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_gridConfig.zMax = m_cfg.zMax;
   m_gridConfig.deltaRMax = m_cfg.deltaRMax;
   m_gridConfig.cotThetaMax = m_cfg.cotThetaMax;
-  // TODO switch to `m_cfg.impactMax`
-  m_gridConfig.impactMax = 20 * Acts::UnitConstants::mm;
+  m_gridConfig.impactMax = m_cfg.impactMax;
   m_gridConfig.phiMin = m_cfg.phiMin;
   m_gridConfig.phiMax = m_cfg.phiMax;
   m_gridConfig.phiBinDeflectionCoverage = m_cfg.phiBinDeflectionCoverage;
@@ -135,22 +134,34 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
 
-  Acts::Experimental::DoubletSeedFinder::Cuts doubletCuts;
-  doubletCuts.deltaRMin = m_cfg.deltaRMin;
-  doubletCuts.deltaRMax = m_cfg.deltaRMax;
-  doubletCuts.deltaZMin = m_cfg.deltaZMin;
-  doubletCuts.deltaZMax = m_cfg.deltaZMax;
-  doubletCuts.impactMax = m_cfg.impactMax;
-  doubletCuts.interactionPointCut = m_cfg.interactionPointCut;
-  doubletCuts.collisionRegionMin = m_cfg.collisionRegionMin;
-  doubletCuts.collisionRegionMax = m_cfg.collisionRegionMax;
-  doubletCuts.cotThetaMax = m_cfg.cotThetaMax;
-  doubletCuts.minPt = m_cfg.minPt;
-  doubletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
+  Acts::Experimental::DoubletSeedFinder::Cuts bottomDoubletCuts;
+  bottomDoubletCuts.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
+                                    ? m_cfg.deltaRMin
+                                    : m_cfg.deltaRMinBottom;
+  bottomDoubletCuts.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                                    ? m_cfg.deltaRMax
+                                    : m_cfg.deltaRMaxBottom;
+  bottomDoubletCuts.deltaZMin = m_cfg.deltaZMin;
+  bottomDoubletCuts.deltaZMax = m_cfg.deltaZMax;
+  bottomDoubletCuts.impactMax = m_cfg.impactMax;
+  bottomDoubletCuts.interactionPointCut = m_cfg.interactionPointCut;
+  bottomDoubletCuts.collisionRegionMin = m_cfg.collisionRegionMin;
+  bottomDoubletCuts.collisionRegionMax = m_cfg.collisionRegionMax;
+  bottomDoubletCuts.cotThetaMax = m_cfg.cotThetaMax;
+  bottomDoubletCuts.minPt = m_cfg.minPt;
+  bottomDoubletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   if (m_cfg.useExtraCuts) {
-    doubletCuts.experimentCuts.connect<itkFastTrackingCuts>();
+    bottomDoubletCuts.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  auto derivedDoubletOptions = doubletCuts.derive(m_cfg.bFieldInZ);
+  auto derivedBottomDoubletCuts = bottomDoubletCuts.derive(m_cfg.bFieldInZ);
+
+  Acts::Experimental::DoubletSeedFinder::Cuts topDoubletCuts =
+      bottomDoubletCuts;
+  topDoubletCuts.deltaRMin =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
+  topDoubletCuts.deltaRMax =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
+  auto derivedTopDoubletCuts = topDoubletCuts.derive(m_cfg.bFieldInZ);
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
@@ -160,7 +171,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletCuts.impactMax = m_cfg.impactMax;
   tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  auto derivedTripletOptions = tripletCuts.derive(m_cfg.bFieldInZ);
+  auto derivedTripletCuts = tripletCuts.derive(m_cfg.bFieldInZ);
 
   // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {
@@ -225,8 +236,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       }
 
       m_seedFinder->createSeedsFromGroup(
-          finderOptions, state, cache, derivedDoubletOptions,
-          derivedDoubletOptions, derivedTripletOptions, *m_seedFilter,
+          finderOptions, state, cache, derivedBottomDoubletCuts,
+          derivedTopDoubletCuts, derivedTripletCuts, *m_seedFilter,
           coreSpacePoints, bottomSps, middleSp, topSps, seeds);
     }  // loop on middle space points
   }
