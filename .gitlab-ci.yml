@@ -514,11 +514,11 @@ linux_ubuntu_2404_clang19:
       fi
 
     - dnf install -y git-lfs
+    - git clone $CLONE_URL src
 
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
 
-    - git clone $CLONE_URL src
 
     - cd src
     - git checkout $HEAD_SHA
