@@ -11,7 +11,8 @@
 namespace Acts::FastJet {
 
 TrackJetSequence TrackJetSequence::create(
-    std::vector<fastjet::PseudoJet>& tracks, const fastjet::JetDefinition& jetDef) {
+    std::vector<fastjet::PseudoJet>& tracks,
+    const fastjet::JetDefinition& jetDef) {
   fastjet::ClusterSequence cs(tracks, jetDef);
   return TrackJetSequence(cs);
 }
