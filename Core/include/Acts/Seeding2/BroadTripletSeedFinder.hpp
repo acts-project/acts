@@ -149,8 +149,8 @@ class BroadTripletSeedFinder {
   /// @param options Configuration options for the seed finder
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
-  /// @param bottomCuts Derived cuts for the bottom space points
-  /// @param topCuts Derived cuts for the top space points
+  /// @param bottomFinder Finder for bottom doublets
+  /// @param topFinder Finder for top doublets
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param spacePoints Space point container
@@ -159,8 +159,8 @@ class BroadTripletSeedFinder {
   /// @param topSps Group of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(const Options& options, State& state, Cache& cache,
-                            const DoubletSeedFinder::DerivedCuts& bottomCuts,
-                            const DoubletSeedFinder::DerivedCuts& topCuts,
+                            const DoubletSeedFinder& bottomFinder,
+                            const DoubletSeedFinder& topFinder,
                             const DerivedTripletCuts& tripletCuts,
                             const BroadTripletSeedFilter& filter,
                             const SpacePointContainer2& spacePoints,
@@ -175,8 +175,8 @@ class BroadTripletSeedFinder {
   /// @param options Configuration options for the seed finder
   /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
-  /// @param bottomCuts Derived cuts for the bottom space points
-  /// @param topCuts Derived cuts for the top space points
+  /// @param bottomFinder Finder for bottom doublets
+  /// @param topFinder Finder for top doublets
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param spacePoints Space point container
@@ -187,8 +187,7 @@ class BroadTripletSeedFinder {
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromSortedGroups(
       const Options& options, State& state, Cache& cache,
-      const DoubletSeedFinder::DerivedCuts& bottomCuts,
-      const DoubletSeedFinder::DerivedCuts& topCuts,
+      const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
       const DerivedTripletCuts& tripletCuts,
       const BroadTripletSeedFilter& filter,
       const SpacePointContainer2& spacePoints,

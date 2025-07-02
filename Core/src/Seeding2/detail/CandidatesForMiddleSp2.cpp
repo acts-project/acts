@@ -67,9 +67,9 @@ void CandidatesForMiddleSp2::clear() {
   m_indicesLow.clear();
 }
 
-bool CandidatesForMiddleSp2::push(std::size_t spB, std::size_t spM,
-                                  std::size_t spT, float weight, float zOrigin,
-                                  bool isQuality) {
+bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
+                                  SpacePointIndex2 spT, float weight,
+                                  float zOrigin, bool isQuality) {
   // Decide in which collection this candidate may be added to according to the
   // isQuality boolean
   if (isQuality) {
@@ -151,9 +151,10 @@ void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
       break;
     }
 
-    // At least one of the child is present. Left child for sure, right child we
-    // have to check. We take the lowest weight of the children. By default this
-    // is the weight of the left child, and we then check for the right child
+    // At least one of the children is present. Left child for sure, right child
+    // we have to check. We take the lowest weight of the children. By default
+    // this is the weight of the left child, and we then check for the right
+    // child
 
     float weightLeftChild = weight(indices, leftChild);
 
@@ -218,9 +219,10 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     // no entries in collection high, we attach the entire low collection
     if (m_nHigh == 0) {
       std::size_t idx = m_nLow;
-      for (std::size_t i(0); i < idx; i++) {
-        output[outIdx--] = m_storage[m_indicesLow[0]];
+      for (std::size_t i = 0; i < idx; i++) {
+        output[outIdx] = m_storage[m_indicesLow[0]];
         pop(m_indicesLow, m_nLow);
+        outIdx--;
       }
       break;
     }
@@ -228,9 +230,10 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     // no entries in collection low, we attach the entire high collection
     if (m_nLow == 0) {
       std::size_t idx = m_nHigh;
-      for (std::size_t i(0); i < idx; i++) {
-        output[outIdx--] = m_storage[m_indicesHigh[0]];
+      for (std::size_t i = 0; i < idx; i++) {
+        output[outIdx] = m_storage[m_indicesHigh[0]];
         pop(m_indicesHigh, m_nHigh);
+        outIdx--;
       }
       break;
     }

@@ -79,11 +79,11 @@ void BroadTripletSeedFilter::filter2SpFixed(
   std::size_t nTopSeedConf = 0;
   if (m_cfg.seedConfirmation) {
     // check if bottom SP is in the central or forward region
-    seedConfRange =
-        (spB.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-         spB.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_cfg.forwardSeedConfirmationRange
-            : m_cfg.centralSeedConfirmationRange;
+    const bool isForwardRegion =
+        spB.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+        spB.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf;
+    seedConfRange = isForwardRegion ? m_cfg.forwardSeedConfirmationRange
+                                    : m_cfg.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
     nTopSeedConf = spB.r() > seedConfRange.rMaxSeedConf
@@ -119,8 +119,6 @@ void BroadTripletSeedFilter::filter2SpFixed(
     auto topSp = topSpVec[topSpIndex];
     auto spT = spacePoints.at(topSp);
 
-    // if two compatible seeds with high distance in r are found, compatible
-    // seeds span 5 layers
     cache.compatibleSeedR.clear();
 
     float invHelixDiameter = invHelixDiameterVec[topSpIndex];

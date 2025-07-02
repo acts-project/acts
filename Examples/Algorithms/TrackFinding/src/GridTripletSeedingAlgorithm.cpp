@@ -134,34 +134,36 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
 
-  Acts::Experimental::DoubletSeedFinder::Cuts bottomDoubletCuts;
-  bottomDoubletCuts.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
-                                    ? m_cfg.deltaRMin
-                                    : m_cfg.deltaRMinBottom;
-  bottomDoubletCuts.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
-                                    ? m_cfg.deltaRMax
-                                    : m_cfg.deltaRMaxBottom;
-  bottomDoubletCuts.deltaZMin = m_cfg.deltaZMin;
-  bottomDoubletCuts.deltaZMax = m_cfg.deltaZMax;
-  bottomDoubletCuts.impactMax = m_cfg.impactMax;
-  bottomDoubletCuts.interactionPointCut = m_cfg.interactionPointCut;
-  bottomDoubletCuts.collisionRegionMin = m_cfg.collisionRegionMin;
-  bottomDoubletCuts.collisionRegionMax = m_cfg.collisionRegionMax;
-  bottomDoubletCuts.cotThetaMax = m_cfg.cotThetaMax;
-  bottomDoubletCuts.minPt = m_cfg.minPt;
-  bottomDoubletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
+  Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
+                                            ? m_cfg.deltaRMin
+                                            : m_cfg.deltaRMinBottom;
+  bottomDoubletFinderConfig.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                                            ? m_cfg.deltaRMax
+                                            : m_cfg.deltaRMaxBottom;
+  bottomDoubletFinderConfig.deltaZMin = m_cfg.deltaZMin;
+  bottomDoubletFinderConfig.deltaZMax = m_cfg.deltaZMax;
+  bottomDoubletFinderConfig.impactMax = m_cfg.impactMax;
+  bottomDoubletFinderConfig.interactionPointCut = m_cfg.interactionPointCut;
+  bottomDoubletFinderConfig.collisionRegionMin = m_cfg.collisionRegionMin;
+  bottomDoubletFinderConfig.collisionRegionMax = m_cfg.collisionRegionMax;
+  bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
+  bottomDoubletFinderConfig.minPt = m_cfg.minPt;
+  bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   if (m_cfg.useExtraCuts) {
-    bottomDoubletCuts.experimentCuts.connect<itkFastTrackingCuts>();
+    bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  auto derivedBottomDoubletCuts = bottomDoubletCuts.derive(m_cfg.bFieldInZ);
+  Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
+      bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
-  Acts::Experimental::DoubletSeedFinder::Cuts topDoubletCuts =
-      bottomDoubletCuts;
-  topDoubletCuts.deltaRMin =
+  Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
+      bottomDoubletFinderConfig;
+  topDoubletFinderConfig.deltaRMin =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
-  topDoubletCuts.deltaRMax =
+  topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
-  auto derivedTopDoubletCuts = topDoubletCuts.derive(m_cfg.bFieldInZ);
+  Acts::Experimental::DoubletSeedFinder topDoubletFinder(
+      topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
@@ -236,9 +238,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       }
 
       m_seedFinder->createSeedsFromGroup(
-          finderOptions, state, cache, derivedBottomDoubletCuts,
-          derivedTopDoubletCuts, derivedTripletCuts, *m_seedFilter,
-          coreSpacePoints, bottomSps, middleSp, topSps, seeds);
+          finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
+          derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSps,
+          middleSp, topSps, seeds);
     }  // loop on middle space points
   }
 

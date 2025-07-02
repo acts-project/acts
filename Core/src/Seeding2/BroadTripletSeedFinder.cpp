@@ -109,8 +109,7 @@ BroadTripletSeedFinder::BroadTripletSeedFinder(
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
-    const DoubletSeedFinder::DerivedCuts& bottomCuts,
-    const DoubletSeedFinder::DerivedCuts& topCuts,
+    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
@@ -127,8 +126,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
   // create middle-top doublets
   cache.topDoublets.clear();
-  DoubletSeedFinder::createTopDoublets(topCuts, spacePoints, spM, middleSpInfo,
-                                       topSps, cache.topDoublets);
+  topFinder.createTopDoublets(spacePoints, spM, middleSpInfo, topSps,
+                              cache.topDoublets);
 
   // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
@@ -140,11 +139,12 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
   float rMaxSeedConf = 0;
   if (filter.config().seedConfirmation) {
     // check if middle SP is in the central or forward region
+    const bool isForwardRegion =
+        spM.z() > filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
+        spM.z() < filter.config().centralSeedConfirmationRange.zMinSeedConf;
     SeedConfirmationRangeConfig seedConfRange =
-        (spM.z() > filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
-         spM.z() < filter.config().centralSeedConfirmationRange.zMinSeedConf)
-            ? filter.config().forwardSeedConfirmationRange
-            : filter.config().centralSeedConfirmationRange;
+        isForwardRegion ? filter.config().forwardSeedConfirmationRange
+                        : filter.config().centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the middle SP is
     // in the central or forward region
     std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
@@ -163,9 +163,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
   // create middle-bottom doublets
   cache.bottomDoublets.clear();
-  DoubletSeedFinder::createBottomDoublets(bottomCuts, spacePoints, spM,
-                                          middleSpInfo, bottomSps,
-                                          cache.bottomDoublets);
+  bottomFinder.createBottomDoublets(spacePoints, spM, middleSpInfo, bottomSps,
+                                    cache.bottomDoublets);
 
   // no bottom SP found -> cannot form any triplet
   if (cache.bottomDoublets.empty()) {
@@ -204,8 +203,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
 void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     const Options& options, State& state, Cache& cache,
-    const DoubletSeedFinder::DerivedCuts& bottomCuts,
-    const DoubletSeedFinder::DerivedCuts& topCuts,
+    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,
@@ -234,24 +232,24 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
   std::ranges::transform(
       bottomSpGroups, std::back_inserter(cache.bottomSpOffsets),
       [&](const std::span<const SpacePointIndex2>& bottomSps) {
-        return std::ranges::lower_bound(
-                   bottomSps, firstMiddleSpR - bottomCuts.deltaRMax, {},
-                   [&](const SpacePointIndex2& spIndex) {
-                     auto sp = spacePoints.at(spIndex);
-                     return sp.r();
-                   }) -
-               bottomSps.begin();
+        auto low = std::ranges::lower_bound(
+            bottomSps, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
+            [&](const SpacePointIndex2& spIndex) {
+              auto sp = spacePoints.at(spIndex);
+              return sp.r();
+            });
+        return low - bottomSps.begin();
       });
   std::ranges::transform(topSpGroups, std::back_inserter(cache.topSpOffsets),
                          [&](const std::span<const SpacePointIndex2>& topSps) {
-                           return std::ranges::lower_bound(
-                                      topSps,
-                                      firstMiddleSpR + topCuts.deltaRMin, {},
-                                      [&](const SpacePointIndex2& spIndex) {
-                                        auto sp = spacePoints.at(spIndex);
-                                        return sp.r();
-                                      }) -
-                                  topSps.begin();
+                           auto low = std::ranges::lower_bound(
+                               topSps,
+                               firstMiddleSpR + topFinder.config().deltaRMin,
+                               {}, [&](const SpacePointIndex2& spIndex) {
+                                 auto sp = spacePoints.at(spIndex);
+                                 return sp.r();
+                               });
+                           return low - topSps.begin();
                          });
 
   for (SpacePointIndex2 middleSp : middleSps) {
@@ -273,9 +271,9 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-top doublets
     cache.topDoublets.clear();
     for (std::size_t i = 0; i < topSpGroups.size(); ++i) {
-      DoubletSeedFinder::createSortedTopDoublets(
-          topCuts, spacePoints, spM, middleSpInfo, topSpGroups[i],
-          cache.topSpOffsets[i], cache.topDoublets);
+      topFinder.createSortedTopDoublets(spacePoints, spM, middleSpInfo,
+                                        topSpGroups[i], cache.topSpOffsets[i],
+                                        cache.topDoublets);
     }
 
     // no top SP found -> try next spM
@@ -288,12 +286,12 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     float rMaxSeedConf = 0;
     if (filter.config().seedConfirmation) {
       // check if middle SP is in the central or forward region
+      const bool isForwardRegion =
+          spM.z() > filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
+          spM.z() < filter.config().centralSeedConfirmationRange.zMinSeedConf;
       SeedConfirmationRangeConfig seedConfRange =
-          (spM.z() >
-               filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
-           spM.z() < filter.config().centralSeedConfirmationRange.zMinSeedConf)
-              ? filter.config().forwardSeedConfirmationRange
-              : filter.config().centralSeedConfirmationRange;
+          isForwardRegion ? filter.config().forwardSeedConfirmationRange
+                          : filter.config().centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
       // in the central or forward region
       std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
@@ -314,8 +312,8 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-bottom doublets
     cache.bottomDoublets.clear();
     for (std::size_t i = 0; i < bottomSpGroups.size(); ++i) {
-      DoubletSeedFinder::createSortedBottomDoublets(
-          bottomCuts, spacePoints, spM, middleSpInfo, bottomSpGroups[i],
+      bottomFinder.createSortedBottomDoublets(
+          spacePoints, spM, middleSpInfo, bottomSpGroups[i],
           cache.bottomSpOffsets[i], cache.bottomDoublets);
     }
 
