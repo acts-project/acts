@@ -831,8 +831,8 @@ template <typename multi_stepper_t>
 void propagator_instatiation_test_function() {
   auto bField = std::make_shared<NullBField>();
   multi_stepper_t multi_stepper(bField);
-  Propagator<multi_stepper_t, Navigator> propagator(
-      std::move(multi_stepper), Navigator{Navigator::Config{}});
+
+  Propagator propagator(std::move(multi_stepper), VoidNavigator{});
 
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})

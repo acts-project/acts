@@ -47,9 +47,8 @@ class ProtoLayerCreator {
  public:
   using DetectorElementFactory =
       std::function<std::shared_ptr<GenericDetectorElement>(
-          std::shared_ptr<const Acts::Transform3>,
-          std::shared_ptr<const Acts::PlanarBounds>, double,
-          std::shared_ptr<const Acts::ISurfaceMaterial>)>;
+          const Acts::Transform3&, std::shared_ptr<const Acts::PlanarBounds>,
+          double, std::shared_ptr<const Acts::ISurfaceMaterial>)>;
 
   /// @struct Config
   ///
