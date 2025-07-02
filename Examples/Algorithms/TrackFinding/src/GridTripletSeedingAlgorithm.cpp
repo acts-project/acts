@@ -47,24 +47,29 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   }
 
   m_gridConfig.minPt = m_cfg.minPt;
+  // TODO switch to `m_cfg.rMin`
   m_gridConfig.rMin = 0;
   m_gridConfig.rMax = m_cfg.rMax;
   m_gridConfig.zMin = m_cfg.zMin;
   m_gridConfig.zMax = m_cfg.zMax;
   m_gridConfig.deltaRMax = m_cfg.deltaRMax;
   m_gridConfig.cotThetaMax = m_cfg.cotThetaMax;
-  // TODO
-  // m_gridConfig.impactMax = m_cfg.impactMax;
+  // TODO switch to `m_cfg.impactMax`
+  m_gridConfig.impactMax = 20 * Acts::UnitConstants::mm;
   m_gridConfig.phiMin = m_cfg.phiMin;
   m_gridConfig.phiMax = m_cfg.phiMax;
   m_gridConfig.phiBinDeflectionCoverage = m_cfg.phiBinDeflectionCoverage;
   m_gridConfig.maxPhiBins = m_cfg.maxPhiBins;
+  m_gridConfig.rBinEdges = {};
+  m_gridConfig.zBinEdges = m_cfg.zBinEdges;
   m_gridConfig.bFieldInZ = m_cfg.bFieldInZ;
   m_gridConfig.bottomBinFinder.emplace(m_cfg.numPhiNeighbors,
                                        m_cfg.zBinNeighborsBottom, 0);
   m_gridConfig.topBinFinder.emplace(m_cfg.numPhiNeighbors,
                                     m_cfg.zBinNeighborsTop, 0);
+  m_gridConfig.navigation[0ul] = {};
   m_gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
+  m_gridConfig.navigation[2ul] = {};
 
   m_seedFinder = Acts::Experimental::BroadTripletSeedFinder(
       logger().cloneWithSuffix("Finder"));
