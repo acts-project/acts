@@ -109,8 +109,7 @@ BroadTripletSeedFinder::BroadTripletSeedFinder(
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
-    const BottomDoubletSeedFinder& bottomFinder,
-    const TopDoubletSeedFinder& topFinder,
+    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
@@ -204,8 +203,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
 void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     const Options& options, State& state, Cache& cache,
-    const BottomDoubletSeedFinder& bottomFinder,
-    const TopDoubletSeedFinder& topFinder,
+    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,

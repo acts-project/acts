@@ -8,8 +8,11 @@
 
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+
+#include <stdexcept>
 
 namespace Acts::Experimental {
 
@@ -324,78 +327,79 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 
 DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg) : m_cfg(cfg) {}
 
-BottomDoubletSeedFinder::BottomDoubletSeedFinder(const DerivedConfig& cfg)
-    : DoubletSeedFinder(cfg) {}
-
-void BottomDoubletSeedFinder::createDoublets(
+void DoubletSeedFinder::createDoublets(
     const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     DoubletsForMiddleSp& compatibleDoublets) const {
   std::size_t candidateOffset = 0;
-  if (config().interactionPointCut) {
+
+  if (m_cfg.candidateDirection == Direction::Backward() &&
+      m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, true, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
-  } else {
+  }
+
+  if (m_cfg.candidateDirection == Direction::Backward() &&
+      !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, false, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
-}
 
-void BottomDoubletSeedFinder::createSortedDoublets(
-    const SpacePointContainer2& spacePoints,
-    const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    std::span<const SpacePointIndex2> candidateSps,
-    std::size_t& candidateOffset,
-    DoubletsForMiddleSp& compatibleDoublets) const {
-  if (config().interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
-  } else {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
-  }
-}
-
-TopDoubletSeedFinder::TopDoubletSeedFinder(const DerivedConfig& cfg)
-    : DoubletSeedFinder(cfg) {}
-
-void TopDoubletSeedFinder::createDoublets(
-    const SpacePointContainer2& spacePoints,
-    const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    std::span<const SpacePointIndex2> candidateSps,
-    DoubletsForMiddleSp& compatibleDoublets) const {
-  std::size_t candidateOffset = 0;
-  if (config().interactionPointCut) {
+  if (m_cfg.candidateDirection == Direction::Forward() &&
+      m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, true, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
-  } else {
+  }
+
+  if (m_cfg.candidateDirection == Direction::Forward() &&
+      !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, false, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
+
+  throw std::logic_error("DoubletSeedFinder: unhandled configuration");
 }
 
-void TopDoubletSeedFinder::createSortedDoublets(
+void DoubletSeedFinder::createSortedDoublets(
     const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
     std::span<const SpacePointIndex2> candidateSps,
     std::size_t& candidateOffset,
     DoubletsForMiddleSp& compatibleDoublets) const {
-  if (config().interactionPointCut) {
+  if (m_cfg.candidateDirection == Direction::Backward() &&
+      m_cfg.interactionPointCut) {
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, true>(
+        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
+        candidateOffset, compatibleDoublets);
+  }
+
+  if (m_cfg.candidateDirection == Direction::Backward() &&
+      !m_cfg.interactionPointCut) {
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, true>(
+        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
+        candidateOffset, compatibleDoublets);
+  }
+
+  if (m_cfg.candidateDirection == Direction::Forward() &&
+      m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, true, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
-  } else {
+  }
+
+  if (m_cfg.candidateDirection == Direction::Forward() &&
+      !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, false, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
+
+  throw std::logic_error("DoubletSeedFinder: unhandled configuration");
 }
 
 }  // namespace Acts::Experimental

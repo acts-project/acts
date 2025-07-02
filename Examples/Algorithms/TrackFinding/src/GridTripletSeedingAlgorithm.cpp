@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
@@ -135,6 +136,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
                                             ? m_cfg.deltaRMin
                                             : m_cfg.deltaRMinBottom;
@@ -153,16 +155,17 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  Acts::Experimental::BottomDoubletSeedFinder bottomDoubletFinder(
+  Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
       bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
   Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
       bottomDoubletFinderConfig;
+  topDoubletFinderConfig.candidateDirection = Acts::Direction::Forward();
   topDoubletFinderConfig.deltaRMin =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
-  Acts::Experimental::TopDoubletSeedFinder topDoubletFinder(
+  Acts::Experimental::DoubletSeedFinder topDoubletFinder(
       topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
