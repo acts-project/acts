@@ -79,9 +79,17 @@ using LayerMultiIntersection =
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
+
 /// Intersection with a @c BoundarySurface
-using BoundaryIntersection =
-    std::pair<SurfaceIntersection, const BoundarySurface*>;
+/// @note This struct is currently split between a gen1 boundary surface
+///       and a gen3 portal but only one of them will be set. This will go away
+///       once the gen 1 geometry is removed.
+struct BoundaryIntersection {
+  SurfaceIntersection intersection;
+  const BoundarySurface* boundarySurface;
+  const Portal* portal;
+};
+
 /// Multi-intersection with a @c BoundarySurface
 using BoundaryMultiIntersection =
     std::pair<SurfaceMultiIntersection, const BoundarySurface*>;

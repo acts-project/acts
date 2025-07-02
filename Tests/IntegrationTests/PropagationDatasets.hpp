@@ -31,7 +31,6 @@ const auto thetaForwardBackward = bdata::make(
     {2_degree, 10_degree, 30_degree, 150_degree, 170_degree, 178_degree});
 const auto thetaBeam = bdata::make({0_degree, 180_degree});
 const auto thetaWithoutBeam = thetaCentral + thetaForwardBackward;
-const auto theta = thetaCentral + thetaForwardBackward + thetaBeam;
 
 // momentum and charge
 const auto absMomentum = bdata::make({0.5_GeV, 1_GeV, 10_GeV, 100_GeV});
