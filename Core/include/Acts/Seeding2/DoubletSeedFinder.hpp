@@ -32,7 +32,7 @@ class DoubletSeedFinder {
     float deltaZMax = std::numeric_limits<float>::infinity();
 
     /// Maximum value of impact parameter estimation of the seed candidates
-    float impactMax = 20. * UnitConstants::mm;
+    float impactMax = 20 * UnitConstants::mm;
 
     /// Enable cut on the compatibility between interaction point and doublet,
     /// this is an useful approximation to speed up the seeding
@@ -52,10 +52,10 @@ class DoubletSeedFinder {
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
     /// term. Check the documentation for more information
     /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-    float minPt = 400. * UnitConstants::MeV;
+    float minPt = 400 * UnitConstants::MeV;
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
-    float helixCutTolerance = 1.;
+    float helixCutTolerance = 1;
 
     /// Delegate to apply experiment specific cuts during doublet finding
     Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts;

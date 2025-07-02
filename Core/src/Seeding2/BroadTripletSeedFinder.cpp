@@ -76,13 +76,14 @@ BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
 
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
-    const float xOverX0 = result.radLengthPerSeed;
-    const float q2OverBeta2 = 1;  // q^2=1, beta^2~1
+    const double xOverX0 = result.radLengthPerSeed;
+    const double q2OverBeta2 = 1;  // q^2=1, beta^2~1
     // RPP2018 eq. 33.15 (treats beta and q² consistently)
-    const float t = std::sqrt(xOverX0 * q2OverBeta2);
+    const double t = std::sqrt(xOverX0 * q2OverBeta2);
     // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
     //                          = 2 * log(sqrt(x/X0) * (q/beta))
-    result.highland = 13.6_MeV * t * (1.0f + 0.038f * 2 * std::log(t));
+    result.highland =
+        static_cast<float>(13.6_MeV * t * (1.0 + 0.038 * 2 * std::log(t)));
   }
 
   const float maxScatteringAngle = result.highland / result.minPt;
@@ -91,21 +92,21 @@ BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   result.pTPerHelixRadius = bFieldInZ;
   result.minHelixDiameter2 =
-      std::pow(result.minPt * 2 / result.pTPerHelixRadius, 2) *
+      std::powf(result.minPt * 2 / result.pTPerHelixRadius, 2) *
       result.helixCutTolerance;
   const float pT2perRadius =
-      std::pow(result.highland / result.pTPerHelixRadius, 2);
+      std::powf(result.highland / result.pTPerHelixRadius, 2);
   result.sigmapT2perRadius =
-      pT2perRadius * std::pow(2 * result.sigmaScattering, 2);
+      pT2perRadius * std::powf(2 * result.sigmaScattering, 2);
   result.multipleScattering2 =
-      maxScatteringAngle2 * std::pow(result.sigmaScattering, 2);
+      maxScatteringAngle2 * std::powf(result.sigmaScattering, 2);
 
   return result;
 }
 
 BroadTripletSeedFinder::BroadTripletSeedFinder(
-    const Config& config, std::unique_ptr<const Logger> logger_)
-    : m_cfg(config), m_logger(std::move(logger_)) {}
+    std::unique_ptr<const Logger> logger_)
+    : m_logger(std::move(logger_)) {}
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
@@ -411,7 +412,7 @@ void BroadTripletSeedFinder::createTriplets(
     float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1. + cotThetaB * cotThetaB;
+    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -489,7 +490,7 @@ void BroadTripletSeedFinder::createTriplets(
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
       float A = (lt.V - Vb) / dU;
-      float S2 = 1. + A * A;
+      float S2 = 1 + A * A;
       float B = Vb - A * Ub;
       float B2 = B * B;
 
@@ -592,7 +593,7 @@ void BroadTripletSeedFinder::createStripTriplets(
     float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1. + cotThetaB * cotThetaB;
+    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -656,8 +657,8 @@ void BroadTripletSeedFinder::createStripTriplets(
       }
 
       // coordinate transformation and checks for bottom spacepoint
-      float B0 = 2. * (Vb - A0 * Ub);
-      float Cb = 1. - B0 * lb.y;
+      float B0 = 2 * (Vb - A0 * Ub);
+      float Cb = 1 - B0 * lb.y;
       float Sb = A0 + B0 * lb.x;
       Eigen::Vector3f positionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
@@ -671,7 +672,7 @@ void BroadTripletSeedFinder::createStripTriplets(
       }
 
       // coordinate transformation and checks for top spacepoint
-      float Ct = 1. - B0 * lt.y;
+      float Ct = 1 - B0 * lt.y;
       float St = A0 + B0 * lt.x;
       Eigen::Vector3f positionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
@@ -692,14 +693,14 @@ void BroadTripletSeedFinder::createStripTriplets(
       float yT = rTTransf[1] - rMTransf[1];
       float zT = rTTransf[2] - rMTransf[2];
 
-      float iDeltaRB2 = 1. / (xB * xB + yB * yB);
-      float iDeltaRT2 = 1. / (xT * xT + yT * yT);
+      float iDeltaRB2 = 1 / (xB * xB + yB * yB);
+      float iDeltaRT2 = 1 / (xT * xT + yT * yT);
 
       cotThetaB = -zB * std::sqrt(iDeltaRB2);
       float cotThetaT = zT * std::sqrt(iDeltaRT2);
 
       // use arithmetic average
-      float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
+      float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
       float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
@@ -743,7 +744,7 @@ void BroadTripletSeedFinder::createStripTriplets(
         continue;
       }
       float A = (vt - vb) / dU;
-      float S2 = 1. + A * A;
+      float S2 = 1 + A * A;
       float B = vb - A * ub;
       float B2 = B * B;
 

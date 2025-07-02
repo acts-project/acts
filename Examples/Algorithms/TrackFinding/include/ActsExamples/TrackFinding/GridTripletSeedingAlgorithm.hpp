@@ -45,10 +45,10 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// maximum forward direction expressed as cot(theta)
     float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
     /// maximum impact parameter in mm
-    float impactMax = 20. * Acts::UnitConstants::mm;
+    float impactMax = 20 * Acts::UnitConstants::mm;
     /// Minimum distance between compatible outer space-points to be considered.
     /// This is used to avoid counting space-points from the same layer
-    float deltaRMin = 5. * Acts::UnitConstants::mm;
+    float deltaRMin = 5 * Acts::UnitConstants::mm;
     /// maximum distance in r from middle space point to bottom or top
     /// spacepoint
     float deltaRMax = 270 * Acts::UnitConstants::mm;
@@ -103,8 +103,8 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
     /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP
     /// is empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
-    float rMinMiddle = 60.f * Acts::UnitConstants::mm;
-    float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+    float rMinMiddle = 60 * Acts::UnitConstants::mm;
+    float rMaxMiddle = 120 * Acts::UnitConstants::mm;
     /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP
     /// can be used to define a fixed r range for each z bin: {{rMin, rMax},
     /// ...}
@@ -112,8 +112,8 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// Range defined in vector for each z bin
     std::vector<std::vector<float>> rRangeMiddleSP;
 
-    float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
-    float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+    float deltaRMiddleMinSPRange = 10 * Acts::UnitConstants::mm;
+    float deltaRMiddleMaxSPRange = 10 * Acts::UnitConstants::mm;
 
     // Seeding parameters used to define the cuts on space-point doublets
 
@@ -135,7 +135,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
-    float helixCutTolerance = 1.;
+    float helixCutTolerance = 1;
 
     // Seed finder triplet cuts
 
@@ -159,19 +159,19 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
     /// Allowed difference in curvature (inverted seed radii) between two
     /// compatible seeds
-    float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
+    float deltaInvHelixDiameter = 0.00003 * (1 / Acts::UnitConstants::mm);
     /// Seed weight/score is increased by this value if a compatible seed has
     /// been found. This is the c1 factor in the seed score calculation (w = c1
     /// * Nt - c2 * d0 - c3 * z0)
-    float compatSeedWeight = 200.;
+    float compatSeedWeight = 200;
     /// The transverse impact parameters (d0) is multiplied by this factor and
     /// subtracted from weight. This is the c2 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
-    float impactWeightFactor = 1.;
+    float impactWeightFactor = 1;
     /// The logitudinal impact parameters (z0) is multiplied by this factor and
     /// subtracted from weight. This is the c3 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
-    float zOriginWeightFactor = 1.;
+    float zOriginWeightFactor = 1;
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
@@ -223,7 +223,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
@@ -260,7 +260,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
       const Acts::Range1D<float>& rMiddleSPRange) const;
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 45.;
+    static float rMin = 45;
     static float cotThetaMax = 1.5;
 
     if (bottomRadius < rMin &&

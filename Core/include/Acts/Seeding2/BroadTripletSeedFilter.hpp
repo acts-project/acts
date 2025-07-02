@@ -33,22 +33,22 @@ class BroadTripletSeedFilter final {
   struct Config {
     /// Allowed difference in curvature (inverted seed radii) between two
     /// compatible seeds
-    float deltaInvHelixDiameter = 0.00003 * 1. / UnitConstants::mm;
+    float deltaInvHelixDiameter = 0.00003 * (1 / UnitConstants::mm);
     /// Minimum distance between compatible outer space-points to be considered.
     /// This is used to avoid counting space-points from the same layer
-    float deltaRMin = 5. * UnitConstants::mm;
+    float deltaRMin = 5 * UnitConstants::mm;
     /// Seed weight/score is increased by this value if a compatible seed has
     /// been found. This is the c1 factor in the seed score calculation (w = c1
     /// * Nt - c2 * d0 - c3 * z0)
-    float compatSeedWeight = 200.;
+    float compatSeedWeight = 200;
     /// The transverse impact parameters (d0) is multiplied by this factor and
     /// subtracted from weight. This is the c2 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
-    float impactWeightFactor = 1.;
+    float impactWeightFactor = 1;
     /// The logitudinal impact parameters (z0) is multiplied by this factor and
     /// subtracted from weight. This is the c3 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
-    float zOriginWeightFactor = 1.;
+    float zOriginWeightFactor = 1;
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached

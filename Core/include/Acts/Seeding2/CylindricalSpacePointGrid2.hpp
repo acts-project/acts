@@ -73,7 +73,7 @@ class CylindricalSpacePointGrid2 {
     std::vector<float> rBinEdges{};
 
     /// magnetic field
-    float bFieldInZ = 0. * UnitConstants::T;
+    float bFieldInZ = 0 * UnitConstants::T;
 
     std::optional<GridBinFinder<3ul>> bottomBinFinder;
     std::optional<GridBinFinder<3ul>> topBinFinder;

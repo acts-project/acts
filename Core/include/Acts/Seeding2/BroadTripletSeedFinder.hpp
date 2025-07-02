@@ -36,8 +36,6 @@ namespace Acts::Experimental {
 /// uses R-Z coordinates for the space points.
 class BroadTripletSeedFinder {
  public:
-  struct Config {};
-
   struct Options {
     float bFieldInZ = 2 * UnitConstants::T;
 
@@ -56,7 +54,7 @@ class BroadTripletSeedFinder {
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
     /// term. Check the documentation for more information
     /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-    float minPt = 400. * UnitConstants::MeV;
+    float minPt = 400 * UnitConstants::MeV;
     /// Number of sigmas of scattering angle to be considered in the minimum pT
     /// scattering term
     float sigmaScattering = 5;
@@ -68,10 +66,10 @@ class BroadTripletSeedFinder {
     /// Maximum transverse momentum for scattering calculation
     float maxPtScattering = 10 * UnitConstants::GeV;
     /// Maximum value of impact parameter estimation of the seed candidates
-    float impactMax = 20. * UnitConstants::mm;
+    float impactMax = 20 * UnitConstants::mm;
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
-    float helixCutTolerance = 1.;
+    float helixCutTolerance = 1;
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
@@ -141,12 +139,9 @@ class BroadTripletSeedFinder {
     BroadTripletSeedFilter::State filter;
   };
 
-  explicit BroadTripletSeedFinder(const Config& config,
-                                  std::unique_ptr<const Logger> logger =
+  explicit BroadTripletSeedFinder(std::unique_ptr<const Logger> logger =
                                       getDefaultLogger("BroadTripletSeedFinder",
                                                        Logging::Level::INFO));
-
-  const Config& config() const { return m_cfg; }
 
   /// Create all possible seeds from bottom, middle, and top space points. No
   /// assumptions on the order of the space points are made.
@@ -204,6 +199,10 @@ class BroadTripletSeedFinder {
       SeedContainer2& outputSeeds) const;
 
  private:
+  std::unique_ptr<const Logger> m_logger;
+
+  const Logger& logger() const { return *m_logger; }
+
   /// Create triplets from the bottom, middle, and top space points.
   ///
   /// @param cache Cache object to store intermediate results
@@ -252,12 +251,6 @@ class BroadTripletSeedFinder {
       const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
       TripletTopCandidates& tripletTopCandidates,
       CandidatesForMiddleSp2& candidatesCollector);
-
- private:
-  const Logger& logger() const { return *m_logger; }
-
-  Config m_cfg;
-  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts::Experimental

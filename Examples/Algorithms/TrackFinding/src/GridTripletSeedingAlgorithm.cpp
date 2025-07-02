@@ -67,7 +67,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
 
   m_seedFinder = Acts::Experimental::BroadTripletSeedFinder(
-      {}, logger().cloneWithSuffix("Finder"));
+      logger().cloneWithSuffix("Finder"));
 
   Acts::Experimental::BroadTripletSeedFilter::Config filterConfig;
   filterConfig.deltaInvHelixDiameter = m_cfg.deltaInvHelixDiameter;
@@ -264,9 +264,8 @@ GridTripletSeedingAlgorithm::retrieveRadiusRangeForMiddle(
   }
 
   // get zBin position of the middle SP
-  auto pVal =
-      std::lower_bound(m_cfg.zBinEdges.begin(), m_cfg.zBinEdges.end(), spM.z());
-  int zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
+  auto pVal = std::ranges::lower_bound(m_cfg.zBinEdges, spM.z());
+  std::size_t zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
   // protects against zM at the limit of zBinEdges
   zBin == 0 ? zBin : --zBin;
   return {m_cfg.rRangeMiddleSP[zBin][0], m_cfg.rRangeMiddleSP[zBin][1]};

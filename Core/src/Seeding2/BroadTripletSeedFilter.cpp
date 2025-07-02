@@ -199,7 +199,8 @@ void BroadTripletSeedFilter::filter2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf = cache.compatibleSeedR.size() + 1 - nTopSeedConf;
+      std::size_t deltaSeedConf =
+          cache.compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
@@ -272,7 +273,7 @@ void BroadTripletSeedFilter::filter1SpFixed(
     m_cfg.experimentCuts->cutPerMiddleSp(candidates);
   }
 
-  unsigned int maxSeeds = candidates.size();
+  std::size_t maxSeeds = candidates.size();
 
   if (maxSeeds > m_cfg.maxSeedsPerSpM) {
     maxSeeds = m_cfg.maxSeedsPerSpM + 1;
@@ -281,7 +282,7 @@ void BroadTripletSeedFilter::filter1SpFixed(
   // default filter removes the last seeds if maximum amount exceeded
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
-  unsigned int numTotalSeeds = 0;
+  std::size_t numTotalSeeds = 0;
   for (const auto& [bottom, middle, top, bestSeedQuality, zOrigin,
                     qualitySeed] : candidates) {
     // stop if we reach the maximum number of seeds

@@ -72,7 +72,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
 
     // evaluating the azimutal deflection including the maximum impact parameter
     float deltaAngleWithMaxD0 =
-        std::abs(std::asin(m_cfg.impactMax / (rMin)) -
+        std::abs(std::asin(m_cfg.impactMax / rMin) -
                  std::asin(m_cfg.impactMax / m_cfg.rMax));
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal

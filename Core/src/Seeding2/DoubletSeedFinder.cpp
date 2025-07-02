@@ -14,7 +14,7 @@ namespace Acts::Experimental {
 
 namespace {
 
-enum SpacePointCandidateType { eBottom, eTop };
+enum class SpacePointCandidateType { eBottom, eTop };
 
 /// Iterates over dublets and tests the compatibility by applying a series of
 /// cuts that can be tested with only two SPs.
@@ -58,7 +58,7 @@ void createDoublets(
   float deltaZ = 0.;
 
   const auto outsideRangeCheck = [](const float value, const float min,
-                                    const float max) -> bool {
+                                    const float max) {
     // intentionally using `|` after profiling. faster due to better branch
     // prediction
     return static_cast<bool>(static_cast<int>(value < min) |
@@ -67,23 +67,17 @@ void createDoublets(
 
   const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
                                   float iDeltaR2, float cotTheta) {
+    using enum SpacePointKnownExtraColumn;
+
     // TOD use some reasonable defaults
     float varianceZM =
-        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
-            ? middleSp.varianceZ()
-            : 0;
+        spacePoints.hasExtraColumns(VarianceZ) ? middleSp.varianceZ() : 0;
     float varianceZO =
-        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
-            ? otherSp.varianceZ()
-            : 0;
+        spacePoints.hasExtraColumns(VarianceZ) ? otherSp.varianceZ() : 0;
     float varianceRM =
-        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
-            ? middleSp.varianceR()
-            : 0;
+        spacePoints.hasExtraColumns(VarianceR) ? middleSp.varianceR() : 0;
     float varianceRO =
-        spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
-            ? otherSp.varianceR()
-            : 0;
+        spacePoints.hasExtraColumns(VarianceR) ? otherSp.varianceR() : 0;
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
@@ -183,7 +177,7 @@ void createDoublets(
           deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
 
       const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
-      const float iDeltaR2 = 1. / deltaR2;
+      const float iDeltaR2 = 1 / deltaR2;
 
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
@@ -210,7 +204,7 @@ void createDoublets(
         deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
 
     const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
-    const float iDeltaR2 = 1. / deltaR2;
+    const float iDeltaR2 = 1 / deltaR2;
 
     const float uT = xNewFrame * iDeltaR2;
     const float vT = yNewFrame * iDeltaR2;
@@ -308,7 +302,7 @@ DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
 
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
-  result.minHelixDiameter2 = std::pow(result.minPt * 2 / pTPerHelixRadius, 2) *
+  result.minHelixDiameter2 = std::powf(result.minPt * 2 / pTPerHelixRadius, 2) *
                              result.helixCutTolerance;
 
   return result;
@@ -317,7 +311,7 @@ DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
 DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
     const ConstSpacePointProxy2& spM) {
   const float rM = spM.r();
-  const float uIP = -1. / rM;
+  const float uIP = -1 / rM;
   const float cosPhiM = -spM.x() * uIP;
   const float sinPhiM = -spM.y() * uIP;
   const float uIP2 = uIP * uIP;
