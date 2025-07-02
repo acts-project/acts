@@ -38,7 +38,7 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 const Stepper stepper;
 const Propagator propagator(stepper);
-const RiddersPropagator riddersPropagator(stepper);
+const RiddersPropagator riddersPropagator(propagator);
 
 }  // namespace
 
