@@ -199,8 +199,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      std::size_t deltaSeedConf =
-          cache.compatibleSeedR.size() + 1 - nTopSeedConf;
+      int deltaSeedConf = cache.compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
