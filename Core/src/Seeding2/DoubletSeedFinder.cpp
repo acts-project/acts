@@ -9,8 +9,7 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-
-#include <cmath>
+#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::Experimental {
 
@@ -304,8 +303,8 @@ DoubletSeedFinder::DerivedCuts DoubletSeedFinder::Cuts::derive(
 
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
-  result.minHelixDiameter2 = std::powf(result.minPt * 2 / pTPerHelixRadius, 2) *
-                             result.helixCutTolerance;
+  result.minHelixDiameter2 =
+      square(result.minPt * 2 / pTPerHelixRadius) * result.helixCutTolerance;
 
   return result;
 }

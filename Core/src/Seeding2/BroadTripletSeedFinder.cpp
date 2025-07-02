@@ -11,8 +11,8 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
-#include <cmath>
 #include <numeric>
 
 #include <Eigen/src/Core/Matrix.h>
@@ -93,14 +93,12 @@ BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   result.pTPerHelixRadius = bFieldInZ;
   result.minHelixDiameter2 =
-      std::powf(result.minPt * 2 / result.pTPerHelixRadius, 2) *
+      square(result.minPt * 2 / result.pTPerHelixRadius) *
       result.helixCutTolerance;
-  const float pT2perRadius =
-      std::powf(result.highland / result.pTPerHelixRadius, 2);
-  result.sigmapT2perRadius =
-      pT2perRadius * std::powf(2 * result.sigmaScattering, 2);
+  const float pT2perRadius = square(result.highland / result.pTPerHelixRadius);
+  result.sigmapT2perRadius = pT2perRadius * square(2 * result.sigmaScattering);
   result.multipleScattering2 =
-      maxScatteringAngle2 * std::powf(result.sigmaScattering, 2);
+      maxScatteringAngle2 * square(result.sigmaScattering);
 
   return result;
 }
