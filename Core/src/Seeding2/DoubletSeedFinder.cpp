@@ -69,7 +69,7 @@ void createDoublets(
                                   float iDeltaR2, float cotTheta) {
     using enum SpacePointKnownExtraColumn;
 
-    // TOD use some reasonable defaults
+    // TODO use some reasonable defaults
     float varianceZM =
         spacePoints.hasExtraColumns(VarianceZ) ? middleSp.varianceZ() : 0;
     float varianceZO =

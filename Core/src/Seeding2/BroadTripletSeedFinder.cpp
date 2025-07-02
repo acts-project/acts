@@ -367,7 +367,7 @@ void BroadTripletSeedFinder::createTriplets(
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.r();
-  // TOD use some reasonable defaults
+  // TODO use some reasonable defaults
   const float varianceRM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()
@@ -569,7 +569,7 @@ void BroadTripletSeedFinder::createStripTriplets(
   const float rM = spM.r();
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
-  // TOD use some reasonable defaults
+  // TODO use some reasonable defaults
   const float varianceRM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()

@@ -278,8 +278,8 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
       return false;
     }
 
-    /// Remove space points beyond eta=4 if their z is
-    /// larger than the max seed z0 (150.)
+    // Remove space points beyond eta=4 if their z is larger than the max seed
+    // z0 (150.)
     float cotTheta = 27.2899;  // corresponds to eta=4
     if ((zabs - 150.) > cotTheta * r) {
       return false;

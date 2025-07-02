@@ -171,7 +171,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   std::vector<Acts::SpacePointIndex2> middleSps;
   std::vector<Acts::SpacePointIndex2> topSps;
 
-  for (const auto [bottom, middle, top] : grid.binnedGround()) {
+  for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
 
     bottomSps.clear();

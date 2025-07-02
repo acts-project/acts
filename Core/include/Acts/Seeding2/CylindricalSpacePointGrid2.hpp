@@ -104,7 +104,7 @@ class CylindricalSpacePointGrid2 {
   GridType& grid() { return *m_grid; }
   const GridType& grid() const { return *m_grid; }
 
-  const BinnedGroupType& binnedGround() const { return *m_binnedGroup; }
+  const BinnedGroupType& binnedGroup() const { return *m_binnedGroup; }
 
  private:
   Config m_cfg;

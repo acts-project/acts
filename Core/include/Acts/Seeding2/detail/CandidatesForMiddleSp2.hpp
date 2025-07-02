@@ -94,7 +94,7 @@ class CandidatesForMiddleSp2 {
                                  const TripletCandidate2& i1,
                                  const TripletCandidate2& i2);
 
-  /// @brief dding a new triplet candidate to the collection, should it satisfy the
+  /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
   /// @param indices The collection into which the candidate should be stored
   /// @param n The current number of stored elements in the container
