@@ -153,7 +153,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
+  Acts::Experimental::BottomDoubletSeedFinder bottomDoubletFinder(
       bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
   Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
@@ -162,7 +162,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
-  Acts::Experimental::DoubletSeedFinder topDoubletFinder(
+  Acts::Experimental::TopDoubletSeedFinder topDoubletFinder(
       topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;

@@ -53,9 +53,9 @@ void setBestSeedQuality(
     }
   };
 
-  set(top);
-  set(middle);
-  set(bottom);
+  for (SpacePointIndex2 sp : {top, middle, bottom}) {
+    set(sp);
+  }
 }
 
 }  // namespace

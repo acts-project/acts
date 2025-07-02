@@ -109,7 +109,8 @@ BroadTripletSeedFinder::BroadTripletSeedFinder(
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
     const Options& options, State& state, Cache& cache,
-    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
+    const BottomDoubletSeedFinder& bottomFinder,
+    const TopDoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     std::span<const SpacePointIndex2> bottomSps, SpacePointIndex2 middleSp,
@@ -126,8 +127,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
   // create middle-top doublets
   cache.topDoublets.clear();
-  topFinder.createTopDoublets(spacePoints, spM, middleSpInfo, topSps,
-                              cache.topDoublets);
+  topFinder.createDoublets(spacePoints, spM, middleSpInfo, topSps,
+                           cache.topDoublets);
 
   // no top SP found -> cannot form any triplet
   if (cache.topDoublets.empty()) {
@@ -163,8 +164,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
   // create middle-bottom doublets
   cache.bottomDoublets.clear();
-  bottomFinder.createBottomDoublets(spacePoints, spM, middleSpInfo, bottomSps,
-                                    cache.bottomDoublets);
+  bottomFinder.createDoublets(spacePoints, spM, middleSpInfo, bottomSps,
+                              cache.bottomDoublets);
 
   // no bottom SP found -> cannot form any triplet
   if (cache.bottomDoublets.empty()) {
@@ -203,7 +204,8 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 
 void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     const Options& options, State& state, Cache& cache,
-    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
+    const BottomDoubletSeedFinder& bottomFinder,
+    const TopDoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
     const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,
@@ -271,9 +273,9 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-top doublets
     cache.topDoublets.clear();
     for (std::size_t i = 0; i < topSpGroups.size(); ++i) {
-      topFinder.createSortedTopDoublets(spacePoints, spM, middleSpInfo,
-                                        topSpGroups[i], cache.topSpOffsets[i],
-                                        cache.topDoublets);
+      topFinder.createSortedDoublets(spacePoints, spM, middleSpInfo,
+                                     topSpGroups[i], cache.topSpOffsets[i],
+                                     cache.topDoublets);
     }
 
     // no top SP found -> try next spM
@@ -312,7 +314,7 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-bottom doublets
     cache.bottomDoublets.clear();
     for (std::size_t i = 0; i < bottomSpGroups.size(); ++i) {
-      bottomFinder.createSortedBottomDoublets(
+      bottomFinder.createSortedDoublets(
           spacePoints, spM, middleSpInfo, bottomSpGroups[i],
           cache.bottomSpOffsets[i], cache.bottomDoublets);
     }

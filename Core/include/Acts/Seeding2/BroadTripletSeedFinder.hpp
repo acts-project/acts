@@ -159,8 +159,8 @@ class BroadTripletSeedFinder {
   /// @param topSps Group of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(const Options& options, State& state, Cache& cache,
-                            const DoubletSeedFinder& bottomFinder,
-                            const DoubletSeedFinder& topFinder,
+                            const BottomDoubletSeedFinder& bottomFinder,
+                            const TopDoubletSeedFinder& topFinder,
                             const DerivedTripletCuts& tripletCuts,
                             const BroadTripletSeedFilter& filter,
                             const SpacePointContainer2& spacePoints,
@@ -187,7 +187,8 @@ class BroadTripletSeedFinder {
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromSortedGroups(
       const Options& options, State& state, Cache& cache,
-      const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
+      const BottomDoubletSeedFinder& bottomFinder,
+      const TopDoubletSeedFinder& topFinder,
       const DerivedTripletCuts& tripletCuts,
       const BroadTripletSeedFilter& filter,
       const SpacePointContainer2& spacePoints,
