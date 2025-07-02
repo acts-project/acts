@@ -274,7 +274,7 @@ def addSeeding(
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
-    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
     initialSigmaQoverPt: Optional[float] = None,
