@@ -516,15 +516,16 @@ linux_ubuntu_2404_clang19:
     - dnf install -y git-lfs
     - git clone $CLONE_URL src
 
-    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
-
-
     - cd src
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
     - cd ..
+
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+
+
 
     - ccache --version
 
