@@ -16,8 +16,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 
-#include <limits>
-
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
 
