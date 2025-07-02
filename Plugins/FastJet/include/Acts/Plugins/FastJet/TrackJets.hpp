@@ -54,13 +54,13 @@ class TrackJetSequence {
   /// @param tracks the input tracks
   /// @jetDef the jet definition to use, defaults to "DefaultJetDefinition"
   static TrackJetSequence create(
-      std::vector<fastjet::PseudoJet>& fourMomenta,
-      fastjet::JetDefinition jetDef = DefaultJetDefinition);
+      std::vector<fastjet::PseudoJet>& tracks,
+      const fastjet::JetDefinition& jetDef = DefaultJetDefinition);
 
   static TrackJetSequence create(
-      std::vector<fastjet::PseudoJet>&& fourMomenta,
-      fastjet::JetDefinition jetDef = DefaultJetDefinition) {
-    return create(fourMomenta, std::move(jetDef));
+      std::vector<fastjet::PseudoJet>&& tracks,
+      const fastjet::JetDefinition& jetDef = DefaultJetDefinition) {
+    return create(tracks, jetDef);
   }
 
   /// Get all the track jets passing the pT & eta cuts
