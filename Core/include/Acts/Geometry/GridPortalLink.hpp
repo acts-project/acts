@@ -115,7 +115,7 @@ class GridPortalLink : public PortalLinkBase {
       AxisDirection direction);
 
   /// Merge two grid portal links into a single one. The routine can merge
-  /// one-dimenaional, tow-dimensional and mixed links. The merge will try to
+  /// one-dimensional, two-dimensional and mixed links. The merge will try to
   /// preserve equidistant binning in case bin widths match. Otherwise, the
   /// merge falls back to variable binning.
   ///

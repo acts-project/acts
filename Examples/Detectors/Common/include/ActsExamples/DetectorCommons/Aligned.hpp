@@ -25,7 +25,6 @@ class Aligned : public DetectorElement {
  public:
   /// Using the constructor from the base class
   using DetectorElement::DetectorElement;
-
   /// An alignment aware transform call
   /// @param gctx the geometry context which is - if possible - unpacked to an AlignementContext
   /// @return The alignment-corrected transform if available, otherwise the nominal transform.
