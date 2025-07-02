@@ -15,7 +15,7 @@ namespace Acts::Experimental {
 
 namespace {
 
-enum class SpacePointCandidateType { eBottom, eTop };
+enum class SpacePointCandidateType { Bottom, Top };
 
 /// Iterates over dublets and tests the compatibility by applying a series of
 /// cuts that can be tested with only two SPs.
@@ -43,7 +43,7 @@ void createDoubletsImpl(
     std::size_t& candidateOffset,
     DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) {
   constexpr bool isBottomCandidate =
-      candidateType == SpacePointCandidateType::eBottom;
+      candidateType == SpacePointCandidateType::Bottom;
 
   const float impactMax =
       isBottomCandidate ? -config.impactMax : config.impactMax;
@@ -334,11 +334,11 @@ void BottomDoubletSeedFinder::createDoublets(
     DoubletsForMiddleSp& compatibleDoublets) const {
   std::size_t candidateOffset = 0;
   if (config().interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::eBottom, true, false>(
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
-    return createDoubletsImpl<SpacePointCandidateType::eBottom, false, false>(
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
@@ -351,11 +351,11 @@ void BottomDoubletSeedFinder::createSortedDoublets(
     std::size_t& candidateOffset,
     DoubletsForMiddleSp& compatibleDoublets) const {
   if (config().interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::eBottom, true, true>(
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
-    return createDoubletsImpl<SpacePointCandidateType::eBottom, false, true>(
+    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
@@ -371,11 +371,11 @@ void TopDoubletSeedFinder::createDoublets(
     DoubletsForMiddleSp& compatibleDoublets) const {
   std::size_t candidateOffset = 0;
   if (config().interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::eTop, true, false>(
+    return createDoubletsImpl<SpacePointCandidateType::Top, true, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
-    return createDoubletsImpl<SpacePointCandidateType::eTop, false, false>(
+    return createDoubletsImpl<SpacePointCandidateType::Top, false, false>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
@@ -388,11 +388,11 @@ void TopDoubletSeedFinder::createSortedDoublets(
     std::size_t& candidateOffset,
     DoubletsForMiddleSp& compatibleDoublets) const {
   if (config().interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::eTop, true, true>(
+    return createDoubletsImpl<SpacePointCandidateType::Top, true, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   } else {
-    return createDoubletsImpl<SpacePointCandidateType::eTop, false, true>(
+    return createDoubletsImpl<SpacePointCandidateType::Top, false, true>(
         config(), spacePoints, middleSp, middleSpInfo, candidateSps,
         candidateOffset, compatibleDoublets);
   }
