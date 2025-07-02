@@ -18,7 +18,7 @@
 namespace Acts {
 
 template <typename propagator_t, typename actor_list_t = ActorList<>>
-struct RidderPropagatorOptions
+struct RiddersPropagatorOptions
     : public propagator_t::template Options<actor_list_t> {
   using base_type = propagator_t::template Options<actor_list_t>;
 
@@ -27,12 +27,12 @@ struct RidderPropagatorOptions
   using actor_list_type = actor_list_t;
 
   /// PropagatorOptions with context
-  RidderPropagatorOptions(const GeometryContext& gctx,
-                          const MagneticFieldContext& mctx)
+  RiddersPropagatorOptions(const GeometryContext& gctx,
+                           const MagneticFieldContext& mctx)
       : base_type(gctx, mctx) {}
 
   /// PropagatorOptions with context and plain options
-  explicit RidderPropagatorOptions(const PropagatorPlainOptions& pOptions)
+  explicit RiddersPropagatorOptions(const PropagatorPlainOptions& pOptions)
       : base_type(pOptions) {}
 
   using base_type::operator PropagatorPlainOptions;
@@ -43,9 +43,9 @@ struct RidderPropagatorOptions
   ///
   /// @param extendedActorList The new actor list to be used (internally)
   template <typename extended_actor_list_t>
-  RidderPropagatorOptions<propagator_t, extended_actor_list_t> extend(
+  RiddersPropagatorOptions<propagator_t, extended_actor_list_t> extend(
       extended_actor_list_t extendedActorList) const {
-    RidderPropagatorOptions<propagator_t, extended_actor_list_t> eoptions(
+    RiddersPropagatorOptions<propagator_t, extended_actor_list_t> eoptions(
         base_type::geoContext, base_type::magFieldContext);
 
     static_cast<decltype(eoptions)::base_type&>(eoptions) =
@@ -56,8 +56,14 @@ struct RidderPropagatorOptions
 
   using base_type::setPlainOptions;
 
+  /// Initial scale for the deviation of the individual bound track parameters
   BoundVector deviationScale = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4};
 
+  /// Different factors applied to the initial scale to create the
+  /// deviations of the individual bound track parameters. The resulting
+  /// function value deviations are then fitted to a line to determine the
+  /// first order derivatives of the final parameters wrt. the initial
+  /// parameters.
   std::vector<double> deviationFactors = {-2, -1, 1, 2};
 };
 
@@ -140,7 +146,7 @@ class RiddersPropagator {
   using NavigatorOptions = typename Navigator::Options;
 
   template <typename actor_list_t = ActorList<>>
-  using Options = RidderPropagatorOptions<propagator_t, actor_list_t>;
+  using Options = RiddersPropagatorOptions<propagator_t, actor_list_t>;
 
   /// @brief Constructor using a propagator
   ///
