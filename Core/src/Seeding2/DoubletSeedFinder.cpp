@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 
+#include <cmath>
+
 namespace Acts::Experimental {
 
 namespace {

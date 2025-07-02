@@ -12,6 +12,7 @@
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 
+#include <cmath>
 #include <numeric>
 
 #include <Eigen/src/Core/Matrix.h>
