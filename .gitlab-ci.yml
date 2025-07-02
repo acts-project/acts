@@ -491,7 +491,7 @@ linux_ubuntu_2404_clang19:
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    INSTALL_DIR: ${{ github.workspace }}/install
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
 
     SETUP:
 
@@ -535,7 +535,14 @@ linux_ubuntu_2404_clang19:
 
     - ctest --test-dir build -j$(nproc)
 
+    # Install main project for Python tests
+    - cmake --install build > install.log
 
+    # Install Python dependencies
+    - source ${INSTALL_DIR}/python/setup.sh
+    - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
+    - cd src
+    - pytest -rfExw -k "not exatrkx" -v
 
 lcg_106a:
   extends: .lcg_base_job
