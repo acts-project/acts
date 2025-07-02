@@ -542,7 +542,7 @@ linux_ubuntu_2404_clang19:
     - source ${INSTALL_DIR}/python/setup.sh
     - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
     - cd src
-    - pytest -rfExw -k "not exatrkx" -v
+    - pytest -rfExw -k "not exatrkx" -v -n1
 
 lcg_106a:
   extends: .lcg_base_job
