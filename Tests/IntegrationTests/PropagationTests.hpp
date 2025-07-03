@@ -11,17 +11,51 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <utility>
+
+inline std::shared_ptr<const Acts::TrackingGeometry> makeDenseDetector(
+    const Acts::GeometryContext& geoCtx) {
+  using namespace Acts::UnitLiterals;
+
+  // avoid rebuilding the tracking geometry for every propagator
+  static std::shared_ptr<const Acts::TrackingGeometry> detector;
+
+  if (!detector) {
+    Acts::CuboidVolumeBuilder::VolumeConfig vConf;
+    vConf.position = {0., 0., 0.};
+    vConf.length = {4_m, 4_m, 4_m};
+    vConf.volumeMaterial =
+        std::make_shared<const Acts::HomogeneousVolumeMaterial>(
+            Acts::Test::makeBeryllium());
+    Acts::CuboidVolumeBuilder::Config conf;
+    conf.volumeCfg.push_back(vConf);
+    conf.position = {0., 0., 0.};
+    conf.length = {4_m, 4_m, 4_m};
+    Acts::CuboidVolumeBuilder cvb(conf);
+    Acts::TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        [=](const auto& context, const auto& inner, const auto&) {
+          return cvb.trackingVolume(context, inner, nullptr);
+        });
+    detector = Acts::TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
+  }
+
+  return detector;
+}
 
 // parameter construction helpers
 
