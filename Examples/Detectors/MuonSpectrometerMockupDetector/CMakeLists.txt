@@ -2,6 +2,7 @@ add_library(
     ActsExamplesMuonSpectrometerMockupDetector
     SHARED
     src/MockupSectorBuilder.cpp
+    src/GeoMuonMockupExperiment.cpp
 )
 target_include_directories(
     ActsExamplesMuonSpectrometerMockupDetector
@@ -15,6 +16,8 @@ target_link_libraries(
         ActsExamplesGeant4
         ActsExamplesDetectorGeant4
         ActsPluginGeant4
+        ActsPluginGeoModel
+        GeoModelIO::GeoModelWrite
 )
 
 install(
