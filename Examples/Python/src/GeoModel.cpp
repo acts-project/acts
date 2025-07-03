@@ -27,9 +27,9 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
 #include <string>
 
@@ -126,7 +126,7 @@ void addGeoModel(Context& ctx) {
         .def("toSensitiveSurface", &Acts::GeoShiftConverter::toSensitiveSurface)
         .def("toPassiveSurface", &Acts::GeoShiftConverter::toPassiveSurface);
   }
-    {
+  {
     // GeoMuonMockupExperiment
     auto f =
         py::class_<ActsExamples::GeoMuonMockupExperiment,
@@ -155,7 +155,6 @@ void addGeoModel(Context& ctx) {
                        /// Station properties
                        barrelRadii, nSectors, nEtaStations, stationDistInZ);
   }
-
 
   // Volume factory
   {

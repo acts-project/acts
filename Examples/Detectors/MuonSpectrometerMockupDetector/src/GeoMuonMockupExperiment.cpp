@@ -127,7 +127,7 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     }
   }
   outTree.publisher->publishVolumes(m_publisher->getName(),
-                                   std::move(publishedVol));
+                                    std::move(publishedVol));
 
   if (m_cfg.dumpTree) {
     // open the DB connection
