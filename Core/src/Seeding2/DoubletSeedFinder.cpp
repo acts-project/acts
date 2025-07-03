@@ -74,15 +74,18 @@ void createDoubletsImpl(
                                   float iDeltaR2, float cotTheta) {
     using enum SpacePointKnownExtraColumn;
 
-    // TODO use some reasonable defaults
-    float varianceZM =
-        spacePoints.hasExtraColumns(VarianceZ) ? middleSp.varianceZ() : 0;
-    float varianceZO =
-        spacePoints.hasExtraColumns(VarianceZ) ? otherSp.varianceZ() : 0;
-    float varianceRM =
-        spacePoints.hasExtraColumns(VarianceR) ? middleSp.varianceR() : 0;
-    float varianceRO =
-        spacePoints.hasExtraColumns(VarianceR) ? otherSp.varianceR() : 0;
+    float varianceZM = spacePoints.hasExtraColumns(VarianceZ)
+                           ? middleSp.varianceZ()
+                           : config.defaultVarianceZ;
+    float varianceZO = spacePoints.hasExtraColumns(VarianceZ)
+                           ? otherSp.varianceZ()
+                           : config.defaultVarianceZ;
+    float varianceRM = spacePoints.hasExtraColumns(VarianceR)
+                           ? middleSp.varianceR()
+                           : config.defaultVarianceR;
+    float varianceRO = spacePoints.hasExtraColumns(VarianceR)
+                           ? otherSp.varianceR()
+                           : config.defaultVarianceR;
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));

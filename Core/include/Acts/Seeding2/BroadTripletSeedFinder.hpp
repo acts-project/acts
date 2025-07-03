@@ -76,6 +76,11 @@ class BroadTripletSeedFinder {
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
 
+    /// Default z variance if not specified for the space point
+    float defaultVarianceZ = 0;
+    /// Default r variance if not specified for the space point
+    float defaultVarianceR = 0;
+
     DerivedTripletCuts derive(float bFieldInZ) const;
   };
 

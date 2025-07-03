@@ -364,15 +364,14 @@ void BroadTripletSeedFinder::createTriplets(
     TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.r();
-  // TODO use some reasonable defaults
   const float varianceRM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()
-          : 0;
+          : cuts.defaultVarianceR;
   const float varianceZM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
           ? spM.varianceZ()
-          : 0;
+          : cuts.defaultVarianceZ;
 
   // make index vectors for sorting
   cache.sortedBottoms.resize(bottomDoublets.size());
@@ -566,15 +565,14 @@ void BroadTripletSeedFinder::createStripTriplets(
   const float rM = spM.r();
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
-  // TODO use some reasonable defaults
   const float varianceRM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceR)
           ? spM.varianceR()
-          : 0;
+          : cuts.defaultVarianceR;
   const float varianceZM =
       spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::VarianceZ)
           ? spM.varianceZ()
-          : 0;
+          : cuts.defaultVarianceZ;
 
   // Reserve enough space, in case current capacity is too little
   tripletTopCandidates.resize(topDoublets.size());
