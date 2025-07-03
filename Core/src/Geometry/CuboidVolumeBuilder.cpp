@@ -20,6 +20,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
