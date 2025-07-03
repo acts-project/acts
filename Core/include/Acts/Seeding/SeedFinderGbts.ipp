@@ -6,27 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// SeedFinderGbts.ipp
-// TODO: update to C++17 style
+#pragma once
 
-#include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderGbts.hpp"
+
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <list>
 #include <numbers>
-#include <numeric>
-#include <type_traits>
 #include <vector>
-
-// core so in ACTS namespace
 
 namespace Acts::Experimental {
 

@@ -13,9 +13,9 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
@@ -69,8 +69,15 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
-                       volumeLogLevel, buildProto, materialDecorator,
+                       volumeLogLevel, buildProto, materialDecorator, gen3,
                        graphvizFile);
+  }
+
+  {
+    auto ad = py::class_<AlignedGenericDetector, GenericDetector,
+                         std::shared_ptr<AlignedGenericDetector>>(
+                  mex, "AlignedGenericDetector")
+                  .def(py::init<const GenericDetector::Config&>());
   }
 
   {
@@ -83,24 +90,6 @@ void addDetector(Context& ctx) {
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
                        surfaceType, binValue, materialDecorator, logLevel);
-  }
-
-  {
-    auto d =
-        py::class_<AlignedDetector, Detector, std::shared_ptr<AlignedDetector>>(
-            mex, "AlignedDetector")
-            .def(py::init<const AlignedDetector::Config&>());
-
-    auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
-                 d, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, seed, iovSize, flushSize, doGarbageCollection,
-                       sigmaInPlane, sigmaOutPlane, sigmaInRot, sigmaOutRot,
-                       firstIovNominal, decoratorLogLevel, mode);
-
-    py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
-        .value("Internal", AlignedDetector::Config::Mode::Internal)
-        .value("External", AlignedDetector::Config::Mode::External);
   }
 
   {

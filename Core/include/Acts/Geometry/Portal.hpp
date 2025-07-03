@@ -42,9 +42,9 @@ class PortalFusingException : public std::exception {
 /// portals that describes which volumes lie behind the portal in that
 /// direction. Portals use associated portal links to perform lookups of target
 /// volumes.
-/// Each portal has two links, and a corresponding surface. One link is
-/// associated with the direction along the surface's normal vector, and one
-/// with the opposite direction.
+/// Each portal has two links (at least one non-null), and a corresponding
+/// surface. One link is associated with the direction along the surface's
+/// normal vector, and one with the opposite direction.
 class Portal {
  public:
   /// Constructor for a portal from a single link
@@ -88,8 +88,8 @@ class Portal {
     };
 
     /// Entry for the link along normal
-    /// Entry for the link opposite normal
     Link alongNormal{};
+    /// Entry for the link opposite normal
     Link oppositeNormal{};
   };
 

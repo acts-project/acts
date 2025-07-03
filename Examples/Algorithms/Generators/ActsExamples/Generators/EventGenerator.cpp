@@ -136,10 +136,13 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
     eventPtrs.push_back(evt.get());
   }
 
-  auto event = HepMC3Util::mergeEvents(eventPtrs, logger());
+  auto event = std::make_shared<HepMC3::GenEvent>();
+  event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
+
+  HepMC3Util::mergeEvents(*event, eventPtrs, logger());
   event->set_event_number(static_cast<int>(ctx.eventNumber));
 
-  ACTS_VERBOSE("Vertices size: " << event->vertices_size());
+  ACTS_VERBOSE("Vertices size: " << event->vertices().size());
   if (m_cfg.printListing) {
     ACTS_VERBOSE("Final event:\n"
                  << [&]() {
@@ -151,7 +154,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("event=" << ctx.eventNumber
                       << " n_primary_vertices=" << nPrimaryVertices
-                      << " n_particles=" << event->particles_size());
+                      << " n_particles=" << event->particles().size());
 
   if (m_outputEvent.isInitialized()) {
     m_outputEvent(ctx, std::move(event));

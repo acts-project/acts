@@ -391,12 +391,13 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return BoundaryIntersection(intersection, boundary);
+        return BoundaryIntersection(intersection, boundary, nullptr);
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
+    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr,
+                                nullptr);
   };
 
   /// Helper function to process boundary surfaces
@@ -420,7 +421,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                           options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first.isValid()) {
+      if (intersection.intersection.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -614,17 +615,24 @@ void TrackingVolume::visualize(IVisualization3D& helper,
                                const ViewConfig& portalViewConfig,
                                const ViewConfig& sensitiveViewConfig) const {
   helper.object(volumeName());
-  Volume::visualize(helper, gctx, viewConfig);
-
-  if (!surfaces().empty()) {
-    helper.object(volumeName() + "_sensitives");
-  }
-  for (const auto& surface : surfaces()) {
-    surface.visualize(helper, gctx, sensitiveViewConfig);
+  if (viewConfig.visible) {
+    Volume::visualize(helper, gctx, viewConfig);
   }
 
-  for (const auto& portal : portals()) {
-    portal.surface().visualize(helper, gctx, portalViewConfig);
+  if (sensitiveViewConfig.visible) {
+    if (!surfaces().empty()) {
+      helper.object(volumeName() + "_sensitives");
+      for (const auto& surface : surfaces()) {
+        surface.visualize(helper, gctx, sensitiveViewConfig);
+      }
+    }
+  }
+
+  if (portalViewConfig.visible) {
+    helper.object(volumeName() + "_portals");
+    for (const auto& portal : portals()) {
+      portal.surface().visualize(helper, gctx, portalViewConfig);
+    }
   }
 
   for (const auto& child : volumes()) {
@@ -708,12 +716,22 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
 }
 
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  // if the visitor is configured for inner--->outer volume visiting we visit
+  // the children first
+  if (visitor.visitDepthFirst()) {
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
+  }
+
   visitor.visitVolume(*this);
 
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
+
   // @TODO: Remove this when Gen1 is remoeved
+
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
@@ -764,8 +782,12 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
+  if (!visitor.visitDepthFirst()) {
+    // if the visitor is configured for outer--->inner volume visiting we visit
+    // the children last
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
   }
 }
 
