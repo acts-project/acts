@@ -23,6 +23,8 @@
 
 namespace Acts {
 
+class Surface;
+
 /// Status enum
 enum class IntersectionStatus : int {
   unreachable = 0,
@@ -151,23 +153,20 @@ using MultiIntersection3D =
     boost::container::static_vector<Intersection3D,
                                     s_maximumNumberOfIntersections>;
 
-template <typename object_t>
-class ObjectIntersection {
+class SurfaceIntersection {
  public:
-  /// Object intersection
-  ///
   /// @param intersection is the intersection
-  /// @param object is the object to be instersected
+  /// @param surface is the surface that has been intersected
   /// @param index is the intersection index
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object,
-                               std::uint8_t index = 0) noexcept
-      : m_intersection(intersection), m_object(object), m_index(index) {}
+  constexpr SurfaceIntersection(const Intersection3D& intersection,
+                                const Surface& surface,
+                                std::uint8_t index = 0) noexcept
+      : m_intersection(intersection), m_surface(&surface), m_index(index) {}
 
-  ObjectIntersection(const ObjectIntersection&) noexcept = default;
-  ObjectIntersection(ObjectIntersection&&) noexcept = default;
-  ObjectIntersection& operator=(const ObjectIntersection&) noexcept = default;
-  ObjectIntersection& operator=(ObjectIntersection&&) noexcept = default;
+  SurfaceIntersection(const SurfaceIntersection&) noexcept = default;
+  SurfaceIntersection(SurfaceIntersection&&) noexcept = default;
+  SurfaceIntersection& operator=(const SurfaceIntersection&) noexcept = default;
+  SurfaceIntersection& operator=(SurfaceIntersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
@@ -190,32 +189,34 @@ class ObjectIntersection {
     return m_intersection.status();
   }
 
-  /// Returns the object that has been intersected
-  constexpr const object_t* object() const { return m_object; }
+  /// Returns the surface that has been intersected
+  constexpr const Surface& surface() const { return *m_surface; }
 
   constexpr std::uint8_t index() const { return m_index; }
 
-  constexpr static ObjectIntersection invalid(
-      const object_t* object = nullptr) {
-    return ObjectIntersection(Intersection3D::invalid(), object);
+  constexpr static SurfaceIntersection invalid() {
+    return SurfaceIntersection(Intersection3D::invalid());
+  }
+  constexpr static SurfaceIntersection invalid(const Surface& surface) {
+    return SurfaceIntersection(Intersection3D::invalid(), surface);
   }
 
   constexpr static bool pathLengthOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) {
     return Intersection3D::pathLengthOrder(aIntersection.intersection(),
                                            bIntersection.intersection());
   }
 
-  constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
+  constexpr static bool closestOrder(const SurfaceIntersection& aIntersection,
+                                     const SurfaceIntersection& bIntersection) {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
 
   constexpr static bool closestForwardOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) {
     return Intersection3D::closestForwardOrder(aIntersection.intersection(),
                                                bIntersection.intersection());
   }
@@ -223,34 +224,33 @@ class ObjectIntersection {
  private:
   /// The intersection itself
   Intersection3D m_intersection = Intersection3D::invalid();
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
+  /// The surface that was (tried to be) intersected
+  const Surface* m_surface = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
 
-  constexpr ObjectIntersection() = default;
+  constexpr SurfaceIntersection() = default;
+  explicit constexpr SurfaceIntersection(const Intersection3D& intersection)
+      : m_intersection(intersection) {}
 };
 
-static_assert(std::is_trivially_move_constructible_v<ObjectIntersection<int>>);
-static_assert(std::is_trivially_move_assignable_v<ObjectIntersection<int>>);
+static_assert(std::is_trivially_move_constructible_v<SurfaceIntersection>);
+static_assert(std::is_trivially_move_assignable_v<SurfaceIntersection>);
 
-template <typename object_t>
-class ObjectMultiIntersection {
+class SurfaceMultiIntersection {
  public:
   using SplitIntersections =
-      boost::container::static_vector<ObjectIntersection<object_t>,
+      boost::container::static_vector<SurfaceIntersection,
                                       s_maximumNumberOfIntersections>;
 
-  /// Object intersection
-  ///
   /// @param intersections are the intersections
-  /// @param object is the object to be instersected
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections), m_object(object) {}
+  /// @param surface is the surface that has been intersected
+  SurfaceMultiIntersection(const MultiIntersection3D& intersections,
+                           const Surface& surface)
+      : m_intersections(intersections), m_surface(&surface) {}
 
-  constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
-    return {m_intersections[index], m_object, index};
+  constexpr SurfaceIntersection operator[](std::uint8_t index) const {
+    return {m_intersections[index], *m_surface, index};
   }
 
   constexpr const MultiIntersection3D& intersections() const {
@@ -259,9 +259,9 @@ class ObjectMultiIntersection {
 
   constexpr std::size_t size() const { return m_intersections.size(); }
 
-  constexpr const object_t* object() const { return m_object; }
+  constexpr const Surface& surface() const { return *m_surface; }
 
-  constexpr SplitIntersections split() const {
+  SplitIntersections split() const {
     SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
       result.push_back(operator[](i));
@@ -269,25 +269,25 @@ class ObjectMultiIntersection {
     return result;
   }
 
-  constexpr ObjectIntersection<object_t> closest() const {
+  SurfaceIntersection closest() const {
     auto splitIntersections = split();
     return *std::min_element(splitIntersections.begin(),
                              splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestOrder);
+                             SurfaceIntersection::closestOrder);
   }
 
-  constexpr ObjectIntersection<object_t> closestForward() const {
+  SurfaceIntersection closestForward() const {
     auto splitIntersections = split();
     return *std::min_element(splitIntersections.begin(),
                              splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestForwardOrder);
+                             SurfaceIntersection::closestForwardOrder);
   }
 
  private:
   /// The intersections
   MultiIntersection3D m_intersections;
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
+  /// The surface that was (tried to be) intersected
+  const Surface* m_surface = nullptr;
 };
 
 namespace detail {

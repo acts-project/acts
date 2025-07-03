@@ -160,7 +160,7 @@ SurfaceMultiIntersection LineSurface::intersect(
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, *this};
   }
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
@@ -180,7 +180,8 @@ SurfaceMultiIntersection LineSurface::intersect(
     }
   }
 
-  return {{Intersection3D(result, u, status), Intersection3D::invalid()}, this};
+  return {{Intersection3D(result, u, status), Intersection3D::invalid()},
+          *this};
 }
 
 BoundToFreeMatrix LineSurface::boundToFreeJacobian(

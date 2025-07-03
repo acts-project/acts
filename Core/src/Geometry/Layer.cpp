@@ -8,8 +8,6 @@
 
 #include "Acts/Geometry/Layer.hpp"
 
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -18,8 +16,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
-#include <functional>
-#include <iterator>
 #include <vector>
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
@@ -127,7 +123,7 @@ Acts::Layer::compatibleSurfaces(
 
   auto isUnique = [&](const SurfaceIntersection& b) {
     return std::ranges::none_of(sIntersections, [&b](const auto& a) {
-      return a.object() == b.object() && a.index() == b.index();
+      return &a.surface() == &b.surface() && a.index() == b.index();
     });
   };
 
