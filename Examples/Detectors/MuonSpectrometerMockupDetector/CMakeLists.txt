@@ -17,7 +17,7 @@ target_link_libraries(
         ActsExamplesDetectorGeant4
         ActsPluginGeant4
         ActsPluginGeoModel
-        GeoModelIO::GeoModelWrite
+        #GeoModelIO::GeoModelWrite
 )
 
 install(
