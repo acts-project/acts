@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <typeinfo>
 
 #include <TROOT.h>
@@ -390,8 +391,8 @@ int Sequencer::run() {
           for (std::size_t n = r.begin(); n != r.end(); ++n) {
             ACTS_VERBOSE("Thread about to pick next event");
 
-            for (auto& writer : m_writers) {
-              if (writer->beginEvent() != ProcessCode::SUCCESS) {
+            for (const auto& writer : m_writers) {
+              if (writer->beginEvent(threadId) != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to process event data");
               }
             }
@@ -408,7 +409,7 @@ int Sequencer::run() {
                 m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to
             // be changed to Algorithm context copies
-            AlgorithmContext context(0, event, eventStore);
+            AlgorithmContext context(0, event, eventStore, threadId);
             std::size_t ialgo = 0;
 
             /// Decorate the context

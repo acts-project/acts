@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <ranges>
 #include <vector>
 
 namespace Acts::Experimental::detail {
@@ -83,8 +84,7 @@ struct PolyhedronReferenceGenerator {
     // Add the barycenter if configured
     if constexpr (aBARY) {
       Vector3 bc(0., 0., 0.);
-      std::for_each(rPositions.begin(), rPositions.end(),
-                    [&](const auto& p) { bc += p; });
+      std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
       bc *= 1. / rPositions.size();
       rPositions.push_back(bc);
     }

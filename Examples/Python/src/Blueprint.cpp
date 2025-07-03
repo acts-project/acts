@@ -264,10 +264,12 @@ void addBlueprint(Context& ctx) {
         });
   };
 
-  auto addNodeMethods = [&blueprintNode](const std::string& name,
-                                         auto&& callable, auto&&... args) {
-    blueprintNode.def(name.c_str(), callable, args...)
-        .def(("add" + name).c_str(), callable, args...);
+  auto addNodeMethods = [&blueprintNode](
+                            std::initializer_list<std::string> names,
+                            auto&& callable, auto&&... args) {
+    for (const auto& name : names) {
+      blueprintNode.def(name.c_str(), callable, args...);
+    }
   };
 
   blueprintNode
@@ -334,7 +336,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(staticNode);
 
   addNodeMethods(
-      "StaticVolume",
+      {"StaticVolume", "addStaticVolume"},
       [](BlueprintNode& self, const Transform3& transform,
          const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
         auto node = std::make_shared<StaticBlueprintNode>(
@@ -370,7 +372,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(cylNode);
 
   addNodeMethods(
-      "CylinderContainer",
+      {"CylinderContainer", "addCylinderContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -401,7 +403,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(boxNode);
 
   addNodeMethods(
-      "CuboidContainer",
+      {"CuboidContainer", "addCuboidContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -431,7 +433,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
-      "Material",
+      {"Material", "addMaterial"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<MaterialDesignatorBlueprintNode>(name);
         self.addChild(child);
@@ -464,7 +466,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(layerNode);
 
   addNodeMethods(
-      "Layer",
+      {"Layer", "addLayer"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<LayerBlueprintNode>(name);
         self.addChild(child);
@@ -507,8 +509,8 @@ void addBlueprint(Context& ctx) {
     return child;
   };
 
-  blueprintNode.def("GeometryIdentifier", geoIdFactory)
-      .def("withGeometryIdentifier", geoIdFactory);
+  addNodeMethods({"GeometryIdentifier", "withGeometryIdentifier"},
+                 geoIdFactory);
   addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY

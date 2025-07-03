@@ -78,6 +78,10 @@ class DigitizationAlgorithm final : public IAlgorithm {
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
     /// The digitizers per GeometryIdentifiers
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
+
+    /// Minimum number of attempts to derive a valid dgitized measurement when
+    /// random numbers are involved.
+    std::size_t minMaxRetries = 10;
   };
 
   /// Construct the smearing algorithm.
@@ -157,15 +161,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ///
   /// @return a variant of a Digitizer
   template <std::size_t kSmearDIM>
-  static Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
+  Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
     CombinedDigitizer<kSmearDIM> impl;
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
     for (std::size_t i = 0; i < kSmearDIM; ++i) {
-      impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
+      impl.smearing.indices[i] = cfg.smearingDigiConfig.params.at(i).index;
       impl.smearing.smearFunctions[i] =
-          cfg.smearingDigiConfig.at(i).smearFunction;
+          cfg.smearingDigiConfig.params.at(i).smearFunction;
+      impl.smearing.forcePositive[i] =
+          cfg.smearingDigiConfig.params.at(i).forcePositiveValues;
+      impl.smearing.maxRetries =
+          std::max(m_cfg.minMaxRetries, cfg.smearingDigiConfig.maxRetries);
     }
     return impl;
   }

@@ -119,10 +119,17 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   ACTS_INFO("(1) Test for inactivity");
   ACTS_INFO("    a) Run without anything present");
   {
+    auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(10, 20, 20);
+    auto tvol = std::make_shared<TrackingVolume>(Transform3::Identity(), bounds,
+                                                 "Undefined");
+
+    auto tgeo = std::make_shared<Acts::TrackingGeometry>(tvol);
+
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
+    navCfg.trackingGeometry = tgeo;
     Navigator navigator{navCfg};
 
     Navigator::Options options(tgContext);

@@ -181,7 +181,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
@@ -239,7 +239,7 @@ def test_edm4hep_tracks_writer(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
@@ -320,6 +320,9 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     ddsim = DD4hepSimulation()
+
+    ddsim.random.seed = 37
+
     if isinstance(ddsim.compactFile, list):
         ddsim.compactFile = [input]
     else:
@@ -342,8 +345,7 @@ def ddsim_input_session():
             getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
         )
 
-        # output_file = str(Path(tmp_dir) / "output_edm4hep.root")
-        output_file = str(Path.cwd() / "output_edm4hep.root")
+        output_file = str(Path(tmp_dir) / "output_edm4hep.root")
 
         if not os.path.exists(output_file):
             # explicitly ask for "spawn" as CI failures were observed with "fork"
@@ -354,6 +356,8 @@ def ddsim_input_session():
             )
             p.start()
             p.join()
+            if p.exitcode != 0:
+                raise RuntimeError("ddsim process failed")
 
             assert os.path.exists(output_file)
 
@@ -382,7 +386,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 
         s.addReader(
             PodioReader(
-                level=acts.logging.INFO,
+                level=acts.logging.VERBOSE,
                 inputPath=ddsim_input,
                 outputFrame="events",
                 category="events",
@@ -510,7 +514,7 @@ def test_edm4hep_tracks_reader(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,

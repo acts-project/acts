@@ -14,7 +14,6 @@
 #include <sstream>
 #include <vector>
 
-#include "TDictionary.h"
 #include "TTreeReaderValue.h"
 
 // Pairs of elements of the same type
@@ -141,6 +140,19 @@ Ordering compare(const std::vector<U>& v1, const std::vector<U>& v2) {
     return Ordering::EQUAL;
   }
 }
+
+// std::swap does not work with std::vector<bool> because it does not return
+// lvalue references.
+template <typename U>
+void swap(std::vector<U>& vec, std::size_t i, std::size_t j) {
+  if constexpr (std::is_same_v<U, bool>) {
+    bool temp = vec[i];
+    vec[i] = vec[j];
+    vec[j] = temp;
+  } else {
+    std::swap(vec[i], vec[j]);
+  }
+};
 
 // === GENERIC SORTING MECHANISM ===
 
@@ -323,7 +335,7 @@ struct BranchComparisonHarness {
         if (className.substr(0, 6) == "vector") {
           std::string elementType = className.substr(7, className.size() - 8);
           return BranchComparisonHarness::createVector(treeMetadata, branchName,
-                                                       std::move(elementType));
+                                                       elementType);
         } else {
           throw UnsupportedBranchType();
         }
@@ -368,14 +380,14 @@ struct BranchComparisonHarness {
               return compare(tree1Data[i], tree1Data[j]);
             },
             [&tree1Data](std::size_t i, std::size_t j) {
-              std::swap(tree1Data[i], tree1Data[j]);
+              swap(tree1Data, i, j);
             }),
         std::make_pair(
             [&tree2Data](std::size_t i, std::size_t j) -> Ordering {
               return compare(tree2Data[i], tree2Data[j]);
             },
             [&tree2Data](std::size_t i, std::size_t j) {
-              std::swap(tree2Data[i], tree2Data[j]);
+              swap(tree2Data, i, j);
             }));
 
     // Setup order-sensitive tree comparison
@@ -398,7 +410,7 @@ struct BranchComparisonHarness {
     };
 
     // ...and we're good to go!
-    return std::move(result);
+    return result;
   }
 
   // Because the people who created TTreeReaderValue could not bother to make it
@@ -423,8 +435,13 @@ struct BranchComparisonHarness {
           branch2Data(tree2Data) {}
 
     void operator()() override {
-      branch1Data.push_back(*branch1Reader);
-      branch2Data.push_back(*branch2Reader);
+      T* data1 = branch1Reader.Get();
+      T* data2 = branch2Reader.Get();
+      if (data1 == nullptr || data2 == nullptr) {
+        throw std::runtime_error{"Corrupt data"};
+      }
+      branch1Data.push_back(*data1);
+      branch2Data.push_back(*data2);
     }
 
    private:
@@ -435,37 +452,61 @@ struct BranchComparisonHarness {
 
   std::unique_ptr<IEventLoader> m_eventLoaderPtr;
 
-  // This helper factory helps building branches associated with std::vectors
-  // of data, which are the only STL collection that we support at the moment.
-  static BranchComparisonHarness createVector(TreeMetadata& treeMetadata,
-                                              const std::string& branchName,
-                                              const std::string elemType) {
-// We support vectors of different types by switching across type (strings)
 #define CREATE_VECTOR__HANDLE_TYPE(type_name)                       \
   if (elemType == #type_name) {                                     \
     return BranchComparisonHarness::create<std::vector<type_name>>( \
         treeMetadata, branchName);                                  \
   }
 
-    // Handle vectors of booleans
-    CREATE_VECTOR__HANDLE_TYPE(bool)
-
-    // Handle vectors of all standard floating-point types
-    else CREATE_VECTOR__HANDLE_TYPE(float) else CREATE_VECTOR__HANDLE_TYPE(
-        double)
-
 // For integer types, we'll want to handle both signed and unsigned versions
 #define CREATE_VECTOR__HANDLE_INTEGER_TYPE(integer_type_name) \
   CREATE_VECTOR__HANDLE_TYPE(integer_type_name)               \
   else CREATE_VECTOR__HANDLE_TYPE(unsigned integer_type_name)
 
-        // Handle vectors of all standard integer types
-        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(char) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(short) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(
-            int) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long long)
+#define CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(integer_type_name) \
+  CREATE_VECTOR__HANDLE_TYPE(integer_type_name)                    \
+  else CREATE_VECTOR__HANDLE_TYPE(U##integer_type_name)
 
-        // Throw an exception if the vector element type is not recognized
-        else throw UnsupportedBranchType();
+  // This helper factory helps building branches associated with std::vectors
+  // of data, which are the only STL collection that we support at the moment.
+  static BranchComparisonHarness createVector(TreeMetadata& treeMetadata,
+                                              const std::string& branchName,
+                                              const std::string& elemType) {
+    // We support vectors of different types by switching across type (strings)
+
+    // clang-format off
+
+    // Handle vectors of booleans
+    CREATE_VECTOR__HANDLE_TYPE(bool)
+
+    // Handle vectors of all standard floating-point types
+    else CREATE_VECTOR__HANDLE_TYPE(float)
+    else CREATE_VECTOR__HANDLE_TYPE(double)
+
+    // Handle vectors of all standard integer types
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE(char)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE(short)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE(int)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long long)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Char_t)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Short_t)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Int_t)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Long_t)
+    else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Long64_t)
+
+    // Throw an exception if the vector element type is not recognized
+    else {
+      std::cerr << "Unsupported vector element type: " << elemType << std::endl;
+      throw UnsupportedBranchType();
+    }
+
+    // clang-format on
   }
+
+#undef CREATE_VECTOR__HANDLE_TYPE
+#undef CREATE_VECTOR__HANDLE_INTEGER_TYPE
+#undef CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT
 
   // This helper method provides general string conversion for all supported
   // branch event data types.

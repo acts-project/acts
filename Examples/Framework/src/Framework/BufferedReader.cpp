@@ -43,7 +43,7 @@ BufferedReader::BufferedReader(const Config &config, Acts::Logging::Level level)
   m_buffer.reserve(eend - ebegin);
   for (auto i = ebegin; i < ebegin + m_cfg.bufferSize; ++i) {
     auto board = std::make_unique<ActsExamples::WhiteBoard>(m_logger->clone());
-    ActsExamples::AlgorithmContext ctx(0, i, *board);
+    ActsExamples::AlgorithmContext ctx(0, i, *board, 0);
 
     ACTS_DEBUG("Read event " << i << " into buffer");
     m_cfg.upstreamReader->read(ctx);

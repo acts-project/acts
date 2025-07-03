@@ -127,6 +127,7 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
       Acts::EstimateTrackParamCovarianceConfig config{
           .initialSigmas =
               Eigen::Map<const Acts::BoundVector>{m_cfg.initialSigmas->data()},
+          .initialSigmaQoverPt = m_cfg.initialSigmaQoverPt,
           .initialSigmaPtRel = m_cfg.initialSigmaPtRel,
           .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
               m_cfg.initialVarInflation.data()}};

@@ -136,9 +136,9 @@ const char* plugin_xml =
   </plugins>
   )""";
 
-const char* indent_4_xml = "    ";
-const char* indent_8_xml = "        ";
-const char* indent_12_xml = "            ";
+const std::string indent_4_xml(4, ' ');
+const std::string indent_8_xml(8, ' ');
+const std::string indent_12_xml(12, ' ');
 
 namespace {
 
@@ -301,9 +301,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto world = lcdd->world();
 
   // Test starts here
+  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   auto surfaceFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-      Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                             Acts::Logging::VERBOSE));
+      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
+                                             Acts::Logging::VERBOSE));
 
   auto layerStructure =
       std::make_shared<Acts::Experimental::DD4hepLayerStructure>(
