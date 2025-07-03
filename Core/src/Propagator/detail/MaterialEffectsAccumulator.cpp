@@ -8,7 +8,9 @@
 
 #include "Acts/Propagator/detail/MaterialEffectsAccumulator.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::detail {
 
@@ -21,45 +23,45 @@ void MaterialEffectsAccumulator::initialize(
   m_initialMomentum = initialMomentum;
 }
 
-void MaterialEffectsAccumulator::accumulate(const MaterialSlab& slab,
-                                            double qOverPin, double qOverPout) {
-  double mass = m_particleHypothesis.mass();
-  double absQ = m_particleHypothesis.absoluteCharge();
-  PdgParticle absPdg = m_particleHypothesis.absolutePdg();
+void MaterialEffectsAccumulator::accumulate(const Material& material,
+                                            double pathLength, double qOverPin,
+                                            double qOverPout) {
+  const Direction direction = Direction::fromScalarZeroAsPositive(pathLength);
+  const MaterialSlab slab(material, std::abs(pathLength));
 
-  double momentumIn = m_particleHypothesis.extractMomentum(qOverPin);
-  double momentumOut = m_particleHypothesis.extractMomentum(qOverPout);
+  const float mass = m_particleHypothesis.mass();
+  const float absQ = m_particleHypothesis.absoluteCharge();
+  const PdgParticle absPdg = m_particleHypothesis.absolutePdg();
 
-  std::size_t substepCount =
-      slab.isVacuum() ? 1
-                      : static_cast<std::size_t>(
-                            std::ceil(slab.thicknessInX0() / m_maxXOverX0Step));
-  double substep = slab.thickness() / substepCount;
-  MaterialSlab subslab(slab.material(), substep);
+  const double momentumIn = m_particleHypothesis.extractMomentum(qOverPin);
+  const double momentumOut = m_particleHypothesis.extractMomentum(qOverPout);
+
+  const std::size_t substepCount =
+      material.isVacuum() ? 1
+                          : static_cast<std::size_t>(std::ceil(
+                                slab.thicknessInX0() / m_maxXOverX0Step));
+  const double substep = pathLength / substepCount;
 
   for (std::size_t i = 0; i < substepCount; ++i) {
-    double momentumMean =
+    const double momentumMean =
         momentumIn + (momentumOut - momentumIn) * (i + 0.5) / substepCount;
-    double qOverPmean = m_particleHypothesis.qOverP(momentumMean, absQ);
+    const double qOverPmean = m_particleHypothesis.qOverP(momentumMean, absQ);
 
-    double theta0in = Acts::computeMultipleScatteringTheta0(
+    const double theta0in = computeMultipleScatteringTheta0(
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);
 
-    m_molarElectronDensity =
-        (m_molarElectronDensity * m_accumulatedMaterial.thickness() +
-         subslab.material().molarElectronDensity() * subslab.thickness()) /
-        (m_accumulatedMaterial.thickness() + subslab.thickness());
     m_accumulatedMaterial =
-        MaterialSlab::combineLayers(m_accumulatedMaterial, subslab);
+        MaterialSlab::combine(m_accumulatedMaterial, material, substep);
 
-    double theta0out = Acts::computeMultipleScatteringTheta0(
+    const double theta0out = computeMultipleScatteringTheta0(
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);
 
-    double deltaVarTheta = square(theta0out) - square(theta0in);
-    double deltaVarPos = m_varAngle * square(substep) +
-                         2 * m_covAnglePosition * substep +
-                         deltaVarTheta * (square(substep) / 3);
-    double deltaCovAnglePosition =
+    const double deltaVarTheta = square(theta0out) - square(theta0in);
+    const double deltaVarPos =
+        direction * m_varAngle * square(substep) +
+        2 * m_covAnglePosition * substep +
+        direction * deltaVarTheta * (square(substep) / 3);
+    const double deltaCovAnglePosition =
         m_varAngle * substep + deltaVarTheta * substep / 2;
     m_varAngle += deltaVarTheta;
     m_varPosition += deltaVarPos;
@@ -96,19 +98,13 @@ MaterialEffectsAccumulator::computeAdditionalFreeCovariance(
 
   // handle energy loss covariance
   {
-    double mass = m_particleHypothesis.mass();
-    double absQ = m_particleHypothesis.absoluteCharge();
-    double qOverP = m_particleHypothesis.qOverP(
+    const double mass = m_particleHypothesis.mass();
+    const double absQ = m_particleHypothesis.absoluteCharge();
+    const double qOverP = m_particleHypothesis.qOverP(
         m_initialMomentum, m_particleHypothesis.absoluteCharge());
 
-    Material other = m_accumulatedMaterial.material();
-    Material tmp = Material::fromMolarDensity(
-        other.X0(), other.L0(), other.Ar(),
-        m_molarElectronDensity / other.molarDensity(), other.molarDensity());
-    MaterialSlab tmpslab(tmp, m_accumulatedMaterial.thickness());
-
-    float qOverPSigma =
-        computeEnergyLossLandauSigmaQOverP(tmpslab, mass, qOverP, absQ);
+    const double qOverPSigma = computeEnergyLossLandauSigmaQOverP(
+        m_accumulatedMaterial, mass, qOverP, absQ);
 
     additionalFreeCovariance(eFreeQOverP, eFreeQOverP) =
         qOverPSigma * qOverPSigma;

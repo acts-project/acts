@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts::detail {
 
@@ -25,7 +23,8 @@ class MaterialEffectsAccumulator {
                   const ParticleHypothesis& particleHypothesis,
                   double initialMomentum);
 
-  void accumulate(const MaterialSlab& slab, double qOverPin, double qOverPout);
+  void accumulate(const Material& material, double pathLength, double qOverPin,
+                  double qOverPout);
 
   std::optional<FreeMatrix> computeAdditionalFreeCovariance(
       const Vector3& direction);
@@ -41,7 +40,6 @@ class MaterialEffectsAccumulator {
   double m_varAngle = 0;
   double m_varPosition = 0;
   double m_covAnglePosition = 0;
-  double m_molarElectronDensity = 0;
 };
 
 }  // namespace Acts::detail

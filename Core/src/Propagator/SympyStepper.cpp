@@ -144,16 +144,20 @@ void SympyStepper::transportCovarianceToBound(
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
-  (void)material;
+  double h = state.stepSize.value() * propDir;
 
-  Vector3 pos = position(state);
-  Vector3 dir = direction(state);
-  double t = time(state);
-  double qop = qOverP(state);
-  double pabs = absoluteMomentum(state);
-  double m = particleHypothesis(state).mass();
-  PdgParticle absPdg = particleHypothesis(state).absolutePdg();
-  double q = charge(state);
+  const double initialH = h;
+  const Direction timeDirection = Direction::fromScalarZeroAsPositive(h);
+
+  const Vector3 pos = position(state);
+  const Vector3 dir = direction(state);
+  const double t = time(state);
+  const double qop = qOverP(state);
+  const double pabs = absoluteMomentum(state);
+  const double m = particleHypothesis(state).mass();
+  const PdgParticle absPdg = particleHypothesis(state).absolutePdg();
+  const double q = charge(state);
+  const double absQ = std::abs(q);
 
   if (state.options.doDense && material != nullptr &&
       pabs < state.options.dense.momentumCutOff) {
@@ -171,15 +175,17 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     }
 
     if (state.options.dense.meanEnergyLoss) {
-      return computeEnergyLossMean(
-          MaterialSlab(material->material({p[0], p[1], p[2]}),
-                       1.0f * UnitConstants::mm),
-          absPdg, m, l, q);
+      return timeDirection *
+             computeEnergyLossMean(
+                 MaterialSlab(material->material({p[0], p[1], p[2]}),
+                              1.0f * UnitConstants::mm),
+                 absPdg, m, l, absQ);
     } else {
-      return computeEnergyLossMode(
-          MaterialSlab(material->material({p[0], p[1], p[2]}),
-                       1.0f * UnitConstants::mm),
-          absPdg, m, l, q);
+      return timeDirection *
+             computeEnergyLossMode(
+                 MaterialSlab(material->material({p[0], p[1], p[2]}),
+                              1.0f * UnitConstants::mm),
+                 absPdg, m, l, absQ);
     }
   };
 
@@ -202,8 +208,6 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return std::clamp(x, lower, upper);
   };
 
-  double h = state.stepSize.value() * propDir;
-  double initialH = h;
   std::size_t nStepTrials = 0;
   double errorEstimate = 0.;
 
@@ -290,9 +294,9 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
 
     Material mat =
         material != nullptr ? material->material(pos) : Material::Vacuum();
-    MaterialSlab slab(mat, h);
 
-    state.materialEffectsAccumulator.accumulate(slab, qop, qOverP(state));
+    state.materialEffectsAccumulator.accumulate(mat, propDir * h, qop,
+                                                qOverP(state));
   }
 
   return h;
