@@ -55,6 +55,8 @@ try:
     import acts.examples.onnx
 
     onnxEnabled = True
+except ModuleNotFoundError:
+    onnxEnabled = False
 except ImportError:
     onnxEnabled = False
 
