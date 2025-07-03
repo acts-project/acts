@@ -175,13 +175,12 @@ PVLink GeoMuonMockupExperiment::assembleBigWheel(const MuonLayer layer, const do
     const double highR = lowR + nEta  * m_chamberLength;
     auto envelopeShape = make_intrusive<GeoTube>(lowR, highR, 0.5*m_chamberLength);
     auto envelopeLogVol = make_intrusive<GeoLogVol>("EndcapEnvelope", cacheShape(envelopeShape), 
-                                                    MaterialManager::getManager()->getMaterial("std::air"))
+                                                    MaterialManager::getManager()->getMaterial("std::air"));
 
     auto envelopeVol = make_intrusive<GeoPhysVol>(cacheVolume(envelopeLogVol));
-    while (lowR < m_cfg.barrelRadii[MuonLayer::Outer] &&
-           stationEta < m_cfg.nEtaStations) {
+    while (stationEta < nEta) {
 
-      lowR = m_cfg.endCapWheelLowR  + (stationEta - 1) * m_chamberLength;
+      // lowR = m_cfg.endCapWheelLowR  + (stationEta - 1) * m_chamberLength;
       // assembleEndcapStation
       ++stationEta;
     }
