@@ -76,6 +76,8 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     unsigned nEtaStations{12};
     /// @brief Separation between two stations
     double stationDistInZ{15. * GeoModelKernelUnits::cm};
+    /// @brief Lower radius of the big wheel
+    double endCapWheelLowR{1. * GeoModelKernelUnits::m};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -87,7 +89,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                               Acts::getDefaultLogger("GeoMuonMockupExperiment",
                                                      Acts::Logging::DEBUG));
 
-  /** @brief  */
+  /// @brief Triggers construction of the Muon mockup detector
   Acts::GeoModelTree constructMS();
 
  private:
@@ -132,23 +134,45 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
 
   void setupMaterials();
-  /** @brief Construct the subvolume containing the tubes. Tubes are arranged in four
-   *         virtual tube layer volumes each containing a serial transformer
-   * placing the tubes per layer
-   *  @param tubeLength: Length of the constructed tubes */
-  PVLink buildTubes(const double tubeLength);
-  /** @brief Construct an absorber volume with a denser material.
-   *  @param thickness: Height of the absorber material.
-   *  @param width:
-   */
+  ///  @brief Construct the subvolume containing the tubes. Tubes are arranged in four
+  ///         virtual tube layer volumes each containing a serial transformer
+  ///         placing the tubes per layer
+  ///  @param tubeLength: Length of the constructed tubes */
+  PVLink buildBarrelTubes(const double tubeLength);
+  ///  @brief Constructs a single Mdt tube consisting of an outer aluminium volume
+  ///         filled with a thinner gas volume
+  ///  @param tubeLength: Lenght of the outer tube
+  PVLink assembleTube(const double tubeLength);
+
+  /// @brief Constructs a big wheel
+  PVLink assembleBigWheel(const MuonLayer layer, const double wheelZ);
+  
+  ///  @brief Construct some absorber volume to add some material to the
+  ///         barrel MS station
+  ///  @param thickness: Total thickness of the absorber
+  ///  @param width: Total width of the absorber parallel to the tubes
+  ///  @param length: Total length of the absorber along the tube-layer
   PVLink buildAbsorber(const double thickness, const double width,
                        const double length);
 
+  /// @brief Assemble a barrel muon station & publish the full physical volumes
+  /// @param layer: Layer where the station is placed. The radial position of the 
+  ///               station is fetched from that information and then finally the
+  ///               tube length
+  /// @param sector: Sector number of the station used to construct a unique
+  ///                name for publishing
+  /// @param etaIdx: Eta number of the station used to construct a unique 
+  ///                name for publishing
   PVLink assembleBarrelStation(const MuonLayer layer, const unsigned int sector,
                                const int etaIdx);
-
+  /// @brief Assemble an endcap station
+  PVLink assembleEndcapStation(const double lowR,
+                               const MuonLayer layer,
+                               const unsigned int sector,
+                               const int etaIdx);
   /// @brief Assemble a new multilayer volume to fit inside the barrel station
   FpvLink assembleMultilayerBarrel(const unsigned ml, const double tubeLength);
+  
 
   FpvLink assembleRpcChamber(const double chamberWidth);
 
