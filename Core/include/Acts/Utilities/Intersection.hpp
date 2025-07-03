@@ -249,15 +249,13 @@ class SurfaceMultiIntersection {
                            const Surface& surface)
       : m_intersections(intersections), m_surface(&surface) {}
 
-  constexpr SurfaceIntersection operator[](std::uint8_t index) const {
+  SurfaceIntersection operator[](std::uint8_t index) const {
     return {m_intersections[index], *m_surface, index};
   }
 
-  constexpr const MultiIntersection3D& intersections() const {
-    return m_intersections;
-  }
+  const MultiIntersection3D& intersections() const { return m_intersections; }
 
-  constexpr std::size_t size() const { return m_intersections.size(); }
+  std::size_t size() const { return m_intersections.size(); }
 
   constexpr const Surface& surface() const { return *m_surface; }
 
