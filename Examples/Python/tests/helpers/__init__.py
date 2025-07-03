@@ -135,7 +135,15 @@ class AssertCollectionExistsAlg(IAlgorithm):
             raise
 
 
-doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+doHashChecks = False
+_hashEnvVar = os.environ.get("ROOT_HASH_CHECKS")
+
+if _hashEnvVar is not None:
+    if _hashEnvVar.lower() not in ("off", "0", "false"):
+        doHashChecks = True
+else:
+    if "CI" in os.environ:
+        doHashChecks = True
 
 
 @contextlib.contextmanager

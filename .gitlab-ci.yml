@@ -491,9 +491,11 @@ linux_ubuntu_2404_clang19:
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-  # disable fpe monitoring as we can't mask without backtrace support
+    # disable fpe monitoring as we can't mask without backtrace support
     ACTS_SEQUENCER_DISABLE_FPEMON: true
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
+    # force off even if it is CI mode
+    ROOT_HASH_CHECKS: off
 
 
     SETUP:
