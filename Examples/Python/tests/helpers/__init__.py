@@ -52,11 +52,9 @@ except ImportError:
     edm4hepEnabled = False
 
 try:
-    import acts.examples.onnx
+    import acts.examples
 
-    onnxEnabled = True
-except ModuleNotFoundError:
-    onnxEnabled = False
+    onnxEnabled = hasattr(acts.examples, "onnx")
 except ImportError:
     onnxEnabled = False
 
