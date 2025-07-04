@@ -15,8 +15,6 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include <TTree.h>
-
 namespace ActsExamples {
 
 RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
@@ -24,7 +22,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
     : IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
       m_cfg(config),
-      m_payload(false, config.readCachedSurfaceInformation) {
+      m_accessor({false, config.readCachedSurfaceInformation}) {
   if (m_cfg.fileList.empty()) {
     throw std::invalid_argument{"No input files given"};
   }
@@ -40,7 +38,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   }
 
   // Connect the branches
-  m_payload.connectForRead(*m_inputChain);
+  m_accessor.connectForRead(*m_inputChain);
 
   // get the number of entries, which also loads the tree
   std::size_t nentries = m_inputChain->GetEntries();
@@ -97,7 +95,7 @@ ProcessCode RootMaterialTrackReader::read(const AlgorithmContext& context) {
                                    << " with stored entry: " << entry);
     m_inputChain->GetEntry(entry);
 
-    Acts::RecordedMaterialTrack rmTrack = m_payload.read();
+    Acts::RecordedMaterialTrack rmTrack = m_accessor.read();
 
     ACTS_VERBOSE("Track vertex:  " << rmTrack.first.first);
     ACTS_VERBOSE("Track momentum:" << rmTrack.first.second);

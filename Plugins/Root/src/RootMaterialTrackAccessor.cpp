@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialTrackPayload.hpp"
+#include "Acts/Plugins/Root/RootMaterialTrackAccessor.hpp"
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -15,7 +15,7 @@
 #include <TChain.h>
 #include <TTree.h>
 
-void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
+void Acts::RootMaterialTrackAccessor::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_vX);
   materialChain.SetBranchAddress("v_y", &m_vY);
@@ -39,7 +39,7 @@ void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("mat_A", &m_stepMatAPtr);
   materialChain.SetBranchAddress("mat_Z", &m_stepMatZPtr);
   materialChain.SetBranchAddress("mat_rho", &m_stepMatRhoPtr);
-  if (m_surfaceInfo) {
+  if (m_cfg.surfaceInfo) {
     materialChain.SetBranchAddress("sur_id", &m_surfaceIdPtr);
     materialChain.SetBranchAddress("sur_x", &m_surfaceXPtr);
     materialChain.SetBranchAddress("sur_y", &m_surfaceYPtr);
@@ -49,7 +49,7 @@ void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
   }
 }
 
-void Acts::RootMaterialTrackPayload::connectForWrite(TTree& materialTree) {
+void Acts::RootMaterialTrackAccessor::connectForWrite(TTree& materialTree) {
   // This sets the branch addresses for the material track
   // Set the branches
   materialTree.Branch("event_id", &m_eventId);
@@ -77,7 +77,7 @@ void Acts::RootMaterialTrackPayload::connectForWrite(TTree& materialTree) {
   materialTree.Branch("mat_Z", &m_stepMatZ);
   materialTree.Branch("mat_rho", &m_stepMatRho);
 
-  if (m_prePostStepInfo) {
+  if (m_cfg.prePostStepInfo) {
     materialTree.Branch("mat_sx", &m_stepXs);
     materialTree.Branch("mat_sy", &m_stepYs);
     materialTree.Branch("mat_sz", &m_stepZs);
@@ -85,7 +85,7 @@ void Acts::RootMaterialTrackPayload::connectForWrite(TTree& materialTree) {
     materialTree.Branch("mat_ey", &m_stepYe);
     materialTree.Branch("mat_ez", &m_stepZe);
   }
-  if (m_surfaceInfo) {
+  if (m_cfg.surfaceInfo) {
     materialTree.Branch("sur_id", &m_surfaceId);
     materialTree.Branch("sur_x", &m_surfaceX);
     materialTree.Branch("sur_y", &m_surfaceY);
@@ -94,12 +94,12 @@ void Acts::RootMaterialTrackPayload::connectForWrite(TTree& materialTree) {
     materialTree.Branch("sur_distance", &m_surfaceDistance);
     materialTree.Branch("sur_pathCorrection", &m_surfacePathCorrection);
   }
-  if (m_volumeInfo) {
+  if (m_cfg.volumeInfo) {
     materialTree.Branch("vol_id", &m_volumeId);
   }
 }
 
-void Acts::RootMaterialTrackPayload::write(
+void Acts::RootMaterialTrackAccessor::write(
     const GeometryContext& gctx, std::uint32_t eventNum,
     const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
@@ -169,7 +169,7 @@ void Acts::RootMaterialTrackPayload::write(
   m_volumeId.reserve(mints);
 
   // reset the global counter
-  if (m_recalculateTotals) {
+  if (m_cfg.recalculateTotals) {
     m_tX0 = 0.;
     m_tL0 = 0.;
   } else {
@@ -200,7 +200,7 @@ void Acts::RootMaterialTrackPayload::write(
     m_stepDy.push_back(direction.y());
     m_stepDz.push_back(direction.z());
 
-    if (m_prePostStepInfo) {
+    if (m_cfg.prePostStepInfo) {
       Acts::Vector3 prePos =
           mint.position - 0.5 * mint.pathCorrection * direction;
       Acts::Vector3 posPos =
@@ -215,7 +215,7 @@ void Acts::RootMaterialTrackPayload::write(
     }
 
     // Store surface information
-    if (m_surfaceInfo) {
+    if (m_cfg.surfaceInfo) {
       const Acts::Surface* surface = mint.surface;
       if (mint.intersectionID.value() != 0) {
         m_surfaceId.push_back(mint.intersectionID.value());
@@ -246,7 +246,7 @@ void Acts::RootMaterialTrackPayload::write(
     }
 
     // store volume information
-    if (m_volumeInfo) {
+    if (m_cfg.volumeInfo) {
       Acts::GeometryIdentifier vlayerID;
       if (!mint.volume.empty()) {
         vlayerID = mint.volume.geometryId();
@@ -270,14 +270,14 @@ void Acts::RootMaterialTrackPayload::write(
     m_stepMatZ.push_back(mprops.material().Z());
     m_stepMatRho.push_back(mprops.material().massDensity());
     // re-calculate if defined to do so
-    if (m_recalculateTotals) {
+    if (m_cfg.recalculateTotals) {
       m_tX0 += mprops.thicknessInX0();
       m_tL0 += mprops.thicknessInL0();
     }
   }
 }
 
-Acts::RecordedMaterialTrack Acts::RootMaterialTrackPayload::read() const {
+Acts::RecordedMaterialTrack Acts::RootMaterialTrackAccessor::read() const {
   Acts::RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
   rmTrack.first.first = Acts::Vector3(m_vX, m_vY, m_vZ);
@@ -310,7 +310,7 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackPayload::read() const {
         Acts::Material::fromMassDensity(mX0, mL0, m_stepMatA[is],
                                         m_stepMatZ[is], m_stepMatRho[is]),
         s);
-    if (m_surfaceInfo) {
+    if (m_cfg.surfaceInfo) {
       // add the surface information to the interaction this allows the
       // mapping to be speed up
       mInteraction.intersectionID = Acts::GeometryIdentifier(m_surfaceId[is]);

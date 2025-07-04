@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Plugins/Root/RootMaterialTrackPayload.hpp"
+#include "Acts/Plugins/Root/RootMaterialTrackAccessor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -99,7 +99,7 @@ class RootMaterialTrackReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  Acts::RootMaterialTrackPayload m_payload;
+  Acts::RootMaterialTrackAccessor m_accessor;
 };
 
 }  // namespace ActsExamples

@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/Plugins/Root/RootMaterialTrackPayload.hpp>
+#include <Acts/Plugins/Root/RootMaterialTrackAccessor.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -21,6 +21,7 @@
 
 class TFile;
 class TTree;
+
 namespace ActsExamples {
 struct AlgorithmContext;
 }  // namespace ActsExamples
@@ -107,7 +108,7 @@ class RootMaterialTrackWriter
   /// The output tree name
   TTree* m_outputTree = nullptr;
   /// The read - write payload
-  Acts::RootMaterialTrackPayload m_payload;
+  Acts::RootMaterialTrackAccessor m_accessor;
 };
 
 }  // namespace ActsExamples

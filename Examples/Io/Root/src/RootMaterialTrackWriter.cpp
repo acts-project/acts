@@ -35,8 +35,8 @@ RootMaterialTrackWriter::RootMaterialTrackWriter(
     const RootMaterialTrackWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputMaterialTracks, "RootMaterialTrackWriter", level),
       m_cfg(config),
-      m_payload(config.prePostStep, config.storeSurface, config.storeVolume,
-                config.recalculateTotals) {
+      m_accessor({config.prePostStep, config.storeSurface, config.storeVolume,
+                  config.recalculateTotals}) {
   // An input collection name and tree name must be specified
   if (m_cfg.inputMaterialTracks.empty()) {
     throw std::invalid_argument("Missing input collection");
@@ -57,7 +57,7 @@ RootMaterialTrackWriter::RootMaterialTrackWriter(
     throw std::bad_alloc();
   }
   // Connect the branches
-  m_payload.connectForWrite(*m_outputTree);
+  m_accessor.connectForWrite(*m_outputTree);
 }
 
 RootMaterialTrackWriter::~RootMaterialTrackWriter() {
@@ -86,7 +86,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
   // Loop over the material tracks and write them out
   for (auto& [idTrack, mtrack] : materialTracks) {
     // write & fill
-    m_payload.write(ctx.geoContext, ctx.eventNumber, mtrack);
+    m_accessor.write(ctx.geoContext, ctx.eventNumber, mtrack);
     m_outputTree->Fill();
   }
   // return success

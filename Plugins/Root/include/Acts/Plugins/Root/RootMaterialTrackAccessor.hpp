@@ -26,20 +26,27 @@ class TrackingVolume;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
-class RootMaterialTrackPayload {
+class RootMaterialTrackAccessor {
  public:
-  /// @brief Constructor
-  explicit RootMaterialTrackPayload(bool prePostStepInfo = false,
-                                    bool surfaceInfo = false,
-                                    bool volumeInfo = false,
-                                    bool recalculateTotals = false)
-      : m_prePostStepInfo(prePostStepInfo),
-        m_surfaceInfo(surfaceInfo),
-        m_volumeInfo(volumeInfo),
-        m_recalculateTotals(recalculateTotals) {}
+  struct Config {
+    /// Whether to store pre- and post-step information
+    bool prePostStepInfo = false;
+    /// Whether to store surface information
+    bool surfaceInfo = false;
+    /// Whether to store volume information
+    bool volumeInfo = false;
+    /// Whether to recalculate totals from the steps
+    bool recalculateTotals = false;
+  };
+
+  /// @brief Constructor from config struct
+  ///
+  /// @param cfg the configuration for the accessor
+  explicit RootMaterialTrackAccessor(const Config& cfg)
+      : m_cfg(cfg){}
 
   /// @brief Destructor
-  ~RootMaterialTrackPayload() = default;
+  ~RootMaterialTrackAccessor() = default;
 
   /// @brief sets the branch connection for reading from a file
   ///
@@ -69,10 +76,8 @@ class RootMaterialTrackPayload {
   RecordedMaterialTrack read() const;
 
  private:
-  bool m_prePostStepInfo = false;
-  bool m_surfaceInfo = false;
-  bool m_volumeInfo = false;
-  bool m_recalculateTotals = false;
+  /// The configuration for the accessor
+  Config m_cfg;
 
   /// Event identifier.
   std::uint32_t m_eventId = 0;
