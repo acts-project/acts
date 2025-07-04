@@ -1,4 +1,5 @@
 set(library_sources
+    src/RootMaterialTrackAccessor.cpp
     src/TGeoCylinderDiscSplitter.cpp
     src/TGeoDetectorElement.cpp
     src/TGeoLayerBuilder.cpp
@@ -26,7 +27,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginRoot PUBLIC ActsCore ROOT::Geom)
+target_link_libraries(
+    ActsPluginRoot
+    PUBLIC ActsCore ROOT::Core ROOT::Tree ROOT::Geom
+)
 
 install(
     TARGETS ActsPluginRoot
