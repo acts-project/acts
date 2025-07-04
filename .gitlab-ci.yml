@@ -491,7 +491,12 @@ linux_ubuntu_2404_clang19:
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    INSTALL_DIR: ${{ github.workspace }}/install
+    # disable fpe monitoring as we can't mask without backtrace support
+    ACTS_SEQUENCER_DISABLE_FPEMON: true
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+    # force off even if it is CI mode
+    ROOT_HASH_CHECKS: off
+
 
     SETUP:
 
@@ -510,9 +515,7 @@ linux_ubuntu_2404_clang19:
         export LCG_PLATFORM="$OS"
       fi
 
-    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
-
+    - dnf install -y git-lfs
     - git clone $CLONE_URL src
 
     - cd src
@@ -520,6 +523,11 @@ linux_ubuntu_2404_clang19:
     - git submodule init
     - git submodule update
     - cd ..
+
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+
+
 
     - ccache --version
 
@@ -535,7 +543,14 @@ linux_ubuntu_2404_clang19:
 
     - ctest --test-dir build -j$(nproc)
 
+    # Install main project for Python tests
+    - cmake --install build > install.log
 
+    # Install Python dependencies
+    - source build/this_acts_withdeps.sh
+    - python3 -m pip install -r src/Examples/Python/tests/requirements.txt
+    - cd src
+    - pytest -rfExw -k "not exatrkx" -v -n1
 
 lcg_106a:
   extends: .lcg_base_job
