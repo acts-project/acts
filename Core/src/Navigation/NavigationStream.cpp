@@ -11,6 +11,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 
@@ -29,10 +30,10 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   std::vector<Candidate> additionalCandidates = {};
   for (auto& [sIntersection, gen2Portal, portal, bTolerance] : m_candidates) {
     // Get the surface from the object intersection
-    const Surface* surface = sIntersection.object();
+    const Surface& surface = sIntersection.surface();
     // Intersect the surface
-    auto multiIntersection = surface->intersect(gctx, position, direction,
-                                                cTolerance, onSurfaceTolerance);
+    auto multiIntersection = surface.intersect(gctx, position, direction,
+                                               cTolerance, onSurfaceTolerance);
 
     bool firstValid = multiIntersection[0].isValid();
     bool secondValid = multiIntersection[1].isValid();
@@ -109,11 +110,11 @@ bool NavigationStream::update(const GeometryContext& gctx,
     // Get the candidate, and resolve the tuple
     Candidate& candidate = currentCandidate();
     // Get the surface from the object intersection
-    const Surface* surface = candidate.intersection.object();
+    const Surface& surface = candidate.intersection.surface();
     // (re-)Intersect the surface
     auto multiIntersection =
-        surface->intersect(gctx, queryPoint.position, queryPoint.direction,
-                           candidate.bTolerance, onSurfaceTolerance);
+        surface.intersect(gctx, queryPoint.position, queryPoint.direction,
+                          candidate.bTolerance, onSurfaceTolerance);
     // Split them into valid intersections
     for (const auto& rsIntersection : multiIntersection.split()) {
       // Skip wrong index solution
@@ -138,38 +139,35 @@ void NavigationStream::reset() {
 
 void NavigationStream::addSurfaceCandidate(
     const Surface& surface, const BoundaryTolerance& bTolerance) {
-  m_candidates.emplace_back(ObjectIntersection<Surface>::invalid(&surface),
-                            nullptr, nullptr, bTolerance);
+  m_candidates.emplace_back(SurfaceIntersection::invalid(surface), nullptr,
+                            nullptr, bTolerance);
 }
 
 void NavigationStream::addSurfaceCandidates(
     std::span<const Surface*> surfaces, const BoundaryTolerance& bTolerance) {
   m_candidates.reserve(m_candidates.size() + surfaces.size());
   std::ranges::for_each(surfaces, [&](const auto* surface) {
-    m_candidates.emplace_back(ObjectIntersection<Surface>::invalid(surface),
-                              nullptr, nullptr, bTolerance);
+    m_candidates.emplace_back(SurfaceIntersection::invalid(*surface), nullptr,
+                              nullptr, bTolerance);
   });
 }
 
 void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
-  m_candidates.emplace_back(
-      ObjectIntersection<Surface>::invalid(&portal.surface()), &portal, nullptr,
-      BoundaryTolerance::None());
+  m_candidates.emplace_back(SurfaceIntersection::invalid(portal.surface()),
+                            &portal, nullptr, BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidate(const Portal& portal) {
-  m_candidates.emplace_back(
-      ObjectIntersection<Surface>::invalid(&portal.surface()), nullptr, &portal,
-      BoundaryTolerance::None());
+  m_candidates.emplace_back(SurfaceIntersection::invalid(portal.surface()),
+                            nullptr, &portal, BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidates(
     std::span<const Experimental::Portal*> portals) {
   m_candidates.reserve(m_candidates.size() + portals.size());
   std::ranges::for_each(portals, [&](const auto& portal) {
-    m_candidates.emplace_back(
-        ObjectIntersection<Surface>::invalid(&(portal->surface())), portal,
-        nullptr, BoundaryTolerance::None());
+    m_candidates.emplace_back(SurfaceIntersection::invalid(portal->surface()),
+                              portal, nullptr, BoundaryTolerance::None());
   });
 }
 

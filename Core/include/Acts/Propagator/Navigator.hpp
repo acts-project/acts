@@ -434,7 +434,7 @@ class Navigator {
         }
         if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-          return NavigationTarget(*state.navSurface().object(),
+          return NavigationTarget(state.navSurface().surface(),
                                   state.navSurface().index(),
                                   BoundaryTolerance::None());
         } else {
@@ -458,7 +458,7 @@ class Navigator {
         }
         if (state.navLayerIndex.value() < state.navLayers.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
-          return NavigationTarget(*state.navLayer().first.object(),
+          return NavigationTarget(state.navLayer().first.surface(),
                                   state.navLayer().first.index(),
                                   BoundaryTolerance::None());
         } else {
@@ -478,7 +478,7 @@ class Navigator {
         }
         if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-          return NavigationTarget(*state.navBoundary().intersection.object(),
+          return NavigationTarget(state.navBoundary().intersection.surface(),
                                   state.navBoundary().intersection.index(),
                                   BoundaryTolerance::None());
         } else {
@@ -571,14 +571,14 @@ class Navigator {
                  << "Current surface: " << state.currentSurface->geometryId());
 
     if (state.navigationStage == Stage::surfaceTarget &&
-        state.navSurface().object() == &surface) {
+        &state.navSurface().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling surface status.");
 
       return;
     }
 
     if (state.navigationStage == Stage::layerTarget &&
-        state.navLayer().first.object() == &surface) {
+        &state.navLayer().first.surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling layer status.");
 
       // Switch to the next layer
@@ -592,7 +592,7 @@ class Navigator {
     }
 
     if (state.navigationStage == Stage::boundaryTarget &&
-        state.navBoundary().intersection.object() == &surface) {
+        &state.navBoundary().intersection.surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling boundary status.");
 
       if (m_geometryVersion == GeometryVersion::Gen1) {

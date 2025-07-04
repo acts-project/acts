@@ -287,7 +287,7 @@ SurfaceMultiIntersection ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, *this};
   }
 
   // Check the validity of the first solution
@@ -317,9 +317,9 @@ SurfaceMultiIntersection ConeSurface::intersect(
   Intersection3D second(tf * solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this};
+    return {{first, second}, *this};
   }
-  return {{second, first}, this};
+  return {{second, first}, *this};
 }
 
 AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
