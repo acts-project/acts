@@ -8,14 +8,16 @@
 
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 
+#include "Acts/Geometry/CuboidPortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
@@ -23,12 +25,13 @@ StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
 Volume& StaticBlueprintNode::build(const BlueprintOptions& options,
                                    const GeometryContext& gctx,
                                    const Logger& logger) {
-  ACTS_DEBUG(prefix() << "static build");
+  ACTS_DEBUG(prefix() << "Static build");
   if (!m_volume) {
     throw std::runtime_error("Volume is not built");
   }
 
-  ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
+  ACTS_DEBUG(prefix() << "Building volume (" << name()
+                      << ", id=" << m_volume->geometryId() << ") with "
                       << children().size() << " children");
   for (auto& child : children()) {
     child.build(options, gctx, logger);
@@ -60,7 +63,10 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
     m_shell = std::make_unique<SingleCylinderPortalShell>(*m_volume);
 
   } else if (type == VolumeBounds::eCuboid) {
-    throw std::logic_error("Cuboid is not implemented yet");
+    m_shell = std::make_unique<SingleCuboidPortalShell>(*m_volume);
+
+  } else if (type == VolumeBounds::eTrapezoid) {
+    m_shell = std::make_unique<SingleTrapezoidPortalShell>(*m_volume);
 
   } else {
     throw std::logic_error("Volume type is not supported");
@@ -167,4 +173,4 @@ void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -14,14 +14,14 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -268,9 +268,9 @@ class KalmanFitter {
       std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
-  KalmanFitter(propagator_t pPropagator,
-               std::unique_ptr<const Logger> _logger =
-                   getDefaultLogger("KalmanFitter", Logging::INFO))
+  explicit KalmanFitter(propagator_t pPropagator,
+                        std::unique_ptr<const Logger> _logger =
+                            getDefaultLogger("KalmanFitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
@@ -407,8 +407,8 @@ class KalmanFitter {
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
           // now get track state proxy for the smoothing logic
-          auto trackStateProxy =
-              result.fittedStates->getTrackState(result.lastMeasurementIndex);
+          typename traj_t::ConstTrackStateProxy trackStateProxy{
+              result.fittedStates->getTrackState(result.lastMeasurementIndex)};
           if (reversedFiltering ||
               extensions.reverseFilteringLogic(trackStateProxy)) {
             // Start to run reversed filtering:
@@ -545,10 +545,10 @@ class KalmanFitter {
       auto st = result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Update the stepping state
-      stepper.resetState(
+      stepper.initialize(
           state.stepping, st.filtered(),
           reversedFilteringCovarianceScaling * st.filteredCovariance(),
-          st.referenceSurface(), state.options.stepping.maxStepSize);
+          stepper.particleHypothesis(state.stepping), st.referenceSurface());
 
       // For the last measurement state, smoothed is filtered
       st.smoothed() = st.filtered();
@@ -558,13 +558,14 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      auto navigationOptions = state.navigation.options;
-      navigationOptions.startSurface = &st.referenceSurface();
-      navigationOptions.targetSurface = nullptr;
-      state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(state.navigation, stepper.position(state.stepping),
-                           stepper.direction(state.stepping),
-                           state.options.direction);
+      state.navigation.options.startSurface = &st.referenceSurface();
+      state.navigation.options.targetSurface = nullptr;
+      auto navInitRes = navigator.initialize(
+          state.navigation, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.options.direction);
+      if (!navInitRes.ok()) {
+        return navInitRes.error();
+      }
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -657,7 +658,7 @@ class KalmanFitter {
         // detected or if the surface has material (no holes before the first
         // measurement)
         auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-            state, stepper, *surface, *result.fittedStates,
+            state.stepping, stepper, *surface, *result.fittedStates,
             result.lastTrackIndex, true, logger(), precedingMeasurementExists,
             freeToBoundCorrection);
 
@@ -1011,16 +1012,16 @@ class KalmanFitter {
       }
       bool reverseDirection = false;
       if (useFirstTrackState) {
-        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+        stepper.initialize(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
-                           firstCreatedState.referenceSurface(),
-                           state.options.stepping.maxStepSize);
+                           stepper.particleHypothesis(state.stepping),
+                           firstCreatedState.referenceSurface());
         reverseDirection = firstIntersection.pathLength() < 0;
       } else {
-        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+        stepper.initialize(state.stepping, lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
-                           lastCreatedMeasurement.referenceSurface(),
-                           state.options.stepping.maxStepSize);
+                           stepper.particleHypothesis(state.stepping),
+                           lastCreatedMeasurement.referenceSurface());
         reverseDirection = lastIntersection.pathLength() < 0;
       }
       // Reverse the navigation direction if necessary
@@ -1046,9 +1047,12 @@ class KalmanFitter {
       navigationOptions.startSurface = &surface;
       navigationOptions.targetSurface = nullptr;
       state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(state.navigation, stepper.position(state.stepping),
-                           stepper.direction(state.stepping),
-                           state.options.direction);
+      auto navInitRes = navigator.initialize(
+          state.navigation, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.options.direction);
+      if (!navInitRes.ok()) {
+        return navInitRes.error();
+      }
 
       return Result<void>::success();
     }
@@ -1205,6 +1209,8 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
+    kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
+    kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
@@ -1236,8 +1242,15 @@ class KalmanFitter {
                 const propagator_options_t& propagatorOptions,
                 track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
-    auto propagatorState =
-        m_propagator.makeState(sParameters, propagatorOptions);
+    auto propagatorState = m_propagator.makeState(propagatorOptions);
+
+    auto propagatorInitResult =
+        m_propagator.initialize(propagatorState, sParameters);
+    if (!propagatorInitResult.ok()) {
+      ACTS_ERROR("Propagation initialization failed: "
+                 << propagatorInitResult.error());
+      return propagatorInitResult.error();
+    }
 
     auto& kalmanResult =
         propagatorState.template get<KalmanFitterResult<traj_t>>();

@@ -65,15 +65,15 @@ class GeoModelBlueprintCreater {
   /// The Blueprint return object
   struct Blueprint {
     std::string name;
-    std::unique_ptr<Acts::Experimental::Blueprint::Node> topNode;
+    std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node> topNode;
 
     /// Access to the top node
-    const Acts::Experimental::Blueprint::Node& node() const {
+    const Acts::Experimental::Gen2Blueprint::Node& node() const {
       if (topNode == nullptr) {
         throw std::runtime_error(
             "GeoModelBlueprintCreater::Blueprint: No top node created");
       }
-      return *(topNode.get());
+      return *topNode;
     }
   };
 
@@ -98,10 +98,10 @@ class GeoModelBlueprintCreater {
   ///
   /// @param cfg the configuration struct
   /// @param mlogger a screen output logger
-  GeoModelBlueprintCreater(const Config& cfg,
-                           std::unique_ptr<const Logger> mlogger =
-                               getDefaultLogger("GeoModelBlueprintCreater",
-                                                Acts::Logging::INFO));
+  explicit GeoModelBlueprintCreater(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger =
+          getDefaultLogger("GeoModelBlueprintCreater", Acts::Logging::INFO));
 
   /// Method that reads the GeoModel blueprint from database
   ///
@@ -121,7 +121,7 @@ class GeoModelBlueprintCreater {
   /// @param motherExtent an extent given from external parameters (e.g. mother volume)
   ///
   /// @return a newly created node
-  std::unique_ptr<Experimental::Blueprint::Node> createNode(
+  std::unique_ptr<Experimental::Gen2Blueprint::Node> createNode(
       Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
       const Extent& motherExtent = Extent()) const;

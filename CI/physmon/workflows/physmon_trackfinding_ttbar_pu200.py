@@ -7,9 +7,11 @@ import shutil
 import acts
 from acts.examples.simulation import (
     addPythia8,
+    ParticleSelectorConfig,
+    addGenParticleSelection,
     addFatras,
     addDigitization,
-    ParticleSelectorConfig,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -61,20 +63,19 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         setup.trackingGeometry,
         setup.field,
         rnd=rnd,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-        ),
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.5 * u.GeV, None),
-            hits=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     addDigitization(
@@ -85,13 +86,22 @@ with tempfile.TemporaryDirectory() as temp:
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     addSeeding(
         s,
         setup.trackingGeometry,
         setup.field,
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaR=(1 * u.mm, 300 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
@@ -101,16 +111,17 @@ with tempfile.TemporaryDirectory() as temp:
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
-        seedingAlgorithm=SeedingAlgorithm.Default,
+        seedingAlgorithm=SeedingAlgorithm.GridTriplet,
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
-        initialSigmaPtRel=0.01,
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
+        initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=setup.geoSel,
         outputDirRoot=tp,
@@ -177,6 +188,7 @@ with tempfile.TemporaryDirectory() as temp:
         seeder=acts.VertexSeedFinder.GaussianSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gauss_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -190,6 +202,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
+        writeTrackInfo=True,
     )
 
     s.run()

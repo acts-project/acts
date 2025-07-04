@@ -6,11 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Utilities/GridIterator.hpp"
+
+#include <numeric>
+#include <stdexcept>
+
 namespace Acts {
+
 // Global Iterator
 template <typename T, class... Axes>
-GridGlobalIterator<T, Axes...>::GridGlobalIterator(
-    const Acts::Grid<T, Axes...>& grid, std::size_t idx)
+GridGlobalIterator<T, Axes...>::GridGlobalIterator(const Grid<T, Axes...>& grid,
+                                                   std::size_t idx)
     : m_grid(&grid), m_idx(idx) {}
 
 template <typename T, class... Axes>
@@ -62,13 +70,13 @@ GridGlobalIterator<T, Axes...>& GridGlobalIterator<T, Axes...>::operator-=(
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator+(
     const std::size_t offset) const {
-  return {*m_grid, m_idx + offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx + offset);
 }
 
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator-(
     const std::size_t offset) const {
-  return {*m_grid, m_idx - offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx - offset);
 }
 
 template <typename T, class... Axes>
@@ -111,9 +119,8 @@ GridGlobalIterator<T, Axes...>::localBinsIndices() const {
 
 // Local Iterator
 template <typename T, class... Axes>
-Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
-    const Acts::Grid<T, Axes...>& grid,
-    const std::array<std::size_t, DIM>& indices)
+GridLocalIterator<T, Axes...>::GridLocalIterator(
+    const Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indices)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
       m_currentIndex(indices) {
@@ -127,9 +134,8 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
 }
 
 template <typename T, class... Axes>
-Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
-    const Acts::Grid<T, Axes...>& grid,
-    const std::array<std::size_t, DIM>& indices,
+GridLocalIterator<T, Axes...>::GridLocalIterator(
+    const Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indices,
     std::array<std::vector<std::size_t>, DIM> navigation)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
@@ -157,17 +163,16 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
 }
 
 template <typename T, class... Axes>
-Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
-    Acts::GridLocalIterator<T, Axes...>&& other) noexcept
+GridLocalIterator<T, Axes...>::GridLocalIterator(
+    GridLocalIterator<T, Axes...>&& other) noexcept
     : m_grid(std::exchange(other.m_grid.ptr, nullptr)),
       m_numLocalBins(other.m_numLocalBins),
       m_currentIndex(other.m_currentIndex),
       m_navigationIndex(std::move(other.m_navigationIndex)) {}
 
 template <typename T, class... Axes>
-Acts::GridLocalIterator<T, Axes...>&
-Acts::GridLocalIterator<T, Axes...>::operator=(
-    Acts::GridLocalIterator<T, Axes...>&& other) noexcept {
+GridLocalIterator<T, Axes...>& GridLocalIterator<T, Axes...>::operator=(
+    GridLocalIterator<T, Axes...>&& other) noexcept {
   m_grid.ptr = std::exchange(other.m_grid.ptr, nullptr);
   m_numLocalBins = other.m_numLocalBins;
   m_currentIndex = other.m_currentIndex;
@@ -176,8 +181,8 @@ Acts::GridLocalIterator<T, Axes...>::operator=(
 }
 
 template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator==(
-    const Acts::GridLocalIterator<T, Axes...>& other) const {
+bool GridLocalIterator<T, Axes...>::operator==(
+    const GridLocalIterator<T, Axes...>& other) const {
   // This will always return false if we are comparing two iterators from
   // different grids.
   // As such a loop from itrStart (from grid A) to itrStop (from grid B) will
@@ -196,8 +201,8 @@ bool Acts::GridLocalIterator<T, Axes...>::operator==(
 }
 
 template <typename T, class... Axes>
-const typename Acts::GridLocalIterator<T, Axes...>::value_type&
-Acts::GridLocalIterator<T, Axes...>::operator*() const {
+const typename GridLocalIterator<T, Axes...>::value_type&
+GridLocalIterator<T, Axes...>::operator*() const {
   std::array<std::size_t, DIM> localPositionBin{};
   for (std::size_t i(0); i < DIM; ++i) {
     localPositionBin[i] = m_navigationIndex[i][m_currentIndex[i]];

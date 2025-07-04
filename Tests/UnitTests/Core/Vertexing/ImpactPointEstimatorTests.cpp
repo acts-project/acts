@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
       Surface::makeShared<PerigeeSurface>(pos1.segment<3>(ePos0));
   // Some fixed track parameter values
   auto params1 = BoundTrackParameters::create(
-                     perigeeSurface, geoContext, pos1, mom1, 1_e / mom1.norm(),
+                     geoContext, perigeeSurface, pos1, mom1, 1_e / mom1.norm(),
                      BoundTrackParameters::CovarianceMatrix::Identity(),
                      ParticleHypothesis::pion())
                      .value();

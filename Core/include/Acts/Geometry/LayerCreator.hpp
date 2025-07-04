@@ -51,20 +51,19 @@ class LayerCreator {
     double cylinderZtolerance{10.};
     /// cylinder module phi tolerance: it counts as same phi, if ...
     double cylinderPhiTolerance{0.1};
-    /// standard constructor
-    Config() = default;
+    /// Default z envelope. Can be overridden by proto layer
+    Envelope defaultEnvelopeZ = zeroEnvelope;
+    /// Default r envelope. Can be overridden by proto layer
+    Envelope defaultEnvelopeR = zeroEnvelope;
   };
 
   /// Constructor
   ///
   /// @param lcConfig is the configuration object
   /// @param logger logging instance
-  LayerCreator(const Config& lcConfig,
-               std::unique_ptr<const Logger> logger =
-                   getDefaultLogger("LayerCreator", Logging::INFO));
-
-  /// Destructor
-  ~LayerCreator() = default;
+  explicit LayerCreator(const Config& lcConfig,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("LayerCreator", Logging::INFO));
 
   /// returning a cylindrical layer
   ///

@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <ranges>
 #include <vector>
 
 namespace {
@@ -143,8 +144,7 @@ Acts::PortalJsonConverter::toJsonDetray(
 
       // Apply the correction from local to global boundaries
       double gCorr = VectorHelpers::cast(transform.translation(), cast);
-      std::for_each(boundaries.begin(), boundaries.end(),
-                    [&gCorr](double& b) { b -= gCorr; });
+      std::ranges::for_each(boundaries, [&gCorr](double& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -319,8 +319,8 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
   }
   auto portal = std::make_shared<Experimental::Portal>(regSurface);
 
-  std::array<Acts::Direction, 2> normalDirs = {Direction::Backward,
-                                               Direction::Forward};
+  std::array<Acts::Direction, 2> normalDirs = {Direction::Backward(),
+                                               Direction::Forward()};
   // re-create the volume links
   auto jLinks = jPortal["volume_links"];
   for (auto [ivl, vl] : enumerate(jLinks)) {

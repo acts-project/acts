@@ -4,21 +4,44 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  DEPENDENCY_TAG: v5
+  SPACK_VERSION: develop-2025-06-08
+  LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
+
+  DEPENDENCY_TAG: v11.1.0
 
 .ccache_base:
   cache:
-    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${CLONE_URL}_${HEAD_REF}
+    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${REPO_SLUG}_${HEAD_REF}
       fallback_keys:
         - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-https://github.com/acts-project/acts.git-main
       when: always
       paths:
         - ${CCACHE_DIR}
 
+.spack_cache:
+  cache:
+   - key:
+       files:
+         - CI/dependencies/setup_spack.sh
+       prefix: spack_${SPACK_VERSION}
+     paths:
+      - spack
+      - .spack
+   - key:
+       files:
+        - spack_lockfile_cache/digest.txt
+       prefix: spack_lockfile_
+     paths:
+      - spack_lockfile_cache
+
+.spack_cleanup:
+  after_script:
+    - rm -rf spack/.git spack/opt spack/var/spack/cache
+    - find spack -type f -name "*.pyc" -delete || true
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
   tags:
     - large
   artifacts:
@@ -26,8 +49,10 @@ clang_tidy:
       - src/clang-tidy/
     when: always
     expire_in: 1 week
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+
+  cache:
+   - !reference [.spack_cache, cache]
+
   script:
     - git clone $CLONE_URL src
     - cd src
@@ -39,14 +64,15 @@ clang_tidy:
         && ln -sf /usr/bin/clang-18 /usr/bin/clang
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
 
-    - source CI/dependencies.sh
+    - |
+      CI/dependencies/setup.sh -c clang++ -e .env
+      source .env
 
     - >
         cmake -B build -S .
         --preset=gitlab-ci-clangtidy
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
-        -DPython_EXECUTABLE=$(which python3)
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
@@ -69,52 +95,59 @@ clang_tidy:
     # Generate an html report
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
   tags:
     - large
 
   cache:
    - !reference [.ccache_base, cache]
+   - !reference [.spack_cache, cache]
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies.sh
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DPython_EXECUTABLE=$(which python3)
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
+      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
 
     - ccache -z
     - cmake --build build -- -j6
     - ccache -s
 
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
   tags:
     - large
 
   cache:
    - !reference [.ccache_base, cache]
+   - !reference [.spack_cache, cache]
 
   artifacts:
     paths:
+      - boost-install/
       - build/
     exclude:
       - build/**/*.o
@@ -124,76 +157,120 @@ build_exatrkx:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies.sh
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
     - mkdir build
     - >
       cmake -B build -S src
       --preset=gitlab-ci-exatrkx
-      -DPython_EXECUTABLE=$(which python3)
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
 
     - ccache -z
     - cmake --build build -- -j6
     - ccache -s
 
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
 test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
   tags:
     - docker-gpu-nvidia
+
+  cache:
+   - !reference [.spack_cache, cache]
   script:
 
     - apt-get update -y
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies.sh
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
-    - ctest --test-dir build -R ExaTrkX
+    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
 
 test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
   tags:
     - docker-gpu-nvidia
+
+  cache:
+   - !reference [.spack_cache, cache]
+
   script:
     - apt-get update -y
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
     - nvidia-smi
-    - source CI/dependencies.sh
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
     - echo $PYTHONPATH
     - which python3
     - python3 --version
     - python3 -c "import acts"
-    - pytest -rFsv -k torch --collect-only
-    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
+    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    - pytest -rfExw -k torch -v --collect-only
+    - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
+build_gnn_tensorrt:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:74
+
+  cache:
+    - !reference [.spack_cache, cache]
+    - !reference [.ccache_base, cache]
+
+  tags:
+    - docker-gpu-nvidia
+
+  script:
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src --preset gitlab-ci-tensorrt
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
 
   cache:
    - !reference [.ccache_base, cache]
+   - !reference [.spack_cache, cache]
 
   artifacts:
     paths:
@@ -212,110 +289,18 @@ build_linux_ubuntu:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - source CI/dependencies.sh
 
     - cd ..
+
+    - |
+      src/CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+
     - mkdir build
     - >
       cmake -B build -S src
       --preset=gitlab-ci
-      -DPython_EXECUTABLE=$(which python3)
       -DACTS_BUILD_PLUGIN_ONNX=ON
-
-    - ccache -z
-    - cmake --build build -- -j6
-    - ccache -s
-
-linux_test_examples:
-  stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
-  needs: [build_linux_ubuntu]
-
-  script:
-    - apt-get update && apt-get install -y git-lfs
-
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
-    - source CI/dependencies.sh
-    - cd ..
-
-    - geant4-config --install-datasets
-    - source build/this_acts_withdeps.sh
-    - cd src
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rFsv -k "not exatrkx" -v -s
-
-linux_physmon:
-  stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
-  variables:
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
-  needs: [build_linux_ubuntu]
-
-  artifacts:
-    when: always
-    paths:
-      - src/physmon
-    expire_in: 1 week
-
-  script:
-    - apt-get update && apt-get install -y git-lfs time
-
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
-    - source CI/dependencies.sh
-    - cd ..
-
-    - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - python3 -m pip install histcmp==0.6.8 matplotlib
-    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
-    - geant4-config --install-datasets
-    - venv_python=$(which python3)
-    - echo $venv_python
-    - source build/this_acts_withdeps.sh
-    - export PATH=$(dirname $venv_python):$PATH
-    - echo $PATH
-    - which python3
-    - cd src
-    - CI/physmon/phys_perf_mon.sh all physmon
-
-###############################
-### UBUNTU EXTRA JOB MATRIX ###
-###############################
-
-.linux_ubuntu_extra:
-  variables:
-    INSTALL_DIR: ${CI_PROJECT_DIR}/install
-
-  stage: build
-
-  cache:
-   - !reference [.ccache_base, cache]
-
-  script:
-    - git clone $CLONE_URL src
-
-    - cd src
-    - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
-    - source CI/dependencies.sh
-
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci
-      -DPython_EXECUTABLE=$(which python3)
-      -DCMAKE_CXX_STANDARD=${CXXSTD}
 
     - ccache -z
     - cmake --build build -- -j6
@@ -333,7 +318,6 @@ linux_physmon:
       -GNinja
       -DCMAKE_BUILD_TYPE=Release
       -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=${CXXSTD}
       -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
     # Downstream build
@@ -342,19 +326,157 @@ linux_physmon:
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
 
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
+linux_test_examples:
+  stage: test
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+  needs: [build_linux_ubuntu]
+
+  cache:
+   - !reference [.spack_cache, cache]
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+    - cd ..
+
+    - geant4-config --install-datasets
+    - source build/this_acts_withdeps.sh
+    - cd src
+    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - pytest -rfExw -k "not exatrkx" -v
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
+linux_physmon:
+  stage: test
+  needs: [build_linux_ubuntu]
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+
+  artifacts:
+    when: always
+    paths:
+      - src/physmon
+    expire_in: 1 week
+
+  cache:
+   - !reference [.spack_cache, cache]
+
+  script:
+    - apt-get update && apt-get install -y git-lfs time
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+    - cd ..
+
+    - git config --global safe.directory "$GITHUB_WORKSPACE"
+    - python3 -m pip install histcmp==0.8.1 matplotlib
+    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
+    - geant4-config --install-datasets
+    - venv_python=$(which python3)
+    - echo $venv_python
+    - source build/this_acts_withdeps.sh
+    - export PATH=$(dirname $venv_python):$PATH
+    - echo $PATH
+    - which python3
+    - cd src
+    - CI/physmon/phys_perf_mon.sh all physmon
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
+###############################
+### UBUNTU EXTRA JOB MATRIX ###
+###############################
+
+.linux_ubuntu_extra:
+  variables:
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+
+  stage: build
+
+  cache:
+   - !reference [.ccache_base, cache]
+   - !reference [.spack_cache, cache]
+
+  script:
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c ${CXX} -e .env
+      source .env
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      --preset=gitlab-ci
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_CXX_COMPILER=${CXX}
+
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build > install.log
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_CXX_COMPILER=${CXX}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
+  after_script:
+   - !reference [.spack_cleanup, after_script]
+
 linux_ubuntu_2204:
   extends: .linux_ubuntu_extra
   variables:
+    CXX: g++
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:74
 
-linux_ubuntu_2204_clang:
+linux_ubuntu_2404_clang19:
   extends: .linux_ubuntu_extra
   variables:
+    CXX: clang++-19
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204_clang:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:74
 
 
 ######################
@@ -362,7 +484,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg_base_job:
-  image: ghcr.io/acts-project/${OS}-base:63
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:74
   stage: build
   tags:
     - cvmfs
@@ -404,10 +526,8 @@ linux_ubuntu_2204_clang:
   script:
     - >
       cmake -B build -S src
-      --preset=gitlab-ci
+      --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DPython_EXECUTABLE=$(which python3)
-      -DACTS_BUILD_PLUGIN_GEOMODEL=OFF # GeoModel is not in LCG at this point
 
     - ccache -z
     - cmake --build build -- -j6
@@ -416,18 +536,6 @@ linux_ubuntu_2204_clang:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_105:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "105"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
 
 lcg_106a:
   extends: .lcg_base_job
@@ -442,3 +550,17 @@ lcg_106a:
           - gcc13
           - gcc14
           - clang16
+
+lcg_107:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+          - clang19

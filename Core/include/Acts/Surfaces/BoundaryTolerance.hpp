@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <optional>
+#include <type_traits>
 #include <variant>
 
 namespace Acts {
@@ -54,89 +55,103 @@ namespace Acts {
 ///
 class BoundaryTolerance {
  public:
+  struct InfiniteParams {};
+
+  struct NoneParams {};
+
+  struct AbsoluteBoundParams {
+    double tolerance0{};
+    double tolerance1{};
+  };
+
+  struct AbsoluteCartesianParams {
+    double tolerance0{};
+    double tolerance1{};
+  };
+
+  struct AbsoluteEuclideanParams {
+    double tolerance{};
+  };
+
+  struct Chi2BoundParams {
+    double maxChi2{};
+    std::array<double, 4> weight;
+
+    Eigen::Map<SquareMatrix2> weightMatrix() {
+      return Eigen::Map<SquareMatrix2>(weight.data());
+    }
+
+    Eigen::Map<const SquareMatrix2> weightMatrix() const {
+      return Eigen::Map<const SquareMatrix2>(weight.data());
+    }
+  };
+
+  static_assert(std::is_trivially_copyable_v<Chi2BoundParams>);
+
+ private:
+  /// Underlying variant type
+  using Variant = std::variant<InfiniteParams, NoneParams, AbsoluteBoundParams,
+                               AbsoluteCartesianParams, AbsoluteEuclideanParams,
+                               Chi2BoundParams>;
+  static_assert(std::is_trivially_copyable_v<Variant>);
+
+  /// Construct from variant
+  explicit BoundaryTolerance(Variant variant);
+
+ public:
   /// Infinite tolerance i.e. no boundary check
-  struct Infinite {};
+  static auto Infinite() noexcept {
+    return BoundaryTolerance{InfiniteParams{}};
+  }
 
   /// No tolerance i.e. exact boundary check
-  struct None {};
+  static auto None() noexcept { return BoundaryTolerance{NoneParams{}}; }
 
   /// Absolute tolerance in bound coordinates
-  struct AbsoluteBound {
-    double tolerance0{};
-    double tolerance1{};
-
-    AbsoluteBound() = default;
-    AbsoluteBound(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
-      if (tolerance0 < 0 || tolerance1 < 0) {
-        throw std::invalid_argument(
-            "AbsoluteBound: Tolerance must be non-negative");
-      }
+  static auto AbsoluteBound(double tolerance0, double tolerance1) {
+    if (tolerance0 < 0 || tolerance1 < 0) {
+      throw std::invalid_argument(
+          "AbsoluteBound: Tolerance must be non-negative");
     }
-  };
+    return BoundaryTolerance{AbsoluteBoundParams{tolerance0, tolerance1}};
+  }
 
   /// Absolute tolerance in Cartesian coordinates
-  struct AbsoluteCartesian {
-    double tolerance0{};
-    double tolerance1{};
-
-    AbsoluteCartesian() = default;
-    AbsoluteCartesian(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
-      if (tolerance0 < 0 || tolerance1 < 0) {
-        throw std::invalid_argument(
-            "AbsoluteCartesian: Tolerance must be non-negative");
-      }
-      if ((tolerance0 == 0) != (tolerance1 == 0)) {
-        throw std::invalid_argument(
-            "AbsoluteCartesian: Both tolerances must be zero or non-zero");
-      }
+  static auto AbsoluteCartesian(double tolerance0, double tolerance1) {
+    if (tolerance0 < 0 || tolerance1 < 0) {
+      throw std::invalid_argument(
+          "AbsoluteCartesian: Tolerance must be non-negative");
     }
-  };
+    if ((tolerance0 == 0) != (tolerance1 == 0)) {
+      throw std::invalid_argument(
+          "AbsoluteCartesian: Both tolerances must be zero or non-zero");
+    }
+    return BoundaryTolerance{AbsoluteCartesianParams{tolerance0, tolerance1}};
+  }
 
   /// Absolute tolerance in Euclidean distance
-  struct AbsoluteEuclidean {
-    double tolerance{};
-
-    AbsoluteEuclidean() = default;
-    explicit AbsoluteEuclidean(double tolerance_) : tolerance(tolerance_) {}
-  };
+  static auto AbsoluteEuclidean(double tolerance) noexcept {
+    return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
+  }
 
   /// Chi2 tolerance in bound coordinates
-  struct Chi2Bound {
-    double maxChi2{};
-    SquareMatrix2 weight = SquareMatrix2::Identity();
+  static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) noexcept {
+    Chi2BoundParams tolerance{maxChi2, {}};
+    tolerance.weightMatrix() = weight;
+    return BoundaryTolerance{tolerance};
+  }
 
-    Chi2Bound() = default;
-    Chi2Bound(const SquareMatrix2& weight_, double maxChi2_)
-        : maxChi2(maxChi2_), weight(weight_) {}
-  };
+  BoundaryTolerance(const BoundaryTolerance& other) noexcept = default;
+  BoundaryTolerance& operator=(const BoundaryTolerance& other) noexcept =
+      default;
+  BoundaryTolerance(BoundaryTolerance&& other) noexcept = default;
+  BoundaryTolerance& operator=(BoundaryTolerance&& other) noexcept = default;
 
   enum class ToleranceMode {
     Extend,  // Extend the boundary
     None,    // No tolerance
     Shrink   // Shrink the boundary
   };
-
-  /// Underlying variant type
-  using Variant = std::variant<Infinite, None, AbsoluteBound, AbsoluteCartesian,
-                               AbsoluteEuclidean, Chi2Bound>;
-
-  /// Construct with infinite tolerance.
-  BoundaryTolerance(const Infinite& infinite);
-  /// Construct with no tolerance.
-  BoundaryTolerance(const None& none);
-  /// Construct with absolute tolerance in bound coordinates.
-  BoundaryTolerance(const AbsoluteBound& AbsoluteBound);
-  /// Construct with absolute tolerance in Cartesian coordinates.
-  BoundaryTolerance(const AbsoluteCartesian& absoluteCartesian);
-  /// Construct with absolute tolerance in Euclidean distance.
-  BoundaryTolerance(const AbsoluteEuclidean& absoluteEuclidean);
-  /// Construct with chi2 tolerance in bound coordinates.
-  BoundaryTolerance(const Chi2Bound& Chi2Bound);
-
-  /// Construct from variant
-  BoundaryTolerance(Variant variant);
 
   /// Check if the tolerance is infinite.
   bool isInfinite() const;
@@ -155,16 +170,16 @@ class BoundaryTolerance {
   ToleranceMode toleranceMode() const;
 
   /// Get the tolerance as absolute bound.
-  AbsoluteBound asAbsoluteBound(bool isCartesian = false) const;
+  AbsoluteBoundParams asAbsoluteBound(bool isCartesian = false) const;
   /// Get the tolerance as absolute Cartesian.
-  const AbsoluteCartesian& asAbsoluteCartesian() const;
+  const AbsoluteCartesianParams& asAbsoluteCartesian() const;
   /// Get the tolerance as absolute Euclidean.
-  const AbsoluteEuclidean& asAbsoluteEuclidean() const;
+  const AbsoluteEuclideanParams& asAbsoluteEuclidean() const;
   /// Get the tolerance as chi2 bound.
-  const Chi2Bound& asChi2Bound() const;
+  const Chi2BoundParams& asChi2Bound() const;
 
   /// Get the tolerance as absolute bound if possible.
-  std::optional<AbsoluteBound> asAbsoluteBoundOpt(
+  std::optional<AbsoluteBoundParams> asAbsoluteBoundOpt(
       bool isCartesian = false) const;
 
   /// Check if the distance is tolerated.
@@ -197,5 +212,8 @@ class BoundaryTolerance {
     return holdsVariant<T>() ? &getVariant<T>() : nullptr;
   }
 };
+
+static_assert(std::is_trivially_copyable_v<BoundaryTolerance>);
+static_assert(std::is_trivially_move_constructible_v<BoundaryTolerance>);
 
 }  // namespace Acts

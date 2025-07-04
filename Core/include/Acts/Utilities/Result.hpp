@@ -27,7 +27,7 @@ class Result {
   /// Private constructor which accepts an external variant.
   /// This is used by the factory static methods to set up
   /// the variant unambiguously in all cases.
-  Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
+  explicit Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
 
  public:
   using ValueType = T;
@@ -66,7 +66,8 @@ class Result {
   /// @param value The potential value, could be an actual valid value or an
   /// error.
   template <typename T2>
-  Result(T2 value) noexcept
+  Result(T2 value) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
     requires(!std::same_as<T, E> && !std::constructible_from<T, E> &&
              !std::convertible_to<T, E> && !std::constructible_from<E, T> &&
              !std::convertible_to<E, T> &&
@@ -371,7 +372,9 @@ class Result<void, E> {
   /// @tparam E2 The type of the actual error
   /// @param error The instance of the actual error
   template <typename E2>
-  Result(E2 error) noexcept : m_opt(std::move(error)) {}
+  Result(E2 error) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
+      : m_opt(std::move(error)) {}
 
   /// Assignment operator from an error.
   /// @tparam E2 The type of the actual error
@@ -413,8 +416,24 @@ class Result<void, E> {
   /// @return Reference to the error
   E error() && noexcept { return std::move(m_opt.value()); }
 
+  void value() const { checkValueAccess(); }
+
  private:
   std::optional<E> m_opt;
+
+  void checkValueAccess() const {
+    if (m_opt.has_value()) {
+      if constexpr (std::is_same_v<E, std::error_code>) {
+        std::stringstream ss;
+        const auto& e = m_opt.value();
+        ss << "Value called on error value: " << e.category().name() << ": "
+           << e.message() << " [" << e.value() << "]";
+        throw std::runtime_error(ss.str());
+      } else {
+        throw std::runtime_error("Value called on error value");
+      }
+    }
+  }
 };
 
 }  // namespace Acts

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -18,6 +19,47 @@
 #include <utility>
 
 namespace ActsExamples {
+
+bool ParticleSelector::MeasurementCounter::isValidParticle(
+    const SimParticle& particle,
+    const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+    const MeasurementContainer& measurements) const {
+  // No hit cuts, accept everything
+  if (counters.empty()) {
+    return true;
+  }
+
+  const auto [measurementsBegin, measurementsEnd] =
+      particleMeasurementsMap.equal_range(particle.particleId());
+
+  boost::container::small_vector<unsigned int, 4> counterValues;
+  counterValues.resize(counters.size(), 0);
+
+  for (auto measurementIt = measurementsBegin; measurementIt != measurementsEnd;
+       ++measurementIt) {
+    const auto measurementIndex = measurementIt->second;
+    const auto measurement = measurements.at(measurementIndex);
+
+    const auto geoId = measurement.geometryId();
+
+    for (std::size_t i = 0; i < counters.size(); i++) {
+      const auto& [counterMap, threshold] = counters[i];
+      if (const auto it = counterMap.find(geoId); it != counterMap.end()) {
+        counterValues[i]++;
+      }
+    }
+  }
+
+  for (std::size_t i = 0; i < counters.size(); i++) {
+    const auto& [counterMap, threshold] = counters[i];
+    const unsigned int value = counterValues[i];
+    if (value < threshold) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 ParticleSelector::ParticleSelector(const Config& config,
                                    Acts::Logging::Level level)
@@ -32,6 +74,7 @@ ParticleSelector::ParticleSelector(const Config& config,
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputParticleMeasurementsMap.maybeInitialize(
       m_cfg.inputParticleMeasurementsMap);
+  m_inputMeasurements.maybeInitialize(m_cfg.inputMeasurements);
   m_outputParticles.initialize(m_cfg.outputParticles);
 
   if (!m_inputParticleMeasurementsMap.isInitialized() &&
@@ -39,6 +82,13 @@ ParticleSelector::ParticleSelector(const Config& config,
        m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max())) {
     throw std::invalid_argument(
         "Measurement-based cuts require the inputMeasurementParticlesMap");
+  }
+  if (!m_cfg.measurementCounter.counters.empty() &&
+      (!m_inputParticleMeasurementsMap.isInitialized() ||
+       !m_inputMeasurements.isInitialized())) {
+    throw std::invalid_argument(
+        "Measurement count-based cuts require the inputMeasurementParticlesMap "
+        "and inputMeasurements");
   }
 
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
@@ -82,9 +132,15 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
           ? m_inputParticleMeasurementsMap(ctx)
           : emptyMeasurementParticlesMap;
 
+  const static MeasurementContainer emptyMeasurements;
+  const MeasurementContainer& inputMeasurements =
+      m_inputMeasurements.isInitialized() ? m_inputMeasurements(ctx)
+                                          : emptyMeasurements;
+
   std::size_t nInvalidCharge = 0;
   std::size_t nInvalidHitCount = 0;
   std::size_t nInvalidMeasurementCount = 0;
+  std::size_t nInvalidMeasurementRegionCount = 0;
 
   // helper functions to select tracks
   auto within = [](auto x, auto min, auto max) {
@@ -117,6 +173,12 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
 
+    const bool validMeasurementRegionCount =
+        m_cfg.measurementCounter.isValidParticle(
+            p, inputMeasurementParticlesMap, inputMeasurements);
+    nInvalidMeasurementRegionCount +=
+        static_cast<std::size_t>(!validMeasurementRegionCount);
+
     // Pdg selection
     bool validPdg = true;
     for (auto pdg : m_cfg.excludeAbsPdgs) {
@@ -128,6 +190,7 @@ ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
 
     return validPdg && validCharge && validSecondary && validPrimaryVertexId &&
            validHitCount && validMeasurementCount &&
+           validMeasurementRegionCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&

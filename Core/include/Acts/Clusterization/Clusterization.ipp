@@ -6,8 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Clusterization/Clusterization.hpp"
+
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <vector>
 
 #include <boost/pending/disjoint_sets.hpp>
@@ -85,7 +90,7 @@ template <std::size_t BufSize>
 struct ConnectionsBase {
   std::size_t nconn{0};
   std::array<Label, BufSize> buf;
-  ConnectionsBase() { std::fill(buf.begin(), buf.end(), NO_LABEL); }
+  ConnectionsBase() { std::ranges::fill(buf, NO_LABEL); }
 };
 
 template <std::size_t GridDim>
@@ -145,6 +150,7 @@ ClusterCollection mergeClustersImpl(CellCollection& cells) {
 
   // Accumulate clusters into the output collection
   ClusterCollection outv;
+  outv.reserve(cells.size() + 1);
   Cluster cl;
   int lbl = getCellLabel(cells.front());
   for (auto& cell : cells) {

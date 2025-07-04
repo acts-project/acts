@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <map>
@@ -44,7 +44,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
-  /// Define a string based story
+  /// Define a string based store
   using Store = std::map<std::string,
                          std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
 
@@ -77,14 +77,14 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ///       TGeoTubeSeg should be translated to a disc surface. Per default it
   ///       will be translated into a cylindrical surface.
   /// @param material Optional material of detector element
-  DD4hepDetectorElement(
+  explicit DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
       double scalor = 1., bool isDisc = false,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
 
-  // Give access to the DD4hep detector element
+  /// Give access to the DD4hep detector element
   const dd4hep::DetElement& sourceElement() const { return m_detElement; }
 
  private:

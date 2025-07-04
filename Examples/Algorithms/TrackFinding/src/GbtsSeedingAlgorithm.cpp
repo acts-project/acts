@@ -9,7 +9,6 @@
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -24,13 +23,13 @@
 #include <sstream>
 #include <vector>
 
-template class Acts::GbtsLayer<ActsExamples::SimSpacePoint>;
-template class Acts::GbtsGeometry<ActsExamples::SimSpacePoint>;
-template class Acts::GbtsNode<ActsExamples::SimSpacePoint>;
-template class Acts::GbtsEtaBin<ActsExamples::SimSpacePoint>;
-template struct Acts::GbtsSP<ActsExamples::SimSpacePoint>;
-template class Acts::GbtsDataStorage<ActsExamples::SimSpacePoint>;
-template class Acts::GbtsEdge<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsLayer<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsGeometry<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsNode<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsEtaBin<ActsExamples::SimSpacePoint>;
+template struct Acts::Experimental::GbtsSP<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsDataStorage<ActsExamples::SimSpacePoint>;
+template class Acts::Experimental::GbtsEdge<ActsExamples::SimSpacePoint>;
 
 // constructor:
 ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
@@ -39,14 +38,10 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // fill config struct
   m_cfg.layerMappingFile = m_cfg.layerMappingFile;
 
-  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
+  m_cfg.seedFinderConfig = m_cfg.seedFinderConfig.calculateDerivedQuantities();
 
-  m_cfg.seedFinderConfig =
-      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-
-  m_cfg.seedFinderOptions =
-      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
-          m_cfg.seedFinderConfig);
+  m_cfg.seedFinderOptions = m_cfg.seedFinderOptions.calculateDerivedQuantities(
+      m_cfg.seedFinderConfig);
 
   for (const auto &spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {
@@ -70,13 +65,13 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   m_cfg.seedFinderConfig.m_layerGeometry = LayerNumbering();
 
   std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.connector_input_file.c_str(), std::ifstream::in);
+      m_cfg.seedFinderConfig.ConnectorInputFile.c_str(), std::ifstream::in);
 
   // connector
-  std::unique_ptr<Acts::GbtsConnector> inputConnector =
-      std::make_unique<Acts::GbtsConnector>(input_ifstream);
+  std::unique_ptr<Acts::Experimental::GbtsConnector> inputConnector =
+      std::make_unique<Acts::Experimental::GbtsConnector>(input_ifstream);
 
-  m_gbtsGeo = std::make_unique<Acts::GbtsGeometry<SimSpacePoint>>(
+  m_gbtsGeo = std::make_unique<Acts::Experimental::GbtsGeometry<SimSpacePoint>>(
       m_cfg.seedFinderConfig.m_layerGeometry, inputConnector);
 
 }  // this is not Gbts config type because it is a member of the algs config,
@@ -85,22 +80,20 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 // execute:
 ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
-  std::vector<Acts::GbtsSP<SimSpacePoint>> GbtsSpacePoints =
+  std::vector<Acts::Experimental::GbtsSP<SimSpacePoint>> GbtsSpacePoints =
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   for (auto sp : GbtsSpacePoints) {
-    ACTS_DEBUG("Gbts space points:  Gbts_id: "
-               << sp.gbtsID << " z: " << sp.SP->z() << " r: " << sp.SP->r()
-               << " ACTS volume:  "
-               << sp.SP->sourceLinks()
-                      .front()
-                      .get<IndexSourceLink>()
-                      .geometryId()
-                      .volume());
+    const auto &links = sp.SP->sourceLinks();
+    if (!links.empty()) {
+      ACTS_DEBUG("Gbts space points:  Gbts_id: "
+                 << sp.gbtsID << " z: " << sp.SP->z() << " r: " << sp.SP->r()
+                 << " ACTS volume:  "
+                 << links.front().get<IndexSourceLink>().geometryId().volume());
+    }
   }
-
   // this is now calling on a core algorithm
-  Acts::SeedFinderGbts<SimSpacePoint> finder(
+  Acts::Experimental::SeedFinderGbts<SimSpacePoint> finder(
       m_cfg.seedFinderConfig, *m_gbtsGeo,
       logger().cloneWithSuffix("GbtdFinder"));
 
@@ -109,11 +102,11 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   finder.loadSpacePoints(GbtsSpacePoints);
 
   // trigGbts file :
-  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -std::numbers::pi,
-                                  std::numbers::pi, 0, -150., 150.);
+  Acts::Experimental::RoiDescriptor internalRoi(
+      0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
   // ROI file:
-  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -std::numbers::pi,
-  //  std::numbers::pi, 0, -225., 225.);
+  //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
+  //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
 
   // new version returns seeds
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *m_gbtsGeo);
@@ -154,12 +147,13 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return ActsGbts;
 }
 
-std::vector<Acts::GbtsSP<ActsExamples::SimSpacePoint>>
+std::vector<Acts::Experimental::GbtsSP<ActsExamples::SimSpacePoint>>
 ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
     const AlgorithmContext &ctx,
     std::map<std::pair<int, int>, std::pair<int, int>> map) const {
   // create space point vectors
-  std::vector<Acts::GbtsSP<ActsExamples::SimSpacePoint>> gbtsSpacePoints;
+  std::vector<Acts::Experimental::GbtsSP<ActsExamples::SimSpacePoint>>
+      gbtsSpacePoints;
   gbtsSpacePoints.reserve(
       m_inputSpacePoints.size());  // not sure if this is enough
 
@@ -222,8 +216,11 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       int eta_mod = Find->second.second;
       int combined_id = Gbts_id * 1000 + eta_mod;
 
+      float ClusterWidth =
+          0;  // false input as this is not available in examples
       // fill Gbts vector with current sapce point and ID
-      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id);
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id,
+                                   ClusterWidth);  // make new GbtsSP here !
     }
   }
   ACTS_VERBOSE("Space points successfully assigned Gbts ID");
@@ -231,9 +228,9 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
   return gbtsSpacePoints;
 }
 
-std::vector<Acts::TrigInDetSiLayer>
+std::vector<Acts::Experimental::TrigInDetSiLayer>
 ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
-  std::vector<Acts::TrigInDetSiLayer> input_vector;
+  std::vector<Acts::Experimental::TrigInDetSiLayer> input_vector;
   std::vector<std::size_t> count_vector;
 
   m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
@@ -331,8 +328,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec, rc, minBound,
-                                         maxBound);
+      Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec,
+                                                       rc, minBound, maxBound);
       input_vector.push_back(new_Gbts_ID);
       count_vector.push_back(
           1);  // so the element exists and not divinding by 0

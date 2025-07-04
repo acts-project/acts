@@ -8,11 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -64,10 +60,10 @@ class GreedyAmbiguityResolution {
     boost::container::flat_set<std::size_t> selectedTracks;
   };
 
-  GreedyAmbiguityResolution(const Config& cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("GreedyAmbiguityResolution",
-                                                 Logging::INFO))
+  explicit GreedyAmbiguityResolution(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("GreedyAmbiguityResolution", Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Computes the initial state for the input data. This function accumulates

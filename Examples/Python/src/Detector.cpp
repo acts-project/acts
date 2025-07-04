@@ -13,9 +13,9 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
@@ -29,6 +29,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -67,15 +68,16 @@ void addDetector(Context& ctx) {
             .def(py::init<const GenericDetector::Config&>());
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, GenericDetector::Config);
-    ACTS_PYTHON_MEMBER(buildLevel);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_MEMBER(surfaceLogLevel);
-    ACTS_PYTHON_MEMBER(layerLogLevel);
-    ACTS_PYTHON_MEMBER(volumeLogLevel);
-    ACTS_PYTHON_MEMBER(buildProto);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
+                       volumeLogLevel, buildProto, materialDecorator, gen3,
+                       graphvizFile);
+  }
+
+  {
+    auto ad = py::class_<AlignedGenericDetector, GenericDetector,
+                         std::shared_ptr<AlignedGenericDetector>>(
+                  mex, "AlignedGenericDetector")
+                  .def(py::init<const GenericDetector::Config&>());
   }
 
   {
@@ -86,45 +88,8 @@ void addDetector(Context& ctx) {
 
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, TelescopeDetector::Config);
-    ACTS_PYTHON_MEMBER(positions);
-    ACTS_PYTHON_MEMBER(stereos);
-    ACTS_PYTHON_MEMBER(offsets);
-    ACTS_PYTHON_MEMBER(bounds);
-    ACTS_PYTHON_MEMBER(thickness);
-    ACTS_PYTHON_MEMBER(surfaceType);
-    ACTS_PYTHON_MEMBER(binValue);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    auto d =
-        py::class_<AlignedDetector, Detector, std::shared_ptr<AlignedDetector>>(
-            mex, "AlignedDetector")
-            .def(py::init<const AlignedDetector::Config&>());
-
-    auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
-                 d, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, AlignedDetector::Config);
-    ACTS_PYTHON_MEMBER(seed);
-    ACTS_PYTHON_MEMBER(iovSize);
-    ACTS_PYTHON_MEMBER(flushSize);
-    ACTS_PYTHON_MEMBER(doGarbageCollection);
-    ACTS_PYTHON_MEMBER(sigmaInPlane);
-    ACTS_PYTHON_MEMBER(sigmaOutPlane);
-    ACTS_PYTHON_MEMBER(sigmaInRot);
-    ACTS_PYTHON_MEMBER(sigmaOutRot);
-    ACTS_PYTHON_MEMBER(firstIovNominal);
-    ACTS_PYTHON_MEMBER(decoratorLogLevel);
-    ACTS_PYTHON_MEMBER(mode);
-    ACTS_PYTHON_STRUCT_END();
-
-    py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
-        .value("Internal", AlignedDetector::Config::Mode::Internal)
-        .value("External", AlignedDetector::Config::Mode::External);
+    ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
+                       surfaceType, binValue, materialDecorator, logLevel);
   }
 
   {
@@ -156,32 +121,12 @@ void addDetector(Context& ctx) {
 
     auto volume =
         py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(volume, TGeoDetector::Config::Volume);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(binToleranceR);
-    ACTS_PYTHON_MEMBER(binTolerancePhi);
-    ACTS_PYTHON_MEMBER(binToleranceZ);
-    ACTS_PYTHON_MEMBER(cylinderDiscSplit);
-    ACTS_PYTHON_MEMBER(cylinderNZSegments);
-    ACTS_PYTHON_MEMBER(cylinderNPhiSegments);
-    ACTS_PYTHON_MEMBER(discNRSegments);
-    ACTS_PYTHON_MEMBER(discNPhiSegments);
-    ACTS_PYTHON_MEMBER(itkModuleSplit);
-    ACTS_PYTHON_MEMBER(barrelMap);
-    ACTS_PYTHON_MEMBER(discMap);
-    ACTS_PYTHON_MEMBER(splitPatterns);
-
-    ACTS_PYTHON_MEMBER(layers);
-    ACTS_PYTHON_MEMBER(subVolumeName);
-    ACTS_PYTHON_MEMBER(sensitiveNames);
-    ACTS_PYTHON_MEMBER(sensitiveAxes);
-    ACTS_PYTHON_MEMBER(rRange);
-    ACTS_PYTHON_MEMBER(zRange);
-    ACTS_PYTHON_MEMBER(splitTolR);
-    ACTS_PYTHON_MEMBER(splitTolZ);
-    ACTS_PYTHON_MEMBER(binning0);
-    ACTS_PYTHON_MEMBER(binning1);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(
+        volume, name, binToleranceR, binTolerancePhi, binToleranceZ,
+        cylinderDiscSplit, cylinderNZSegments, cylinderNPhiSegments,
+        discNRSegments, discNPhiSegments, itkModuleSplit, barrelMap, discMap,
+        splitPatterns, layers, subVolumeName, sensitiveNames, sensitiveAxes,
+        rRange, zRange, splitTolR, splitTolZ, binning0, binning1);
 
     auto regTriplet = [&c](const std::string& name, auto v) {
       using type = decltype(v);
@@ -207,20 +152,11 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorBinning",
                std::vector<std::pair<int, Acts::BinningType>>{});
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, TGeoDetector::Config);
-    ACTS_PYTHON_MEMBER(surfaceLogLevel);
-    ACTS_PYTHON_MEMBER(layerLogLevel);
-    ACTS_PYTHON_MEMBER(volumeLogLevel);
-    ACTS_PYTHON_MEMBER(fileName);
-    ACTS_PYTHON_MEMBER(buildBeamPipe);
-    ACTS_PYTHON_MEMBER(beamPipeRadius);
-    ACTS_PYTHON_MEMBER(beamPipeHalflengthZ);
-    ACTS_PYTHON_MEMBER(beamPipeLayerThickness);
-    ACTS_PYTHON_MEMBER(beamPipeEnvelopeR);
-    ACTS_PYTHON_MEMBER(layerEnvelopeR);
-    ACTS_PYTHON_MEMBER(unitScalor);
-    ACTS_PYTHON_MEMBER(volumes);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, surfaceLogLevel, layerLogLevel, volumeLogLevel,
+                       fileName, buildBeamPipe, beamPipeRadius,
+                       beamPipeHalflengthZ, beamPipeLayerThickness,
+                       beamPipeEnvelopeR, layerEnvelopeR, unitScalor,
+                       materialDecorator, volumes);
 
     patchKwargsConstructor(c);
   }

@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -35,16 +36,25 @@ DD4hepDetector::DD4hepDetector(const Config& cfg)
 
   m_detector = buildDD4hepGeometry();
 
+  if (m_cfg.alignmentDecorator != nullptr) {
+    m_contextDecorators = {m_cfg.alignmentDecorator};
+  }
+
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
       m_detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
       m_cfg.sortDetectors, m_nominalGeometryContext, m_cfg.materialDecorator,
-      m_cfg.geometryIdentifierHook);
+      m_cfg.geometryIdentifierHook, m_cfg.detectorElementFactory);
 }
 
 dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
   return *m_detector;
+}
+
+std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
+  throw_assert(m_detector != nullptr, "Detector not initialized");
+  return std::make_shared<Acts::DD4hepFieldAdapter>(m_detector->field());
 }
 
 TGeoNode& DD4hepDetector::tgeoGeometry() {

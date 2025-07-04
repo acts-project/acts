@@ -32,11 +32,11 @@ struct InteractionVolume {
 
   /// Constructor from tracking volume
   /// @param tv The tracking volume
-  InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
+  explicit InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
 
   /// Constructor from detector volume
   /// @param dv The detector volume
-  InteractionVolume(const Experimental::DetectorVolume* dv)
+  explicit InteractionVolume(const Experimental::DetectorVolume* dv)
       : detectorVolume(dv) {}
 
   /// Forward the geometry identifier
@@ -87,7 +87,7 @@ struct MaterialInteraction {
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
-  MaterialSlab materialSlab;
+  MaterialSlab materialSlab = MaterialSlab::Nothing();
 };
 
 /// Simple result struct to be returned

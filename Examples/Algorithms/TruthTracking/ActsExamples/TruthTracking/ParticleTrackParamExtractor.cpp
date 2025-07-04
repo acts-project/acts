@@ -38,7 +38,7 @@ ActsExamples::ProcessCode ParticleTrackParamExtractor::execute(
   std::unordered_map<SimBarcode, std::shared_ptr<Acts::PerigeeSurface>>
       perigeeSurfaces;
 
-  for (auto&& [vtxId, vtxParticles] : groupBySecondaryVertex(particles)) {
+  for (auto&& [vtxId, vtxParticles] : groupByVertexId(particles)) {
     // a group contains at least one particle by construction. assume that all
     // particles within the group originate from the same position and use it
     // to as the reference position for the perigee frame.

@@ -172,8 +172,8 @@ template <typename Direction, typename RefUnitU, typename RefUnitV>
 void testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
                      const Eigen::MatrixBase<RefUnitU>& refU,
                      const Eigen::MatrixBase<RefUnitV>& refV) {
-  const auto u = Acts::makeCurvilinearUnitU(direction);
-  const auto uv = Acts::makeCurvilinearUnitVectors(direction);
+  const auto u = Acts::createCurvilinearUnitU(direction);
+  const auto uv = Acts::createCurvilinearUnitVectors(direction);
   // verify normalization
   CHECK_CLOSE_ABS(u.norm(), 1, eps);
   CHECK_CLOSE_ABS(uv.first.norm(), 1, eps);

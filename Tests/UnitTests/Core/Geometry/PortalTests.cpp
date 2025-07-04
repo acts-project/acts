@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <stdexcept>
@@ -71,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
   auto cyl2 = Surface::makeShared<CylinderSurface>(
       Transform3{Translation3{Vector3::UnitZ() * 100_mm}}, 50_mm, 100_mm);
 
-  Portal portal1{Direction::AlongNormal,
+  Portal portal1{Direction::AlongNormal(),
                  std::make_unique<TrivialPortalLink>(cyl1, *vol1)};
   BOOST_CHECK(portal1.isValid());
 
@@ -87,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
           .value(),
       nullptr);
 
-  Portal portal2{Direction::AlongNormal, cyl2, *vol2};
+  Portal portal2{Direction::AlongNormal(), cyl2, *vol2};
   BOOST_CHECK(portal2.isValid());
 
   BOOST_CHECK_EQUAL(
@@ -106,15 +105,15 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                  nullptr};
   BOOST_CHECK(portal3.isValid());
 
-  BOOST_CHECK_NE(portal3.getLink(Direction::AlongNormal), nullptr);
-  BOOST_CHECK_EQUAL(portal3.getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_NE(portal3.getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_EQUAL(portal3.getLink(Direction::OppositeNormal()), nullptr);
 
   Portal portal4{gctx, nullptr,
                  std::make_unique<TrivialPortalLink>(cyl2, *vol2)};
   BOOST_CHECK(portal4.isValid());
 
-  BOOST_CHECK_EQUAL(portal4.getLink(Direction::AlongNormal), nullptr);
-  BOOST_CHECK_NE(portal4.getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_EQUAL(portal4.getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_NE(portal4.getLink(Direction::OppositeNormal()), nullptr);
 
   // Not mergeable because 1 has portal along but 4 has portal oppsite
   //         ^
@@ -169,11 +168,11 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 
   Portal merged12 =
       Portal::merge(gctx, portal1, portal2, AxisDirection::AxisZ, *logger);
-  BOOST_CHECK_NE(merged12.getLink(Direction::AlongNormal), nullptr);
-  BOOST_CHECK_EQUAL(merged12.getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_NE(merged12.getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_EQUAL(merged12.getLink(Direction::OppositeNormal()), nullptr);
 
   auto composite12 = dynamic_cast<const CompositePortalLink*>(
-      merged12.getLink(Direction::AlongNormal));
+      merged12.getLink(Direction::AlongNormal()));
   BOOST_REQUIRE_NE(composite12, nullptr);
 
   BOOST_CHECK_EQUAL(
@@ -215,8 +214,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
       AssertionFailureException);
 
   // Can't merge because surface has material
-  auto material =
-      std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
+  auto material = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab::Nothing());  // vacuum
   cyl2->assignSurfaceMaterial(material);
   portal1 = Portal{gctx, {.alongNormal = {cyl1, *vol1}}};
   portal2 = Portal{gctx, {.alongNormal = {cyl2, *vol2}}};
@@ -326,8 +325,8 @@ BOOST_AUTO_TEST_CASE(Disc) {
       vol4.get());
 
   // Can't merge because surface has material
-  auto material =
-      std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
+  auto material = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab::Nothing());  // vacuum
   disc2->assignSurfaceMaterial(material);
   portal1 = Portal{
       gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
@@ -369,9 +368,10 @@ BOOST_AUTO_TEST_CASE(Separated) {
   BOOST_CHECK(portal2.isValid());
 
   // Same way can't set cyl2 as other link
-  BOOST_CHECK_THROW(portal1.setLink(gctx, Direction::AlongNormal, cyl2, *vol2),
-                    PortalFusingException);
-  BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal), nullptr);
+  BOOST_CHECK_THROW(
+      portal1.setLink(gctx, Direction::AlongNormal(), cyl2, *vol2),
+      PortalFusingException);
+  BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal()), nullptr);
 
   Portal portal1b{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   BOOST_CHECK(portal1b.isValid());
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(Success) {
   //      |   |   |   |
   //      +---+   +---+
   Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
-  BOOST_CHECK_EQUAL(&portal1.getLink(Direction::OppositeNormal)->surface(),
+  BOOST_CHECK_EQUAL(&portal1.getLink(Direction::OppositeNormal())->surface(),
                     cyl1.get());
 
   Portal portal2{gctx, {.alongNormal = {cyl2, *vol2}}};
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(Success) {
   // Portal surface is set to the one from "along", because it gets set first
   BOOST_CHECK_EQUAL(&portal3.surface(), cyl2.get());
   // "Opposite" gets the already-set surface set as well
-  BOOST_CHECK_EQUAL(&portal3.getLink(Direction::OppositeNormal)->surface(),
+  BOOST_CHECK_EQUAL(&portal3.getLink(Direction::OppositeNormal())->surface(),
                     cyl2.get());
 }
 
@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(Material) {
   Portal portal1{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   Portal portal2{gctx, {.alongNormal = {cyl2, *vol2}}};
 
-  auto material =
-      std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab{});  // vacuum
+  auto material = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab::Nothing());  // vacuum
 
   cyl1->assignSurfaceMaterial(material);
 
@@ -579,11 +579,11 @@ BOOST_AUTO_TEST_CASE(GridCreationOnFuse) {
   Portal fused = Portal::fuse(gctx, aPortal, bPortal, *logger);
 
   BOOST_CHECK_NE(dynamic_cast<const TrivialPortalLink*>(
-                     fused.getLink(Direction::OppositeNormal)),
+                     fused.getLink(Direction::OppositeNormal())),
                  nullptr);
 
   const auto* grid = dynamic_cast<const GridPortalLink*>(
-      fused.getLink(Direction::AlongNormal));
+      fused.getLink(Direction::AlongNormal()));
   BOOST_REQUIRE_NE(grid, nullptr);
 
   BOOST_CHECK_EQUAL(grid->grid().axes().front()->getNBins(), 3);
@@ -612,19 +612,19 @@ BOOST_AUTO_TEST_CASE(Construction) {
 }
 
 BOOST_AUTO_TEST_CASE(InvalidConstruction) {
-  BOOST_CHECK_THROW(Portal(Direction::AlongNormal, nullptr),
+  BOOST_CHECK_THROW(Portal(Direction::AlongNormal(), nullptr),
                     std::invalid_argument);
 
   auto vol1 = makeDummyVolume();
 
-  BOOST_CHECK_THROW(Portal(Direction::AlongNormal, nullptr, *vol1),
+  BOOST_CHECK_THROW(Portal(Direction::AlongNormal(), nullptr, *vol1),
                     std::invalid_argument);
 
   auto disc1 = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), std::make_shared<RadialBounds>(50_mm, 100_mm));
-  Portal portal(Direction::AlongNormal, disc1, *vol1);
+  Portal portal(Direction::AlongNormal(), disc1, *vol1);
 
-  BOOST_CHECK_THROW(portal.setLink(gctx, Direction::AlongNormal, nullptr),
+  BOOST_CHECK_THROW(portal.setLink(gctx, Direction::AlongNormal(), nullptr),
                     std::invalid_argument);
 }
 
@@ -646,12 +646,12 @@ BOOST_AUTO_TEST_CASE(PortalFill) {
   portal1 = Portal{gctx, {.oppositeNormal = {cyl1, *vol1}}};
   portal2 = Portal{gctx, {.alongNormal = {cyl1, *vol2}}};
 
-  BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal), nullptr);
-  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_EQUAL(portal1.getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal()), nullptr);
 
   portal1.fill(*vol2);
-  BOOST_CHECK_NE(portal1.getLink(Direction::AlongNormal), nullptr);
-  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal), nullptr);
+  BOOST_CHECK_NE(portal1.getLink(Direction::AlongNormal()), nullptr);
+  BOOST_CHECK_NE(portal1.getLink(Direction::OppositeNormal()), nullptr);
 
   BOOST_CHECK_THROW(portal1.fill(*vol2), std::logic_error);
 }

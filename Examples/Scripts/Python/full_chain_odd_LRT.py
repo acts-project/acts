@@ -15,11 +15,13 @@ from acts.examples.simulation import (
     ParticleConfig,
     ParticleSelectorConfig,
     addPythia8,
+    ParticleSelectorConfig,
+    addGenParticleSelection,
     addFatras,
     addGeant4,
-    ParticleSelectorConfig,
+    addSimParticleSelection,
     addDigitization,
-    addParticleSelection,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -151,6 +153,7 @@ ambi_scoring = args.ambi_solver == "scoring"
 ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
+actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = (
@@ -162,13 +165,13 @@ oddMaterialMap = (
 oddDigiConfig = (
     args.digi_config
     if args.digi_config
-    else geoDir / "config/odd-digi-smearing-config.json"
+    else actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 )
 
-oddSeedingSel = geoDir / "config/odd-seeding-config.json"
+oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
@@ -194,7 +197,7 @@ if args.edm4hep:
             "LongStripBarrelReadout",
             "LongStripEndcapReadout",
         ],
-        outputParticlesGenerator="particles_input",
+        outputParticlesGenerator="particles_generated",
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
@@ -204,19 +207,18 @@ if args.edm4hep:
         level=acts.logging.INFO,
     )
     s.addReader(edm4hepReader)
+
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
 
-    addParticleSelection(
+    addSimParticleSelection(
         s,
-        config=ParticleSelectorConfig(
+        ParticleSelectorConfig(
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
-        inputParticles="particles",
-        outputParticles="particles_selected",
     )
 else:
     if not args.ttbar:
@@ -233,8 +235,8 @@ else:
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
-                rMean=2,
-                rStdDev=0.0125 * u.mm,
+                rMean=50.0,
+                rStdDev=50.0 * u.mm,
                 zMean=2,
                 zStdDev=55.5 * u.mm,
                 tMean=0,
@@ -259,6 +261,16 @@ else:
             outputDirCsv=outputDir if args.output_csv else None,
         )
 
+        addGenParticleSelection(
+            s,
+            ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+            ),
+        )
+
     if args.geant4:
         if s.config.numThreads != 1:
             raise ValueError("Geant 4 simulation does not support multi-threading")
@@ -271,18 +283,6 @@ else:
             detector,
             trackingGeometry,
             field,
-            preSelectParticles=ParticleSelectorConfig(
-                rho=(0.0, 24 * u.mm),
-                absZ=(0.0, 1.0 * u.m),
-                eta=(-3.0, 3.0),
-                pt=(150 * u.MeV, None),
-            ),
-            postSelectParticles=ParticleSelectorConfig(
-                pt=(1.0 * u.GeV, None),
-                eta=(-3.0, 3.0),
-                hits=(9, None),
-                removeNeutral=True,
-            ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
             outputDirObj=outputDir if args.output_obj else None,
@@ -295,22 +295,6 @@ else:
             s,
             trackingGeometry,
             field,
-            preSelectParticles=(
-                ParticleSelectorConfig(
-                    rho=(0.0, 24 * u.mm),
-                    absZ=(0.0, 1.0 * u.m),
-                    eta=(-3.0, 3.0),
-                    pt=(150 * u.MeV, None),
-                )
-                if args.ttbar
-                else ParticleSelectorConfig()
-            ),
-            postSelectParticles=ParticleSelectorConfig(
-                pt=(1.0 * u.GeV, None),
-                eta=(-3.0, 3.0),
-                hits=(9, None),
-                removeNeutral=True,
-            ),
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
@@ -328,6 +312,16 @@ addDigitization(
     rnd=rnd,
 )
 
+addDigiParticleSelection(
+    s,
+    ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        eta=(-3.0, 3.0),
+        measurements=(9, None),
+        removeNeutral=True,
+    ),
+)
+
 if args.reco:
     addSeeding(
         s,
@@ -338,9 +332,10 @@ if args.reco:
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
@@ -424,14 +419,9 @@ if args.reco:
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                pTMax=1400,
-                pTMin=0.5,
-                phiMax=math.pi,
-                phiMin=-math.pi,
-                etaMax=4,
-                etaMin=-4,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,

@@ -58,11 +58,7 @@ void addExampleAlgorithms(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTracks);
-    ACTS_PYTHON_MEMBER(outputTracks);
-    ACTS_PYTHON_MEMBER(selectorConfig);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, inputTracks, outputTracks, selectorConfig);
   }
 
   {
@@ -86,30 +82,11 @@ void addExampleAlgorithms(Context& ctx) {
 
       patchKwargsConstructor(c);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-      ACTS_PYTHON_MEMBER(loc0Min);
-      ACTS_PYTHON_MEMBER(loc0Max);
-      ACTS_PYTHON_MEMBER(loc1Min);
-      ACTS_PYTHON_MEMBER(loc1Max);
-      ACTS_PYTHON_MEMBER(timeMin);
-      ACTS_PYTHON_MEMBER(timeMax);
-      ACTS_PYTHON_MEMBER(phiMin);
-      ACTS_PYTHON_MEMBER(phiMax);
-      ACTS_PYTHON_MEMBER(etaMin);
-      ACTS_PYTHON_MEMBER(etaMax);
-      ACTS_PYTHON_MEMBER(absEtaMin);
-      ACTS_PYTHON_MEMBER(absEtaMax);
-      ACTS_PYTHON_MEMBER(ptMin);
-      ACTS_PYTHON_MEMBER(ptMax);
-      ACTS_PYTHON_MEMBER(minMeasurements);
-      ACTS_PYTHON_MEMBER(maxHoles);
-      ACTS_PYTHON_MEMBER(maxOutliers);
-      ACTS_PYTHON_MEMBER(maxHolesAndOutliers);
-      ACTS_PYTHON_MEMBER(maxSharedHits);
-      ACTS_PYTHON_MEMBER(maxChi2);
-      ACTS_PYTHON_MEMBER(measurementCounter);
-      ACTS_PYTHON_MEMBER(requireReferenceSurface);
-      ACTS_PYTHON_STRUCT_END();
+      ACTS_PYTHON_STRUCT(c, loc0Min, loc0Max, loc1Min, loc1Max, timeMin,
+                         timeMax, phiMin, phiMax, etaMin, etaMax, absEtaMin,
+                         absEtaMax, ptMin, ptMax, minMeasurements, maxHoles,
+                         maxOutliers, maxHolesAndOutliers, maxSharedHits,
+                         maxChi2, measurementCounter, requireReferenceSurface);
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
       pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
@@ -129,10 +106,7 @@ void addExampleAlgorithms(Context& ctx) {
 
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, EtaBinnedConfig);
-      ACTS_PYTHON_MEMBER(cutSets);
-      ACTS_PYTHON_MEMBER(absEtaEdges);
-      ACTS_PYTHON_STRUCT_END();
+      ACTS_PYTHON_STRUCT(c, cutSets, absEtaEdges);
     }
   }
 }

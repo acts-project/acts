@@ -13,17 +13,14 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <numbers>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -40,11 +37,11 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
   };
 
   for (auto [is, surface] : enumerate(surfaces)) {
-    surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
   }
 
   // First is homogeneous
-  MaterialSlab mp;
+  MaterialSlab mp = MaterialSlab::Nothing();
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
@@ -72,7 +69,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
                                            100.0)};
 
   for (auto [is, surface] : enumerate(surfaces)) {
-    surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
   }
 
   // Accepted materials are:
@@ -81,7 +78,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   // - Binned (remapping)
 
   // First is homogeneous
-  MaterialSlab mp;
+  MaterialSlab mp = MaterialSlab::Nothing();
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
@@ -169,15 +166,15 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 
   BOOST_CHECK_EQUAL(maps.size(), 3u);
 
-  auto m0Itr = maps.find(GeometryIdentifier().setSensitive(1));
+  auto m0Itr = maps.find(GeometryIdentifier().withSensitive(1));
   BOOST_CHECK(m0Itr != maps.end());
   BOOST_CHECK(m0Itr->second != nullptr);
 
-  auto m1Itr = maps.find(GeometryIdentifier().setSensitive(2));
+  auto m1Itr = maps.find(GeometryIdentifier().withSensitive(2));
   BOOST_CHECK(m1Itr != maps.end());
   BOOST_CHECK(m1Itr->second != nullptr);
 
-  auto m2Itr = maps.find(GeometryIdentifier().setSensitive(3));
+  auto m2Itr = maps.find(GeometryIdentifier().withSensitive(3));
   BOOST_CHECK(m2Itr != maps.end());
   BOOST_CHECK(m2Itr->second != nullptr);
 
@@ -203,7 +200,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   // Check failures
   auto invalidSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 40.0, 100.0);
-  invalidSurface->assignGeometryId(GeometryIdentifier().setSensitive(4));
+  invalidSurface->assignGeometryId(GeometryIdentifier().withSensitive(4));
 
   // Invalid surface amongst material
   MaterialInteraction mXX;

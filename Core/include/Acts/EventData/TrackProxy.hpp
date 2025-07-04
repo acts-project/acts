@@ -111,16 +111,29 @@ class TrackProxy {
   ///
   /// @{
 
-  /// Copy constructor from a mutable track proxy. This is always valid, either
-  /// mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy(const MutableTrackProxy& other)
+  /// Copy constructor: const to const or mutable to mutable
+  /// @param other the other track proxy
+  TrackProxy(const TrackProxy& other) = default;
+
+  /// Copy assignment operator: const to const or mutable to mutable
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const TrackProxy& other) = default;
+
+  /// Constructor from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  explicit TrackProxy(const MutableTrackProxy& other)
+    requires ReadOnly
       : m_container{other.m_container}, m_index{other.m_index} {}
 
-  /// Copy assignment operator from mutable track proxy. This is always valid,
-  /// either mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy& operator=(const MutableTrackProxy& other) {
+  /// Copy assignment operator from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const MutableTrackProxy& other)
+    requires ReadOnly
+  {
     m_container = other.m_container;
     m_index = other.m_index;
     return *this;
@@ -306,6 +319,22 @@ class TrackProxy {
   /// Get the global momentum vector
   /// @return the global momentum vector
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
+
+  /// Get the four-momentum vector: (px, py, pz, e)
+  /// @return the four-momentum vector
+  Vector4 fourMomentum() const {
+    Vector4 p4 = Vector4::Zero();
+
+    Vector3 p3 = momentum();
+    p4[eMom0] = p3[eMom0];
+    p4[eMom1] = p3[eMom1];
+    p4[eMom2] = p3[eMom2];
+
+    float m = particleHypothesis().mass();
+    p4[eEnergy] = std::sqrt(m * m + p3.squaredNorm());
+
+    return p4;
+  }
 
   /// Return the number of track states associated to this track
   /// @note This is calculated by iterating over the track states which is

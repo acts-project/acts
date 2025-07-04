@@ -69,7 +69,7 @@ class GeometryHierarchyMap {
   /// Construct the container from the given elements.
   ///
   /// @param elements input elements (must be unique with respect to identifier)
-  GeometryHierarchyMap(std::vector<InputElement> elements);
+  explicit GeometryHierarchyMap(std::vector<InputElement> elements);
 
   /// Construct the container from an initializer list.
   ///
@@ -99,7 +99,9 @@ class GeometryHierarchyMap {
   /// Access the geometry identifier for the i-th element with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
-  GeometryIdentifier idAt(std::size_t index) const { return m_ids.at(index); }
+  GeometryIdentifier idAt(std::size_t index) const {
+    return GeometryIdentifier(m_ids.at(index));
+  }
 
   /// Access the value of the i-th element in the container with bounds check.
   ///
@@ -132,18 +134,19 @@ class GeometryHierarchyMap {
   // NOTE this class assumes that it knows the ordering of the levels within
   //      the geometry id. if the geometry id changes, this code has to be
   //      adapted too. the asserts ensure that such a change is caught.
-  static_assert(GeometryIdentifier().setVolume(1).value() <
-                    GeometryIdentifier().setVolume(1).setBoundary(1).value(),
+  static_assert(GeometryIdentifier().withVolume(1).value() <
+                    GeometryIdentifier().withVolume(1).withBoundary(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setBoundary(1).value() <
-                    GeometryIdentifier().setBoundary(1).setLayer(1).value(),
+  static_assert(GeometryIdentifier().withBoundary(1).value() <
+                    GeometryIdentifier().withBoundary(1).withLayer(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setLayer(1).value() <
-                    GeometryIdentifier().setLayer(1).setApproach(1).value(),
+  static_assert(GeometryIdentifier().withLayer(1).value() <
+                    GeometryIdentifier().withLayer(1).withApproach(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setApproach(1).value() <
-                    GeometryIdentifier().setApproach(1).setSensitive(1).value(),
-                "Incompatible GeometryIdentifier hierarchy");
+  static_assert(
+      GeometryIdentifier().withApproach(1).value() <
+          GeometryIdentifier().withApproach(1).withSensitive(1).value(),
+      "Incompatible GeometryIdentifier hierarchy");
 
   using Identifier = GeometryIdentifier::Value;
 
@@ -156,31 +159,31 @@ class GeometryHierarchyMap {
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryIdentifier id) {
     // construct id from encoded value with all bits set
-    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
+    const auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
-      return allSet.setExtra(0u).value();
+      return allSet.withExtra(0u).value();
     }
     if (id.approach() != 0u) {
-      return allSet.setExtra(0u).setSensitive(0u).value();
+      return allSet.withExtra(0u).withSensitive(0u).value();
     }
     if (id.layer() != 0u) {
-      return allSet.setExtra(0u).setSensitive(0u).setApproach(0u).value();
+      return allSet.withExtra(0u).withSensitive(0u).withApproach(0u).value();
     }
     if (id.boundary() != 0u) {
-      return allSet.setExtra(0u)
-          .setSensitive(0u)
-          .setApproach(0u)
-          .setLayer(0u)
+      return allSet.withExtra(0u)
+          .withSensitive(0u)
+          .withApproach(0u)
+          .withLayer(0u)
           .value();
     }
     if (id.volume() != 0u) {
-      return allSet.setExtra(0u)
-          .setSensitive(0u)
-          .setApproach(0u)
-          .setLayer(0u)
-          .setBoundary(0u)
+      return allSet.withExtra(0u)
+          .withSensitive(0u)
+          .withApproach(0u)
+          .withLayer(0u)
+          .withBoundary(0u)
           .value();
     }
     // no valid levels; all bits are zero.
@@ -189,7 +192,7 @@ class GeometryHierarchyMap {
 
   /// Construct a mask where only the highest level is set.
   static constexpr Identifier makeHighestLevelMask() {
-    return makeLeadingLevelsMask(GeometryIdentifier(0u).setVolume(1u));
+    return makeLeadingLevelsMask(GeometryIdentifier(0u).withVolume(1u));
   }
 
   /// Compare the two identifiers only within the masked bits.
@@ -254,7 +257,8 @@ inline void GeometryHierarchyMap<value_t>::fill(
 
   for (const auto& element : elements) {
     m_ids.push_back(element.first.value());
-    m_masks.push_back(makeLeadingLevelsMask(element.first.value()));
+    m_masks.push_back(
+        makeLeadingLevelsMask(GeometryIdentifier(element.first.value())));
     m_values.push_back(std::move(element.second));
   }
 }

@@ -9,8 +9,12 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include "Acts/EventData/ProxyAccessor.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
+
+#include <algorithm>
+#include <ranges>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -86,28 +90,35 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
-  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
-      &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select<
-      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
-
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
   sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
   sourceLinkAccessor.container = &measurements.orderedIndices();
 
-  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
-      slAccessorDelegate;
-  slAccessorDelegate.connect<&ProtoTrackSourceLinkAccessor::range>(
-      &sourceLinkAccessor);
+  using TrackStateCreatorType =
+      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
+                              TrackContainer>;
+  TrackStateCreatorType trackStateCreator;
+  trackStateCreator.sourceLinkAccessor
+      .template connect<&ProtoTrackSourceLinkAccessor::range>(
+          &sourceLinkAccessor);
+  trackStateCreator.calibrator
+      .connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
+  trackStateCreator.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<
+          typename TrackContainer::TrackStateContainerBackend>>(&measSel);
+
+  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.createTrackStates
+      .template connect<&TrackStateCreatorType ::createTrackStates>(
+          &trackStateCreator);
 
   // Set the CombinatorialKalmanFilter options
   TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, &(*pSurface));
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -207,8 +218,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::finalize() {
       float, ba::features<ba::tag::sum, ba::tag::mean, ba::tag::variance>>;
 
   Accumulator totalAcc;
-  std::for_each(m_nTracksPerSeeds.begin(), m_nTracksPerSeeds.end(),
-                [&](auto v) { totalAcc(static_cast<float>(v)); });
+  std::ranges::for_each(m_nTracksPerSeeds,
+                        [&](auto v) { totalAcc(static_cast<float>(v)); });
   ACTS_INFO("- total number tracks: " << ba::sum(totalAcc));
   ACTS_INFO("- avg tracks per seed: " << ba::mean(totalAcc) << " +- "
                                       << std::sqrt(ba::variance(totalAcc)));

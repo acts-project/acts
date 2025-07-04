@@ -15,10 +15,14 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
@@ -48,7 +52,9 @@ std::shared_ptr<RegularSurface> mergedSurface(const Surface& a,
     return merged;
   } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(&a);
              planeA != nullptr) {
-    throw std::logic_error{"Plane surfaces not implemented yet"};
+    const auto& planeB = dynamic_cast<const PlaneSurface&>(b);
+    auto [merged, reversed] = planeA->mergedWith(planeB, direction);
+    return merged;
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }
@@ -135,9 +141,9 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
   Vector3 global = m_surface->localToGlobal(gctx, position);
   auto res = resolveVolume(gctx, global, tolerance);
   if (!res.ok()) {
-    return res.error();
+    return Result<const TrackingVolume*>::failure(res.error());
   }
-  return *res;
+  return Result<const TrackingVolume*>::success(*res);
 }
 
 Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
@@ -153,7 +159,8 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     }
   }
 
-  return PortalError::PositionNotOnAnyChildPortalLink;
+  return Result<const TrackingVolume*>::failure(
+      PortalError::PositionNotOnAnyChildPortalLink);
 }
 
 std::size_t CompositePortalLink::depth() const {
@@ -180,19 +187,20 @@ void CompositePortalLink::toStream(std::ostream& os) const {
 std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     const GeometryContext& gctx, const Logger& logger) const {
   ACTS_VERBOSE("Attempting to make a grid from a composite portal link");
-  std::vector<TrivialPortalLink*> trivialLinks;
-  std::ranges::transform(m_children, std::back_inserter(trivialLinks),
-                         [](const auto& child) {
-                           return dynamic_cast<TrivialPortalLink*>(child.get());
-                         });
 
-  if (std::ranges::any_of(trivialLinks,
-                          [](auto link) { return link == nullptr; })) {
-    ACTS_VERBOSE(
-        "Failed to make a grid from a composite portal link -> returning "
-        "nullptr");
+  if (std::ranges::any_of(m_children, [](const auto& child) {
+        return dynamic_cast<const TrivialPortalLink*>(child.get()) == nullptr;
+      })) {
+    ACTS_ERROR(
+        "Cannot make a grid from a composite portal link with "
+        "non-trivial children");
     return nullptr;
   }
+
+  std::vector<TrivialPortalLink> trivialLinks;
+  std::ranges::transform(
+      m_children, std::back_inserter(trivialLinks),
+      [&](auto& child) { return dynamic_cast<TrivialPortalLink&>(*child); });
 
   // we already know all children have surfaces that are compatible, we produced
   // a merged surface for the overall dimensions.
@@ -220,14 +228,14 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     std::ranges::sort(
         trivialLinks, [&itransform, &gctx](const auto& a, const auto& b) {
-          return (itransform * a->surface().transform(gctx)).translation()[eZ] <
-                 (itransform * b->surface().transform(gctx)).translation()[eZ];
+          return (itransform * a.surface().transform(gctx)).translation()[eZ] <
+                 (itransform * b.surface().transform(gctx)).translation()[eZ];
         });
 
     for (const auto& [i, child] : enumerate(trivialLinks)) {
       const auto& bounds =
-          dynamic_cast<const CylinderBounds&>(child->surface().bounds());
-      Transform3 ltransform = itransform * child->surface().transform(gctx);
+          dynamic_cast<const CylinderBounds&>(child.surface().bounds());
+      Transform3 ltransform = itransform * child.surface().transform(gctx);
       double hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
       double minZ = ltransform.translation()[eZ] - hlZ;
       double maxZ = ltransform.translation()[eZ] + hlZ;
@@ -241,12 +249,13 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     Axis axis{AxisBound, edges};
 
-    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    auto gridPortalLink =
+        GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      gridPortalLink->grid().atLocalBins({i + 1}) = &child.volume();
     }
 
-    return grid;
+    return gridPortalLink;
 
   } else if (surface().type() == Surface::SurfaceType::Disc) {
     ACTS_VERBOSE("Combining composite into disc grid");
@@ -261,16 +270,16 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     std::ranges::sort(trivialLinks, [](const auto& a, const auto& b) {
       const auto& boundsA =
-          dynamic_cast<const RadialBounds&>(a->surface().bounds());
+          dynamic_cast<const RadialBounds&>(a.surface().bounds());
       const auto& boundsB =
-          dynamic_cast<const RadialBounds&>(b->surface().bounds());
+          dynamic_cast<const RadialBounds&>(b.surface().bounds());
       return boundsA.get(RadialBounds::eMinR) <
              boundsB.get(RadialBounds::eMinR);
     });
 
     for (const auto& [i, child] : enumerate(trivialLinks)) {
       const auto& bounds =
-          dynamic_cast<const RadialBounds&>(child->surface().bounds());
+          dynamic_cast<const RadialBounds&>(child.surface().bounds());
 
       if (i == 0) {
         edges.push_back(bounds.get(RadialBounds::eMinR));
@@ -284,12 +293,62 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child.volume();
     }
 
     return grid;
   } else if (surface().type() == Surface::SurfaceType::Plane) {
-    throw std::runtime_error{"Plane surfaces not implemented yet"};
+    ACTS_VERBOSE("Combining composite into plane grid");
+
+    if (m_direction != AxisDirection::AxisX &&
+        m_direction != AxisDirection::AxisY) {
+      ACTS_ERROR("Plane grid only supports binning in x/y direction");
+      throw std::runtime_error{"Unsupported binning direction"};
+    }
+
+    bool dirX = m_direction == AxisDirection::AxisX;
+
+    std::vector<double> edges;
+    edges.reserve(m_children.size() + 1);
+
+    const Transform3& groupTransform = m_surface->transform(gctx);
+    Transform3 itransform = groupTransform.inverse();
+
+    std::size_t sortingDir = dirX ? eX : eY;
+    std::ranges::sort(trivialLinks, [&itransform, &gctx, sortingDir](
+                                        const auto& a, const auto& b) {
+      return (itransform * a.surface().transform(gctx))
+                 .translation()[sortingDir] <
+             (itransform * b.surface().transform(gctx))
+                 .translation()[sortingDir];
+    });
+
+    for (const auto& [i, child] : enumerate(trivialLinks)) {
+      const auto& bounds =
+          dynamic_cast<const RectangleBounds&>(child.surface().bounds());
+      Transform3 ltransform = itransform * child.surface().transform(gctx);
+      double half = dirX ? bounds.halfLengthX() : bounds.halfLengthY();
+      double min = ltransform.translation()[sortingDir] - half;
+      double max = ltransform.translation()[sortingDir] + half;
+      if (i == 0) {
+        edges.push_back(min);
+      }
+      edges.push_back(max);
+    }
+
+    ACTS_VERBOSE("~> Determined bin edges to be " << printEdges(edges));
+
+    Axis axis{AxisBound, edges};
+
+    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    for (const auto& [i, child] : enumerate(trivialLinks)) {
+      grid->grid().atLocalBins({i + 1}) = &child.volume();
+    }
+
+    grid->setArtifactPortalLinks(std::move(trivialLinks));
+
+    return grid;
+
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }

@@ -32,9 +32,10 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     : WriterT(cfg.inputTracks, "TrackFinderPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
+      m_fakePlotTool(m_cfg.fakePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl),
+      m_trackQualityPlotTool(m_cfg.trackQualityPlotToolConfig, lvl) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -45,6 +46,9 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
   if (m_cfg.inputParticleTrackMatching.empty()) {
     throw std::invalid_argument("Missing input particle track matching");
   }
+  if (m_cfg.inputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument("Missing input measurement particles map");
+  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -52,6 +56,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
+  m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -71,16 +76,24 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
 
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
-  m_fakeRatePlotTool.book(m_fakeRatePlotCache);
+  m_fakePlotTool.book(m_fakePlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
+  for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
+    m_trackSummaryPlotTool.book(m_subDetectorSummaryCaches[key], key);
+  }
+  m_trackQualityPlotTool.book(m_trackQualityPlotCache);
 }
 
 TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
-  m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
+  m_fakePlotTool.clear(m_fakePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
+  for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
+    m_trackSummaryPlotTool.clear(m_subDetectorSummaryCaches.at(key));
+  }
+  m_trackQualityPlotTool.clear(m_trackQualityPlotCache);
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -88,16 +101,16 @@ TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
 
 ProcessCode TrackFinderPerformanceWriter::finalize() {
   float eff_tracks = static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
-  float fakeRate_tracks =
+  float fakeRatio_tracks =
       static_cast<float>(m_nTotalFakeTracks) / m_nTotalTracks;
-  float duplicationRate_tracks =
+  float duplicationRatio_tracks =
       static_cast<float>(m_nTotalDuplicateTracks) / m_nTotalTracks;
 
   float eff_particle =
       static_cast<float>(m_nTotalMatchedParticles) / m_nTotalParticles;
-  float fakeRate_particle =
+  float fakeRatio_particle =
       static_cast<float>(m_nTotalFakeParticles) / m_nTotalParticles;
-  float duplicationRate_particle =
+  float duplicationRatio_particle =
       static_cast<float>(m_nTotalDuplicateParticles) / m_nTotalParticles;
 
   ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
@@ -108,16 +121,16 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   ACTS_INFO(
       "Efficiency with tracks (nMatchedTracks/ nAllTracks) = " << eff_tracks);
   ACTS_INFO(
-      "Fake rate with tracks (nFakeTracks/nAllTracks) = " << fakeRate_tracks);
-  ACTS_INFO("Duplicate rate with tracks (nDuplicateTracks/nAllTracks) = "
-            << duplicationRate_tracks);
+      "Fake ratio with tracks (nFakeTracks/nAllTracks) = " << fakeRatio_tracks);
+  ACTS_INFO("Duplicate ratio with tracks (nDuplicateTracks/nAllTracks) = "
+            << duplicationRatio_tracks);
   ACTS_INFO("Efficiency with particles (nMatchedParticles/nTrueParticles) = "
             << eff_particle);
-  ACTS_INFO("Fake rate with particles (nFakeParticles/nTrueParticles) = "
-            << fakeRate_particle);
+  ACTS_INFO("Fake ratio with particles (nFakeParticles/nTrueParticles) = "
+            << fakeRatio_particle);
   ACTS_INFO(
-      "Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = "
-      << duplicationRate_particle);
+      "Duplicate ratio with particles (nDuplicateParticles/nTrueParticles) = "
+      << duplicationRatio_particle);
 
   auto writeFloat = [&](float f, const char* name) {
     TVectorF v(1);
@@ -128,15 +141,20 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
-    m_fakeRatePlotTool.write(m_fakeRatePlotCache);
+    m_fakePlotTool.write(m_fakePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
     m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
+    for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
+      m_trackSummaryPlotTool.write(m_subDetectorSummaryCaches.at(key));
+    }
+    m_trackQualityPlotTool.write(m_trackQualityPlotCache);
+
     writeFloat(eff_tracks, "eff_tracks");
-    writeFloat(fakeRate_tracks, "fakerate_tracks");
-    writeFloat(duplicationRate_tracks, "duplicaterate_tracks");
+    writeFloat(fakeRatio_tracks, "fakeratio_tracks");
+    writeFloat(duplicationRatio_tracks, "duplicateratio_tracks");
     writeFloat(eff_particle, "eff_particles");
-    writeFloat(fakeRate_particle, "fakerate_particles");
-    writeFloat(duplicationRate_particle, "duplicaterate_particles");
+    writeFloat(fakeRatio_particle, "fakeratio_particles");
+    writeFloat(duplicationRatio_particle, "duplicateratio_particles");
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();
@@ -156,6 +174,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
   const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
+  const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -163,14 +182,17 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
   // Vector of input features for neural network classification
   std::vector<float> inputFeatures(3);
 
+  ACTS_DEBUG("Collect information from " << tracks.size() << " tracks");
+  std::size_t unmatched = 0, missingRefSurface = 0;
   for (const auto& track : tracks) {
     // Counting number of total trajectories
     m_nTotalTracks++;
 
     // Check if the reco track has fitted track parameters
     if (!track.hasReferenceSurface()) {
-      ACTS_WARNING("No fitted track parameters for track, index = "
+      ACTS_VERBOSE("No fitted track parameters for track, index = "
                    << track.index() << " tip index = " << track.tipIndex());
+      missingRefSurface++;
       continue;
     }
 
@@ -183,11 +205,38 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
                                 track.nOutliers(), track.nHoles(),
                                 track.nSharedHits());
 
+    // Potentially fill other track summary caches for the given volumes
+    for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
+      ACTS_VERBOSE("Fill track summary stats for subset " << key);
+      std::size_t nTrackStates{}, nMeasurements{}, nOutliers{}, nHoles{},
+          nSharedHits{};
+      for (auto state : track.trackStatesReversed()) {
+        if (!state.hasReferenceSurface() ||
+            !volumes.contains(state.referenceSurface().geometryId().volume())) {
+          continue;
+        }
+
+        nTrackStates++;
+        nMeasurements += static_cast<std::size_t>(
+            state.typeFlags().test(Acts::MeasurementFlag));
+        nOutliers +=
+            static_cast<std::size_t>(state.typeFlags().test(Acts::OutlierFlag));
+        nHoles +=
+            static_cast<std::size_t>(state.typeFlags().test(Acts::HoleFlag));
+        nSharedHits += static_cast<std::size_t>(
+            state.typeFlags().test(Acts::SharedHitFlag));
+      }
+      m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
+                                  fittedParameters, nTrackStates, nMeasurements,
+                                  nOutliers, nHoles, nSharedHits);
+    }
+
     // Get the truth matching information
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
       ACTS_DEBUG("No truth matching information for this track, index = "
                  << track.index() << " tip index = " << track.tipIndex());
+      unmatched++;
       continue;
     }
 
@@ -201,15 +250,43 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalDuplicateTracks++;
     }
 
-    // Fill fake rate plots
-    m_fakeRatePlotTool.fill(
-        m_fakeRatePlotCache, fittedParameters,
+    // Fill fake ratio plots
+    m_fakePlotTool.fill(
+        m_fakePlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Fake);
 
-    // Fill the duplication rate
+    // Fill the duplication ratio
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
+
+    if (particleMatch.particle.has_value() &&
+        particleMeasurementsMap.contains(particleMatch.particle.value())) {
+      const auto measurements =
+          particleMeasurementsMap.equal_range(particleMatch.particle.value());
+
+      std::size_t nTrackMeasurements =
+          track.nMeasurements() + track.nOutliers();
+      std::size_t nMatchedHits =
+          particleMatch.contributingParticles.front().hitCount;
+      std::size_t nParticleHits =
+          std::distance(measurements.first, measurements.second);
+
+      double completeness = static_cast<double>(nMatchedHits) / nParticleHits;
+      double purity = static_cast<double>(nMatchedHits) / nTrackMeasurements;
+
+      // Fill the track quality plots
+      m_trackQualityPlotTool.fill(m_trackQualityPlotCache, fittedParameters,
+                                  completeness, purity);
+    }
+  }
+
+  if (unmatched > 0) {
+    ACTS_DEBUG("No matching information found for " << unmatched << " tracks");
+  }
+  if (missingRefSurface > 0) {
+    ACTS_DEBUG("Reference surface was missing for " << missingRefSurface
+                                                    << " tracks");
   }
 
   // Loop over all truth particles for efficiency plots and reco details.
@@ -230,7 +307,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalMatchedParticles += 1;
 
       // Check if the particle has more than one matched track for the duplicate
-      // rate
+      // rate/ratio
       if (nMatchedTracks > 1) {
         m_nTotalDuplicateParticles += 1;
       }
@@ -267,8 +344,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
                                nMatchedTracks - 1);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle.initial(),
-                            nMatchedTracks, nFakeTracks);
+    m_fakePlotTool.fill(m_fakePlotCache, particle.initial(), nMatchedTracks,
+                        nFakeTracks);
 
     m_nTotalParticles += 1;
   }

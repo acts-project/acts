@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -34,10 +33,13 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
                           ActsExamples::DigiComponentsConfig &b) {
   // Check smearing config
   for (const auto &[as, bs] :
-       Acts::zip(a.smearingDigiConfig, b.smearingDigiConfig)) {
+       Acts::zip(a.smearingDigiConfig.params, b.smearingDigiConfig.params)) {
     if (as.index != bs.index) {
       return false;
     }
+  }
+  if (a.smearingDigiConfig.maxRetries != b.smearingDigiConfig.maxRetries) {
+    return false;
   }
   // Check geometric config
   const auto &ag = a.geometricDigiConfig;
@@ -249,7 +251,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
         // Check for a representing volume configuration, insert if not
         // present
         Acts::GeometryIdentifier volGeoId =
-            Acts::GeometryIdentifier().setVolume(geoId.volume());
+            Acts::GeometryIdentifier().withVolume(geoId.volume());
 
         auto volRep = volumeLayerComponents.find(volGeoId);
         if (volRep != volumeLayerComponents.end() &&
@@ -263,7 +265,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
 
         // Check for a representing layer configuration, insert if not present
         Acts::GeometryIdentifier volLayGeoId =
-            Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
+            Acts::GeometryIdentifier(volGeoId).withLayer(geoId.layer());
         auto volLayRep = volumeLayerComponents.find(volLayGeoId);
 
         if (volLayRep != volumeLayerComponents.end() &&

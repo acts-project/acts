@@ -7,12 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
@@ -21,9 +23,30 @@
 
 #include <memory>
 
+#include <boost/preprocessor/if.hpp>
+#include <boost/vmd/tuple/size.hpp>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#define ACTS_PYTHON_DECLARE_GNN_STAGE(algorithm, base, mod, ...)            \
+  do {                                                                      \
+    using namespace Acts;                                                   \
+                                                                            \
+    using Alg = algorithm;                                                  \
+    using Config = Alg::Config;                                             \
+    auto alg = py::class_<Alg, base, std::shared_ptr<Alg>>(mod, #algorithm) \
+                   .def(py::init([](const Config &c, Logging::Level lvl) {  \
+                          return std::make_shared<Alg>(                     \
+                              c, getDefaultLogger(#algorithm, lvl));        \
+                        }),                                                 \
+                        py::arg("config"), py::arg("level"))                \
+                   .def_property_readonly("config", &Alg::config);          \
+                                                                            \
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
+    BOOST_PP_IF(BOOST_VMD_IS_EMPTY(__VA_ARGS__), BOOST_PP_EMPTY(),          \
+                ACTS_PYTHON_STRUCT(c, __VA_ARGS__));                        \
+  } while (0)
 
 namespace py = pybind11;
 
@@ -49,113 +72,38 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
   }
 
+  ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex);
+
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
-  {
-    using Alg = Acts::TorchMetricLearning;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, mex,
+                                modelPath, selectedFeatures, embeddingDim, rVal,
+                                knnVal, deviceID);
 
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "TorchMetricLearning")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("MetricLearning", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TorchEdgeClassifier, EdgeClassificationBase,
+                                mex, modelPath, selectedFeatures, cut, nChunks,
+                                undirected, deviceID, useEdgeFeatures);
+#endif
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(deviceID);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  {
-    using Alg = Acts::TorchEdgeClassifier;
-    using Config = Alg::Config;
+#ifdef ACTS_EXATRKX_WITH_TENSORRT
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TensorRTEdgeClassifier, EdgeClassificationBase,
+                                mex, modelPath, selectedFeatures, cut,
+                                numExecutionContexts);
+#endif
 
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "TorchEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_MEMBER(nChunks);
-    ACTS_PYTHON_MEMBER(undirected);
-    ACTS_PYTHON_MEMBER(deviceID);
-    ACTS_PYTHON_MEMBER(useEdgeFeatures);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  {
-    using Alg = Acts::BoostTrackBuilding;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "BoostTrackBuilding")
-                   .def(py::init([](Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              getDefaultLogger("EdgeClassifier", lvl));
-                        }),
-                        py::arg("level"));
-  }
+#ifdef ACTS_EXATRKX_WITH_CUDA
+  ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, mex,
+                                useOneBlockImplementation, doJunctionRemoval);
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
-  {
-    using Alg = Acts::OnnxMetricLearning;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, mex,
+                                modelPath, cut);
+#endif
 
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "OnnxMetricLearning")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("MetricLearning", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  {
-    using Alg = Acts::OnnxEdgeClassifier;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "OnnxEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_STRUCT_END();
-  }
+#ifdef ACTS_EXATRKX_WITH_MODULEMAP
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
+      phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -227,15 +175,22 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 
   {
-    using Class = Acts::TorchTruthGraphMetricsHook;
+    using Class = Acts::TruthGraphMetricsHook;
 
     auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
-                   mex, "TorchTruthGraphMetricsHook")
+                   mex, "TruthGraphMetricsHook")
                    .def(py::init([](const std::vector<std::int64_t> &g,
                                     Logging::Level lvl) {
                      return std::make_shared<Class>(
-                         g, getDefaultLogger("PipelineHook", lvl));
+                         g, getDefaultLogger("TruthGraphHook", lvl));
                    }));
+  }
+
+  {
+    auto cls =
+        py::class_<Acts::Device>(mex, "Device")
+            .def_static("Cpu", &Acts::Device::Cpu)
+            .def_static("Cuda", &Acts::Device::Cuda, py::arg("index") = 0);
   }
 
   {
@@ -255,6 +210,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
+                 py::arg("device") = Acts::Device::Cuda(0),
                  py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }

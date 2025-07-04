@@ -16,18 +16,12 @@
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Seeding/PathSeeder.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <numbers>
@@ -39,8 +33,6 @@ using namespace Acts::UnitLiterals;
 
 using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
-
-using TrackParameters = CurvilinearTrackParameters;
 
 GeometryContext gctx;
 
@@ -68,8 +60,8 @@ class NoFieldIntersectionFinder {
   // length
   std::vector<std::pair<GeometryIdentifier, Vector2>> operator()(
       const GeometryContext& geoCtx,
-      const TrackParameters& trackParameters) const {
-    Vector3 position = trackParameters.position();
+      const BoundTrackParameters& trackParameters) const {
+    Vector3 position = trackParameters.position(geoCtx);
     Vector3 direction = trackParameters.direction();
 
     std::vector<std::pair<GeometryIdentifier, Vector2>> sIntersections;
@@ -121,7 +113,7 @@ class TrackEstimator {
   Vector3 m_ip;
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
-  std::pair<TrackParameters, TrackParameters> operator()(
+  std::pair<BoundTrackParameters, BoundTrackParameters> operator()(
       const GeometryContext& geoCtx, const SourceLink& pivot) const {
     auto testSourceLink = pivot.get<detail::Test::TestSourceLink>();
     Vector3 pivot3 = m_surfaceAccessor(pivot)->localToGlobal(
@@ -135,9 +127,11 @@ class TrackEstimator {
     double theta = Acts::VectorHelpers::theta(direction);
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
-    TrackParameters ipParams(ip, phi, theta, qOverP, std::nullopt, particle);
-    TrackParameters firstLayerParams(ip, phi, theta, qOverP, std::nullopt,
-                                     particle);
+    BoundTrackParameters ipParams = BoundTrackParameters::createCurvilinear(
+        ip, phi, theta, qOverP, std::nullopt, particle);
+    BoundTrackParameters firstLayerParams =
+        BoundTrackParameters::createCurvilinear(ip, phi, theta, qOverP,
+                                                std::nullopt, particle);
 
     return {ipParams, firstLayerParams};
   }
@@ -159,9 +153,7 @@ struct ConstructSourceLinkGrid {
 
       Grid grid(std::make_tuple(xAxis, yAxis));
 
-      GeometryIdentifier geoId;
-
-      geoId.setSensitive(i);
+      auto geoId = GeometryIdentifier().withSensitive(i);
 
       lookupTable.insert({geoId, grid});
     }
@@ -202,29 +194,21 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   auto transform0 = Transform3::Identity();
   auto surf0 = Surface::makeShared<PlaneSurface>(
       transform0 * Transform3(rotation), std::move(surf0bounds));
-  auto geoId0 = GeometryIdentifier();
-  geoId0.setSensitive(1);
 
   auto transform1 =
       Transform3::Identity() * Translation3(Vector3(2 * deltaX, 0, 0));
   auto surf1 = Surface::makeShared<PlaneSurface>(
       transform1 * Transform3(rotation), std::move(surf1bounds));
-  auto geoId1 = GeometryIdentifier();
-  geoId1.setSensitive(2);
 
   auto transform2 =
       Transform3::Identity() * Translation3(Vector3(4 * deltaX, 0, 0));
   auto surf2 = Surface::makeShared<PlaneSurface>(
       transform2 * Transform3(rotation), std::move(surf2bounds));
-  auto geoId2 = GeometryIdentifier();
-  geoId2.setSensitive(3);
 
   auto transform3 =
       Transform3::Identity() * Translation3(Vector3(6 * deltaX, 0, 0));
   auto surf3 = Surface::makeShared<PlaneSurface>(
       transform3 * Transform3(rotation), std::move(surf3bounds));
-  auto geoId3 = GeometryIdentifier();
-  geoId3.setSensitive(4);
 
   // Create a bunch of volume bounds
   auto vol0bounds = std::make_unique<CuboidVolumeBounds>(
@@ -272,24 +256,23 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   // changes
   int id = 1;
 
-  // Volume ids
+  // Volume ids: 1-3
   for (auto& volume : volumes) {
-    volume->assignGeometryId(id);
+    volume->assignGeometryId(Acts::GeometryIdentifier(id));
     id++;
   }
-  // Intervolume portal ids
+  // Intervolume portal ids: 6,7,10,11
   for (auto& volume : volumes) {
     for (auto& port : volume->portalPtrs()) {
-      if (port->surface().geometryId() == 0) {
-        port->surface().assignGeometryId(id);
+      if (port->surface().geometryId() == Acts::GeometryIdentifier(0)) {
+        port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
         id++;
       }
     }
   }
   // Surface ids
   for (auto& surf : {surf0, surf1, surf2, surf3}) {
-    auto geoId = GeometryIdentifier();
-    geoId.setSensitive(id);
+    auto geoId = GeometryIdentifier().withSensitive(id);
     surf->assignGeometryId(geoId);
     id++;
   }
@@ -312,9 +295,10 @@ std::vector<SourceLink> createSourceLinks(
 
   std::vector<SourceLink> sourceLinks;
   for (double phi : truePhis) {
-    TrackParameters trackParameters(trueVertex, phi, trueTheta, trueQOverP,
-                                    std::nullopt,
-                                    ParticleHypothesis::electron());
+    BoundTrackParameters trackParameters =
+        BoundTrackParameters::createCurvilinear(trueVertex, phi, trueTheta,
+                                                trueQOverP, std::nullopt,
+                                                ParticleHypothesis::electron());
 
     auto intersections = intersectionFinder(geoCtx, trackParameters);
 
@@ -380,8 +364,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.pathWidthProvider.connect<&PathWidthProvider::operator()>(
       &pathWidthProvider);
 
-  GeometryIdentifier geoId;
-  geoId.setSensitive(14);
+  auto geoId = GeometryIdentifier().withSensitive(14);
   pathSeederCfg.refLayerIds.push_back(geoId);
 
   // Create the PathSeeder

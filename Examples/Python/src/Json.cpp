@@ -76,16 +76,9 @@ void addJson(Context& ctx) {
 
     auto c = py::class_<MaterialMapJsonConverter::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialMapJsonConverter::Config);
-    ACTS_PYTHON_MEMBER(context);
-    ACTS_PYTHON_MEMBER(processSensitives);
-    ACTS_PYTHON_MEMBER(processApproaches);
-    ACTS_PYTHON_MEMBER(processRepresenting);
-    ACTS_PYTHON_MEMBER(processBoundaries);
-    ACTS_PYTHON_MEMBER(processVolumes);
-    ACTS_PYTHON_MEMBER(processDenseVolumes);
-    ACTS_PYTHON_MEMBER(processNonMaterial);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches,
+                       processRepresenting, processBoundaries, processVolumes,
+                       processDenseVolumes, processNonMaterial);
   }
 
   {
@@ -110,12 +103,7 @@ void addJson(Context& ctx) {
 
     auto c =
         py::class_<JsonMaterialWriter::Config>(cls, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonMaterialWriter::Config);
-    ACTS_PYTHON_MEMBER(converterCfg);
-    ACTS_PYTHON_MEMBER(fileName);
-    ACTS_PYTHON_MEMBER(writeFormat);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, converterCfg, fileName, writeFormat);
   }
 
   {
@@ -132,10 +120,7 @@ void addJson(Context& ctx) {
     auto c = py::class_<Config>(cls, "Config")
                  .def(py::init<>())
                  .def(py::init<const std::string&>(), py::arg("path"));
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(path);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, path);
   }
 
   {
@@ -155,11 +140,7 @@ void addJson(Context& ctx) {
                                                   const Acts::Surface*>,
                                std::pair<double, double>>(),
                       py::arg("refLayers"), py::arg("bins"));
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(refLayers);
-    ACTS_PYTHON_MEMBER(bins);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, refLayers, bins);
   }
 
   {
@@ -176,17 +157,9 @@ void addJson(Context& ctx) {
     auto c =
         py::class_<JsonSurfacesWriter::Config>(cls, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonSurfacesWriter::Config);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_MEMBER(outputPrecision);
-    ACTS_PYTHON_MEMBER(writeLayer);
-    ACTS_PYTHON_MEMBER(writeApproach);
-    ACTS_PYTHON_MEMBER(writeSensitive);
-    ACTS_PYTHON_MEMBER(writeBoundary);
-    ACTS_PYTHON_MEMBER(writePerEvent);
-    ACTS_PYTHON_MEMBER(writeOnlyNames);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, trackingGeometry, outputDir, outputPrecision,
+                       writeLayer, writeApproach, writeSensitive, writeBoundary,
+                       writePerEvent, writeOnlyNames);
   }
 
   {
@@ -207,11 +180,7 @@ void addJson(Context& ctx) {
     auto sjOptions =
         py::class_<Acts::JsonSurfacesReader::Options>(m, "SurfaceJsonOptions")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(sjOptions, Acts::JsonSurfacesReader::Options);
-    ACTS_PYTHON_MEMBER(inputFile);
-    ACTS_PYTHON_MEMBER(jsonEntryPath);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(sjOptions, inputFile, jsonEntryPath);
 
     m.def("readSurfaceHierarchyMapFromJson",
           Acts::JsonSurfacesReader::readHierarchyMap);

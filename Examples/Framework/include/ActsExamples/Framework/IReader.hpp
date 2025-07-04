@@ -37,6 +37,13 @@ class IReader : public SequenceElement {
   /// event number provided to select the proper data to be read.
   virtual ProcessCode read(const AlgorithmContext& context) = 0;
 
+  /// Instructs this reader to skip over a fixed number of events
+  /// @param events
+  /// @return Process code indicating if the skip was successful
+  virtual ProcessCode skip(std::size_t /*events*/) {
+    return ProcessCode::SUCCESS;
+  }
+
   /// Internal execute method forwards to the read method as mutable
   /// @param context The algorithm context
   ProcessCode internalExecute(const AlgorithmContext& context) final {
@@ -48,6 +55,9 @@ class IReader : public SequenceElement {
 
   /// Fulfill the algorithm interface
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
+
+  /// Return the type for debug output
+  std::string_view typeName() const override { return "Reader"; }
 };
 
 }  // namespace ActsExamples
