@@ -48,6 +48,12 @@ void addGeoModel(Context& ctx) {
 
   auto gm = m.def_submodule("geomodel");
 
+  py::class_<GeoModelTree::FpvConstLink>(
+      gm, "GeoModelTree::FpvConstLink")
+      .def(py::init<>())
+      .def("get", &GeoModelTree::FpvConstLink::get,
+           py::return_value_policy::reference);
+
   py::class_<Acts::GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
 
   gm.def("readFromDb", &Acts::GeoModelReader::readFromDb);

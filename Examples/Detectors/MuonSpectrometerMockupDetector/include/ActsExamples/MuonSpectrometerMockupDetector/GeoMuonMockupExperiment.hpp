@@ -73,11 +73,15 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     ///        nSectors muon stations are placed at equal distance
     unsigned nSectors{24};
     /// @brief How many eta stations are placed along z
-    unsigned nEtaStations{12};
-    /// @brief Separation between two stations
+    unsigned nEtaStations{6};
+    /// @brief Separation between two stations in the barrel
     double stationDistInZ{15. * GeoModelKernelUnits::cm};
+    /// @brief Separation between two stations in the endcap
+    double stationDistInR{5. * GeoModelKernelUnits::cm};
     /// @brief Lower radius of the big wheel
     double endCapWheelLowR{1. * GeoModelKernelUnits::m};
+    /// @brief Separation between the two big wheels
+    double bigWheelDistZ{5.*GeoModelKernelUnits::m};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -125,35 +129,50 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                                (s_rpcGasHeight + s_rpcGasSingletSeparation)};
   /// @brief Separation between Rpc & Mdt detectors
   constexpr static double s_rpcMdtDistance = 3.5 * GeoModelKernelUnits::cm;
-  /// @brief Height of muon station
-  double m_muonStationHeight{2. * m_multiLayerHeight +
+  /// @brief Height of a barrel muon station
+  double m_stationHeightBarrel{2. * m_multiLayerHeight +
                              m_cfg.multiLayerSeparation +
                              2. * (m_rpcChamberHeight + s_rpcMdtDistance)};
 
+  /// @brief Height of a endcap muon station
+  double m_stationHeightEndcap{2. * m_multiLayerHeight +  m_cfg.multiLayerSeparation };
   /// @brief Angular coverage of each sector
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
 
   void setupMaterials();
-  ///  @brief Construct the subvolume containing the tubes. Tubes are arranged in four
-  ///         virtual tube layer volumes each containing a serial transformer
-  ///         placing the tubes per layer
-  ///  @param tubeLength: Length of the constructed tubes */
-  PVLink buildBarrelTubes(const double tubeLength);
+
+
+  //// @brief Constructs multilayers of tubes. If the lower & upper 
+  ///         each tube has a separate length
+  ///  @param lowerTubeLength: Length of the most bottom tube in the trapezoid
+  ///  @param upperTubeLength: Length of the most top tube in the trapezoid
+  PVLink buildTubes(const double lowerTubeLength,
+                    const double upperTubeLength);
   ///  @brief Constructs a single Mdt tube consisting of an outer aluminium volume
   ///         filled with a thinner gas volume
   ///  @param tubeLength: Lenght of the outer tube
   PVLink assembleTube(const double tubeLength);
 
+  /// @brief Publishes a full physical volume and also adds it to the
+  ///        surrounding envelope
+  /// @param envelopeVol: Enevelope volume to publish the full phyiscal volume
+  /// @param publishMe: The full physical volume to publish
+  /// @param pubName: Name of the published full physical volume
+  void publishFPV(PVLink envelopeVol, FpvLink publishMe, 
+                  const std::string& pubName);
+
   /// @brief Constructs a big wheel
-  PVLink assembleBigWheel(const MuonLayer layer, const double wheelZ);
+  void assembleBigWheel(PVLink envelope, const MuonLayer layer, const double wheelZ);
   
   ///  @brief Construct some absorber volume to add some material to the
   ///         barrel MS station
   ///  @param thickness: Total thickness of the absorber
-  ///  @param width: Total width of the absorber parallel to the tubes
+  ///  @param widthS: Total width of the absorber parallel to the tubes on the
+  ///                 short side of the trapezoid 
+  ///  @param widthL: Total width of the absorber parallel to the tubes on the
+  ///                 long side of the trapezoid 
   ///  @param length: Total length of the absorber along the tube-layer
-  PVLink buildAbsorber(const double thickness, const double width,
-                       const double length);
+  PVLink buildAbsorber(const double thickness, const double widthS, const double widthL, const double length);
 
   /// @brief Assemble a barrel muon station & publish the full physical volumes
   /// @param layer: Layer where the station is placed. The radial position of the 
@@ -172,6 +191,11 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                                const int etaIdx);
   /// @brief Assemble a new multilayer volume to fit inside the barrel station
   FpvLink assembleMultilayerBarrel(const unsigned ml, const double tubeLength);
+  /// @brief Assemble a new multilayer volume to fit inside the endcap station
+  FpvLink assembleMultilayerEndcap(const unsigned ml, 
+                                   const double lowerTubeLength,
+                                   const double upperTubeLength);
+
   
 
   FpvLink assembleRpcChamber(const double chamberWidth);
