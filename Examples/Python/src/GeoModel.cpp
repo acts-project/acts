@@ -158,9 +158,9 @@ void addGeoModel(Context& ctx) {
                        /// Rpc properties
                        nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
                        /// Station properties
-                       barrelRadii, nSectors, nEtaStations, stationDistInZ);
+                       barrelRadii, nSectors, nEtaStations, stationDistInZ,
+                       stationDistInR, endCapWheelLowR, bigWheelDistZ);
   }
-
   // Volume factory
   {
     auto a =
