@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <cmath>
 #include <limits>
@@ -46,13 +47,23 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiEta(T phi, T eta) {
 ///       explicitly cast mismatched input types.
 template <typename T>
 inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
-  const auto cosTheta = std::cos(theta);
-  const auto sinTheta = std::sin(theta);
+  sincos csTheta{theta};
+  sincos csPhi{phi};
   return {
-      std::cos(phi) * sinTheta,
-      std::sin(phi) * sinTheta,
-      cosTheta,
+      csPhi.cs * csTheta.sn,
+      csPhi.sn * csTheta.sn,
+      csTheta.cs,
   };
+}
+/// @brief Construct a normalized direction vector from the tangents of the
+///        x-axis to the z-axis and of the y-axis to the z-axis
+///
+/// @param tanAlpha: Tangent of the x-axis to the z-axis
+/// @param tanBeta: Tangent of the y-axis to the z-axis
+template <typename T>
+inline Eigen::Matrix<T, 3, 1> makeDirectionFromAxisTangents(T tanAlpha,
+                                                            T tanBeta) {
+  return Eigen::Matrix<T, 3, 1>{tanAlpha, tanBeta, 1}.normalized();
 }
 
 /// Construct a phi and theta angle from a direction vector.
@@ -61,8 +72,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
 ///
 template <typename T>
 inline Eigen::Matrix<T, 2, 1> makePhiThetaFromDirection(
-    Eigen::Matrix<T, 3, 1> unitDir) {
-  unitDir.normalize();
+    const Eigen::Matrix<T, 3, 1>& unitDir) {
   T phi = std::atan2(unitDir[1], unitDir[0]);
   T theta = std::acos(unitDir[2]);
   return {
