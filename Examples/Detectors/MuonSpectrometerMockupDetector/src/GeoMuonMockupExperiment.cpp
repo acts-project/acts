@@ -218,7 +218,8 @@ void GeoMuonMockupExperiment::assembleBigWheel(PVLink envelopeVol,
   const double effR = (m_chamberLength + m_cfg.stationDistInR);
 
   const unsigned int nEta =
-      1 + (m_cfg.barrelRadii[MuonLayer::Outer] - lowR) / effR;
+      1 + static_cast<unsigned>((m_cfg.barrelRadii[MuonLayer::Outer] - lowR) /
+                                effR);
   const double highR = lowR + nEta * effR;
   auto envelopeShape =
       make_intrusive<GeoTube>(lowR, highR, 0.5 * m_stationHeightEndcap);
