@@ -138,8 +138,7 @@ class BoundaryTolerance {
   }
 
   /// Chi2 tolerance in bound coordinates
-  constexpr static auto Chi2Bound(const SquareMatrix2& weight,
-                                  double maxChi2) noexcept {
+  static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) noexcept {
     Chi2BoundParams tolerance{maxChi2, {}};
     tolerance.weightMatrix() = weight;
     return BoundaryTolerance{tolerance};
@@ -222,18 +221,18 @@ class BoundaryTolerance {
 
   /// Check if the boundary check is of a specific type.
   template <typename T>
-  bool holdsVariant() const {
+  constexpr bool holdsVariant() const {
     return std::holds_alternative<T>(m_variant);
   }
 
   /// Get the specific underlying type.
   template <typename T>
-  const T& getVariant() const {
+  constexpr const T& getVariant() const {
     return std::get<T>(m_variant);
   }
 
   template <typename T>
-  const T* getVariantPtr() const {
+  constexpr const T* getVariantPtr() const {
     return holdsVariant<T>() ? &getVariant<T>() : nullptr;
   }
 };
