@@ -8,21 +8,18 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Material/IMaterialDecorator.hpp>
-#include <Acts/Material/ISurfaceMaterial.hpp>
-#include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <utility>
 
 class TFile;
 
@@ -35,14 +32,11 @@ using SurfaceMaterialMap =
 using VolumeMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
-}  // namespace Acts
-
-namespace ActsExamples {
 
 /// @class RootMaterialDecorator
 ///
 /// @brief Read the collection of SurfaceMaterial & VolumeMaterial
-class RootMaterialDecorator : public Acts::IMaterialDecorator {
+class RootMaterialDecorator : public IMaterialDecorator {
  public:
   /// @class Config
   /// Configuration of the Reader
@@ -91,7 +85,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Constructor
   ///
   /// @param cfg configuration struct for the reader
-  RootMaterialDecorator(const Config& config, Acts::Logging::Level level);
+  RootMaterialDecorator(const Config& config, Logging::Level level);
 
   /// Destructor
   ~RootMaterialDecorator() override;
@@ -99,7 +93,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  void decorate(Acts::Surface& surface) const final {
+  void decorate(Surface& surface) const final {
     // Null out the material for this surface
     if (m_clearSurfaceMaterial) {
       surface.assignSurfaceMaterial(nullptr);
@@ -114,7 +108,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  void decorate(Acts::TrackingVolume& volume) const final {
+  void decorate(TrackingVolume& volume) const final {
     // Null out the material for this volume
     if (m_clearSurfaceMaterial) {
       volume.assignVolumeMaterial(nullptr);
@@ -127,7 +121,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   }
 
   /// Return the maps
-  const Acts::DetectorMaterialMaps materialMaps() const {
+  const DetectorMaterialMaps materialMaps() const {
     return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 
@@ -138,21 +132,21 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// The config class
   Config m_cfg;
 
-  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
+  std::unique_ptr<const Logger> m_logger{nullptr};
 
   /// The input file
   TFile* m_inputFile{nullptr};
 
   /// Surface based material
-  Acts::SurfaceMaterialMap m_surfaceMaterialMap;
+  SurfaceMaterialMap m_surfaceMaterialMap;
 
   /// Volume based material
-  Acts::VolumeMaterialMap m_volumeMaterialMap;
+  VolumeMaterialMap m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace ActsExamples
+}  // namespace Acts

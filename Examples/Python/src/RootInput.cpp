@@ -7,9 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Plugins/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
@@ -71,15 +71,14 @@ void addRootInput(Context& ctx) {
                              outputSimHits);
 
   {
-    auto rmd =
-        py::class_<RootMaterialDecorator, Acts::IMaterialDecorator,
-                   std::shared_ptr<RootMaterialDecorator>>(
-            mex, "RootMaterialDecorator")
-            .def(
-                py::init<RootMaterialDecorator::Config, Acts::Logging::Level>(),
-                py::arg("config"), py::arg("level"));
+    auto rmd = py::class_<Acts::RootMaterialDecorator, Acts::IMaterialDecorator,
+                          std::shared_ptr<Acts::RootMaterialDecorator>>(
+                   mex, "RootMaterialDecorator")
+                   .def(py::init<Acts::RootMaterialDecorator::Config,
+                                 Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
 
-    using Config = RootMaterialDecorator::Config;
+    using Config = Acts::RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
