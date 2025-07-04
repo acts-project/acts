@@ -30,6 +30,13 @@ except ImportError:
             "ROOT likely built without/with incompatible PyROOT. Skipping tests that need ROOT"
         )
 
+try:
+    from acts import geomodel
+
+    geomodelEnabled = True
+except ImportError:
+    geomodelEnabled = False
+
 dd4hepEnabled = "DD4hep_DIR" in os.environ
 if dd4hepEnabled:
     try:
