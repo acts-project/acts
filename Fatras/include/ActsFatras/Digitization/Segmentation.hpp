@@ -44,18 +44,11 @@ struct ChannelStep {
   bool operator<(const ChannelStep& cstep) const { return path < cstep.path; }
 };
 
---- a/Fatras/include/ActsFatras/Digitization/Segmentation.hpp
-+++ b/Fatras/include/ActsFatras/Digitization/Segmentation.hpp
-@@ -44,6 +44,10 @@
- class ISegmentation {
-+public:
-+  /// Virtual destructor
-+  virtual ~ISegmentation() = default;
-+
-   /// Return the bin according to the segmentation
-   virtual std::size_t bin(const Acts::Vector3& position) const = 0;
+class ISegmentation {
+ public:
+  /// Virtual destructor
+  virtual ~ISegmentation() = default;
 
-   // ... rest of interface ...
   /// Return the bin according to the segmentation
   /// @param pos The position to be binned
   /// @return The bin in the segmentation
