@@ -126,17 +126,17 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
       std::string rhoName = tdName + "/" + m_cfg.rhotag;
 
       // Get the histograms
-      TH1F* n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));
-      TH1F* v = dynamic_cast<TH1F*>(m_inputFile->Get(vName.c_str()));
-      TH1F* o = dynamic_cast<TH1F*>(m_inputFile->Get(oName.c_str()));
-      TH1F* min = dynamic_cast<TH1F*>(m_inputFile->Get(minName.c_str()));
-      TH1F* max = dynamic_cast<TH1F*>(m_inputFile->Get(maxName.c_str()));
-      TH2F* t = dynamic_cast<TH2F*>(m_inputFile->Get(tName.c_str()));
-      TH2F* x0 = dynamic_cast<TH2F*>(m_inputFile->Get(x0Name.c_str()));
-      TH2F* l0 = dynamic_cast<TH2F*>(m_inputFile->Get(l0Name.c_str()));
-      TH2F* A = dynamic_cast<TH2F*>(m_inputFile->Get(aName.c_str()));
-      TH2F* Z = dynamic_cast<TH2F*>(m_inputFile->Get(zName.c_str()));
-      TH2F* rho = dynamic_cast<TH2F*>(m_inputFile->Get(rhoName.c_str()));
+      auto n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));
+      auto v = dynamic_cast<TH1F*>(m_inputFile->Get(vName.c_str()));
+      auto o = dynamic_cast<TH1F*>(m_inputFile->Get(oName.c_str()));
+      auto min = dynamic_cast<TH1F*>(m_inputFile->Get(minName.c_str()));
+      auto max = dynamic_cast<TH1F*>(m_inputFile->Get(maxName.c_str()));
+      auto t = dynamic_cast<TH2F*>(m_inputFile->Get(tName.c_str()));
+      auto x0 = dynamic_cast<TH2F*>(m_inputFile->Get(x0Name.c_str()));
+      auto l0 = dynamic_cast<TH2F*>(m_inputFile->Get(l0Name.c_str()));
+      auto A = dynamic_cast<TH2F*>(m_inputFile->Get(aName.c_str()));
+      auto Z = dynamic_cast<TH2F*>(m_inputFile->Get(zName.c_str()));
+      auto rho = dynamic_cast<TH2F*>(m_inputFile->Get(rhoName.c_str()));
 
       std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
 
@@ -177,8 +177,8 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
             auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
             auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-            float rmin = min->GetBinContent(ib);
-            float rmax = max->GetBinContent(ib);
+            float rmin = static_cast<float>(min->GetBinContent(ib));
+            float rmax = static_cast<float>(max->GetBinContent(ib));
             bUtility += BinUtility(nbins, rmin, rmax, opt, val);
           }
           ACTS_VERBOSE("Created " << bUtility);
@@ -231,16 +231,16 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
       std::string rhoName = tdName + "/" + m_cfg.rhotag;
 
       // Get the histograms
-      TH1F* n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));
-      TH1F* v = dynamic_cast<TH1F*>(m_inputFile->Get(vName.c_str()));
-      TH1F* o = dynamic_cast<TH1F*>(m_inputFile->Get(oName.c_str()));
-      TH1F* min = dynamic_cast<TH1F*>(m_inputFile->Get(minName.c_str()));
-      TH1F* max = dynamic_cast<TH1F*>(m_inputFile->Get(maxName.c_str()));
-      TH1F* x0 = dynamic_cast<TH1F*>(m_inputFile->Get(x0Name.c_str()));
-      TH1F* l0 = dynamic_cast<TH1F*>(m_inputFile->Get(l0Name.c_str()));
-      TH1F* A = dynamic_cast<TH1F*>(m_inputFile->Get(aName.c_str()));
-      TH1F* Z = dynamic_cast<TH1F*>(m_inputFile->Get(zName.c_str()));
-      TH1F* rho = dynamic_cast<TH1F*>(m_inputFile->Get(rhoName.c_str()));
+      auto n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));
+      auto v = dynamic_cast<TH1F*>(m_inputFile->Get(vName.c_str()));
+      auto o = dynamic_cast<TH1F*>(m_inputFile->Get(oName.c_str()));
+      auto min = dynamic_cast<TH1F*>(m_inputFile->Get(minName.c_str()));
+      auto max = dynamic_cast<TH1F*>(m_inputFile->Get(maxName.c_str()));
+      auto x0 = dynamic_cast<TH1F*>(m_inputFile->Get(x0Name.c_str()));
+      auto l0 = dynamic_cast<TH1F*>(m_inputFile->Get(l0Name.c_str()));
+      auto A = dynamic_cast<TH1F*>(m_inputFile->Get(aName.c_str()));
+      auto Z = dynamic_cast<TH1F*>(m_inputFile->Get(zName.c_str()));
+      auto rho = dynamic_cast<TH1F*>(m_inputFile->Get(rhoName.c_str()));
 
       // Only go on when you have all the material histograms
       if ((x0 != nullptr) && (l0 != nullptr) && (A != nullptr) &&
