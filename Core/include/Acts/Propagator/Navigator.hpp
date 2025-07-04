@@ -686,6 +686,16 @@ class Navigator {
           state.options.geoContext, position, direction, navOpts);
       std::ranges::sort(state.navSurfaces,
                         SurfaceIntersection::pathLengthOrder);
+      // For now we implicitly remove overlapping surfaces.
+      // For track finding it might be useful to discover overlapping surfaces
+      // and check for compatible measurements. This is under investigation
+      // and might be implemented in the future.
+      auto toBeRemoved = std::ranges::unique(
+          state.navSurfaces, [&](const auto& a, const auto& b) {
+            return std::abs(a.pathLength() - b.pathLength()) <
+                   state.options.surfaceTolerance;
+          });
+      state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
     } else {
       // @TODO: What to do with external surfaces?
       // Gen 3 !
