@@ -689,8 +689,8 @@ class Navigator {
       // Special care is taken for the external surfaces which should always
       // come first, so they are preferred to be targeted and hit first.
       std::ranges::sort(
-          state.navSurfaces, [&state, &navOpts](const SurfaceIntersection& a,
-                                                const SurfaceIntersection& b) {
+          state.navSurfaces,
+          [&state](const SurfaceIntersection& a, const SurfaceIntersection& b) {
             // Prefer to sort by path length. We assume surfaces are at the same
             // distance if the difference is smaller than the tolerance.
             if (std::abs(a.pathLength() - b.pathLength()) >
@@ -699,10 +699,8 @@ class Navigator {
             }
             // If the path length is practically the same, sort by geometry.
             // First we check if one of the surfaces is external.
-            bool aIsExternal = rangeContainsValue(navOpts.externalSurfaces,
-                                                  a.object()->geometryId());
-            bool bIsExternal = rangeContainsValue(navOpts.externalSurfaces,
-                                                  b.object()->geometryId());
+            bool aIsExternal = a.boundaryTolerance().isInfinite();
+            bool bIsExternal = b.boundaryTolerance().isInfinite();
             if (aIsExternal == bIsExternal) {
               // If both are external or both are not external, sort by geometry
               // identifier
