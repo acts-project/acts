@@ -55,8 +55,7 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
           ConstrainedStep::Type::Navigator, logger());
-      if (preStepSurfaceStatus == IntersectionStatus::reachable ||
-          preStepSurfaceStatus == IntersectionStatus::onSurface) {
+      if (preStepSurfaceStatus == IntersectionStatus::reachable) {
         return nextTarget;
       }
     }
