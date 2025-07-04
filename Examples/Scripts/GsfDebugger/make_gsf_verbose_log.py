@@ -13,10 +13,7 @@ if __name__ == "__main__":
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    digiConfigFile = (
-        srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
     detector = acts.examples.GenericDetector()

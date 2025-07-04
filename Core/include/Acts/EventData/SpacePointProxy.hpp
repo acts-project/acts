@@ -9,13 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/Holders.hpp"
-
-#include <any>
-#include <iostream>
-#include <string_view>
-#include <type_traits>
 
 namespace Acts {
 

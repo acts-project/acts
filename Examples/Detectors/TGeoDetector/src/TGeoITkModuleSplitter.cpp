@@ -9,7 +9,7 @@
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"

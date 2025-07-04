@@ -46,12 +46,22 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @param name The name of the node (for debug only)
   /// @param axis The stacking axis direction in local reference frame
   /// @param attachmentStrategy The attachment strategy for the stack
-  /// @param resizeStrategy The resize strategy
+  /// @param resizeStrategy The resize strategy for the stack
   ContainerBlueprintNode(
       const std::string& name, AxisDirection axis,
       VolumeAttachmentStrategy attachmentStrategy =
           VolumeAttachmentStrategy::Midpoint,
       VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand);
+
+  /// Main constructor for the container node.
+  /// @param name The name of the node (for debug only)
+  /// @param axis The stacking axis direction in local reference frame
+  /// @param attachmentStrategy The attachment strategy for the stack
+  /// @param resizeStrategies The resize strategies for the stack
+  ContainerBlueprintNode(
+      const std::string& name, AxisDirection axis,
+      VolumeAttachmentStrategy attachmentStrategy,
+      std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies);
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -100,9 +110,17 @@ class ContainerBlueprintNode : public BlueprintNode {
 
   /// Setter for the resize strategy
   /// @param resizeStrategy The resize strategy
+  /// @note @p resizeStrategy is used for both sides of the container
   /// @return This node for chaining
   ContainerBlueprintNode& setResizeStrategy(
       VolumeResizeStrategy resizeStrategy);
+
+  /// Setter for the resize strategies
+  /// @param inner The inner resize strategy
+  /// @param outer The outer resize strategy
+  /// @return This node for chaining
+  ContainerBlueprintNode& setResizeStrategies(VolumeResizeStrategy inner,
+                                              VolumeResizeStrategy outer);
 
   /// Accessor to the stacking direction
   /// @return The stacking direction
@@ -114,7 +132,13 @@ class ContainerBlueprintNode : public BlueprintNode {
 
   /// Accessor to the resize strategy
   /// @return The resize strategy
+  [[deprecated("Use resizeStrategies() instead")]]
   VolumeResizeStrategy resizeStrategy() const;
+
+  /// Accessor to the resize strategies
+  /// @return The resize strategies
+  std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies()
+      const;
 
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -196,7 +220,9 @@ class ContainerBlueprintNode : public BlueprintNode {
   AxisDirection m_direction = AxisDirection::AxisZ;
   VolumeAttachmentStrategy m_attachmentStrategy{
       VolumeAttachmentStrategy::Midpoint};
-  VolumeResizeStrategy m_resizeStrategy{VolumeResizeStrategy::Expand};
+
+  std::pair<VolumeResizeStrategy, VolumeResizeStrategy> m_resizeStrategies{
+      VolumeResizeStrategy::Expand, VolumeResizeStrategy::Expand};
 
   std::vector<Volume*> m_childVolumes;
   // This is going to be an instance of a *stack* of volumes, which is created

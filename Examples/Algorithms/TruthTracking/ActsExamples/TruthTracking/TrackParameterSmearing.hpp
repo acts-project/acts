@@ -68,7 +68,12 @@ class TrackParameterSmearing final : public IAlgorithm {
     /// Optional. Initial sigmas for the track parameters which overwrites the
     /// smearing params if set.
     std::optional<std::array<double, 6>> initialSigmas;
-    /// Relative pt resolution used for the initial sigma of q/p.
+    /// Initial sigma(q/pt) for the track parameters.
+    /// @note The resulting q/p sigma is added to the one in `initialSigmas`
+    double initialSigmaQoverPt =
+        0.1 * Acts::UnitConstants::e / Acts::UnitConstants::GeV;
+    /// Initial sigma(pt)/pt for the track parameters.
+    /// @note The resulting q/p sigma is added to the one in `initialSigmas`
     double initialSigmaPtRel = 0.1;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1e4, 1e4, 1e4, 1e4, 1e4, 1e4};

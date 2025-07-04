@@ -5,7 +5,7 @@ ec=0
 files="$@"
 
 if [ -z "$files" ]; then
-    files=$(find Core Examples Tests Plugins -name "*.hpp")
+    files=$(find Core Examples Tests Plugins -name "*.hpp" -o -name "*.ipp")
 fi
 
 for file in $files; do

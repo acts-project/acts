@@ -118,7 +118,12 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
     m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
     m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
+
     // particle constants
+    if (!std::isfinite(particle.mass()) || !std::isfinite(particle.charge())) {
+      ACTS_WARNING("Particle mass or charge is not finite, can't write it");
+    }
+
     m_m.push_back(
         Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
     m_q.push_back(

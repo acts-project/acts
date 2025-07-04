@@ -10,9 +10,12 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 class IMaterialDecorator;
@@ -32,11 +35,20 @@ class GenericDetector : public Detector {
     Acts::Logging::Level volumeLogLevel = Acts::Logging::INFO;
     bool buildProto = false;
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
+    bool gen3 = false;
+    std::optional<std::filesystem::path> graphvizFile;
   };
 
   explicit GenericDetector(const Config& cfg);
 
- private:
+ protected:
+  struct NoBuildTag {};
+  explicit GenericDetector(const Config& cfg, NoBuildTag /*tag*/);
+
+  void buildTrackingGeometry(
+      const Generic::ProtoLayerCreator::DetectorElementFactory&
+          detectorElementFactory);
+
   Config m_cfg;
 };
 

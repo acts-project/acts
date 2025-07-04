@@ -22,7 +22,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginDD4hep PUBLIC ActsCore ActsPluginTGeo)
+target_link_libraries(ActsPluginDD4hep PUBLIC ActsCore ActsPluginRoot)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
     target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})

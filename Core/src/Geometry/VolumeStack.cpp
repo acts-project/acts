@@ -10,11 +10,12 @@
 
 namespace Acts {
 
-VolumeStack::VolumeStack(std::vector<Volume*>& volumes, AxisDirection direction,
-                         VolumeResizeStrategy resizeStrategy)
+VolumeStack::VolumeStack(
+    std::vector<Volume*>& volumes, AxisDirection direction,
+    std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies)
     : Volume(initialVolume(volumes)),
       m_direction(direction),
-      m_resizeStrategy(resizeStrategy),
+      m_resizeStrategies{resizeStrategies.first, resizeStrategies.second},
       m_volumes(volumes) {}
 
 Volume& VolumeStack::initialVolume(std::span<Volume*> volumes) {

@@ -9,16 +9,13 @@
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-#include <iterator>
-#include <map>
 #include <ostream>
 #include <stdexcept>
 #include <unordered_map>
@@ -54,117 +51,68 @@ TruthVertexFinder::TruthVertexFinder(const Config& config,
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input truth particles collection");
-  }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing input hit-particles map collection");
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track-particle matching");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
 
-  m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTracks.initialize(m_cfg.inputTracks);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   // prepare input and output collections
   const auto& tracks = m_inputTracks(ctx);
-  const auto& particles = m_inputParticles(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
-  ACTS_VERBOSE("Have " << particles.size() << " particles");
-  ACTS_VERBOSE("Have " << tracks.size() << " tracks");
+  ACTS_DEBUG("Have " << tracks.size() << " tracks");
 
-  std::unordered_map<TrackIndex, TrackMatchEntry> trackParticleMatching;
-  std::unordered_map<SimBarcode, ParticleMatchEntry> particleTrackMatching;
+  // first step is to sort the tracks into potential proto vertices using the
+  // track-particle matching information.
+  // at this stage we use the full vertex ID, including the secondary vertex ID.
 
-  {
-    // For each particle within a track, how many hits did it contribute
-    std::vector<ParticleHitCount> particleHitCounts;
+  std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
+      protoVertexTrackMap;
 
-    for (const auto& track : tracks) {
-      // Get the majority truth particle to this track
-      identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
-      if (particleHitCounts.empty()) {
-        ACTS_DEBUG(
-            "No truth particle associated with this trajectory with tip index "
-            "= "
-            << track.tipIndex());
-        continue;
-      }
-
-      // Get the majority particleId and majority particle counts
-      // Note that the majority particle might be not in the truth seeds
-      // collection
-      ActsFatras::Barcode majorityParticleId =
-          particleHitCounts.front().particleId;
-      std::size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-      if (!particles.contains(majorityParticleId)) {
-        ACTS_DEBUG(
-            "The majority particle is not in the input particle collection, "
-            "majorityParticleId = "
-            << majorityParticleId);
-        continue;
-      }
-
-      // Check if the trajectory is matched with truth.
-      // If not, it will be classified as 'fake'
-      const bool recoMatched =
-          static_cast<float>(nMajorityHits) / track.nMeasurements() >=
-          m_cfg.trackMatchingRatio;
-
-      if (recoMatched) {
-        trackParticleMatching[track.index()] = {majorityParticleId,
-                                                particleHitCounts};
-
-        auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
-        if (!particleTrackMatch.track) {
-          particleTrackMatch.track = track.index();
-        } else {
-          // we already have a track associated with this particle and have to
-          // resolve the ambiguity.
-          // we will use the track with more hits and smaller chi2
-          const auto& otherTrack =
-              tracks.getTrack(particleTrackMatch.track.value());
-          if (otherTrack.nMeasurements() < track.nMeasurements() ||
-              otherTrack.chi2() > track.chi2()) {
-            particleTrackMatch.track = track.index();
-          }
-
-          ++particleTrackMatch.duplicates;
-        }
-      } else {
-        trackParticleMatching[track.index()] = {std::nullopt,
-                                                particleHitCounts};
-
-        auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
-        ++particleTrackMatch.fakes;
-      }
+  for (const auto& track : tracks) {
+    auto trackMatchIt = trackParticleMatching.find(track.index());
+    if (trackMatchIt == trackParticleMatching.end()) {
+      continue;
     }
+    const auto& trackMatch = trackMatchIt->second;
+
+    // get the particle associated to the track
+    auto particleOpt = trackMatchIt->second.particle;
+    if (!particleOpt) {
+      continue;
+    }
+    auto barcode = *particleOpt;
+
+    // Skip fake and duplicate tracks
+    if (trackMatch.classification != TrackMatchClassification::Matched) {
+      continue;
+    }
+
+    // derive the vertex ID from the barcode
+    SimVertexBarcode vertexId = SimVertexBarcode(barcode);
+
+    // add the track to the proto vertex map
+    protoVertexTrackMap[vertexId].push_back(track.index());
   }
 
-  std::unordered_map<SimBarcode, std::vector<TrackIndex>> protoVertexTrackMap;
-
-  for (const auto& [particle, trackMatch] : particleTrackMatching) {
-    auto vtxId = SimBarcode(particle).setParticle(0).setSubParticle(0);
-
-    if (trackMatch.track) {
-      protoVertexTrackMap[vtxId].push_back(trackMatch.track.value());
-    }
-  }
+  // in the second step we separate secondary vertices based on the
+  // configuration.
 
   ProtoVertexContainer protoVertices;
 
   // assumes the begin/end iterator references the particles container
-  auto addProtoVertex = [&](const std::vector<TrackIndex>& vtxTracks) {
+  auto addProtoVertex = [&](const std::vector<TrackIndex>& vertexTracks) {
     ProtoVertex protoVertex;
-    protoVertex.reserve(vtxTracks.size());
-    for (const auto& track : vtxTracks) {
+    protoVertex.reserve(vertexTracks.size());
+    for (const auto& track : vertexTracks) {
       protoVertex.push_back(track);
     }
     protoVertices.push_back(std::move(protoVertex));
@@ -173,38 +121,39 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   if (m_cfg.excludeSecondaries) {
     // if secondaries are excluded, the `separateSecondaries` flag has no effect
     // since there will be no secondary vertices to separate
-    for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-      if (vtxId.vertexSecondary() != 0u) {
+    for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+      if (vertexId.vertexSecondary() != 0u) {
         continue;
       }
-      addProtoVertex(vtxTracks);
+      addProtoVertex(vertexTracks);
     }
   } else {
     // particles from secondary vertices should be included
     if (m_cfg.separateSecondaries) {
       // secondary particles are added to separate secondary vertices
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-        addProtoVertex(vtxTracks);
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+        addProtoVertex(vertexTracks);
       }
     } else {
       // secondary particles are included in the primary vertex
 
-      std::unordered_map<SimBarcode, std::vector<TrackIndex>>
+      std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
           protoVertexTrackMap2;
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-        auto vtxId2 = SimBarcode(vtxId).setVertexSecondary(0);
-        protoVertexTrackMap2[vtxId2].insert(protoVertexTrackMap2[vtxId].end(),
-                                            vtxTracks.begin(), vtxTracks.end());
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+        auto vertexId2 = SimVertexBarcode(vertexId).setVertexSecondary(0);
+        auto& vertexTracks2 = protoVertexTrackMap2[vertexId2];
+        vertexTracks2.insert(vertexTracks2.end(), vertexTracks.begin(),
+                             vertexTracks.end());
       }
 
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap2) {
-        addProtoVertex(vtxTracks);
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap2) {
+        addProtoVertex(vertexTracks);
       }
     }
   }
 
-  ACTS_VERBOSE("Write " << protoVertices.size() << " proto vertex to "
-                        << m_cfg.outputProtoVertices);
+  ACTS_DEBUG("Write " << protoVertices.size() << " proto vertex to "
+                      << m_cfg.outputProtoVertices);
 
   m_outputProtoVertices(ctx, std::move(protoVertices));
 

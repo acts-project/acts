@@ -1,0 +1,101 @@
+{
+  "acts-geometry-hierarchy-map": {
+    "format-version": 0,
+    "value-identifier": "digitization-configuration"
+  },
+  "entries": [
+    {
+      "volume": 17,
+      "value": {
+        "geometric": {
+          "digital": false,
+          "indices": [0, 1],
+          "segmentation": {
+            "binningdata": [
+              {
+                "bins": 336,
+                "max": 8.4,
+                "min": -8.4,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binX"
+              },
+              {
+                "bins": 1440,
+                "max": 36.0,
+                "min": -36.0,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binY"
+              }
+            ]
+          },
+          "thickness": 0.125,
+          "threshold": 0.01
+        }
+      }
+    },
+    {
+      "volume": 24,
+      "value": {
+        "geometric": {
+          "digital": true,
+          "indices": [0, 1],
+          "segmentation": {
+            "binningdata": [
+              {
+                "bins": 960,
+                "max": 24.0,
+                "min": -24.0,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binX"
+              },
+              {
+                "bins": 216,
+                "max": 54.0,
+                "min": -54.0,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binY"
+              }
+            ]
+          },
+          "thickness": 0.2,
+          "threshold": 0.01
+        }
+      }
+    },
+    {
+      "volume": 29,
+      "value": {
+        "geometric": {
+          "digital": true,
+          "indices": [0, 1],
+          "segmentation": {
+            "binningdata": [
+              {
+                "bins": 640,
+                "max": 48.0,
+                "min": -48.0,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binX"
+              },
+              {
+                "bins": 72,
+                "max": 54.0,
+                "min": -54.0,
+                "option": "open",
+                "type": "equidistant",
+                "value": "binY"
+              }
+            ]
+          },
+          "thickness": 0.25,
+          "threshold": 0.01
+        }
+      }
+    }
+  ]
+}

@@ -8,15 +8,17 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <cmath>
 #include <memory>
 #include <numbers>
 
 namespace Acts {
+
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
@@ -146,46 +148,14 @@ struct SeedFinderOrthogonalConfig {
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
-  bool isInInternalUnits = false;
+  bool isInInternalUnits = true;
+  //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
+  SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
-    if (!isInInternalUnits) {
-      throw std::runtime_error(
-          "SeedFinderOrthogonalConfig not in ACTS internal units in "
-          "calculateDerivedQuantities");
-    }
     SeedFinderOrthogonalConfig config = *this;
-    /// calculation of scattering using the highland formula
-    /// convert pT to p once theta angle is known
-    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
-                      (1 + 0.038 * std::log(radLengthPerSeed));
+    config.highland = approximateHighlandScattering(config.radLengthPerSeed);
     config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
-    return config;
-  }
-
-  SeedFinderOrthogonalConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "SeedFinderOrthogonalConfig already in ACTS internal units in "
-          "toInternalUnits");
-    }
-    using namespace Acts::UnitLiterals;
-    SeedFinderOrthogonalConfig config = *this;
-    config.isInInternalUnits = true;
-    config.minPt /= 1_MeV;
-    config.deltaRMinTopSP /= 1_mm;
-    config.deltaRMaxTopSP /= 1_mm;
-    config.deltaRMinBottomSP /= 1_mm;
-    config.deltaRMaxBottomSP /= 1_mm;
-    config.impactMax /= 1_mm;
-    config.maxPtScattering /= 1_MeV;
-    config.collisionRegionMin /= 1_mm;
-    config.collisionRegionMax /= 1_mm;
-    config.zMin /= 1_mm;
-    config.zMax /= 1_mm;
-    config.rMax /= 1_mm;
-    config.rMin /= 1_mm;
-
     return config;
   }
 };

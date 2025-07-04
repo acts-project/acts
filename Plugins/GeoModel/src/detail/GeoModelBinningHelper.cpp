@@ -12,12 +12,12 @@
 
 #include <boost/algorithm/string.hpp>
 
-std::tuple<Acts::ProtoAxis, std::size_t>
+std::tuple<Acts::DirectedProtoAxis, std::size_t>
 Acts::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
-  AxisDirection bValue = toAxisDirection(binningTokens[0]);
+  AxisDirection axisDir = toAxisDirection(binningTokens[0]);
 
   std::vector<std::string> binningDetails = {binningTokens.begin() + 1,
                                              binningTokens.end()};
@@ -47,7 +47,7 @@ Acts::detail::GeoModelBinningHelper::toProtoAxis(
   // The Range
   double rangeMin = 0.;
   double rangeMax = 0.;
-  if (bValue == AxisDirection::AxisPhi &&
+  if (axisDir == AxisDirection::AxisPhi &&
       boundaryType == AxisBoundaryType::Closed) {
     rangeMin = -std::numbers::pi;
     rangeMax = std::numbers::pi;
@@ -55,9 +55,9 @@ Acts::detail::GeoModelBinningHelper::toProtoAxis(
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;
       rangeMin = std::stod(binningDetails[3]);
-    } else if (extent.has_value() && extent.value().constrains(bValue)) {
+    } else if (extent.has_value() && extent.value().constrains(axisDir)) {
       autoRange = false;
-      rangeMin = extent.value().min(bValue);
+      rangeMin = extent.value().min(axisDir);
     } else if (binningDetails[3] != "*") {
       throw std::invalid_argument(
           "GeoModelBinningHelper: Range minimum is not defined.");
@@ -66,16 +66,16 @@ Acts::detail::GeoModelBinningHelper::toProtoAxis(
     if (binningDetails.size() > 4u && binningDetails[4] != "*") {
       autoRange = false;
       rangeMax = std::stod(binningDetails[4]);
-    } else if (extent.has_value() && extent.value().constrains(bValue)) {
+    } else if (extent.has_value() && extent.value().constrains(axisDir)) {
       autoRange = false;
-      rangeMax = extent.value().max(bValue);
+      rangeMax = extent.value().max(axisDir);
     } else if (binningDetails[4] != "*") {
       throw std::invalid_argument(
           "GeoModelBinningHelper: Range maximum is not defined.");
     }
   }
-  auto pAxis = autoRange
-                   ? ProtoAxis(bValue, boundaryType, nBins)
-                   : ProtoAxis(bValue, boundaryType, rangeMin, rangeMax, nBins);
+  auto pAxis = autoRange ? DirectedProtoAxis(axisDir, boundaryType, nBins)
+                         : DirectedProtoAxis(axisDir, boundaryType, rangeMin,
+                                             rangeMax, nBins);
   return {pAxis, nExpansion};
 }

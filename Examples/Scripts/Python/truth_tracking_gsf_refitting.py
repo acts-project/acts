@@ -104,16 +104,14 @@ if __name__ == "__main__":
 
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = (
-        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
     # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
-    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

@@ -314,15 +314,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    // Navigator preStep always resets the current surface
-    state.currentSurface = nullptr;
 
     double nearLimit = state.options.nearLimit;
     double farLimit = state.options.farLimit;
@@ -642,13 +642,15 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                               const Vector3& direction) const {
     (void)direction;
 
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
+    // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    state.currentSurface = nullptr;
 
     // We cannot do anything without a last position
     if (!state.lastPosition.has_value() && state.endOfCandidates()) {

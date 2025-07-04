@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <algorithm>
+
 #include <unsupported/Eigen/Splines>
 
 namespace Acts::Interpolation3D {
@@ -59,8 +61,13 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
     for (std::size_t i = 0; i < inputs.size(); ++i) {
       points.col(i) = inputs[i].transpose();
     }
+
+    // MARK: fpeMaskBegin(FLTDIV, 1, #4024)
+    // MARK: fpeMaskBegin(FLTINV, 1, #4024)
     Eigen::Spline<double, 3> spline3D =
         Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
+    // MARK: fpeMaskEnd(FLTDIV)
+    // MARK: fpeMaskEnd(FLTINV)
 
     double step = 1. / (nPoints - 1);
     for (std::size_t i = 0; i < nPoints; ++i) {
@@ -77,17 +84,16 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
   if (keepOriginalHits) {
     output.insert(output.begin(), inputsRaw.begin() + 1, inputsRaw.end() - 1);
     // We need to sort the output in distance to first
-    std::sort(output.begin(), output.end(),
-              [&inputs](const auto& a, const auto& b) {
-                const auto ifront = inputs.front();
-                double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
-                             (a[1] - ifront[1]) * (a[1] - ifront[1]) +
-                             (a[2] - ifront[2]) * (a[2] - ifront[2]);
-                double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
-                             (b[1] - ifront[1]) * (b[1] - ifront[1]) +
-                             (b[2] - ifront[2]) * (b[2] - ifront[2]);
-                return da2 < db2;
-              });
+    std::ranges::sort(output, [&inputs](const auto& a, const auto& b) {
+      const auto ifront = inputs.front();
+      double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
+                   (a[1] - ifront[1]) * (a[1] - ifront[1]) +
+                   (a[2] - ifront[2]) * (a[2] - ifront[2]);
+      double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
+                   (b[1] - ifront[1]) * (b[1] - ifront[1]) +
+                   (b[2] - ifront[2]) * (b[2] - ifront[2]);
+      return da2 < db2;
+    });
   }
 
   return output;

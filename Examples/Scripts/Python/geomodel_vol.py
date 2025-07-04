@@ -25,7 +25,7 @@ def main():
         "--queries",
         type=str,
         nargs="+",
-        default="GeoModelXML",
+        default=[],
         help="List of Queries for Published full phys volumes",
     )
 
@@ -152,20 +152,20 @@ def main():
     # All surfaces from GeoModel
     # Output the surface to an OBJ file
     if args.output_obj:
-        segments = 720
         gmBoxes = gmFactoryCache.boundingBoxes
         gmBoxSurfaces = []
         for gmBox in gmBoxes:
             gmBoxSurfaces.extend(gmBox.surfaces())
         gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
         unboundSurfaces = [item for item in gmSurfaces if item not in gmBoxSurfaces]
-
+        viewCfg = acts.ViewConfig()
+        viewCfg.quarterSegments = 720
+        viewCfg.color = acts.Color(75, 220, 100)
         acts.examples.writeVolumesSurfacesObj(
             unboundSurfaces,
             gmBoxes,
             gContext,
-            [75, 220, 100],
-            segments,
+            viewCfg,
             args.output + "_vols.obj",
         )
 

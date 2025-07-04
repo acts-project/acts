@@ -22,12 +22,6 @@ namespace Acts {
 /// @note This is a base class for the different types of volume stacks
 class VolumeStack : public Volume {
  public:
-  /// @param volumes is the vector of volumes
-  /// @param direction is the direction of the stack
-  /// @param resizeStrategy is the resize strategy
-  VolumeStack(std::vector<Volume*>& volumes, AxisDirection direction,
-              VolumeResizeStrategy resizeStrategy);
-
   /// Access the gap volume that were created during attachment or resizing.
   /// @return the vector of gap volumes
   const std::vector<std::shared_ptr<Volume>>& gaps() const;
@@ -45,6 +39,28 @@ class VolumeStack : public Volume {
   static Volume& initialVolume(std::span<Volume*> volumes);
 
  protected:
+  struct ResizeStrategies {
+    VolumeResizeStrategy first;
+    VolumeResizeStrategy second;
+
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const ResizeStrategies& rs) {
+      if (rs.first == rs.second) {
+        os << "<-" << rs.first << "->";
+      } else {
+        os << "<-" << rs.first << "|" << rs.second << "->";
+      }
+      return os;
+    }
+  };
+
+  /// @param volumes is the vector of volumes
+  /// @param direction is the direction of the stack
+  /// @param resizeStrategies is the pair of resize strategies
+  VolumeStack(
+      std::vector<Volume*>& volumes, AxisDirection direction,
+      std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies);
+
   /// @param transform is the transform of the gap volume
   /// @param bounds is the bounds of the gap volume
   /// @return the shared pointer to the gap volume
@@ -52,7 +68,8 @@ class VolumeStack : public Volume {
       const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
 
   AxisDirection m_direction{};
-  VolumeResizeStrategy m_resizeStrategy{};
+
+  ResizeStrategies m_resizeStrategies;
 
   std::vector<std::shared_ptr<Volume>> m_gaps{};
   std::vector<Volume*>& m_volumes;

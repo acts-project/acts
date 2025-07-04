@@ -14,7 +14,6 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
-#include <utility>
 #include <vector>
 
 namespace ActsExamples {

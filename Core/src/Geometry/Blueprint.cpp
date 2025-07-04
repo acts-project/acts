@@ -17,6 +17,7 @@
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -27,6 +28,69 @@ const std::string s_rootName = "Root";
 }
 
 namespace Acts::Experimental {
+
+///@class BlueprintVisitor
+/// A class for visiting blueprint hierarchy and apply the geometry identifiers
+class BlueprintVisitor : public TrackingGeometryMutableVisitor {
+ public:
+  explicit BlueprintVisitor(
+      const Logger &logger,
+      std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
+          &volumesById)
+      : TrackingGeometryMutableVisitor(true),
+        m_volumesById(volumesById),
+        m_logger(logger) {}
+
+  void visitVolume(TrackingVolume &volume) override {
+    GeometryIdentifier::Value iportal = 0;
+    GeometryIdentifier::Value isensitive = 0;
+
+    auto id = volume.geometryId();
+
+    if (id == GeometryIdentifier{}) {
+      auto it = std::ranges::find(m_volumesById, nullptr);
+      if (it == m_volumesById.end()) {
+        ACTS_ERROR("No free volume IDs left, all " << m_volumesById.size()
+                                                   << " are used");
+        // @TODO: Maybe link to documentation about this
+        throw std::logic_error("No free volume IDs left");
+      }
+
+      id = GeometryIdentifier().withVolume(
+          std::distance(m_volumesById.begin(), it) + 1);
+
+      ACTS_DEBUG("Assigning volume ID " << id << " for "
+                                        << volume.volumeName());
+      volume.assignGeometryId(id);
+      *it = &volume;
+    }
+
+    for (auto &portal : volume.portals()) {
+      if (portal.surface().geometryId() != GeometryIdentifier{}) {
+        continue;
+      }
+      iportal += 1;
+      auto portalId = id.withBoundary(iportal);
+      ACTS_DEBUG("Assigning portal ID: " << portalId);
+      portal.surface().assignGeometryId(portalId);
+    }
+    for (auto &surface : volume.surfaces()) {
+      if (surface.geometryId() != GeometryIdentifier{}) {
+        continue;
+      }
+      isensitive += 1;
+      auto surfaceId = id.withSensitive(isensitive);
+      ACTS_DEBUG("Assigning surface ID: " << surfaceId);
+      surface.assignGeometryId(surfaceId);
+    }
+  }
+
+ private:
+  std::array<const TrackingVolume *, GeometryIdentifier::getMaxVolume()>
+      &m_volumesById;
+  const Logger &m_logger;
+  const Acts::Logger &logger() const { return m_logger; }
+};
 
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
@@ -191,8 +255,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
 
-  world->setNavigationPolicy(
-      options.defaultNavigationPolicyFactory->build(gctx, *world, logger));
+  world->setNavigationPolicy(std::make_unique<Acts::TryAllNavigationPolicy>(
+      gctx, *world, logger, Acts::TryAllNavigationPolicy::Config{}));
 
   auto &shell = child.connect(options, gctx, logger);
 
@@ -231,63 +295,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   ACTS_DEBUG(prefix() << "Assigning volume IDs for remaining volumes");
 
-  TrackingVolume *currentVolume = nullptr;
-  GeometryIdentifier::Value iportal = 0;
-  GeometryIdentifier::Value isensitive = 0;
-  world->apply(overloaded{
-      [&](TrackingVolume &volume) {
-        iportal = 0;
-        isensitive = 0;
-        currentVolume = &volume;
-
-        if (volume.geometryId() != GeometryIdentifier{}) {
-          return;
-        }
-
-        auto it = std::ranges::find(volumesById, nullptr);
-        if (it == volumesById.end()) {
-          ACTS_ERROR(prefix() << "No free volume IDs left, all "
-                              << volumesById.size() << " are used");
-          // @TODO: Maybe link to documentation about this
-          throw std::logic_error("No free volume IDs left");
-        }
-
-        auto id = GeometryIdentifier().withVolume(
-            std::distance(volumesById.begin(), it) + 1);
-
-        ACTS_DEBUG(prefix() << "Assigning volume ID " << id << " for "
-                            << volume.volumeName());
-        volume.assignGeometryId(id);
-
-        *it = &volume;
-      },
-      [&](::Acts::Portal &portal) {
-        if (currentVolume == nullptr) {
-          // This should not really happen
-          ACTS_ERROR(prefix() << "No current volume found");
-          throw std::logic_error("No current volume found");
-        }
-
-        iportal += 1;
-        auto id = currentVolume->geometryId().withBoundary(iportal);
-        ACTS_VERBOSE(prefix() << "Assigning portal ID: " << id);
-        portal.surface().assignGeometryId(id);
-      },
-      [&](Surface &surface) {
-        if (currentVolume == nullptr) {
-          ACTS_ERROR(prefix() << "No current volume found");
-          throw std::logic_error("No current volume found");
-        }
-
-        if (surface.geometryId() != GeometryIdentifier{}) {
-          return;
-        }
-
-        isensitive += 1;
-        auto id = currentVolume->geometryId().withSensitive(isensitive);
-        ACTS_VERBOSE(prefix() << "Assigning surface ID: " << id);
-        surface.assignGeometryId(id);
-      }});
+  BlueprintVisitor visitor{logger, volumesById};
+  world->apply(visitor);
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);

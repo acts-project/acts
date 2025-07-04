@@ -12,8 +12,6 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 
-#include <string>
-
 namespace ActsExamples {
 
 /// Event data writer interface.
@@ -30,6 +28,14 @@ class IWriter : public SequenceElement {
   /// @param context The algorithm context
   ProcessCode internalExecute(const AlgorithmContext& context) final {
     return write(context);
+  }
+
+  /// Informs the writer that the sequencer will start processing the next
+  /// event.
+  /// @param threadId The thread ID
+  virtual ProcessCode beginEvent(std::size_t threadId) {
+    static_cast<void>(threadId);
+    return ProcessCode::SUCCESS;
   }
 
   /// Fulfill the algorithm interface

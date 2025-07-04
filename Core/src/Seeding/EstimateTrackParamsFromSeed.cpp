@@ -107,10 +107,14 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
       // note that we rely on the fact that sigma theta is already computed
       double varianceTheta = result(eBoundTheta, eBoundTheta);
 
-      // transverse momentum contribution
+      // contribution from sigma(q/pt)
+      variance += std::pow(
+          config.initialSigmaQoverPt * std::sin(params[eBoundTheta]), 2);
+
+      // contribution from sigma(pt)/pt
       variance += std::pow(config.initialSigmaPtRel * params[eBoundQOverP], 2);
 
-      // theta contribution
+      // contribution from sigma(theta)
       variance +=
           varianceTheta *
           std::pow(params[eBoundQOverP] / std::tan(params[eBoundTheta]), 2);

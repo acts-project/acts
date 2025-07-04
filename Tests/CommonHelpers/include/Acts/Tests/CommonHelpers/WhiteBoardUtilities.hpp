@@ -69,7 +69,7 @@ struct GenericReadWriteTool {
   template <typename writer_t>
   auto write(writer_t &writer, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, eventId, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board, 0);
 
     auto add = [&](auto &self, auto N) {
       if constexpr (N() < kSize) {
@@ -86,7 +86,7 @@ struct GenericReadWriteTool {
   template <typename reader_t>
   auto read(reader_t &reader, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, eventId, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board, 0);
 
     reader.internalExecute(ctx);
 

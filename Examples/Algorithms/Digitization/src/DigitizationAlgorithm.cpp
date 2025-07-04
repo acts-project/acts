@@ -100,7 +100,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
     std::vector<Acts::BoundIndices> indices;
-    for (auto& gcf : smCfg) {
+    for (auto& gcf : smCfg.params) {
       indices.push_back(gcf.index);
     }
     indices.insert(indices.begin(), geoCfg.indices.begin(),
@@ -115,7 +115,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
           "Digitization configuration contains duplicate parameter indices");
     }
 
-    switch (smCfg.size()) {
+    switch (smCfg.params.size()) {
       case 0u:
         digitizerInput.emplace_back(geoId, makeDigitizer<0u>(digiCfg));
         break;

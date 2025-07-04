@@ -25,7 +25,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
@@ -84,23 +83,6 @@ void addMaterial(Context& ctx) {
                                                           "IMaterialDecorator")
         .def("decorate", py::overload_cast<Surface&>(
                              &Acts::IMaterialDecorator::decorate, py::const_));
-  }
-
-  {
-    auto rmd =
-        py::class_<RootMaterialDecorator, Acts::IMaterialDecorator,
-                   std::shared_ptr<RootMaterialDecorator>>(
-            mex, "RootMaterialDecorator")
-            .def(
-                py::init<RootMaterialDecorator::Config, Acts::Logging::Level>(),
-                py::arg("config"), py::arg("level"));
-
-    using Config = RootMaterialDecorator::Config;
-    auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
-                       otag, mintag, maxtag, ttag, x0tag, l0tag, atag, ztag,
-                       rhotag, fileName);
   }
 
   {

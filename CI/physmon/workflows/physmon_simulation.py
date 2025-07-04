@@ -57,9 +57,18 @@ with tempfile.TemporaryDirectory() as temp:
                     acts.PdgParticle.eElectron,
                 ]
             ],
+            randomNumbers=rnd,
+            outputEvent="particle_gun_event",
+        )
+    )
+
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.INFO,
+            inputEvent="particle_gun_event",
             outputParticles="particles_generated",
             outputVertices="vertices_input",
-            randomNumbers=rnd,
+            mergePrimaries=False,
         )
     )
 
@@ -111,7 +120,7 @@ with tempfile.TemporaryDirectory() as temp:
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=3,
-        numThreads=-1,
+        numThreads=1,  # Pythia8 does not give identical results otherwise
         logLevel=acts.logging.INFO,
     )
 

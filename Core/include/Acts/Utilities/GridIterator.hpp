@@ -8,12 +8,16 @@
 
 #pragma once
 
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
 #include <array>
+#include <vector>
 
 namespace Acts {
+
+template <typename T, class... Axes>
+  requires(std::is_default_constructible_v<T> && !std::is_same_v<T, bool>)
+class Grid;
 
 /// @class GridGlobalIterator
 /// Grid iterator using the global position. This iterates on all
@@ -36,13 +40,13 @@ class GridGlobalIterator {
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
   /// @param [in] idx The global bin
-  GridGlobalIterator(Acts::Grid<T, Axes...>&& grid, std::size_t idx) = delete;
+  GridGlobalIterator(Grid<T, Axes...>&& grid, std::size_t idx) = delete;
   /// @brief Constructor not taking ownership of the grid
   /// @param [in] grid The grid
   /// @param [in] idx The global bin
   ///
   /// @pre Global bin index must be a valid index for the grid
-  explicit GridGlobalIterator(const Acts::Grid<T, Axes...>& grid,
+  explicit GridGlobalIterator(const Grid<T, Axes...>& grid,
                               std::size_t idx = 0ul);
 
   /// @brief Copy constructor
@@ -133,7 +137,7 @@ class GridGlobalIterator {
   /// The iterator never takes ownership of the grid. If the grid gets
   /// invalidated (e.g. in a move operation) we can get undefined behaviours
   /// if the iterator gets used after being invalidated
-  Acts::detail::RefHolder<const Acts::Grid<T, Axes...>> m_grid{nullptr};
+  detail::RefHolder<const Grid<T, Axes...>> m_grid{nullptr};
   /// @brief The iteration index, corresponding to the global bin in the grid
   std::size_t m_idx{0ul};
 };
@@ -160,7 +164,7 @@ class GridLocalIterator {
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
   /// @param [in] indices The local position
-  GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
+  GridLocalIterator(Grid<T, Axes...>&& grid,
                     const std::array<std::size_t, DIM>& indices) = delete;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
@@ -168,16 +172,15 @@ class GridLocalIterator {
   /// @param [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
-  GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    const std::array<std::size_t, DIM>& indices,
-                    std::array<std::vector<std::size_t>, DIM> navigation) =
-      delete;
+  GridLocalIterator(
+      Grid<T, Axes...>&& grid, const std::array<std::size_t, DIM>& indices,
+      std::array<std::vector<std::size_t>, DIM> navigation) = delete;
   /// @brief Constructor
   /// @param [in] grid The grid
   /// @param [in] indices The local position
   ///
   /// @pre The local bins must be a valid local position in the grid
-  GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
+  GridLocalIterator(const Grid<T, Axes...>& grid,
                     const std::array<std::size_t, DIM>& indices);
   /// @brief Constructor with custom navigation pattern
   /// @param [in] grid The grid
@@ -189,7 +192,7 @@ class GridLocalIterator {
   /// <= num bins in the axis) in the grid and have no repetitions.
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
-  GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
+  GridLocalIterator(const Grid<T, Axes...>& grid,
                     const std::array<std::size_t, DIM>& indices,
                     std::array<std::vector<std::size_t>, DIM> navigation);
 
@@ -221,7 +224,7 @@ class GridLocalIterator {
   /// @brief Equality operator
   /// @param [in] other The other GridLocalIterator to be compared against this one
   /// @return The result of the comparison
-  bool operator==(const Acts::GridLocalIterator<T, Axes...>& other) const;
+  bool operator==(const GridLocalIterator<T, Axes...>& other) const;
 
   /// @brief Return stored value at given local position
   /// @return The stored value in the grid from that given local position
@@ -257,7 +260,7 @@ class GridLocalIterator {
   /// The iterator never takes ownership of the grid. If the grid gets
   /// invalidated (e.g. in a move operation) we can get undefined behaviours
   /// if the iterator gets used after being invalidated
-  Acts::detail::RefHolder<const Acts::Grid<T, Axes...>> m_grid{nullptr};
+  detail::RefHolder<const Grid<T, Axes...>> m_grid{nullptr};
   /// @brief The maximum number of local bins in the grid. This does not include
   /// under- and over-flow bins
   std::array<std::size_t, DIM> m_numLocalBins{};
@@ -280,7 +283,7 @@ class GridLocalIterator {
 };
 
 template <typename T, class... Axes>
-GridGlobalIterator(const Acts::Grid<T, Axes...>& grid,
+GridGlobalIterator(const Grid<T, Axes...>& grid,
                    std::size_t idx) -> GridGlobalIterator<T, Axes...>;
 
 }  // namespace Acts

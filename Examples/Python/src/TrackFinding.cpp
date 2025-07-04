@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
@@ -15,12 +14,11 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -30,7 +28,6 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
 
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <tuple>
@@ -39,15 +36,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-class SimSpacePoint;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -59,9 +47,10 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SpacePointMaker, mex, "SpacePointMaker", inputMeasurements,
-      outputSpacePoints, trackingGeometry, geometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
+                                "SpacePointMaker", inputMeasurements,
+                                outputSpacePoints, trackingGeometry,
+                                geometrySelection, stripGeometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -110,11 +99,11 @@ void addTrackFinding(Context& ctx) {
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(
         c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
-        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaPhiMax, deltaZMax,
-        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
-        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
-        radLengthPerSeed, deltaZMax, interactionPointCut, deltaPhiMax, highland,
-        maxScatteringAngle2, useVariableMiddleSPRange, deltaRMiddleMinSPRange,
+        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaZMax, sigmaScattering,
+        maxPtScattering, maxSeedsPerSpM, collisionRegionMin, collisionRegionMax,
+        phiMin, phiMax, zMin, zMax, rMax, rMin, radLengthPerSeed,
+        interactionPointCut, deltaPhiMax, highland, maxScatteringAngle2,
+        useVariableMiddleSPRange, deltaRMiddleMinSPRange,
         deltaRMiddleMaxSPRange, rRangeMiddleSP, rMinMiddle, rMaxMiddle,
         seedConfirmation, centralSeedConfirmationRange,
         forwardSeedConfirmationRange);
@@ -163,6 +152,23 @@ void addTrackFinding(Context& ctx) {
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::GridTripletSeedingAlgorithm, mex,
+      "GridTripletSeedingAlgorithm", inputSpacePoints, outputSeeds, bFieldInZ,
+      minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax, deltaRMinTop,
+      deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax, zMin, zMax,
+      phiMin, phiMax, phiBinDeflectionCoverage, maxPhiBins, zBinNeighborsTop,
+      zBinNeighborsBottom, numPhiNeighbors, zBinEdges, zBinsCustomLooping,
+      rMinMiddle, rMaxMiddle, useVariableMiddleSPRange, rRangeMiddleSP,
+      deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin, deltaZMax,
+      interactionPointCut, collisionRegionMin, collisionRegionMax,
+      helixCutTolerance, sigmaScattering, radLengthPerSeed, maxPtScattering,
+      toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
+      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
+      seedWeightIncrement, numSeedIncrement, useDeltaRinsteadOfTopRadius,
+      seedConfirmation, centralSeedConfirmationRange,
+      forwardSeedConfirmationRange, useExtraCuts);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
                                 outputSeeds, seedFilterConfig, seedFinderConfig,
@@ -182,14 +188,16 @@ void addTrackFinding(Context& ctx) {
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
                                 "TrackParamsLookupEstimation", refLayers, bins,

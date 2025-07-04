@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
+#include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 
 #include <memory>
 #include <mutex>
@@ -29,7 +29,7 @@ namespace ActsExamples {
 
 struct Pythia8GeneratorImpl;
 
-class Pythia8Generator : public EventGenerator::ParticlesGenerator {
+class Pythia8Generator : public ParticlesGenerator {
  public:
   struct Config {
     /// PDG particle number of the first incoming beam.
@@ -66,8 +66,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Pythia8Generator& operator=(const Pythia8Generator&) = delete;
   Pythia8Generator& operator=(Pythia8Generator&& other) = delete;
 
-  std::pair<SimVertexContainer, SimParticleContainer> operator()(
-      RandomEngine& rng) override;
+  std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) override;
 
  private:
   /// Private access to the logging instance

@@ -32,7 +32,7 @@ struct NavigationObjectCandidate {
                             BoundaryTolerance _boundaryTolerance)
       : object(_object),
         representation(_representation),
-        boundaryTolerance(std::move(_boundaryTolerance)) {}
+        boundaryTolerance(_boundaryTolerance) {}
 
   std::pair<SurfaceMultiIntersection, AnyIntersectionObject> intersect(
       const GeometryContext& gctx, const Vector3& position,
@@ -66,9 +66,9 @@ struct IntersectedNavigationObject {
   IntersectedNavigationObject(SurfaceIntersection _intersection,
                               AnyIntersectionObject _anyObject,
                               BoundaryTolerance _boundaryTolerance)
-      : intersection(std::move(_intersection)),
+      : intersection(_intersection),
         anyObject(_anyObject),
-        boundaryTolerance(std::move(_boundaryTolerance)) {}
+        boundaryTolerance(_boundaryTolerance) {}
 
   template <typename object_t>
   bool checkType() const {

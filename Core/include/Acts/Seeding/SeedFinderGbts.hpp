@@ -8,23 +8,13 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <array>
-#include <iostream>
-#include <list>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {

@@ -157,7 +157,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   auto g4SensitiveDetector = g4LogicalVolume->GetSensitiveDetector();
 
   // Get the transform of the G4 object
-  Acts::Transform3 localG4ToGlobal;
+  Acts::Transform3 localG4ToGlobal{Acts::Transform3::Identity()};
   {
     auto g4Translation = g4PhysicalVolume->GetTranslation();
     auto g4Rotation = g4PhysicalVolume->GetRotation();
@@ -174,7 +174,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
     }
   }
 
-  Acts::Vector3 g4AbsPosition = localG4ToGlobal * Acts::Vector3::Zero();
+  const Acts::Vector3 g4AbsPosition = localG4ToGlobal.translation();
 
   if (G4int nDaughters = g4LogicalVolume->GetNoDaughters(); nDaughters > 0) {
     // Step down to all daughters
@@ -182,11 +182,11 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       remapSensitiveNames(state, gctx, g4LogicalVolume->GetDaughter(id),
                           localG4ToGlobal);
     }
-    return;
   }
 
-  std::string volumeName = g4LogicalVolume->GetName();
-  std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
+  const std::string& volumeName{g4LogicalVolume->GetName()};
+  const std::string& volumeMaterialName{
+      g4LogicalVolume->GetMaterial()->GetName()};
 
   const bool isSensitive = g4SensitiveDetector != nullptr;
   const bool isMappedMaterial =
@@ -204,6 +204,9 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                  << ") were not found");
     return;
   }
+  ACTS_VERBOSE("Attempt to map " << g4PhysicalVolume->GetName() << "' at "
+                                 << g4AbsPosition.transpose()
+                                 << " to the tracking geometry");
 
   // Prepare the mapped surface
   const Acts::Surface* mappedSurface = nullptr;

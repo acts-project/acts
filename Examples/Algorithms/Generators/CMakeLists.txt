@@ -2,7 +2,6 @@ add_library(
     ActsExamplesGenerators
     SHARED
     ActsExamples/Generators/EventGenerator.cpp
-    ActsExamples/Generators/ParametricParticleGenerator.cpp
 )
 target_include_directories(
     ActsExamplesGenerators
@@ -10,7 +9,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGenerators
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC ActsCore ActsExamplesFramework ActsExamplesIoHepMC3 HepMC3::HepMC3
 )
 
 install(

@@ -166,8 +166,7 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/Json/include \
-                         ../Plugins/Legacy/include \
-                         ../Plugins/TGeo/include \
+                         ../Plugins/Root/include \
                          ../Plugins/ExaTrkX/include
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
@@ -779,9 +778,8 @@ INPUT                  = ../Core/include \
                          ../Plugins/Podio/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/Json/include \
-                         ../Plugins/Legacy/include \
                          ../Plugins/Onnx/include \
-                         ../Plugins/TGeo/include \
+                         ../Plugins/Root/include \
                          ../Plugins/ExaTrkX/include \
 
 # This tag can be used to specify the character encoding of the source files

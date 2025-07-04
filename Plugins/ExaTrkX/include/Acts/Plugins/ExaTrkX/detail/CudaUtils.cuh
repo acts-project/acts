@@ -8,24 +8,17 @@
 
 #pragma once
 
-#include <sstream>
-
-#include <cuda_runtime_api.h>
+#include <cstdint>
 
 namespace Acts::detail {
 
-inline void cudaAssert(cudaError_t code, const char *file, int line) {
-  if (code != cudaSuccess) {
-    std::stringstream ss;
-    ss << "CUDA error: " << cudaGetErrorString(code) << ", " << file << ":"
-       << line;
-    throw std::runtime_error(ss.str());
+template <typename T>
+__global__ void iota(std::size_t size, T *array) {
+  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= size) {
+    return;
   }
+  array[i] = i;
 }
 
 }  // namespace Acts::detail
-
-#define ACTS_CUDA_CHECK(ans)                             \
-  do {                                                   \
-    Acts::detail::cudaAssert((ans), __FILE__, __LINE__); \
-  } while (0)

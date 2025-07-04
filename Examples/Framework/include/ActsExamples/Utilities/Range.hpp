@@ -32,7 +32,6 @@ class Range {
   ~Range() = default;
   Range& operator=(Range&&) noexcept = default;
   Range& operator=(const Range&) = default;
-
   Iterator begin() const { return m_begin; }
   Iterator end() const { return m_end; }
   bool empty() const { return m_begin == m_end; }

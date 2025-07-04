@@ -21,12 +21,17 @@ BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometryTest) {
   CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
   BOOST_CHECK_NE(tGeometry, nullptr);
+
+  BOOST_CHECK(tGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen1);
 }
 
 BOOST_AUTO_TEST_CASE(CubicTrackingGeometryTest) {
   CubicTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
   BOOST_CHECK_NE(tGeometry, nullptr);
+  BOOST_CHECK(tGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen1);
 }
 
 }  // namespace Acts::Test

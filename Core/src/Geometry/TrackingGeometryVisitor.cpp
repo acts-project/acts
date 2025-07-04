@@ -10,6 +10,7 @@
 
 namespace Acts {
 
+ITrackingGeometryVisitor::~ITrackingGeometryVisitor() = default;
 TrackingGeometryVisitor::~TrackingGeometryVisitor() = default;
 TrackingGeometryMutableVisitor::~TrackingGeometryMutableVisitor() = default;
 

@@ -13,29 +13,19 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
-#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Iterator.hpp"
 
-#include <any>
 #include <vector>
 
 namespace Acts {
 
 struct SpacePointContainerConfig {
   bool useDetailedDoubleMeasurementInfo = false;
-  bool isInInternalUnits = false;
 
-  SpacePointContainerConfig toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "SpacePointContainerConfig");
-    }
-    using namespace Acts::UnitLiterals;
-    SpacePointContainerConfig config = *this;
-    config.isInInternalUnits = true;
-    return config;
-  };
+  bool isInInternalUnits = true;
+  //[[deprecated("SpacePointContainerConfig uses internal units")]]
+  SpacePointContainerConfig toInternalUnits() const { return *this; };
 };
 
 struct SpacePointContainerOptions {
@@ -43,21 +33,10 @@ struct SpacePointContainerOptions {
   // used as offset for Space Points
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
-  bool isInInternalUnits = false;
 
-  SpacePointContainerOptions toInternalUnits() const {
-    if (isInInternalUnits) {
-      throw std::runtime_error(
-          "Repeated conversion to internal units for "
-          "SpacePointContainerOptions");
-    }
-    using namespace Acts::UnitLiterals;
-    SpacePointContainerOptions options = *this;
-    options.isInInternalUnits = true;
-    options.beamPos[0] /= 1_mm;
-    options.beamPos[1] /= 1_mm;
-    return options;
-  }
+  bool isInInternalUnits = true;
+  //[[deprecated("SpacePointContainerOptions uses internal units")]]
+  SpacePointContainerOptions toInternalUnits() const { return *this; }
 };
 
 template <typename container_t, template <typename> class holder_t>

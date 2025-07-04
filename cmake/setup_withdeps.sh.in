@@ -8,9 +8,9 @@
 
 # This script sets up the ACTS Examples environment in a somewhat robust way.
 
-if [ -n "$ZSH_VERSION" ]; then
+if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
-elif [ -n "$BASH_VERSION" ]; then
+elif [ -n "${BASH_VERSION:-}" ]; then
     script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 else
     # If the current shell is not ZSH or Bash, we can't guarantee that the
@@ -43,17 +43,31 @@ export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
 export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 
 # activate dependencies if present
-if [[ -d "@ROOT_DIR@" ]]; then
-  . @ROOT_BINDIR@/thisroot.sh
+if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
+  # Dependency setup script has already given us this location!
+  . "$ROOT_SETUP_SCRIPT"
+else
+  # Try to recover the build-time configuration
+  if [[ -d "@ROOT_DIR@" ]]; then
+    . @ROOT_BINDIR@/thisroot.sh
+  fi
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
   . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
+  prevstate=$-
+
+  set +e
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
+
+  if [[ "$prevstate" == *e* ]]; then
+    # -e was set before, re-enabling
+    set -e
+  fi
 fi
 if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"

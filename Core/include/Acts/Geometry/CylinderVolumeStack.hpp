@@ -44,6 +44,7 @@ class CylinderVolumeStack : public VolumeStack {
   ///       @p direction. Resizing in the other direction
   ///       is always delegated to the child volumes,
   ///       which might in turn be @c CylinderVolumeStack
+  /// @note @p resizeStrategy is used for both ends of the stack
   /// @param logger is the logger
   /// @pre The volumes need to have a common coordinate
   ///      system relative to @p direction. I.e. they need
@@ -56,6 +57,31 @@ class CylinderVolumeStack : public VolumeStack {
       std::vector<Volume*>& volumes, AxisDirection direction,
       VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
       VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
+      const Logger& logger = Acts::getDummyLogger());
+
+  /// Constructor from a vector of volumes and direction
+  /// @param volumes is the vector of volumes
+  /// @param direction is the binning direction
+  /// @param strategy is the attachment strategy
+  /// @param resizeStrategies is the resize strategies
+  /// @note @p resizeStrategy only affects resizing along
+  ///       @p direction. Resizing in the other direction
+  ///       is always delegated to the child volumes,
+  ///       which might in turn be @c CylinderVolumeStack
+  /// @note The first element of @p resizeStrategies is used for the *low* end
+  ///       and the second element is used for the *high* end of the stack
+  /// @param logger is the logger
+  /// @pre The volumes need to have a common coordinate
+  ///      system relative to @p direction. I.e. they need
+  ///      to be aligned in @c z and cannot have a rotation
+  ///      in @c x or @c y.
+  /// @pre The volumes all need to have @c CylinerVolumeBounds
+  ///      and cannot have a @f$\phi@f$ sector or bevels.
+  /// @note Preconditions are checked on construction
+  CylinderVolumeStack(
+      std::vector<Volume*>& volumes, AxisDirection direction,
+      VolumeAttachmentStrategy strategy,
+      std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies,
       const Logger& logger = Acts::getDummyLogger());
 
   /// Update the volume bounds and transform. This

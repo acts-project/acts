@@ -13,8 +13,7 @@
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer &spacepoints,
-    const std::optional<ClusterContainer> &clusters,
+    const SimSpacePointContainer &spacepoints, const ClusterContainer *clusters,
     const std::vector<TrackFindingAlgorithmExaTrkX::NodeFeature> &nodeFeatures,
     const std::vector<float> &featureScales);
 

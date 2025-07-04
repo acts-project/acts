@@ -400,7 +400,8 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
         kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
 
-        self._printFpeSummary(kwargs["fpeMasks"])
+        if self.config.logLevel >= acts.logging.DEBUG:
+            self._printFpeSummary(kwargs["fpeMasks"])
 
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):

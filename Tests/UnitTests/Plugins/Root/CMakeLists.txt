@@ -1,0 +1,13 @@
+set(unittest_extra_libraries ActsPluginRoot)
+
+add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
+add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)
+add_unittest(TGeoTrd1Conversion TGeoTrd1ConversionTests.cpp)
+add_unittest(TGeoTrd2Conversion TGeoTrd2ConversionTests.cpp)
+add_unittest(TGeoTubeConversion TGeoTubeConversionTests.cpp)
+add_unittest(TGeoLayerBuilder TGeoLayerBuilderTests.cpp)
+if(${ROOT_VERSION} VERSION_GREATER "6.25.01")
+    add_unittest(TGeoMaterialConverter TGeoMaterialConverterTests.cpp)
+endif()
+add_unittest(TGeoParser TGeoParserTests.cpp)
+add_unittest(TGeoPrimitivesHelper TGeoPrimitivesHelperTests.cpp)
