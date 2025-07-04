@@ -257,10 +257,8 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-            AxisDirection val =
-                static_cast<AxisDirection>(v->GetBinContent(ib));
-            BinningOption opt =
-                static_cast<BinningOption>(o->GetBinContent(ib));
+            auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
+            auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
             float rmax = max->GetBinContent(ib);
             bUtility += BinUtility(nbins, rmin, rmax, opt, val);
@@ -320,8 +318,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
               double dz = Z->GetBinContent(p);
               double drho = rho->GetBinContent(p);
               // Create material properties
-              const auto material =
-                  Material::fromMassDensity(dx0, dl0, da, dz, drho);
+              const auto material = Material::fromMassDensity(
+                  static_cast<float>(dx0), static_cast<float>(dl0),
+                  static_cast<float>(da), static_cast<float>(dz),
+                  static_cast<float>(drho));
               mGrid.at(p - 1) = material.parameters();
             }
             MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
@@ -337,8 +337,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           double dz = Z->GetBinContent(1);
           double drho = rho->GetBinContent(1);
           // Create material properties
-          const auto material =
-              Material::fromMassDensity(dx0, dl0, da, dz, drho);
+          const auto material = Material::fromMassDensity(
+              static_cast<float>(dx0), static_cast<float>(dl0),
+              static_cast<float>(da), static_cast<float>(dz),
+              static_cast<float>(drho));
           vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
         }
       }
