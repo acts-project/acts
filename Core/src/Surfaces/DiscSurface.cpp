@@ -300,7 +300,8 @@ SurfaceMultiIntersection DiscSurface::intersect(
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
                           status),
            Intersection3D::invalid()},
-          this};
+          this,
+          boundaryTolerance};
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
