@@ -113,18 +113,18 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction,
                           const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
-  boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
+  boost::container::small_vector<SurfaceIntersection, 10> surfaceIntersections;
 
   // fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor) {
-    return sIntersections;
+    return surfaceIntersections;
   }
 
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
   auto isUnique = [&](const SurfaceIntersection& b) {
-    return std::ranges::none_of(sIntersections, [&b](const auto& a) {
+    return std::ranges::none_of(surfaceIntersections, [&b](const auto& a) {
       return a.object() == b.object() && a.index() == b.index();
     });
   };
@@ -145,27 +145,30 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
   };
 
   // lemma 1 : check and fill the surface
-  // [&sIntersections, &options, &parameters
-  auto processSurface = [&](const Surface& sf, bool sensitive = false) {
+  auto processSurface = [&](const Surface& surface, bool sensitive = false) {
     // veto if it's start surface
-    if (options.startObject == &sf) {
+    if (options.startObject == &surface) {
       return;
     }
     // veto if it doesn't fit the prescription
-    if (!acceptSurface(sf, sensitive)) {
+    if (!acceptSurface(surface, sensitive)) {
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (rangeContainsValue(options.externalSurfaces, sf.geometryId())) {
+    if (rangeContainsValue(options.externalSurfaces, surface.geometryId())) {
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
-    SurfaceIntersection sfi =
-        sf.intersect(gctx, position, direction, boundaryTolerance).closest();
-    if (sfi.isValid() &&
-        detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit) &&
-        isUnique(sfi)) {
-      sIntersections.push_back(sfi);
+    auto [intersection, index] =
+        surface.intersect(gctx, position, direction, boundaryTolerance)
+            .closest()
+            .value();
+    SurfaceIntersection surfaceIntersection(intersection, &surface, index);
+    if (intersection.isValid() &&
+        detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                farLimit) &&
+        isUnique(surfaceIntersection)) {
+      surfaceIntersections.push_back(surfaceIntersection);
     }
   };
 
@@ -209,7 +212,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
   const Surface* layerSurface = &surfaceRepresentation();
   processSurface(*layerSurface);
 
-  return sIntersections;
+  return surfaceIntersections;
 }
 
 SurfaceIntersection Layer::surfaceOnApproach(
@@ -220,28 +223,15 @@ SurfaceIntersection Layer::surfaceOnApproach(
   // - options.resolveSensitive is on -> always
   // - options.resolveMaterial is on
   //   && either sensitive or approach surfaces have material
-  bool resolvePS = options.resolveSensitive || options.resolvePassive;
-  bool resolveMS = options.resolveMaterial &&
-                   (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-                    (surfaceRepresentation().surfaceMaterial() != nullptr));
+  const bool resolvePS = options.resolveSensitive || options.resolvePassive;
+  const bool resolveMS =
+      options.resolveMaterial &&
+      (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
+       (surfaceRepresentation().surfaceMaterial() != nullptr));
 
   // The Limits
-  double nearLimit = options.nearLimit;
-  double farLimit = options.farLimit;
-
-  // Helper function to find valid intersection
-  auto findValidIntersection =
-      [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
-    for (const auto& sfi : sfmi.split()) {
-      if (sfi.isValid() &&
-          detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit)) {
-        return sfi;
-      }
-    }
-
-    // Return an invalid one
-    return SurfaceIntersection::invalid();
-  };
+  const double nearLimit = options.nearLimit;
+  const double farLimit = options.farLimit;
 
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
@@ -253,9 +243,11 @@ SurfaceIntersection Layer::surfaceOnApproach(
 
   // Intersect and check the representing surface
   const Surface& rSurface = surfaceRepresentation();
-  auto sIntersection =
-      rSurface.intersect(gctx, position, direction, options.boundaryTolerance);
-  return findValidIntersection(sIntersection);
+  const auto [intersection, index] =
+      rSurface.intersect(gctx, position, direction, options.boundaryTolerance)
+          .firstValid(nearLimit, farLimit)
+          .value();
+  return SurfaceIntersection(intersection, &rSurface, index);
 }
 
 }  // namespace Acts

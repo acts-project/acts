@@ -267,7 +267,7 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-SurfaceMultiIntersection DiscSurface::intersect(
+MultiIntersection3D DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -296,10 +296,9 @@ SurfaceMultiIntersection DiscSurface::intersect(
       status = IntersectionStatus::unreachable;
     }
   }
-  return {{Intersection3D(intersection.position(), intersection.pathLength(),
-                          status),
-           Intersection3D::invalid()},
-          this};
+  return MultiIntersection3D(Intersection3D(intersection.position(),
+                                            intersection.pathLength(), status),
+                             Intersection3D::invalid());
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(

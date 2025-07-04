@@ -11,6 +11,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 
@@ -27,9 +28,10 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // A container collecting additional candidates from multiple
   // valid interseciton
   std::vector<Candidate> additionalCandidates = {};
-  for (auto& [sIntersection, gen2Portal, portal, bTolerance] : m_candidates) {
+  for (auto& [surfaceIntersection, gen2Portal, portal, bTolerance] :
+       m_candidates) {
     // Get the surface from the object intersection
-    const Surface* surface = sIntersection.object();
+    const Surface* surface = surfaceIntersection.object();
     // Intersect the surface
     auto multiIntersection = surface->intersect(gctx, position, direction,
                                                 cTolerance, onSurfaceTolerance);
@@ -40,29 +42,33 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
       if (multiIntersection[0].pathLength() < -onSurfaceTolerance) {
         continue;
       }
-      sIntersection = multiIntersection[0];
+      surfaceIntersection =
+          SurfaceIntersection(multiIntersection[0], surface, 0);
     } else if (!firstValid && secondValid) {
       if (multiIntersection[1].pathLength() < -onSurfaceTolerance) {
         continue;
       }
-      sIntersection = multiIntersection[1];
+      surfaceIntersection =
+          SurfaceIntersection(multiIntersection[1], surface, 1);
     } else {
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
-      for (const auto& rsIntersection : multiIntersection.split()) {
+      for (const auto& [index, intersection] : enumerate(multiIntersection)) {
         // Skip negative solutions, respecting the on surface tolerance
-        if (rsIntersection.pathLength() < -onSurfaceTolerance) {
+        if (intersection.pathLength() < -onSurfaceTolerance) {
           continue;
         }
         // Valid solution is either on surface or updates the distance
-        if (rsIntersection.isValid()) {
+        if (intersection.isValid()) {
           if (!originalCandidateUpdated) {
-            sIntersection = rsIntersection;
+            surfaceIntersection =
+                SurfaceIntersection(intersection, surface, index);
             originalCandidateUpdated = true;
           } else {
-            additionalCandidates.emplace_back(rsIntersection, gen2Portal,
-                                              portal, bTolerance);
+            additionalCandidates.emplace_back(
+                SurfaceIntersection(intersection, surface, index), gen2Portal,
+                portal, bTolerance);
           }
         }
       }
@@ -111,18 +117,19 @@ bool NavigationStream::update(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface* surface = candidate.intersection.object();
     // (re-)Intersect the surface
-    auto multiIntersection =
+    MultiIntersection3D multiIntersection =
         surface->intersect(gctx, queryPoint.position, queryPoint.direction,
                            candidate.bTolerance, onSurfaceTolerance);
     // Split them into valid intersections
-    for (const auto& rsIntersection : multiIntersection.split()) {
+    for (const auto& [index, intersection] : enumerate(multiIntersection)) {
       // Skip wrong index solution
-      if (rsIntersection.index() != candidate.intersection.index()) {
+      if (index != candidate.intersection.index()) {
         continue;
       }
       // Valid solution is either on surface or updates the distance
-      if (rsIntersection.isValid()) {
-        candidate.intersection = rsIntersection;
+      if (intersection.isValid()) {
+        candidate.intersection =
+            SurfaceIntersection(intersection, surface, index);
         return true;
       }
     }

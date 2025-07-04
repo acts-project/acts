@@ -20,9 +20,9 @@ namespace Acts {
 
 void GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
-  for (auto& sf : m_surfaceCache) {
-    auto mutableSf = const_cast<Surface*>(sf);
-    mutableSf->associateLayer(lay);
+  for (const Surface* surface : m_surfaceCache) {
+    Surface* mutableSurface = const_cast<Surface*>(surface);
+    mutableSurface->associateLayer(lay);
   }
 }
 
@@ -31,23 +31,24 @@ SurfaceIntersection GenericApproachDescriptor::approachSurface(
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double nearLimit, double farLimit) const {
   // almost always 2
-  boost::container::small_vector<SurfaceIntersection, 4> sIntersections;
-  sIntersections.reserve(m_surfaceCache.size());
-  for (const auto& sf : m_surfaceCache) {
-    auto sfIntersection =
-        sf->intersect(gctx, position, direction, boundaryTolerance);
-    for (const auto& intersection : sfIntersection.split()) {
+  boost::container::small_vector<SurfaceIntersection, 4> surfaceIntersections;
+  surfaceIntersections.reserve(m_surfaceCache.size());
+  for (const Surface* surface : m_surfaceCache) {
+    auto multiIntersection =
+        surface->intersect(gctx, position, direction, boundaryTolerance);
+    for (const auto& intersection : multiIntersection) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        sIntersections.push_back(intersection);
+        surfaceIntersections.emplace_back(intersection, surface);
       }
     }
   }
-  if (sIntersections.empty()) {
+  if (surfaceIntersections.empty()) {
     return SurfaceIntersection::invalid();
   }
-  return *std::min_element(sIntersections.begin(), sIntersections.end(),
+  return *std::min_element(surfaceIntersections.begin(),
+                           surfaceIntersections.end(),
                            SurfaceIntersection::pathLengthOrder);
 }
 

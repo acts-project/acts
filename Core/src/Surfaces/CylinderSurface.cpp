@@ -218,7 +218,7 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-SurfaceMultiIntersection CylinderSurface::intersect(
+MultiIntersection3D CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -229,7 +229,8 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return MultiIntersection3D(Intersection3D::invalid(),
+                               Intersection3D::invalid());
   }
 
   // Check the validity of the first solution
@@ -268,7 +269,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
   if (qe.solutions == 1) {
-    return {{first, first}, this};
+    return MultiIntersection3D(first, first);
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -280,9 +281,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, this};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(

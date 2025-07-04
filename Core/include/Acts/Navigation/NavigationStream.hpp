@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <span>
 #include <vector>
@@ -53,8 +53,7 @@ class NavigationStream {
   /// - a BoundaryTolerance : the boundary tolerance used for the intersection
   struct Candidate {
     /// The intersection
-    ObjectIntersection<Surface> intersection =
-        ObjectIntersection<Surface>::invalid();
+    SurfaceIntersection intersection = SurfaceIntersection::invalid();
     /// The portal
     const Acts::Experimental::Portal* gen2Portal = nullptr;
     const Portal* portal = nullptr;
@@ -73,8 +72,8 @@ class NavigationStream {
     /// @return true if aCandidate is closer to the origin
     constexpr static bool pathLengthOrder(const Candidate& aCandidate,
                                           const Candidate& bCandidate) {
-      return ObjectIntersection<Surface>::pathLengthOrder(
-          aCandidate.intersection, bCandidate.intersection);
+      return SurfaceIntersection::pathLengthOrder(aCandidate.intersection,
+                                                  bCandidate.intersection);
     }
   };
 

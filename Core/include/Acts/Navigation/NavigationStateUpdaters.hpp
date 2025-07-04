@@ -9,20 +9,15 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
-#include <memory>
 
 namespace Acts::Experimental {
 
@@ -56,19 +51,19 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     BoundaryTolerance boundaryTolerance =
         sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
     // Check the surface intersection
-    auto sIntersection = surface.intersect(
+    auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto& si : sIntersection.split()) {
-      if (si.isValid() && si.pathLength() > overstepTolerance) {
+    for (const auto& intersection : multiIntersection) {
+      if (intersection.isValid() &&
+          intersection.pathLength() > overstepTolerance) {
         confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{
-            si, sc.surface, sc.portal, boundaryTolerance});
+            intersection, sc.surface, sc.portal, boundaryTolerance});
       }
     }
   }
 
-  std::ranges::sort(confirmedCandidates, {}, [](const auto& c) {
-    return c.objectIntersection.pathLength();
-  });
+  std::ranges::sort(confirmedCandidates, {},
+                    [](const auto& c) { return c.intersection.pathLength(); });
 
   nState.surfaceCandidates = std::move(confirmedCandidates);
   nState.surfaceCandidateIndex = 0;

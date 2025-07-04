@@ -31,7 +31,6 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -73,9 +72,6 @@ using LayerVector = std::vector<LayerPtr>;
 
 /// Intersection with @c Layer
 using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
-/// Multi-intersection with @c Layer
-using LayerMultiIntersection =
-    std::pair<SurfaceMultiIntersection, const Layer*>;
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
@@ -89,10 +85,6 @@ struct BoundaryIntersection {
   const BoundarySurface* boundarySurface;
   const Portal* portal;
 };
-
-/// Multi-intersection with a @c BoundarySurface
-using BoundaryMultiIntersection =
-    std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
 
 /// @}
 

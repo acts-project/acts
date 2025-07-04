@@ -378,9 +378,9 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceMultiIntersection& candidates,
+      [&](MultiIntersection3D& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
-    for (const auto& intersection : candidates.split()) {
+    for (const auto& [index, intersection] : enumerate(candidates)) {
       if (!intersection.isValid()) {
         continue;
       }
@@ -389,7 +389,10 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return BoundaryIntersection(intersection, boundary, nullptr);
+        return BoundaryIntersection(
+            SurfaceIntersection(intersection,
+                                &boundary->surfaceRepresentation(), index),
+            boundary, nullptr);
       }
     }
 

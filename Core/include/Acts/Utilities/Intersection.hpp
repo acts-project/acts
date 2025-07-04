@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -22,6 +23,21 @@
 #include <boost/container/static_vector.hpp>
 
 namespace Acts {
+
+namespace detail {
+
+/// This function checks if an intersection path length is valid for the
+/// specified near-limit and far-limit
+///
+/// @param pathLength The path length of the intersection
+/// @param nearLimit The minimum path length for an intersection to be considered
+/// @param farLimit The maximum path length for an intersection to be considered
+/// @param logger A optionally supplied logger which prints out a lot of infos
+///               at VERBOSE level
+bool checkPathLength(double pathLength, double nearLimit, double farLimit,
+                     const Logger& logger = getDummyLogger());
+
+}  // namespace detail
 
 /// Status enum
 enum class IntersectionStatus : int {
@@ -147,9 +163,90 @@ static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
 static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
-using MultiIntersection3D =
-    boost::container::static_vector<Intersection3D,
-                                    s_maximumNumberOfIntersections>;
+
+template <unsigned int DIM>
+class MultiIntersection {
+ public:
+  using IntersectionType = Intersection<DIM>;
+
+  static constexpr std::uint8_t maximumNumberOfIntersections =
+      s_maximumNumberOfIntersections;
+  using Container =
+      boost::container::static_vector<IntersectionType,
+                                      maximumNumberOfIntersections>;
+
+  using IndexedIntersection = std::pair<IntersectionType, std::uint8_t>;
+
+  explicit MultiIntersection() = default;
+  explicit MultiIntersection(const IntersectionType& intersection)
+      : m_intersections{intersection} {}
+  explicit MultiIntersection(Container intersections)
+      : m_intersections(std::move(intersections)) {}
+  explicit MultiIntersection(std::span<const IntersectionType> intersections)
+      : m_intersections(intersections.begin(), intersections.end()) {}
+  MultiIntersection(const IntersectionType& intersection1,
+                    const IntersectionType& intersection2)
+      : m_intersections{intersection1, intersection2} {}
+
+  MultiIntersection(const MultiIntersection&) noexcept = default;
+  MultiIntersection(MultiIntersection&&) noexcept = default;
+  MultiIntersection& operator=(const MultiIntersection&) noexcept = default;
+  MultiIntersection& operator=(MultiIntersection&&) noexcept = default;
+
+  constexpr IntersectionType& operator[](std::size_t index) {
+    return m_intersections[index];
+  }
+  constexpr const IntersectionType& operator[](std::size_t index) const {
+    return m_intersections[index];
+  }
+
+  constexpr bool empty() const { return m_intersections.empty(); }
+  constexpr std::size_t size() const { return m_intersections.size(); }
+
+  auto begin() { return m_intersections.begin(); }
+  auto end() { return m_intersections.end(); }
+  auto begin() const { return m_intersections.begin(); }
+  auto end() const { return m_intersections.end(); }
+  auto cbegin() const { return m_intersections.cbegin(); }
+  auto cend() const { return m_intersections.cend(); }
+
+  constexpr std::optional<IndexedIntersection> closest() const {
+    auto min = std::min_element(begin(), end(), IntersectionType::closestOrder);
+    if (min == end()) {
+      return std::nullopt;
+    }
+    return IndexedIntersection(
+        *min, static_cast<std::uint8_t>(std::distance(begin(), min)));
+  }
+
+  constexpr std::optional<IndexedIntersection> closestForward() const {
+    auto min =
+        std::min_element(begin(), end(), IntersectionType::closestForwardOrder);
+    if (min == end()) {
+      return std::nullopt;
+    }
+    return IndexedIntersection(
+        *min, static_cast<std::uint8_t>(std::distance(begin(), min)));
+  }
+
+  constexpr std::optional<IndexedIntersection> firstValid(
+      double nearLimit, double farLimit,
+      const Logger& logger = getDummyLogger()) const {
+    for (const auto& [index, intersection] : enumerate(*this)) {
+      if (intersection.isValid() &&
+          detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger)) {
+        return IndexedIntersection(intersection, index);
+      }
+    }
+    return std::nullopt;
+  }
+
+ private:
+  Container m_intersections;
+};
+
+using MultiIntersection3D = MultiIntersection<3>;
 
 template <typename object_t>
 class ObjectIntersection {
@@ -233,76 +330,5 @@ class ObjectIntersection {
 
 static_assert(std::is_trivially_move_constructible_v<ObjectIntersection<int>>);
 static_assert(std::is_trivially_move_assignable_v<ObjectIntersection<int>>);
-
-template <typename object_t>
-class ObjectMultiIntersection {
- public:
-  using SplitIntersections =
-      boost::container::static_vector<ObjectIntersection<object_t>,
-                                      s_maximumNumberOfIntersections>;
-
-  /// Object intersection
-  ///
-  /// @param intersections are the intersections
-  /// @param object is the object to be instersected
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections), m_object(object) {}
-
-  constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
-    return {m_intersections[index], m_object, index};
-  }
-
-  constexpr const MultiIntersection3D& intersections() const {
-    return m_intersections;
-  }
-
-  constexpr std::size_t size() const { return m_intersections.size(); }
-
-  constexpr const object_t* object() const { return m_object; }
-
-  constexpr SplitIntersections split() const {
-    SplitIntersections result;
-    for (std::size_t i = 0; i < size(); ++i) {
-      result.push_back(operator[](i));
-    }
-    return result;
-  }
-
-  constexpr ObjectIntersection<object_t> closest() const {
-    auto splitIntersections = split();
-    return *std::min_element(splitIntersections.begin(),
-                             splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestOrder);
-  }
-
-  constexpr ObjectIntersection<object_t> closestForward() const {
-    auto splitIntersections = split();
-    return *std::min_element(splitIntersections.begin(),
-                             splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestForwardOrder);
-  }
-
- private:
-  /// The intersections
-  MultiIntersection3D m_intersections;
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
-};
-
-namespace detail {
-
-/// This function checks if an intersection path length is valid for the
-/// specified near-limit and far-limit
-///
-/// @param pathLength The path length of the intersection
-/// @param nearLimit The minimum path length for an intersection to be considered
-/// @param farLimit The maximum path length for an intersection to be considered
-/// @param logger A optionally supplied logger which prints out a lot of infos
-///               at VERBOSE level
-bool checkPathLength(double pathLength, double nearLimit, double farLimit,
-                     const Logger& logger = getDummyLogger());
-
-}  // namespace detail
 
 }  // namespace Acts
