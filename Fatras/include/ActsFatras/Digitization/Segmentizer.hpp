@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "ActsFatras/Digitization/Segmentation.hpp"
 
 #include <array>
 #include <utility>
@@ -30,37 +31,6 @@ struct Segmentizer {
   using Segment2D = std::array<Acts::Vector2, 2>;
   /// Shorthand for a 2D bin
   using Bin2D = std::array<unsigned int, 2>;
-  /// shorthand for a 2D bin delta
-  using BinDelta2D = std::array<int, 2>;
-
-  /// Nested struct for stepping from one channel to the next.
-  struct ChannelStep {
-    /// This is the delta to the last step in bins
-    BinDelta2D delta = {0, 0};
-    /// The intersection with the channel boundary
-    Acts::Vector2 intersect;
-    /// The patlength from the start
-    double path = 0.;
-
-    /// Constructor with arguments for a ChannelStep.
-    ///
-    /// @param delta_ The bin delta for this step
-    /// @param intersect_ The intersect with the channel boundary
-    /// @param start The start of the surface segment, for path from origin
-    ChannelStep(BinDelta2D delta_, Acts::Vector2 intersect_,
-                const Acts::Vector2& start)
-        : delta(delta_),
-          intersect(std::move(intersect_)),
-          path((intersect - start).norm()) {}
-
-    /// Smaller operator for sorting the ChannelStep objects.
-    ///
-    /// @param cstep The other ChannelStep to be compared
-    ///
-    /// The ChannelStep objects can be compared with its path distance
-    /// from the start (surface segment origin)
-    bool operator<(const ChannelStep& cstep) const { return path < cstep.path; }
-  };
 
   /// Nested struct for representing channel steps.
   struct ChannelSegment {

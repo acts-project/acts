@@ -62,6 +62,15 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// @brief get the bin
+  /// @param x the value to be binned
+  virtual std::size_t getBin(double x) const = 0;
+
+  // Get the bin center of the given bin
+  /// @param bin the bin index
+  /// @return the bin center
+  virtual double getBinCenter(std::size_t bin) const = 0;
+
   /// Centralized axis factory for equidistant binning
   ///
   /// @param aBoundaryType the axis boundary type
