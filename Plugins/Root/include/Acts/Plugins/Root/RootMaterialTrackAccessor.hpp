@@ -42,8 +42,7 @@ class RootMaterialTrackAccessor {
   /// @brief Constructor from config struct
   ///
   /// @param cfg the configuration for the accessor
-  explicit RootMaterialTrackAccessor(const Config& cfg)
-      : m_cfg(cfg){}
+  explicit RootMaterialTrackAccessor(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Destructor
   ~RootMaterialTrackAccessor() = default;
