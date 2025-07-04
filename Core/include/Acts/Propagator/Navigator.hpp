@@ -460,7 +460,7 @@ class Navigator {
           ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
           return NavigationTarget(*state.navLayer().first.object(),
                                   state.navLayer().first.index(),
-                                  state.navSurface().boundaryTolerance());
+                                  state.navLayer().first.boundaryTolerance());
         } else {
           // This was the last layer, switch to boundaries
           ACTS_VERBOSE(volInfo(state) << "Target boundaries.");
@@ -478,9 +478,10 @@ class Navigator {
         }
         if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-          return NavigationTarget(*state.navBoundary().intersection.object(),
-                                  state.navBoundary().intersection.index(),
-                                  state.navSurface().boundaryTolerance());
+          return NavigationTarget(
+              *state.navBoundary().intersection.object(),
+              state.navBoundary().intersection.index(),
+              state.navBoundary().intersection.boundaryTolerance());
         } else {
           // This was the last boundary, we have to leave the volume somehow,
           // renavigate
