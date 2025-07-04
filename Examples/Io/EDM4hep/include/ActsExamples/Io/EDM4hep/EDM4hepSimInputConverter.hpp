@@ -21,7 +21,8 @@
 
 namespace edm4hep {
 class MCParticle;
-}
+class SimTrackerHit;
+}  // namespace edm4hep
 
 namespace podio {
 class Frame;
@@ -66,6 +67,15 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
 
     /// Whether to sort sim hits in time to produce index sequence
     bool sortSimHitsInTime = false;
+
+    std::optional<double> particleRMin = std::nullopt;
+    std::optional<double> particleRMax = std::nullopt;
+
+    std::optional<double> particlePtMin = std::nullopt;
+    std::optional<double> particlePtMax = std::nullopt;
+
+    std::optional<double> simHitRMin = std::nullopt;
+    std::optional<double> simHitRMax = std::nullopt;
   };
 
   using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;
@@ -91,6 +101,10 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
                        std::size_t& maxGen) const;
 
   static void setSubParticleIds(std::span<SimParticle> particles);
+
+  bool acceptParticle(const SimParticle& particle) const;
+  bool acceptParticle(const edm4hep::MCParticle& particle) const;
+  bool acceptSimHit(const edm4hep::SimTrackerHit& particle) const;
 
   Config m_cfg;
 

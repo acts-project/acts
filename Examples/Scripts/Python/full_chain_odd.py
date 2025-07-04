@@ -184,9 +184,19 @@ s = acts.examples.Sequencer(
 
 if args.edm4hep:
     import acts.examples.edm4hep
+    from acts.examples.podio import PodioReader
 
-    edm4hepReader = acts.examples.edm4hep.EDM4hepSimReader(
-        inputPath=str(args.edm4hep),
+    s.addReader(
+        PodioReader(
+            level=acts.logging.DEBUG,
+            inputPath=str(args.edm4hep),
+            outputFrame="events",
+            category="events",
+        )
+    )
+
+    edm4hepReader = acts.examples.edm4hep.EDM4hepSimInputConverter(
+        inputFrame="events",
         inputSimHits=[
             "PixelBarrelReadout",
             "PixelEndcapReadout",
@@ -198,13 +208,17 @@ if args.edm4hep:
         outputParticlesGenerator="particles_generated",
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
+        outputSimVertices="vertices_truth",
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
-        sortSimHitsInTime=True,
-        level=acts.logging.INFO,
+        sortSimHitsInTime=False,
+        particleRMax=1080 * u.mm,
+        particlePtMin=150 * u.MeV,
+        simHitRMax=1080 * u.mm,
+        level=acts.logging.DEBUG,
     )
-    s.addReader(edm4hepReader)
+    s.addAlgorithm(edm4hepReader)
 
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
 
@@ -214,7 +228,6 @@ if args.edm4hep:
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
     )
