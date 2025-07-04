@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -188,11 +187,14 @@ findTrackStateForExtrapolation(
       freeVector = MultiTrajectoryHelpers::freeFiltered(geoContext, state);
     }
 
-    return referenceSurface
-        .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
-                   freeVector.template segment<3>(eFreeDir0),
-                   BoundaryTolerance::None(), s_onSurfaceTolerance)
-        .closest();
+    auto closest =
+        referenceSurface
+            .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
+                       freeVector.template segment<3>(eFreeDir0),
+                       BoundaryTolerance::None(), s_onSurfaceTolerance)
+            .closest();
+    return SurfaceIntersection(closest.first, &referenceSurface,
+                               closest.second);
   };
 
   switch (strategy) {

@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -32,11 +33,12 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           .intersect(gctx, params.position(gctx), params.direction(),
                      BoundaryTolerance::Infinite())
-          .closest();
+          .closest()
+          .first;
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -125,7 +127,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     intersection = perigeeSurface
                        .intersect(gctx, paramVecCopy.template head<3>(),
                                   wiggledDir, BoundaryTolerance::Infinite())
-                       .closest();
+                       .closest()
+                       .first;
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

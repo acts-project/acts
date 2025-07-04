@@ -380,7 +380,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
   auto checkIntersection =
       [&](MultiIntersection3D& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
-    for (const auto& [index, intersection] : enumerate(candidates)) {
+    for (auto [intersection, index] : candidates) {
       if (!intersection.isValid()) {
         continue;
       }

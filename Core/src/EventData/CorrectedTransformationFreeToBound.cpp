@@ -151,7 +151,6 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
                        navDir * params.segment<3>(eFreeDir0),
                        BoundaryTolerance::Infinite())
             .closest()
-            .value()
             .first;
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 

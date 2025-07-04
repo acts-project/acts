@@ -161,8 +161,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     // the surface intersection
     auto [intersection, index] =
         surface.intersect(gctx, position, direction, boundaryTolerance)
-            .closest()
-            .value();
+            .closest();
     SurfaceIntersection surfaceIntersection(intersection, &surface, index);
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -242,12 +241,17 @@ SurfaceIntersection Layer::surfaceOnApproach(
   }
 
   // Intersect and check the representing surface
-  const Surface& rSurface = surfaceRepresentation();
-  const auto [intersection, index] =
-      rSurface.intersect(gctx, position, direction, options.boundaryTolerance)
-          .firstValid(nearLimit, farLimit)
-          .value();
-  return SurfaceIntersection(intersection, &rSurface, index);
+  const Surface& layerSurface = surfaceRepresentation();
+  const MultiIntersection3D multiIntersection = layerSurface.intersect(
+      gctx, position, direction, options.boundaryTolerance);
+  for (auto [intersection, index] : multiIntersection) {
+    if (intersection.isValid() &&
+        detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                farLimit)) {
+      return SurfaceIntersection(intersection, &layerSurface, index);
+    }
+  }
+  return SurfaceIntersection::invalid(&layerSurface);
 }
 
 }  // namespace Acts

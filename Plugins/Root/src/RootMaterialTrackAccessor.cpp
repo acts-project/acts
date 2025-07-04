@@ -226,16 +226,16 @@ void Acts::RootMaterialTrackAccessor::write(
         m_surfaceR.push_back(VectorHelpers::perp(mint.intersection));
         m_surfaceDistance.push_back((mint.position - mint.intersection).norm());
       } else if (surface != nullptr) {
-        auto sfIntersection =
-            surface
-                ->intersect(gctx, mint.position, mint.direction,
-                            Acts::BoundaryTolerance::None())
-                .closest();
+        auto intersection = surface
+                                ->intersect(gctx, mint.position, mint.direction,
+                                            Acts::BoundaryTolerance::None())
+                                .closest()
+                                .first;
         m_surfaceId.push_back(surface->geometryId().value());
         m_surfacePathCorrection.push_back(1.0);
-        m_surfaceX.push_back(sfIntersection.position().x());
-        m_surfaceY.push_back(sfIntersection.position().y());
-        m_surfaceZ.push_back(sfIntersection.position().z());
+        m_surfaceX.push_back(intersection.position().x());
+        m_surfaceY.push_back(intersection.position().y());
+        m_surfaceZ.push_back(intersection.position().z());
       } else {
         m_surfaceId.push_back(Acts::GeometryIdentifier().value());
         m_surfaceX.push_back(0);

@@ -53,7 +53,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     // Check the surface intersection
     auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (const auto& intersection : multiIntersection) {
+    for (auto [intersection, index] : multiIntersection) {
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
         confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{

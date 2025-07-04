@@ -36,11 +36,11 @@ SurfaceIntersection GenericApproachDescriptor::approachSurface(
   for (const Surface* surface : m_surfaceCache) {
     auto multiIntersection =
         surface->intersect(gctx, position, direction, boundaryTolerance);
-    for (const auto& intersection : multiIntersection) {
+    for (auto [intersection, index] : multiIntersection) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        surfaceIntersections.emplace_back(intersection, surface);
+        surfaceIntersections.emplace_back(intersection, surface, index);
       }
     }
   }

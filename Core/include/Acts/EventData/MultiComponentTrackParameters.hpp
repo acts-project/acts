@@ -90,10 +90,11 @@ class MultiComponentBoundTrackParameters {
 
     // Project the position onto the surface, keep everything else as is
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
-      Vector3 newPos = s->intersect(geoCtx, pos4.template segment<3>(eFreePos0),
-                                    dir, BoundaryTolerance::Infinite())
-                           .closest()
-                           .position();
+      auto [closestIntersection, closestIndex] =
+          s->intersect(geoCtx, pos4.template segment<3>(eFreePos0), dir,
+                       BoundaryTolerance::Infinite())
+              .closest();
+      Vector3 newPos = closestIntersection.position();
 
       ParametersVector bv =
           transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);

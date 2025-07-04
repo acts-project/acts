@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -55,9 +54,8 @@ inline std::ostream& operator<<(std::ostream& os, IntersectionStatus status) {
   return os;
 }
 
-///  @struct Intersection
-///
-///  Intersection struct used for position
+/// Intersection struct containing the position, path length and status of an
+/// intersection.
 template <unsigned int DIM>
 class Intersection {
  public:
@@ -171,79 +169,102 @@ class MultiIntersection {
 
   static constexpr std::uint8_t maximumNumberOfIntersections =
       s_maximumNumberOfIntersections;
-  using Container =
-      boost::container::static_vector<IntersectionType,
-                                      maximumNumberOfIntersections>;
+  using Container = std::array<IntersectionType, maximumNumberOfIntersections>;
 
-  using IndexedIntersection = std::pair<IntersectionType, std::uint8_t>;
+  constexpr explicit MultiIntersection(
+      const IntersectionType& intersection) noexcept
+      : m_intersections{intersection, IntersectionType::invalid()}, m_size{1} {}
+  constexpr MultiIntersection(const IntersectionType& intersection1,
+                              const IntersectionType& intersection2) noexcept
+      : m_intersections{intersection1, intersection2}, m_size{2} {}
 
-  explicit MultiIntersection() = default;
-  explicit MultiIntersection(const IntersectionType& intersection)
-      : m_intersections{intersection} {}
-  explicit MultiIntersection(Container intersections)
-      : m_intersections(std::move(intersections)) {}
-  explicit MultiIntersection(std::span<const IntersectionType> intersections)
-      : m_intersections(intersections.begin(), intersections.end()) {}
-  MultiIntersection(const IntersectionType& intersection1,
-                    const IntersectionType& intersection2)
-      : m_intersections{intersection1, intersection2} {}
+  constexpr MultiIntersection(const MultiIntersection&) noexcept = default;
+  constexpr MultiIntersection(MultiIntersection&&) noexcept = default;
+  constexpr MultiIntersection& operator=(const MultiIntersection&) noexcept =
+      default;
+  constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
+      default;
 
-  MultiIntersection(const MultiIntersection&) noexcept = default;
-  MultiIntersection(MultiIntersection&&) noexcept = default;
-  MultiIntersection& operator=(const MultiIntersection&) noexcept = default;
-  MultiIntersection& operator=(MultiIntersection&&) noexcept = default;
-
-  constexpr IntersectionType& operator[](std::size_t index) {
+  constexpr IntersectionType& operator[](std::uint8_t index) noexcept {
     return m_intersections[index];
   }
-  constexpr const IntersectionType& operator[](std::size_t index) const {
+  constexpr const IntersectionType& operator[](
+      std::uint8_t index) const noexcept {
     return m_intersections[index];
   }
 
-  constexpr bool empty() const { return m_intersections.empty(); }
-  constexpr std::size_t size() const { return m_intersections.size(); }
+  constexpr std::uint8_t size() const noexcept { return m_size; }
 
-  auto begin() { return m_intersections.begin(); }
-  auto end() { return m_intersections.end(); }
-  auto begin() const { return m_intersections.begin(); }
-  auto end() const { return m_intersections.end(); }
-  auto cbegin() const { return m_intersections.cbegin(); }
-  auto cend() const { return m_intersections.cend(); }
+  template <bool ReadOnly>
+  class Iterator {
+   public:
+    using container_iterator =
+        std::conditional_t<ReadOnly, typename Container::const_iterator,
+                           typename Container::iterator>;
 
-  constexpr std::optional<IndexedIntersection> closest() const {
-    auto min = std::min_element(begin(), end(), IntersectionType::closestOrder);
-    if (min == end()) {
-      return std::nullopt;
+    using value_type =
+        std::pair<std::conditional_t<ReadOnly, const IntersectionType&,
+                                     IntersectionType&>,
+                  std::uint8_t>;
+    using difference_type = std::ptrdiff_t;
+    using pointer =
+        std::conditional_t<ReadOnly, const value_type*, value_type*>;
+    using reference =
+        std::conditional_t<ReadOnly, const value_type&, value_type&>;
+    using iterator_category = std::forward_iterator_tag;
+
+    constexpr Iterator(container_iterator it, std::uint8_t index) noexcept
+        : m_it(it), m_index(index) {}
+
+    constexpr Iterator& operator++() noexcept {
+      ++m_it;
+      ++m_index;
+      return *this;
     }
-    return IndexedIntersection(
-        *min, static_cast<std::uint8_t>(std::distance(begin(), min)));
+
+    constexpr value_type operator*() const noexcept { return {*m_it, m_index}; }
+
+   private:
+    container_iterator m_it;
+    std::uint8_t m_index;
+
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs) noexcept {
+      return lhs.m_it == rhs.m_it;
+    }
+  };
+
+  constexpr auto begin() noexcept {
+    return Iterator<false>(m_intersections.begin(), 0);
+  }
+  constexpr auto end() noexcept {
+    return Iterator<false>(m_intersections.begin() + m_size, m_size);
+  }
+  constexpr auto begin() const noexcept {
+    return Iterator<true>(m_intersections.begin(), 0);
+  }
+  constexpr auto end() const noexcept {
+    return Iterator<true>(m_intersections.begin() + m_size, m_size);
   }
 
-  constexpr std::optional<IndexedIntersection> closestForward() const {
-    auto min =
-        std::min_element(begin(), end(), IntersectionType::closestForwardOrder);
-    if (min == end()) {
-      return std::nullopt;
-    }
-    return IndexedIntersection(
-        *min, static_cast<std::uint8_t>(std::distance(begin(), min)));
+  constexpr std::pair<const IntersectionType&, std::uint8_t> closest()
+      const noexcept {
+    auto min = std::ranges::min_element(m_intersections,
+                                        IntersectionType::closestOrder);
+    return {*min, static_cast<std::uint8_t>(
+                      std::distance(m_intersections.begin(), min))};
   }
 
-  constexpr std::optional<IndexedIntersection> firstValid(
-      double nearLimit, double farLimit,
-      const Logger& logger = getDummyLogger()) const {
-    for (const auto& [index, intersection] : enumerate(*this)) {
-      if (intersection.isValid() &&
-          detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                  farLimit, logger)) {
-        return IndexedIntersection(intersection, index);
-      }
-    }
-    return std::nullopt;
+  constexpr std::pair<const IntersectionType&, std::uint8_t> closestForward()
+      const noexcept {
+    auto min = std::ranges::min_element(m_intersections,
+                                        IntersectionType::closestForwardOrder);
+    return {*min, static_cast<std::uint8_t>(
+                      std::distance(m_intersections.begin(), min))};
   }
 
  private:
   Container m_intersections;
+  std::uint8_t m_size = 0;
 };
 
 using MultiIntersection3D = MultiIntersection<3>;
