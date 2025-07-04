@@ -81,7 +81,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     /// @brief Lower radius of the big wheel
     double endCapWheelLowR{1. * GeoModelKernelUnits::m};
     /// @brief Separation between the two big wheels
-    double bigWheelDistZ{5.*GeoModelKernelUnits::m};
+    double bigWheelDistZ{5. * GeoModelKernelUnits::m};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -131,72 +131,69 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   constexpr static double s_rpcMdtDistance = 3.5 * GeoModelKernelUnits::cm;
   /// @brief Height of a barrel muon station
   double m_stationHeightBarrel{2. * m_multiLayerHeight +
-                             m_cfg.multiLayerSeparation +
-                             2. * (m_rpcChamberHeight + s_rpcMdtDistance)};
+                               m_cfg.multiLayerSeparation +
+                               2. * (m_rpcChamberHeight + s_rpcMdtDistance)};
 
   /// @brief Height of a endcap muon station
-  double m_stationHeightEndcap{2. * m_multiLayerHeight +  m_cfg.multiLayerSeparation };
+  double m_stationHeightEndcap{2. * m_multiLayerHeight +
+                               m_cfg.multiLayerSeparation};
   /// @brief Angular coverage of each sector
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
 
   void setupMaterials();
 
-
-  //// @brief Constructs multilayers of tubes. If the lower & upper 
+  //// @brief Constructs multilayers of tubes. If the lower & upper
   ///         each tube has a separate length
   ///  @param lowerTubeLength: Length of the most bottom tube in the trapezoid
   ///  @param upperTubeLength: Length of the most top tube in the trapezoid
-  PVLink buildTubes(const double lowerTubeLength,
-                    const double upperTubeLength);
+  PVLink buildTubes(const double lowerTubeLength, const double upperTubeLength);
   ///  @brief Constructs a single Mdt tube consisting of an outer aluminium volume
   ///         filled with a thinner gas volume
-  ///  @param tubeLength: Lenght of the outer tube
+  ///  @param tubeLength: Length of the outer tube
   PVLink assembleTube(const double tubeLength);
 
   /// @brief Publishes a full physical volume and also adds it to the
   ///        surrounding envelope
-  /// @param envelopeVol: Enevelope volume to publish the full phyiscal volume
+  /// @param envelopeVol: Enevelope volume to publish the full physical volume
   /// @param publishMe: The full physical volume to publish
   /// @param pubName: Name of the published full physical volume
-  void publishFPV(PVLink envelopeVol, FpvLink publishMe, 
+  void publishFPV(PVLink envelopeVol, FpvLink publishMe,
                   const std::string& pubName);
 
   /// @brief Constructs a big wheel
-  void assembleBigWheel(PVLink envelope, const MuonLayer layer, const double wheelZ);
-  
+  void assembleBigWheel(PVLink envelope, const MuonLayer layer,
+                        const double wheelZ);
+
   ///  @brief Construct some absorber volume to add some material to the
   ///         barrel MS station
   ///  @param thickness: Total thickness of the absorber
   ///  @param widthS: Total width of the absorber parallel to the tubes on the
-  ///                 short side of the trapezoid 
+  ///                 short side of the trapezoid
   ///  @param widthL: Total width of the absorber parallel to the tubes on the
-  ///                 long side of the trapezoid 
+  ///                 long side of the trapezoid
   ///  @param length: Total length of the absorber along the tube-layer
-  PVLink buildAbsorber(const double thickness, const double widthS, const double widthL, const double length);
+  PVLink buildAbsorber(const double thickness, const double widthS,
+                       const double widthL, const double length);
 
   /// @brief Assemble a barrel muon station & publish the full physical volumes
-  /// @param layer: Layer where the station is placed. The radial position of the 
-  ///               station is fetched from that information and then finally the
-  ///               tube length
+  /// @param layer: Layer where the station is placed. The radial position of the
+  ///               station is fetched from that information and then finally
+  ///               the tube length
   /// @param sector: Sector number of the station used to construct a unique
   ///                name for publishing
-  /// @param etaIdx: Eta number of the station used to construct a unique 
+  /// @param etaIdx: Eta number of the station used to construct a unique
   ///                name for publishing
   PVLink assembleBarrelStation(const MuonLayer layer, const unsigned int sector,
                                const int etaIdx);
   /// @brief Assemble an endcap station
-  PVLink assembleEndcapStation(const double lowR,
-                               const MuonLayer layer,
-                               const unsigned int sector,
-                               const int etaIdx);
+  PVLink assembleEndcapStation(const double lowR, const MuonLayer layer,
+                               const unsigned int sector, const int etaIdx);
   /// @brief Assemble a new multilayer volume to fit inside the barrel station
   FpvLink assembleMultilayerBarrel(const unsigned ml, const double tubeLength);
   /// @brief Assemble a new multilayer volume to fit inside the endcap station
-  FpvLink assembleMultilayerEndcap(const unsigned ml, 
+  FpvLink assembleMultilayerEndcap(const unsigned ml,
                                    const double lowerTubeLength,
                                    const double upperTubeLength);
-
-  
 
   FpvLink assembleRpcChamber(const double chamberWidth);
 
