@@ -88,10 +88,10 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   ///        and the logger object.
   /// @param cfg: Configuration object to steer the geometry layout
   /// @param logger: Acts logging object
-  GeoMuonMockupExperiment(const Config& cfg,
-                          std::unique_ptr<const Acts::Logger> logger =
-                              Acts::getDefaultLogger("GeoMuonMockupExperiment",
-                                                     Acts::Logging::DEBUG));
+  explicit GeoMuonMockupExperiment(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "GeoMuonMockupExperiment", Acts::Logging::DEBUG));
 
   /// @brief Triggers construction of the Muon mockup detector
   Acts::GeoModelTree constructMS();
@@ -139,7 +139,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                                m_cfg.multiLayerSeparation};
   /// @brief Angular coverage of each sector
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
-
+  /// @brief Setup the Material database with all materials used during construction
   void setupMaterials();
 
   //// @brief Constructs multilayers of tubes. If the lower & upper
@@ -157,11 +157,14 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /// @param envelopeVol: Enevelope volume to publish the full physical volume
   /// @param publishMe: The full physical volume to publish
   /// @param pubName: Name of the published full physical volume
-  void publishFPV(PVLink envelopeVol, FpvLink publishMe,
+  void publishFPV(const PVLink& envelopeVol, const FpvLink& publishMe,
                   const std::string& pubName);
 
-  /// @brief Constructs a big wheel
-  void assembleBigWheel(PVLink envelope, const MuonLayer layer,
+  /// @brief Constructs a big wheel and places it within the world envelope
+  /// @param envelope: Reference to the world envelope in which the wheel is placed
+  /// @param layer: Layer of the big wheel (middle / outer). Needed for volume publishing
+  /// @param wheelZ: Z position of the wheel centre point
+  void assembleBigWheel(const PVLink& envelope, const MuonLayer layer,
                         const double wheelZ);
 
   ///  @brief Construct some absorber volume to add some material to the
@@ -185,16 +188,36 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   ///                name for publishing
   PVLink assembleBarrelStation(const MuonLayer layer, const unsigned int sector,
                                const int etaIdx);
-  /// @brief Assemble an endcap station
+  /// @brief Assemble an endcap station consisting of two multi layers
+  /// @param lowR: Low radial position of the endcap used to calculate the lower & upper tube length
+  /// @param layer: Layer where the station is placed. The radial position of the
+  ///               station is fetched from that information and then finally
+  ///               the tube length
+  /// @param sector: Sector number of the station used to construct a unique
+  ///                name for publishing
+  /// @param etaIdx: Eta number of the station used to construct a unique
+  ///                name for publishing
   PVLink assembleEndcapStation(const double lowR, const MuonLayer layer,
                                const unsigned int sector, const int etaIdx);
-  /// @brief Assemble a new multilayer volume to fit inside the barrel station
+
+  /// @brief Assemble a new multilayer volume to fit inside a barrel station
+  /// @param ml: Multilayer number. If it's 1 the passive material is placed in front,
+  ///            for 2 it's placed after the tube multilayer
+  /// @param tubeLength: Length of all tubes in the multilayer
   FpvLink assembleMultilayerBarrel(const unsigned ml, const double tubeLength);
-  /// @brief Assemble a new multilayer volume to fit inside the endcap station
+  /// @brief Assemble a new multilayer volume to fit inside an endcap station.
+  /// @param ml: Multilayer number. If it's 1 the passive material is placed in front,
+  ///            for 2 it's placed after the tube multilayer
+  /// @param lowerTubeLength: Length of the tube at the bottom of the trapezoid
+  /// @param upperTubeLength: Length of the tube at the top of the trapezoid. Tube length
+  ///                         between the two values is gradually incremented
+  ///                         depending on the number of tubes.
   FpvLink assembleMultilayerEndcap(const unsigned ml,
                                    const double lowerTubeLength,
                                    const double upperTubeLength);
-
+  /// @brief Assemble a new Rpc chamber volume.
+  /// @param chamberWidth: Length of the chamber along the direction given
+  ///                      by the close-by tubes.
   FpvLink assembleRpcChamber(const double chamberWidth);
 
   //// @brief list of published full physical volumes

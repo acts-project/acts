@@ -210,7 +210,7 @@ PVLink GeoMuonMockupExperiment::assembleEndcapStation(const double lowR,
 
   return envelopeVol;
 }
-void GeoMuonMockupExperiment::assembleBigWheel(PVLink envelopeVol,
+void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
                                                const MuonLayer layer,
                                                const double wheelZ) {
   envelopeVol->add(makeTransform(GeoTrf::TranslateZ3D(wheelZ)));
@@ -309,7 +309,8 @@ void GeoMuonMockupExperiment::setupMaterials() {
     matMan->printAll();
   }
 }
-void GeoMuonMockupExperiment::publishFPV(PVLink envelopeVol, FpvLink publishMe,
+void GeoMuonMockupExperiment::publishFPV(const PVLink& envelopeVol,
+                                         const FpvLink& publishMe,
                                          const std::string& pubName) {
   m_publisher->publishNode(static_cast<GeoVFullPhysVol*>(publishMe.get()),
                            pubName);
