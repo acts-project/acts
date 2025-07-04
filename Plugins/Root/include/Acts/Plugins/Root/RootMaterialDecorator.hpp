@@ -85,7 +85,7 @@ class RootMaterialDecorator : public IMaterialDecorator {
   /// Constructor
   ///
   /// @param cfg configuration struct for the reader
-  RootMaterialDecorator(const Config& config, Logging::Level level);
+  RootMaterialDecorator(const Config& cfg, Logging::Level level);
 
   /// Destructor
   ~RootMaterialDecorator() override;

@@ -9,19 +9,19 @@
 #include "Acts/Plugins/Root/RootMaterialDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -41,10 +41,8 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
 
-
 Acts::RootMaterialDecorator::RootMaterialDecorator(
-    const Acts::RootMaterialDecorator::Config& config,
-    Logging::Level level)
+    const Acts::RootMaterialDecorator::Config& config, Logging::Level level)
     : m_cfg(config),
       m_logger{getDefaultLogger("RootMaterialDecorator", level)} {
   // Validate the configuration
@@ -151,8 +149,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
 
         // The material matrix
         MaterialSlabMatrix materialMatrix(
-            nbins1,
-            MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
+            nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
 
         // We need binned material properties
         if (nbins0 * nbins1 > 1) {
@@ -169,8 +166,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
                 // Create material properties
                 const auto material =
                     Material::fromMassDensity(dx0, dl0, da, dz, drho);
-                materialMatrix[ib1 - 1][ib0 - 1] =
-                    MaterialSlab(material, dt);
+                materialMatrix[ib1 - 1][ib0 - 1] = MaterialSlab(material, dt);
               }
             }
           }
@@ -297,11 +293,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid2D> matMap(
-                transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<InterpolatedMaterialMap<
-                MaterialMapper<MaterialGrid2D>>>(std::move(matMap),
-                                                             bUtility);
+            MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
+            vMaterial = std::make_shared<
+                InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+                std::move(matMap), bUtility);
           } else if (dim == 3) {
             // 3D Grid material
             std::function<Vector3(Vector3)> transfoGlobalToLocal;
@@ -329,11 +324,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
                   Material::fromMassDensity(dx0, dl0, da, dz, drho);
               mGrid.at(p - 1) = material.parameters();
             }
-            MaterialMapper<MaterialGrid3D> matMap(
-                transfoGlobalToLocal, mGrid);
-            vMaterial = std::make_shared<InterpolatedMaterialMap<
-                MaterialMapper<MaterialGrid3D>>>(std::move(matMap),
-                                                             bUtility);
+            MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
+            vMaterial = std::make_shared<
+                InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+                std::move(matMap), bUtility);
           }
         } else {
           // Homogeneous material
@@ -345,8 +339,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           // Create material properties
           const auto material =
               Material::fromMassDensity(dx0, dl0, da, dz, drho);
-          vMaterial =
-              std::make_shared<HomogeneousVolumeMaterial>(material);
+          vMaterial = std::make_shared<HomogeneousVolumeMaterial>(material);
         }
       }
       ACTS_VERBOSE("Successfully read Material for : " << geoID);
