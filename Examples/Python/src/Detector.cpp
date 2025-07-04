@@ -16,6 +16,7 @@
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
@@ -72,6 +73,13 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
                        volumeLogLevel, buildProto, materialDecorator, gen3,
                        graphvizFile);
+  }
+
+  {
+    auto ad = py::class_<AlignedGenericDetector, GenericDetector,
+                         std::shared_ptr<AlignedGenericDetector>>(
+                  mex, "AlignedGenericDetector")
+                  .def(py::init<const GenericDetector::Config&>());
   }
 
   {
