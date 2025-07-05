@@ -23,3 +23,10 @@ target_sources(
         SurfaceMaterialMapper.cpp
         VolumeMaterialMapper.cpp
 )
+
+if(ACTS_BUILD_PLUGIN_TRACCC)
+    target_link_libraries(ActsCore PRIVATE detray::io)
+    target_sources(ActsCore PRIVATE DetrayMaterial.cpp)
+else()
+    target_sources(ActsCore PRIVATE DetrayMaterialStub.cpp)
+endif()

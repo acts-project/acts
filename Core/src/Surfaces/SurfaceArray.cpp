@@ -28,8 +28,7 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
       m_transform(transform) {}
 
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
-    : p_gridLookup(
-          static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf.get()))),
+    : p_gridLookup(std::make_unique<SingleElementLookup>(srf.get())),
       m_surfaces({std::move(srf)}) {
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
 }

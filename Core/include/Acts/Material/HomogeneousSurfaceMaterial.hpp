@@ -87,6 +87,8 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param sl The outoput stream
   std::ostream& toStream(std::ostream& sl) const final;
 
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override;
+
  private:
   /// The five different MaterialSlab
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();

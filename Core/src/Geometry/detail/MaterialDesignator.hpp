@@ -23,14 +23,13 @@ class CylinderProtoDesignator;
 class CuboidProtoDesignator;
 class NullDesignator;
 template <typename face_enum_t, typename shell_type_t>
-class HomogeneousMaterialDesignator;
+class ISurfaceMaterialDesignator;
 
 using CylinderHomogeneousMaterialDesignator =
-    HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
-                                  CylinderPortalShell>;
+    ISurfaceMaterialDesignator<CylinderVolumeBounds::Face, CylinderPortalShell>;
 
 using CuboidHomogeneousMaterialDesignator =
-    HomogeneousMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
+    ISurfaceMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
 
 class DesignatorBase {
  public:
@@ -261,19 +260,18 @@ class CuboidProtoDesignator : public DesignatorBase {
 };
 
 template <typename face_enum_t, typename shell_type_t>
-class HomogeneousMaterialDesignator : public DesignatorBase {
+class ISurfaceMaterialDesignator : public DesignatorBase {
  public:
   using FaceType = face_enum_t;
   using ShellType = shell_type_t;
 
-  HomogeneousMaterialDesignator(
-      FaceType face,
-      std::shared_ptr<const HomogeneousSurfaceMaterial> material) {
+  ISurfaceMaterialDesignator(FaceType face,
+                             std::shared_ptr<const ISurfaceMaterial> material) {
     m_materials.emplace_back(face, std::move(material));
   }
 
   std::string label() const override {
-    return std::string{shellTypeName()} + " HomogeneousMaterialDesignator";
+    return std::string{shellTypeName()} + " ISurfaceMaterialDesignator";
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
@@ -322,8 +320,8 @@ class HomogeneousMaterialDesignator : public DesignatorBase {
   }
 
   std::unique_ptr<DesignatorBase> merged(
-      const HomogeneousMaterialDesignator& other) const override {
-    auto merged = std::make_unique<HomogeneousMaterialDesignator>(*this);
+      const ISurfaceMaterialDesignator& other) const override {
+    auto merged = std::make_unique<ISurfaceMaterialDesignator>(*this);
     std::ranges::copy(other.m_materials,
                       std::back_inserter(merged->m_materials));
     return merged;
@@ -331,12 +329,11 @@ class HomogeneousMaterialDesignator : public DesignatorBase {
 
   std::unique_ptr<DesignatorBase> merged(
       const NullDesignator& /*other*/) const override {
-    return std::make_unique<HomogeneousMaterialDesignator>(*this);
+    return std::make_unique<ISurfaceMaterialDesignator>(*this);
   }
 
  private:
-  std::vector<
-      std::pair<FaceType, std::shared_ptr<const HomogeneousSurfaceMaterial>>>
+  std::vector<std::pair<FaceType, std::shared_ptr<const ISurfaceMaterial>>>
       m_materials;
 };
 
