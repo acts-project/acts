@@ -98,6 +98,10 @@ class SurfaceArray {
     virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
         const = 0;
 
+    virtual const Transform3& getTransform() const = 0;
+
+    virtual Surface::SurfaceType surfaceType() const = 0;
+
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
     virtual std::size_t dimensions() const = 0;
@@ -321,6 +325,10 @@ class SurfaceArray {
       return AnyGridConstView<SurfaceVector>{m_grid};
     }
 
+    const Transform3& getTransform() const override { return m_transform; }
+
+    Surface::SurfaceType surfaceType() const override { return m_type; }
+
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
     std::size_t dimensions() const override { return DIM; }
@@ -460,6 +468,15 @@ class SurfaceArray {
       return std::nullopt;
     }
 
+    const Transform3& getTransform() const override {
+      static const Transform3 identityTransform = Transform3::Identity();
+      return identityTransform;
+    }
+
+    Surface::SurfaceType surfaceType() const override {
+      return Surface::SurfaceType::Other;
+    }
+
     /// @brief Get the number of dimensions
     /// @return always 0
     std::size_t dimensions() const override { return 0; }
@@ -583,6 +600,9 @@ class SurfaceArray {
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
   std::ostream& toStream(const GeometryContext& gctx, std::ostream& sl) const;
+
+  /// Return the lookup object
+  const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
  private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
