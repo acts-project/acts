@@ -43,10 +43,6 @@ static inline int getCellColumn(const Cell& cell) {
   return cell.column;
 }
 
-static inline int& getCellLabel(Cell& cell) {
-  return cell.label;
-}
-
 static inline double getCellTime(const Cell& cell) {
   return cell.time;
 }
