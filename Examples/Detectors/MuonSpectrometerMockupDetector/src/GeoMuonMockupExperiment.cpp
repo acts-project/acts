@@ -451,7 +451,7 @@ PVLink GeoMuonMockupExperiment::buildTubes(const double lowerTubeLength,
     }
     envelopeVol->add(makeTransform(GeoTrf::Translate3D(firstTubePos)));
     envelopeVol->add(cacheVolume(layerVol));
-    firstTubePos = firstTubePos + ((tL % 2) !=0 ? posStag : negStag);
+    firstTubePos = firstTubePos + ((tL % 2) != 0 ? posStag : negStag);
   }
   return cacheVolume(envelopeVol);
 }
