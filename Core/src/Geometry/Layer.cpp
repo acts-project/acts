@@ -125,7 +125,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
 
   auto isUnique = [&](const SurfaceIntersection& b) {
     return std::ranges::none_of(surfaceIntersections, [&b](const auto& a) {
-      return a.object() == b.object() && a.index() == b.index();
+      return &a.surface() == &b.surface() && a.index() == b.index();
     });
   };
 
@@ -159,10 +159,10 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
-    auto [intersection, index] =
+    IndexedIntersection3D intersection =
         surface.intersect(gctx, position, direction, boundaryTolerance)
             .closest();
-    SurfaceIntersection surfaceIntersection(intersection, &surface, index);
+    SurfaceIntersection surfaceIntersection(intersection, surface);
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit) &&
@@ -244,14 +244,14 @@ SurfaceIntersection Layer::surfaceOnApproach(
   const Surface& layerSurface = surfaceRepresentation();
   const MultiIntersection3D multiIntersection = layerSurface.intersect(
       gctx, position, direction, options.boundaryTolerance);
-  for (auto [intersection, index] : multiIntersection) {
+  for (auto intersection : multiIntersection) {
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit)) {
-      return SurfaceIntersection(intersection, &layerSurface, index);
+      return SurfaceIntersection(intersection, layerSurface);
     }
   }
-  return SurfaceIntersection::invalid(&layerSurface);
+  return SurfaceIntersection::invalid(layerSurface);
 }
 
 }  // namespace Acts

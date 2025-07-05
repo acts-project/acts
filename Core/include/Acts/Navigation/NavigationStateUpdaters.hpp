@@ -53,11 +53,11 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     // Check the surface intersection
     auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto [intersection, index] : multiIntersection) {
+    for (auto intersection : multiIntersection) {
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
         confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{
-            intersection, index, sc.surface, sc.portal, boundaryTolerance});
+            intersection, sc.surface, sc.portal, boundaryTolerance});
       }
     }
   }

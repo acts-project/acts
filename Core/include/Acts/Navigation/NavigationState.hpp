@@ -37,9 +37,7 @@ struct NavigationState {
   /// A candidates can either be a surface or a portal (which contain a surface)
   struct SurfaceCandidate {
     /// A candidate intersection
-    Intersection3D intersection;
-    /// The intersection index of the candidate
-    std::uint8_t insersectionIndex = 0;
+    IndexedIntersection3D intersection;
     /// A candidate is either a detector Surface
     const Surface* surface = nullptr;
     /// Or a portal

@@ -60,7 +60,7 @@ class NavigationStream {
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
     /// Convenience access to surface
-    const Surface& surface() const { return *intersection.object(); }
+    const Surface& surface() const { return intersection.surface(); }
     /// Cinvencience access to the path length
     double pathLength() const { return intersection.pathLength(); }
 

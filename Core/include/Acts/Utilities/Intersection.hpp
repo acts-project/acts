@@ -23,6 +23,8 @@
 
 namespace Acts {
 
+class Surface;
+
 namespace detail {
 
 /// This function checks if an intersection path length is valid for the
@@ -83,32 +85,35 @@ class Intersection {
     std::ranges::copy(position, m_position.begin());
   }
 
-  Intersection(const Intersection&) noexcept = default;
-  Intersection(Intersection&&) noexcept = default;
-  Intersection& operator=(const Intersection&) noexcept = default;
-  Intersection& operator=(Intersection&&) noexcept = default;
+  constexpr Intersection(const Intersection&) noexcept = default;
+  constexpr Intersection(Intersection&&) noexcept = default;
+  constexpr Intersection& operator=(const Intersection&) noexcept = default;
+  constexpr Intersection& operator=(Intersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
-  constexpr bool isValid() const {
+  constexpr bool isValid() const noexcept {
     return m_status != IntersectionStatus::unreachable;
   }
 
   /// Returns the position of the interseciton
-  constexpr Position position() const { return Position{m_position.data()}; }
+  constexpr Position position() const noexcept {
+    return Position{m_position.data()};
+  }
 
   /// Returns the path length to the interseciton
-  constexpr double pathLength() const { return m_pathLength; }
+  constexpr double pathLength() const noexcept { return m_pathLength; }
 
   /// Returns the intersection status enum
-  constexpr IntersectionStatus status() const { return m_status; }
+  constexpr IntersectionStatus status() const noexcept { return m_status; }
 
   /// Static factory to creae an invalid instesection
-  constexpr static Intersection invalid() { return Intersection(); }
+  constexpr static Intersection invalid() noexcept { return Intersection(); }
 
   /// Comparison function for path length order i.e. intersection closest to
   /// -inf will be first.
-  constexpr static bool pathLengthOrder(const Intersection& aIntersection,
-                                        const Intersection& bIntersection) {
+  constexpr static bool pathLengthOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -116,8 +121,9 @@ class Intersection {
 
   /// Comparison function for closest order i.e. intersection closest to 0 will
   /// be first.
-  constexpr static bool closestOrder(const Intersection& aIntersection,
-                                     const Intersection& bIntersection) {
+  constexpr static bool closestOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
     if ((aIntersection.status() == IntersectionStatus::unreachable) &&
         (bIntersection.status() != IntersectionStatus::unreachable)) {
       return false;
@@ -134,8 +140,9 @@ class Intersection {
 
   /// Comparison function for closest forward order i.e. intersection closest to
   /// 0 with positive path length will be first.
-  constexpr static bool closestForwardOrder(const Intersection& aIntersection,
-                                            const Intersection& bIntersection) {
+  constexpr static bool closestForwardOrder(
+      const Intersection& aIntersection,
+      const Intersection& bIntersection) noexcept {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return std::signbit(a) == std::signbit(b) ? std::abs(a) < std::abs(b)
@@ -150,7 +157,7 @@ class Intersection {
   /// The Status of the intersection
   IntersectionStatus m_status = IntersectionStatus::unreachable;
 
-  constexpr Intersection() = default;
+  constexpr Intersection() noexcept = default;
 };
 
 using Intersection2D = Intersection<2>;
@@ -160,22 +167,65 @@ static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
-static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
+using IntersectionIndex = std::uint8_t;
+
+template <unsigned int DIM>
+class IndexedIntersection {
+ public:
+  using Intersection = Intersection<DIM>;
+  using Position = Intersection::Position;
+
+  constexpr IndexedIntersection(const Intersection& intersection,
+                                IntersectionIndex index) noexcept
+      : m_intersection(intersection), m_index(index) {}
+
+  constexpr IndexedIntersection(const IndexedIntersection&) noexcept = default;
+  constexpr IndexedIntersection(IndexedIntersection&&) noexcept = default;
+  constexpr IndexedIntersection& operator=(
+      const IndexedIntersection&) noexcept = default;
+  constexpr IndexedIntersection& operator=(IndexedIntersection&&) noexcept =
+      default;
+
+  constexpr const Intersection& intersection() const { return m_intersection; }
+
+  constexpr IntersectionIndex index() const { return m_index; }
+
+  /// Returns whether the intersection was successful or not
+  constexpr bool isValid() const { return m_intersection.isValid(); }
+
+  /// Returns the position of the interseciton
+  constexpr Position position() const { return m_intersection.position(); }
+
+  /// Returns the path length to the interseciton
+  constexpr double pathLength() const { return m_intersection.pathLength(); }
+
+  /// Returns the intersection status enum
+  constexpr IntersectionStatus status() const {
+    return m_intersection.status();
+  }
+
+ private:
+  Intersection m_intersection = Intersection::invalid();
+  IntersectionIndex m_index = 0;
+};
+
+using IndexedIntersection2D = IndexedIntersection<2>;
+using IndexedIntersection3D = IndexedIntersection<3>;
+
+static constexpr IntersectionIndex s_maximumNumberOfIntersections = 2;
 
 template <unsigned int DIM>
 class MultiIntersection {
  public:
-  using IntersectionType = Intersection<DIM>;
+  using Intersection = Intersection<DIM>;
 
-  static constexpr std::uint8_t maximumNumberOfIntersections =
-      s_maximumNumberOfIntersections;
-  using Container = std::array<IntersectionType, maximumNumberOfIntersections>;
+  using Container = std::array<Intersection, s_maximumNumberOfIntersections>;
 
   constexpr explicit MultiIntersection(
-      const IntersectionType& intersection) noexcept
-      : m_intersections{intersection, IntersectionType::invalid()}, m_size{1} {}
-  constexpr MultiIntersection(const IntersectionType& intersection1,
-                              const IntersectionType& intersection2) noexcept
+      const Intersection& intersection) noexcept
+      : m_intersections{intersection, Intersection::invalid()}, m_size{1} {}
+  constexpr MultiIntersection(const Intersection& intersection1,
+                              const Intersection& intersection2) noexcept
       : m_intersections{intersection1, intersection2}, m_size{2} {}
 
   constexpr MultiIntersection(const MultiIntersection&) noexcept = default;
@@ -185,40 +235,26 @@ class MultiIntersection {
   constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
       default;
 
-  constexpr IntersectionType& at(std::uint8_t index) {
-    if (index >= m_size) {
-      throw std::out_of_range("Index out of range in MultiIntersection");
-    }
-    return m_intersections[index];
+  constexpr Intersection& at(IntersectionIndex index) {
+    return m_intersections.at(index);
   }
-  constexpr const IntersectionType& at(std::uint8_t index) const {
-    if (index >= m_size) {
-      throw std::out_of_range("Index out of range in MultiIntersection");
-    }
-    return m_intersections[index];
+  constexpr const Intersection& at(IntersectionIndex index) const {
+    return m_intersections.at(index);
   }
 
   constexpr std::uint8_t size() const noexcept { return m_size; }
 
-  template <bool ReadOnly>
   class Iterator {
    public:
-    using container_iterator =
-        std::conditional_t<ReadOnly, typename Container::const_iterator,
-                           typename Container::iterator>;
+    using container_iterator = Container::const_iterator;
 
-    using value_type =
-        std::pair<std::conditional_t<ReadOnly, const IntersectionType&,
-                                     IntersectionType&>,
-                  std::uint8_t>;
+    using value_type = IndexedIntersection<DIM>;
     using difference_type = std::ptrdiff_t;
-    using pointer =
-        std::conditional_t<ReadOnly, const value_type*, value_type*>;
-    using reference =
-        std::conditional_t<ReadOnly, const value_type&, value_type&>;
+    using pointer = const value_type*;
+    using reference = const value_type&;
     using iterator_category = std::forward_iterator_tag;
 
-    constexpr Iterator(container_iterator it, std::uint8_t index) noexcept
+    constexpr Iterator(container_iterator it, IntersectionIndex index) noexcept
         : m_it(it), m_index(index) {}
 
     constexpr Iterator& operator++() noexcept {
@@ -231,39 +267,31 @@ class MultiIntersection {
 
    private:
     container_iterator m_it;
-    std::uint8_t m_index;
+    IntersectionIndex m_index;
 
     friend bool operator==(const Iterator& lhs, const Iterator& rhs) noexcept {
       return lhs.m_it == rhs.m_it;
     }
   };
 
-  constexpr auto begin() noexcept {
-    return Iterator<false>(m_intersections.begin(), 0);
-  }
-  constexpr auto end() noexcept {
-    return Iterator<false>(m_intersections.begin() + m_size, m_size);
-  }
   constexpr auto begin() const noexcept {
-    return Iterator<true>(m_intersections.begin(), 0);
+    return Iterator(m_intersections.begin(), 0);
   }
   constexpr auto end() const noexcept {
-    return Iterator<true>(m_intersections.begin() + m_size, m_size);
+    return Iterator(m_intersections.begin() + m_size, m_size);
   }
 
-  constexpr std::pair<const IntersectionType&, std::uint8_t> closest()
-      const noexcept {
-    auto min = std::ranges::min_element(m_intersections,
-                                        IntersectionType::closestOrder);
-    return {*min, static_cast<std::uint8_t>(
+  constexpr IndexedIntersection<DIM> closest() const noexcept {
+    auto min =
+        std::ranges::min_element(m_intersections, Intersection::closestOrder);
+    return {*min, static_cast<IntersectionIndex>(
                       std::distance(m_intersections.begin(), min))};
   }
 
-  constexpr std::pair<const IntersectionType&, std::uint8_t> closestForward()
-      const noexcept {
+  constexpr IndexedIntersection<DIM> closestForward() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
-                                        IntersectionType::closestForwardOrder);
-    return {*min, static_cast<std::uint8_t>(
+                                        Intersection::closestForwardOrder);
+    return {*min, static_cast<IntersectionIndex>(
                       std::distance(m_intersections.begin(), min))};
   }
 
@@ -272,73 +300,89 @@ class MultiIntersection {
   std::uint8_t m_size = 0;
 };
 
+using MultiIntersection2D = MultiIntersection<2>;
 using MultiIntersection3D = MultiIntersection<3>;
 
-template <typename object_t>
-class ObjectIntersection {
+class SurfaceIntersection {
  public:
-  /// Object intersection
+  using Intersection = Intersection3D;
+  using Position = Intersection::Position;
+
+  /// Create a surface intersection from a 3D intersection, intersection index,
+  /// and a surface
   ///
   /// @param intersection is the intersection
-  /// @param object is the object to be instersected
   /// @param index is the intersection index
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object,
-                               std::uint8_t index = 0) noexcept
-      : m_intersection(intersection), m_object(object), m_index(index) {}
+  /// @param object is the object to be instersected
+  constexpr SurfaceIntersection(const Intersection3D& intersection,
+                                IntersectionIndex index,
+                                const Surface& surface) noexcept
+      : m_intersection(intersection), m_index(index), m_surface(&surface) {}
+  constexpr SurfaceIntersection(
+      const IndexedIntersection3D& indexedIntersection,
+      const Surface& surface) noexcept
+      : m_intersection(indexedIntersection.intersection()),
+        m_index(indexedIntersection.index()),
+        m_surface(&surface) {}
 
-  ObjectIntersection(const ObjectIntersection&) noexcept = default;
-  ObjectIntersection(ObjectIntersection&&) noexcept = default;
-  ObjectIntersection& operator=(const ObjectIntersection&) noexcept = default;
-  ObjectIntersection& operator=(ObjectIntersection&&) noexcept = default;
-
-  /// Returns whether the intersection was successful or not
-  constexpr bool isValid() const { return m_intersection.isValid(); }
+  constexpr SurfaceIntersection(const SurfaceIntersection&) noexcept = default;
+  constexpr SurfaceIntersection(SurfaceIntersection&&) noexcept = default;
+  constexpr SurfaceIntersection& operator=(
+      const SurfaceIntersection&) noexcept = default;
+  constexpr SurfaceIntersection& operator=(SurfaceIntersection&&) noexcept =
+      default;
 
   /// Returns the intersection
   constexpr const Intersection3D& intersection() const {
     return m_intersection;
   }
 
+  constexpr IntersectionIndex index() const noexcept { return m_index; }
+
+  /// Returns the surface that has been intersected
+  constexpr const Surface& surface() const noexcept { return *m_surface; }
+
+  /// Returns whether the intersection was successful or not
+  constexpr bool isValid() const { return m_intersection.isValid(); }
+
   /// Returns the position of the interseciton
-  Intersection3D::Position position() const {
-    return m_intersection.position();
-  }
+  Position position() const noexcept { return m_intersection.position(); }
 
   /// Returns the path length to the interseciton
-  constexpr double pathLength() const { return m_intersection.pathLength(); }
+  constexpr double pathLength() const noexcept {
+    return m_intersection.pathLength();
+  }
 
   /// Returns the status of the interseciton
-  constexpr IntersectionStatus status() const {
+  constexpr IntersectionStatus status() const noexcept {
     return m_intersection.status();
   }
 
-  /// Returns the object that has been intersected
-  constexpr const object_t* object() const { return m_object; }
-
-  constexpr std::uint8_t index() const { return m_index; }
-
-  constexpr static ObjectIntersection invalid(
-      const object_t* object = nullptr) {
-    return ObjectIntersection(Intersection3D::invalid(), object);
+  constexpr static SurfaceIntersection invalid() noexcept {
+    return SurfaceIntersection();
+  }
+  constexpr static SurfaceIntersection invalid(
+      const Surface& surface) noexcept {
+    return SurfaceIntersection(Intersection3D::invalid(), 0, surface);
   }
 
   constexpr static bool pathLengthOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) noexcept {
     return Intersection3D::pathLengthOrder(aIntersection.intersection(),
                                            bIntersection.intersection());
   }
 
-  constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
+  constexpr static bool closestOrder(
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) noexcept {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
 
   constexpr static bool closestForwardOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) noexcept {
     return Intersection3D::closestForwardOrder(aIntersection.intersection(),
                                                bIntersection.intersection());
   }
@@ -346,15 +390,15 @@ class ObjectIntersection {
  private:
   /// The intersection itself
   Intersection3D m_intersection = Intersection3D::invalid();
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
   /// The intersection index
-  std::uint8_t m_index = 0;
+  IntersectionIndex m_index = 0;
+  /// The surface that was (tried to be) intersected
+  const Surface* m_surface = nullptr;
 
-  constexpr ObjectIntersection() = default;
+  constexpr SurfaceIntersection() = default;
 };
 
-static_assert(std::is_trivially_move_constructible_v<ObjectIntersection<int>>);
-static_assert(std::is_trivially_move_assignable_v<ObjectIntersection<int>>);
+static_assert(std::is_trivially_move_constructible_v<SurfaceIntersection>);
+static_assert(std::is_trivially_move_assignable_v<SurfaceIntersection>);
 
 }  // namespace Acts
