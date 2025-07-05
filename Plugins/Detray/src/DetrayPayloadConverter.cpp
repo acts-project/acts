@@ -20,6 +20,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -682,6 +683,20 @@ DetrayPayloadConverter::convertTrackingGeometry(
       // NOTE: Volume association is EXTERNAL, i.e. we need to fill a map keyed
       // by the volume index
       materialGrids.grids[volPayload.index.link] = std::move(grids);
+    }
+
+    // Look for navigation policies that we need to convert!
+    const auto* navPolicy = volume.navigationPolicy();
+    if (navPolicy != nullptr) {
+      auto detrayGrids = navPolicy->toDetrayPayload();
+      if (detrayGrids != nullptr) {
+        ACTS_DEBUG("Volume " << volume.volumeName()
+                             << " (idx: " << volPayload.index.link
+                             << ") has navigation policy which produced "
+                             << detrayGrids->grids.size() << " grids");
+      }
+      // per volume, we have a VECTOR of grids: what are they? are they always
+      // tied to a surface? which one?
     }
   });
 
