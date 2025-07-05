@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-std::unique_ptr<DetraySurfaceGrids> MultiNavigationPolicy::toDetrayPayload()
+std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload()
     const {
   // Only ONE of the child policies should return a non-nullptr payload
   for (const auto& policy : m_policyPtrs) {
@@ -30,18 +30,18 @@ std::unique_ptr<DetraySurfaceGrids> MultiNavigationPolicy::toDetrayPayload()
   return nullptr;
 }
 
-std::unique_ptr<DetraySurfaceGrids>
+std::unique_ptr<DetraySurfaceGrid>
 Experimental::MultiLayerNavigationPolicy::toDetrayPayload() const {
   return nullptr;
 }
 
-std::unique_ptr<DetraySurfaceGrids>
+std::unique_ptr<DetraySurfaceGrid>
 SurfaceArrayNavigationPolicy::toDetrayPayload() const {
   // @TODO: Implement this conversion!
   return nullptr;
 }
 
-std::unique_ptr<DetraySurfaceGrids> TryAllNavigationPolicy::toDetrayPayload()
+std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload()
     const {
   return nullptr;
 }
