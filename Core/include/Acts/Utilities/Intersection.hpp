@@ -96,9 +96,7 @@ class Intersection {
   }
 
   /// Returns the position of the interseciton
-  constexpr Position position() const noexcept {
-    return Position{m_position.data()};
-  }
+  Position position() const noexcept { return Position{m_position.data()}; }
 
   /// Returns the path length to the interseciton
   constexpr double pathLength() const noexcept { return m_pathLength; }
@@ -194,7 +192,7 @@ class IndexedIntersection {
   constexpr bool isValid() const { return m_intersection.isValid(); }
 
   /// Returns the position of the interseciton
-  constexpr Position position() const { return m_intersection.position(); }
+  Position position() const { return m_intersection.position(); }
 
   /// Returns the path length to the interseciton
   constexpr double pathLength() const { return m_intersection.pathLength(); }
@@ -235,9 +233,6 @@ class MultiIntersection {
   constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
       default;
 
-  constexpr Intersection& at(IntersectionIndex index) {
-    return m_intersections.at(index);
-  }
   constexpr const Intersection& at(IntersectionIndex index) const {
     return m_intersections.at(index);
   }
