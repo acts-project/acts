@@ -174,7 +174,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           BinUtility bUtility;
           for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-            std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
+            auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
             auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
             auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = static_cast<float>(min->GetBinContent(ib));
@@ -256,7 +256,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
-            std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
+            auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
             auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
             auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
@@ -287,8 +287,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
               double dz = Z->GetBinContent(p);
               double drho = rho->GetBinContent(p);
               // Create material properties
-              const auto material =
-                  Material::fromMassDensity(dx0, dl0, da, dz, drho);
+              const auto material = Material::fromMassDensity(
+                  static_cast<float>(dx0), static_cast<float>(dl0),
+                  static_cast<float>(da), static_cast<float>(dz),
+                  static_cast<float>(drho));
               mGrid.at(p - 1) = material.parameters();
             }
             MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
