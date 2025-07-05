@@ -37,7 +37,7 @@ using DetraySurfaceMaterial =
                                           detray::io::material_id>,
                  detray::io::material_slab_payload>;
 
-using DetraySurfaceGrids =
-    detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>;
+using DetraySurfaceGrid =
+    detray::io::grid_payload<std::size_t, detray::io::accel_id>;
 
 }  // namespace Acts
