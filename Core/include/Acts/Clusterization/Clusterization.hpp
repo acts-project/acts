@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace Acts::Ccl {
 
 template <typename Cell>
@@ -98,7 +97,8 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
 template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
-  std::vector<std::uint8_t> labelClusters(CellCollection& cells, Connect&& connect = Connect());
+std::vector<std::uint8_t> labelClusters(CellCollection& cells,
+                                        Connect&& connect = Connect());
 
 /// @brief mergeClusters
 ///

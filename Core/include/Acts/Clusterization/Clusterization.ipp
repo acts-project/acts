@@ -17,22 +17,16 @@
 
 #include <boost/pending/disjoint_sets.hpp>
 
-
 namespace Acts::Ccl::internal {
 
 template <typename Cluster>
-void reserve(Cluster& /*cl*/,
-	     std::size_t /*n*/) {}
-  
+void reserve(Cluster& /*cl*/, std::size_t /*n*/) {}
+
 template <Acts::Ccl::CanReserve Cluster>
-void reserve(Cluster& cl,
-	     std::size_t n)
-{
+void reserve(Cluster& cl, std::size_t n) {
   clusterReserve(cl, n);
 }
-  
 
-  
 template <typename Cell, std::size_t GridDim>
 struct Compare {
   static_assert(GridDim != 1 && GridDim != 2,
@@ -124,22 +118,21 @@ struct Connections<2> : public ConnectionsBase<4> {
 
 // Cell collection logic
 template <typename Cell, typename Connect, std::size_t GridDim>
-Connections<GridDim> getConnections(std::size_t idx,
-				    std::vector<Cell>& cells,
-				    std::vector<Label>& labels,
-				    Connect&& connect) {
+Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
+                                    std::vector<Label>& labels,
+                                    Connect&& connect) {
   Connections<GridDim> seen;
 
   for (std::size_t i(0ul); i < idx; ++i) {
     std::size_t idx_2 = idx - i - 1;
     ConnectResult cr = connect(cells[idx], cells[idx_2]);
-    
+
     if (cr == ConnectResult::eNoConnStop) {
       break;
     }
     if (cr == ConnectResult::eNoConn) {
       continue;
-    }    
+    }
     if (cr == ConnectResult::eConn) {
       seen.buf[seen.nconn] = labels[idx_2];
       seen.nconn += 1;
@@ -153,22 +146,21 @@ Connections<GridDim> getConnections(std::size_t idx,
 }
 
 template <typename CellCollection, typename ClusterCollection>
-  requires(
-      Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
-                               typename ClusterCollection::value_type>)
-  ClusterCollection mergeClustersImpl(CellCollection& cells,
-				      const std::vector<Label>& cellLabels,
-				      const std::vector<std::uint8_t>& nClusters) {
+  requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
+                                    typename ClusterCollection::value_type>)
+ClusterCollection mergeClustersImpl(
+    CellCollection& cells, const std::vector<Label>& cellLabels,
+    const std::vector<std::uint8_t>& nClusters) {
   using Cluster = typename ClusterCollection::value_type;
 
   // Accumulate clusters into the output collection
   ClusterCollection outv(nClusters.size());
-  for (std::size_t i(0); i<outv.size(); ++i) {
+  for (std::size_t i(0); i < outv.size(); ++i) {
     reserve(outv[i], nClusters[i]);
   }
 
   // Fill clusters with cells
-  for (std::size_t i(0); i<cells.size(); ++i) {
+  for (std::size_t i(0); i < cells.size(); ++i) {
     Label label = cellLabels[i] - 1;
     Cluster& cl = outv[label];
     clusterAddCell(cl, cells[i]);
@@ -177,9 +169,9 @@ template <typename CellCollection, typename ClusterCollection>
   // Due to previous merging, we may have now clusters with
   // no cells. We need to remove them
   std::size_t invalidClusters = 0ul;
-  for (std::size_t i(0); i<outv.size(); ++i) {
+  for (std::size_t i(0); i < outv.size(); ++i) {
     std::size_t idx = outv.size() - i - 1;
-    if ( nClusters[idx] != 0 ) {
+    if (nClusters[idx] != 0) {
       continue;
     }
     // we have an invalid cluster.
@@ -189,7 +181,7 @@ template <typename CellCollection, typename ClusterCollection>
     ++invalidClusters;
   }
   outv.resize(outv.size() - invalidClusters);
-    
+
   return outv;
 }
 
@@ -251,36 +243,33 @@ void recordEquivalences(const internal::Connections<GridDim> seen,
   }
 }
 
-
 template <typename CellCollection, std::size_t GridDim, typename Connect>
-  std::vector<std::uint8_t> labelClusters(CellCollection& cells,
-					  std::vector<Label>& cellLabels,
-					  Connect&& connect) {
+std::vector<std::uint8_t> labelClusters(CellCollection& cells,
+                                        std::vector<Label>& cellLabels,
+                                        Connect&& connect) {
   using Cell = typename CellCollection::value_type;
-  
+
   internal::DisjointSets ds{};
-  
+
   // Sort cells by position to enable in-order scan
   std::ranges::sort(cells, internal::Compare<Cell, GridDim>());
-  
+
   // First pass: Allocate labels and record equivalences
-  for (std::size_t nCell(0ul); nCell < cells.size(); ++nCell) {    
+  for (std::size_t nCell(0ul); nCell < cells.size(); ++nCell) {
     const internal::Connections<GridDim> seen =
-      internal::getConnections<Cell, Connect, GridDim>(nCell,
-						       cells,
-						       cellLabels,
-						       std::forward<Connect>(connect));
-    
+        internal::getConnections<Cell, Connect, GridDim>(
+            nCell, cells, cellLabels, std::forward<Connect>(connect));
+
     if (seen.nconn == 0) {
       // Allocate new label
       cellLabels[nCell] = ds.makeSet();
-    } else {      
+    } else {
       recordEquivalences(seen, ds);
       // Set label for current cell
       cellLabels[nCell] = seen.buf[0];
     }
-  } // loop on cells
-  
+  }  // loop on cells
+
   // Second pass: Merge labels based on recorded equivalences
   int maxNClusters = 0;
   for (Label& lbl : cellLabels) {
@@ -301,21 +290,24 @@ template <typename CellCollection, std::size_t GridDim, typename Connect>
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2>
   requires(GridDim == 1 || GridDim == 2)
-  ClusterCollection mergeClusters(CellCollection& cells,
-				  const std::vector<Label>& cellLabels,
-				  const std::vector<std::uint8_t>& nClusters) {
-  return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells,
-									cellLabels,
-									nClusters);
+ClusterCollection mergeClusters(CellCollection& cells,
+                                const std::vector<Label>& cellLabels,
+                                const std::vector<std::uint8_t>& nClusters) {
+  return internal::mergeClustersImpl<CellCollection, ClusterCollection>(
+      cells, cellLabels, nClusters);
 }
 
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
 ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
-  if (cells.empty()) return {};
+  if (cells.empty())
+    return {};
   std::vector<Label> cellLabels(cells.size(), NO_LABEL);
-  std::vector<std::uint8_t> nClusters = labelClusters<CellCollection, GridDim, Connect>(cells, cellLabels, std::forward<Connect>(connect));
-  return mergeClusters<CellCollection, ClusterCollection, GridDim>(cells, cellLabels, nClusters);
+  std::vector<std::uint8_t> nClusters =
+      labelClusters<CellCollection, GridDim, Connect>(
+          cells, cellLabels, std::forward<Connect>(connect));
+  return mergeClusters<CellCollection, ClusterCollection, GridDim>(
+      cells, cellLabels, nClusters);
 }
 
 }  // namespace Acts::Ccl
