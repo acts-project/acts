@@ -584,7 +584,6 @@ FpvLink GeoMuonMockupExperiment::assembleMultilayerBarrel(
     envelopeVol->add(buildAbsorber(m_cfg.mdtFoamThickness, envelopeWidth,
                                    envelopeWidth, m_chamberLength));
   }
-
   return envelopeVol;
 }
 }  // namespace ActsExamples
