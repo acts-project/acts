@@ -66,7 +66,7 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
   tIter->Reset();
 
   // Iterate over the keys in the file
-  while (TKey* key = static_cast<TKey*>(tIter->Next())) {
+  while (auto key = static_cast<TKey*>(tIter->Next())) {
     // Remember the directory
     std::string tdName(key->GetName());
 
@@ -177,8 +177,8 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
             auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
             auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-            float rmin = static_cast<float>(min->GetBinContent(ib));
-            float rmax = static_cast<float>(max->GetBinContent(ib));
+            auto rmin = static_cast<float>(min->GetBinContent(ib));
+            auto rmax = static_cast<float>(max->GetBinContent(ib));
             bUtility += BinUtility(nbins, rmin, rmax, opt, val);
           }
           ACTS_VERBOSE("Created " << bUtility);
@@ -196,8 +196,10 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           double dz = Z->GetBinContent(1, 1);
           double drho = rho->GetBinContent(1, 1);
           // Create and set the homogeneous surface material
-          const auto material =
-              Material::fromMassDensity(dx0, dl0, da, dz, drho);
+          const auto material = Material::fromMassDensity(
+              static_cast<float>(dx0), static_cast<float>(dl0),
+              static_cast<float>(da), static_cast<float>(dz),
+              static_cast<float>(drho));
           sMaterial = std::make_shared<const HomogeneousSurfaceMaterial>(
               MaterialSlab(material, dt));
         }
