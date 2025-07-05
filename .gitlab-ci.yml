@@ -464,13 +464,6 @@ linux_physmon:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-linux_ubuntu_2204:
-  extends: .linux_ubuntu_extra
-  variables:
-    CXX: g++
-    CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:80
-
 linux_ubuntu_2404_clang19:
   extends: .linux_ubuntu_extra
   variables:
