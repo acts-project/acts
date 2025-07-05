@@ -26,6 +26,18 @@ inline Material makeSilicon() {
                                     (2.329 / 28.0855) * 1_mol / 1_cm3);
 }
 
+inline Material makeLiquidArgon() {
+  using namespace UnitLiterals;
+  return Material::fromMassDensity(140.0343868497_mm, 857.0639538668_mm,
+                                   39.9476933511, 18, 1.396 * 1_g / 1_cm3);
+}
+
+inline Material makeIron() {
+  using namespace UnitLiterals;
+  return Material::fromMassDensity(17.57493465097_mm, 169.9030027586_mm,
+                                   55.845110798, 26, 7.874 * 1_g / 1_cm3);
+}
+
 /// Build material slab corresponding to 1 radiation and interaction length.
 inline MaterialSlab makeUnitSlab() {
   using namespace UnitLiterals;

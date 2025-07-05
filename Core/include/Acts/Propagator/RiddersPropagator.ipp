@@ -27,7 +27,7 @@ namespace {
 /// @param [in] derivatives Derivatives of a single parameter
 ///
 /// @return Boolean result whether a phi jump occurred
-bool inconsistentDerivativesOnDisc(
+inline bool inconsistentDerivativesOnDisc(
     const std::vector<BoundVector>& derivatives) {
   // Test each component with each other
   for (unsigned int i = 0; i < derivatives.size(); i++) {
@@ -56,8 +56,8 @@ bool inconsistentDerivativesOnDisc(
 /// @param [in] derivatives Vector of resulting derivatives
 ///
 /// @return Vector containing the linear fit
-BoundVector fitLinear(const std::vector<double>& deviations,
-                      const std::vector<BoundVector>& derivatives) {
+inline BoundVector fitLinear(const std::vector<double>& deviations,
+                             const std::vector<BoundVector>& derivatives) {
   assert(!derivatives.empty() && "no fit without data");
   if (derivatives.size() == 1) {
     return derivatives[0];
