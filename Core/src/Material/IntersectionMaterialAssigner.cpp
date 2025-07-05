@@ -14,44 +14,45 @@
 
 #include <algorithm>
 
+namespace Acts {
+
 namespace {
 
-std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
-    const Acts::GeometryContext& gctx, const Acts::Vector3& position,
-    const Acts::Vector3& direction,
-    const std::vector<const Acts::Surface*>& surfaces) {
+std::vector<SurfaceIntersection> forwardOrderedIntersections(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const std::vector<const Surface*>& surfaces) {
   // First deal with the surface intersections
-  std::vector<Acts::SurfaceIntersection> sIntersections;
+  std::vector<SurfaceIntersection> surfaceIntersections;
   // Intersect the surfaces
-  for (auto& surface : surfaces) {
+  for (const Surface* surface : surfaces) {
     // Get the intersection
-    auto sMultiIntersection = surface->intersect(
-        gctx, position, direction, Acts::BoundaryTolerance::None());
+    auto multiIntersection = surface->intersect(gctx, position, direction,
+                                                BoundaryTolerance::None());
 
     // Take the closest
-    auto closestForward = sMultiIntersection.closestForward();
-    if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
-        closestForward.pathLength() > 0.0) {
-      sIntersections.push_back(closestForward);
+    auto [intersection, index] = multiIntersection.closestForward();
+    if (intersection.status() >= IntersectionStatus::reachable &&
+        intersection.pathLength() > 0) {
+      surfaceIntersections.emplace_back(intersection, surface, index);
       continue;
     }
   }
   // Sort the intersection along the pathlength
-  std::ranges::sort(sIntersections,
-                    &Acts::SurfaceIntersection::pathLengthOrder);
-  return sIntersections;
+  std::ranges::sort(surfaceIntersections,
+                    &SurfaceIntersection::pathLengthOrder);
+  return surfaceIntersections;
 }
 
 }  // namespace
 
-std::pair<std::vector<Acts::IAssignmentFinder::SurfaceAssignment>,
-          std::vector<Acts::IAssignmentFinder::VolumeAssignment>>
-Acts::IntersectionMaterialAssigner::assignmentCandidates(
+std::pair<std::vector<IAssignmentFinder::SurfaceAssignment>,
+          std::vector<IAssignmentFinder::VolumeAssignment>>
+IntersectionMaterialAssigner::assignmentCandidates(
     const GeometryContext& gctx, const MagneticFieldContext& /*mctx*/,
     const Vector3& position, const Vector3& direction) const {
   // The resulting candidates
-  std::pair<std::vector<Acts::IAssignmentFinder::SurfaceAssignment>,
-            std::vector<Acts::IAssignmentFinder::VolumeAssignment>>
+  std::pair<std::vector<IAssignmentFinder::SurfaceAssignment>,
+            std::vector<IAssignmentFinder::VolumeAssignment>>
       candidates;
 
   ACTS_DEBUG("Finding material assignment from position "
@@ -114,3 +115,5 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
   // Return the result
   return candidates;
 }
+
+}  // namespace Acts

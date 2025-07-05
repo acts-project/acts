@@ -10,8 +10,6 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
-#include <utility>
-
 namespace Acts {
 
 class Surface;

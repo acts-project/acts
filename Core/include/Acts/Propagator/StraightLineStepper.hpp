@@ -211,14 +211,13 @@ class StraightLineStepper {
   /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param intersection [in] The SurfaceIntersection
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const SurfaceIntersection& intersection,
                       Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
-    double stepSize = oIntersection.pathLength();
+    double stepSize = intersection.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
