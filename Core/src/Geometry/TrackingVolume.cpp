@@ -16,7 +16,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -34,7 +33,6 @@
 
 namespace Acts {
 
-// constructor for arguments
 TrackingVolume::TrackingVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
@@ -549,8 +547,8 @@ void TrackingVolume::setMotherVolume(TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 
-const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3& position) const {
+const Layer* TrackingVolume::associatedLayer(const GeometryContext& /*gctx*/,
+                                             const Vector3& position) const {
   // confined static layers - highest hierarchy
   if (m_confinedLayers != nullptr) {
     return (m_confinedLayers->object(position).get());
@@ -659,7 +657,7 @@ void TrackingVolume::initializeNavigationCandidates(
 
 namespace {
 
-void visitLayer(const Acts::Layer& layer, TrackingGeometryVisitor& visitor) {
+void visitLayer(const Layer& layer, TrackingGeometryVisitor& visitor) {
   visitor.visitLayer(layer);
   // Surfaces contained in the surface array
   if (layer.surfaceArray() != nullptr) {
@@ -715,7 +713,7 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   }
 }
 
-void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+void TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   // if the visitor is configured for inner--->outer volume visiting we visit
   // the children first
   if (visitor.visitDepthFirst()) {
