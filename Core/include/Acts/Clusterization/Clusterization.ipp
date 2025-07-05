@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Clusterization/Clusterization.hpp"
+
 #include <algorithm>
 #include <array>
 #include <ranges>
