@@ -180,7 +180,7 @@ template <typename CellCollection, typename ClusterCollection>
   std::size_t invalidClusters = 0ul;
   for (std::size_t i(0); i<outv.size(); ++i) {
     std::size_t idx = outv.size() - i - 1;
-    if ( not outv[idx].ids.empty() ) {
+    if ( nClusters[idx] != 0 ) {
       continue;
     }
     // we have an invalid cluster.
@@ -288,7 +288,9 @@ template <typename CellCollection, std::size_t GridDim, typename Connect>
     lbl = ds.findSet(lbl);
     maxNClusters = std::max(maxNClusters, lbl);
   }
-  
+
+  // Third pass: Keep count of how many cells go in each
+  // to-be-created clusters
   std::vector<std::uint8_t> nClusters(maxNClusters, 0);
   for (const Label label : cellLabels) {
     ++nClusters[label - 1];
