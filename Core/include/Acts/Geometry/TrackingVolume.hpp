@@ -509,6 +509,14 @@ class TrackingVolume : public Volume {
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
 
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  const INavigationPolicy* navigationPolicy() const;
+
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  INavigationPolicy* navigationPolicy();
+
   /// Register a navigation policy with this volume. The argument can not be
   /// nullptr.
   /// @param policy is the navigation policy to be registered
