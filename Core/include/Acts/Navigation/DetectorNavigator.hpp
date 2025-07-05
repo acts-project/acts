@@ -198,7 +198,7 @@ class DetectorNavigator {
 
     state.currentSurface = nullptr;
     state.currentPortal = nullptr;
-    return NavigationTarget(surface, candidate.objectIntersection.index(),
+    return NavigationTarget(surface, candidate.insersectionIndex,
                             candidate.boundaryTolerance);
   }
 
@@ -355,7 +355,7 @@ class DetectorNavigator {
     // Sort properly the surface candidates
     auto& nCandidates = state.surfaceCandidates;
     std::ranges::sort(nCandidates, {}, [](const auto& c) {
-      return c.objectIntersection.pathLength();
+      return c.intersection.pathLength();
     });
     state.surfaceCandidateIndex = -1;
   }

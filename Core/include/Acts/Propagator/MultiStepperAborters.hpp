@@ -49,16 +49,17 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
     // However, if mean of all is on surface, we are happy as well
     if (averageOnSurface) {
-      const auto sIntersection =
+      const auto intersection =
           surface
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
                   state.options.direction * stepper.direction(state.stepping),
                   BoundaryTolerance(boundaryTolerance),
                   averageOnSurfaceTolerance)
-              .closest();
+              .closest()
+              .first;
 
-      if (sIntersection.status() == IntersectionStatus::onSurface) {
+      if (intersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(
             "MultiStepperSurfaceReached aborter | "
             "Reached target in average mode");
@@ -71,7 +72,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
       ACTS_VERBOSE(
           "MultiStepperSurfaceReached aborter | Average distance to target: "
-          << sIntersection.pathLength());
+          << intersection.pathLength());
     }
 
     bool reached = true;

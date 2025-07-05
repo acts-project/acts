@@ -572,7 +572,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                              ->intersect(geoCtx, stepper.position(state),
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
-                             .closest(),
+                             .closest()
+                             .first,
                          navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
@@ -584,7 +585,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                              ->intersect(geoCtx, stepper.position(state),
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
-                             .closest(),
+                             .closest()
+                             .first,
                          navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }

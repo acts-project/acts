@@ -29,6 +29,7 @@
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -966,13 +967,14 @@ class KalmanFitter {
           result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
-      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+      auto target = [&](const FreeVector& freeVector) -> Intersection3D {
         return targetReached.surface
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
                 BoundaryTolerance::None(), state.options.surfaceTolerance)
-            .closest();
+            .closest()
+            .first;
       };
 
       // The smoothed free params at the first/last measurement state.

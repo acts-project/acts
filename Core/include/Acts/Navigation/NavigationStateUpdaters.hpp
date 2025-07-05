@@ -57,7 +57,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
         confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{
-            intersection, sc.surface, sc.portal, boundaryTolerance});
+            intersection, index, sc.surface, sc.portal, boundaryTolerance});
       }
     }
   }

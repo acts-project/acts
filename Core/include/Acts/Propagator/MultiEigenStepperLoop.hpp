@@ -562,23 +562,25 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param intersection [in] The SurfaceIntersection
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
   template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const SurfaceIntersection& intersection,
                       Direction direction, ConstrainedStep::Type stype) const {
-    const Surface& surface = *oIntersection.object();
+    const Surface& surface = *intersection.object();
 
     for (auto& component : state.components) {
-      auto intersection = surface.intersect(
-          component.state.options.geoContext,
-          SingleStepper::position(component.state),
-          direction * SingleStepper::direction(component.state),
-          BoundaryTolerance::None())[oIntersection.index()];
+      auto componentIntersection =
+          surface
+              .intersect(component.state.options.geoContext,
+                         SingleStepper::position(component.state),
+                         direction * SingleStepper::direction(component.state),
+                         BoundaryTolerance::None())
+              .at(intersection.index());
 
-      SingleStepper::updateStepSize(component.state, intersection, direction,
-                                    stype);
+      SingleStepper::updateStepSize(component.state, componentIntersection,
+                                    direction, stype);
     }
   }
 

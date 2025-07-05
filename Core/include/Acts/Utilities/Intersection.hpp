@@ -185,11 +185,16 @@ class MultiIntersection {
   constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
       default;
 
-  constexpr IntersectionType& operator[](std::uint8_t index) noexcept {
+  constexpr IntersectionType& at(std::uint8_t index) {
+    if (index >= m_size) {
+      throw std::out_of_range("Index out of range in MultiIntersection");
+    }
     return m_intersections[index];
   }
-  constexpr const IntersectionType& operator[](
-      std::uint8_t index) const noexcept {
+  constexpr const IntersectionType& at(std::uint8_t index) const {
+    if (index >= m_size) {
+      throw std::out_of_range("Index out of range in MultiIntersection");
+    }
     return m_intersections[index];
   }
 

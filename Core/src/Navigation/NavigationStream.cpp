@@ -36,20 +36,20 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     auto multiIntersection = surface->intersect(gctx, position, direction,
                                                 cTolerance, onSurfaceTolerance);
 
-    bool firstValid = multiIntersection[0].isValid();
-    bool secondValid = multiIntersection[1].isValid();
+    bool firstValid = multiIntersection.at(0).isValid();
+    bool secondValid = multiIntersection.at(1).isValid();
     if (firstValid && !secondValid) {
-      if (multiIntersection[0].pathLength() < -onSurfaceTolerance) {
+      if (multiIntersection.at(0).pathLength() < -onSurfaceTolerance) {
         continue;
       }
       surfaceIntersection =
-          SurfaceIntersection(multiIntersection[0], surface, 0);
+          SurfaceIntersection(multiIntersection.at(0), surface, 0);
     } else if (!firstValid && secondValid) {
-      if (multiIntersection[1].pathLength() < -onSurfaceTolerance) {
+      if (multiIntersection.at(1).pathLength() < -onSurfaceTolerance) {
         continue;
       }
       surfaceIntersection =
-          SurfaceIntersection(multiIntersection[1], surface, 1);
+          SurfaceIntersection(multiIntersection.at(1), surface, 1);
     } else {
       // Split them into valid intersections, keep track of potentially
       // additional candidates
