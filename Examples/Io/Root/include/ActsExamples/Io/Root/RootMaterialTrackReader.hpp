@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Plugins/Root/RootMaterialTrackAccessor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -25,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-class TChain;
+#include <TChain.h>
 
 namespace ActsExamples {
 
@@ -55,7 +54,7 @@ class RootMaterialTrackReader : public IReader {
   RootMaterialTrackReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootMaterialTrackReader() override;
+  ~RootMaterialTrackReader() override = default;
 
   /// Framework name() method
   std::string name() const override;
@@ -96,69 +95,11 @@ class RootMaterialTrackReader : public IReader {
   /// The input tree name
   std::unique_ptr<TChain> m_inputChain;
 
-  /// Event identifier.
-  std::uint32_t m_eventId = 0;
-
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  /// start global x
-  float m_v_x = 0;
-  /// start global y
-  float m_v_y = 0;
-  /// start global z
-  float m_v_z = 0;
-  /// start global momentum x
-  float m_v_px = 0;
-  /// start global momentum y
-  float m_v_py = 0;
-  /// start global momentum z
-  float m_v_pz = 0;
-  /// start phi direction
-  float m_v_phi = 0;
-  /// start eta direction
-  float m_v_eta = 0;
-  /// thickness in X0/L0
-  float m_tX0 = 0;
-  /// thickness in X0/L0
-  float m_tL0 = 0;
-
-  /// step x position
-  std::vector<float>* m_step_x = new std::vector<float>;
-  /// step y position
-  std::vector<float>* m_step_y = new std::vector<float>;
-  /// step z position
-  std::vector<float>* m_step_z = new std::vector<float>;
-  /// step x direction
-  std::vector<float>* m_step_dx = new std::vector<float>;
-  /// step y direction
-  std::vector<float>* m_step_dy = new std::vector<float>;
-  /// step z direction
-  std::vector<float>* m_step_dz = new std::vector<float>;
-  /// step length
-  std::vector<float>* m_step_length = new std::vector<float>;
-  /// step material x0
-  std::vector<float>* m_step_X0 = new std::vector<float>;
-  /// step material l0
-  std::vector<float>* m_step_L0 = new std::vector<float>;
-  /// step material A
-  std::vector<float>* m_step_A = new std::vector<float>;
-  /// step material Z
-  std::vector<float>* m_step_Z = new std::vector<float>;
-  /// step material rho
-  std::vector<float>* m_step_rho = new std::vector<float>;
-
-  /// ID of the surface associated with the step
-  std::vector<std::uint64_t>* m_sur_id = new std::vector<std::uint64_t>;
-  /// x position of the center of the surface associated with the step
-  std::vector<float>* m_sur_x = new std::vector<float>;
-  /// y position of the center of the surface associated with the step
-  std::vector<float>* m_sur_y = new std::vector<float>;
-  /// z position of the center of the surface associated with the step
-  std::vector<float>* m_sur_z = new std::vector<float>;
-  /// path correction when associating material to the given surface
-  std::vector<float>* m_sur_pathCorrection = new std::vector<float>;
+  Acts::RootMaterialTrackAccessor m_accessor;
 };
 
 }  // namespace ActsExamples

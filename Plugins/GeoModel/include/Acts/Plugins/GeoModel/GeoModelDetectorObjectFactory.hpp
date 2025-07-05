@@ -42,12 +42,12 @@ namespace Acts {
 class GeoModelDetectorObjectFactory {
  public:
   /// @brief abrivation of the smart pointer to a full physical volume
-  using FPVConstLink = GeoIntrusivePtr<const GeoVFullPhysVol>;
+  using FpvConstLink = GeoModelTree::FpvConstLink;
   ///  @brief Tuple describing the shared ptr to a Volume which will be turned into a TrackingVolume,
   ///          a Gen-2 volume and the pointer to the full physical volume
   using GeoModelVolumeFPVTuple =
       std::tuple<std::shared_ptr<Volume>,
-                 std::shared_ptr<Experimental::DetectorVolume>, FPVConstLink>;
+                 std::shared_ptr<Experimental::DetectorVolume>, FpvConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -101,7 +101,7 @@ class GeoModelDetectorObjectFactory {
   /// @param fpv: Pointer to the full physical volume to convert
   /// @param cache: Output cache object in which the constructed surfaces are saved
   /// @param gctx: Instance to an geometry context in order to build the envelope volumes
-  void convertFpv(const std::string& name, const FPVConstLink& fpv,
+  void convertFpv(const std::string& name, const FpvConstLink& fpv,
                   Cache& cache, const GeometryContext& gctx);
 
  private:

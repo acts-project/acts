@@ -44,18 +44,13 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
                                               const GeometryContext &gctx,
                                               const GeoModelTree &geoModelTree,
                                               const Options &options) {
-  if (geoModelTree.geoReader == nullptr) {
-    throw std::invalid_argument("GeoModelTree has no GeoModelReader");
-  }
-  for (const auto &q : options.queries) {
+  for (const std::string &q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
     // load data from database according to querie (Muon)
-    auto qFPV = geoModelTree.geoReader
-                    ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
+    auto qFPV = geoModelTree.publisher->getPublishedVol(q);
 
     /** Full physical volumes represent  logical detector units.*/
-    for (const auto &[name, fpv] : qFPV) {
-      FPVConstLink physVol{fpv};
+    for (const auto &[name, physVol] : qFPV) {
       ACTS_INFO("Convert volume " << name);
       convertFpv(name, physVol, cache, gctx);
     }
@@ -138,7 +133,7 @@ bool GeoModelDetectorObjectFactory::convertBox(const std::string &name) const {
 }
 
 void GeoModelDetectorObjectFactory::convertFpv(const std::string &name,
-                                               const FPVConstLink &fpv,
+                                               const FpvConstLink &fpv,
                                                Cache &cache,
                                                const GeometryContext &gctx) {
   const std::size_t prevSize = cache.sensitiveSurfaces.size();

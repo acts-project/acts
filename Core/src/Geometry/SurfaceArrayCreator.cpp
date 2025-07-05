@@ -12,23 +12,21 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
@@ -75,8 +73,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                         ftransform);
 }
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
+std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
@@ -141,8 +138,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                         ftransform);
 }
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
+std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
@@ -195,8 +191,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
                                         ftransform);
 }
 
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
+std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
@@ -304,8 +299,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
-std::unique_ptr<Acts::SurfaceArray>
-Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
+std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
@@ -373,7 +367,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     }
     default: {
       throw std::invalid_argument(
-          "Acts::SurfaceArrayCreator::"
+          "SurfaceArrayCreator::"
           "surfaceArrayOnPlane: Invalid binning "
           "direction");
     }
@@ -387,7 +381,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   //!< @todo implement - take from ATLAS complex TRT builder
 }
 
-std::vector<const Acts::Surface*> Acts::SurfaceArrayCreator::findKeySurfaces(
+std::vector<const Surface*> SurfaceArrayCreator::findKeySurfaces(
     const std::vector<const Surface*>& surfaces,
     const std::function<bool(const Surface*, const Surface*)>& equal) const {
   std::vector<const Surface*> keys;
@@ -407,7 +401,7 @@ std::vector<const Acts::Surface*> Acts::SurfaceArrayCreator::findKeySurfaces(
   return keys;
 }
 
-std::size_t Acts::SurfaceArrayCreator::determineBinCount(
+std::size_t SurfaceArrayCreator::determineBinCount(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     AxisDirection aDir) const {
   auto matcher = m_cfg.surfaceMatcher;
@@ -419,8 +413,7 @@ std::size_t Acts::SurfaceArrayCreator::determineBinCount(
   return keys.size();
 }
 
-Acts::SurfaceArrayCreator::ProtoAxis
-Acts::SurfaceArrayCreator::createVariableAxis(
+SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     AxisDirection aDir, const ProtoLayer& protoLayer,
     Transform3& transform) const {
@@ -437,13 +430,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   auto equal = [&gctx, &aDir, &matcher](const Surface* a, const Surface* b) {
     return matcher(gctx, aDir, a, b);
   };
-  std::vector<const Acts::Surface*> keys = findKeySurfaces(surfaces, equal);
+  std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
 
   std::vector<AxisScalar> aDirs;
-  if (aDir == Acts::AxisDirection::AxisPhi) {
+  if (aDir == AxisDirection::AxisPhi) {
     std::stable_sort(
-        keys.begin(), keys.end(),
-        [&gctx](const Acts::Surface* a, const Acts::Surface* b) {
+        keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
           return (phi(a->referencePosition(gctx, AxisDirection::AxisPhi)) <
                   phi(b->referencePosition(gctx, AxisDirection::AxisPhi)));
         });
@@ -479,31 +471,28 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     unsigned int segments = 72;
 
     // get the bounds of the last surfaces
-    const Acts::Surface* backSurface = keys.back();
-    const Acts::PlanarBounds* backBounds =
-        dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
+    const Surface* backSurface = keys.back();
+    const PlanarBounds* backBounds =
+        dynamic_cast<const PlanarBounds*>(&(backSurface->bounds()));
     if (backBounds == nullptr) {
       ACTS_ERROR(
           "Given SurfaceBounds are not planar - not implemented for "
           "other bounds yet! ");
     }
     // get the global vertices
-    std::vector<Acts::Vector3> backVertices =
+    std::vector<Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
-    AxisScalar maxBValue = phi(
-        *std::max_element(backVertices.begin(), backVertices.end(),
-                          [](const Acts::Vector3& a, const Acts::Vector3& b) {
-                            return phi(a) < phi(b);
-                          }));
+    AxisScalar maxBValue = phi(*std::max_element(
+        backVertices.begin(), backVertices.end(),
+        [](const Vector3& a, const Vector3& b) { return phi(a) < phi(b); }));
 
     aDirs.push_back(maxBValue);
 
     aDirs.push_back(std::numbers::pi_v<AxisScalar>);
 
-  } else if (aDir == Acts::AxisDirection::AxisZ) {
+  } else if (aDir == AxisDirection::AxisZ) {
     std::stable_sort(
-        keys.begin(), keys.end(),
-        [&gctx](const Acts::Surface* a, const Acts::Surface* b) {
+        keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
           return (a->referencePosition(gctx, AxisDirection::AxisZ).z() <
                   b->referencePosition(gctx, AxisDirection::AxisZ).z());
         });
@@ -527,8 +516,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     }
   } else {  // AxisDirection::AxisR
     std::stable_sort(
-        keys.begin(), keys.end(),
-        [&gctx](const Acts::Surface* a, const Acts::Surface* b) {
+        keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
           return (perp(a->referencePosition(gctx, AxisDirection::AxisR)) <
                   perp(b->referencePosition(gctx, AxisDirection::AxisR)));
         });
@@ -567,8 +555,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   return pAxis;
 }
 
-Acts::SurfaceArrayCreator::ProtoAxis
-Acts::SurfaceArrayCreator::createEquidistantAxis(
+SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     AxisDirection aDir, const ProtoLayer& protoLayer, Transform3& transform,
     std::size_t nBins) const {
@@ -582,11 +569,11 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   double maximum = 0.;
 
   // binning option is open for z and r, in case of phi binning reset later
-  // Acts::BinningOption bOption = Acts::open;
+  // BinningOption bOption = open;
 
   // the key surfaces - placed in different bins in the given binning
   // direction
-  std::vector<const Acts::Surface*> keys;
+  std::vector<const Surface*> keys;
 
   std::size_t binNumber = 0;
   if (nBins == 0) {
@@ -606,9 +593,9 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       // Phi binning
       // set the binning option for phi
       // sort first in phi
-      const Acts::Surface* maxElem = *std::max_element(
+      const Surface* maxElem = *std::max_element(
           surfaces.begin(), surfaces.end(),
-          [&gctx](const Acts::Surface* a, const Acts::Surface* b) {
+          [&gctx](const Surface* a, const Surface* b) {
             return phi(a->referencePosition(gctx, AxisDirection::AxisR)) <
                    phi(b->referencePosition(gctx, AxisDirection::AxisR));
           });
@@ -622,7 +609,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
 
       // multiple surfaces, we bin from -pi to pi closed
       if (keys.size() > 1) {
-        // bOption = Acts::closed;
+        // bOption = closed;
 
         minimum = -std::numbers::pi;
         maximum = std::numbers::pi;
@@ -669,14 +656,15 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   return pAxis;
 }
 
-std::vector<Acts::Vector3> Acts::SurfaceArrayCreator::makeGlobalVertices(
-    const GeometryContext& gctx, const Acts::Surface& surface,
-    const std::vector<Acts::Vector2>& locVertices) const {
-  std::vector<Acts::Vector3> globVertices;
+std::vector<Vector3> SurfaceArrayCreator::makeGlobalVertices(
+    const GeometryContext& gctx, const Surface& surface,
+    const std::vector<Vector2>& locVertices) const {
+  std::vector<Vector3> globVertices;
   for (auto& vertex : locVertices) {
-    Acts::Vector3 globVertex =
-        surface.localToGlobal(gctx, vertex, Acts::Vector3());
+    Vector3 globVertex = surface.localToGlobal(gctx, vertex, Vector3());
     globVertices.push_back(globVertex);
   }
   return globVertices;
 }
+
+}  // namespace Acts

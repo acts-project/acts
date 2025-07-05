@@ -58,7 +58,7 @@ class Config:
         self.zBins = zBins
         self.phiBins = phiBins
 
-        if seedingAlgorithm == SeedingAlgorithm.Default:
+        if seedingAlgorithm == SeedingAlgorithm.GridTriplet:
             self.bucketSize = 0
             self.metric = HashingMetric.dphi
             self.annoySeed = 123456789

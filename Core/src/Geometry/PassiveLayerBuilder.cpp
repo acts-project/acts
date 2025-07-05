@@ -15,46 +15,42 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <cstddef>
 #include <ostream>
 #include <utility>
 
 namespace Acts {
-class DiscBounds;
-}  // namespace Acts
 
-Acts::PassiveLayerBuilder::PassiveLayerBuilder(
+PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,
     std::unique_ptr<const Logger> logger)
     : m_cfg(), m_logger(std::move(logger)) {
   setConfiguration(plConfig);
 }
 
-void Acts::PassiveLayerBuilder::setConfiguration(
+void PassiveLayerBuilder::setConfiguration(
     const PassiveLayerBuilder::Config& plConfig) {
   //!< @todo add configuration check
   m_cfg = plConfig;
 }
 
-void Acts::PassiveLayerBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void PassiveLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::positiveLayers(
+const LayerVector PassiveLayerBuilder::positiveLayers(
     const GeometryContext& gctx) const {
   return endcapLayers(gctx, 1);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::negativeLayers(
+const LayerVector PassiveLayerBuilder::negativeLayers(
     const GeometryContext& gctx) const {
   return endcapLayers(gctx, -1);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
-    const Acts::GeometryContext& /*gctx*/, int side) const {
+const LayerVector PassiveLayerBuilder::endcapLayers(
+    const GeometryContext& /*gctx*/, int side) const {
   LayerVector eLayers;
   // pos/neg layers
   std::size_t numpnLayers = m_cfg.posnegLayerPositionZ.size();
@@ -97,8 +93,8 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
   return eLayers;
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
-    const Acts::GeometryContext& /*gctx*/) const {
+const LayerVector PassiveLayerBuilder::centralLayers(
+    const GeometryContext& /*gctx*/) const {
   LayerVector cLayers;
   // the central layers
   std::size_t numcLayers = m_cfg.centralLayerRadii.size();
@@ -135,3 +131,5 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
   }
   return cLayers;
 }
+
+}  // namespace Acts

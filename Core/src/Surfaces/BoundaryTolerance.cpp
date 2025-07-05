@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <stdexcept>
-#include <utility>
 
 namespace Acts {
 

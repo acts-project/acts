@@ -227,7 +227,7 @@ def runCKFTracks(
             else (
                 SeedingAlgorithm.TruthEstimated
                 if truthEstimatedSeeded
-                else SeedingAlgorithm.Default
+                else SeedingAlgorithm.GridTriplet
             )
         ),
         initialSigmas=[

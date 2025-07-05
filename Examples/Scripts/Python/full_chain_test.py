@@ -186,7 +186,7 @@ interactive testing with one-off configuration specified by command-line options
         "--seeding-algorithm",
         action=EnumAction,
         enum=SeedingAlgorithm,
-        default=SeedingAlgorithm.Default,
+        default=SeedingAlgorithm.GridTriplet,
         help="Select the seeding algorithm to use",
     )
     parser.add_argument(
@@ -551,7 +551,7 @@ def full_chain(args):
         VertexFinder,
     )
 
-    if args.itk and args.seeding_algorithm == SeedingAlgorithm.Default:
+    if args.itk and args.seeding_algorithm == SeedingAlgorithm.GridTriplet:
         seedingAlgConfig = itk.itkSeedingAlgConfig(
             itk.InputSpacePointsType.PixelSpacePoints
         )

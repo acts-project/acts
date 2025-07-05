@@ -8,37 +8,30 @@
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
-#include <initializer_list>
 #include <limits>
-#include <set>
-#include <tuple>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::fieldMapRZ(
-    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
-                                    std::array<std::size_t, 2> nBinsRZ)>&
-        localToGlobalBin,
-    std::vector<double> rPos, std::vector<double> zPos,
-    const std::vector<Vector2>& bField, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant) {
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                           std::array<std::size_t, 2> nBinsRZ)>&
+               localToGlobalBin,
+           std::vector<double> rPos, std::vector<double> zPos,
+           const std::vector<Vector2>& bField, double lengthUnit,
+           double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
   const auto [rMin, rMax, rBinCount] = detail::getMinMaxAndBinCount(rPos);
   auto [zMin, zMax, zBinCount] = detail::getMinMaxAndBinCount(zPos);
@@ -107,11 +100,10 @@ Acts::fieldMapRZ(
       {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::fieldMapXYZ(
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
+fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
@@ -190,13 +182,12 @@ Acts::fieldMapXYZ(
       {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
-                       const std::pair<double, double>& zLim,
-                       const std::pair<std::size_t, std::size_t>& nBins,
-                       const SolenoidBField& field) {
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+solenoidFieldMap(const std::pair<double, double>& rLim,
+                 const std::pair<double, double>& zLim,
+                 const std::pair<std::size_t, std::size_t>& nBins,
+                 const SolenoidBField& field) {
   auto [rMin, rMax] = rLim;
   auto [zMin, zMax] = zLim;
   const auto [nBinsR, nBinsZ] = nBins;
@@ -257,3 +248,5 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
       {transformPos, transformBField, std::move(grid)});
   return map;
 }
+
+}  // namespace Acts

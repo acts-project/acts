@@ -16,7 +16,6 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cstdlib>
