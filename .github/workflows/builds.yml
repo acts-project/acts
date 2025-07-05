@@ -253,9 +253,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2204
-            std: 20
-            cxx: g++
           - image: ubuntu2404_clang19
             std: 20
             cxx: clang++-19
