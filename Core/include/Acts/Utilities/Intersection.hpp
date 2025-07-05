@@ -19,8 +19,6 @@
 #include <span>
 #include <type_traits>
 
-#include <boost/container/static_vector.hpp>
-
 namespace Acts {
 
 class Surface;
@@ -161,8 +159,8 @@ class Intersection {
 using Intersection2D = Intersection<2>;
 using Intersection3D = Intersection<3>;
 
-static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
+static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
 static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
 
 using IntersectionIndex = std::uint8_t;
@@ -209,6 +207,10 @@ class IndexedIntersection {
 
 using IndexedIntersection2D = IndexedIntersection<2>;
 using IndexedIntersection3D = IndexedIntersection<3>;
+
+static_assert(std::is_trivially_copy_constructible_v<IndexedIntersection2D>);
+static_assert(std::is_trivially_move_constructible_v<IndexedIntersection2D>);
+static_assert(std::is_trivially_move_assignable_v<IndexedIntersection2D>);
 
 static constexpr IntersectionIndex s_maximumNumberOfIntersections = 2;
 
@@ -393,6 +395,7 @@ class SurfaceIntersection {
   constexpr SurfaceIntersection() = default;
 };
 
+static_assert(std::is_trivially_copy_constructible_v<SurfaceIntersection>);
 static_assert(std::is_trivially_move_constructible_v<SurfaceIntersection>);
 static_assert(std::is_trivially_move_assignable_v<SurfaceIntersection>);
 
