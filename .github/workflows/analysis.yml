@@ -30,7 +30,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     steps:
 
       - uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
