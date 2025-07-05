@@ -128,9 +128,6 @@ Connections<GridDim> getConnections(std::size_t idx,
 				    Connect&& connect) {
   Connections<GridDim> seen;
 
-  typename std::vector<Cell>::iterator it = cells.begin() + idx;
-  typename std::vector<Cell>::iterator it_2{it};
-
   for (std::size_t i(0ul); i < idx; ++i) {
     std::size_t idx_2 = idx - i - 1;
     ConnectResult cr = connect(cells[idx], cells[idx_2]);
