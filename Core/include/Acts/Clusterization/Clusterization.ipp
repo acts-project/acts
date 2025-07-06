@@ -300,8 +300,9 @@ ClusterCollection mergeClusters(CellCollection& cells,
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
 ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
-  if (cells.empty())
+  if (cells.empty()) {
     return {};
+  }
   std::vector<Label> cellLabels(cells.size(), NO_LABEL);
   std::vector<std::size_t> nClusters =
       labelClusters<CellCollection, GridDim, Connect>(
