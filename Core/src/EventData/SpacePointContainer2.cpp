@@ -17,20 +17,19 @@ SpacePointContainer2::SpacePointContainer2(
       m_z(other.m_z),
       m_sourceLinkOffsets(other.m_sourceLinkOffsets),
       m_sourceLinkCounts(other.m_sourceLinkCounts),
-      m_sourceLinks(other.m_sourceLinks),
-      m_rColumn(other.m_rColumn),
-      m_phiColumn(other.m_phiColumn),
-      m_timeColumn(other.m_timeColumn),
-      m_varianceZColumn(other.m_varianceZColumn),
-      m_varianceRColumn(other.m_varianceRColumn),
-      m_topStripVectorColumn(other.m_topStripVectorColumn),
-      m_bottomStripVectorColumn(other.m_bottomStripVectorColumn),
-      m_stripCenterDistanceColumn(other.m_stripCenterDistanceColumn),
-      m_topStripCenterColumn(other.m_topStripCenterColumn),
-      m_copyFromIndexColumn(other.m_copyFromIndexColumn) {
-  for (const auto &[name, column] : other.m_namedExtraColumns) {
-    m_namedExtraColumns.try_emplace(name, column->copy());
-  }
+      m_sourceLinks(other.m_sourceLinks) {
+  copyExtraColumns(other);
+}
+
+SpacePointContainer2::SpacePointContainer2(
+    SpacePointContainer2 &&other) noexcept
+    : m_x(std::move(other.m_x)),
+      m_y(std::move(other.m_y)),
+      m_z(std::move(other.m_z)),
+      m_sourceLinkOffsets(std::move(other.m_sourceLinkOffsets)),
+      m_sourceLinkCounts(std::move(other.m_sourceLinkCounts)),
+      m_sourceLinks(std::move(other.m_sourceLinks)) {
+  moveExtraColumns(other);
 }
 
 SpacePointContainer2 &SpacePointContainer2::operator=(
@@ -45,22 +44,74 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
   m_sourceLinkOffsets = other.m_sourceLinkOffsets;
   m_sourceLinkCounts = other.m_sourceLinkCounts;
   m_sourceLinks = other.m_sourceLinks;
-  m_rColumn = other.m_rColumn;
-  m_phiColumn = other.m_phiColumn;
-  m_timeColumn = other.m_timeColumn;
-  m_varianceZColumn = other.m_varianceZColumn;
-  m_varianceRColumn = other.m_varianceRColumn;
-  m_topStripVectorColumn = other.m_topStripVectorColumn;
-  m_bottomStripVectorColumn = other.m_bottomStripVectorColumn;
-  m_stripCenterDistanceColumn = other.m_stripCenterDistanceColumn;
-  m_topStripCenterColumn = other.m_topStripCenterColumn;
-  m_copyFromIndexColumn = other.m_copyFromIndexColumn;
 
-  m_extraColumns.clear();
+  copyExtraColumns(other);
+
+  return *this;
+}
+
+SpacePointContainer2 &SpacePointContainer2::operator=(
+    SpacePointContainer2 &&other) noexcept {
+  if (this == &other) {
+    return *this;
+  }
+
+  m_x = std::move(other.m_x);
+  m_y = std::move(other.m_y);
+  m_z = std::move(other.m_z);
+  m_sourceLinkOffsets = std::move(other.m_sourceLinkOffsets);
+  m_sourceLinkCounts = std::move(other.m_sourceLinkCounts);
+  m_sourceLinks = std::move(other.m_sourceLinks);
+
+  moveExtraColumns(other);
+
+  return *this;
+}
+
+void SpacePointContainer2::copyExtraColumns(const SpacePointContainer2 &other) {
+  m_extraColumns.reserve(other.m_extraColumns.size());
+
   for (const auto &[name, column] : other.m_namedExtraColumns) {
     m_namedExtraColumns.try_emplace(name, column->copy());
   }
-  return *this;
+
+  m_knownExtraColumns = other.m_knownExtraColumns;
+  knownExtraColumns() = other.knownExtraColumns();
+
+  initializeExtraColumns();
+}
+
+void SpacePointContainer2::moveExtraColumns(
+    SpacePointContainer2 &other) noexcept {
+  m_extraColumns.reserve(other.m_extraColumns.size());
+
+  for (auto &[name, column] : other.m_namedExtraColumns) {
+    m_namedExtraColumns.try_emplace(name, std::move(column));
+  }
+
+  other.m_namedExtraColumns.clear();
+  other.m_extraColumns.clear();
+
+  m_knownExtraColumns = other.m_knownExtraColumns;
+  knownExtraColumns() = std::move(other).knownExtraColumns();
+
+  initializeExtraColumns();
+}
+
+void SpacePointContainer2::initializeExtraColumns() noexcept {
+  m_extraColumns.clear();
+
+  for (const auto &[name, column] : m_namedExtraColumns) {
+    m_extraColumns.push_back(column.get());
+  }
+
+  const auto appendExtraColumn = [this]<typename T>(std::optional<T> &column) {
+    if (column.has_value()) {
+      m_extraColumns.push_back(&*column);
+    }
+  };
+  std::apply([&](auto &...args) { ((appendExtraColumn(args)), ...); },
+             knownExtraColumns());
 }
 
 void SpacePointContainer2::reserve(std::size_t size,

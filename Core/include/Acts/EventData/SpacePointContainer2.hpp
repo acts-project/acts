@@ -144,7 +144,7 @@ class SpacePointContainer2 {
   /// Move constructs a space point container.
   /// The extra columns are moved as well.
   /// @param other The space point container to move.
-  SpacePointContainer2(SpacePointContainer2 &&other) noexcept = default;
+  SpacePointContainer2(SpacePointContainer2 &&other) noexcept;
 
   /// Detructs the space point container.
   ~SpacePointContainer2() noexcept = default;
@@ -159,8 +159,7 @@ class SpacePointContainer2 {
   /// The extra columns are moved as well.
   /// @param other The space point container to move.
   /// @return A reference to this space point container.
-  SpacePointContainer2 &operator=(SpacePointContainer2 &&other) noexcept =
-      default;
+  SpacePointContainer2 &operator=(SpacePointContainer2 &&other) noexcept;
 
   /// Returns the number of space points in the container.
   /// @return The number of space points in the container.
@@ -726,6 +725,9 @@ class SpacePointContainer2 {
   std::vector<std::uint8_t> m_sourceLinkCounts;
   std::vector<SourceLink> m_sourceLinks;
 
+  // known extra columns
+  SpacePointKnownExtraColumn m_knownExtraColumns{
+      SpacePointKnownExtraColumn::None};
   // cylindrical coordinates
   std::optional<SpacePointExtraColumnHolder<float>> m_rColumn;
   std::optional<SpacePointExtraColumnHolder<float>> m_phiColumn;
@@ -746,13 +748,36 @@ class SpacePointContainer2 {
   // copy information
   std::optional<SpacePointExtraColumnHolder<std::size_t>> m_copyFromIndexColumn;
 
-  SpacePointKnownExtraColumn m_knownExtraColumns{
-      SpacePointKnownExtraColumn::None};
-
   std::unordered_map<std::string, std::unique_ptr<SpacePointColumnHolderBase>>
       m_namedExtraColumns;
 
   std::vector<SpacePointColumnHolderBase *> m_extraColumns;
+
+  auto knownExtraColumns() & noexcept {
+    return std::tie(m_rColumn, m_phiColumn, m_timeColumn, m_varianceZColumn,
+                    m_varianceRColumn, m_topStripVectorColumn,
+                    m_bottomStripVectorColumn, m_stripCenterDistanceColumn,
+                    m_topStripCenterColumn, m_copyFromIndexColumn);
+  }
+  auto knownExtraColumns() const & noexcept {
+    return std::tie(m_rColumn, m_phiColumn, m_timeColumn, m_varianceZColumn,
+                    m_varianceRColumn, m_topStripVectorColumn,
+                    m_bottomStripVectorColumn, m_stripCenterDistanceColumn,
+                    m_topStripCenterColumn, m_copyFromIndexColumn);
+  }
+  auto knownExtraColumns() && noexcept {
+    return std::tuple(
+        std::move(m_rColumn), std::move(m_phiColumn), std::move(m_timeColumn),
+        std::move(m_varianceZColumn), std::move(m_varianceRColumn),
+        std::move(m_topStripVectorColumn), std::move(m_bottomStripVectorColumn),
+        std::move(m_stripCenterDistanceColumn),
+        std::move(m_topStripCenterColumn), std::move(m_copyFromIndexColumn));
+  }
+
+  void copyExtraColumns(const SpacePointContainer2 &other);
+  void moveExtraColumns(SpacePointContainer2 &other) noexcept;
+
+  void initializeExtraColumns() noexcept;
 
   template <typename Holder>
   auto createExtraColumnImpl(const std::string &name) {
