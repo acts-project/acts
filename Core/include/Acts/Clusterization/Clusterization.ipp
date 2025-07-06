@@ -148,9 +148,9 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
 template <typename CellCollection, typename ClusterCollection>
   requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
                                     typename ClusterCollection::value_type>)
-ClusterCollection mergeClustersImpl(
-    CellCollection& cells, const std::vector<Label>& cellLabels,
-    const std::vector<std::uint8_t>& nClusters) {
+ClusterCollection mergeClustersImpl(CellCollection& cells,
+                                    const std::vector<Label>& cellLabels,
+                                    const std::vector<std::size_t>& nClusters) {
   using Cluster = typename ClusterCollection::value_type;
 
   // Accumulate clusters into the output collection
@@ -244,9 +244,9 @@ void recordEquivalences(const internal::Connections<GridDim> seen,
 }
 
 template <typename CellCollection, std::size_t GridDim, typename Connect>
-std::vector<std::uint8_t> labelClusters(CellCollection& cells,
-                                        std::vector<Label>& cellLabels,
-                                        Connect&& connect) {
+std::vector<std::size_t> labelClusters(CellCollection& cells,
+                                       std::vector<Label>& cellLabels,
+                                       Connect&& connect) {
   using Cell = typename CellCollection::value_type;
 
   internal::DisjointSets ds{};
@@ -279,7 +279,7 @@ std::vector<std::uint8_t> labelClusters(CellCollection& cells,
 
   // Third pass: Keep count of how many cells go in each
   // to-be-created clusters
-  std::vector<std::uint8_t> nClusters(maxNClusters, 0);
+  std::vector<std::size_t> nClusters(maxNClusters, 0);
   for (const Label label : cellLabels) {
     ++nClusters[label - 1];
   }
@@ -292,7 +292,7 @@ template <typename CellCollection, typename ClusterCollection,
   requires(GridDim == 1 || GridDim == 2)
 ClusterCollection mergeClusters(CellCollection& cells,
                                 const std::vector<Label>& cellLabels,
-                                const std::vector<std::uint8_t>& nClusters) {
+                                const std::vector<std::size_t>& nClusters) {
   return internal::mergeClustersImpl<CellCollection, ClusterCollection>(
       cells, cellLabels, nClusters);
 }
@@ -303,7 +303,7 @@ ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
   if (cells.empty())
     return {};
   std::vector<Label> cellLabels(cells.size(), NO_LABEL);
-  std::vector<std::uint8_t> nClusters =
+  std::vector<std::size_t> nClusters =
       labelClusters<CellCollection, GridDim, Connect>(
           cells, cellLabels, std::forward<Connect>(connect));
   return mergeClusters<CellCollection, ClusterCollection, GridDim>(
