@@ -55,6 +55,13 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
           ConstrainedStep::Type::Navigator, logger());
+      if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
+        // This indicates a geometry overlap which is not handled by the
+        // navigator, so we skip this target
+        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
+                     << nextTarget.surface->geometryId());
+        continue;
+      }
       if (preStepSurfaceStatus == IntersectionStatus::reachable) {
         return nextTarget;
       }
