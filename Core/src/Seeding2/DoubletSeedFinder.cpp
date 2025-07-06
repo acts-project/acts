@@ -72,20 +72,10 @@ void createDoubletsImpl(
 
   const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
                                   float iDeltaR2, float cotTheta) {
-    using enum SpacePointKnownExtraColumn;
-
-    float varianceZM = spacePoints.hasExtraColumns(VarianceZ)
-                           ? middleSp.varianceZ()
-                           : config.defaultVarianceZ;
-    float varianceZO = spacePoints.hasExtraColumns(VarianceZ)
-                           ? otherSp.varianceZ()
-                           : config.defaultVarianceZ;
-    float varianceRM = spacePoints.hasExtraColumns(VarianceR)
-                           ? middleSp.varianceR()
-                           : config.defaultVarianceR;
-    float varianceRO = spacePoints.hasExtraColumns(VarianceR)
-                           ? otherSp.varianceR()
-                           : config.defaultVarianceR;
+    float varianceZM = middleSp.varianceZ();
+    float varianceZO = otherSp.varianceZ();
+    float varianceRM = middleSp.varianceR();
+    float varianceRO = otherSp.varianceR();
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
