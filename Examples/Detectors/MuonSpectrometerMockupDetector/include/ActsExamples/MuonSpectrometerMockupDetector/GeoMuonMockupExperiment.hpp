@@ -28,7 +28,7 @@ namespace ActsExamples {
 ///        with n gas gaps each.
 class GeoMuonMockupExperiment : public GeoDeDuplicator {
  public:
-  enum MuonLayer { Inner, Middle, Outer, nLayers };
+  enum class MuonLayer { Inner, Middle, Outer, nLayers };
 
   /// @brief Abrivation of the memory-managed FullPhysVols
   using FpvLink = Acts::GeoModelTree::FpvLink;
@@ -66,7 +66,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     unsigned nRpcAlongPhi{2};
 
     /// @brief Placement of the three radial barrel layers
-    std::array<double, MuonLayer::nLayers> barrelRadii{
+    std::array<double, static_cast<int>(MuonLayer::nLayers)> barrelRadii{
         6. * GeoModelKernelUnits::m, 9. * GeoModelKernelUnits::m,
         12. * GeoModelKernelUnits::m};
     /// @brief Number of sectors in the spectrometer. On each of the three conentric layers

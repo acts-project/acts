@@ -87,8 +87,8 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
         const double z_displacement =
             0.25 * m_chamberLength +
             etaIdx * (m_chamberLength + m_cfg.stationDistInZ);
-        const double radius =
-            m_cfg.barrelRadii[layer] + 0.5 * m_stationHeightBarrel;
+        const double radius = m_cfg.barrelRadii[static_cast<int>(layer)] +
+                              0.5 * m_stationHeightBarrel;
         barrelEnvelope->add(
             makeTransform(GeoTrf::TranslateZ3D(z_displacement) *
                           GeoTrf::RotateZ3D(sector * m_sectorSize) *
@@ -117,8 +117,9 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
       muonEnvelope, MuonLayer::Outer,
       -(barrelZ + 1.5 * m_stationHeightEndcap + m_cfg.bigWheelDistZ));
 
-  const unsigned nChambers = 2 * m_cfg.nSectors * m_cfg.nEtaStations *
-                             MuonLayer::nLayers;  // barrel part
+  const unsigned nChambers =
+      2 * m_cfg.nSectors * m_cfg.nEtaStations *
+      static_cast<unsigned>(MuonLayer::nLayers);  // barrel part
   const unsigned nMultiLayers = 2 * nChambers;
   const unsigned nTubes = nMultiLayers * m_cfg.nTubeLayers * m_cfg.nTubes;
   const unsigned nRpc = 2 * nChambers * m_cfg.nRpcAlongZ * m_cfg.nRpcAlongPhi;
@@ -218,8 +219,9 @@ void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
   const double effR = (m_chamberLength + m_cfg.stationDistInR);
 
   const unsigned int nEta =
-      1 + static_cast<unsigned>((m_cfg.barrelRadii[MuonLayer::Outer] - lowR) /
-                                effR);
+      1 + static_cast<unsigned>(
+              (m_cfg.barrelRadii[static_cast<int>(MuonLayer::Outer)] - lowR) /
+              effR);
   const double highR = lowR + nEta * effR;
   auto envelopeShape =
       make_intrusive<GeoTube>(lowR, highR, 0.5 * m_stationHeightEndcap);
@@ -320,9 +322,10 @@ void GeoMuonMockupExperiment::publishFPV(const PVLink& envelopeVol,
 PVLink GeoMuonMockupExperiment::assembleBarrelStation(const MuonLayer layer,
                                                       const unsigned int sector,
                                                       const int etaIdx) {
-  const double envelopeWidth =
-      2. * (m_cfg.barrelRadii[layer] - 0.5 * m_stationHeightBarrel) *
-      std::sin(0.5 * m_sectorSize);
+  const double envelopeWidth = 2. *
+                               (m_cfg.barrelRadii[static_cast<int>(layer)] -
+                                0.5 * m_stationHeightBarrel) *
+                               std::sin(0.5 * m_sectorSize);
 
   auto box = make_intrusive<GeoBox>(
       0.5 * m_stationHeightBarrel, 0.5 * envelopeWidth,
