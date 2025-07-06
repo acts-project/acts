@@ -219,18 +219,19 @@ VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
   if (m_cfg.inputSelectedParticles.empty()) {
     throw std::invalid_argument("Collection with selected particles missing");
   }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
-  }
 
   m_inputTracks.maybeInitialize(m_cfg.inputTracks);
   m_inputTruthVertices.initialize(m_cfg.inputTruthVertices);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputSelectedParticles.initialize(m_cfg.inputSelectedParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
 
   if (m_cfg.writeTrackInfo && !m_inputTracks.isInitialized()) {
     throw std::invalid_argument("Missing input tracks collection");
+  }
+  if (m_cfg.writeTrackInfo && !m_inputTrackParticleMatching.isInitialized()) {
+    throw std::invalid_argument("Missing input track particles matching");
   }
 
   // Setup ROOT I/O
@@ -366,34 +367,44 @@ ProcessCode VertexNTupleWriter::finalize() {
 
 ProcessCode VertexNTupleWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
+  // In case we do not have any tracks in the vertex, we create empty
+  // collections
+  const static TrackParticleMatching emptyTrackParticleMatching;
+  const static Acts::ConstVectorTrackContainer emptyConstTrackContainer;
+  const static Acts::ConstVectorMultiTrajectory emptyConstTrackStateContainer;
+  const static ConstTrackContainer emptyTracks(
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          emptyConstTrackContainer),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          emptyConstTrackStateContainer));
+
   // Read truth vertex input collection
   const SimVertexContainer& truthVertices = m_inputTruthVertices(ctx);
   // Read truth particle input collection
   const SimParticleContainer& particles = m_inputParticles(ctx);
   const SimParticleContainer& selectedParticles = m_inputSelectedParticles(ctx);
   const TrackParticleMatching& trackParticleMatching =
-      m_inputTrackParticleMatching(ctx);
-
-  const ConstTrackContainer* tracks = nullptr;
+      (m_inputTrackParticleMatching.isInitialized()
+           ? m_inputTrackParticleMatching(ctx)
+           : emptyTrackParticleMatching);
+  const ConstTrackContainer& tracks =
+      (m_inputTracks.isInitialized() ? m_inputTracks(ctx) : emptyTracks);
   SimParticleContainer recoParticles;
 
-  if (m_inputTracks.isInitialized()) {
-    tracks = &m_inputTracks(ctx);
-
-    for (ConstTrackProxy track : *tracks) {
-      if (!track.hasReferenceSurface()) {
-        ACTS_DEBUG("No reference surface on this track, index = "
-                   << track.index() << " tip index = " << track.tipIndex());
-        continue;
-      }
-
-      if (const SimParticle* particle =
-              findParticle(particles, trackParticleMatching, track, logger());
-          particle != nullptr) {
-        recoParticles.insert(*particle);
-      }
+  for (ConstTrackProxy track : tracks) {
+    if (!track.hasReferenceSurface()) {
+      ACTS_DEBUG("No reference surface on this track, index = "
+                 << track.index() << " tip index = " << track.tipIndex());
+      continue;
     }
-  } else {
+
+    if (const SimParticle* particle =
+            findParticle(particles, trackParticleMatching, track, logger());
+        particle != nullptr) {
+      recoParticles.insert(*particle);
+    }
+  }
+  if (tracks.size() == 0) {
     // if not using tracks, then all truth particles are associated with the
     // vertex
     recoParticles = particles;
@@ -425,12 +436,11 @@ ProcessCode VertexNTupleWriter::writeT(
   // Get number of track-associated true primary vertices
   m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
 
-  ACTS_INFO("Number of reconstructed tracks : "
-            << ((tracks != nullptr) ? tracks->size() : 0));
-  ACTS_INFO("Number of reco track-associated truth particles in event : "
-            << recoParticles.size());
-  ACTS_INFO("Maximum number of reconstructible primary vertices : "
-            << m_nVtxReconstructable);
+  ACTS_DEBUG("Number of reconstructed tracks : " << tracks.size());
+  ACTS_DEBUG("Number of reco track-associated truth particles in event : "
+             << recoParticles.size());
+  ACTS_DEBUG("Maximum number of reconstructible primary vertices : "
+             << m_nVtxReconstructable);
 
   struct ToTruthMatching {
     std::optional<SimVertexBarcode> vertexId;
@@ -455,31 +465,38 @@ ProcessCode VertexNTupleWriter::writeT(
     const std::vector<Acts::TrackAtVertex>& tracksAtVtx = vtx.tracks();
 
     // Containers for storing truth particles and truth vertices that
-    // contribute
-    // to the reconstructed vertex
+    // contribute to the reconstructed vertex
     std::vector<std::pair<SimVertexBarcode, double>> contributingTruthVertices;
 
     double totalTrackWeight = 0;
-    for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-      if (trk.trackWeight < m_cfg.minTrkWeight) {
-        continue;
-      }
+    if (!tracksAtVtx.empty()) {
+      for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
+        if (trk.trackWeight < m_cfg.minTrkWeight) {
+          continue;
+        }
 
-      totalTrackWeight += trk.trackWeight;
+        totalTrackWeight += trk.trackWeight;
 
-      std::optional<ConstTrackProxy> trackOpt = findTrack(*tracks, trk);
-      if (!trackOpt.has_value()) {
-        ACTS_DEBUG("Track has no matching input track.");
-        continue;
+        std::optional<ConstTrackProxy> trackOpt = findTrack(tracks, trk);
+        if (!trackOpt.has_value()) {
+          ACTS_DEBUG("Track has no matching input track.");
+          continue;
+        }
+        const ConstTrackProxy& inputTrk = *trackOpt;
+        const SimParticle* particle =
+            findParticle(particles, trackParticleMatching, inputTrk, logger());
+        if (particle == nullptr) {
+          ACTS_VERBOSE("Track has no matching truth particle.");
+        } else {
+          contributingTruthVertices.emplace_back(
+              SimBarcode{particle->particleId()}.vertexId(), trk.trackWeight);
+        }
       }
-      const ConstTrackProxy& inputTrk = *trackOpt;
-      const SimParticle* particle =
-          findParticle(particles, trackParticleMatching, inputTrk, logger());
-      if (particle == nullptr) {
-        ACTS_VERBOSE("Track has no matching truth particle.");
-      } else {
+    } else {
+      // If no tracks at the vertex, then use all truth particles
+      for (auto& particle : recoParticles) {
         contributingTruthVertices.emplace_back(
-            SimBarcode{particle->particleId()}.vertexId(), trk.trackWeight);
+            SimBarcode{particle.particleId()}.vertexId(), 1.);
       }
     }
 
@@ -501,7 +518,9 @@ ProcessCode VertexNTupleWriter::writeT(
     double sumPt2 = calcSumPt2(m_cfg, vtx);
 
     double vertexMatchFraction =
-        truthMajorityVertexTrackWeights / totalTrackWeight;
+        (totalTrackWeight > 0
+             ? truthMajorityVertexTrackWeights / totalTrackWeight
+             : 0.);
     RecoVertexClassification recoVertexClassification =
         RecoVertexClassification::Unknown;
 
@@ -714,7 +733,7 @@ ProcessCode VertexNTupleWriter::writeT(
     }
 
     if (m_cfg.writeTrackInfo) {
-      writeTrackInfo(ctx, particles, *tracks, trackParticleMatching, truthPos,
+      writeTrackInfo(ctx, particles, tracks, trackParticleMatching, truthPos,
                      tracksAtVtx);
     }
   }

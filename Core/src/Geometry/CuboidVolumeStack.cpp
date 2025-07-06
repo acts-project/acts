@@ -125,7 +125,7 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
                                      VolumeAttachmentStrategy strategy,
                                      VolumeResizeStrategy resizeStrategy,
                                      const Logger& logger)
-    : VolumeStack(volumes, direction, resizeStrategy) {
+    : VolumeStack(volumes, direction, {resizeStrategy, resizeStrategy}) {
   std::tie(m_dirOrth1, m_dirOrth2) = getOrthogonalAxes(m_direction);
 
   initializeOuterVolume(strategy, logger);
@@ -550,7 +550,8 @@ std::pair<double, double> CuboidVolumeStack::synchronizeBounds(
 void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                                std::optional<Transform3> transform,
                                const Logger& logger) {
-  ACTS_DEBUG("Resizing CuboidVolumeStack with strategy: " << m_resizeStrategy);
+  ACTS_DEBUG(
+      "Resizing CuboidVolumeStack with strategy: " << m_resizeStrategies.first);
   ACTS_DEBUG("Currently have " << m_volumes.size() << " children");
   ACTS_DEBUG(m_gaps.size() << " gaps");
   for (const auto& v : m_volumes) {
@@ -674,7 +675,8 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
   } else {
     auto dirIdx = axisToIndex(m_direction);
     auto boundDirIdx = CuboidVolumeBounds::boundsFromAxisDirection(m_direction);
-    if (m_resizeStrategy == VolumeResizeStrategy::Expand) {
+    auto [firstStrategy, secondStrategy] = m_resizeStrategies;
+    if (firstStrategy == VolumeResizeStrategy::Expand) {
       if (newVolume.min(m_direction) < oldVolume.min(m_direction)) {
         ACTS_VERBOSE("Expanding first volume to new "
                      << axisDirectionName(m_direction) << "bounds");
@@ -712,7 +714,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         last.set({{boundDirIdx, newHlLast}});
         last.setLocalTransform(Transform3{translation}, m_groupTransform);
       }
-    } else if (m_resizeStrategy == VolumeResizeStrategy::Gap) {
+    } else if (firstStrategy == VolumeResizeStrategy::Gap) {
       ACTS_VERBOSE("Creating gap volumes to fill the new "
                    << axisDirectionName(m_direction) << " bounds");
 

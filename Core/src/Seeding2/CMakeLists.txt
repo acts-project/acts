@@ -1,0 +1,9 @@
+target_sources(
+    ActsCore
+    PRIVATE
+        detail/CandidatesForMiddleSp2.cpp
+        CylindricalSpacePointGrid2.cpp
+        DoubletSeedFinder.cpp
+        BroadTripletSeedFilter.cpp
+        BroadTripletSeedFinder.cpp
+)

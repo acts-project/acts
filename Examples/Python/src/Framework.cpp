@@ -21,6 +21,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+using namespace py::literals;
 using namespace ActsExamples;
 using namespace Acts::Python;
 
@@ -120,13 +121,15 @@ void addFramework(Context& ctx) {
       .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
-      .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
+      .def(py::init<std::size_t, std::size_t, WhiteBoard&, std::size_t>(),
+           "alg"_a, "event"_a, "store"_a, "thread"_a)
       .def_readonly("algorithmNumber", &AlgorithmContext::algorithmNumber)
       .def_readonly("eventNumber", &AlgorithmContext::eventNumber)
       .def_property_readonly("eventStore",
                              [](const AlgorithmContext& self) -> WhiteBoard& {
                                return self.eventStore;
                              })
+      .def_readonly("threadId", &AlgorithmContext::threadId)
       .def_readonly("magFieldContext", &AlgorithmContext::magFieldContext)
       .def_readonly("geoContext", &AlgorithmContext::geoContext)
       .def_readonly("calibContext", &AlgorithmContext::calibContext)

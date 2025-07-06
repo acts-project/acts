@@ -102,12 +102,9 @@ jobs:
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
-          git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          git checkout origin/${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
           git remote -v
           git status
-
-      - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v3
 
       - name: Debug
         run: |
@@ -116,28 +113,30 @@ jobs:
           ls -al build/coverage
 
       - name: Run sonar-scanner (PR mode)
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
-        run: |
-          sonar-scanner \
-            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
-            --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
-            --define sonar.scm.revision="${{ github.event.workflow_run.head_sha }}" \
-            --define sonar.pullrequest.key="${{ steps.pr_number.outputs.content }}" \
-            --define sonar.pullrequest.branch="${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}" \
+        with:
+          args: >
+            --define sonar.cfamily.compile-commands="build/compile_commands.json"
+            --define sonar.coverageReportPaths=build/coverage/cov.xml
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}"
+            --define sonar.scm.revision="${{ github.event.workflow_run.head_sha }}"
+            --define sonar.pullrequest.key="${{ steps.pr_number.outputs.content }}"
+            --define sonar.pullrequest.branch="${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}"
             --define sonar.pullrequest.base="${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}"
 
       - name: Run sonar-scanner (push mode)
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
-        run: |
-          sonar-scanner \
-            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
-            --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
+        with:
+          args: >
+            --define sonar.cfamily.compile-commands="build/compile_commands.json"
+            --define sonar.coverageReportPaths=build/coverage/cov.xml
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}"
             --define sonar.branch.name=main

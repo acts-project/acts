@@ -27,7 +27,7 @@ class GeometryContext;
 /// This class is the base class for all portal shells
 class PortalShellBase {
  public:
-  /// Virtusl destructor
+  /// Virtual destructor
   virtual ~PortalShellBase() = default;
 
   /// Fill the open slots of the shell with a @c TrivialPortalLink

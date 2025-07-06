@@ -231,14 +231,14 @@ class DirectNavigator {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
+    // Navigator target always resets the current surface
+    state.currentSurface = nullptr;
+
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE("DirectNavigator::nextTarget");
-
-    // Navigator target always resets the current surface
-    state.currentSurface = nullptr;
 
     // Move the sequence to the next surface
     state.nextSurface();

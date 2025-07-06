@@ -248,7 +248,9 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
 
-  const auto& surface = rectangleElement->surface();
+  Acts::Surface& surface = rectangleElement->surface();
+  surface.assignGeometryId(
+      Acts::GeometryIdentifier().withVolume(1).withLayer(2));
   BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
 
   auto sTransform = surface.transform(tContext);
@@ -265,6 +267,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   CHECK_CLOSE_ABS(boundValues[2u], 50, 1e-10);
   CHECK_CLOSE_ABS(boundValues[3u], 450, 1e-10);
 
+  // memory cleanup
   lcdd->destroyInstance();
 }
 

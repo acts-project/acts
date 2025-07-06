@@ -18,9 +18,14 @@ class AssertCollectionExistsAlg(acts.examples.IAlgorithm):
         return acts.examples.ProcessCode.SUCCESS
 
 
-def test_navigator(conf_const):
-    nav = conf_const(acts.Navigator)
-    nav = conf_const(acts.Navigator, trackingGeometry=None)
+def test_navigator(conf_const, trk_geo):
+
+    with pytest.raises(ValueError):
+        conf_const(acts.Navigator)
+    with pytest.raises(ValueError):
+        conf_const(acts.Navigator, trackingGeometry=None)
+
+    conf_const(acts.Navigator, trackingGeometry=trk_geo)
 
 
 def test_steppers(conf_const, trk_geo):

@@ -36,20 +36,29 @@ void addGeometryBuildingGen1(Context &ctx) {
   {
     auto creator =
         py::class_<Acts::LayerCreator>(m, "LayerCreator")
-            .def(py::init<Acts::LayerCreator::Config>())
-            .def("cylinderLayer",
-                 [](const Acts::LayerCreator &self, const GeometryContext &gctx,
-                    SurfacePtrVector surfaces, std::size_t binsPhi,
-                    std::size_t binsZ) {
-                   return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
-                                             binsZ);
-                 })
-            .def("discLayer", [](const Acts::LayerCreator &self,
-                                 const GeometryContext &gctx,
-                                 SurfacePtrVector surfaces, std::size_t binsR,
-                                 std::size_t binsPhi) {
-              return self.discLayer(gctx, std::move(surfaces), binsR, binsPhi);
-            });
+            .def(py::init([](const Acts::LayerCreator::Config &cfg,
+                             Acts::Logging::Level level) {
+              return Acts::LayerCreator(
+                  cfg, Acts::getDefaultLogger("LayerCreator", level));
+            }))
+            .def(
+                "cylinderLayer",
+                [](const Acts::LayerCreator &self, const GeometryContext &gctx,
+                   SurfacePtrVector surfaces, std::size_t binsPhi,
+                   std::size_t binsZ) {
+                  return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
+                                            binsZ);
+                },
+                "gctx"_a, "surfaces"_a, "binsPhi"_a, "binsZ"_a)
+            .def(
+                "discLayer",
+                [](const Acts::LayerCreator &self, const GeometryContext &gctx,
+                   SurfacePtrVector surfaces, std::size_t binsR,
+                   std::size_t binsPhi) {
+                  return self.discLayer(gctx, std::move(surfaces), binsR,
+                                        binsPhi);
+                },
+                "gctx"_a, "surfaces"_a, "binsR"_a, "binsPhi"_a);
 
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());

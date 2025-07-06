@@ -27,3 +27,4 @@ IncludeCategories:
   - Regex:    '^<.*>'
     Priority: 3
   # all headers not explicitly listed will be assigned to the last group
+IncludeIsMainSourceRegex: '(\.cpp)|(\.ipp)$'

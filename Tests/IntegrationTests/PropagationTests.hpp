@@ -21,7 +21,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <numbers>
 #include <utility>
 
 // parameter construction helpers
@@ -33,12 +32,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinear(double phi,
                                                             double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
@@ -53,19 +46,13 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
-
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 80_um;
-  stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 1_degree;
-  stddev[eBoundTheta] = 1.5_degree;
+  stddev[eBoundTime] = 20_ps;
+  stddev[eBoundPhi] = 20_mrad;
+  stddev[eBoundTheta] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
   BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
@@ -89,12 +76,6 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
     double phi, double theta, double absMom) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
-
-  // phi is ill-defined in forward/backward tracks. normalize the value to
-  // ensure parameter comparisons give correct answers.
-  if (!((0 < theta) && (theta < std::numbers::pi))) {
-    phi = 0;
-  }
 
   Vector4 pos4 = Vector4::Zero();
   return BoundTrackParameters::createCurvilinear(

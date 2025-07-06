@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // Polyhedron reference generator
   PolyhedronReferenceGenerator<1u, true> rGenerator;
   // A single proto axis clused in phi with 44 bins
-  ProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                  -std::numbers::pi, std::numbers::pi, 44u);
+  DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                          -std::numbers::pi, std::numbers::pi, 44u);
 
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   // Polyhedron reference generator
   PolyhedronReferenceGenerator<1u, true> rGenerator;
   // A single proto axis clused in phi with 44 bins
-  ProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                  -std::numbers::pi, std::numbers::pi, 44u);
+  DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                          -std::numbers::pi, std::numbers::pi, 44u);
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
@@ -153,10 +153,10 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   decltype(rSurfacesR0) rSurfaces = rSurfacesR0;
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
 
-  ProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound,
-                   {24., 74., 110});
-  ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 44u);
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound,
+                           {24., 74., 110});
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 44u);
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
@@ -205,9 +205,10 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  ProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24., 152, 8u);
-  ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 88u);
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24.,
+                           152, 8u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 88u);
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
@@ -258,9 +259,10 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  ProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24., 152, 8u);
-  ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 88u);
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24.,
+                           152, 8u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 88u);
 
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
@@ -296,10 +298,10 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
   auto surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                              116., 3., 2., {52, 14});
 
-  ProtoAxis pAxisZ(AxisDirection::AxisZ, AxisBoundaryType::Bound, -500., 500.,
-                   28u);
-  ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 52u);
+  DirectedProtoAxis pAxisZ(AxisDirection::AxisZ, AxisBoundaryType::Bound, -500.,
+                           500., 28u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 52u);
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedCylinder =

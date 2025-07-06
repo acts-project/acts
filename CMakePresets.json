@@ -14,9 +14,9 @@
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_BUILD_INTEGRATIONTESTS": "ON",
-                "ACTS_BUILD_PLUGIN_LEGACY": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "ON"
             }
         },
@@ -47,6 +47,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
@@ -55,7 +56,6 @@
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
-                "ACTS_BUILD_PLUGIN_CUDA": "OFF",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_PODIO": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
@@ -66,12 +66,14 @@
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_TGEO": "ON",
+                "ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
+                "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "OFF",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
-                "ACTS_BUILD_EXAMPLES_HEPMC3": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
-                "ACTS_BUILD_EXAMPLES_HASHING": "ON"
+                "ACTS_BUILD_EXAMPLES_HASHING": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         },
         {
@@ -80,6 +82,14 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "github-ci-no-root",
+            "displayName": "GitHub-CI (without ROOT)",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "ACTS_BUILD_EXAMPLES_ROOT": "OFF"
             }
         },
         {
@@ -106,7 +116,6 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
             }
         },
@@ -121,12 +130,16 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
+                "CMAKE_CUDA_ARCHITECTURES": "86",
+                "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "ON",
-                "ACTS_EXATRKX_ENABLE_ONNX": "OFF",
+                "ACTS_EXATRKX_ENABLE_ONNX": "ON",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
+                "ACTS_EXATRKX_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
             }
@@ -138,10 +151,13 @@
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_CUDA_ARCHITECTURES": "86",
+                "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON"
+                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON",
+                "ACTS_EXATRKX_ENABLE_MODULEMAP": "OFF"
             }
         }
     ]

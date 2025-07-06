@@ -50,10 +50,7 @@ for vid in volumes:
 
 output = subprocess.check_output(base_cli).decode("utf-8")
 
-ref_path = (
-    args.sourcedir
-    + "/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-)
+ref_path = args.sourcedir + "/Examples/Configs/generic-digi-smearing-config.json"
 
 with open(ref_path, "r") as ifile:
     ref = ifile.read()

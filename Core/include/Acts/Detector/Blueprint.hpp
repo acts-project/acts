@@ -99,7 +99,8 @@ struct Node final {
   std::vector<AxisDirection> binning = {};
 
   /// Portal proto material binning
-  std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
+  std::map<unsigned int, std::vector<DirectedProtoAxis>> portalMaterialBinning =
+      {};
 
   /// Auxiliary information
   std::vector<std::string> auxiliary = {};

@@ -11,12 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-namespace Acts::detail {
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+namespace detail {
 
 void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
                                  const std::vector<const Surface*>& surfaces,
@@ -71,4 +72,17 @@ std::ostream& ProtoLayerBase::toStream(std::ostream& sl) const {
   return sl;
 }
 
-}  // namespace Acts::detail
+}  // namespace detail
+
+ProtoLayer::ProtoLayer(const MutableProtoLayer& other) {
+  transform = other.transform;
+  extent = other.extent;
+  envelope = other.envelope;
+
+  m_surfaces.reserve(other.surfaces().size());
+  for (const auto& sf : other.surfaces()) {
+    m_surfaces.push_back(sf);
+  }
+}
+
+}  // namespace Acts
