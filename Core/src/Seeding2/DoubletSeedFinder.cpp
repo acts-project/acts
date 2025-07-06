@@ -96,7 +96,7 @@ void createDoubletsImpl(
     // the iterator so we don't need to look at the other SPs again
     for (; candidateOffset < candidateSps.size(); ++candidateOffset) {
       ConstSpacePointProxy2 otherSp =
-          spacePoints.at(candidateSps[candidateOffset]);
+          spacePoints[candidateSps[candidateOffset]];
 
       if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
@@ -113,7 +113,7 @@ void createDoubletsImpl(
   }
 
   for (SpacePointIndex2 otherSpIndex : candidateSps.subspan(candidateOffset)) {
-    ConstSpacePointProxy2 otherSp = spacePoints.at(otherSpIndex);
+    ConstSpacePointProxy2 otherSp = spacePoints[otherSpIndex];
 
     if constexpr (isBottomCandidate) {
       deltaR = rM - otherSp.r();

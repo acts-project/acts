@@ -10,7 +10,8 @@
 
 namespace Acts::Experimental {
 
-SpacePointContainer2::SpacePointContainer2(const SpacePointContainer2 &other)
+SpacePointContainer2::SpacePointContainer2(
+    const SpacePointContainer2 &other) noexcept
     : m_x(other.m_x),
       m_y(other.m_y),
       m_z(other.m_z),
@@ -33,7 +34,7 @@ SpacePointContainer2::SpacePointContainer2(const SpacePointContainer2 &other)
 }
 
 SpacePointContainer2 &SpacePointContainer2::operator=(
-    const SpacePointContainer2 &other) {
+    const SpacePointContainer2 &other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -62,7 +63,8 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
   return *this;
 }
 
-void SpacePointContainer2::reserve(std::size_t size, float averageSourceLinks) {
+void SpacePointContainer2::reserve(std::size_t size,
+                                   float averageSourceLinks) noexcept {
   m_x.reserve(size);
   m_y.reserve(size);
   m_z.reserve(size);
@@ -75,7 +77,7 @@ void SpacePointContainer2::reserve(std::size_t size, float averageSourceLinks) {
   }
 }
 
-void SpacePointContainer2::clear() {
+void SpacePointContainer2::clear() noexcept {
   m_x.clear();
   m_y.clear();
   m_z.clear();
@@ -89,7 +91,7 @@ void SpacePointContainer2::clear() {
 }
 
 void SpacePointContainer2::createExtraColumns(
-    SpacePointKnownExtraColumn columns) {
+    SpacePointKnownExtraColumn columns) noexcept {
   using enum SpacePointKnownExtraColumn;
 
   if ((columns & R) != None && !m_rColumn.has_value()) {
@@ -147,47 +149,8 @@ void SpacePointContainer2::createExtraColumns(
     m_copyFromIndexColumn->resize(size());
     m_extraColumns.push_back(&*m_copyFromIndexColumn);
   }
-}
 
-bool SpacePointContainer2::hasExtraColumns(
-    SpacePointKnownExtraColumn columns) const {
-  using enum SpacePointKnownExtraColumn;
-
-  if ((columns & R) != None && !m_rColumn.has_value()) {
-    return false;
-  }
-  if ((columns & Phi) != None && !m_phiColumn.has_value()) {
-    return false;
-  }
-  if ((columns & Time) != None && !m_timeColumn.has_value()) {
-    return false;
-  }
-  if ((columns & VarianceZ) != None && !m_varianceZColumn.has_value()) {
-    return false;
-  }
-  if ((columns & VarianceR) != None && !m_varianceRColumn.has_value()) {
-    return false;
-  }
-  if ((columns & TopStripVector) != None &&
-      !m_topStripVectorColumn.has_value()) {
-    return false;
-  }
-  if ((columns & BottomStripVector) != None &&
-      !m_bottomStripVectorColumn.has_value()) {
-    return false;
-  }
-  if ((columns & StripCenterDistance) != None &&
-      !m_stripCenterDistanceColumn.has_value()) {
-    return false;
-  }
-  if ((columns & TopStripCenter) != None &&
-      !m_topStripCenterColumn.has_value()) {
-    return false;
-  }
-  if ((columns & CopyFromIndex) != None && !m_copyFromIndexColumn.has_value()) {
-    return false;
-  }
-  return true;
+  m_knownExtraColumns = m_knownExtraColumns | columns;
 }
 
 }  // namespace Acts::Experimental
