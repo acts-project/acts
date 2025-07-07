@@ -55,13 +55,16 @@ namespace Acts::detail {
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
+///
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, const Surface& surface,
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath, const FreeToBoundCorrection& freeToBoundCorrection);
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
+    bool covTransport, double accumulatedPath,
+    const FreeToBoundCorrection& freeToBoundCorrection);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -87,7 +90,9 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& transportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
     double accumulatedPath);
 
@@ -112,7 +117,9 @@ void transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
@@ -126,12 +133,12 @@ void transportCovarianceToBound(
 ///        parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 ///
-void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
-                                      BoundMatrix& fullTransportJacobian,
-                                      FreeMatrix& freeTransportJacobian,
-                                      FreeVector& freeToPathDerivatives,
-                                      BoundToFreeMatrix& boundToFreeJacobian,
-                                      const Vector3& direction);
+void transportCovarianceToCurvilinear(
+    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    const Vector3& direction);
 
 /// Convert bound track parameters to another bound surface.
 /// @pre The @p targetSurface must intersect with the surface attached to
