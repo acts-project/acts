@@ -632,7 +632,8 @@ ProcessCode VertexNTupleWriter::writeT(
     if (toTruthMatching.vertexId.has_value()) {
       auto iTruthVertex = truthVertices.find(toTruthMatching.vertexId.value());
       if (iTruthVertex == truthVertices.end()) {
-        ACTS_ERROR("Truth vertex not found.");
+        ACTS_ERROR("Truth vertex not found for id: "
+                   << toTruthMatching.vertexId.value());
         continue;
       }
       const SimVertex& truthVertex = *iTruthVertex;
