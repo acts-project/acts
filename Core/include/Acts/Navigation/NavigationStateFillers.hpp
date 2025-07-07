@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <ranges>
 #include <vector>
 
 namespace Acts {
@@ -51,9 +48,11 @@ struct SurfacesFiller {
   inline static void fill(NavigationState& nState,
                           const std::vector<const Surface*>& surfaces) {
     std::ranges::for_each(surfaces, [&](const auto& s) {
-      nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>::invalid(), s, nullptr,
-          nState.surfaceBoundaryTolerance});
+      nState.surfaceCandidates.push_back(
+          NavigationState::SurfaceCandidate{{Intersection3D::invalid(), 0},
+                                            s,
+                                            nullptr,
+                                            nState.surfaceBoundaryTolerance});
     });
   }
 };
@@ -68,9 +67,11 @@ struct PortalsFiller {
   inline static void fill(NavigationState& nState,
                           const std::vector<const Portal*>& portals) {
     std::ranges::for_each(portals, [&](const auto& p) {
-      nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>::invalid(), nullptr, p,
-          BoundaryTolerance::None()});
+      nState.surfaceCandidates.push_back(
+          NavigationState::SurfaceCandidate{{Intersection3D::invalid(), 0},
+                                            nullptr,
+                                            p,
+                                            BoundaryTolerance::None()});
     });
   }
 };

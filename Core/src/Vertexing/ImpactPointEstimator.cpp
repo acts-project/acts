@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -361,11 +362,12 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
-  auto intersection =
+  Intersection3D intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
                       BoundaryTolerance::Infinite())
-          .closest();
+          .closest()
+          .first;
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
@@ -425,11 +427,12 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
                       BoundaryTolerance::Infinite())
-          .closest();
+          .closest()
+          .first;
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

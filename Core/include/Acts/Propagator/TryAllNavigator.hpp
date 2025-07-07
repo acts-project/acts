@@ -332,13 +332,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
       const detail::IntersectedNavigationObject& previousCandidate =
           state.currentCandidates.front();
 
-      const Surface& surface = *previousCandidate.intersection.object();
-      std::uint8_t index = previousCandidate.intersection.index();
+      const Surface& surface = *previousCandidate.representation;
+      std::uint8_t index = previousCandidate.intersectionIndex;
       BoundaryTolerance boundaryTolerance = previousCandidate.boundaryTolerance;
 
-      auto intersection = surface.intersect(
-          state.options.geoContext, position, direction, boundaryTolerance,
-          state.options.surfaceTolerance)[index];
+      auto intersection =
+          surface
+              .intersect(state.options.geoContext, position, direction,
+                         boundaryTolerance, state.options.surfaceTolerance)
+              .at(index);
 
       if (intersection.pathLength() < 0) {
         nearLimit = std::min(nearLimit, intersection.pathLength() -
@@ -358,7 +360,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       auto intersections =
           candidate.intersect(state.options.geoContext, position, direction,
                               state.options.surfaceTolerance);
-      for (const auto& intersection : intersections.first.split()) {
+      for (const auto& [intersection, index] : intersections.first) {
         // exclude invalid intersections
         if (!intersection.isValid() ||
             !detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -366,8 +368,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
           continue;
         }
         // store candidate
-        intersectionCandidates.emplace_back(intersection, intersections.second,
-                                            candidate.boundaryTolerance);
+        intersectionCandidates.emplace_back(
+            intersection, index, intersections.second,
+            *candidate.representation, candidate.boundaryTolerance);
       }
     }
 
@@ -381,8 +384,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
     state.currentCandidates.clear();
 
     for (const auto& candidate : intersectionCandidates) {
-      const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.object();
+      const Intersection3D& intersection = candidate.intersection;
+      std::uint8_t index = candidate.intersectionIndex;
+      const Surface& surface = *candidate.representation;
       BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       if (intersection.status() == IntersectionStatus::onSurface) {
@@ -394,8 +398,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       }
 
       if (intersection.status() == IntersectionStatus::reachable) {
-        nextTarget =
-            NavigationTarget(surface, intersection.index(), boundaryTolerance);
+        nextTarget = NavigationTarget(surface, index, boundaryTolerance);
         break;
       }
     }
@@ -464,13 +467,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
     std::vector<detail::IntersectedNavigationObject> hitCandidates;
 
     for (const auto& candidate : state.currentCandidates) {
-      const Surface& surface = *candidate.intersection.object();
-      std::uint8_t index = candidate.intersection.index();
+      std::uint8_t index = candidate.intersectionIndex;
+      const Surface& surface = *candidate.representation;
       BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
-      auto intersection = surface.intersect(
-          state.options.geoContext, position, direction, boundaryTolerance,
-          state.options.surfaceTolerance)[index];
+      Intersection3D intersection =
+          surface
+              .intersect(state.options.geoContext, position, direction,
+                         boundaryTolerance, state.options.surfaceTolerance)
+              .at(index);
 
       if (intersection.status() == IntersectionStatus::onSurface) {
         hitCandidates.emplace_back(candidate);
@@ -495,8 +500,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     // we can only handle a single surface hit so we pick the first one
     const auto candidate = hitCandidates.front();
-    const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    const Surface& surface = *candidate.representation;
 
     ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
                                 << " successfully hit, storing it.");
@@ -685,7 +689,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         auto intersections =
             candidate.intersect(state.options.geoContext, stepEnd,
                                 stepDirection, state.options.surfaceTolerance);
-        for (const auto& intersection : intersections.first.split()) {
+        for (auto [intersection, index] : intersections.first) {
           // exclude invalid intersections
           if (!intersection.isValid() ||
               !detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -694,7 +698,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
           }
           // store candidate
           state.activeCandidates.emplace_back(
-              intersection, intersections.second, candidate.boundaryTolerance);
+              intersection, index, intersections.second,
+              *candidate.representation, candidate.boundaryTolerance);
         }
       }
 
@@ -706,7 +711,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
       for (const auto& candidate : state.activeCandidates) {
         ACTS_VERBOSE("found candidate "
-                     << candidate.intersection.object()->geometryId());
+                     << candidate.representation->geometryId());
       }
     }
 
@@ -727,14 +732,14 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                  << " surfaces remain to try.");
 
     const auto& candidate = state.activeCandidate();
-    const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    std::uint8_t index = candidate.intersectionIndex;
+    const Surface& surface = *candidate.representation;
     BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
     ACTS_VERBOSE(volInfo(state)
                  << "Next surface candidate will be " << surface.geometryId());
 
-    return NavigationTarget(surface, intersection.index(), boundaryTolerance);
+    return NavigationTarget(surface, index, boundaryTolerance);
   }
 
   /// @brief Check if the target is still valid
@@ -784,16 +789,16 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     while (!state.endOfCandidates()) {
       const auto& candidate = state.activeCandidate();
-      const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.object();
+      std::uint8_t index = candidate.intersectionIndex;
+      const Surface& surface = *candidate.representation;
       BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       // first with boundary tolerance
       IntersectionStatus surfaceStatus =
           surface
               .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance,
-                         state.options.surfaceTolerance)[intersection.index()]
+                         boundaryTolerance, state.options.surfaceTolerance)
+              .at(index)
               .status();
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -805,8 +810,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       surfaceStatus =
           surface
               .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance,
-                         state.options.surfaceTolerance)[intersection.index()]
+                         boundaryTolerance, state.options.surfaceTolerance)
+              .at(index)
               .status();
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -837,8 +842,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     // we can only handle a single surface hit so we pick the first one
     const auto& candidate = hitCandidates.front();
-    const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    const Surface& surface = *candidate.representation;
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     state.currentSurface = &surface;

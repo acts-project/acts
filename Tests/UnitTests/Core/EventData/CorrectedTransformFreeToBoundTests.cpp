@@ -16,18 +16,14 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
-#include <string>
 #include <tuple>
 
 using namespace Acts;
@@ -76,10 +72,11 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // the intersection of the track with the end surface
-  SurfaceIntersection intersection =
+  Intersection3D intersection =
       eSurface
           ->intersect(geoCtx, Vector3(0, 0, 0), dir, BoundaryTolerance::None())
-          .closest();
+          .closest()
+          .first;
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
 
