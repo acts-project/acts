@@ -55,9 +55,11 @@ void createDoubletsImpl(
   const float yM = middleSp.y();
   const float zM = middleSp.z();
   const float rM = middleSp.r();
+  const float varianceZM = middleSp.varianceZ();
+  const float varianceRM = middleSp.varianceR();
 
   // equivalent to impactMax / (rM * rM);
-  float vIPAbs = impactMax * middleSpInfo.uIP2;
+  const float vIPAbs = impactMax * middleSpInfo.uIP2;
 
   float deltaR = 0.;
   float deltaZ = 0.;
@@ -72,20 +74,8 @@ void createDoubletsImpl(
 
   const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
                                   float iDeltaR2, float cotTheta) {
-    using enum SpacePointKnownExtraColumn;
-
-    float varianceZM = spacePoints.hasExtraColumns(VarianceZ)
-                           ? middleSp.varianceZ()
-                           : config.defaultVarianceZ;
-    float varianceZO = spacePoints.hasExtraColumns(VarianceZ)
-                           ? otherSp.varianceZ()
-                           : config.defaultVarianceZ;
-    float varianceRM = spacePoints.hasExtraColumns(VarianceR)
-                           ? middleSp.varianceR()
-                           : config.defaultVarianceR;
-    float varianceRO = spacePoints.hasExtraColumns(VarianceR)
-                           ? otherSp.varianceR()
-                           : config.defaultVarianceR;
+    const float varianceZO = otherSp.varianceZ();
+    const float varianceRO = otherSp.varianceR();
 
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
@@ -96,7 +86,7 @@ void createDoubletsImpl(
     // the iterator so we don't need to look at the other SPs again
     for (; candidateOffset < candidateSps.size(); ++candidateOffset) {
       ConstSpacePointProxy2 otherSp =
-          spacePoints.at(candidateSps[candidateOffset]);
+          spacePoints[candidateSps[candidateOffset]];
 
       if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
@@ -113,10 +103,15 @@ void createDoubletsImpl(
   }
 
   for (SpacePointIndex2 otherSpIndex : candidateSps.subspan(candidateOffset)) {
-    ConstSpacePointProxy2 otherSp = spacePoints.at(otherSpIndex);
+    ConstSpacePointProxy2 otherSp = spacePoints[otherSpIndex];
+
+    const float xO = otherSp.x();
+    const float yO = otherSp.y();
+    const float zO = otherSp.z();
+    const float rO = otherSp.r();
 
     if constexpr (isBottomCandidate) {
-      deltaR = rM - otherSp.r();
+      deltaR = rM - rO;
 
       if constexpr (sortedInR) {
         // if r-distance is too small we are done
@@ -125,7 +120,7 @@ void createDoubletsImpl(
         }
       }
     } else {
-      deltaR = otherSp.r() - rM;
+      deltaR = rO - rM;
 
       if constexpr (sortedInR) {
         // if r-distance is too big we are done
@@ -142,9 +137,9 @@ void createDoubletsImpl(
     }
 
     if constexpr (isBottomCandidate) {
-      deltaZ = zM - otherSp.z();
+      deltaZ = zM - zO;
     } else {
-      deltaZ = otherSp.z() - zM;
+      deltaZ = zO - zM;
     }
 
     if (outsideRangeCheck(deltaZ, config.deltaZMin, config.deltaZMax)) {
@@ -177,8 +172,8 @@ void createDoubletsImpl(
       }
 
       // transform SP coordinates to the u-v reference frame
-      const float deltaX = otherSp.x() - xM;
-      const float deltaY = otherSp.y() - yM;
+      const float deltaX = xO - xM;
+      const float deltaY = yO - yM;
 
       const float xNewFrame =
           deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -204,8 +199,8 @@ void createDoubletsImpl(
     }
 
     // transform SP coordinates to the u-v reference frame
-    const float deltaX = otherSp.x() - xM;
-    const float deltaY = otherSp.y() - yM;
+    const float deltaX = xO - xM;
+    const float deltaY = yO - yM;
 
     const float xNewFrame =
         deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -243,7 +238,7 @@ void createDoubletsImpl(
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
         if (config.experimentCuts.connected() &&
-            !config.experimentCuts(otherSp.r(), cotTheta)) {
+            !config.experimentCuts(rO, cotTheta)) {
           continue;
         }
       }
@@ -288,7 +283,7 @@ void createDoubletsImpl(
     // to detector specific cuts
     if constexpr (isBottomCandidate) {
       if (config.experimentCuts.connected() &&
-          !config.experimentCuts(otherSp.r(), cotTheta)) {
+          !config.experimentCuts(rO, cotTheta)) {
         continue;
       }
     }
