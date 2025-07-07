@@ -124,7 +124,7 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
   Connections<GridDim> seen;
 
   for (std::size_t i = 0; i < idx; ++i) {
-    std::size_t idx_2 = idx - i - 1;
+    std::size_t idx2 = idx - i - 1;
     ConnectResult cr = connect(cells[idx], cells[idx_2]);
 
     if (cr == ConnectResult::eNoConnStop) {
