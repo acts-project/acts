@@ -154,35 +154,35 @@ ClusterCollection mergeClustersImpl(CellCollection& cells,
   using Cluster = typename ClusterCollection::value_type;
 
   // Accumulate clusters into the output collection
-  ClusterCollection outv(nClusters.size());
-  for (std::size_t i = 0; i < outv.size(); ++i) {
-    reserve(outv[i], nClusters[i]);
+  ClusterCollection clusters(nClusters.size());
+  for (std::size_t i = 0; i < clusters.size(); ++i) {
+    reserve(clusters[i], nClusters[i]);
   }
 
   // Fill clusters with cells
   for (std::size_t i = 0; i < cells.size(); ++i) {
     Label label = cellLabels[i] - 1;
-    Cluster& cl = outv[label];
+    Cluster& cl = clusters[label];
     clusterAddCell(cl, cells[i]);
   }
 
   // Due to previous merging, we may have now clusters with
   // no cells. We need to remove them
   std::size_t invalidClusters = 0ul;
-  for (std::size_t i = 0; i < outv.size(); ++i) {
-    std::size_t idx = outv.size() - i - 1;
+  for (std::size_t i = 0; i < clusters.size(); ++i) {
+    std::size_t idx = clusters.size() - i - 1;
     if (nClusters[idx] != 0) {
       continue;
     }
     // we have an invalid cluster.
     // move them all to the back so that we can remove
     // them later
-    std::swap(outv[idx], outv[outv.size() - invalidClusters - 1]);
+    std::swap(clusters[idx], outv[clusters.size() - invalidClusters - 1]);
     ++invalidClusters;
   }
-  outv.resize(outv.size() - invalidClusters);
+  clusters.resize(clusters.size() - invalidClusters);
 
-  return outv;
+  return clusters;
 }
 
 }  // namespace Acts::Ccl::internal
