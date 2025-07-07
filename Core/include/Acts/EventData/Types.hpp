@@ -15,10 +15,10 @@
 
 namespace Acts {
 
-using SpacePointIndex2 = std::size_t;
+using SpacePointIndex2 = std::uint32_t;
 using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
 
-using SeedIndex2 = std::size_t;
+using SeedIndex2 = std::uint32_t;
 
 using TrackIndexType = std::uint32_t;
 static constexpr TrackIndexType kTrackIndexInvalid =

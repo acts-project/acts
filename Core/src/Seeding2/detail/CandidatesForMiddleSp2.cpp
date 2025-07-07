@@ -12,15 +12,14 @@
 
 namespace Acts::Experimental {
 
-void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
-                                            std::size_t nHigh) {
+void CandidatesForMiddleSp2::setMaxElements(Size nLow, Size nHigh) {
   m_maxSizeHigh = nHigh;
   m_maxSizeLow = nLow;
 
   // protection against default numbers
   // it may cause std::bad_alloc if we don't protect
-  if (nHigh == std::numeric_limits<std::size_t>::max() ||
-      nLow == std::numeric_limits<std::size_t>::max()) {
+  if (nHigh == std::numeric_limits<Size>::max() ||
+      nLow == std::numeric_limits<Size>::max()) {
     return;
   }
 
@@ -30,8 +29,8 @@ void CandidatesForMiddleSp2::setMaxElements(std::size_t nLow,
   m_indicesLow.reserve(nLow);
 }
 
-void CandidatesForMiddleSp2::pop(std::vector<std::size_t>& indices,
-                                 std::size_t& currentSize) {
+void CandidatesForMiddleSp2::pop(std::vector<Index>& indices,
+                                 Size& currentSize) {
   // Remove the candidate with the lowest weight in the collection
   // By construction, this element is always the first element in the
   // collection.
@@ -43,15 +42,8 @@ void CandidatesForMiddleSp2::pop(std::vector<std::size_t>& indices,
   bubbledw(indices, 0, --currentSize);
 }
 
-bool CandidatesForMiddleSp2::exists(const std::size_t n,
-                                    const std::size_t maxSize) const {
-  // If the element exists, its index is lower than the current number
-  // of stored elements
-  return n < maxSize;
-}
-
-float CandidatesForMiddleSp2::weight(const std::vector<std::size_t>& indices,
-                                     std::size_t n) const {
+float CandidatesForMiddleSp2::weight(const std::vector<Index>& indices,
+                                     const Index n) const {
   // Get the weight of the n-th element
   return m_storage[indices[n]].weight;
 }
@@ -80,11 +72,11 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
               zOrigin, isQuality);
 }
 
-bool CandidatesForMiddleSp2::push(std::vector<std::size_t>& indices,
-                                  std::size_t& n, const std::size_t nMax,
-                                  std::size_t spB, std::size_t spM,
-                                  std::size_t spT, float weight, float zOrigin,
-                                  bool isQuality) {
+bool CandidatesForMiddleSp2::push(std::vector<Index>& indices, Index& n,
+                                  const Size nMax, const Index spB,
+                                  const Index spM, const Index spT,
+                                  const float weight, const float zOrigin,
+                                  const bool isQuality) {
   // If we do not want to store candidates, returns
   if (nMax == 0) {
     return false;
@@ -111,9 +103,8 @@ bool CandidatesForMiddleSp2::push(std::vector<std::size_t>& indices,
   return true;
 }
 
-void CandidatesForMiddleSp2::addToCollection(std::vector<std::size_t>& indices,
-                                             std::size_t& n,
-                                             const std::size_t nMax,
+void CandidatesForMiddleSp2::addToCollection(std::vector<Index>& indices,
+                                             Index& n, const Size nMax,
                                              const TripletCandidate2& element) {
   // adds elements to the end of the collection
   if (indices.size() == nMax) {
@@ -126,15 +117,15 @@ void CandidatesForMiddleSp2::addToCollection(std::vector<std::size_t>& indices,
   bubbleup(indices, n++);
 }
 
-void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
-                                      std::size_t n, std::size_t actualSize) {
+void CandidatesForMiddleSp2::bubbledw(std::vector<Index>& indices, Index n,
+                                      const Size actualSize) {
   while (n < actualSize) {
     // The collection of indexes are sorted as min heap trees
     // left child : 2 * n + 1
     // right child: 2 * n + 2
-    float current = weight(indices, n);
-    std::size_t leftChild = 2 * n + 1;
-    std::size_t rightChild = 2 * n + 2;
+    const float current = weight(indices, n);
+    const Index leftChild = 2 * n + 1;
+    const Index rightChild = 2 * n + 2;
 
     // We have to move the current node down the tree to its correct position.
     // This is done by comparing its weight with the weights of its two
@@ -156,9 +147,9 @@ void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
     // this is the weight of the left child, and we then check for the right
     // child
 
-    float weightLeftChild = weight(indices, leftChild);
+    const float weightLeftChild = weight(indices, leftChild);
 
-    std::size_t selectedChild = leftChild;
+    Index selectedChild = leftChild;
     float selectedWeight = weightLeftChild;
 
     // Check which child has the lower weight
@@ -183,15 +174,14 @@ void CandidatesForMiddleSp2::bubbledw(std::vector<std::size_t>& indices,
   }  // while loop
 }
 
-void CandidatesForMiddleSp2::bubbleup(std::vector<std::size_t>& indices,
-                                      std::size_t n) {
+void CandidatesForMiddleSp2::bubbleup(std::vector<Index>& indices, Index n) {
   while (n != 0) {
     // The collection of indexes are sorted as min heap trees
     // parent: (n - 1) / 2;
     // this works because it is an integer operation
-    std::size_t parentIdx = (n - 1) / 2;
+    const Index parentIdx = (n - 1) / 2;
 
-    float weightCurrent = weight(indices, n);
+    const float weightCurrent = weight(indices, n);
     // If weight of the parent is lower than this one, we stop
     if (float weightParent = weight(indices, parentIdx);
         weightParent <= weightCurrent) {
@@ -210,7 +200,7 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
   output.resize(m_nHigh + m_nLow);
-  std::size_t outIdx = output.size() - 1;
+  Index outIdx = output.size() - 1;
 
   // rely on the fact that m_indices* are both min heap trees
   // Sorting comes naturally by popping elements one by one and
@@ -218,8 +208,8 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   while (m_nHigh != 0 || m_nLow != 0) {
     // no entries in collection high, we attach the entire low collection
     if (m_nHigh == 0) {
-      std::size_t idx = m_nLow;
-      for (std::size_t i = 0; i < idx; i++) {
+      Index idx = m_nLow;
+      for (Index i = 0; i < idx; i++) {
         output[outIdx] = m_storage[m_indicesLow[0]];
         pop(m_indicesLow, m_nLow);
         outIdx--;
@@ -229,8 +219,8 @@ void CandidatesForMiddleSp2::toSortedCandidates(
 
     // no entries in collection low, we attach the entire high collection
     if (m_nLow == 0) {
-      std::size_t idx = m_nHigh;
-      for (std::size_t i = 0; i < idx; i++) {
+      Index idx = m_nHigh;
+      for (Index i = 0; i < idx; i++) {
         output[outIdx] = m_storage[m_indicesHigh[0]];
         pop(m_indicesHigh, m_nHigh);
         outIdx--;
@@ -262,13 +252,13 @@ bool CandidatesForMiddleSp2::descendingByQuality(
   // This is for the case when the weights from different seeds
   // are same. This makes cpu & cuda results same
 
-  auto bottomL1 = spacePoints[i1.bottom];
-  auto middleL1 = spacePoints[i1.middle];
-  auto topL1 = spacePoints[i1.top];
+  const auto bottomL1 = spacePoints[i1.bottom];
+  const auto middleL1 = spacePoints[i1.middle];
+  const auto topL1 = spacePoints[i1.top];
 
-  auto bottomL2 = spacePoints[i2.bottom];
-  auto middleL2 = spacePoints[i2.middle];
-  auto topL2 = spacePoints[i2.top];
+  const auto bottomL2 = spacePoints[i2.bottom];
+  const auto middleL2 = spacePoints[i2.middle];
+  const auto topL2 = spacePoints[i2.top];
 
   float seed1_sum = 0.;
   float seed2_sum = 0.;
