@@ -30,6 +30,10 @@ template <std::size_t DIM>
 class GridBinFinder {
  public:
   static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
+
+  using stored_values_t =
+      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
+
   /// @brief Constructor
   /// @tparam args ... Input parameters provided by the user
   ///
@@ -48,6 +52,11 @@ class GridBinFinder {
   {
     storeValue(std::forward<args>(vals)...);
   }
+
+  explicit GridBinFinder(const std::array<stored_values_t, DIM>& values)
+      : m_values(values) {}
+
+  const std::array<stored_values_t, DIM>& values() const { return m_values; }
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid
   ///
@@ -105,8 +114,6 @@ class GridBinFinder {
   bool isGridCompatible(const Grid<stored_t, Axes...>& grid) const;
 
  private:
-  using stored_values_t =
-      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
   /// These values are provided by the user and can be ints, a pair of ints or a
   /// vector of pair of ints. In the first case, the neighbours will be +/- bins
