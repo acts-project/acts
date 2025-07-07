@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <array>
-#include <functional>
+#include <tuple>
 
 namespace ActsFatras {
 
@@ -24,10 +24,13 @@ namespace ActsFatras {
 /// A Lorentz drift angle can be applied.
 ///
 struct PlanarSurfaceDrift {
-  /// Shorthand for a 2D segment
+  /// Shorthand for a 2D segment - drifted segment in 2D
   using Segment2D = std::array<Acts::Vector2, 2>;
+  /// Shorthand for a 3D segment  - undrifted segment in 3D
+  using Segment3D = std::array<Acts::Vector3, 2>;
 
-  /// Drift the full 3D segment onto a surface 2D readout plane
+  /// Drift the full 3D segment onto a surface 2D readout plane.
+  ///
   ///
   /// @param gctx The current Geometry context
   /// @param surface The nominal intersection surface
@@ -35,16 +38,21 @@ struct PlanarSurfaceDrift {
   /// @param pos The position in global coordinates
   /// @param dir The direction in global coordinates
   /// @param driftdir The drift direction in local (surface) coordinates
-  /// @note a drift direction of (0,0,0) is drift to central plane
-  ///       any other a drift direction with driftDir.z() != 0.
-  ///       will result on a readout on either + 0.5*depletion
-  ///       or -0.5*depletion
   ///
-  /// @return a Segment on the readout surface @note without masking
-  Segment2D toReadout(const Acts::GeometryContext& gctx,
-                      const Acts::Surface& surface, double thickness,
-                      const Acts::Vector3& pos, const Acts::Vector3& dir,
-                      const Acts::Vector3& driftdir) const;
+  /// @note A drift direction with no perpendicular component will
+  /// result in a segment with no lorentz drift or emulate a 3D pixel
+  /// sensor.
+  ///
+  /// @note The readout is alwayws emulated at the central surface,
+  /// as the mask will be deployed there, and the measurement is
+  /// presented there/
+  ///
+  /// @return a tuple of the (drifted) Segment on the readout surface
+  /// ( @note without masking ), and original 3D segment (in local 3D frame)
+  Acts::Result<std::tuple<Segment2D, Segment3D>> toReadout(
+      const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+      double thickness, const Acts::Vector3& pos, const Acts::Vector3& dir,
+      const Acts::Vector3& driftdir = Acts::Vector3(0., 0., 0.)) const;
 };
 
 }  // namespace ActsFatras
