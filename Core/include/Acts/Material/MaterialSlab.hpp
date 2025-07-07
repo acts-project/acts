@@ -43,6 +43,21 @@ class MaterialSlab {
   static MaterialSlab combineLayers(const MaterialSlab& layerA,
                                     const MaterialSlab& layerB);
 
+  /// Compute the average properties for a combined slab of two materials.
+  ///
+  /// The averaged material slab has the combined thickness of the two input
+  /// slabs and assumes the two input materials are homogeneously and
+  /// continuously mixed throughout the slab.
+  ///
+  /// @param slab1 Properties of the first material slab
+  /// @param material2 Properties of the second material
+  /// @param thickness2 Thickness of the second material slab. Can be negative to
+  ///                   subtract the second material from the first slab.
+  ///
+  /// @returns Material slab with the combined thickness and average parameters
+  static MaterialSlab combine(const MaterialSlab& slab1,
+                              const Material& material2, float thickness2);
+
   /// Combine material properties of multiple layers by averaging them.
   ///
   /// @param layers Input layers to average over.

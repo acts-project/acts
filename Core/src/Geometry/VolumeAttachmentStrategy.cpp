@@ -8,8 +8,8 @@
 
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 
-namespace Acts {
-std::ostream& operator<<(std::ostream& os, VolumeAttachmentStrategy strategy) {
+std::ostream& Acts::operator<<(std::ostream& os,
+                               VolumeAttachmentStrategy strategy) {
   switch (strategy) {
     case VolumeAttachmentStrategy::First:
       os << "First";
@@ -29,5 +29,3 @@ std::ostream& operator<<(std::ostream& os, VolumeAttachmentStrategy strategy) {
   }
   return os;
 }
-
-}  // namespace Acts
