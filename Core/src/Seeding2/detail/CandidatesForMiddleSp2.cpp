@@ -252,13 +252,13 @@ bool CandidatesForMiddleSp2::descendingByQuality(
   // This is for the case when the weights from different seeds
   // are same. This makes cpu & cuda results same
 
-  const auto bottomL1 = spacePoints.at(i1.bottom);
-  const auto middleL1 = spacePoints.at(i1.middle);
-  const auto topL1 = spacePoints.at(i1.top);
+  const auto bottomL1 = spacePoints[i1.bottom];
+  const auto middleL1 = spacePoints[i1.middle];
+  const auto topL1 = spacePoints[i1.top];
 
-  auto bottomL2 = spacePoints.at(i2.bottom);
-  auto middleL2 = spacePoints.at(i2.middle);
-  auto topL2 = spacePoints.at(i2.top);
+  const auto bottomL2 = spacePoints[i2.bottom];
+  const auto middleL2 = spacePoints[i2.middle];
+  const auto topL2 = spacePoints[i2.top];
 
   float seed1_sum = 0.;
   float seed2_sum = 0.;
