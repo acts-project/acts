@@ -125,7 +125,7 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
 
   for (std::size_t i = 0; i < idx; ++i) {
     std::size_t idx2 = idx - i - 1;
-    ConnectResult cr = connect(cells[idx], cells[idx_2]);
+    ConnectResult cr = connect(cells[idx], cells[idx2]);
 
     if (cr == ConnectResult::eNoConnStop) {
       break;
@@ -134,7 +134,7 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
       continue;
     }
     if (cr == ConnectResult::eConn) {
-      seen.buf[seen.nconn] = labels[idx_2];
+      seen.buf[seen.nconn] = labels[idx2];
       seen.nconn += 1;
       if (seen.nconn == seen.buf.size()) {
         break;
@@ -155,12 +155,12 @@ ClusterCollection mergeClustersImpl(CellCollection& cells,
 
   // Accumulate clusters into the output collection
   ClusterCollection outv(nClusters.size());
-  for (std::size_t i(0); i < outv.size(); ++i) {
+  for (std::size_t i = 0; i < outv.size(); ++i) {
     reserve(outv[i], nClusters[i]);
   }
 
   // Fill clusters with cells
-  for (std::size_t i(0); i < cells.size(); ++i) {
+  for (std::size_t i = 0; i < cells.size(); ++i) {
     Label label = cellLabels[i] - 1;
     Cluster& cl = outv[label];
     clusterAddCell(cl, cells[i]);
@@ -169,7 +169,7 @@ ClusterCollection mergeClustersImpl(CellCollection& cells,
   // Due to previous merging, we may have now clusters with
   // no cells. We need to remove them
   std::size_t invalidClusters = 0ul;
-  for (std::size_t i(0); i < outv.size(); ++i) {
+  for (std::size_t i = 0; i < outv.size(); ++i) {
     std::size_t idx = outv.size() - i - 1;
     if (nClusters[idx] != 0) {
       continue;
