@@ -17,23 +17,23 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
-Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<Acts::Vector3, 8>& vertices) noexcept(false)
+namespace Acts {
+
+GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
+    const std::array<Vector3, 8>& vertices) noexcept(false)
     : m_vertices(vertices) {
   construct();
 }
 
-Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
+GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<double, GenericCuboidVolumeBounds::BoundValues::eSize>&
         values) noexcept(false)
     : m_vertices() {
@@ -44,8 +44,7 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
   construct();
 }
 
-bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
-                                             double tol) const {
+bool GenericCuboidVolumeBounds::inside(const Vector3& gpos, double tol) const {
   constexpr std::array<std::size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
   bool ref = std::signbit((gpos - m_vertices[vtxs[0]]).dot(m_normals[0]));
@@ -63,8 +62,7 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
   return true;
 }
 
-std::vector<Acts::OrientedSurface>
-Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> GenericCuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
 
@@ -129,9 +127,8 @@ Acts::GenericCuboidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
-    std::ostream& sl) const {
-  sl << "Acts::GenericCuboidVolumeBounds: vertices (x, y, z) =\n";
+std::ostream& GenericCuboidVolumeBounds::toStream(std::ostream& sl) const {
+  sl << "GenericCuboidVolumeBounds: vertices (x, y, z) =\n";
   for (std::size_t i = 0; i < 8; i++) {
     if (i > 0) {
       sl << ",\n";
@@ -141,7 +138,7 @@ std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
   return sl;
 }
 
-void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
+void GenericCuboidVolumeBounds::construct() noexcept(false) {
   // calculate approximate center of gravity first, so we can make sure
   // the normals point inwards
   Vector3 cog(0, 0, 0);
@@ -187,7 +184,7 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 }
 
-std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
+std::vector<double> GenericCuboidVolumeBounds::values() const {
   std::vector<double> rvalues;
   rvalues.reserve(BoundValues::eSize);
   for (std::size_t iv = 0; iv < 8; ++iv) {
@@ -198,8 +195,8 @@ std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
   return rvalues;
 }
 
-Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Vector3& envelope,
+Volume::BoundingBox GenericCuboidVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin, vmax;
 
@@ -220,8 +217,8 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
   return {entity, vmin - envelope, vmax + envelope};
 }
 
-void Acts::GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
-                                           const Transform3& transform) const {
+void GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
+                                     const Transform3& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,
                        const auto& d) {
     helper.face(std::vector<Vector3>(
@@ -235,3 +232,5 @@ void Acts::GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
   draw_face(m_vertices[2], m_vertices[3], m_vertices[7], m_vertices[6]);
   draw_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 }
+
+}  // namespace Acts
