@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -158,10 +159,15 @@ class SurfaceIntersection {
   /// @param intersection is the intersection
   /// @param surface is the surface that has been intersected
   /// @param index is the intersection index
-  constexpr SurfaceIntersection(const Intersection3D& intersection,
-                                const Surface& surface,
-                                std::uint8_t index = 0) noexcept
-      : m_intersection(intersection), m_surface(&surface), m_index(index) {}
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  constexpr SurfaceIntersection(
+      const Intersection3D& intersection, const Surface& surface,
+      std::uint8_t index = 0,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None()) noexcept
+      : m_intersection(intersection),
+        m_surface(&surface),
+        m_index(index),
+        m_boundaryTolerance(boundaryTolerance) {}
 
   SurfaceIntersection(const SurfaceIntersection&) noexcept = default;
   SurfaceIntersection(SurfaceIntersection&&) noexcept = default;
@@ -193,6 +199,9 @@ class SurfaceIntersection {
   constexpr const Surface& surface() const { return *m_surface; }
 
   constexpr std::uint8_t index() const { return m_index; }
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
 
   constexpr static SurfaceIntersection invalid() {
     return SurfaceIntersection(Intersection3D::invalid());
@@ -228,6 +237,8 @@ class SurfaceIntersection {
   const Surface* m_surface = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 
   constexpr SurfaceIntersection() = default;
   explicit constexpr SurfaceIntersection(const Intersection3D& intersection)
@@ -245,12 +256,16 @@ class SurfaceMultiIntersection {
 
   /// @param intersections are the intersections
   /// @param surface is the surface that has been intersected
-  SurfaceMultiIntersection(const MultiIntersection3D& intersections,
-                           const Surface& surface)
-      : m_intersections(intersections), m_surface(&surface) {}
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  SurfaceMultiIntersection(
+      const MultiIntersection3D& intersections, const Surface& surface,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None())
+      : m_intersections(intersections),
+        m_surface(&surface),
+        m_boundaryTolerance(boundaryTolerance) {}
 
   SurfaceIntersection operator[](std::uint8_t index) const {
-    return {m_intersections[index], *m_surface, index};
+    return {m_intersections[index], *m_surface, index, m_boundaryTolerance};
   }
 
   const MultiIntersection3D& intersections() const { return m_intersections; }
@@ -259,7 +274,11 @@ class SurfaceMultiIntersection {
 
   constexpr const Surface& surface() const { return *m_surface; }
 
-  SplitIntersections split() const {
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
+
+  constexpr SplitIntersections split() const {
     SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
       result.push_back(operator[](i));
@@ -286,6 +305,8 @@ class SurfaceMultiIntersection {
   MultiIntersection3D m_intersections;
   /// The surface that was (tried to be) intersected
   const Surface* m_surface = nullptr;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 };
 
 namespace detail {
