@@ -300,6 +300,10 @@ class MultiIntersection {
 using MultiIntersection2D = MultiIntersection<2>;
 using MultiIntersection3D = MultiIntersection<3>;
 
+static_assert(std::is_trivially_copy_constructible_v<MultiIntersection2D>);
+static_assert(std::is_trivially_move_constructible_v<MultiIntersection2D>);
+static_assert(std::is_trivially_move_assignable_v<MultiIntersection2D>);
+
 class SurfaceIntersection {
  public:
   using Intersection = Intersection3D;
