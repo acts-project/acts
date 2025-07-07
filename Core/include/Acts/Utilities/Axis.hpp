@@ -292,7 +292,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const int w = getNBins();
+    const int w = static_cast<int>(getNBins());
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
@@ -307,7 +307,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(double x) const final {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -352,7 +352,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const final {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
@@ -604,7 +604,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const int w = getNBins();
+    const int w = static_cast<int>(getNBins());
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
@@ -619,7 +619,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(double x) const final {
     const auto it =
         std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
     return wrapBin(std::distance(std::begin(m_binEdges), it));
@@ -669,7 +669,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const final {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 

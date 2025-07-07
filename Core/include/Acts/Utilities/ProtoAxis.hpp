@@ -61,7 +61,7 @@ class ProtoAxis {
   ProtoAxis(ProtoAxis&&) = default;
   ProtoAxis& operator=(ProtoAxis&&) = default;
 
-  ~ProtoAxis() = default;
+  virtual ~ProtoAxis() = default;
 
   /// @brief Return the IAxis representation
   ///
@@ -89,7 +89,7 @@ class ProtoAxis {
 
   /// Dump into a string
   /// @return the string representation
-  std::string toString() const;
+  virtual std::string toString() const;
 
  private:
   /// @brief Hidden friend ostream operator
@@ -192,7 +192,7 @@ struct DirectedProtoAxis : public ProtoAxis {
   DirectedProtoAxis(AxisDirection axisDir, AxisBoundaryType abType,
                     std::size_t nbins);
 
-  virtual ~DirectedProtoAxis() = default;
+  ~DirectedProtoAxis() = default;
 
   /// Access to the AxisDirection
   /// @return the axis direction
