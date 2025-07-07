@@ -177,7 +177,7 @@ ClusterCollection mergeClustersImpl(CellCollection& cells,
     // we have an invalid cluster.
     // move them all to the back so that we can remove
     // them later
-    std::swap(clusters[idx], outv[clusters.size() - invalidClusters - 1]);
+    std::swap(clusters[idx], clusters[clusters.size() - invalidClusters - 1]);
     ++invalidClusters;
   }
   clusters.resize(clusters.size() - invalidClusters);
