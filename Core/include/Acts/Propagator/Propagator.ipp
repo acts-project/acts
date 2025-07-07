@@ -58,7 +58,8 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
         // This indicates a geometry overlap which is not handled by the
         // navigator, so we skip this target.
-        // This can also happen in a well-behaved geometry with external surfaces.
+        // This can also happen in a well-behaved geometry with external
+        // surfaces.
         ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
                      << nextTarget.surface->geometryId());
         continue;
