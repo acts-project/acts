@@ -11,23 +11,24 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/IGridSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 void Acts::RootMaterialMapAccessor::write(TFile& rFile,
                                           const GeometryContext& gctx,
-                                          const Surface& surface) const {
+                                          const Surface& surface)  {
   auto geoID = surface.geometryId();
   auto surfaceMaterial = surface.surfaceMaterial();
   if (surfaceMaterial == nullptr) {
     return;
   }
 
+
   auto homogeneousMaterial =
       dynamic_cast<const HomogeneousSurfaceMaterial*>(surfaceMaterial);
   if (homogeneousMaterial != nullptr) {
-    
-    
+    writeHomogeneousMaterial(*homogeneousMaterial);
+    m_hGeoIdPtr->push_back(geoID.value());
   }
 
   auto binnedMaterial =
@@ -37,4 +38,38 @@ void Acts::RootMaterialMapAccessor::write(TFile& rFile,
   }
 
   return;
+}
+
+void Acts::RootMaterialMapAccessor::connectForWrite(
+    TTree& rTree, MaterialTreePayload& treePayload) {
+  rTree.Branch("hGeoId", &treePayload.hGeoIdPtr);
+  rTree.Branch("ht", &treePayload.htPtr);
+  rTree.Branch("hX0", &treePayload.hX0Ptr);
+  rTree.Branch("hL0", &treePayload.hL0Ptr);
+  rTree.Branch("hA", &treePayload.hAPtr);
+  rTree.Branch("hZ", &treePayload.hZPtr);
+  rTree.Branch("hRho", &treePayload.hRhoPtr);
+}
+
+void Acts::RootMaterialMapAccessor::connectForRead(
+    const TTree& rTree, MaterialTreePayload& treePayload) {
+  rTree.SetBranchAddress("hGeoId", &treePayload.hGeoIdPtr);
+  rTree.SetBranchAddress("ht", &treePayload.htPtr);
+  rTree.SetBranchAddress("hX0", &treePayload.hX0Ptr);
+  rTree.SetBranchAddress("hL0", &treePayload.hL0Ptr);
+  rTree.SetBranchAddress("hA", &treePayload.hAPtr);
+  rTree.SetBranchAddress("hZ", &treePayload.hZPtr);
+  rTree.SetBranchAddress("hRho", &treePayload.hRhoPtr);
+}
+
+void Acts::RootMaterialMapAccessor::writeHomogeneousMaterial(
+    const HomogeneousSurfaceMaterial& homogeneousMaterial) {
+  if (m_hTree == nullptr) {
+    m_hTree = std::make_unique<TTree>("HomogeneousMaterial",
+                                      "Homogeneous Material Tree");
+
+
+  }
+
+
 }
