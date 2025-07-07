@@ -187,6 +187,19 @@ bool EDM4hepSimInputConverter::acceptParticle(
 
 bool EDM4hepSimInputConverter::acceptParticle(
     const edm4hep::MCParticle& particle) const {
+  double z = particle.getVertex().z * Acts::UnitConstants::mm;
+  if (m_cfg.particleZMin.has_value() && z < m_cfg.particleZMin.value()) {
+    ACTS_VERBOSE("Skipping particle with z=" << z << " < zMin="
+                                             << m_cfg.particleZMin.value());
+    return false;
+  }
+
+  if (m_cfg.particleZMax.has_value() && z > m_cfg.particleZMax.value()) {
+    ACTS_VERBOSE("Skipping particle with z=" << z << " > zMax="
+                                             << m_cfg.particleZMax.value());
+    return false;
+  }
+
   double r = std::hypot(particle.getVertex()[0], particle.getVertex()[1]) *
              Acts::UnitConstants::mm;
 

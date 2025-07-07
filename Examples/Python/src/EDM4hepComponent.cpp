@@ -50,12 +50,15 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
                        outputParticlesGenerator, outputParticlesSimulation,
                        outputSimHits, outputSimVertices, graphvizOutput,
                        dd4hepDetector, trackingGeometry, sortSimHitsInTime,
-                       particleRMin, particleRMax, simHitRMin, simHitRMax,
-                       particlePtMin, particlePtMax);
+                       particleRMin, particleRMax, particleZMin, particleZMax,
+                       simHitRMin, simHitRMax, particlePtMin, particlePtMax);
 
     using Config = EDM4hepSimInputConverter::Config;
     pythonRangeProperty(config, "particleR", &Config::particleRMin,
                         &Config::particleRMax);
+
+    pythonRangeProperty(config, "particleZ", &Config::particleZMin,
+                        &Config::particleZMax);
 
     pythonRangeProperty(config, "simHitR", &Config::simHitRMin,
                         &Config::simHitRMax);

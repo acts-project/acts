@@ -71,6 +71,9 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
     std::optional<double> particleRMin = std::nullopt;
     std::optional<double> particleRMax = std::nullopt;
 
+    std::optional<double> particleZMin = std::nullopt;
+    std::optional<double> particleZMax = std::nullopt;
+
     std::optional<double> particlePtMin = std::nullopt;
     std::optional<double> particlePtMax = std::nullopt;
 
