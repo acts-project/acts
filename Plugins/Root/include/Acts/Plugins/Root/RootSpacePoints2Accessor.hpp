@@ -21,12 +21,14 @@ class RootSpacePointAccessor {
   /// @brief sets the branch connection for writing to a file
   ///
   /// @param ttree the TTree to write to
-  void connectForWrite(TTree& ttree);
+  void connectForWrite(TTree& ttree,
+                       const Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
-  void connectForRead(TChain& tchain);
+  void connectForRead(TChain& tchain,
+                      const Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief Write a space point to the tree
   ///

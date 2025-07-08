@@ -15,34 +15,60 @@
 
 namespace Acts {
 
-void RootSpacePointAccessor::connectForRead(TChain& tchain) {
+void RootSpacePointAccessor::connectForRead(
+    TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
   tchain.SetBranchAddress("index", &m_index);
 
   tchain.SetBranchAddress("x", &m_x);
   tchain.SetBranchAddress("y", &m_y);
   tchain.SetBranchAddress("z", &m_z);
 
-  tchain.SetBranchAddress("t", &m_t);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::Time)) {
+    tchain.SetBranchAddress("t", &m_t);
+  }
 
-  tchain.SetBranchAddress("r", &m_r);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::R)) {
+    tchain.SetBranchAddress("r", &m_r);
+  }
 
-  tchain.SetBranchAddress("var_z", &m_varZ);
-  tchain.SetBranchAddress("var_r", &m_varR);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceZ)) {
+    tchain.SetBranchAddress("var_z", &m_varZ);
+  }
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceR)) {
+    tchain.SetBranchAddress("var_r", &m_varR);
+  }
 }
 
-void RootSpacePointAccessor::connectForWrite(TTree& ttree) {
+void RootSpacePointAccessor::connectForWrite(
+    TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
   ttree.Branch("index", &m_index);
 
   ttree.Branch("x", &m_x);
   ttree.Branch("y", &m_y);
   ttree.Branch("z", &m_z);
 
-  ttree.Branch("t", &m_t);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::Time)) {
+    ttree.Branch("t", &m_t);
+  }
 
-  ttree.Branch("r", &m_r);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::R)) {
+    ttree.Branch("r", &m_r);
+  }
 
-  ttree.Branch("var_z", &m_varZ);
-  ttree.Branch("var_r", &m_varR);
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceZ)) {
+    ttree.Branch("var_z", &m_varZ);
+  }
+  if (spacePoints.hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceR)) {
+    ttree.Branch("var_r", &m_varR);
+  }
 }
 
 void RootSpacePointAccessor::write(
@@ -53,19 +79,31 @@ void RootSpacePointAccessor::write(
   m_y = spacePoint.y();
   m_z = spacePoint.z();
 
-  m_t = spacePoint.time();
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::Time)) {
+    m_t = spacePoint.time();
+  }
 
-  m_r = spacePoint.r();
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::R)) {
+    m_r = spacePoint.r();
+  }
 
-  m_varZ = spacePoint.varianceZ();
-  m_varR = spacePoint.varianceR();
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceZ)) {
+    m_varZ = spacePoint.varianceZ();
+  }
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceR)) {
+    m_varR = spacePoint.varianceR();
+  }
 }
 
 void RootSpacePointAccessor::write(
     const Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
-  connectForWrite(ttree);
+  connectForWrite(ttree, spacePoints);
 
-  for (const auto& spacePoint : spacePoints) {
+  for (Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
     write(spacePoint);
     ttree.Fill();
   }
@@ -77,17 +115,29 @@ void RootSpacePointAccessor::read(
   spacePoint.y() = m_y;
   spacePoint.z() = m_z;
 
-  spacePoint.time() = m_t;
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::Time)) {
+    spacePoint.time() = m_t;
+  }
 
-  spacePoint.r() = m_r;
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::R)) {
+    spacePoint.r() = m_r;
+  }
 
-  spacePoint.varianceZ() = m_varZ;
-  spacePoint.varianceR() = m_varR;
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceZ)) {
+    spacePoint.varianceZ() = m_varZ;
+  }
+  if (spacePoint.container().hasExtraColumns(
+          Experimental::SpacePointKnownExtraColumn::VarianceR)) {
+    spacePoint.varianceR() = m_varR;
+  }
 }
 
 void RootSpacePointAccessor::read(
     TChain& tchain, Experimental::SpacePointContainer2& spacePoints) {
-  connectForRead(tchain);
+  connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();
   for (std::size_t i = 0; i < nEntries; ++i) {
