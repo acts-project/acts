@@ -158,14 +158,13 @@ void addRootOutput(Context& ctx) {
                                    &Writer::write));
 
     auto ac = py::class_<RootMaterialMapAccessor::Config>(w, "AccessorConfig")
-                     .def(py::init<>());
+                  .def(py::init<>());
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches,
                        processRepresenting, processBoundaries, accessorConfig,
-                       filePath,
-                       fileMode);
+                       filePath, fileMode);
   }
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSeedWriter, mex,

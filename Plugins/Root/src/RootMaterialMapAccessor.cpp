@@ -259,13 +259,13 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
     for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
       homogeneousMaterialTree->GetEntry(i);
       Acts::GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
-      Acts::MaterialSlab materialSlab(Acts::Material::fromMassDensity(
-                                          m_homogenousMaterialTreePayload.hX0,
+      Acts::MaterialSlab materialSlab(
+          Acts::Material::fromMassDensity(m_homogenousMaterialTreePayload.hX0,
                                           m_homogenousMaterialTreePayload.hL0,
                                           m_homogenousMaterialTreePayload.hA,
                                           m_homogenousMaterialTreePayload.hZ,
                                           m_homogenousMaterialTreePayload.hRho),
-                                      m_homogenousMaterialTreePayload.ht);
+          m_homogenousMaterialTreePayload.ht);
       auto homogeneousMaterial =
           std::make_shared<Acts::HomogeneousSurfaceMaterial>(materialSlab);
       surfaceMaterials.emplace(geoID, homogeneousMaterial);

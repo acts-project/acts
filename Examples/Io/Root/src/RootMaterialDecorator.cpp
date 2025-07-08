@@ -84,6 +84,10 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     // Remember the directory
     std::string tdName(key->GetName());
 
+    std::vector<std::string> splitNames;
+    iter_split(splitNames, tdName,
+               boost::algorithm::first_finder(m_cfg.accessorConfig.voltag));
+
     ACTS_VERBOSE("Processing directory: " << tdName);
     if (splitNames[0] == m_cfg.accessorConfig.folderVolumeNameBase) {
       // The volume material to be read in for this

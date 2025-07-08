@@ -18,11 +18,10 @@
 
 namespace Acts {
 
-  using SurfaceMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-  using VolumeMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-  using DetectorMaterialMaps =
-      std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
+using SurfaceMaterialMaps =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+using VolumeMaterialMaps =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
 
-} // namespace Acts
+}  // namespace Acts

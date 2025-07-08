@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Material/DetectorMaterialMaps.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <map>
 #include <memory>
@@ -82,7 +82,7 @@ class RootMaterialMapAccessor {
   struct MaterialTreePayload {
     std::size_t index = 0;
     /// geometry identifier
-    int64_t hGeoId;
+    std::int64_t hGeoId;
     /// thickness
     float ht;
     /// X0
@@ -101,8 +101,9 @@ class RootMaterialMapAccessor {
   /// @param cfg the configuration for the accessor
   /// @param mLogger the logger to use, default is INFO level
   explicit RootMaterialMapAccessor(
-      const Config& cfg, std::unique_ptr<const Logger> mLogger = getDefaultLogger(
-                             "RootMaterialMapAccessor", Logging::INFO))
+      const Config& cfg,
+      std::unique_ptr<const Logger> mLogger =
+          getDefaultLogger("RootMaterialMapAccessor", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor
@@ -157,7 +158,8 @@ class RootMaterialMapAccessor {
   /// @param indexedMaterialTree the indexed material tree, if available
   /// @return a shared pointer to the ISurfaceMaterial
   std::shared_ptr<const ISurfaceMaterial> readTextureSurfaceMaterial(
-      TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree = nullptr);
+      TFile& rFile, const std::string& tdName,
+      TTree* indexedMaterialTree = nullptr);
 
   /// Read the a grid Surface material
   const Logger& logger() const { return *m_logger; }

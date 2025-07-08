@@ -12,13 +12,13 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
+#include <Acts/Material/DetectorMaterialMaps.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
-#include <Acts/Material/DetectorMaterialMaps.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
+#include <Acts/Plugins/Root/RootMaterialMapAccessor.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include <Acts/Plugins/Root/RootMaterialMapAccessor.hpp>
 
 #include <map>
 #include <memory>
