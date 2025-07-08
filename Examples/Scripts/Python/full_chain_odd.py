@@ -220,7 +220,7 @@ if args.edm4hep:
     )
     s.addAlgorithm(edm4hepReader)
 
-    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesSimulation)
 
     addSimParticleSelection(
         s,
