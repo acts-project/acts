@@ -33,7 +33,7 @@ class GridBinFinder {
   using stored_values_t =
       std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
 
-  /// @brief Constructor
+  /// @brief Constructor that takes the individual values for each axis
   /// @tparam args ... Input parameters provided by the user
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
@@ -52,8 +52,11 @@ class GridBinFinder {
     storeValue(std::forward<args>(vals)...);
   }
 
-  explicit GridBinFinder(const std::array<stored_values_t, DIM>& values)
-      : m_values(values) {}
+  /// @brief Constructor that takes an array of axes values
+  ///
+  /// @param [in] values The array of stored values that define how many neighbours we need to find
+  explicit GridBinFinder(std::array<stored_values_t, DIM> values)
+      : m_values(std::move(values)) {}
 
   const std::array<stored_values_t, DIM>& values() const { return m_values; }
 
