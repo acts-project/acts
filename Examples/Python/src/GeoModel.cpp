@@ -28,6 +28,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/ITkHelpers/ITkModuleSplitting.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
 #include <string>
 
@@ -45,6 +46,11 @@ void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
   auto gm = m.def_submodule("geomodel");
+
+  py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
+      .def(py::init<>())
+      .def("get", &GeoModelTree::FpvConstLink::get,
+           py::return_value_policy::reference);
 
   py::class_<Acts::GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
 
@@ -124,7 +130,36 @@ void addGeoModel(Context& ctx) {
         .def("toSensitiveSurface", &Acts::GeoShiftConverter::toSensitiveSurface)
         .def("toPassiveSurface", &Acts::GeoShiftConverter::toPassiveSurface);
   }
-
+  {
+    // GeoMuonMockupExperiment
+    auto f =
+        py::class_<ActsExamples::GeoMuonMockupExperiment,
+                   std::shared_ptr<ActsExamples::GeoMuonMockupExperiment>>(
+            gm, "GeoMuonMockupExperiment")
+            .def(py::init(
+                [](const ActsExamples::GeoMuonMockupExperiment::Config& config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<
+                      ActsExamples::GeoMuonMockupExperiment>(
+                      config, getDefaultLogger(name, level));
+                }))
+            .def("constructMS",
+                 &ActsExamples::GeoMuonMockupExperiment::constructMS);
+    auto c =
+        py::class_<ActsExamples::GeoMuonMockupExperiment::Config>(f, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c,
+                       /// General properties
+                       dumpTree, dbName,
+                       /// Mdt properties
+                       innerTubeRadius, tubeWallThickness, nTubeLayers, nTubes,
+                       mdtFoamThickness, multiLayerSeparation,
+                       /// Rpc properties
+                       nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
+                       /// Station properties
+                       barrelRadii, nSectors, nEtaStations, stationDistInZ,
+                       stationDistInR, endCapWheelLowR, bigWheelDistZ);
+  }
   // Volume factory
   {
     auto a =

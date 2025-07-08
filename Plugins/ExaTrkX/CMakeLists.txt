@@ -152,6 +152,7 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginExaTrkX PUBLIC ActsCore Boost::boost)
+target_link_libraries(ActsPluginExaTrkX PRIVATE std::filesystem)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)

@@ -32,10 +32,6 @@ bool cellComp(const Cell1D& left, const Cell1D& right) {
   return left.col < right.col;
 }
 
-Ccl::Label& getCellLabel(Cell1D& cell) {
-  return cell.label;
-}
-
 int getCellColumn(const Cell1D& cell) {
   return cell.col;
 }

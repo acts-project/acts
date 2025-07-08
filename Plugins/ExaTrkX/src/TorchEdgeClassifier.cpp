@@ -170,7 +170,7 @@ PipelineTensors TorchEdgeClassifier::operator()(
   torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
-  if( edgesAfterCut.numel() == 0 ) {
+  if (edgesAfterCut.numel() == 0) {
     throw NoEdgesError{};
   }
 

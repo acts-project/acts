@@ -1,6 +1,7 @@
 add_library(
     ActsExamplesDetectorTGeo
     SHARED
+    src/AlignedTGeoDetectorElement.cpp
     src/TGeoDetector.cpp
     src/TGeoITkModuleSplitter.cpp
 )
@@ -14,7 +15,7 @@ target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
         ActsCore
-        ActsPluginTGeo
+        ActsPluginRoot
         ActsPluginJson
         ActsExamplesFramework
         ActsExamplesDetectorGeneric

@@ -8,7 +8,6 @@
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cmath>
@@ -20,7 +19,9 @@
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
-Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(config) {
+namespace Acts {
+
+SolenoidBField::SolenoidBField(Config config) : m_cfg(config) {
   m_dz = m_cfg.length / m_cfg.nCoils;
   m_R2 = m_cfg.radius * m_cfg.radius;
   // we need to scale so we reproduce the expected B field strength
@@ -29,12 +30,12 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(config) {
   m_scale = m_cfg.bMagCenter / field.norm();
 }
 
-Acts::MagneticFieldProvider::Cache Acts::SolenoidBField::makeCache(
+MagneticFieldProvider::Cache SolenoidBField::makeCache(
     const MagneticFieldContext& mctx) const {
   return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
 }
 
-Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {
+Vector3 SolenoidBField::getField(const Vector3& position) const {
   using VectorHelpers::perp;
   Vector2 rzPos(perp(position), position.z());
   Vector2 rzField = multiCoilField(rzPos, m_scale);
@@ -49,17 +50,16 @@ Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {
   return xyzField;
 }
 
-Acts::Result<Acts::Vector3> Acts::SolenoidBField::getField(
+Result<Vector3> SolenoidBField::getField(
     const Vector3& position, MagneticFieldProvider::Cache& /*cache*/) const {
   return Result<Vector3>::success(getField(position));
 }
 
-Acts::Vector2 Acts::SolenoidBField::getField(const Vector2& position) const {
+Vector2 SolenoidBField::getField(const Vector2& position) const {
   return multiCoilField(position, m_scale);
 }
 
-Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
-                                                   double scale) const {
+Vector2 SolenoidBField::multiCoilField(const Vector2& pos, double scale) const {
   // iterate over all coils
   Vector2 resultField(0, 0);
   for (std::size_t coil = 0; coil < m_cfg.nCoils; coil++) {
@@ -71,12 +71,12 @@ Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
   return resultField;
 }
 
-Acts::Vector2 Acts::SolenoidBField::singleCoilField(const Vector2& pos,
-                                                    double scale) const {
+Vector2 SolenoidBField::singleCoilField(const Vector2& pos,
+                                        double scale) const {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
+double SolenoidBField::B_r(const Vector2& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -114,7 +114,7 @@ double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   return r / pos[0] * constant * B;
 }
 
-double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
+double SolenoidBField::B_z(const Vector2& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -152,7 +152,7 @@ double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
   return constant * B;
 }
 
-double Acts::SolenoidBField::k2(double r, double z) const {
+double SolenoidBField::k2(double r, double z) const {
   //  2           4Rr
   // k   =  ---------------
   //               2      2
@@ -160,3 +160,5 @@ double Acts::SolenoidBField::k2(double r, double z) const {
   return 4 * m_cfg.radius * r /
          ((m_cfg.radius + r) * (m_cfg.radius + r) + z * z);
 }
+
+}  // namespace Acts

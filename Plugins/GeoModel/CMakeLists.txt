@@ -3,6 +3,7 @@ include(FetchContent)
 add_library(
     ActsPluginGeoModel
     SHARED
+    src/GeoModelTree.cpp
     src/GeoModelBlueprintCreater.cpp
     src/GeoModelConversionError.cpp
     src/GeoModelToDetectorVolume.cpp

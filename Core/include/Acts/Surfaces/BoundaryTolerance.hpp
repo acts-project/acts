@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <optional>
+#include <type_traits>
 #include <variant>
 
 namespace Acts {
@@ -61,87 +62,93 @@ class BoundaryTolerance {
   struct AbsoluteBoundParams {
     double tolerance0{};
     double tolerance1{};
-
-    AbsoluteBoundParams() = default;
-    AbsoluteBoundParams(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
-      if (tolerance0 < 0 || tolerance1 < 0) {
-        throw std::invalid_argument(
-            "AbsoluteBound: Tolerance must be non-negative");
-      }
-    }
   };
 
   struct AbsoluteCartesianParams {
     double tolerance0{};
     double tolerance1{};
-
-    AbsoluteCartesianParams() = default;
-    AbsoluteCartesianParams(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
-      if (tolerance0 < 0 || tolerance1 < 0) {
-        throw std::invalid_argument(
-            "AbsoluteCartesian: Tolerance must be non-negative");
-      }
-      if ((tolerance0 == 0) != (tolerance1 == 0)) {
-        throw std::invalid_argument(
-            "AbsoluteCartesian: Both tolerances must be zero or non-zero");
-      }
-    }
   };
 
   struct AbsoluteEuclideanParams {
     double tolerance{};
-
-    AbsoluteEuclideanParams() = default;
-    explicit AbsoluteEuclideanParams(double tolerance_)
-        : tolerance(tolerance_) {}
   };
 
   struct Chi2BoundParams {
     double maxChi2{};
-    SquareMatrix2 weight = SquareMatrix2::Identity();
+    std::array<double, 4> weight;
 
-    Chi2BoundParams() = default;
-    Chi2BoundParams(const SquareMatrix2& weight_, double maxChi2_)
-        : maxChi2(maxChi2_), weight(weight_) {}
+    Eigen::Map<SquareMatrix2> weightMatrix() {
+      return Eigen::Map<SquareMatrix2>(weight.data());
+    }
+
+    Eigen::Map<const SquareMatrix2> weightMatrix() const {
+      return Eigen::Map<const SquareMatrix2>(weight.data());
+    }
   };
+
+  static_assert(std::is_trivially_copyable_v<Chi2BoundParams>);
 
  private:
   /// Underlying variant type
   using Variant = std::variant<InfiniteParams, NoneParams, AbsoluteBoundParams,
                                AbsoluteCartesianParams, AbsoluteEuclideanParams,
                                Chi2BoundParams>;
+  static_assert(std::is_trivially_copyable_v<Variant>);
 
   /// Construct from variant
-  explicit BoundaryTolerance(Variant variant);
+  constexpr explicit BoundaryTolerance(Variant variant) : m_variant{variant} {}
 
  public:
   /// Infinite tolerance i.e. no boundary check
-  static auto Infinite() { return BoundaryTolerance{InfiniteParams{}}; }
+  constexpr static auto Infinite() noexcept {
+    return BoundaryTolerance{InfiniteParams{}};
+  }
 
   /// No tolerance i.e. exact boundary check
-  static auto None() { return BoundaryTolerance{NoneParams{}}; }
+  constexpr static auto None() noexcept {
+    return BoundaryTolerance{NoneParams{}};
+  }
 
   /// Absolute tolerance in bound coordinates
-  static auto AbsoluteBound(double tolerance0, double tolerance1) {
+  constexpr static auto AbsoluteBound(double tolerance0, double tolerance1) {
+    if (tolerance0 < 0 || tolerance1 < 0) {
+      throw std::invalid_argument(
+          "AbsoluteBound: Tolerance must be non-negative");
+    }
     return BoundaryTolerance{AbsoluteBoundParams{tolerance0, tolerance1}};
   }
 
   /// Absolute tolerance in Cartesian coordinates
-  static auto AbsoluteCartesian(double tolerance0, double tolerance1) {
+  constexpr static auto AbsoluteCartesian(double tolerance0,
+                                          double tolerance1) {
+    if (tolerance0 < 0 || tolerance1 < 0) {
+      throw std::invalid_argument(
+          "AbsoluteCartesian: Tolerance must be non-negative");
+    }
+    if ((tolerance0 == 0) != (tolerance1 == 0)) {
+      throw std::invalid_argument(
+          "AbsoluteCartesian: Both tolerances must be zero or non-zero");
+    }
     return BoundaryTolerance{AbsoluteCartesianParams{tolerance0, tolerance1}};
   }
 
   /// Absolute tolerance in Euclidean distance
-  static auto AbsoluteEuclidean(double tolerance) {
+  constexpr static auto AbsoluteEuclidean(double tolerance) noexcept {
     return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
   }
 
   /// Chi2 tolerance in bound coordinates
-  static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) {
-    return BoundaryTolerance{Chi2BoundParams{weight, maxChi2}};
+  static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) noexcept {
+    Chi2BoundParams tolerance{maxChi2, {}};
+    tolerance.weightMatrix() = weight;
+    return BoundaryTolerance{tolerance};
   }
+
+  BoundaryTolerance(const BoundaryTolerance& other) noexcept = default;
+  BoundaryTolerance& operator=(const BoundaryTolerance& other) noexcept =
+      default;
+  BoundaryTolerance(BoundaryTolerance&& other) noexcept = default;
+  BoundaryTolerance& operator=(BoundaryTolerance&& other) noexcept = default;
 
   enum class ToleranceMode {
     Extend,  // Extend the boundary
@@ -150,17 +157,26 @@ class BoundaryTolerance {
   };
 
   /// Check if the tolerance is infinite.
-  bool isInfinite() const;
+  constexpr bool isInfinite() const { return holdsVariant<InfiniteParams>(); }
   /// Check if the is no tolerance.
-  bool isNone() const;
+  constexpr bool isNone() const { return holdsVariant<NoneParams>(); }
   /// Check if the tolerance is absolute with bound coordinates.
-  bool hasAbsoluteBound(bool isCartesian = false) const;
+  constexpr bool hasAbsoluteBound(bool isCartesian = false) const {
+    return holdsVariant<NoneParams>() || holdsVariant<AbsoluteBoundParams>() ||
+           (isCartesian && holdsVariant<AbsoluteCartesianParams>());
+  }
   /// Check if the tolerance is absolute with Cartesian coordinates.
-  bool hasAbsoluteCartesian() const;
+  constexpr bool hasAbsoluteCartesian() const {
+    return holdsVariant<AbsoluteCartesianParams>();
+  }
   /// Check if the tolerance is absolute with Euclidean distance.
-  bool hasAbsoluteEuclidean() const;
+  constexpr bool hasAbsoluteEuclidean() const {
+    return holdsVariant<AbsoluteEuclideanParams>();
+  }
   /// Check if the tolerance is chi2 with bound coordinates.
-  bool hasChi2Bound() const;
+  constexpr bool hasChi2Bound() const {
+    return holdsVariant<Chi2BoundParams>();
+  }
 
   /// Check if any tolerance is set.
   ToleranceMode toleranceMode() const;
@@ -168,22 +184,34 @@ class BoundaryTolerance {
   /// Get the tolerance as absolute bound.
   AbsoluteBoundParams asAbsoluteBound(bool isCartesian = false) const;
   /// Get the tolerance as absolute Cartesian.
-  const AbsoluteCartesianParams& asAbsoluteCartesian() const;
+  constexpr const AbsoluteCartesianParams& asAbsoluteCartesian() const {
+    return getVariant<AbsoluteCartesianParams>();
+  }
   /// Get the tolerance as absolute Euclidean.
-  const AbsoluteEuclideanParams& asAbsoluteEuclidean() const;
+  constexpr const AbsoluteEuclideanParams& asAbsoluteEuclidean() const {
+    return getVariant<AbsoluteEuclideanParams>();
+  }
   /// Get the tolerance as chi2 bound.
-  const Chi2BoundParams& asChi2Bound() const;
+  constexpr const Chi2BoundParams& asChi2Bound() const {
+    return getVariant<Chi2BoundParams>();
+  }
 
   /// Get the tolerance as absolute bound if possible.
-  std::optional<AbsoluteBoundParams> asAbsoluteBoundOpt(
-      bool isCartesian = false) const;
+  constexpr std::optional<AbsoluteBoundParams> asAbsoluteBoundOpt(
+      bool isCartesian = false) const {
+    return hasAbsoluteBound(isCartesian)
+               ? std::optional(asAbsoluteBound(isCartesian))
+               : std::nullopt;
+  }
 
   /// Check if the distance is tolerated.
   bool isTolerated(const Vector2& distance,
                    const std::optional<SquareMatrix2>& jacobianOpt) const;
 
   /// Check if there is a metric assigned with this tolerance.
-  bool hasMetric(bool hasJacobian) const;
+  constexpr bool hasMetric(bool hasJacobian) const {
+    return hasJacobian || hasChi2Bound();
+  }
 
   /// Get the metric for the tolerance.
   SquareMatrix2 getMetric(const std::optional<SquareMatrix2>& jacobian) const;
@@ -193,20 +221,23 @@ class BoundaryTolerance {
 
   /// Check if the boundary check is of a specific type.
   template <typename T>
-  bool holdsVariant() const {
+  constexpr bool holdsVariant() const {
     return std::holds_alternative<T>(m_variant);
   }
 
   /// Get the specific underlying type.
   template <typename T>
-  const T& getVariant() const {
+  constexpr const T& getVariant() const {
     return std::get<T>(m_variant);
   }
 
   template <typename T>
-  const T* getVariantPtr() const {
+  constexpr const T* getVariantPtr() const {
     return holdsVariant<T>() ? &getVariant<T>() : nullptr;
   }
 };
+
+static_assert(std::is_trivially_copyable_v<BoundaryTolerance>);
+static_assert(std::is_trivially_move_constructible_v<BoundaryTolerance>);
 
 }  // namespace Acts

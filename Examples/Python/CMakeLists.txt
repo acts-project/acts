@@ -52,7 +52,6 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
-        ActsExamplesDetectorContextual
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
         ActsExamplesIoCsv
@@ -104,7 +103,10 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+        PUBLIC
+            ActsPluginGeoModel
+            ActsExamplesDetectorGeoModel
+            ActsExamplesMuonSpectrometerMockupDetector
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
     target_compile_definitions(ActsPythonBindings PRIVATE WITH_GEOMODEL_PLUGIN)
@@ -112,8 +114,8 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_TGEO)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginTGeo)
+if(ACTS_BUILD_PLUGIN_ROOT)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginRoot)
     target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)

@@ -38,6 +38,7 @@
 #include <map>
 #include <numbers>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -881,14 +882,14 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     auto fusedCylinder = Portal::fuse(innerCylinder, outerCylinder);
 
     // Update the attached volumes with the new portal
-    std::for_each(innerAttachedVolumes.begin(), innerAttachedVolumes.end(),
-                  [&](std::shared_ptr<DetectorVolume>& av) {
-                    av->updatePortal(fusedCylinder, 2u);
-                  });
-    std::for_each(outerAttachedVolume.begin(), outerAttachedVolume.end(),
-                  [&](std::shared_ptr<DetectorVolume>& av) {
-                    av->updatePortal(fusedCylinder, 3u);
-                  });
+    std::ranges::for_each(innerAttachedVolumes,
+                          [&](std::shared_ptr<DetectorVolume>& av) {
+                            av->updatePortal(fusedCylinder, 2u);
+                          });
+    std::ranges::for_each(outerAttachedVolume,
+                          [&](std::shared_ptr<DetectorVolume>& av) {
+                            av->updatePortal(fusedCylinder, 3u);
+                          });
   }
 
   // Proto container refurbishment
@@ -950,14 +951,14 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
 
     auto fusedDisc = Portal::fuse(pDisc, nDisc);
 
-    std::for_each(pAttachedVolumes.begin(), pAttachedVolumes.end(),
-                  [&](std::shared_ptr<DetectorVolume>& av) {
-                    av->updatePortal(fusedDisc, 1u);
-                  });
-    std::for_each(nAttachedVolumes.begin(), nAttachedVolumes.end(),
-                  [&](std::shared_ptr<DetectorVolume>& av) {
-                    av->updatePortal(fusedDisc, 0u);
-                  });
+    std::ranges::for_each(pAttachedVolumes,
+                          [&](std::shared_ptr<DetectorVolume>& av) {
+                            av->updatePortal(fusedDisc, 1u);
+                          });
+    std::ranges::for_each(nAttachedVolumes,
+                          [&](std::shared_ptr<DetectorVolume>& av) {
+                            av->updatePortal(fusedDisc, 0u);
+                          });
   }
 
   // Proto container refurbishment
@@ -1059,10 +1060,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   auto& innerTube = wrappingVolume->portalPtrs()[3u];
   auto fusedCover = Portal::fuse(innerCover, innerTube);
 
-  std::for_each(innerAttachedVolumes.begin(), innerAttachedVolumes.end(),
-                [&](std::shared_ptr<DetectorVolume>& av) {
-                  av->updatePortal(fusedCover, 2u);
-                });
+  std::ranges::for_each(innerAttachedVolumes,
+                        [&](std::shared_ptr<DetectorVolume>& av) {
+                          av->updatePortal(fusedCover, 2u);
+                        });
   wrappingVolume->updatePortal(fusedCover, 3u);
 
   // Stitch sides - negative
@@ -1075,10 +1076,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   auto& secondDiscN = wrappingVolume->portalPtrs()[4u];
   auto fusedDiscN = Portal::fuse(firstDiscN, secondDiscN);
 
-  std::for_each(firstNAttachedVolumes.begin(), firstNAttachedVolumes.end(),
-                [&](std::shared_ptr<DetectorVolume>& av) {
-                  av->updatePortal(fusedDiscN, 0u);
-                });
+  std::ranges::for_each(firstNAttachedVolumes,
+                        [&](std::shared_ptr<DetectorVolume>& av) {
+                          av->updatePortal(fusedDiscN, 0u);
+                        });
   wrappingVolume->updatePortal(fusedDiscN, 4u);
 
   // Stich sides - positive
@@ -1089,10 +1090,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   auto& secondDiscP = wrappingVolume->portalPtrs()[5u];
   auto fusedDiscP = Portal::fuse(firstDiscP, secondDiscP);
 
-  std::for_each(firstPAttachedVolumes.begin(), firstPAttachedVolumes.end(),
-                [&](std::shared_ptr<DetectorVolume>& av) {
-                  av->updatePortal(fusedDiscP, 1u);
-                });
+  std::ranges::for_each(firstPAttachedVolumes,
+                        [&](std::shared_ptr<DetectorVolume>& av) {
+                          av->updatePortal(fusedDiscP, 1u);
+                        });
 
   wrappingVolume->updatePortal(fusedDiscP, 5u);
 
