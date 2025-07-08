@@ -23,13 +23,13 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <iomanip>
 #include <map>
 #include <numeric>
 #include <stdexcept>
 
 #include <DD4hep/Detector.h>
-#include <__algorithm/ranges_lower_bound.h>
 #include <boost/histogram.hpp>
 #include <boost/histogram/ostream.hpp>
 #include <edm4hep/MCParticle.h>
@@ -42,6 +42,13 @@
 namespace bh = boost::histogram;
 
 namespace ActsExamples {
+namespace detail {
+struct ParticleInfo {
+  std::size_t particleIndex;
+  std::uint16_t numHits;
+};
+
+}  // namespace detail
 
 EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
                                                    Acts::Logging::Level level)
@@ -344,7 +351,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
   // key: input particle index, value: index in the unordered particle
   // container
-  std::unordered_map<int, std::size_t> edm4hepParticleMap;
+  std::unordered_map<int, detail::ParticleInfo> edm4hepParticleMap;
 
   std::size_t nGeneratorParticles = 0;
   for (const auto& particle : mcParticleCollection) {
@@ -353,7 +360,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
-  std::vector<SimParticle> particlesGeneratorUnordered;
+  std::optional particlesGeneratorUnordered = std::vector<SimParticle>{};
 
   std::size_t nPrimaryVertices = 0;
   // Walk the particle tree
@@ -363,6 +370,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
     Acts::AveragingScopedTimer timerFindStable(
         "Finding generator-stable particles", logger(), Acts::Logging::DEBUG);
+
     std::vector<edm4hep::MCParticle> generatorStableParticles;
 
     for (const auto& [vtxPos, particles] : primaryVertices) {
@@ -394,8 +402,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
           "Have " << generatorStableParticles.size()
                   << " generator stable particles for this primary vertex");
 
-      particlesGeneratorUnordered.reserve(particlesGeneratorUnordered.size() +
-                                          generatorStableParticles.size());
+      particlesGeneratorUnordered->reserve(particlesGeneratorUnordered->size() +
+                                           generatorStableParticles.size());
 
       for (const auto& genParticle : generatorStableParticles) {
         SimParticle particle =
@@ -403,14 +411,16 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                 .withParticleId(SimBarcode{}
                                     .setParticle(nParticles)
                                     .setVertexPrimary(nPrimaryVertices));
-        generatorStableParticles.push_back(genParticle);
+        particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
 
         const auto pid = particle.particleId();
         unorderedParticlesInitial.push_back(std::move(particle));
         edm4hepParticleMap[genParticle.getObjectID().index] =
-            unorderedParticlesInitial.size() - 1;
+            detail::ParticleInfo{
+                .particleIndex = unorderedParticlesInitial.size() - 1,
+                .numHits = 0};
         processChildren(genParticle, pid, unorderedParticlesInitial,
                         parentRelationship, edm4hepParticleMap,
                         nSecondaryVertices, maxGen);
@@ -430,12 +440,12 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Found " << nGeneratorParticles << " generator particles and "
                       << unorderedParticlesInitial.size() - nGeneratorParticles
                       << " particles from simulation");
-  ACTS_DEBUG("Converted " << unorderedParticlesInitial.size()
-                          << " particles in total");
+  ACTS_DEBUG("Found " << unorderedParticlesInitial.size()
+                      << " particles in total");
 
-  std::vector<SimParticle> particlesSimulatedUnordered;
-  particlesSimulatedUnordered.reserve(unorderedParticlesInitial.size() -
-                                      nGeneratorParticles);
+  std::optional particlesSimulatedUnordered = std::vector<SimParticle>{};
+  particlesSimulatedUnordered->reserve(unorderedParticlesInitial.size() -
+                                       nGeneratorParticles);
 
   std::vector<SimVertex> simVerticesUnordered;
 
@@ -494,6 +504,24 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     return vtxPos4;
   };
 
+  // Let's figure out first how many hits each particle has:
+  for (const auto& name : m_cfg.inputSimHits) {
+    const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
+
+    for (const auto& hit : inputHits) {
+      auto particle = Acts::EDM4hepUtil::getParticle(hit);
+
+      auto it = edm4hepParticleMap.find(particle.getObjectID().index);
+      if (it == edm4hepParticleMap.end()) {
+        ACTS_ERROR(
+            "Found sim hit with unknown particle: " << particle.getObjectID());
+        continue;
+      }
+
+      it->second.numHits += 1;
+    }
+  }
+
   {
     Acts::ScopedTimer timer("Converting particles", logger(),
                             Acts::Logging::DEBUG);
@@ -509,7 +537,13 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         continue;
       }
 
-      const std::size_t index = particleIt->second;
+      const auto& [index, numHits] = particleIt->second;
+
+      if (!acceptParticle(inParticle) && numHits == 0) {
+        // Only reject particles if they don't have simhits
+        continue;
+      }
+
       const auto& particleInitial = unorderedParticlesInitial.at(index);
       ACTS_VERBOSE("Have converted particle: " << particleInitial);
 
@@ -550,19 +584,27 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                    << particleInitial.fourMomentum().transpose() << " -> "
                    << particleSimulated.final().fourMomentum().transpose());
 
-      particlesSimulatedUnordered.push_back(particleSimulated);
+      particlesSimulatedUnordered->push_back(particleSimulated);
     }
   }
 
-  using namespace bh::literals;
+  ACTS_DEBUG("Converted " << particlesGeneratorUnordered->size()
+                          << " generator particles");
+  ACTS_DEBUG("Converted " << particlesSimulatedUnordered->size()
+                          << " simulated particles");
 
-  std::ranges::sort(particlesGeneratorUnordered, detail::CompareParticleId{});
-  std::ranges::sort(particlesSimulatedUnordered, detail::CompareParticleId{});
+  std::ranges::sort(*particlesGeneratorUnordered, detail::CompareParticleId{});
+  std::ranges::sort(*particlesSimulatedUnordered, detail::CompareParticleId{});
 
-  SimParticleContainer particlesGenerator{particlesGeneratorUnordered.begin(),
-                                          particlesGeneratorUnordered.end()};
-  SimParticleContainer particlesSimulated{particlesSimulatedUnordered.begin(),
-                                          particlesSimulatedUnordered.end()};
+  SimParticleContainer particlesGenerator{particlesGeneratorUnordered->begin(),
+                                          particlesGeneratorUnordered->end()};
+
+  particlesGeneratorUnordered.reset();
+
+  SimParticleContainer particlesSimulated{particlesSimulatedUnordered->begin(),
+                                          particlesSimulatedUnordered->end()};
+
+  particlesSimulatedUnordered.reset();
 
   if (!m_cfg.graphvizOutput.empty()) {
     std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
@@ -571,7 +613,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     graphviz(dot, unorderedParticlesInitial, parentRelationship);
   }
 
-  std::vector<SimHit> simHitsUnordered;
+  std::optional simHitsUnordered = std::vector<SimHit>{};
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
                                       << " sim hit collections");
   {
@@ -579,7 +621,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     for (const auto& name : m_cfg.inputSimHits) {
       const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
-      simHitsUnordered.reserve(simHitsUnordered.size() + inputHits.size());
+      simHitsUnordered->reserve(simHitsUnordered->size() + inputHits.size());
 
       for (const auto& hit : inputHits) {
         auto simHit = EDM4hepUtil::readSimHit(
@@ -597,7 +639,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                     "but expect to be here");
               }
 
-              const auto& particle = unorderedParticlesInitial.at(it->second);
+              const auto& particle =
+                  unorderedParticlesInitial.at(it->second.particleIndex);
               ACTS_VERBOSE("- " << inParticle.getObjectID() << " -> "
                                 << particle.particleId() << "(sim="
                                 << inParticle.isCreatedInSimulation() << ")\n"
@@ -687,14 +730,15 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
           continue;
         }
 
-        simHitsUnordered.push_back(std::move(simHit));
+        simHitsUnordered->push_back(std::move(simHit));
       }
     }
   }
 
-  std::ranges::sort(simHitsUnordered, detail::CompareGeometryId{});
+  std::ranges::sort(*simHitsUnordered, detail::CompareGeometryId{});
 
-  SimHitContainer simHits{simHitsUnordered.begin(), simHitsUnordered.end()};
+  SimHitContainer simHits{simHitsUnordered->begin(), simHitsUnordered->end()};
+  simHitsUnordered.reset();
 
   if (m_cfg.sortSimHitsInTime) {
     Acts::ScopedTimer timer("Sorting sim hits in time", logger(),
@@ -788,7 +832,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 void EDM4hepSimInputConverter::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     std::vector<SimParticle>& particles, ParentRelationship& parentRelationship,
-    std::unordered_map<int, std::size_t>& particleMap,
+    std::unordered_map<int, detail::ParticleInfo>& particleMap,
     std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
   constexpr auto indent = [&](std::size_t n) {
     std::string result;
@@ -872,7 +916,8 @@ void EDM4hepSimInputConverter::processChildren(
                  << daughter.getEndpoint().z);
 
     particles.push_back(std::move(particle));
-    particleMap[daughter.getObjectID().index] = particles.size() - 1;
+    particleMap[daughter.getObjectID().index] = detail::ParticleInfo{
+        .particleIndex = particles.size() - 1, .numHits = 0};
     parentRelationship[particles.size() - 1] = parentIndex;
     processChildren(daughter, pid, particles, parentRelationship, particleMap,
                     nSecondaryVertices, maxGen);

@@ -30,6 +30,10 @@ class Frame;
 
 namespace ActsExamples {
 
+namespace detail {
+struct ParticleInfo;
+}
+
 class DD4hepDetector;
 
 /// Read particles from EDM4hep.
@@ -96,12 +100,12 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
   ProcessCode convert(const AlgorithmContext& ctx,
                       const podio::Frame& frame) const override;
 
-  void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
-                       std::vector<SimParticle>& particles,
-                       ParentRelationship& parentRelationship,
-                       std::unordered_map<int, std::size_t>& particleMap,
-                       std::size_t& nSecondaryVertices,
-                       std::size_t& maxGen) const;
+  void processChildren(
+      const edm4hep::MCParticle& particle, SimBarcode parentId,
+      std::vector<SimParticle>& particles,
+      ParentRelationship& parentRelationship,
+      std::unordered_map<int, detail::ParticleInfo>& particleMap,
+      std::size_t& nSecondaryVertices, std::size_t& maxGen) const;
 
   static void setSubParticleIds(std::span<SimParticle> particles);
 
