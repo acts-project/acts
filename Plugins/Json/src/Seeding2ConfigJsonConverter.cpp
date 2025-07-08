@@ -10,6 +10,9 @@
 
 #include "Acts/Plugins/Json/DefinitionsJsonConverter.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
 
 namespace {
 
@@ -18,14 +21,17 @@ void to_json(nlohmann::json& j, const Acts::GridBinFinder<DIM>& f) {
   nlohmann::json::array_t values;
 
   for (const auto& value : f.values()) {
-    if (std::holds_alternative<int>(value)) {
-      values.push_back(std::get<int>(value));
-    } else if (std::holds_alternative<std::pair<int, int>>(value)) {
-      values.push_back(std::get<std::pair<int, int>>(value));
-    } else if (std::holds_alternative<std::vector<std::pair<int, int>>>(
-                   value)) {
-      values.push_back(std::get<std::vector<std::pair<int, int>>>(value));
-    }
+    std::visit(
+        Acts::overloaded{
+            [&](int v) { values.push_back(v); },
+            [&](const std::pair<int, int>& p) { values.push_back(p); },
+            [&](const std::vector<std::pair<int, int>>& vec) {
+              values.push_back(vec);
+            },
+            [](const auto&) {
+              throw std::runtime_error("Unsupported type in GridBinFinder");
+            }},
+        value);
   }
 
   j = values;
@@ -39,9 +45,15 @@ Acts::GridBinFinder<DIM> from_json(const nlohmann::json& j) {
   for (std::size_t i = 0; i < DIM; ++i) {
     if (j[i].is_number_integer()) {
       values[i] = j[i].get<int>();
-    } else if (j[i].is_array() && j[i].size() == 2) {
+    } else if (j[i].is_array() && j[i].size() == 2 &&
+               j[i][0].is_number_integer() && j[i][1].is_number_integer()) {
       values[i] = j[i].get<std::pair<int, int>>();
-    } else if (j[i].is_array()) {
+    } else if (j[i].is_array() &&
+               std::ranges::all_of(j[i], [](const nlohmann::json& elem) {
+                 return elem.is_array() && elem.size() == 2 &&
+                        elem[0].is_number_integer() &&
+                        elem[1].is_number_integer();
+               })) {
       values[i] = j[i].get<std::vector<std::pair<int, int>>>();
     } else {
       throw std::runtime_error("Invalid type for GridBinFinder value");
