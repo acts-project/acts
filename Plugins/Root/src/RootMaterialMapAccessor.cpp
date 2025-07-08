@@ -328,12 +328,10 @@ Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
                        .withSensitive(senID);
 
       auto texturedSurfaceMaterial =
-          readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);                 
+          readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);
       surfaceMaterials.emplace(geoID, texturedSurfaceMaterial);
-
     }
   }
-
   return detectorMaterial;
 }
 
@@ -342,6 +340,116 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
   std::shared_ptr<const Acts::ISurfaceMaterial> texturedSurfaceMaterial =
       nullptr;
+
+  // Construct the common names & get the common histograms
+  std::string nName = tdName + "/" + m_cfg.ntag;
+  std::string vName = tdName + "/" + m_cfg.vtag;
+  std::string oName = tdName + "/" + m_cfg.otag;
+  std::string minName = tdName + "/" + m_cfg.mintag;
+  std::string maxName = tdName + "/" + m_cfg.maxtag;
+  // Get the histograms
+  TH1F* n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
+  TH1F* v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
+  TH1F* o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
+  TH1F* min = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
+  TH1F* max = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+
+  // Now reconstruct the bin untilities
+  BinUtility bUtility;
+  for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
+    std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
+    auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
+    auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
+    float rmin = min->GetBinContent(ib);
+    float rmax = max->GetBinContent(ib);
+    bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
+  }
+  ACTS_VERBOSE("Created " << bUtility);
+
+  /// Draw from histogram only source
+  if (indexedMaterialTree == nullptr) {
+    // Construct the names for histogram type storage
+    std::string tName = tdName + "/" + m_cfg.ttag;
+    std::string x0Name = tdName + "/" + m_cfg.x0tag;
+    std::string l0Name = tdName + "/" + m_cfg.l0tag;
+    std::string aName = tdName + "/" + m_cfg.atag;
+    std::string zName = tdName + "/" + m_cfg.ztag;
+    std::string rhoName = tdName + "/" + m_cfg.rhotag;
+
+    // Get the histograms
+    TH2F* t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
+    TH2F* x0 = dynamic_cast<TH2F*>(rFile.Get(x0Name.c_str()));
+    TH2F* l0 = dynamic_cast<TH2F*>(rFile.Get(l0Name.c_str()));
+    TH2F* A = dynamic_cast<TH2F*>(rFile.Get(aName.c_str()));
+    TH2F* Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
+    TH2F* rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
+
+    std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
+
+    // Only go on when you have all histograms
+    if (std::ranges::all_of(hists,
+                            [](const auto* hist) { return hist != nullptr; })) {
+      // Get the number of bins
+      int nbins0 = t->GetNbinsX();
+      int nbins1 = t->GetNbinsY();
+
+      // The material matrix
+      MaterialSlabMatrix materialMatrix(
+          nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
+
+      // Fill the matrix first
+      for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
+        for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
+          double dt = t->GetBinContent(ib0, ib1);
+          if (dt > 0.) {
+            double dx0 = x0->GetBinContent(ib0, ib1);
+            double dl0 = l0->GetBinContent(ib0, ib1);
+            double da = A->GetBinContent(ib0, ib1);
+            double dz = Z->GetBinContent(ib0, ib1);
+            double drho = rho->GetBinContent(ib0, ib1);
+            // Create material properties
+            const auto material =
+                Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+            materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
+          }
+        }
+      }  // Construct the binned material with the right bin utility
+      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+          bUtility, std::move(materialMatrix));
+    }
+  } else {
+    // Construct the names for histogram type storage
+    std::string indexName = tdName + "/" + m_cfg.itag;
+    // Get the histograms
+    TH2I* ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
+    // Get the number of bins
+    int nbins0 = ih->GetNbinsX();
+    int nbins1 = ih->GetNbinsY();
+
+    // The material matrix
+    MaterialSlabMatrix materialMatrix(
+        nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
+
+    // Fill the matrix first
+    for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
+      for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
+        int idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
+        indexedMaterialTree->GetEntry(idx);
+        double dt = m_indexedMaterialTreePayload.ht;
+        double dx0 = m_indexedMaterialTreePayload.hX0;
+        double dl0 = m_indexedMaterialTreePayload.hL0;
+        double da = m_indexedMaterialTreePayload.hA;
+        double dz = m_indexedMaterialTreePayload.hZ;
+        double drho = m_indexedMaterialTreePayload.hRho;
+        // Create material properties
+        const auto material =
+            Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+        materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
+      }
+    }  // Construct the binned material with the right bin utility
+    texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+        bUtility, std::move(materialMatrix));
+  }
 
   return texturedSurfaceMaterial;
 }

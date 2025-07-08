@@ -119,9 +119,11 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorHomogeneousReadWrite) {
         dynamic_cast<const HomogeneousSurfaceMaterial*>(readMaterial.get());
     BOOST_REQUIRE(hMaterial != nullptr);
     BOOST_CHECK_CLOSE(hMaterial->materialSlab(accessorPosition).material().X0(),
-                      sMaterial->materialSlab(accessorPosition).material().X0(), 1e-6);
+                      sMaterial->materialSlab(accessorPosition).material().X0(),
+                      1e-6);
     BOOST_CHECK_CLOSE(hMaterial->materialSlab(accessorPosition).material().L0(),
-                      sMaterial->materialSlab(accessorPosition).material().L0(), 1e-6);
+                      sMaterial->materialSlab(accessorPosition).material().L0(),
+                      1e-6);
   }
 }
 
@@ -143,6 +145,55 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnrfReadWrite) {
 
   rFile->Write();
   rFile->Close();
+
+  // Let's read it back
+  auto iFile = TFile::Open("RootMaterialMapAccessorBinnedTests.root", "READ");
+  BOOST_REQUIRE(iFile != nullptr);
+  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile);
+  BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
+  BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
+
+  // Compare
+  for (const auto& [refGeoID, refSMaterial] : surfaceMaterials) {
+    auto binnedReferenceMaterial =
+        dynamic_cast<const BinnedSurfaceMaterial*>(refSMaterial.get());
+
+    BOOST_REQUIRE(binnedReferenceMaterial != nullptr);
+
+    auto it = surfaceMapsRead.find(refGeoID);
+    BOOST_REQUIRE(it != surfaceMapsRead.end());
+    const auto& readMaterial = it->second;
+    BOOST_REQUIRE(readMaterial != nullptr);
+    const auto* binnedMaterial =
+        dynamic_cast<const BinnedSurfaceMaterial*>(readMaterial.get());
+    BOOST_REQUIRE(binnedMaterial != nullptr);
+
+    // Check the binning
+    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
+                      binnedReferenceMaterial->binUtility().bins(0));
+    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
+                      binnedReferenceMaterial->binUtility().bins(1));
+
+    // Compare the material matrix
+    const auto& materialMatrix = binnedMaterial->fullMaterial();
+    const auto& referenceMaterialMatrix =
+        binnedReferenceMaterial->fullMaterial();
+
+    BOOST_REQUIRE_EQUAL(materialMatrix.size(), referenceMaterialMatrix.size());
+    for (std::size_t i = 0; i < materialMatrix.size(); ++i) {
+      BOOST_REQUIRE_EQUAL(materialMatrix[i].size(),
+                          referenceMaterialMatrix[i].size());
+      for (std::size_t j = 0; j < materialMatrix[i].size(); ++j) {
+        const auto& mat = materialMatrix[i][j];
+        const auto& refMat = referenceMaterialMatrix[i][j];
+        BOOST_CHECK_CLOSE(mat.material().X0(), refMat.material().X0(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().L0(), refMat.material().L0(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().Ar(), refMat.material().Ar(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().Z(), refMat.material().Z(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.thickness(), refMat.thickness(), 1e-6);
+      }
+    }
+  }
 
   // Create the accessor - compressed writing
   Acts::RootMaterialMapAccessor::Config cfgIndexed{true};
