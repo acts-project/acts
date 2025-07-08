@@ -10,26 +10,24 @@
 
 namespace Acts::Experimental {
 
+SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
+  createColumns(columns);
+}
+
 SpacePointContainer2::SpacePointContainer2(
     const SpacePointContainer2 &other) noexcept
-    : m_x(other.m_x),
-      m_y(other.m_y),
-      m_z(other.m_z),
-      m_sourceLinkOffsets(other.m_sourceLinkOffsets),
+    : m_sourceLinkOffsets(other.m_sourceLinkOffsets),
       m_sourceLinkCounts(other.m_sourceLinkCounts),
       m_sourceLinks(other.m_sourceLinks) {
-  copyExtraColumns(other);
+  copyColumns(other);
 }
 
 SpacePointContainer2::SpacePointContainer2(
     SpacePointContainer2 &&other) noexcept
-    : m_x(std::move(other.m_x)),
-      m_y(std::move(other.m_y)),
-      m_z(std::move(other.m_z)),
-      m_sourceLinkOffsets(std::move(other.m_sourceLinkOffsets)),
+    : m_sourceLinkOffsets(std::move(other.m_sourceLinkOffsets)),
       m_sourceLinkCounts(std::move(other.m_sourceLinkCounts)),
       m_sourceLinks(std::move(other.m_sourceLinks)) {
-  moveExtraColumns(other);
+  moveColumns(other);
 }
 
 SpacePointContainer2 &SpacePointContainer2::operator=(
@@ -38,14 +36,11 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
-  m_x = other.m_x;
-  m_y = other.m_y;
-  m_z = other.m_z;
   m_sourceLinkOffsets = other.m_sourceLinkOffsets;
   m_sourceLinkCounts = other.m_sourceLinkCounts;
   m_sourceLinks = other.m_sourceLinks;
 
-  copyExtraColumns(other);
+  copyColumns(other);
 
   return *this;
 }
@@ -56,152 +51,155 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
-  m_x = std::move(other.m_x);
-  m_y = std::move(other.m_y);
-  m_z = std::move(other.m_z);
   m_sourceLinkOffsets = std::move(other.m_sourceLinkOffsets);
   m_sourceLinkCounts = std::move(other.m_sourceLinkCounts);
   m_sourceLinks = std::move(other.m_sourceLinks);
 
-  moveExtraColumns(other);
+  moveColumns(other);
 
   return *this;
 }
 
-void SpacePointContainer2::copyExtraColumns(const SpacePointContainer2 &other) {
-  m_extraColumns.reserve(other.m_extraColumns.size());
+void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
+  m_allColumns.reserve(other.m_allColumns.size());
 
   for (const auto &[name, column] : other.m_namedExtraColumns) {
     m_namedExtraColumns.try_emplace(name, column->copy());
   }
 
-  m_knownExtraColumns = other.m_knownExtraColumns;
-  knownExtraColumns() = other.knownExtraColumns();
+  m_allocatedColumns = other.m_allocatedColumns;
+  knownColumns() = other.knownColumns();
 
-  initializeExtraColumns();
+  initializeColumns();
 }
 
-void SpacePointContainer2::moveExtraColumns(
-    SpacePointContainer2 &other) noexcept {
-  m_extraColumns.reserve(other.m_extraColumns.size());
+void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
+  m_allColumns.reserve(other.m_allColumns.size());
 
   for (auto &[name, column] : other.m_namedExtraColumns) {
     m_namedExtraColumns.try_emplace(name, std::move(column));
   }
 
   other.m_namedExtraColumns.clear();
-  other.m_extraColumns.clear();
+  other.m_allColumns.clear();
 
-  m_knownExtraColumns = other.m_knownExtraColumns;
-  knownExtraColumns() = std::move(other).knownExtraColumns();
+  m_allocatedColumns = other.m_allocatedColumns;
+  knownColumns() = std::move(other).knownColumns();
 
-  initializeExtraColumns();
+  initializeColumns();
 }
 
-void SpacePointContainer2::initializeExtraColumns() noexcept {
-  m_extraColumns.clear();
+void SpacePointContainer2::initializeColumns() noexcept {
+  m_allColumns.clear();
 
   for (const auto &[name, column] : m_namedExtraColumns) {
-    m_extraColumns.push_back(column.get());
+    m_allColumns.push_back(column.get());
   }
 
   const auto appendExtraColumn = [this]<typename T>(std::optional<T> &column) {
     if (column.has_value()) {
-      m_extraColumns.push_back(&*column);
+      m_allColumns.push_back(&*column);
     }
   };
   std::apply([&](auto &...args) { ((appendExtraColumn(args)), ...); },
-             knownExtraColumns());
+             knownColumns());
 }
 
 void SpacePointContainer2::reserve(std::size_t size,
                                    float averageSourceLinks) noexcept {
-  m_x.reserve(size);
-  m_y.reserve(size);
-  m_z.reserve(size);
   m_sourceLinkOffsets.reserve(size);
   m_sourceLinkCounts.reserve(size);
   m_sourceLinks.reserve(static_cast<std::size_t>(size * averageSourceLinks));
 
-  for (auto &column : m_extraColumns) {
+  for (auto &column : m_allColumns) {
     column->reserve(size);
   }
 }
 
 void SpacePointContainer2::clear() noexcept {
-  m_x.clear();
-  m_y.clear();
-  m_z.clear();
   m_sourceLinkOffsets.clear();
   m_sourceLinkCounts.clear();
   m_sourceLinks.clear();
 
-  for (auto &column : m_extraColumns) {
+  for (auto &column : m_allColumns) {
     column->clear();
   }
 }
 
-void SpacePointContainer2::createExtraColumns(
-    SpacePointKnownExtraColumn columns) noexcept {
-  using enum SpacePointKnownExtraColumn;
+void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
+  using enum SpacePointColumns;
 
+  if ((columns & X) != None && !m_xColumn.has_value()) {
+    m_xColumn = SpacePointColumnHolder<float>();
+    m_xColumn->resize(size());
+    m_allColumns.push_back(&*m_xColumn);
+  }
+  if ((columns & Y) != None && !m_yColumn.has_value()) {
+    m_yColumn = SpacePointColumnHolder<float>();
+    m_yColumn->resize(size());
+    m_allColumns.push_back(&*m_yColumn);
+  }
+  if ((columns & Z) != None && !m_zColumn.has_value()) {
+    m_zColumn = SpacePointColumnHolder<float>();
+    m_zColumn->resize(size());
+    m_allColumns.push_back(&*m_zColumn);
+  }
   if ((columns & R) != None && !m_rColumn.has_value()) {
-    m_rColumn = SpacePointExtraColumnHolder<float>();
+    m_rColumn = SpacePointColumnHolder<float>();
     m_rColumn->resize(size());
-    m_extraColumns.push_back(&*m_rColumn);
+    m_allColumns.push_back(&*m_rColumn);
   }
   if ((columns & Phi) != None && !m_phiColumn.has_value()) {
-    m_phiColumn = SpacePointExtraColumnHolder<float>();
+    m_phiColumn = SpacePointColumnHolder<float>();
     m_phiColumn->resize(size());
-    m_extraColumns.push_back(&*m_phiColumn);
+    m_allColumns.push_back(&*m_phiColumn);
   }
   if ((columns & Time) != None && !m_timeColumn.has_value()) {
-    m_timeColumn = SpacePointExtraColumnHolder<float>(NoTime);
+    m_timeColumn = SpacePointColumnHolder<float>(NoTime);
     m_timeColumn->resize(size());
-    m_extraColumns.push_back(&*m_timeColumn);
+    m_allColumns.push_back(&*m_timeColumn);
   }
   if ((columns & VarianceZ) != None && !m_varianceZColumn.has_value()) {
-    m_varianceZColumn = SpacePointExtraColumnHolder<float>();
+    m_varianceZColumn = SpacePointColumnHolder<float>();
     m_varianceZColumn->resize(size());
-    m_extraColumns.push_back(&*m_varianceZColumn);
+    m_allColumns.push_back(&*m_varianceZColumn);
   }
   if ((columns & VarianceR) != None && !m_varianceRColumn.has_value()) {
-    m_varianceRColumn = SpacePointExtraColumnHolder<float>();
+    m_varianceRColumn = SpacePointColumnHolder<float>();
     m_varianceRColumn->resize(size());
-    m_extraColumns.push_back(&*m_varianceRColumn);
+    m_allColumns.push_back(&*m_varianceRColumn);
   }
   if ((columns & TopStripVector) != None &&
       !m_topStripVectorColumn.has_value()) {
-    m_topStripVectorColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
+    m_topStripVectorColumn = SpacePointColumnHolder<Eigen::Vector3f>();
     m_topStripVectorColumn->resize(size());
-    m_extraColumns.push_back(&*m_topStripVectorColumn);
+    m_allColumns.push_back(&*m_topStripVectorColumn);
   }
   if ((columns & BottomStripVector) != None &&
       !m_bottomStripVectorColumn.has_value()) {
-    m_bottomStripVectorColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
+    m_bottomStripVectorColumn = SpacePointColumnHolder<Eigen::Vector3f>();
     m_bottomStripVectorColumn->resize(size());
-    m_extraColumns.push_back(&*m_bottomStripVectorColumn);
+    m_allColumns.push_back(&*m_bottomStripVectorColumn);
   }
   if ((columns & StripCenterDistance) != None &&
       !m_stripCenterDistanceColumn.has_value()) {
-    m_stripCenterDistanceColumn =
-        SpacePointExtraColumnHolder<Eigen::Vector3f>();
+    m_stripCenterDistanceColumn = SpacePointColumnHolder<Eigen::Vector3f>();
     m_stripCenterDistanceColumn->resize(size());
-    m_extraColumns.push_back(&*m_stripCenterDistanceColumn);
+    m_allColumns.push_back(&*m_stripCenterDistanceColumn);
   }
   if ((columns & TopStripCenter) != None &&
       !m_topStripCenterColumn.has_value()) {
-    m_topStripCenterColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
+    m_topStripCenterColumn = SpacePointColumnHolder<Eigen::Vector3f>();
     m_topStripCenterColumn->resize(size());
-    m_extraColumns.push_back(&*m_topStripCenterColumn);
+    m_allColumns.push_back(&*m_topStripCenterColumn);
   }
   if ((columns & CopyFromIndex) != None && !m_copyFromIndexColumn.has_value()) {
-    m_copyFromIndexColumn = SpacePointExtraColumnHolder<std::size_t>();
+    m_copyFromIndexColumn = SpacePointColumnHolder<std::size_t>();
     m_copyFromIndexColumn->resize(size());
-    m_extraColumns.push_back(&*m_copyFromIndexColumn);
+    m_allColumns.push_back(&*m_copyFromIndexColumn);
   }
 
-  m_knownExtraColumns = m_knownExtraColumns | columns;
+  m_allocatedColumns = m_allocatedColumns | columns;
 }
 
 }  // namespace Acts::Experimental

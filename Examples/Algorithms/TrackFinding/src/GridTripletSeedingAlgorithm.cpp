@@ -102,19 +102,23 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::Experimental::SpacePointContainer2 coreSpacePoints;
-  coreSpacePoints.createExtraColumns(
-      Acts::Experimental::SpacePointKnownExtraColumn::R |
-      Acts::Experimental::SpacePointKnownExtraColumn::Phi |
-      Acts::Experimental::SpacePointKnownExtraColumn::VarianceR |
-      Acts::Experimental::SpacePointKnownExtraColumn::VarianceZ);
+  Acts::Experimental::SpacePointContainer2 coreSpacePoints(
+      Acts::Experimental::SpacePointColumns::X |
+      Acts::Experimental::SpacePointColumns::Y |
+      Acts::Experimental::SpacePointColumns::Z |
+      Acts::Experimental::SpacePointColumns::R |
+      Acts::Experimental::SpacePointColumns::Phi |
+      Acts::Experimental::SpacePointColumns::VarianceR |
+      Acts::Experimental::SpacePointColumns::VarianceZ);
   coreSpacePoints.reserve(spacePoints.size());
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (m_spacePointSelector(sp)) {
       auto newSp = coreSpacePoints.createSpacePoint(
-          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)}, sp.x(),
-          sp.y(), sp.z());
+          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
+      newSp.x() = sp.x();
+      newSp.y() = sp.y();
+      newSp.z() = sp.z();
       newSp.r() = sp.r();
       newSp.phi() = std::atan2(sp.y(), sp.x());
       newSp.varianceR() = sp.varianceR();
