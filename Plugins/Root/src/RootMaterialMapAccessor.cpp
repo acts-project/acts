@@ -10,66 +10,338 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
-void Acts::RootMaterialMapAccessor::write(TFile& rFile,
-                                          const GeometryContext& gctx,
-                                          const Surface& surface)  {
-  auto geoID = surface.geometryId();
-  auto surfaceMaterial = surface.surfaceMaterial();
-  if (surfaceMaterial == nullptr) {
+#include <TFile.h>
+#include <TH1I.h>
+#include <TH2F.h>
+#include <TKey.h>
+#include <TList.h>
+#include <TObject.h>
+#include <TTree.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/finder.hpp>
+#include <boost/algorithm/string/iter_find.hpp>
+
+void Acts::RootMaterialMapAccessor::write(
+    TFile& rFile, const GeometryIdentifier& geoID,
+    const ISurfaceMaterial& surfaceMaterial) {
+  /// Change to the file
+  rFile.cd();
+
+  // Homogeneous surface material writing into one tree
+  auto homogeneousMaterial =
+      dynamic_cast<const HomogeneousSurfaceMaterial*>(&surfaceMaterial);
+  if (homogeneousMaterial != nullptr) {
+    if (m_hTree == nullptr) {
+      m_hTree = new TTree(m_cfg.homogeneousMaterialTree.c_str(),
+                          "Homogeneous Material Tree");
+      connectForWrite(*m_hTree, m_homogenousMaterialTreePayload);
+    }
+    fillMaterialSlab(m_homogenousMaterialTreePayload,
+                     homogeneousMaterial->materialSlab());
+    m_homogenousMaterialTreePayload.hGeoId = geoID.value();
+    m_hTree->Fill();
     return;
   }
 
+  // Binned surface material writing
+  auto bsMaterial =
+      dynamic_cast<const BinnedSurfaceMaterial*>(&surfaceMaterial);
+  if (bsMaterial != nullptr) {
+    // decode the geometryID
+    const auto gvolID = geoID.volume();
+    const auto gbouID = geoID.boundary();
+    const auto glayID = geoID.layer();
+    const auto gappID = geoID.approach();
+    const auto gsenID = geoID.sensitive();
+    // create the directory
+    std::string tdName = m_cfg.folderSurfaceNameBase.c_str();
+    tdName += m_cfg.voltag + std::to_string(gvolID);
+    tdName += m_cfg.boutag + std::to_string(gbouID);
+    tdName += m_cfg.laytag + std::to_string(glayID);
+    tdName += m_cfg.apptag + std::to_string(gappID);
+    tdName += m_cfg.sentag + std::to_string(gsenID);
+    // create a new directory
+    rFile.mkdir(tdName.c_str());
+    rFile.cd(tdName.c_str());
 
-  auto homogeneousMaterial =
-      dynamic_cast<const HomogeneousSurfaceMaterial*>(surfaceMaterial);
-  if (homogeneousMaterial != nullptr) {
-    writeHomogeneousMaterial(*homogeneousMaterial);
-    m_hGeoIdPtr->push_back(geoID.value());
+    // Boundary condistions
+    // Get the binning data
+    auto& binningData = bsMaterial->binUtility().binningData();
+    // 1-D or 2-D maps
+    std::size_t binningBins = binningData.size();
+
+    // The bin number information
+    auto n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
+                      binningBins - 0.5);
+
+    // The binning value information
+    auto v = new TH1F(m_cfg.vtag.c_str(), "binning values; bin", binningBins,
+                      -0.5, binningBins - 0.5);
+
+    // The binning option information
+    auto o = new TH1F(m_cfg.otag.c_str(), "binning options; bin", binningBins,
+                      -0.5, binningBins - 0.5);
+
+    // The binning option information - range min
+    auto rmin = new TH1F(m_cfg.mintag.c_str(), "min; bin", binningBins, -0.5,
+                         binningBins - 0.5);
+
+    // The binning option information - range max
+    auto rmax = new TH1F(m_cfg.maxtag.c_str(), "max; bin", binningBins, -0.5,
+                         binningBins - 0.5);
+
+    // Now fill the histogram content
+    std::size_t b = 1;
+    for (auto bData : binningData) {
+      // Fill: nbins, value, option, min, max
+      n->SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
+      v->SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
+      o->SetBinContent(b, static_cast<int>(binningData[b - 1].option));
+      rmin->SetBinContent(b, binningData[b - 1].min);
+      rmax->SetBinContent(b, binningData[b - 1].max);
+      ++b;
+    }
+    n->Write();
+    v->Write();
+    o->Write();
+    rmin->Write();
+    rmax->Write();
+
+    // If compressed writing is not enabled, write the binned surface material
+    // as histograms
+    if (!m_cfg.indexedMaterial) {
+      fillBinnedSurfaceMaterial(*bsMaterial);
+      return;
+    }
+
+    // Otherwise, write the binned surface material into the TTree
+    if (m_gTree == nullptr) {
+      // Back to file level
+      rFile.cd();
+      m_gTree = new TTree(m_cfg.indexMaterialTreeName.c_str(),
+                          "Indexed Material Tree");
+      connectForWrite(*m_gTree, m_indexedMaterialTreePayload);
+      // Back to the directory
+      rFile.cd(tdName.c_str());
+    }
+    fillBinnedSurfaceMaterial(m_indexedMaterialTreePayload, *bsMaterial);
+    return;
   }
 
-  auto binnedMaterial =
-      dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
-  if (binnedMaterial != nullptr) {
-    // writeBinnedMaterial(rFile, gctx, geoID, *binnedMaterial);
-  }
+  // auto gridMaterial = dynamic_cast<const
+  // IGridSurfaceMaterial*>(surfaceMaterial); if (gridMaterial != nullptr) {
+  //  writeGridMaterial(rFile, gctx, geoID, *gridMaterial);
+  // return;
+  //}
 
   return;
 }
 
+void Acts::RootMaterialMapAccessor::write(
+    TFile& rFile, const DetectorMaterial& detectorMaterial) {
+  auto [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  for (const auto& [geoID, sMaterial] : surfaceMaterials) {
+    write(rFile, geoID, *sMaterial);
+  }
+}
+
 void Acts::RootMaterialMapAccessor::connectForWrite(
     TTree& rTree, MaterialTreePayload& treePayload) {
-  rTree.Branch("hGeoId", &treePayload.hGeoIdPtr);
-  rTree.Branch("ht", &treePayload.htPtr);
-  rTree.Branch("hX0", &treePayload.hX0Ptr);
-  rTree.Branch("hL0", &treePayload.hL0Ptr);
-  rTree.Branch("hA", &treePayload.hAPtr);
-  rTree.Branch("hZ", &treePayload.hZPtr);
-  rTree.Branch("hRho", &treePayload.hRhoPtr);
+  if (&treePayload == &m_homogenousMaterialTreePayload) {
+    rTree.Branch("hGeoId", &treePayload.hGeoId);
+  }
+  rTree.Branch(m_cfg.ttag.c_str(), &treePayload.ht);
+  rTree.Branch(m_cfg.x0tag.c_str(), &treePayload.hX0);
+  rTree.Branch(m_cfg.l0tag.c_str(), &treePayload.hL0);
+  rTree.Branch(m_cfg.atag.c_str(), &treePayload.hA);
+  rTree.Branch(m_cfg.ztag.c_str(), &treePayload.hZ);
+  rTree.Branch(m_cfg.rhotag.c_str(), &treePayload.hRho);
 }
 
 void Acts::RootMaterialMapAccessor::connectForRead(
-    const TTree& rTree, MaterialTreePayload& treePayload) {
-  rTree.SetBranchAddress("hGeoId", &treePayload.hGeoIdPtr);
-  rTree.SetBranchAddress("ht", &treePayload.htPtr);
-  rTree.SetBranchAddress("hX0", &treePayload.hX0Ptr);
-  rTree.SetBranchAddress("hL0", &treePayload.hL0Ptr);
-  rTree.SetBranchAddress("hA", &treePayload.hAPtr);
-  rTree.SetBranchAddress("hZ", &treePayload.hZPtr);
-  rTree.SetBranchAddress("hRho", &treePayload.hRhoPtr);
+    TTree& rTree, MaterialTreePayload& treePayload) {
+  if (&treePayload == &m_homogenousMaterialTreePayload) {
+    rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
+  }
+  rTree.SetBranchAddress(m_cfg.ttag.c_str(), &treePayload.ht);
+  rTree.SetBranchAddress(m_cfg.x0tag.c_str(), &treePayload.hX0);
+  rTree.SetBranchAddress(m_cfg.l0tag.c_str(), &treePayload.hL0);
+  rTree.SetBranchAddress(m_cfg.atag.c_str(), &treePayload.hA);
+  rTree.SetBranchAddress(m_cfg.ztag.c_str(), &treePayload.hZ);
+  rTree.SetBranchAddress(m_cfg.rhotag.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapAccessor::writeHomogeneousMaterial(
-    const HomogeneousSurfaceMaterial& homogeneousMaterial) {
-  if (m_hTree == nullptr) {
-    m_hTree = std::make_unique<TTree>("HomogeneousMaterial",
-                                      "Homogeneous Material Tree");
+void Acts::RootMaterialMapAccessor::fillMaterialSlab(
+    MaterialTreePayload& payload, const MaterialSlab& materialSlab) {
+  payload.ht = materialSlab.thickness();
+  payload.hX0 = materialSlab.material().X0();
+  payload.hL0 = materialSlab.material().L0();
+  payload.hA = materialSlab.material().Ar();
+  payload.hZ = materialSlab.material().Z();
+  payload.hRho = materialSlab.material().massDensity();
+}
 
+void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
+    const BinnedSurfaceMaterial& bsMaterial) {
+  std::size_t bins0 = bsMaterial.binUtility().bins(0);
+  std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
+  auto t = new TH2F(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
+                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  auto x0 = new TH2F(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
+                     bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  auto l0 = new TH2F(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0,
+                     -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  auto A = new TH2F(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
+                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  auto Z = new TH2F(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
+                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  auto rho = new TH2F(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0,
+                      -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+
+  // loop over the material and fill
+  const auto& materialMatrix = bsMaterial.fullMaterial();
+  for (auto [b1, materialVector] : enumerate(materialMatrix)) {
+    for (auto [b0, mat] : enumerate(materialVector)) {
+      t->SetBinContent(b0 + 1, b1 + 1, mat.thickness());
+      x0->SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
+      l0->SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
+      A->SetBinContent(b0 + 1, b1 + 1, mat.material().Ar());
+      Z->SetBinContent(b0 + 1, b1 + 1, mat.material().Z());
+      rho->SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
+    }
+  }
+  t->Write();
+  x0->Write();
+  l0->Write();
+  A->Write();
+  Z->Write();
+  rho->Write();
+}
+
+void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
+    MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
+  std::size_t bins0 = bsMaterial.binUtility().bins(0);
+  std::size_t bins1 = bsMaterial.binUtility().bins(1);
+
+  auto idx = new TH2I(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5,
+                      bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  // loop over the material and fill
+  const auto& materialMatrix = bsMaterial.fullMaterial();
+  for (auto [b1, materialVector] : enumerate(materialMatrix)) {
+    for (auto [b0, mat] : enumerate(materialVector)) {
+      idx->SetBinContent(b0 + b1 * bins0 + 1, payload.index++);
+      fillMaterialSlab(payload, mat);
+      m_gTree->Fill();
+    }
+  }
+  idx->Write();
+}
+
+Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
+  Acts::DetectorMaterial detectorMaterial;
+
+  auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+
+  TTree* homogeneousMaterialTree =
+      dynamic_cast<TTree*>(rFile.Get(m_cfg.homogeneousMaterialTree.c_str()));
+
+  // Read homogeneous material tree
+  if (homogeneousMaterialTree != nullptr) {
+    connectForRead(*homogeneousMaterialTree, m_homogenousMaterialTreePayload);
+    for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
+      homogeneousMaterialTree->GetEntry(i);
+      Acts::GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
+      Acts::MaterialSlab materialSlab(Acts::Material::fromMolarDensity(
+                                          m_homogenousMaterialTreePayload.hX0,
+                                          m_homogenousMaterialTreePayload.hL0,
+                                          m_homogenousMaterialTreePayload.hA,
+                                          m_homogenousMaterialTreePayload.hZ,
+                                          m_homogenousMaterialTreePayload.hRho),
+                                      m_homogenousMaterialTreePayload.ht);
+      auto homogeneousMaterial =
+          std::make_shared<Acts::HomogeneousSurfaceMaterial>(materialSlab);
+      surfaceMaterials.emplace(geoID, homogeneousMaterial);
+    }
   }
 
+  // Read the binned surface material
+  TTree* indexedMaterialTree =
+      dynamic_cast<TTree*>(rFile.Get(m_cfg.indexMaterialTreeName.c_str()));
 
+  // Get the list of keys from the file
+  TList* tlist = rFile.GetListOfKeys();
+  auto tIter = tlist->MakeIterator();
+  tIter->Reset();
+
+  // Iterate over the keys in the file
+  while (TKey* key = static_cast<TKey*>(tIter->Next())) {
+    // Remember the directory
+    std::string tdName(key->GetName());
+
+    ACTS_VERBOSE("Processing directory: " << tdName);
+
+    // volume
+    std::vector<std::string> splitNames;
+    iter_split(splitNames, tdName,
+               boost::algorithm::first_finder(m_cfg.voltag));
+    // Surface Material
+    if (splitNames[0] == m_cfg.folderSurfaceNameBase) {
+      // The surface material to be read in for this
+      std::shared_ptr<const Acts::ISurfaceMaterial> sMaterial = nullptr;
+
+      boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
+      Acts::GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
+      // boundary
+      iter_split(splitNames, tdName,
+                 boost::algorithm::first_finder(m_cfg.boutag));
+      boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
+      Acts::GeometryIdentifier::Value bouID = std::stoi(splitNames[0]);
+      // layer
+      iter_split(splitNames, tdName,
+                 boost::algorithm::first_finder(m_cfg.laytag));
+      boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
+      Acts::GeometryIdentifier::Value layID = std::stoi(splitNames[0]);
+      // approach
+      iter_split(splitNames, tdName,
+                 boost::algorithm::first_finder(m_cfg.apptag));
+      boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
+      Acts::GeometryIdentifier::Value appID = std::stoi(splitNames[0]);
+      // sensitive
+      iter_split(splitNames, tdName,
+                 boost::algorithm::first_finder(m_cfg.sentag));
+      Acts::GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
+
+      // Reconstruct the geometry ID
+      auto geoID = Acts::GeometryIdentifier()
+                       .withVolume(volID)
+                       .withBoundary(bouID)
+                       .withLayer(layID)
+                       .withApproach(appID)
+                       .withSensitive(senID);
+
+      auto texturedSurfaceMaterial =
+          readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);                 
+      surfaceMaterials.emplace(geoID, texturedSurfaceMaterial);
+
+    }
+  }
+
+  return detectorMaterial;
+}
+
+std::shared_ptr<const Acts::ISurfaceMaterial>
+Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
+    TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
+  std::shared_ptr<const Acts::ISurfaceMaterial> texturedSurfaceMaterial =
+      nullptr;
+
+  return texturedSurfaceMaterial;
 }

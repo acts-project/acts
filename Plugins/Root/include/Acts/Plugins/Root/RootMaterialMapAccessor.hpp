@@ -8,25 +8,42 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+
+#include <map>
+#include <memory>
 #include <string>
+#include <tuple>
 
-#include <TTree.h>
-
+class TTree;
 class TFile;
 class TDirectory;
 
 namespace Acts {
 
-class Surface;
-class GeometryContext;
+class GeometryIdentifier;
+class ISurfaceMaterial;
+class IVolumeMaterial;
 class HomogeneousSurfaceMaterial;
+class MaterialSlab;
 class BinnedSurfaceMaterial;
+
+using SurfaceMaterialMaps =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+using VolumeMaterialMaps =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+using DetectorMaterial = std::tuple<SurfaceMaterialMaps, VolumeMaterialMaps>;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
 class RootMaterialMapAccessor {
  public:
   struct Config {
+    bool indexedMaterial = false;
+    /// The name of the homogeneous material tree
+    std::string homogeneousMaterialTree = "HomogeneousMaterial";
+    /// The name of the indexed material tree
+    std::string indexMaterialTreeName = "IndexedMaterial";
     /// The name of the output surface tree
     std::string folderSurfaceNameBase = "SurfaceMaterial";
     /// The name of the output volume tree
@@ -47,6 +64,8 @@ class RootMaterialMapAccessor {
     std::string vtag = "v";
     /// The option tag -> binning options: open, closed
     std::string otag = "o";
+    /// The index tag
+    std::string itag = "i";
     /// The range min tag: min value
     std::string mintag = "min";
     /// The range max tag: max value
@@ -66,76 +85,101 @@ class RootMaterialMapAccessor {
   };
 
   struct MaterialTreePayload {
-    std::vector<uint64_t> hGeoId;
-    std::vector<uint64_t>* hGeoIdPtr = &hGeoId;
+    std::size_t index = 0;
+    /// geometry identifier
+    int64_t hGeoId;
     /// thickness
-    std::vector<float> ht;
-    std::vector<float>* htPtr = &ht;
+    float ht;
     /// X0
-    std::vector<float> hX0;
-    std::vector<float>* hX0Ptr = &hX0;
+    float hX0;
     /// L0
-    std::vector<float> hL0;
-    std::vector<float>* hL0Ptr = &hL0;
+    float hL0;
     /// A
-    std::vector<float> hA;
-    std::vector<float>* hAPtr = &hA;
+    float hA;
     /// Z
-    std::vector<float> hZ;
-    std::vector<float>* hZPtr = &hZ;
+    float hZ;
     /// Rho
-    std::vector<float> hRho;
-    std::vector<float>* hRhoPtr = &hRho;
+    float hRho;
   };
 
   /// @brief Constructor from config struct
   /// @param cfg the configuration for the accessor
-  explicit RootMaterialMapAccessor(const Config& cfg) : cfg(cfg) {}
+  /// @param mLogger the logger to use, default is INFO level
+  explicit RootMaterialMapAccessor(
+      const Config& cfg, std::unique_ptr<const Logger> mLogger = getDefaultLogger(
+                             "RootMaterialMapAccessor", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor
   ~RootMaterialMapAccessor() = default;
 
+  /// Write the detector maps
+  /// @param rFile the file to write to
+  /// @param detectorMaterial the detector material maps
+  void write(TFile& rFile, const DetectorMaterial& detectorMaterial);
+
   /// Write the material to file
   /// @param rFile the file to write to
-  /// @param gctx the geometry context
-  /// @param surface is the surface associated with the material
-  void write(TFile& rFile, const GeometryContext& gctx, const Surface& surface);
+  /// @param geoID the geometry identifier for the surface
+  /// @param surfaceMaterial is the surface associated with the material
+  void write(TFile& rFile, const GeometryIdentifier& geoID,
+             const ISurfaceMaterial& surfaceMaterial);
+
+  /// Read the detector maps
+  /// @param rFile the file to read from
+  DetectorMaterial read(TFile& rFile);
 
  private:
-  /// @brief Write the homogeneous material to the file
-  /// @param homogeneousMaterial the homogeneous material to write
-  void writeHomogeneousMaterial(
-      const HomogeneousSurfaceMaterial& homogeneousMaterial);
-
   /// @brief Connect the homogeneous material tree for writing
   /// @param rTree the tree to connect to
   /// @param treePayload the payload to connect to the tree
   void connectForWrite(TTree& rTree, MaterialTreePayload& treePayload);
 
-
   /// @brief Connect the homogeneous material tree for writing
   /// @param rTree the tree to connect to
   /// @param treePayload the payload to connect to the tree
-  void connectForRead(const TTree& rTree, MaterialTreePayload& treePayload);
+  void connectForRead(TTree& rTree, MaterialTreePayload& treePayload);
 
-  /// @brief
-  /// @param rDirectory
-  /// @param binnedMaterial
-  void writeBinnedSurfaceMaterial(TDirectory& rDirectory,
-                                  const BinnedSurfaceMaterial& binnedMaterial);
+  /// Fill the material slab
+  /// @param payload the tree payload to fill
+  /// @param materialSlab the material slab to fill
+  void fillMaterialSlab(MaterialTreePayload& payload,
+                        const MaterialSlab& materialSlab);
+
+  /// @brief Fill the Binned Surface material as histograms - legacy mode
+  /// @param bsMaterial the binned surface material to write
+  void fillBinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsMaterial);
+
+  /// @brief Fill the Binned Surface material as histograms - indexed mode
+  /// @param payload the tree payload to fill
+  /// @param bsMaterial the binned surface material to write
+  void fillBinnedSurfaceMaterial(MaterialTreePayload& payload,
+                                 const BinnedSurfaceMaterial& bsMaterial);
+
+  /// Read the a texture Surface material 
+  /// @param rFile the file to read from
+  /// @param tdName the name of the texture directory
+  /// @param indexedMaterialTree the indexed material tree, if available
+  /// @return a shared pointer to the ISurfaceMaterial
+  std::shared_ptr<const ISurfaceMaterial> readTextureSurfaceMaterial(
+      TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree = nullptr);
+
+  /// Read the a grid Surface material
+  const Logger& logger() const { return *m_logger; }
 
   /// The configuration for the accessor
   Config m_cfg;
 
+  /// The logger for this accessor
+  std::unique_ptr<const Logger> m_logger;
+
   /// The homogeneous material tree
-  std::unique_ptr<TTree> m_hTree = nullptr;
+  TTree* m_hTree = nullptr;
   MaterialTreePayload m_homogenousMaterialTreePayload;
 
   /// The globally indexed material tree
-  std::unique_ptr<TTree> m_gTree = nullptr;
-  MaterialTreePayload m_globallyIndexedMaterialTreePayload;
-
-
+  TTree* m_gTree = nullptr;
+  MaterialTreePayload m_indexedMaterialTreePayload;
 };
 
 }  // namespace Acts
