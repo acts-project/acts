@@ -379,7 +379,7 @@ if args.reco:
         CkfConfig(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
+            numMeasurementsCutOff=2,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes=[16, 17, 18],
