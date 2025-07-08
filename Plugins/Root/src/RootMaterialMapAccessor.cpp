@@ -425,33 +425,36 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     std::string indexName = tdName + "/" + m_cfg.itag;
     // Get the histograms
     TH2I* ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
-    // Get the number of bins
-    int nbins0 = ih->GetNbinsX();
-    int nbins1 = ih->GetNbinsY();
 
-    // The material matrix
-    MaterialSlabMatrix materialMatrix(
-        nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
+    if (ih != nullptr) {
+      // Get the number of bins
+      int nbins0 = ih->GetNbinsX();
+      int nbins1 = ih->GetNbinsY();
 
-    // Fill the matrix first
-    for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
-      for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-        int idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
-        indexedMaterialTree->GetEntry(idx);
-        double dt = m_indexedMaterialTreePayload.ht;
-        double dx0 = m_indexedMaterialTreePayload.hX0;
-        double dl0 = m_indexedMaterialTreePayload.hL0;
-        double da = m_indexedMaterialTreePayload.hA;
-        double dz = m_indexedMaterialTreePayload.hZ;
-        double drho = m_indexedMaterialTreePayload.hRho;
-        // Create material properties
-        const auto material =
-            Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
-        materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
-      }
-    }  // Construct the binned material with the right bin utility
-    texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-        bUtility, std::move(materialMatrix));
+      // The material matrix
+      MaterialSlabMatrix materialMatrix(
+          nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
+
+      // Fill the matrix first
+      for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
+        for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
+          int idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
+          indexedMaterialTree->GetEntry(idx);
+          double dt = m_indexedMaterialTreePayload.ht;
+          double dx0 = m_indexedMaterialTreePayload.hX0;
+          double dl0 = m_indexedMaterialTreePayload.hL0;
+          double da = m_indexedMaterialTreePayload.hA;
+          double dz = m_indexedMaterialTreePayload.hZ;
+          double drho = m_indexedMaterialTreePayload.hRho;
+          // Create material properties
+          const auto material =
+              Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
+          materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
+        }
+      }  // Construct the binned material with the right bin utility
+      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+          bUtility, std::move(materialMatrix));
+    }
   }
 
   return texturedSurfaceMaterial;
