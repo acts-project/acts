@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -27,6 +28,7 @@
 #include <iomanip>
 #include <map>
 #include <numeric>
+#include <ranges>
 #include <stdexcept>
 
 #include <DD4hep/Detector.h>
@@ -45,7 +47,7 @@ namespace ActsExamples {
 namespace detail {
 struct ParticleInfo {
   std::size_t particleIndex;
-  std::uint16_t numHits;
+  // std::uint16_t numHits;
 };
 
 }  // namespace detail
@@ -96,104 +98,6 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   });
 }
 
-namespace {
-std::string vid(unsigned int vtx) {
-  return "V" + std::to_string(vtx);
-}
-
-std::string pid(const SimParticle& particle) {
-  return "P" + std::to_string(particle.particleId().value());
-}
-
-std::string plabel(const SimParticle& particle) {
-  using namespace Acts::UnitLiterals;
-  std::stringstream ss;
-
-  ss << particle.pdg() << "\\n(" << particle.particleId() << ")\\n"
-     << "p=" << std::setprecision(3) << particle.absoluteMomentum() / 1_GeV
-     << " GeV";
-
-  auto p = particle.position();
-
-  ss << "\\npos=" << p[0] << ", " << p[1] << ", " << p[2];
-
-  return ss.str();
-}
-
-}  // namespace
-
-void EDM4hepSimInputConverter::graphviz(
-    std::ostream& os, const std::vector<SimParticle>& particles,
-    const ParentRelationship& parents) const {
-  os << "digraph Event {\n";
-
-  std::set<unsigned int> primaryVertices;
-
-  for (const auto& particle : particles) {
-    if (particle.particleId().generation() == 0) {
-      primaryVertices.insert(
-          static_cast<unsigned int>(particle.particleId().vertexPrimary()));
-
-      os << vid(static_cast<unsigned int>(
-                particle.particleId().vertexPrimary()))
-         << " -> " << pid(particle) << ";\n";
-    }
-
-    os << pid(particle) << " [label=\"" << plabel(particle) << "\"];\n";
-  }
-
-  for (const auto [childIdx, parentIdx] : parents) {
-    const auto& child = particles[childIdx];
-    const auto& parent = particles[parentIdx];
-    os << pid(parent) << " -> " << pid(child);
-
-    if (parent.particleId().vertexSecondary() ==
-        child.particleId().vertexSecondary()) {
-      os << " [style=dashed]";
-    }
-
-    os << ";\n";
-  }
-
-  for (unsigned int vtx : primaryVertices) {
-    os << vid(vtx) << " [label=\"PV" << vtx << "\"];\n";
-  }
-
-  os << "}";
-}
-
-bool EDM4hepSimInputConverter::acceptParticle(
-    const SimParticle& particle) const {
-  double r = Acts::VectorHelpers::perp(particle.position());
-  if (m_cfg.particleRMin.has_value() && r < m_cfg.particleRMin.value()) {
-    ACTS_VERBOSE("Skipping particle with r=" << r << " < rMin="
-                                             << m_cfg.particleRMin.value());
-    return false;
-  }
-
-  if (m_cfg.particleRMax.has_value() && r > m_cfg.particleRMax.value()) {
-    ACTS_VERBOSE("Skipping particle with r=" << r << " > rMax="
-                                             << m_cfg.particleRMax.value());
-    return false;
-  }
-
-  double pt = particle.transverseMomentum();
-
-  if (m_cfg.particlePtMin.has_value() && pt < m_cfg.particlePtMin.value()) {
-    ACTS_VERBOSE("Skipping particle with pt=" << pt << " < ptMin="
-                                              << m_cfg.particlePtMin.value());
-    return false;
-  }
-
-  if (m_cfg.particlePtMax.has_value() && pt > m_cfg.particlePtMax.value()) {
-    ACTS_VERBOSE("Skipping particle with pt=" << pt << " > ptMax="
-                                              << m_cfg.particlePtMax.value());
-    return false;
-  }
-
-  return true;
-}
-
 bool EDM4hepSimInputConverter::acceptParticle(
     const edm4hep::MCParticle& particle) const {
   double z = particle.getVertex().z * Acts::UnitConstants::mm;
@@ -241,25 +145,6 @@ bool EDM4hepSimInputConverter::acceptParticle(
   return true;
 }
 
-bool EDM4hepSimInputConverter::acceptSimHit(
-    const edm4hep::SimTrackerHit& particle) const {
-  double r = std::hypot(particle.getPosition().x, particle.getPosition().y) *
-             Acts::UnitConstants::mm;
-
-  if (m_cfg.simHitRMin.has_value() && r < m_cfg.simHitRMin.value()) {
-    ACTS_VERBOSE("Skipping sim hit with r=" << r << " < rMin="
-                                            << m_cfg.simHitRMin.value());
-    return false;
-  }
-  if (m_cfg.simHitRMax.has_value() && r > m_cfg.simHitRMax.value()) {
-    ACTS_VERBOSE("Skipping sim hit with r=" << r << " > rMax="
-                                            << m_cfg.simHitRMax.value());
-    return false;
-  }
-
-  return true;
-}
-
 namespace {
 void findGeneratorStableParticles(
     const edm4hep::MCParticle& particle,
@@ -299,13 +184,14 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Total input particles: " << mcParticleCollection.size()
                                        << " particles");
 
-  std::vector<SimParticle> unorderedParticlesInitial;
+  std::vector<SimBarcode> unorderedParticlesInitial;
 
   // Read particles from the input file
   // Find particles without parents and group them by vtx position to find
   // primary vertices
-  std::vector<std::pair<Acts::Vector3, std::vector<edm4hep::MCParticle>>>
-      primaryVertices;
+  std::vector<std::pair<Acts::Vector3, std::vector<int>>> primaryVertices;
+
+  std::size_t nVertexParticles = 0;
 
   {
     Acts::ScopedTimer timer("Finding primary vertices", logger(),
@@ -326,25 +212,30 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         return v.first == vtxPos;
       });
 
-      std::vector<edm4hep::MCParticle>* vertexParticles = nullptr;
+      std::vector<int>* vertexParticles = nullptr;
 
       if (it == primaryVertices.end()) {
         ACTS_VERBOSE("Found primary vertex at " << vtx.x << ", " << vtx.y
                                                 << ", " << vtx.z);
-        primaryVertices.emplace_back(vtxPos,
-                                     std::vector<edm4hep::MCParticle>{});
+        primaryVertices.emplace_back(vtxPos, std::vector<int>{});
         vertexParticles = &primaryVertices.back().second;
       } else {
         vertexParticles = &it->second;
       }
 
       assert(vertexParticles != nullptr);
-      std::ranges::copy(particle.getDaughters(),
-                        std::back_inserter(*vertexParticles));
+      nVertexParticles += particle.getDaughters().size();
+
+      std::ranges::copy(
+          particle.getDaughters() | std::views::transform([](const auto& p) {
+            return p.getObjectID().index;
+          }),
+          std::back_inserter(*vertexParticles));
     }
   }
 
-  ACTS_DEBUG("Found " << primaryVertices.size() << " primary vertices");
+  ACTS_DEBUG("Found " << primaryVertices.size() << " primary vertices with "
+                      << nVertexParticles << " outgoing particles in total");
 
   // key: child, value: parent
   ParentRelationship parentRelationship;
@@ -353,12 +244,52 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   // container
   std::unordered_map<int, detail::ParticleInfo> edm4hepParticleMap;
 
+  std::vector<std::uint8_t> numSimHits;
+  numSimHits.resize(mcParticleCollection.size());
+
   std::size_t nGeneratorParticles = 0;
   for (const auto& particle : mcParticleCollection) {
     if (!particle.isCreatedInSimulation()) {
       nGeneratorParticles += 1;
     }
+
+    // std::size_t index = particle.getObjectID().index;
+    //
+    // if (index != numSimHits.size()) {
+    //   ACTS_ERROR("index=" << index << " size=" << numSimHits.size());
+    //   throw std::runtime_error{"Inconsistency with edm4hep indices"};
+    // }
+    //
+    // numSimHits.push_back(0);
   }
+
+  // Let's figure out first how many hits each particle has:
+  for (const auto& name : m_cfg.inputSimHits) {
+    const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
+
+    for (const auto& hit : inputHits) {
+      auto particle = Acts::EDM4hepUtil::getParticle(hit);
+
+      std::size_t index = particle.getObjectID().index;
+
+      auto& num = numSimHits.at(index);
+      constexpr unsigned int maxNum =
+          (1 << sizeof(decltype(numSimHits)::value_type) * 8) - 1;
+
+      if (num == maxNum) {
+        throw std::runtime_error{"Hit count " + std::to_string(num) +
+                                 " is at the limit of " +
+                                 std::to_string(maxNum)};
+      }
+
+      num += 1;
+    }
+  }
+
+  std::function<std::uint8_t(const edm4hep::MCParticle&)> getNumHits =
+      [&numSimHits](const edm4hep::MCParticle& p) {
+        return numSimHits.at(p.getObjectID().index);
+      };
 
   std::optional particlesGeneratorUnordered = std::vector<SimParticle>{};
 
@@ -393,7 +324,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       {
         auto s = timerFindStable.sample();
-        for (const auto& inParticle : particles) {
+        for (const auto& index : particles) {
+          const auto& inParticle = mcParticleCollection.at(index);
           findGeneratorStableParticles(inParticle, generatorStableParticles);
         }
       }
@@ -416,11 +348,10 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         ACTS_VERBOSE("  - at " << particle.position().transpose());
 
         const auto pid = particle.particleId();
-        unorderedParticlesInitial.push_back(std::move(particle));
+        unorderedParticlesInitial.push_back(particle.particleId());
         edm4hepParticleMap[genParticle.getObjectID().index] =
-            detail::ParticleInfo{
-                .particleIndex = unorderedParticlesInitial.size() - 1,
-                .numHits = 0};
+            detail::ParticleInfo{.particleIndex =
+                                     unorderedParticlesInitial.size() - 1};
         processChildren(genParticle, pid, unorderedParticlesInitial,
                         parentRelationship, edm4hepParticleMap,
                         nSecondaryVertices, maxGen);
@@ -444,56 +375,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                       << " particles in total");
 
   std::optional particlesSimulatedUnordered = std::vector<SimParticle>{};
-  particlesSimulatedUnordered->reserve(unorderedParticlesInitial.size() -
-                                       nGeneratorParticles);
-
-  std::vector<SimVertex> simVerticesUnordered;
-
-  auto maybeAddVertex = [&](const Acts::Vector4& vtxPos4,
-
-                            SimVertexBarcode vtxId) -> SimVertex& {
-    auto getMinDistance = [&]() {
-      std::stringstream sstr;
-      auto closestIt = std::ranges::min_element(
-          simVerticesUnordered, {}, [&vtxPos4](const auto& v) {
-            return (v.position4.template head<3>() - vtxPos4.template head<3>())
-                .norm();
-          });
-
-      if (closestIt != simVerticesUnordered.end()) {
-        sstr << (closestIt->position4.head<3>() - vtxPos4.head<3>()).norm();
-      } else {
-        sstr << "[NONE]";
-      }
-
-      return sstr.str();
-    };
-
-    auto vertexIt =
-        std::ranges::find_if(simVerticesUnordered, [&](const auto& v) {
-          return (v.position4.template head<3>() - vtxPos4.template head<3>())
-                         .norm() < Acts::UnitConstants::mm * 1e-3 &&
-                 v.id == vtxId;
-        });
-
-    SimVertex* vertex = nullptr;
-    // We don't have a vertex for this position + id yet
-    if (vertexIt == simVerticesUnordered.end()) {
-      ACTS_VERBOSE("Adding new vertex: position="
-                   << vtxPos4.template head<3>().transpose() << " id=" << vtxId
-                   << " (closest existing=" << getMinDistance() << ")");
-      vertex = &simVerticesUnordered.emplace_back(vtxId, vtxPos4);
-    } else {
-      vertex = &*vertexIt;
-      ACTS_VERBOSE("Reusing existing vertex: position="
-                   << vtxPos4.template head<3>().transpose()
-                   << " id=" << vertex->id);
-    }
-
-    assert(vertex != nullptr);
-
-    return *vertex;
-  };
 
   auto convertPosition4 = [&](const edm4hep::MCParticle& inParticle) {
     Acts::Vector4 vtxPos4 = {inParticle.getVertex()[0],
@@ -504,24 +385,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     return vtxPos4;
   };
 
-  // Let's figure out first how many hits each particle has:
-  for (const auto& name : m_cfg.inputSimHits) {
-    const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
-
-    for (const auto& hit : inputHits) {
-      auto particle = Acts::EDM4hepUtil::getParticle(hit);
-
-      auto it = edm4hepParticleMap.find(particle.getObjectID().index);
-      if (it == edm4hepParticleMap.end()) {
-        ACTS_ERROR(
-            "Found sim hit with unknown particle: " << particle.getObjectID());
-        continue;
-      }
-
-      it->second.numHits += 1;
-    }
-  }
-
   {
     Acts::ScopedTimer timer("Converting particles", logger(),
                             Acts::Logging::DEBUG);
@@ -531,25 +394,23 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
       if (particleIt == edm4hepParticleMap.end()) {
-        // @FIXME: I think this is now expected, downgrade to verbose
-        // ACTS_DEBUG("Particle " << inParticle.getObjectID()
-        //                        << " not found in particle map");
         continue;
       }
 
-      const auto& [index, numHits] = particleIt->second;
+      const auto& [index] = particleIt->second;
 
-      if (!acceptParticle(inParticle) && numHits == 0) {
+      if (!acceptParticle(inParticle) && getNumHits(inParticle) == 0) {
         // Only reject particles if they don't have simhits
         continue;
       }
 
-      const auto& particleInitial = unorderedParticlesInitial.at(index);
-      ACTS_VERBOSE("Have converted particle: " << particleInitial);
+      const auto& pid = unorderedParticlesInitial.at(index);
 
       // Copy the particle to the simulated particle container, because we'll
       // make modified version for the "final" state (i.e. after simulation)
-      SimParticle particleSimulated = particleInitial;
+      SimParticle particleSimulated = EDM4hepUtil::readParticle(inParticle);
+      particleSimulated.setParticleId(pid);
+      ACTS_VERBOSE("Have converted particle: " << particleSimulated);
 
       // Find the decay time of the particle, by looking for the first
       // daughter that marks that it's the endpoint of the parent: this
@@ -578,10 +439,12 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       particleSimulated.final().setAbsoluteMomentum(momentumFinal.norm());
 
       ACTS_VERBOSE("- Updated particle initial -> final, position: "
-                   << particleInitial.fourPosition().transpose() << " -> "
+                   << particleSimulated.initial().fourPosition().transpose()
+                   << " -> "
                    << particleSimulated.final().fourPosition().transpose());
       ACTS_VERBOSE("                                     momentum: "
-                   << particleInitial.fourMomentum().transpose() << " -> "
+                   << particleSimulated.initial().fourMomentum().transpose()
+                   << " -> "
                    << particleSimulated.final().fourMomentum().transpose());
 
       particlesSimulatedUnordered->push_back(particleSimulated);
@@ -605,13 +468,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                           particlesSimulatedUnordered->end()};
 
   particlesSimulatedUnordered.reset();
-
-  if (!m_cfg.graphvizOutput.empty()) {
-    std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
-                                        ctx.eventNumber);
-    std::ofstream dot(path);
-    graphviz(dot, unorderedParticlesInitial, parentRelationship);
-  }
 
   std::optional simHitsUnordered = std::vector<SimHit>{};
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
@@ -639,13 +495,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                     "but expect to be here");
               }
 
-              const auto& particle =
-                  unorderedParticlesInitial.at(it->second.particleIndex);
-              ACTS_VERBOSE("- " << inParticle.getObjectID() << " -> "
-                                << particle.particleId() << "(sim="
-                                << inParticle.isCreatedInSimulation() << ")\n"
-                                << inParticle);
-              return particle.particleId();
+              auto pid = unorderedParticlesInitial.at(it->second.particleIndex);
+              return pid;
             },
             [&](std::uint64_t cellId) {
               ACTS_VERBOSE("CellID: " << cellId);
@@ -735,6 +586,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
+  ACTS_DEBUG("Read " << simHitsUnordered->size() << " sim hits in total");
+
   std::ranges::sort(*simHitsUnordered, detail::CompareGeometryId{});
 
   SimHitContainer simHits{simHitsUnordered->begin(), simHitsUnordered->end()};
@@ -790,6 +643,54 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
+  std::vector<SimVertex> simVerticesUnordered;
+
+  auto maybeAddVertex = [&](const Acts::Vector4& vtxPos4,
+
+                            SimVertexBarcode vtxId) -> SimVertex& {
+    auto getMinDistance = [&]() {
+      std::stringstream sstr;
+      auto closestIt = std::ranges::min_element(
+          simVerticesUnordered, {}, [&vtxPos4](const auto& v) {
+            return (v.position4.template head<3>() - vtxPos4.template head<3>())
+                .norm();
+          });
+
+      if (closestIt != simVerticesUnordered.end()) {
+        sstr << (closestIt->position4.head<3>() - vtxPos4.head<3>()).norm();
+      } else {
+        sstr << "[NONE]";
+      }
+
+      return sstr.str();
+    };
+
+    auto vertexIt =
+        std::ranges::find_if(simVerticesUnordered, [&](const auto& v) {
+          return (v.position4.template head<3>() - vtxPos4.template head<3>())
+                         .norm() < Acts::UnitConstants::mm * 1e-3 &&
+                 v.id == vtxId;
+        });
+
+    SimVertex* vertex = nullptr;
+    // We don't have a vertex for this position + id yet
+    if (vertexIt == simVerticesUnordered.end()) {
+      ACTS_VERBOSE("Adding new vertex: position="
+                   << vtxPos4.template head<3>().transpose() << " id=" << vtxId
+                   << " (closest existing=" << getMinDistance() << ")");
+      vertex = &simVerticesUnordered.emplace_back(vtxId, vtxPos4);
+    } else {
+      vertex = &*vertexIt;
+      ACTS_VERBOSE("Reusing existing vertex: position="
+                   << vtxPos4.template head<3>().transpose()
+                   << " id=" << vertex->id);
+    }
+
+    assert(vertex != nullptr);
+
+    return *vertex;
+  };
+
   {
     Acts::ScopedTimer timer("Finding source vertices for particles", logger(),
                             Acts::Logging::DEBUG);
@@ -831,7 +732,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
 void EDM4hepSimInputConverter::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
-    std::vector<SimParticle>& particles, ParentRelationship& parentRelationship,
+    std::vector<SimBarcode>& particles, ParentRelationship& parentRelationship,
     std::unordered_map<int, detail::ParticleInfo>& particleMap,
     std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
   constexpr auto indent = [&](std::size_t n) {
@@ -915,30 +816,34 @@ void EDM4hepSimInputConverter::processChildren(
                  << daughter.getEndpoint().y << ", "
                  << daughter.getEndpoint().z);
 
-    particles.push_back(std::move(particle));
-    particleMap[daughter.getObjectID().index] = detail::ParticleInfo{
-        .particleIndex = particles.size() - 1, .numHits = 0};
+    particles.push_back(particle.particleId());
+    particleMap[daughter.getObjectID().index] =
+        detail::ParticleInfo{.particleIndex = particles.size() - 1};
     parentRelationship[particles.size() - 1] = parentIndex;
+
+    // if (!acceptParticle(daughter) && numHits(daughter) == 0) {
+    //   // Do not descend into tree for rejected particles without hits
+    //   continue;
+    // }
+
     processChildren(daughter, pid, particles, parentRelationship, particleMap,
                     nSecondaryVertices, maxGen);
   }
 }
 
 void EDM4hepSimInputConverter::setSubParticleIds(
-    std::span<SimParticle> particles) {
+    std::span<SimBarcode> particles) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 
   for (auto& particle : particles) {
-    const auto pid = particle.particleId();
-    if (pid.generation() >= numByGeneration.size()) {
-      numByGeneration.resize(pid.generation() + 1, 0);
+    if (particle.generation() >= numByGeneration.size()) {
+      numByGeneration.resize(particle.generation() + 1, 0);
     }
-    unsigned long nextSubParticle = numByGeneration[pid.generation()];
-    numByGeneration[pid.generation()] += 1;
+    unsigned long nextSubParticle = numByGeneration[particle.generation()];
+    numByGeneration[particle.generation()] += 1;
 
-    auto newPid = particle.particleId().setSubParticle(nextSubParticle);
-    particle.setParticleId(newPid);
+    particle.setSubParticle(nextSubParticle);
   }
 }
 

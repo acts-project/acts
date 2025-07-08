@@ -209,13 +209,12 @@ if args.edm4hep:
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         outputSimVertices="vertices_truth",
-        graphvizOutput="graphviz",
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
         sortSimHitsInTime=False,
         particleRMax=1080 * u.mm,
+        particleZ=(-3030 * u.mm, 3030 * u.mm),
         particlePtMin=150 * u.MeV,
-        simHitRMax=1080 * u.mm,
         level=acts.logging.DEBUG,
     )
     s.addAlgorithm(edm4hepReader)
