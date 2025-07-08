@@ -19,13 +19,12 @@
 
 namespace Acts {
 
-/// @class BinFinder
 /// @tparam DIM Dimension of the Grid on which the GridBinFinder will be used
 ///
-/// The BinFinder is used by the ISPGroupSelector. It can be
-/// used to find both bins that could be bottom bins as well as bins that could
-/// be top bins, which are assumed to be the same bins. Does not take
-/// interaction region into account to limit z-bins.
+/// The GridBinFinder is used by the ISPGroupSelector. It can be used to find
+/// both bins that could be bottom bins as well as bins that could be top bins,
+/// which are assumed to be the same bins. Does not take interaction region into
+/// account to limit z-bins.
 template <std::size_t DIM>
 class GridBinFinder {
  public:
