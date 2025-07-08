@@ -19,8 +19,6 @@ namespace Acts::Experimental {
 
 class DoubletSeedFinder {
  public:
-  struct DerivedConfig;
-
   struct Config {
     /// Direction of the doublet candidate space points. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.
@@ -64,11 +62,12 @@ class DoubletSeedFinder {
 
     /// Delegate to apply experiment specific cuts during doublet finding
     Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts;
-
-    DerivedConfig derive(float bFieldInZ) const;
   };
 
   struct DerivedConfig : public Config {
+    DerivedConfig(const Config& cfg, float bFieldInZ);
+
+    float bFieldInZ = 0.0f;
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 

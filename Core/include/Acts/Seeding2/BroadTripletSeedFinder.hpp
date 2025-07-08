@@ -46,8 +46,6 @@ class BroadTripletSeedFinder {
     bool useStripMeasurementInfo = false;
   };
 
-  struct DerivedTripletCuts;
-
   struct TripletCuts {
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
@@ -75,11 +73,12 @@ class BroadTripletSeedFinder {
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
-
-    DerivedTripletCuts derive(float bFieldInZ) const;
   };
 
   struct DerivedTripletCuts : public TripletCuts {
+    DerivedTripletCuts(const TripletCuts& cuts, float bFieldInZ);
+
+    float bFieldInZ = 0;
     float highland = 0;
     float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
