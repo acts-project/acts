@@ -11,8 +11,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
-#include <iostream>
-#include <ratio>
 
 namespace Acts {
 
