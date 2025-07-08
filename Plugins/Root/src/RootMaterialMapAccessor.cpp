@@ -193,37 +193,37 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  auto t = new TH2F(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
-                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  auto x0 = new TH2F(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
-                     bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  auto l0 = new TH2F(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0,
-                     -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  auto A = new TH2F(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
-                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  auto Z = new TH2F(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
-                    bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  auto rho = new TH2F(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0,
-                      -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  TH2F t(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
+         bins1, -0.5, bins1 - 0.5);
+  TH2F x0(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
+          bins1, -0.5, bins1 - 0.5);
+  TH2F l0(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
+          bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  TH2F A(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
+         bins1, -0.5, bins1 - 0.5);
+  TH2F Z(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
+         bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  TH2F rho(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
+           bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
 
   // loop over the material and fill
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
-      t->SetBinContent(b0 + 1, b1 + 1, mat.thickness());
-      x0->SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
-      l0->SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
-      A->SetBinContent(b0 + 1, b1 + 1, mat.material().Ar());
-      Z->SetBinContent(b0 + 1, b1 + 1, mat.material().Z());
-      rho->SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
+      t.SetBinContent(b0 + 1, b1 + 1, mat.thickness());
+      x0.SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
+      l0.SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
+      A.SetBinContent(b0 + 1, b1 + 1, mat.material().Ar());
+      Z.SetBinContent(b0 + 1, b1 + 1, mat.material().Z());
+      rho.SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
     }
   }
-  t->Write();
-  x0->Write();
-  l0->Write();
-  A->Write();
-  Z->Write();
-  rho->Write();
+  t.Write();
+  x0.Write();
+  l0.Write();
+  A.Write();
+  Z.Write();
+  rho.Write();
 }
 
 void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
@@ -231,18 +231,18 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  auto idx = new TH2I(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5,
-                      bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5, bins0 - 0.5,
+           bins1, -0.5, bins1 - 0.5);
   // loop over the material and fill
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
-      idx->SetBinContent(b0 + 1, b1 + 1, payload.index++);
+      idx.SetBinContent(b0 + 1, b1 + 1, payload.index++);
       fillMaterialSlab(payload, mat);
       m_gTree->Fill();
     }
   }
-  idx->Write();
+  idx.Write();
 }
 
 Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
