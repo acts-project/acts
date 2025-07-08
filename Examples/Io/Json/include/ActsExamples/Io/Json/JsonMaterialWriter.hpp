@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/DetectorMaterialMaps.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -27,18 +28,7 @@
 #include <utility>
 
 namespace Acts {
-
 class TrackingGeometry;
-class ISurfaceMaterial;
-class IVolumeMaterial;
-
-using SurfaceMaterialMap =
-    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-
-using VolumeMaterialMap =
-    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-
-using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {

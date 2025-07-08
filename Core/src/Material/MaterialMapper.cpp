@@ -79,7 +79,7 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
   return {mappedMaterial, unmappedMaterial};
 }
 
-Acts::MaterialMapper::DetectorMaterialMaps Acts::MaterialMapper::finalizeMaps(
+Acts::DetectorMaterialMaps Acts::MaterialMapper::finalizeMaps(
     const State& state) const {
   // The final maps
   DetectorMaterialMaps detectorMaterialMaps;

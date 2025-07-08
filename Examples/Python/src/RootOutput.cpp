@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Plugins/Root/RootMaterialMapAccessor.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -156,13 +157,14 @@ void addRootOutput(Context& ctx) {
                  .def("write", py::overload_cast<const Acts::TrackingGeometry&>(
                                    &Writer::write));
 
+    auto ac = py::class_<RootMaterialMapAccessor::Config>(w, "AccessorConfig")
+                     .def(py::init<>());
+
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches,
-                       processRepresenting, processBoundaries, processVolumes,
-                       folderSurfaceNameBase, folderVolumeNameBase, voltag,
-                       boutag, laytag, apptag, sentag, ntag, vtag, otag, mintag,
-                       maxtag, ttag, x0tag, l0tag, atag, ztag, rhotag, filePath,
+                       processRepresenting, processBoundaries, accessorConfig,
+                       filePath,
                        fileMode);
   }
 

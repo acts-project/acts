@@ -29,10 +29,10 @@ namespace Acts {
 /// from a json file
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
-  using SurfaceMaterialMap =
+  using SurfaceMaterialMaps =
       std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
-  using VolumeMaterialMap =
+  using VolumeMaterialMaps =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
@@ -53,8 +53,8 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
  private:
   MaterialMapJsonConverter::Config m_readerConfig;
-  SurfaceMaterialMap m_surfaceMaterialMap;
-  VolumeMaterialMap m_volumeMaterialMap;
+  SurfaceMaterialMaps m_surfaceMaterialMap;
+  VolumeMaterialMaps m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};

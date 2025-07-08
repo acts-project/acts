@@ -145,8 +145,8 @@ void Acts::RootMaterialMapAccessor::write(
 }
 
 void Acts::RootMaterialMapAccessor::write(
-    TFile& rFile, const DetectorMaterial& detectorMaterial) {
-  auto [surfaceMaterials, volumeMaterials] = detectorMaterial;
+    TFile& rFile, const DetectorMaterialMaps& DetectorMaterialMaps) {
+  auto [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial);
   }
@@ -237,7 +237,7 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
-      idx->SetBinContent(b0 + b1 * bins0 + 1, payload.index++);
+      idx->SetBinContent(b0 + 1, b1 + 1, payload.index++);
       fillMaterialSlab(payload, mat);
       m_gTree->Fill();
     }
@@ -245,10 +245,10 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   idx->Write();
 }
 
-Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
-  Acts::DetectorMaterial detectorMaterial;
+Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
+  Acts::DetectorMaterialMaps DetectorMaterialMaps;
 
-  auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
 
   TTree* homogeneousMaterialTree =
       dynamic_cast<TTree*>(rFile.Get(m_cfg.homogeneousMaterialTree.c_str()));
@@ -259,7 +259,7 @@ Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
     for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
       homogeneousMaterialTree->GetEntry(i);
       Acts::GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
-      Acts::MaterialSlab materialSlab(Acts::Material::fromMolarDensity(
+      Acts::MaterialSlab materialSlab(Acts::Material::fromMassDensity(
                                           m_homogenousMaterialTreePayload.hX0,
                                           m_homogenousMaterialTreePayload.hL0,
                                           m_homogenousMaterialTreePayload.hA,
@@ -272,9 +272,12 @@ Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
     }
   }
 
-  // Read the binned surface material
+  // Read the binned surface material, if there - connect it to the payload
   TTree* indexedMaterialTree =
       dynamic_cast<TTree*>(rFile.Get(m_cfg.indexMaterialTreeName.c_str()));
+  if (indexedMaterialTree != nullptr) {
+    connectForRead(*indexedMaterialTree, m_indexedMaterialTreePayload);
+  }
 
   // Get the list of keys from the file
   TList* tlist = rFile.GetListOfKeys();
@@ -332,7 +335,7 @@ Acts::DetectorMaterial Acts::RootMaterialMapAccessor::read(TFile& rFile) {
       surfaceMaterials.emplace(geoID, texturedSurfaceMaterial);
     }
   }
-  return detectorMaterial;
+  return DetectorMaterialMaps;
 }
 
 std::shared_ptr<const Acts::ISurfaceMaterial>

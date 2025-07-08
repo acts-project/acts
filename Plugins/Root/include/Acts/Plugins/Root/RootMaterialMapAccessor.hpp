@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Material/DetectorMaterialMaps.hpp"
 
 #include <map>
 #include <memory>
@@ -27,12 +28,6 @@ class IVolumeMaterial;
 class HomogeneousSurfaceMaterial;
 class MaterialSlab;
 class BinnedSurfaceMaterial;
-
-using SurfaceMaterialMaps =
-    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-using VolumeMaterialMaps =
-    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-using DetectorMaterial = std::tuple<SurfaceMaterialMaps, VolumeMaterialMaps>;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
@@ -116,7 +111,7 @@ class RootMaterialMapAccessor {
   /// Write the detector maps
   /// @param rFile the file to write to
   /// @param detectorMaterial the detector material maps
-  void write(TFile& rFile, const DetectorMaterial& detectorMaterial);
+  void write(TFile& rFile, const DetectorMaterialMaps& detectorMaterial);
 
   /// Write the material to file
   /// @param rFile the file to write to
@@ -127,7 +122,7 @@ class RootMaterialMapAccessor {
 
   /// Read the detector maps
   /// @param rFile the file to read from
-  DetectorMaterial read(TFile& rFile);
+  DetectorMaterialMaps read(TFile& rFile);
 
  private:
   /// @brief Connect the homogeneous material tree for writing
@@ -156,7 +151,7 @@ class RootMaterialMapAccessor {
   void fillBinnedSurfaceMaterial(MaterialTreePayload& payload,
                                  const BinnedSurfaceMaterial& bsMaterial);
 
-  /// Read the a texture Surface material 
+  /// Read the a texture Surface material
   /// @param rFile the file to read from
   /// @param tdName the name of the texture directory
   /// @param indexedMaterialTree the indexed material tree, if available

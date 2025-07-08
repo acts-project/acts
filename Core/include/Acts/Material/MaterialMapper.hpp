@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/DetectorMaterialMaps.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
@@ -24,14 +25,6 @@ namespace Acts {
 /// @brief material mapping procedure
 class MaterialMapper {
  public:
-  /// @brief The material maps
-  using SurfaceMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-  using VolumeMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-  using DetectorMaterialMaps =
-      std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
-
   /// @brief nested configuration struct
   struct Config {
     // The assignment finder
