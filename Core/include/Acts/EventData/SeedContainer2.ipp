@@ -17,7 +17,7 @@
 namespace Acts::Experimental {
 
 inline MutableSeedProxy2 SeedContainer2::createSeed(
-    std::span<const SpacePointIndex2> spacePoints) {
+    std::span<const SpacePointIndex2> spacePoints) noexcept {
   m_sizes.push_back(static_cast<std::uint8_t>(spacePoints.size()));
   m_spacePointOffsets.push_back(m_spacePoints.size());
   m_qualities.push_back(-std::numeric_limits<float>::infinity());

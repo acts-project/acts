@@ -65,11 +65,6 @@ class DoubletSeedFinder {
     /// Delegate to apply experiment specific cuts during doublet finding
     Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts;
 
-    /// Default z variance if not specified for the space point
-    float defaultVarianceZ = 0;
-    /// Default r variance if not specified for the space point
-    float defaultVarianceR = 0;
-
     DerivedConfig derive(float bFieldInZ) const;
   };
 

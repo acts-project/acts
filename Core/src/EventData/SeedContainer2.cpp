@@ -10,7 +10,8 @@
 
 namespace Acts::Experimental {
 
-void SeedContainer2::reserve(std::size_t size, float averageSpacePoints) {
+void SeedContainer2::reserve(std::size_t size,
+                             float averageSpacePoints) noexcept {
   m_sizes.reserve(size);
   m_spacePointOffsets.reserve(size);
   m_qualities.reserve(size);
@@ -18,7 +19,7 @@ void SeedContainer2::reserve(std::size_t size, float averageSpacePoints) {
   m_spacePoints.reserve(static_cast<std::size_t>(size * averageSpacePoints));
 }
 
-void SeedContainer2::clear() {
+void SeedContainer2::clear() noexcept {
   m_sizes.clear();
   m_spacePointOffsets.clear();
   m_qualities.clear();
