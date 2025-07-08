@@ -299,8 +299,8 @@ void createDoubletsImpl(
 }  // namespace
 
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& cfg,
-                                                float bFieldInZ)
-    : Config(cfg), bFieldInZ(bFieldInZ) {
+                                                float bFieldInZ_)
+    : Config(cfg), bFieldInZ(bFieldInZ_) {
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;

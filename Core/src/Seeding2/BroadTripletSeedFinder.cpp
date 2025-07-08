@@ -70,8 +70,8 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
 }  // namespace
 
 BroadTripletSeedFinder::DerivedTripletCuts::DerivedTripletCuts(
-    const TripletCuts& cuts, float bFieldInZ)
-    : TripletCuts(cuts), bFieldInZ(bFieldInZ) {
+    const TripletCuts& cuts, float bFieldInZ_)
+    : TripletCuts(cuts), bFieldInZ(bFieldInZ_) {
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
     const double xOverX0 = radLengthPerSeed;
