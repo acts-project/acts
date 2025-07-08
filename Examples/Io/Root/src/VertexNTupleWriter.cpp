@@ -538,34 +538,38 @@ ProcessCode VertexNTupleWriter::writeT(
     auto& recoToTruth = recoToTruthMatching.back();
 
     // We have to decide if this reco vertex is a split vertex.
-    if (truthMajorityVertexId.has_value()) {
-      if (auto it = truthToRecoMatching.find(truthMajorityVertexId.value());
-          it != truthToRecoMatching.end()) {
-        // This truth vertex is already matched to a reconstructed vertex so we
-        // are dealing with a split vertex.
+    if (!truthMajorityVertexId.has_value()) {
+      // No truth vertex matched to this reconstructed vertex
+      ACTS_DEBUG("No truth vertex matched to this reconstructed vertex.");
+      continue;
+    }
 
-        // We have to decide which of the two reconstructed vertices is the
-        // split vertex.
-        if (sumPt2 <= it->second.recoSumPt2) {
-          // Since the sumPt2 is smaller we can simply call this a split vertex
+    if (auto it = truthToRecoMatching.find(truthMajorityVertexId.value());
+        it != truthToRecoMatching.end()) {
+      // This truth vertex is already matched to a reconstructed vertex so we
+      // are dealing with a split vertex.
 
-          recoToTruth.classification = RecoVertexClassification::Split;
+      // We have to decide which of the two reconstructed vertices is the
+      // split vertex.
+      if (sumPt2 <= it->second.recoSumPt2) {
+        // Since the sumPt2 is smaller we can simply call this a split vertex
 
-          // Keep the existing truth to reco matching
-        } else {
-          // The sumPt2 is larger, so we call the other vertex a split vertex.
+        recoToTruth.classification = RecoVertexClassification::Split;
 
-          auto& otherRecoToTruth = recoToTruthMatching.at(it->second.recoIndex);
-          // Swap the classification
-          recoToTruth.classification = otherRecoToTruth.classification;
-          otherRecoToTruth.classification = RecoVertexClassification::Split;
-
-          // Overwrite the truth to reco matching
-          it->second = {vtxIndex, sumPt2};
-        }
+        // Keep the existing truth to reco matching
       } else {
-        truthToRecoMatching[truthMajorityVertexId.value()] = {vtxIndex, sumPt2};
+        // The sumPt2 is larger, so we call the other vertex a split vertex.
+
+        auto& otherRecoToTruth = recoToTruthMatching.at(it->second.recoIndex);
+        // Swap the classification
+        recoToTruth.classification = otherRecoToTruth.classification;
+        otherRecoToTruth.classification = RecoVertexClassification::Split;
+
+        // Overwrite the truth to reco matching
+        it->second = {vtxIndex, sumPt2};
       }
+    } else {
+      truthToRecoMatching[truthMajorityVertexId.value()] = {vtxIndex, sumPt2};
     }
   }
 
