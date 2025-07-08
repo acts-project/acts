@@ -67,7 +67,7 @@ class DoubletSeedFinder {
   struct DerivedConfig : public Config {
     DerivedConfig(const Config& cfg, float bFieldInZ);
 
-    float bFieldInZ = 0.0f;
+    float bFieldInZ = 0;
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 
