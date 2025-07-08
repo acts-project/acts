@@ -21,34 +21,40 @@ class RootSpacePointAccessor {
   /// @brief sets the branch connection for writing to a file
   ///
   /// @param ttree the TTree to write to
+  /// @param spacePoints the space points to write
   void connectForWrite(TTree& ttree,
                        const Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
+  /// @param spacePoints the space points to read into
   void connectForRead(TChain& tchain,
                       const Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief Write a space point to the tree
+  /// @note the caller has to do the TTree::Fill() after this call
   ///
   /// @param spacePoint the space point to write
-  ///
-  /// @note the caller has to do the TTree::Fill() after this call
   void write(const Experimental::ConstSpacePointProxy2& spacePoint);
 
   /// @brief Write the space points to the tree
   ///
   /// @param spacePoints the space points to write
+  /// @param ttree the TTree to write to
   void write(const Experimental::SpacePointContainer2& spacePoints,
              TTree& ttree);
 
   /// @brief Read a space point from the tree
-  ///
   /// @note the caller has to do the TChain::GetEntry() before this call
+  ///
+  /// @param spacePoint the space point to read into
   void read(Experimental::MutableSpacePointProxy2& spacePoint);
 
   /// @brief Read the space points from the tree
+  ///
+  /// @param tchain the TChain to read from
+  /// @param spacePoints the space points to read into
   void read(TChain& tchain, Experimental::SpacePointContainer2& spacePoints);
 
  private:
