@@ -148,60 +148,109 @@ void SpacePointContainer2::createExtraColumns(
   if ((columns & R) != None && !m_rColumn.has_value()) {
     m_rColumn = SpacePointExtraColumnHolder<float>();
     m_rColumn->resize(size());
-    m_extraColumns.push_back(&*m_rColumn);
   }
   if ((columns & Phi) != None && !m_phiColumn.has_value()) {
     m_phiColumn = SpacePointExtraColumnHolder<float>();
     m_phiColumn->resize(size());
-    m_extraColumns.push_back(&*m_phiColumn);
   }
   if ((columns & Time) != None && !m_timeColumn.has_value()) {
     m_timeColumn = SpacePointExtraColumnHolder<float>(NoTime);
     m_timeColumn->resize(size());
-    m_extraColumns.push_back(&*m_timeColumn);
   }
   if ((columns & VarianceZ) != None && !m_varianceZColumn.has_value()) {
     m_varianceZColumn = SpacePointExtraColumnHolder<float>();
     m_varianceZColumn->resize(size());
-    m_extraColumns.push_back(&*m_varianceZColumn);
   }
   if ((columns & VarianceR) != None && !m_varianceRColumn.has_value()) {
     m_varianceRColumn = SpacePointExtraColumnHolder<float>();
     m_varianceRColumn->resize(size());
-    m_extraColumns.push_back(&*m_varianceRColumn);
   }
   if ((columns & TopStripVector) != None &&
       !m_topStripVectorColumn.has_value()) {
     m_topStripVectorColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
     m_topStripVectorColumn->resize(size());
-    m_extraColumns.push_back(&*m_topStripVectorColumn);
   }
   if ((columns & BottomStripVector) != None &&
       !m_bottomStripVectorColumn.has_value()) {
     m_bottomStripVectorColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
     m_bottomStripVectorColumn->resize(size());
-    m_extraColumns.push_back(&*m_bottomStripVectorColumn);
   }
   if ((columns & StripCenterDistance) != None &&
       !m_stripCenterDistanceColumn.has_value()) {
     m_stripCenterDistanceColumn =
         SpacePointExtraColumnHolder<Eigen::Vector3f>();
     m_stripCenterDistanceColumn->resize(size());
-    m_extraColumns.push_back(&*m_stripCenterDistanceColumn);
   }
   if ((columns & TopStripCenter) != None &&
       !m_topStripCenterColumn.has_value()) {
     m_topStripCenterColumn = SpacePointExtraColumnHolder<Eigen::Vector3f>();
     m_topStripCenterColumn->resize(size());
-    m_extraColumns.push_back(&*m_topStripCenterColumn);
   }
   if ((columns & CopyFromIndex) != None && !m_copyFromIndexColumn.has_value()) {
     m_copyFromIndexColumn = SpacePointExtraColumnHolder<std::size_t>();
     m_copyFromIndexColumn->resize(size());
-    m_extraColumns.push_back(&*m_copyFromIndexColumn);
   }
 
   m_knownExtraColumns = m_knownExtraColumns | columns;
+
+  initializeExtraColumns();
+}
+
+void SpacePointContainer2::dropExtraColumns(
+    SpacePointKnownExtraColumn columns) noexcept {
+  using enum SpacePointKnownExtraColumn;
+
+  if ((columns & R) != None) {
+    m_rColumn.reset();
+  }
+  if ((columns & Phi) != None) {
+    m_phiColumn.reset();
+  }
+  if ((columns & Time) != None) {
+    m_timeColumn.reset();
+  }
+  if ((columns & VarianceZ) != None) {
+    m_varianceZColumn.reset();
+  }
+  if ((columns & VarianceR) != None) {
+    m_varianceRColumn.reset();
+  }
+  if ((columns & TopStripVector) != None) {
+    m_topStripVectorColumn.reset();
+  }
+  if ((columns & BottomStripVector) != None) {
+    m_bottomStripVectorColumn.reset();
+  }
+  if ((columns & StripCenterDistance) != None) {
+    m_stripCenterDistanceColumn.reset();
+  }
+  if ((columns & TopStripCenter) != None) {
+    m_topStripCenterColumn.reset();
+  }
+  if ((columns & CopyFromIndex) != None) {
+    m_copyFromIndexColumn.reset();
+  }
+
+  m_knownExtraColumns = m_knownExtraColumns & ~columns;
+
+  initializeExtraColumns();
+}
+
+void SpacePointContainer2::dropExtraColumn(const std::string &name) {
+  auto it = m_namedExtraColumns.find(name);
+
+  if (it == m_namedExtraColumns.end()) {
+    throw std::runtime_error("Extra column '" + name + "' does not exist");
+  }
+
+  m_namedExtraColumns.erase(it);
+
+  initializeExtraColumns();
+}
+
+bool SpacePointContainer2::hasExtraColumn(
+    const std::string &name) const noexcept {
+  return m_namedExtraColumns.contains(name);
 }
 
 }  // namespace Acts::Experimental
