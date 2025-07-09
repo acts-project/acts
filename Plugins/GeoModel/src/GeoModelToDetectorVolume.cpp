@@ -30,9 +30,27 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
+#include <GeoModelKernel/GeoVFullPhysVol.h>
 
 namespace Acts::GeoModel {
 
+/// @brief GeoNodePositioning is the class which handles
+///        the absolute placement of a GeoVPhysVol. Its constructor
+///        is protected though -> create helper class to make it public
+class GeoVolumePositioner : public GeoNodePositioning {
+ public:
+  explicit GeoVolumePositioner(const GeoVPhysVol* physVol)
+      : GeoNodePositioning{physVol} {}
+};
+
+Acts::Transform3 volumePosInSpace(const PVConstLink& physVol) {
+  if (auto fullPhys = dynamic_pointer_cast<const GeoVFullPhysVol>(physVol);
+      fullPhys != nullptr) {
+    return fullPhys->getAbsoluteTransform();
+  }
+  GeoVolumePositioner positioner{physVol};
+  return positioner.getAbsoluteTransform();
+}
 std::shared_ptr<Volume> convertVolume(const Transform3& trf,
                                       const GeoShape* shape,
                                       VolumeBoundFactory& boundFactory) {
