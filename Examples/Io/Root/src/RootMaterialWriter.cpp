@@ -123,8 +123,8 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       }
 
       // 2-D or 3-D maps
-      int bins = static_cast<int>(binningData.size());
-      float fBins = static_cast<float>(bins);
+      auto bins = static_cast<int>(binningData.size());
+      auto fBins = static_cast<float>(bins);
 
       // The bin number information
       TH1F n(m_cfg.accessorConfig.ntag.c_str(), "bins; bin", bins, -0.5,
@@ -149,11 +149,14 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       // Now fill the histogram content
       for (const auto& [b, bData] : enumerate(binningData)) {
         // Fill: nbins, value, option, min, max
-        n.SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-        v.SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-        o.SetBinContent(b, static_cast<int>(binningData[b - 1].option));
-        rmin.SetBinContent(b, binningData[b - 1].min);
-        rmax.SetBinContent(b, binningData[b - 1].max);
+        n.SetBinContent(static_cast<int>(b),
+                        static_cast<int>(binningData[b - 1].bins()));
+        v.SetBinContent(static_cast<int>(b),
+                        static_cast<int>(binningData[b - 1].binvalue));
+        o.SetBinContent(static_cast<int>(b),
+                        static_cast<int>(binningData[b - 1].option));
+        rmin.SetBinContent(static_cast<int>(b), binningData[b - 1].min);
+        rmax.SetBinContent(static_cast<int>(b), binningData[b - 1].max);
       }
       n.Write();
       v.Write();
@@ -162,7 +165,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       rmax.Write();
     }
 
-    float fPoints = static_cast<float>(points);
+    auto fPoints = static_cast<float>(points);
     TH1F x0(m_cfg.accessorConfig.x0tag.c_str(), "X_{0} [mm] ;gridPoint", points,
             -0.5, fPoints - 0.5);
     TH1F l0(m_cfg.accessorConfig.l0tag.c_str(), "#Lambda_{0} [mm] ;gridPoint",

@@ -232,15 +232,16 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5,
-           static_cast<float>(bins0) - 0.5, bins1, -0.5,
+  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", static_cast<int>(bins0),
+           -0.5, static_cast<float>(bins0) - 0.5, static_cast<int>(bins1), -0.5,
            static_cast<float>(bins1) - 0.5);
   // loop over the material and fill
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
       idx.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
-                        payload.index++);
+                        payload.index);
+      payload.index++;
       fillMaterialSlab(payload, mat);
       m_gTree->Fill();
     }
@@ -253,7 +254,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
 
   auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
 
-  TTree* homogeneousMaterialTree =
+  auto homogeneousMaterialTree =
       dynamic_cast<TTree*>(rFile.Get(m_cfg.homogeneousMaterialTree.c_str()));
 
   // Read homogeneous material tree
@@ -261,16 +262,16 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
     connectForRead(*homogeneousMaterialTree, m_homogenousMaterialTreePayload);
     for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
       homogeneousMaterialTree->GetEntry(i);
-      Acts::GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
-      Acts::MaterialSlab materialSlab(
-          Acts::Material::fromMassDensity(m_homogenousMaterialTreePayload.hX0,
-                                          m_homogenousMaterialTreePayload.hL0,
-                                          m_homogenousMaterialTreePayload.hA,
-                                          m_homogenousMaterialTreePayload.hZ,
-                                          m_homogenousMaterialTreePayload.hRho),
+      GeometryIdentifier geoID(m_homogenousMaterialTreePayload.hGeoId);
+      MaterialSlab materialSlab(
+          Material::fromMassDensity(m_homogenousMaterialTreePayload.hX0,
+                                    m_homogenousMaterialTreePayload.hL0,
+                                    m_homogenousMaterialTreePayload.hA,
+                                    m_homogenousMaterialTreePayload.hZ,
+                                    m_homogenousMaterialTreePayload.hRho),
           m_homogenousMaterialTreePayload.ht);
       auto homogeneousMaterial =
-          std::make_shared<Acts::HomogeneousSurfaceMaterial>(materialSlab);
+          std::make_shared<HomogeneousSurfaceMaterial>(materialSlab);
       surfaceMaterials.emplace(geoID, homogeneousMaterial);
     }
   }
@@ -304,29 +305,29 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
       std::shared_ptr<const Acts::ISurfaceMaterial> sMaterial = nullptr;
 
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-      Acts::GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
+      GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
       // boundary
       iter_split(splitNames, tdName,
                  boost::algorithm::first_finder(m_cfg.boutag));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-      Acts::GeometryIdentifier::Value bouID = std::stoi(splitNames[0]);
+      GeometryIdentifier::Value bouID = std::stoi(splitNames[0]);
       // layer
       iter_split(splitNames, tdName,
                  boost::algorithm::first_finder(m_cfg.laytag));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-      Acts::GeometryIdentifier::Value layID = std::stoi(splitNames[0]);
+      GeometryIdentifier::Value layID = std::stoi(splitNames[0]);
       // approach
       iter_split(splitNames, tdName,
                  boost::algorithm::first_finder(m_cfg.apptag));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-      Acts::GeometryIdentifier::Value appID = std::stoi(splitNames[0]);
+      GeometryIdentifier::Value appID = std::stoi(splitNames[0]);
       // sensitive
       iter_split(splitNames, tdName,
                  boost::algorithm::first_finder(m_cfg.sentag));
-      Acts::GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
+      GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
 
       // Reconstruct the geometry ID
-      auto geoID = Acts::GeometryIdentifier()
+      auto geoID = GeometryIdentifier()
                        .withVolume(volID)
                        .withBoundary(bouID)
                        .withLayer(layID)
@@ -383,12 +384,12 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     std::string rhoName = tdName + "/" + m_cfg.rhotag;
 
     // Get the histograms
-    TH2F* t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
-    TH2F* x0 = dynamic_cast<TH2F*>(rFile.Get(x0Name.c_str()));
-    TH2F* l0 = dynamic_cast<TH2F*>(rFile.Get(l0Name.c_str()));
-    TH2F* A = dynamic_cast<TH2F*>(rFile.Get(aName.c_str()));
-    TH2F* Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
-    TH2F* rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
+    auto t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
+    auto x0 = dynamic_cast<TH2F*>(rFile.Get(x0Name.c_str()));
+    auto l0 = dynamic_cast<TH2F*>(rFile.Get(l0Name.c_str()));
+    auto A = dynamic_cast<TH2F*>(rFile.Get(aName.c_str()));
+    auto Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
+    auto rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
 
     std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
 
@@ -415,8 +416,8 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
             double drho = rho->GetBinContent(ib0, ib1);
             // Create material properties
             const auto material =
-                Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
-            materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
+                Material::fromMassDensity(dx0, dl0, da, dz, drho);
+            materialMatrix[ib1 - 1][ib0 - 1] = MaterialSlab(material, dt);
           }
         }
       }  // Construct the binned material with the right bin utility
@@ -451,8 +452,8 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
           double drho = m_indexedMaterialTreePayload.hRho;
           // Create material properties
           const auto material =
-              Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
-          materialMatrix[ib1 - 1][ib0 - 1] = Acts::MaterialSlab(material, dt);
+              Material::fromMassDensity(dx0, dl0, da, dz, drho);
+          materialMatrix[ib1 - 1][ib0 - 1] = MaterialSlab(material, dt);
         }
       }  // Construct the binned material with the right bin utility
       texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
