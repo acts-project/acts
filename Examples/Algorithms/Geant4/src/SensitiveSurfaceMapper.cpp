@@ -9,11 +9,13 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsExamples/Geant4/AlgebraConverters.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -90,43 +92,46 @@ void writeG4Polyhedron(
     visualizer.face(faces, color);
   }
 }
-
 }  // namespace
 
 namespace ActsExamples::Geant4 {
 
+SensitiveCandidates::SensitiveCandidates(
+    const std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::unique_ptr<const Acts::Logger> _logger)
+    : m_trackingGeo{trackingGeometry} {
+  Acts::Navigator::Config navCfg{};
+  navCfg.trackingGeometry = m_trackingGeo;
+  navCfg.resolveSensitive = true;
+  /// We're just interested in the active surfaces
+  navCfg.resolveMaterial = false;
+
+  m_navigator = std::make_shared<Acts::Navigator>(navCfg, std::move(_logger));
+}
 std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
     const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
   std::vector<const Acts::Surface*> surfaces;
+  Acts::Navigator::Options navOpts{gctx};
+  Acts::Navigator::State navState{Acts::Navigator::Options{gctx}};
 
-  if (trackingGeometry == nullptr) {
+  auto stateInit = m_navigator->initialize(
+      navState, position, position.normalized(), Acts::Direction::Forward());
+  if (!stateInit.ok()) {
     return surfaces;
   }
-
-  // In case we do not find a layer at this position for whatever reason
-  const auto layer = trackingGeometry->associatedLayer(gctx, position);
-  if (layer == nullptr) {
-    return surfaces;
-  }
-
-  const auto surfaceArray = layer->surfaceArray();
-  if (surfaceArray == nullptr) {
-    return surfaces;
-  }
-
-  for (const auto& surface : surfaceArray->surfaces()) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      surfaces.push_back(surface);
-    }
+  if (navState.startVolume) {
+    constexpr bool restrictToSensitives = true;
+    navState.startVolume->visitSurfaces(
+        [&](const Acts::Surface* surface) { surfaces.push_back(surface); },
+        restrictToSensitives);
   }
   return surfaces;
 }
-
 std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
   std::vector<const Acts::Surface*> surfaces;
 
-  const bool restrictToSensitives = true;
-  trackingGeometry->visitSurfaces(
+  constexpr bool restrictToSensitives = true;
+  m_trackingGeo->visitSurfaces(
       [&](auto surface) { surfaces.push_back(surface); }, restrictToSensitives);
 
   return surfaces;
@@ -141,17 +146,6 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform) const {
   // Make sure the unit conversion is correct
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-
-  auto g4ToActsVector = [](const G4ThreeVector& g4vec) {
-    return Acts::Vector3(g4vec[0] * convertLength, g4vec[1] * convertLength,
-                         g4vec[2] * convertLength);
-  };
-
-  auto actsToG4Vec = [](const Acts::Vector3& actsVec) {
-    return G4ThreeVector(actsVec[0] / convertLength, actsVec[1] / convertLength,
-                         actsVec[2] / convertLength);
-  };
 
   auto g4LogicalVolume = g4PhysicalVolume->GetLogicalVolume();
   auto g4SensitiveDetector = g4LogicalVolume->GetSensitiveDetector();
@@ -161,7 +155,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   {
     auto g4Translation = g4PhysicalVolume->GetTranslation();
     auto g4Rotation = g4PhysicalVolume->GetRotation();
-    Acts::Vector3 g4RelPosition = g4ToActsVector(g4Translation);
+    Acts::Vector3 g4RelPosition = convertPosition(g4Translation);
     Acts::Translation3 translation(g4RelPosition);
     if (g4Rotation == nullptr) {
       localG4ToGlobal = motherTransform * translation;
@@ -214,7 +208,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   std::vector<const Acts::Surface*> candidateSurfaces;
   const auto g4Polyhedron = g4LogicalVolume->GetSolid()->GetPolyhedron();
   for (int i = 1; i < g4Polyhedron->GetNoVertices(); ++i) {
-    auto vtx = g4ToActsVector(g4Polyhedron->GetVertex(i));
+    auto vtx = convertPosition(g4Polyhedron->GetVertex(i));
     auto vtxGlobal = localG4ToGlobal * vtx;
 
     candidateSurfaces = m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal);
@@ -235,8 +229,9 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   ACTS_VERBOSE("Found " << candidateSurfaces.size()
                         << " candidate surfaces for " << volumeName);
 
+  Acts::detail::TransformSorter trfSorter{};
   for (const auto& candidateSurface : candidateSurfaces) {
-    if (candidateSurface->center(gctx).isApprox(g4AbsPosition)) {
+    if (!trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition)) {
       ACTS_VERBOSE("Successful match with center matching");
       mappedSurface = candidateSurface;
       break;
@@ -267,7 +262,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
           localG4ToGlobal.inverse() * boundsCentroidGlobal;
 
       if (g4LogicalVolume->GetSolid()->Inside(
-              actsToG4Vec(boundsCentroidG4Frame)) != EInside::kOutside) {
+              convertPosition(boundsCentroidG4Frame)) != EInside::kOutside) {
         ACTS_VERBOSE("Successful match with centroid matching");
         mappedSurface = candidateSurface;
         break;
@@ -292,8 +287,14 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
     std::string mappedName = std::string(mappingPrefix) + volumeName;
     g4PhysicalVolume->SetName(mappedName);
   }
+  if (state.g4VolumeToSurfaces.find(g4PhysicalVolume) ==
+      state.g4VolumeToSurfaces.end()) {
+    state.g4VolumeToSurfaces.insert(
+        std::make_pair(g4PhysicalVolume, SurfacePosMap_t{trfSorter}));
+  }
   // Insert into the multi-map
-  state.g4VolumeToSurfaces.insert({g4PhysicalVolume, mappedSurface});
+  state.g4VolumeToSurfaces[g4PhysicalVolume].insert(
+      std::make_pair(g4AbsPosition, mappedSurface));
 }
 
 bool SensitiveSurfaceMapper::checkMapping(
@@ -303,8 +304,10 @@ bool SensitiveSurfaceMapper::checkMapping(
   std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
-  for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
-    found.push_back(surfacePtr);
+  for (const auto& [_, surfaceMap] : state.g4VolumeToSurfaces) {
+    for (const auto& [__, surfacePtr] : surfaceMap) {
+      found.push_back(surfacePtr);
+    }
   }
   std::ranges::sort(found);
   auto newEnd = std::unique(found.begin(), found.end());
