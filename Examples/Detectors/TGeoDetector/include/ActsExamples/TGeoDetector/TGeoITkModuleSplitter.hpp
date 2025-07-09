@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/Root/ITGeoDetectorElementSplitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>

@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
+    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -274,7 +274,7 @@ def addSeeding(
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
-    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
     initialSigmaQoverPt: Optional[float] = None,
@@ -395,6 +395,18 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             seeds = addStandardSeeding(
+                s,
+                spacePoints,
+                seedingAlgorithmConfigArg,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                spacePointGridConfigArg,
+                logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
+            logger.info("Using grid triplet seeding")
+            seeds = addGridTripletSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -817,6 +829,99 @@ def addStandardSeeding(
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
+    )
+    sequence.addAlgorithm(seedingAlg)
+
+    return seedingAlg.config.outputSeeds
+
+
+def addGridTripletSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    spacePointGridConfigArg: SpacePointGridConfigArg,
+    logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
+):
+    """adds triplet seeding
+    For parameters description see addSeeding
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    seedingAlg = acts.examples.GridTripletSeedingAlgorithm(
+        level=logLevel,
+        inputSpacePoints=spacePoints,
+        outputSeeds=outputSeeds,
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            minPt=seedFinderConfigArg.minPt,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            impactMax=seedFinderConfigArg.impactMax,
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            deltaRMinTop=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRTopSP[0] is None
+                else seedFinderConfigArg.deltaRTopSP[0]
+            ),
+            deltaRMaxTop=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRTopSP[1] is None
+                else seedFinderConfigArg.deltaRTopSP[1]
+            ),
+            deltaRMinBottom=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRBottomSP[0] is None
+                else seedFinderConfigArg.deltaRBottomSP[0]
+            ),
+            deltaRMaxBottom=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRBottomSP[1] is None
+                else seedFinderConfigArg.deltaRBottomSP[1]
+            ),
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            phiMin=spacePointGridConfigArg.phi[0],
+            phiMax=spacePointGridConfigArg.phi[1],
+            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
+            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            rMinMiddle=None,
+            rMaxMiddle=None,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaZMin=None,
+            deltaZMax=None,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            helixCutTolerance=None,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            maxPtScattering=seedFinderConfigArg.maxPtScattering,
+            toleranceParam=None,
+            deltaInvHelixDiameter=None,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+        ),
     )
     sequence.addAlgorithm(seedingAlg)
 

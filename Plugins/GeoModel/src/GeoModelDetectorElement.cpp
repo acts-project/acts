@@ -27,6 +27,11 @@ const Acts::Transform3& Acts::GeoModelDetectorElement::transform(
   return m_surfaceTransform;
 }
 
+const Acts::Transform3& Acts::GeoModelDetectorElement::nominalTransform()
+    const {
+  return m_surfaceTransform;
+}
+
 const Acts::Surface& Acts::GeoModelDetectorElement::surface() const {
   return *m_surface;
 }

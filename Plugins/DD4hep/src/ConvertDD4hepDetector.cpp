@@ -22,7 +22,6 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -63,7 +62,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
         sortSubDetectors,
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const IMaterialDecorator> matDecorator,
-    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook) {
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook,
+    const DD4hepLayerBuilder::ElementFactory& detectorElementFactory) {
   // create local logger for conversion
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
@@ -97,7 +97,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     // create volume builder
     auto volBuilder = volumeBuilder_dd4hep(
         subDetector, logger, bTypePhi, bTypeR, bTypeZ, layerEnvelopeR,
-        layerEnvelopeZ, defaultLayerThickness);
+        layerEnvelopeZ, defaultLayerThickness, detectorElementFactory);
     if (volBuilder != nullptr) {
       // distinguish beam pipe
       if (volBuilder->getConfiguration().buildToRadiusZero) {
@@ -153,7 +153,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector, const Logger& logger, BinningType bTypePhi,
     BinningType bTypeR, BinningType bTypeZ, double layerEnvelopeR,
-    double layerEnvelopeZ, double defaultLayerThickness) {
+    double layerEnvelopeZ, double defaultLayerThickness,
+    const DD4hepLayerBuilder::ElementFactory& detectorElementFactory) {
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(logger);
   // create local logger for conversion
@@ -214,6 +215,10 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       }
 
       dd4hep::DetType type{volumeDetElement.typeFlag()};
+
+      if (!type.is(dd4hep::DetType::TRACKER)) {
+        continue;
+      }
 
       if (type.is(dd4hep::DetType::ENDCAP)) {
         ACTS_VERBOSE("Subvolume: '" << volumeDetElement.name()
@@ -370,6 +375,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     lbConfig.bTypeR = bTypeR;
     lbConfig.bTypeZ = bTypeZ;
     lbConfig.defaultThickness = defaultLayerThickness;
+    lbConfig.detectorElementFactory = detectorElementFactory;
     auto dd4hepLayerBuilder = std::make_shared<const Acts::DD4hepLayerBuilder>(
         lbConfig, logger.clone(std::string("D2A_L:") + subDetector.name()));
 
