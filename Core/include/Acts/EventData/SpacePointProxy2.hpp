@@ -184,6 +184,11 @@ class SpacePointProxy2 {
     return m_container->entry(column, m_index);
   }
 
+  /// Const access to the source links of the space point.
+  /// @return A const span of source links associated with the space point.
+  std::span<const SourceLink> sourceLinks() const noexcept {
+    return m_container->sourceLinks(m_index);
+  }
   /// Const access to the x coordinate of the space point.
   /// @return The x coordinate of the space point.
   float x() const noexcept { return m_container->x(m_index); }

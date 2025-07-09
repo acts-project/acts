@@ -14,6 +14,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <span>

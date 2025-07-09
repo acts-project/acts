@@ -12,6 +12,14 @@
 
 #include <unordered_set>
 
+namespace {
+
+template <typename Tuple>
+using tuple_indices =
+    std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>;
+
+}
+
 namespace Acts::Experimental {
 
 SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
@@ -28,6 +36,8 @@ SpacePointContainer2::SpacePointContainer2(
     SpacePointContainer2 &&other) noexcept
     : m_size(other.m_size), m_sourceLinks(std::move(other.m_sourceLinks)) {
   moveColumns(other);
+
+  other.m_size = 0;
 }
 
 SpacePointContainer2 &SpacePointContainer2::operator=(
@@ -36,8 +46,8 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
+  m_size = other.m_size;
   m_sourceLinks = other.m_sourceLinks;
-
   copyColumns(other);
 
   return *this;
@@ -49,9 +59,11 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
+  m_size = other.m_size;
   m_sourceLinks = std::move(other.m_sourceLinks);
-
   moveColumns(other);
+
+  other.m_size = 0;
 
   return *this;
 }
@@ -85,22 +97,23 @@ void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
 
 void SpacePointContainer2::reserve(std::uint32_t size,
                                    float averageSourceLinks) noexcept {
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->reserve(size);
-  }
-
   if (hasColumns(SpacePointColumns::SourceLinks)) {
     m_sourceLinks.reserve(
         static_cast<std::uint32_t>(size * averageSourceLinks));
   }
+
+  for (const auto &[name, column] : m_namedColumns) {
+    column.first->reserve(size);
+  }
 }
 
 void SpacePointContainer2::clear() noexcept {
+  m_size = 0;
+  m_sourceLinks.clear();
+
   for (const auto &[name, column] : m_namedColumns) {
     column.first->clear();
   }
-
-  m_sourceLinks.clear();
 }
 
 void SpacePointContainer2::assignSourceLinks(
@@ -116,10 +129,10 @@ void SpacePointContainer2::assignSourceLinks(
     throw std::logic_error("Source links already assigned to the space point");
   }
 
-  m_sourceLinkOffsetColumn->proxy().data().push_back(
-      static_cast<SpacePointIndex2>(m_sourceLinks.size()));
-  m_sourceLinkCountColumn->proxy().data().push_back(
-      static_cast<std::uint8_t>(sourceLinks.size()));
+  entry(m_sourceLinkOffsetColumn->proxy(), index) =
+      static_cast<SpacePointIndex2>(m_sourceLinks.size());
+  entry(m_sourceLinkCountColumn->proxy(), index) =
+      static_cast<std::uint8_t>(sourceLinks.size());
   m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
                        sourceLinks.end());
 }
@@ -145,7 +158,7 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
          std::get<Is>(knownColumnMaks()), std::get<Is>(knownColumnNames()),
          std::get<Is>(knownColumnDefaults()), std::get<Is>(knownColumns()))),
      ...);
-  }(std::index_sequence_for<decltype(knownColumns())>{});
+  }(tuple_indices<decltype(knownColumns())>{});
 }
 
 void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
@@ -166,7 +179,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
                  std::get<Is>(knownColumnNames()),
                  std::get<Is>(knownColumns()))),
      ...);
-  }(std::index_sequence_for<decltype(knownColumns())>{});
+  }(tuple_indices<decltype(knownColumns())>{});
 }
 
 void SpacePointContainer2::dropColumn(const std::string &name) {

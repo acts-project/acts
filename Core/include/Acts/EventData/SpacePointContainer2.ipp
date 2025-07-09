@@ -20,6 +20,8 @@ SpacePointContainer2::createSpacePoint() noexcept {
     column.first->emplace_back();
   }
 
+  ++m_size;
+
   return MutableProxyType(*this, size() - 1);
 }
 
