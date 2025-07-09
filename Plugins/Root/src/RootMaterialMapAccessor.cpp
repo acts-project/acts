@@ -75,8 +75,8 @@ void Acts::RootMaterialMapAccessor::write(
     // Get the binning data
     auto& binningData = bsMaterial->binUtility().binningData();
     // 1-D or 2-D maps
-    int bins = static_cast<int>(binningData.size());
-    float fBins = static_cast<float>(bins);
+    auto bins = static_cast<int>(binningData.size());
+    auto fBins = static_cast<float>(bins);
 
     // The bin number information
     TH1F n(m_cfg.ntag.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
@@ -96,11 +96,12 @@ void Acts::RootMaterialMapAccessor::write(
     // Now fill the histogram content
     for (auto [b, bData] : enumerate(binningData)) {
       // Fill: nbins, value, option, min, max
-      n.SetBinContent(b + 1, static_cast<int>(bData.bins()));
-      v.SetBinContent(b + 1, static_cast<int>(bData.binvalue));
-      o.SetBinContent(b + 1, static_cast<int>(bData.option));
-      rmin.SetBinContent(b + 1, bData.min);
-      rmax.SetBinContent(b + 1, bData.max);
+      n.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.bins()));
+      v.SetBinContent(static_cast<int>(b) + 1,
+                      static_cast<int>(bData.binvalue));
+      o.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.option));
+      rmin.SetBinContent(static_cast<int>(b) + 1, bData.min);
+      rmax.SetBinContent(static_cast<int>(b) + 1, bData.max);
     }
     n.Write();
     v.Write();
@@ -135,6 +136,12 @@ void Acts::RootMaterialMapAccessor::write(
   const auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial);
+  }
+  if (m_hTree != nullptr) {
+    m_hTree->Write();
+  }
+  if (m_gTree != nullptr) {
+    m_gTree->Write();
   }
 }
 
@@ -176,10 +183,10 @@ void Acts::RootMaterialMapAccessor::fillMaterialSlab(
 
 void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
-  int bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
-  int bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
-  float fBins0 = static_cast<float>(bins0);
-  float fBins1 = static_cast<float>(bins1);
+  auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
+  auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
+  auto fBins0 = static_cast<float>(bins0);
+  auto fBins1 = static_cast<float>(bins1);
 
   TH2F t(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
@@ -198,12 +205,18 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
-      t.SetBinContent(b0 + 1, b1 + 1, mat.thickness());
-      x0.SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
-      l0.SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
-      A.SetBinContent(b0 + 1, b1 + 1, mat.material().Ar());
-      Z.SetBinContent(b0 + 1, b1 + 1, mat.material().Z());
-      rho.SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
+      t.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                      mat.thickness());
+      x0.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                       mat.material().X0());
+      l0.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                       mat.material().L0());
+      A.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                      mat.material().Ar());
+      Z.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                      mat.material().Z());
+      rho.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                        mat.material().massDensity());
     }
   }
   t.Write();
@@ -226,7 +239,8 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
-      idx.SetBinContent(b0 + 1, b1 + 1, payload.index++);
+      idx.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
+                        payload.index++);
       fillMaterialSlab(payload, mat);
       m_gTree->Fill();
     }
@@ -349,7 +363,7 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
   // Now reconstruct the bin untilities
   BinUtility bUtility;
   for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-    std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
+    auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
     auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
     auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
     float rmin = min->GetBinContent(ib);
@@ -427,7 +441,7 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
       // Fill the matrix first
       for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-          int idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
+          auto idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
           indexedMaterialTree->GetEntry(idx);
           double dt = m_indexedMaterialTreePayload.ht;
           double dx0 = m_indexedMaterialTreePayload.hX0;
