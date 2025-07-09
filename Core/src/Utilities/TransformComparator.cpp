@@ -10,10 +10,10 @@
 
 namespace Acts::detail {
 TransformComparator::TransformComparator(const double transTolerance,
-                                 const double rotTolerance)
+                                         const double rotTolerance)
     : m_tolTrans{transTolerance}, m_tolRot{rotTolerance} {}
 int TransformComparator::compare(const Acts::RotationMatrix3& a,
-                             const Acts::RotationMatrix3& b) const {
+                                 const Acts::RotationMatrix3& b) const {
   const Acts::Vector3 anglesA = a.eulerAngles(2, 1, 0);
   const Acts::Vector3 anglesB = b.eulerAngles(2, 1, 0);
   for (int i = 0; i < 3; ++i) {
@@ -25,7 +25,7 @@ int TransformComparator::compare(const Acts::RotationMatrix3& a,
   return 0;
 }
 int TransformComparator::compare(const Acts::Transform3& a,
-                             const Acts::Transform3& b) const {
+                                 const Acts::Transform3& b) const {
   if (const int tCmp = compare<3>(a.translation(), b.translation());
       tCmp != 0) {
     return tCmp;
@@ -33,19 +33,19 @@ int TransformComparator::compare(const Acts::Transform3& a,
   return compare(a.rotation(), b.rotation());
 }
 bool TransformComparator::operator()(const Acts::Transform3& a,
-                                 const Acts::Transform3& b) const {
+                                     const Acts::Transform3& b) const {
   return compare(a, b) < 0;
 }
 bool TransformComparator::operator()(const Acts::RotationMatrix3& a,
-                                 const RotationMatrix3& b) const {
+                                     const RotationMatrix3& b) const {
   return compare(a, b) < 0;
 }
 bool TransformComparator::operator()(const Acts::Vector3& a,
-                                 const Acts::Vector3& b) const {
+                                     const Acts::Vector3& b) const {
   return compare<3>(a, b) < 0;
 }
 bool TransformComparator::operator()(const Acts::Vector2& a,
-                                 const Acts::Vector2& b) const {
+                                     const Acts::Vector2& b) const {
   return compare<2>(a, b) < 0;
 }
 }  // namespace Acts::detail
