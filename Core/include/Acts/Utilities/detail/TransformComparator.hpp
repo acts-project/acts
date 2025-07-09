@@ -20,17 +20,17 @@ namespace Acts::detail {
 ///        the < operator is assigned based on this difference. In the case of
 ///        rotations, the three euler angles of the rotation matrix are
 ///        evaluated and compared in an anlogous way
-class TransformSorter {
+class TransformComparator {
  public:
   /// @brief Default constructor setting the predefined tolerance values
   ///        for translation & rotation
-  TransformSorter() = default;
+  TransformComparator() = default;
   /// @brief Constructor with an adaption of the translation & rotTolerance
   /// @param transTolerance: Tolerance value within the difference of the
   ///         i-th component between two vectors is considered to be 0
   /// @param rotTolerance: Tolerance value within the difference of the
   ///        i-th Euler angle between two Rotations is considered to be 0
-  TransformSorter(const double transTolerance, const double rotTolerance);
+  TransformComparator(const double transTolerance, const double rotTolerance);
   /// @brief Generic comparison function between two kSize-dimensional vectors
   ///        Returns 0 if all components agree within the translational
   ///        tolerance. As soon as one component differs, 1 is returned if the

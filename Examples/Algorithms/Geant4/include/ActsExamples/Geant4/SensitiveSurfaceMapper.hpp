@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/TransformSorter.hpp"
+#include "Acts/Utilities/detail/TransformComparator.hpp"
 
 #include <map>
 #include <memory>
@@ -97,7 +97,7 @@ class SensitiveSurfaceMapper {
   /// @brief Abrivation of the association between G4 volumes and surfaces
 
   using SurfacePosMap_t = std::map<Acts::Vector3, const Acts::Surface*,
-                                   Acts::detail::TransformSorter>;
+                                   Acts::detail::TransformComparator>;
   using VolumeToSurfAssocMap_t =
       std::unordered_map<const G4VPhysicalVolume*, SurfacePosMap_t>;
 

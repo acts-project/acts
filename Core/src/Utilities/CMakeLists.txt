@@ -11,5 +11,5 @@ target_sources(
         GraphViz.cpp
         ProtoAxis.cpp
         ScopedTimer.cpp
-        TransformSorter.cpp
+        TransformComparator.cpp
 )

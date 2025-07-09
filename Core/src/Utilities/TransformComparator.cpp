@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/detail/TransformSorter.hpp"
+#include "Acts/Utilities/detail/TransformComparator.hpp"
 
 namespace Acts::detail {
-TransformSorter::TransformSorter(const double transTolerance,
+TransformComparator::TransformComparator(const double transTolerance,
                                  const double rotTolerance)
     : m_tolTrans{transTolerance}, m_tolRot{rotTolerance} {}
-int TransformSorter::compare(const Acts::RotationMatrix3& a,
+int TransformComparator::compare(const Acts::RotationMatrix3& a,
                              const Acts::RotationMatrix3& b) const {
   const Acts::Vector3 anglesA = a.eulerAngles(2, 1, 0);
   const Acts::Vector3 anglesB = b.eulerAngles(2, 1, 0);
@@ -24,7 +24,7 @@ int TransformSorter::compare(const Acts::RotationMatrix3& a,
   }
   return 0;
 }
-int TransformSorter::compare(const Acts::Transform3& a,
+int TransformComparator::compare(const Acts::Transform3& a,
                              const Acts::Transform3& b) const {
   if (const int tCmp = compare<3>(a.translation(), b.translation());
       tCmp != 0) {
@@ -32,19 +32,19 @@ int TransformSorter::compare(const Acts::Transform3& a,
   }
   return compare(a.rotation(), b.rotation());
 }
-bool TransformSorter::operator()(const Acts::Transform3& a,
+bool TransformComparator::operator()(const Acts::Transform3& a,
                                  const Acts::Transform3& b) const {
   return compare(a, b) < 0;
 }
-bool TransformSorter::operator()(const Acts::RotationMatrix3& a,
+bool TransformComparator::operator()(const Acts::RotationMatrix3& a,
                                  const RotationMatrix3& b) const {
   return compare(a, b) < 0;
 }
-bool TransformSorter::operator()(const Acts::Vector3& a,
+bool TransformComparator::operator()(const Acts::Vector3& a,
                                  const Acts::Vector3& b) const {
   return compare<3>(a, b) < 0;
 }
-bool TransformSorter::operator()(const Acts::Vector2& a,
+bool TransformComparator::operator()(const Acts::Vector2& a,
                                  const Acts::Vector2& b) const {
   return compare<2>(a, b) < 0;
 }

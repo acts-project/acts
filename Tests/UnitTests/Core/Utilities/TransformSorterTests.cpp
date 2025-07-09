@@ -10,14 +10,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
-#include "Acts/Utilities/detail/TransformSorter.hpp"
+#include "Acts/Utilities/detail/TransformComparator.hpp"
 
-BOOST_AUTO_TEST_SUITE(TransformSorterTests)
+BOOST_AUTO_TEST_SUITE(TransformComparatorTests)
 
 BOOST_AUTO_TEST_CASE(Vector3Sorting) {
   ///
-  Acts::detail::TransformSorter sorter{};
-  Acts::detail::TransformSorter sorterWithTol{0.5, 0.5};
+  Acts::detail::TransformComparator sorter{};
+  Acts::detail::TransformComparator sorterWithTol{0.5, 0.5};
 
   for (unsigned dimA = 0; dimA < 3; ++dimA) {
     const Acts::Vector3 aPlus = Acts::Vector3::Unit(dimA);
@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(Vector3Sorting) {
 }
 
 BOOST_AUTO_TEST_CASE(Vector2Sorting) {
-  Acts::detail::TransformSorter sorter{};
-  Acts::detail::TransformSorter sorterWithTol{0.5, 0.5};
+  Acts::detail::TransformComparator sorter{};
+  Acts::detail::TransformComparator sorterWithTol{0.5, 0.5};
 
   for (unsigned dimA = 0; dimA < 2; ++dimA) {
     const Acts::Vector2 aPlus = Acts::Vector2::Unit(dimA);

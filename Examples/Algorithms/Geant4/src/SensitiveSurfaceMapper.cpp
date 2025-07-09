@@ -229,7 +229,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   ACTS_VERBOSE("Found " << candidateSurfaces.size()
                         << " candidate surfaces for " << volumeName);
 
-  Acts::detail::TransformSorter trfSorter{};
+  Acts::detail::TransformComparator trfSorter{};
   for (const auto& candidateSurface : candidateSurfaces) {
     if (trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition) !=
         0) {
