@@ -80,7 +80,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   tIter->Reset();
 
   // Iterate over the keys in the file
-  while (TKey* key = static_cast<TKey*>(tIter->Next())) {
+  while (auto key = static_cast<TKey*>(tIter->Next())) {
     // Remember the directory
     std::string tdName(key->GetName());
 

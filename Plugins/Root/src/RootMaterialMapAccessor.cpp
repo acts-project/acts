@@ -240,7 +240,7 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
       idx.SetBinContent(static_cast<int>(b0) + 1, static_cast<int>(b1) + 1,
-                        payload.index);
+                        static_cast<float>(payload.index));
       payload.index++;
       fillMaterialSlab(payload, mat);
       m_gTree->Fill();
@@ -272,12 +272,12 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
           m_homogenousMaterialTreePayload.ht);
       auto homogeneousMaterial =
           std::make_shared<HomogeneousSurfaceMaterial>(materialSlab);
-      surfaceMaterials.emplace(geoID, homogeneousMaterial);
+      surfaceMaterials.try_emplace(geoID, homogeneousMaterial);
     }
   }
 
   // Read the binned surface material, if there - connect it to the payload
-  TTree* indexedMaterialTree =
+  auto indexedMaterialTree =
       dynamic_cast<TTree*>(rFile.Get(m_cfg.indexMaterialTreeName.c_str()));
   if (indexedMaterialTree != nullptr) {
     connectForRead(*indexedMaterialTree, m_indexedMaterialTreePayload);
@@ -289,7 +289,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
   tIter->Reset();
 
   // Iterate over the keys in the file
-  while (TKey* key = static_cast<TKey*>(tIter->Next())) {
+  while (auto key = static_cast<TKey*>(tIter->Next())) {
     // Remember the directory
     std::string tdName(key->GetName());
 
@@ -336,7 +336,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
 
       auto texturedSurfaceMaterial =
           readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);
-      surfaceMaterials.emplace(geoID, texturedSurfaceMaterial);
+      surfaceMaterials.try_emplace(geoID, texturedSurfaceMaterial);
     }
   }
   return DetectorMaterialMaps;
@@ -355,11 +355,11 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
   std::string minName = tdName + "/" + m_cfg.mintag;
   std::string maxName = tdName + "/" + m_cfg.maxtag;
   // Get the histograms
-  TH1F* n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
-  TH1F* v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
-  TH1F* o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
-  TH1F* min = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
-  TH1F* max = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+  auto n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
+  auto v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
+  auto o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
+  auto min = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
+  auto max = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
 
   // Now reconstruct the bin untilities
   BinUtility bUtility;
@@ -367,8 +367,8 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
     auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
     auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-    float rmin = min->GetBinContent(ib);
-    float rmax = max->GetBinContent(ib);
+    auto rmin = static_cast<float>(min->GetBinContent(ib));
+    auto rmax = static_cast<float>(max->GetBinContent(ib));
     bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
   }
   ACTS_VERBOSE("Created " << bUtility);
@@ -409,11 +409,11 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
           double dt = t->GetBinContent(ib0, ib1);
           if (dt > 0.) {
-            double dx0 = x0->GetBinContent(ib0, ib1);
-            double dl0 = l0->GetBinContent(ib0, ib1);
-            double da = A->GetBinContent(ib0, ib1);
-            double dz = Z->GetBinContent(ib0, ib1);
-            double drho = rho->GetBinContent(ib0, ib1);
+            auto dx0 = static_cast<float>(x0->GetBinContent(ib0, ib1));
+            auto dl0 = static_cast<float>(l0->GetBinContent(ib0, ib1));
+            auto da = static_cast<float>(A->GetBinContent(ib0, ib1));
+            auto dz = static_cast<float>(Z->GetBinContent(ib0, ib1));
+            auto drho = static_cast<float>(rho->GetBinContent(ib0, ib1));
             // Create material properties
             const auto material =
                 Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -428,7 +428,7 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     // Construct the names for histogram type storage
     std::string indexName = tdName + "/" + m_cfg.itag;
     // Get the histograms
-    TH2I* ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
+    auto ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
 
     if (ih != nullptr) {
       // Get the number of bins
@@ -444,12 +444,12 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
           auto idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
           indexedMaterialTree->GetEntry(idx);
-          double dt = m_indexedMaterialTreePayload.ht;
-          double dx0 = m_indexedMaterialTreePayload.hX0;
-          double dl0 = m_indexedMaterialTreePayload.hL0;
-          double da = m_indexedMaterialTreePayload.hA;
-          double dz = m_indexedMaterialTreePayload.hZ;
-          double drho = m_indexedMaterialTreePayload.hRho;
+          float dt = m_indexedMaterialTreePayload.ht;
+          float dx0 = m_indexedMaterialTreePayload.hX0;
+          float dl0 = m_indexedMaterialTreePayload.hL0;
+          float da = m_indexedMaterialTreePayload.hA;
+          float dz = m_indexedMaterialTreePayload.hZ;
+          float drho = m_indexedMaterialTreePayload.hRho;
           // Create material properties
           const auto material =
               Material::fromMassDensity(dx0, dl0, da, dz, drho);
