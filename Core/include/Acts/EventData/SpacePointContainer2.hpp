@@ -483,9 +483,15 @@ class SpacePointContainer2 {
   }
 
   /// Creates extra columns based on the specified known extra columns.
-  /// This will create the columns if they do not already exist.
+  /// This will only create the columns if they do not already exist and fill
+  /// them according to the size of the container with default values.
   /// @param columns The known extra columns to create.
   void createExtraColumns(SpacePointKnownExtraColumn columns) noexcept;
+
+  /// Drops the specified extra columns from the container.
+  /// This will only drop columns if they exist.
+  /// @param columns The extra columns to drop.
+  void dropExtraColumns(SpacePointKnownExtraColumn columns) noexcept;
 
   /// Checks if the container has the given extra columns.
   /// @param columns The extra columns to check for.
@@ -605,17 +611,20 @@ class SpacePointContainer2 {
   /// @return A reference to the newly created column.
   /// @throws std::runtime_error if a column with the same name already exists.
   template <typename T>
-  SpacePointExtraColumnProxy<T> createExtraColumn(
-      const std::string &name) noexcept {
+  SpacePointExtraColumnProxy<T> createExtraColumn(const std::string &name) {
     return createExtraColumnImpl<SpacePointExtraColumnHolder<T>>(name);
   }
+
+  /// Drops the extra column with the given name.
+  /// If the column does not exist, an exception is thrown.
+  /// @param name The name of the column.
+  /// @throws std::runtime_error if the column does not exist.
+  void dropExtraColumn(const std::string &name);
 
   /// Checks if an extra column with the given name exists.
   /// @param name The name of the column.
   /// @return True if the column exists, false otherwise.
-  bool hasExtraColumn(const std::string &name) const noexcept {
-    return m_namedExtraColumns.contains(name);
-  }
+  bool hasExtraColumn(const std::string &name) const noexcept;
 
   /// Returns a mutable reference to the extra column with the given name.
   /// If the column does not exist, an exception is thrown.
@@ -623,8 +632,7 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the extra column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  SpacePointExtraColumnProxy<T> extraColumn(
-      const std::string &name) const noexcept {
+  SpacePointExtraColumnProxy<T> extraColumn(const std::string &name) const {
     return extraColumnImpl<SpacePointExtraColumnHolder<T>>(name);
   }
 
