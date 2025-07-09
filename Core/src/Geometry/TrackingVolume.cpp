@@ -16,7 +16,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -34,7 +33,6 @@
 
 namespace Acts {
 
-// constructor for arguments
 TrackingVolume::TrackingVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
@@ -391,12 +389,13 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return BoundaryIntersection(intersection, boundary);
+        return BoundaryIntersection(intersection, boundary, nullptr);
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
+    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr,
+                                nullptr);
   };
 
   /// Helper function to process boundary surfaces
@@ -420,7 +419,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                           options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first.isValid()) {
+      if (intersection.intersection.isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -548,8 +547,8 @@ void TrackingVolume::setMotherVolume(TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 
-const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3& position) const {
+const Layer* TrackingVolume::associatedLayer(const GeometryContext& /*gctx*/,
+                                             const Vector3& position) const {
   // confined static layers - highest hierarchy
   if (m_confinedLayers != nullptr) {
     return (m_confinedLayers->object(position).get());
@@ -658,7 +657,7 @@ void TrackingVolume::initializeNavigationCandidates(
 
 namespace {
 
-void visitLayer(const Acts::Layer& layer, TrackingGeometryVisitor& visitor) {
+void visitLayer(const Layer& layer, TrackingGeometryVisitor& visitor) {
   visitor.visitLayer(layer);
   // Surfaces contained in the surface array
   if (layer.surfaceArray() != nullptr) {
@@ -714,13 +713,23 @@ void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   }
 }
 
-void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+void TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  // if the visitor is configured for inner--->outer volume visiting we visit
+  // the children first
+  if (visitor.visitDepthFirst()) {
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
+  }
+
   visitor.visitVolume(*this);
 
   // Visit the boundary surfaces
   // This does const casts because Gen1 substructure does not have transitive
   // const-ness
+
   // @TODO: Remove this when Gen1 is remoeved
+
   for (const auto& bs : m_boundarySurfaces) {
     visitor.visitBoundarySurface(
         const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
@@ -771,8 +780,12 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
     visitor.visitSurface(surface);
   }
 
-  for (auto& volume : volumes()) {
-    volume.apply(visitor);
+  if (!visitor.visitDepthFirst()) {
+    // if the visitor is configured for outer--->inner volume visiting we visit
+    // the children last
+    for (auto& volume : volumes()) {
+      volume.apply(visitor);
+    }
   }
 }
 

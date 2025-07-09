@@ -39,10 +39,11 @@ components:
 - [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 - [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
-- [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
+- [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
 - [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 - [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
+- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -285,7 +286,7 @@ components.
 | ACTS_EXATRKX_ENABLE_TENSORRT        | Enable the native TensorRT inference<br>modules<br> type: `bool`, default: `OFF`                                                                                                                                                   |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
-| ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_ROOT              | Build ROOT plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_SETUP_ANNOY                    | Explicitly set up Annoy for the project<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_PLUGIN_HASHING           | Build Hashing plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |

@@ -15,8 +15,6 @@
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::Experimental {
@@ -34,7 +32,7 @@ MultiWireVolumeBuilder::MultiWireVolumeBuilder(
 }
 
 std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
-    GeometryContext& gctx) const {
+    const GeometryContext& gctx) const {
   // Create the tracking volume
 
   ACTS_VERBOSE("Building a tracking volume with name "

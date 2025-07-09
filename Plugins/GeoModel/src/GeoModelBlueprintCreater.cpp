@@ -21,7 +21,9 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <ranges>
 
 #include <boost/algorithm/string.hpp>
 
@@ -39,13 +41,12 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   Acts::GeoModelBlueprintCreater::Blueprint blueprint;
 
   // The GeoModel tree must have a reader
-  if (gmTree.geoReader == nullptr) {
+  if (gmTree.dbMgr == nullptr) {
     throw std::invalid_argument(
-        "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
+        "GeoModelBlueprintCreater: GeoModelTree has no dbMgr");
   }
 
-  auto blueprintTable =
-      gmTree.geoReader->getTableFromTableName_String(options.table);
+  auto blueprintTable = gmTree.dbMgr->getTableRecords_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;
@@ -263,11 +264,9 @@ Acts::GeoModelBlueprintCreater::createNode(
 
     // Create the binnings
     std::vector<Acts::AxisDirection> binnings;
-    std::for_each(
-        entry.binnings.begin(), entry.binnings.end(),
-        [&binnings](const std::string& b) {
-          binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
-        });
+    std::ranges::for_each(entry.binnings, [&binnings](const std::string& b) {
+      binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
+    });
 
     // Complete the children
     auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(

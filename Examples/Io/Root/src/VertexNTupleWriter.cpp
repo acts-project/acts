@@ -507,7 +507,7 @@ ProcessCode VertexNTupleWriter::writeT(
       fmap[vtxId].second += weight;
     }
     double truthMajorityVertexTrackWeights = 0;
-    SimVertexBarcode truthMajorityVertexId{0};
+    std::optional<SimVertexBarcode> truthMajorityVertexId = std::nullopt;
     for (const auto& [vtxId, counter] : fmap) {
       if (counter.second > truthMajorityVertexTrackWeights) {
         truthMajorityVertexId = vtxId;
@@ -538,7 +538,13 @@ ProcessCode VertexNTupleWriter::writeT(
     auto& recoToTruth = recoToTruthMatching.back();
 
     // We have to decide if this reco vertex is a split vertex.
-    if (auto it = truthToRecoMatching.find(truthMajorityVertexId);
+    if (!truthMajorityVertexId.has_value()) {
+      // No truth vertex matched to this reconstructed vertex
+      ACTS_DEBUG("No truth vertex matched to this reconstructed vertex.");
+      continue;
+    }
+
+    if (auto it = truthToRecoMatching.find(truthMajorityVertexId.value());
         it != truthToRecoMatching.end()) {
       // This truth vertex is already matched to a reconstructed vertex so we
       // are dealing with a split vertex.
@@ -563,7 +569,7 @@ ProcessCode VertexNTupleWriter::writeT(
         it->second = {vtxIndex, sumPt2};
       }
     } else {
-      truthToRecoMatching[truthMajorityVertexId] = {vtxIndex, sumPt2};
+      truthToRecoMatching[truthMajorityVertexId.value()] = {vtxIndex, sumPt2};
     }
   }
 
@@ -632,7 +638,8 @@ ProcessCode VertexNTupleWriter::writeT(
     if (toTruthMatching.vertexId.has_value()) {
       auto iTruthVertex = truthVertices.find(toTruthMatching.vertexId.value());
       if (iTruthVertex == truthVertices.end()) {
-        ACTS_ERROR("Truth vertex not found.");
+        ACTS_ERROR("Truth vertex not found for id: "
+                   << toTruthMatching.vertexId.value());
         continue;
       }
       const SimVertex& truthVertex = *iTruthVertex;

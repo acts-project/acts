@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <filesystem>
@@ -65,7 +66,8 @@ PodioReader::PodioReader(const Config& config, Acts::Logging::Level level)
 PodioReader::~PodioReader() = default;
 
 ProcessCode PodioReader::read(const AlgorithmContext& context) {
-  ACTS_DEBUG("Reading EDM4hep inputs");
+  Acts::ScopedTimer timer("Reading PODIO inputs", logger(),
+                          Acts::Logging::DEBUG);
   podio::Frame frame = m_impl->reader().readEntry(
       m_impl->m_cfg.category, static_cast<unsigned int>(context.eventNumber));
   m_impl->m_frameWriteHandle(context, std::move(frame));
