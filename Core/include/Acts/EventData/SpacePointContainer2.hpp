@@ -499,8 +499,13 @@ class SpacePointContainer2 {
 
   /// Creates additional columns. This will create the columns if they do not
   /// already exist.
-  /// @param columns The known Columns to create.
+  /// @param columns The columns to create.
   void createColumns(SpacePointColumns columns) noexcept;
+
+  /// Drops the specified columns from the container.
+  /// This will only drop columns if they exist.
+  /// @param columns The columns to drop.
+  void dropColumns(SpacePointColumns columns) noexcept;
 
   /// Checks if the container has the given Columns.
   /// @param columns The Columns to check for.
@@ -616,10 +621,18 @@ class SpacePointContainer2 {
   /// @param name The name of the column.
   /// @return A reference to the newly created column.
   /// @throws std::runtime_error if a column with the same name already exists.
+  /// @throws std::runtime_error if the column name is reserved.
   template <typename T>
-  SpacePointColumnProxy<T> createColumn(const std::string &name) noexcept {
+  SpacePointColumnProxy<T> createColumn(const std::string &name) {
     return createColumnImpl<SpacePointColumnHolder<T>>(name);
   }
+
+  /// Drops the column with the given name.
+  /// If the column does not exist, an exception is thrown.
+  /// @param name The name of the column.
+  /// @throws std::runtime_error if the column does not exist.
+  /// @throws std::runtime_error if the column name is reserved.
+  void dropColumn(const std::string &name);
 
   /// Checks if an Column with the given name exists.
   /// @param name The name of the column.
@@ -634,7 +647,7 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the Column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  SpacePointColumnProxy<T> namedColumn(const std::string &name) const noexcept {
+  SpacePointColumnProxy<T> namedColumn(const std::string &name) const {
     return namedColumnImpl<SpacePointColumnHolder<T>>(name);
   }
 

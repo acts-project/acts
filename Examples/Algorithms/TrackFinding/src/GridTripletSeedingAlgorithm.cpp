@@ -161,7 +161,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
-      bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          bottomDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
       bottomDoubletFinderConfig;
@@ -171,7 +172,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
   Acts::Experimental::DoubletSeedFinder topDoubletFinder(
-      topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
@@ -181,7 +183,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletCuts.impactMax = m_cfg.impactMax;
   tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  auto derivedTripletCuts = tripletCuts.derive(m_cfg.bFieldInZ);
+  Acts::Experimental::BroadTripletSeedFinder::DerivedTripletCuts
+      derivedTripletCuts(tripletCuts, m_cfg.bFieldInZ);
 
   // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {

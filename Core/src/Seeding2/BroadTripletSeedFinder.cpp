@@ -69,38 +69,30 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
 
 }  // namespace
 
-BroadTripletSeedFinder::DerivedTripletCuts
-BroadTripletSeedFinder::TripletCuts::derive(float bFieldInZ) const {
-  DerivedTripletCuts result;
-
-  static_cast<TripletCuts&>(result) = *this;
-
+BroadTripletSeedFinder::DerivedTripletCuts::DerivedTripletCuts(
+    const TripletCuts& cuts, float bFieldInZ_)
+    : TripletCuts(cuts), bFieldInZ(bFieldInZ_) {
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
-    const double xOverX0 = result.radLengthPerSeed;
+    const double xOverX0 = radLengthPerSeed;
     const double q2OverBeta2 = 1;  // q^2=1, beta^2~1
     // RPP2018 eq. 33.15 (treats beta and q² consistently)
     const double t = std::sqrt(xOverX0 * q2OverBeta2);
     // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
     //                          = 2 * log(sqrt(x/X0) * (q/beta))
-    result.highland =
+    highland =
         static_cast<float>(13.6_MeV * t * (1.0 + 0.038 * 2 * std::log(t)));
   }
 
-  const float maxScatteringAngle = result.highland / result.minPt;
+  const float maxScatteringAngle = highland / minPt;
   const float maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
 
   // bFieldInZ is in (pT/radius) natively, no need for conversion
-  result.pTPerHelixRadius = bFieldInZ;
-  result.minHelixDiameter2 =
-      square(result.minPt * 2 / result.pTPerHelixRadius) *
-      result.helixCutTolerance;
-  const float pT2perRadius = square(result.highland / result.pTPerHelixRadius);
-  result.sigmapT2perRadius = pT2perRadius * square(2 * result.sigmaScattering);
-  result.multipleScattering2 =
-      maxScatteringAngle2 * square(result.sigmaScattering);
-
-  return result;
+  pTPerHelixRadius = bFieldInZ;
+  minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
+  const float pT2perRadius = square(highland / pTPerHelixRadius);
+  sigmapT2perRadius = pT2perRadius * square(2 * sigmaScattering);
+  multipleScattering2 = maxScatteringAngle2 * square(sigmaScattering);
 }
 
 BroadTripletSeedFinder::BroadTripletSeedFinder(

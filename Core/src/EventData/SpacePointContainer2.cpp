@@ -148,6 +148,40 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
   }(std::index_sequence_for<decltype(knownColumns())>{});
 }
 
+void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
+  using enum SpacePointColumns;
+
+  const auto dropColumn =
+      [&]<typename T>(SpacePointColumns mask, std::string_view name,
+                      std::optional<SpacePointColumnHolder<T>> &column) {
+        if (ACTS_CHECK_BIT(columns, mask) && column.has_value()) {
+          m_namedColumns.erase(std::string(name));
+          column.reset();
+          m_knownColumns = m_knownColumns & ~mask;
+        }
+      };
+
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    ((dropColumn(std::get<Is>(knownColumnMaks()),
+                 std::get<Is>(knownColumnNames()),
+                 std::get<Is>(knownColumns()))),
+     ...);
+  }(std::index_sequence_for<decltype(knownColumns())>{});
+}
+
+void SpacePointContainer2::dropColumn(const std::string &name) {
+  if (reservedColumn(name)) {
+    throw std::runtime_error("Cannot drop reserved column: " + name);
+  }
+
+  auto it = m_namedColumns.find(name);
+  if (it == m_namedColumns.end()) {
+    throw std::runtime_error("Column does not exist: " + name);
+  }
+
+  m_namedColumns.erase(it);
+}
+
 bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {
   static const std::unordered_set<std::string> reservedColumns = std::apply(
       [](auto... reservedNames) {
