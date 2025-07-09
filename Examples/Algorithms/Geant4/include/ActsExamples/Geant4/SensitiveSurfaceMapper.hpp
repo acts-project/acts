@@ -63,7 +63,7 @@ struct SensitiveCandidatesBase {
 /// Implementation of the SensitiveCandidates for Gen1 && Gen3 geometry
 struct SensitiveCandidates : public SensitiveCandidatesBase {
   SensitiveCandidates(
-      const std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
       std::unique_ptr<const Acts::Logger> _logger);
 
   std::vector<const Acts::Surface*> queryPosition(

@@ -97,7 +97,7 @@ void writeG4Polyhedron(
 namespace ActsExamples::Geant4 {
 
 SensitiveCandidates::SensitiveCandidates(
-    const std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
     std::unique_ptr<const Acts::Logger> _logger)
     : m_trackingGeo{trackingGeometry} {
   Acts::Navigator::Config navCfg{};
@@ -119,7 +119,7 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
   if (!stateInit.ok()) {
     return surfaces;
   }
-  if (navState.startVolume) {
+  if (navState.startVolume != nullptr) {
     constexpr bool restrictToSensitives = true;
     navState.startVolume->visitSurfaces(
         [&](const Acts::Surface* surface) { surfaces.push_back(surface); },
@@ -231,7 +231,8 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
 
   Acts::detail::TransformSorter trfSorter{};
   for (const auto& candidateSurface : candidateSurfaces) {
-    if (!trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition)) {
+    if (trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition) !=
+        0) {
       ACTS_VERBOSE("Successful match with center matching");
       mappedSurface = candidateSurface;
       break;
