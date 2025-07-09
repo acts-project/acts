@@ -27,6 +27,8 @@ EOF
 
 cat > /etc/motd <<EOF
 =============== ACTS dev container with dependencies ===============
+- If you want to run with ODD, you'll need to run:
+    git submodule init && git submodule update
 - Configure:
     configure_acts
 - Build:

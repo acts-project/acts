@@ -9,7 +9,6 @@
 				"xaver.clang-format",
 				"twxs.cmake",
 				"llvm-vs-code-extensions.vscode-clangd",
-				"ms-vscode.cmake-tools"
 			],
 			"settings": {
 				"clangd.path": "/usr/bin/clangd",
