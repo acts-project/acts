@@ -96,11 +96,11 @@ void Acts::RootMaterialMapAccessor::write(
     // Now fill the histogram content
     for (auto [b, bData] : enumerate(binningData)) {
       // Fill: nbins, value, option, min, max
-      n.SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-      v.SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-      o.SetBinContent(b, static_cast<int>(binningData[b - 1].option));
-      rmin.SetBinContent(b, binningData[b - 1].min);
-      rmax.SetBinContent(b, binningData[b - 1].max);
+      n.SetBinContent(b + 1, static_cast<int>(bData.bins()));
+      v.SetBinContent(b + 1, static_cast<int>(bData.binvalue));
+      o.SetBinContent(b + 1, static_cast<int>(bData.option));
+      rmin.SetBinContent(b + 1, bData.min);
+      rmax.SetBinContent(b + 1, bData.max);
     }
     n.Write();
     v.Write();
@@ -219,8 +219,9 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5, bins0 - 0.5,
-           bins1, -0.5, bins1 - 0.5);
+  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", bins0, -0.5,
+           static_cast<float>(bins0) - 0.5, bins1, -0.5,
+           static_cast<float>(bins1) - 0.5);
   // loop over the material and fill
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {

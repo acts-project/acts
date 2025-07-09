@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorHomogeneousReadWrite) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnrfReadWrite) {
+BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnedReadWrite) {
   auto surfaceMaterials = createBinnedSurfaceMaterial();
 
   auto rFile =

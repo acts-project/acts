@@ -147,15 +147,13 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
                 fBins - 0.5);
 
       // Now fill the histogram content
-      std::size_t b = 1;
-      for (auto bData : binningData) {
+      for (const auto& [b, bData] : enumerate(binningData)) {
         // Fill: nbins, value, option, min, max
         n.SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
         v.SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
         o.SetBinContent(b, static_cast<int>(binningData[b - 1].option));
         rmin.SetBinContent(b, binningData[b - 1].min);
         rmax.SetBinContent(b, binningData[b - 1].max);
-        ++b;
       }
       n.Write();
       v.Write();
