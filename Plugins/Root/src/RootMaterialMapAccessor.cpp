@@ -75,44 +75,38 @@ void Acts::RootMaterialMapAccessor::write(
     // Get the binning data
     auto& binningData = bsMaterial->binUtility().binningData();
     // 1-D or 2-D maps
-    std::size_t binningBins = binningData.size();
+    int bins = static_cast<int>(binningData.size());
+    float fBins = static_cast<float>(bins);
 
     // The bin number information
-    auto n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
-                      binningBins - 0.5);
+    TH1F n(m_cfg.ntag.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
 
     // The binning value information
-    auto v = new TH1F(m_cfg.vtag.c_str(), "binning values; bin", binningBins,
-                      -0.5, binningBins - 0.5);
+    TH1F v(m_cfg.vtag.c_str(), "binning values; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information
-    auto o = new TH1F(m_cfg.otag.c_str(), "binning options; bin", binningBins,
-                      -0.5, binningBins - 0.5);
+    TH1F o(m_cfg.otag.c_str(), "binning options; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information - range min
-    auto rmin = new TH1F(m_cfg.mintag.c_str(), "min; bin", binningBins, -0.5,
-                         binningBins - 0.5);
+    TH1F rmin(m_cfg.mintag.c_str(), "min; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information - range max
-    auto rmax = new TH1F(m_cfg.maxtag.c_str(), "max; bin", binningBins, -0.5,
-                         binningBins - 0.5);
+    TH1F rmax(m_cfg.maxtag.c_str(), "max; bin", bins, -0.5, fBins - 0.5);
 
     // Now fill the histogram content
-    std::size_t b = 1;
-    for (auto bData : binningData) {
+    for (auto [b, bData] : enumerate(binningData)) {
       // Fill: nbins, value, option, min, max
-      n->SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-      v->SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-      o->SetBinContent(b, static_cast<int>(binningData[b - 1].option));
-      rmin->SetBinContent(b, binningData[b - 1].min);
-      rmax->SetBinContent(b, binningData[b - 1].max);
-      ++b;
+      n.SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
+      v.SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
+      o.SetBinContent(b, static_cast<int>(binningData[b - 1].option));
+      rmin.SetBinContent(b, binningData[b - 1].min);
+      rmax.SetBinContent(b, binningData[b - 1].max);
     }
-    n->Write();
-    v->Write();
-    o->Write();
-    rmin->Write();
-    rmax->Write();
+    n.Write();
+    v.Write();
+    o.Write();
+    rmin.Write();
+    rmax.Write();
 
     // If compressed writing is not enabled, write the binned surface material
     // as histograms
@@ -134,19 +128,11 @@ void Acts::RootMaterialMapAccessor::write(
     fillBinnedSurfaceMaterial(m_indexedMaterialTreePayload, *bsMaterial);
     return;
   }
-
-  // auto gridMaterial = dynamic_cast<const
-  // IGridSurfaceMaterial*>(surfaceMaterial); if (gridMaterial != nullptr) {
-  //  writeGridMaterial(rFile, gctx, geoID, *gridMaterial);
-  // return;
-  //}
-
-  return;
 }
 
 void Acts::RootMaterialMapAccessor::write(
     TFile& rFile, const DetectorMaterialMaps& DetectorMaterialMaps) {
-  auto [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
+  const auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial);
   }
@@ -190,21 +176,23 @@ void Acts::RootMaterialMapAccessor::fillMaterialSlab(
 
 void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
-  std::size_t bins0 = bsMaterial.binUtility().bins(0);
-  std::size_t bins1 = bsMaterial.binUtility().bins(1);
+  int bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
+  int bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
+  float fBins0 = static_cast<float>(bins0);
+  float fBins1 = static_cast<float>(bins1);
 
-  TH2F t(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
-         bins1, -0.5, bins1 - 0.5);
-  TH2F x0(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
-          bins1, -0.5, bins1 - 0.5);
+  TH2F t(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
+         fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
+  TH2F x0(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
+          bins1, -0.5, fBins1 - 0.5);
   TH2F l0(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
-          bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-  TH2F A(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, bins0 - 0.5,
-         bins1, -0.5, bins1 - 0.5);
+          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
+  TH2F A(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
+         bins1, -0.5, fBins1 - 0.5);
   TH2F Z(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
-         bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+         fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
   TH2F rho(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
-           bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+           fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
 
   // loop over the material and fill
   const auto& materialMatrix = bsMaterial.fullMaterial();

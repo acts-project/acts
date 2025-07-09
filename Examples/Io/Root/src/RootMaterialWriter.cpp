@@ -108,84 +108,81 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
     auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
         Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
 
-    std::size_t points = 1;
+    int points = 1;
     if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {
       // Get the binning data
       std::vector<Acts::BinningData> binningData;
       if (bvMaterial3D != nullptr) {
         binningData = bvMaterial3D->binUtility().binningData();
         Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
-        points = grid.size();
+        points = static_cast<int>(grid.size());
       } else {
         binningData = bvMaterial2D->binUtility().binningData();
         Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
-        points = grid.size();
+        points = static_cast<int>(grid.size());
       }
 
       // 2-D or 3-D maps
-      std::size_t binningBins = binningData.size();
+      int bins = static_cast<int>(binningData.size());
+      float fBins = static_cast<float>(bins);
 
       // The bin number information
-      TH1F* n = new TH1F(m_cfg.accessorConfig.ntag.c_str(), "bins; bin",
-                         binningBins, -0.5, binningBins - 0.5);
+      TH1F n(m_cfg.accessorConfig.ntag.c_str(), "bins; bin", bins, -0.5,
+             fBins - 0.5);
 
       // The binning value information
-      TH1F* v =
-          new TH1F(m_cfg.accessorConfig.vtag.c_str(), "binning values; bin",
-                   binningBins, -0.5, binningBins - 0.5);
+      TH1F v(m_cfg.accessorConfig.vtag.c_str(), "binning values; bin", bins,
+             -0.5, fBins - 0.5);
 
       // The binning option information
-      TH1F* o =
-          new TH1F(m_cfg.accessorConfig.otag.c_str(), "binning options; bin",
-                   binningBins, -0.5, binningBins - 0.5);
+      TH1F o(m_cfg.accessorConfig.otag.c_str(), "binning options; bin", bins,
+             -0.5, fBins - 0.5);
 
       // The binning option information
-      TH1F* min = new TH1F(m_cfg.accessorConfig.mintag.c_str(), "min; bin",
-                           binningBins, -0.5, binningBins - 0.5);
+      TH1F rmin(m_cfg.accessorConfig.mintag.c_str(), "min; bin", bins, -0.5,
+                fBins - 0.5);
 
       // The binning option information
-      TH1F* max = new TH1F(m_cfg.accessorConfig.maxtag.c_str(), "max; bin",
-                           binningBins, -0.5, binningBins - 0.5);
+      TH1F rmax(m_cfg.accessorConfig.maxtag.c_str(), "max; bin", bins, -0.5,
+                fBins - 0.5);
 
       // Now fill the histogram content
       std::size_t b = 1;
       for (auto bData : binningData) {
         // Fill: nbins, value, option, min, max
-        n->SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
-        v->SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
-        o->SetBinContent(b, static_cast<int>(binningData[b - 1].option));
-        min->SetBinContent(b, binningData[b - 1].min);
-        max->SetBinContent(b, binningData[b - 1].max);
+        n.SetBinContent(b, static_cast<int>(binningData[b - 1].bins()));
+        v.SetBinContent(b, static_cast<int>(binningData[b - 1].binvalue));
+        o.SetBinContent(b, static_cast<int>(binningData[b - 1].option));
+        rmin.SetBinContent(b, binningData[b - 1].min);
+        rmax.SetBinContent(b, binningData[b - 1].max);
         ++b;
       }
-      n->Write();
-      v->Write();
-      o->Write();
-      min->Write();
-      max->Write();
+      n.Write();
+      v.Write();
+      o.Write();
+      rmin.Write();
+      rmax.Write();
     }
 
-    TH1F* x0 = new TH1F(m_cfg.accessorConfig.x0tag.c_str(),
-                        "X_{0} [mm] ;gridPoint", points, -0.5, points - 0.5);
-    TH1F* l0 =
-        new TH1F(m_cfg.accessorConfig.l0tag.c_str(),
-                 "#Lambda_{0} [mm] ;gridPoint", points, -0.5, points - 0.5);
-    TH1F* A = new TH1F(m_cfg.accessorConfig.atag.c_str(),
-                       "X_{0} [mm] ;gridPoint", points, -0.5, points - 0.5);
-    TH1F* Z =
-        new TH1F(m_cfg.accessorConfig.ztag.c_str(),
-                 "#Lambda_{0} [mm] ;gridPoint", points, -0.5, points - 0.5);
-    TH1F* rho =
-        new TH1F(m_cfg.accessorConfig.rhotag.c_str(),
-                 "#rho [g/mm^3] ;gridPoint", points, -0.5, points - 0.5);
+    float fPoints = static_cast<float>(points);
+    TH1F x0(m_cfg.accessorConfig.x0tag.c_str(), "X_{0} [mm] ;gridPoint", points,
+            -0.5, fPoints - 0.5);
+    TH1F l0(m_cfg.accessorConfig.l0tag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+            points, -0.5, fPoints - 0.5);
+    TH1F A(m_cfg.accessorConfig.atag.c_str(), "X_{0} [mm] ;gridPoint", points,
+           -0.5, fPoints - 0.5);
+    TH1F Z(m_cfg.accessorConfig.ztag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+           points, -0.5, fPoints - 0.5);
+    TH1F rho(m_cfg.accessorConfig.rhotag.c_str(), "#rho [g/mm^3] ;gridPoint",
+             points, -0.5, fPoints - 0.5);
     // homogeneous volume
     if (points == 1) {
       auto mat = vMaterial->material({0, 0, 0});
-      x0->SetBinContent(1, mat.X0());
-      l0->SetBinContent(1, mat.L0());
-      A->SetBinContent(1, mat.Ar());
-      Z->SetBinContent(1, mat.Z());
-      rho->SetBinContent(1, mat.massDensity());
+      x0.SetBinContent(1, mat.X0());
+      l0.SetBinContent(1, mat.L0());
+      A.SetBinContent(1, mat.Ar());
+      Z.SetBinContent(1, mat.Z());
+      rho.SetBinContent(1, mat.massDensity());
     } else {
       // 3d grid volume
       if (bvMaterial3D != nullptr) {
@@ -193,11 +190,11 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
           if (!mat.isVacuum()) {
-            x0->SetBinContent(point + 1, mat.X0());
-            l0->SetBinContent(point + 1, mat.L0());
-            A->SetBinContent(point + 1, mat.Ar());
-            Z->SetBinContent(point + 1, mat.Z());
-            rho->SetBinContent(point + 1, mat.massDensity());
+            x0.SetBinContent(point + 1, mat.X0());
+            l0.SetBinContent(point + 1, mat.L0());
+            A.SetBinContent(point + 1, mat.Ar());
+            Z.SetBinContent(point + 1, mat.Z());
+            rho.SetBinContent(point + 1, mat.massDensity());
           }
         }
       }
@@ -207,20 +204,20 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
           if (!mat.isVacuum()) {
-            x0->SetBinContent(point + 1, mat.X0());
-            l0->SetBinContent(point + 1, mat.L0());
-            A->SetBinContent(point + 1, mat.Ar());
-            Z->SetBinContent(point + 1, mat.Z());
-            rho->SetBinContent(point + 1, mat.massDensity());
+            x0.SetBinContent(point + 1, mat.X0());
+            l0.SetBinContent(point + 1, mat.L0());
+            A.SetBinContent(point + 1, mat.Ar());
+            Z.SetBinContent(point + 1, mat.Z());
+            rho.SetBinContent(point + 1, mat.massDensity());
           }
         }
       }
     }
-    x0->Write();
-    l0->Write();
-    A->Write();
-    Z->Write();
-    rho->Write();
+    x0.Write();
+    l0.Write();
+    A.Write();
+    Z.Write();
+    rho.Write();
   }
 }
 
