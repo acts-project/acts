@@ -156,7 +156,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
-      bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          bottomDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
       bottomDoubletFinderConfig;
@@ -166,7 +167,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
   Acts::Experimental::DoubletSeedFinder topDoubletFinder(
-      topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
@@ -176,7 +178,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletCuts.impactMax = m_cfg.impactMax;
   tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  auto derivedTripletCuts = tripletCuts.derive(m_cfg.bFieldInZ);
+  Acts::Experimental::BroadTripletSeedFinder::DerivedTripletCuts
+      derivedTripletCuts(tripletCuts, m_cfg.bFieldInZ);
 
   // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {
@@ -188,63 +191,37 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFinder::State state;
   static thread_local Acts::Experimental::BroadTripletSeedFinder::Cache cache;
 
-  std::vector<Acts::SpacePointIndex2> bottomSps;
-  std::vector<Acts::SpacePointIndex2> middleSps;
-  std::vector<Acts::SpacePointIndex2> topSps;
+  std::vector<std::span<const Acts::SpacePointIndex2>> bottomSpGroups;
+  std::span<const Acts::SpacePointIndex2> middleSps;
+  std::vector<std::span<const Acts::SpacePointIndex2>> topSpGroups;
 
   for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
 
-    bottomSps.clear();
+    bottomSpGroups.clear();
     for (const auto b : bottom) {
-      bottomSps.insert(bottomSps.end(), grid.at(b).begin(), grid.at(b).end());
+      bottomSpGroups.push_back(grid.at(b));
     }
-    middleSps.clear();
     middleSps = grid.at(middle);
-    topSps.clear();
+    topSpGroups.clear();
     for (const auto t : top) {
-      topSps.insert(topSps.end(), grid.at(t).begin(), grid.at(t).end());
+      topSpGroups.push_back(grid.at(t));
     }
-
-    std::ranges::sort(bottomSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
-    std::ranges::sort(middleSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
-    std::ranges::sort(topSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
 
     // we compute this here since all middle space point candidates belong to
     // the same z-bin
     auto firstMiddleSp = coreSpacePoints.at(middleSps.front());
-    auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-        retrieveRadiusRangeForMiddle(
-            Acts::Experimental::ConstSpacePointProxy2(firstMiddleSp),
-            rMiddleSpRange);
+    auto radiusRangeForMiddle = retrieveRadiusRangeForMiddle(
+        Acts::Experimental::ConstSpacePointProxy2(firstMiddleSp),
+        rMiddleSpRange);
     ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
-                 << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
-                 << "]");
+                 << radiusRangeForMiddle.first << ", "
+                 << radiusRangeForMiddle.second << "]");
 
-    for (Acts::SpacePointIndex2 middleSp : middleSps) {
-      auto spM = coreSpacePoints.at(middleSp);
-      const float rM = spM.r();
-
-      // check if spM is outside our radial region of interest
-      if (rM < minRadiusRangeForMiddle) {
-        continue;
-      }
-      if (rM > maxRadiusRangeForMiddle) {
-        // break because SPs are sorted in r
-        break;
-      }
-
-      m_seedFinder->createSeedsFromGroup(
-          finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
-          derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSps,
-          middleSp, topSps, seeds);
-    }  // loop on middle space points
+    m_seedFinder->createSeedsFromSortedGroups(
+        finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
+        derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSpGroups,
+        middleSps, topSpGroups, radiusRangeForMiddle, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

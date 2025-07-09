@@ -10,8 +10,6 @@
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -19,7 +17,6 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
-#include <concepts>
 #include <ostream>
 
 namespace Acts::Experimental {

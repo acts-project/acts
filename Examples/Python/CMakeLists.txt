@@ -103,7 +103,10 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+        PUBLIC
+            ActsPluginGeoModel
+            ActsExamplesDetectorGeoModel
+            ActsExamplesMuonSpectrometerMockupDetector
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
