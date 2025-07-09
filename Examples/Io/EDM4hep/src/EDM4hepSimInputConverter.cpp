@@ -252,15 +252,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     if (!particle.isCreatedInSimulation()) {
       nGeneratorParticles += 1;
     }
-
-    // std::size_t index = particle.getObjectID().index;
-    //
-    // if (index != numSimHits.size()) {
-    //   ACTS_ERROR("index=" << index << " size=" << numSimHits.size());
-    //   throw std::runtime_error{"Inconsistency with edm4hep indices"};
-    // }
-    //
-    // numSimHits.push_back(0);
   }
 
   // Let's figure out first how many hits each particle has:
@@ -274,7 +265,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       auto& num = numSimHits.at(index);
       constexpr unsigned int maxNum =
-          (1 << sizeof(decltype(numSimHits)::value_type) * 8) - 1;
+          (1 << (sizeof(decltype(numSimHits)::value_type) * 8)) - 1;
 
       if (num == maxNum) {
         throw std::runtime_error{"Hit count " + std::to_string(num) +
@@ -474,6 +465,9 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                       << " sim hit collections");
   {
     Acts::ScopedTimer timer("Reading sim hits", logger(), Acts::Logging::DEBUG);
+
+    const auto& vm = m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
+
     for (const auto& name : m_cfg.inputSimHits) {
       const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
@@ -500,9 +494,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
             },
             [&](std::uint64_t cellId) {
               ACTS_VERBOSE("CellID: " << cellId);
-
-              const auto& vm =
-                  m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
               const auto detElement = vm.lookupDetElement(cellId);
 
@@ -820,11 +811,6 @@ void EDM4hepSimInputConverter::processChildren(
     particleMap[daughter.getObjectID().index] =
         detail::ParticleInfo{.particleIndex = particles.size() - 1};
     parentRelationship[particles.size() - 1] = parentIndex;
-
-    // if (!acceptParticle(daughter) && numHits(daughter) == 0) {
-    //   // Do not descend into tree for rejected particles without hits
-    //   continue;
-    // }
 
     processChildren(daughter, pid, particles, parentRelationship, particleMap,
                     nSecondaryVertices, maxGen);
