@@ -78,16 +78,17 @@ using GridEqClosedEqBound = Acts::Grid<
 ///
 /// @tparam indexed_grid_materital_t
 /// @param jMaterial the json object to written into
-/// @param indexedMaterialCandidate the actual indexed material
+/// @param indexedGridMaterialCandidate the actual indexed material
 template <typename indexed_grid_materital_t>
 void convertIndexedGridMaterial(
     nlohmann::json& jMaterial,
-    const Acts::ISurfaceMaterial& indexedMaterialCandidate) {
+    const Acts::ISurfaceMaterial& indexedGridMaterialCandidate) {
   // Check if the material is of the right type
-  const indexed_grid_materital_t* indexedMaterial =
-      dynamic_cast<const indexed_grid_materital_t*>(&indexedMaterialCandidate);
+  const indexed_grid_materital_t* indexedGridMaterial =
+      dynamic_cast<const indexed_grid_materital_t*>(
+          &indexedGridMaterialCandidate);
 
-  if (indexedMaterial != nullptr) {
+  if (indexedGridMaterial != nullptr) {
     // It is a grid type material
     jMaterial[Acts::jsonKey().typekey] = "grid";
     nlohmann::json jMaterialAccessor;
@@ -96,7 +97,7 @@ void convertIndexedGridMaterial(
 
     // If we have a globally indexed map, the material data is loaded elsewhere,
     // locally indexed material vectors are written though
-    const auto& materialAccessor = indexedMaterial->materialAccessor();
+    const auto& materialAccessor = indexedGridMaterial->materialAccessor();
 
     if constexpr (std::is_same_v<decltype(materialAccessor),
                                  const Acts::IndexedMaterialAccessor&>) {
@@ -104,43 +105,45 @@ void convertIndexedGridMaterial(
       jMaterialAccessor["type"] = "indexed";
 
       nlohmann::json jMaterialData;
-      for (const auto& msl : materialAccessor.material) {
+      for (const auto& msl : (*materialAccessor.indexedMaterial)) {
         jMaterialData.push_back(msl);
       }
       jMaterialAccessor["storage_vector"] = jMaterialData;
     }
     // Write the index grid
     jMaterialAccessor["grid"] =
-        Acts::GridJsonConverter::toJson(indexedMaterial->grid());
+        Acts::GridJsonConverter::toJson(indexedGridMaterial->grid());
     jMaterial["accessor"] = jMaterialAccessor;
 
     // Global and bound -> grid local
     jMaterial["global_to_grid_local"] = Acts::GridAccessJsonConverter::toJson(
-        *(indexedMaterial->globalToGridLocalDelegate().instance()));
+        *(indexedGridMaterial->globalToGridLocalDelegate().instance()));
 
     jMaterial["bound_to_grid_local"] = Acts::GridAccessJsonConverter::toJson(
-        *(indexedMaterial->boundToGridLocalDelegate().instance()));
+        *(indexedGridMaterial->boundToGridLocalDelegate().instance()));
   }
 }
 
 /// @brief Unrolling function for catching the right instance
 ///
 /// @param jMaterial is the json object to be written into
-/// @param indexedMaterial is the indexed material
+/// @param indexedGridMaterial is the indexed material
 template <typename... Args>
-void unrollIndexedGridConversion(nlohmann::json& jMaterial,
-                                 const Acts::ISurfaceMaterial& indexedMaterial,
-                                 Acts::TypeList<Args...> /*unused*/) {
-  (convertIndexedGridMaterial<Args>(jMaterial, indexedMaterial), ...);
+void unrollIndexedGridConversion(
+    nlohmann::json& jMaterial,
+    const Acts::ISurfaceMaterial& indexedGridMaterial,
+    Acts::TypeList<Args...> /*unused*/) {
+  (convertIndexedGridMaterial<Args>(jMaterial, indexedGridMaterial), ...);
 }
 
 template <typename IndexedAccessorType>
-Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
+Acts::ISurfaceMaterial* indexedGridMaterialFromJson(nlohmann::json& jMaterial) {
   // Load accessor and grid
   nlohmann::json jMaterialAccessor = jMaterial["accessor"];
 
   // Prepare the material and its accessor
-  IndexedAccessorType materialAccessor(std::vector<Acts::MaterialSlab>{});
+  IndexedAccessorType materialAccessor(
+      std::make_shared<std::vector<Acts::MaterialSlab>>());
 
   // If it's locally indexed, we need to load the material vector
   if constexpr (std::is_same_v<IndexedAccessorType,
@@ -149,7 +152,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
     for (const auto& msl : jMaterialAccessor["storage_vector"]) {
       Acts::MaterialSlab mat = Acts::MaterialSlab::Nothing();
       from_json(msl, mat);
-      materialAccessor.material.push_back(mat);
+      materialAccessor.indexedMaterial->push_back(mat);
     }
   }
 
@@ -427,21 +430,6 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     return;
   }
 
-  // Possible: globally indexed grid types
-  using GloballyIndexedSurfaceGrids = Acts::TypeList<
-      Acts::GloballyIndexedSurfaceMaterial<GridEqBound<std::size_t>>,
-      Acts::GloballyIndexedSurfaceMaterial<GridEqClosed<std::size_t>>,
-      Acts::GloballyIndexedSurfaceMaterial<GridEqBoundEqBound<std::size_t>>,
-      Acts::GloballyIndexedSurfaceMaterial<GridEqBoundEqClosed<std::size_t>>,
-      Acts::GloballyIndexedSurfaceMaterial<GridEqClosedEqBound<std::size_t>>>;
-
-  unrollIndexedGridConversion(jMaterial, *material,
-                              GloballyIndexedSurfaceGrids{});
-  if (!jMaterial.empty()) {
-    j[Acts::jsonKey().materialkey] = jMaterial;
-    return;
-  }
-
   // Possible: material grid types
   // using MaterialSurfaceGrids = Acts::TypeList<
   //    Acts::GridSurfaceMaterial<GridEqBound<std::size_t>>,
@@ -469,7 +457,7 @@ void Acts::from_json(const nlohmann::json& j,
   // Grid based material maps
   if (jMaterial[Acts::jsonKey().typekey] == "grid") {
     material =
-        indexedMaterialFromJson<Acts::IndexedMaterialAccessor>(jMaterial);
+        indexedGridMaterialFromJson<Acts::IndexedMaterialAccessor>(jMaterial);
     return;
   }
 

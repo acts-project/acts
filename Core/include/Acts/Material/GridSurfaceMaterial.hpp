@@ -46,78 +46,24 @@ struct GridMaterialAccessor : public IGridMaterialAccessor {
       grid_type& grid, const typename grid_type::point_t& point) const {
     return grid.atPosition(point);
   }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param grid the grid (ignored)
-  /// @param scale the amount of the scaling
-  ///
-  /// @note this is not particularly fast
-  template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
-    // Loop through the grid bins, get the indices and scale the material
-    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      grid.at(ib).scaleThickness(static_cast<float>(scale));
-    }
-  }
 };
 
-/// @brief  This is an accessor for cases where the material is filled in a vector
-/// and then indexed by the grid
+/// @brief  This is an accessor for cases where the material is indexed
+///
+/// It can work for globally or locally indexed materials, depening if the
+/// material store is shared or not.
 struct IndexedMaterialAccessor : public IGridMaterialAccessor {
-  /// Broadcast the grid_value_type
-  using grid_value_type = std::size_t;
-
-  /// @brief The internal storage of the material
-  explicit IndexedMaterialAccessor(std::vector<MaterialSlab>&& mmaterial)
-      : IGridMaterialAccessor(), material(std::move(mmaterial)) {}
-
-  /// @brief The internal storage of the material
-  std::vector<MaterialSlab> material;
-  /// @brief  Direct const access to the material slap sorted in the grid
-  /// @tparam grid_type the type of the grid, also defines the point type
-  /// @param grid the grid
-  /// @param point the lookup point (already casted from global, or filled from local)
-  ///
-  /// @return the material slab from the grid bin associated to the lookup point
-  template <typename grid_type>
-  inline const MaterialSlab& slab(
-      const grid_type& grid, const typename grid_type::point_t& point) const {
-    auto index = grid.atPosition(point);
-    return material[index];
-  }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param scale the amount of the scaling
-  template <typename grid_type>
-  void scale(grid_type& /*grid*/, double scale) {
-    for (auto& m : material) {
-      m.scaleThickness(static_cast<float>(scale));
-    }
-  }
-};
-
-/// @brief  This is an accessor for cases where the material is filled in a global
-/// material vector that is accessed from the different material grids.
-struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
-  explicit GloballyIndexedMaterialAccessor(
-      std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
-      : IGridMaterialAccessor(),
-        globalMaterial(std::move(gMaterial)),
-        sharedEntries(shared) {}
+  /// Constructor for the indexed material accessor
+  /// @param idxMaterial is the indexed material vector
+  explicit IndexedMaterialAccessor(
+      std::shared_ptr<std::vector<MaterialSlab>> idxMaterial)
+      : IGridMaterialAccessor(), indexedMaterial(std::move(idxMaterial)) {}
 
   /// Broadcast the grid_value_type
   using grid_value_type = std::size_t;
 
-  /// @brief The internal storage of the material
-  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
-
-  /// Indicate if you have entries bins across different grids, e.g. by
-  /// running a compression/clustering algorithm.
-  ///
-  /// It is the responsibility of the user to set this flag correctly.
-  bool sharedEntries = false;
+  /// @brief The storage vector of the material
+  std::shared_ptr<std::vector<MaterialSlab>> indexedMaterial = nullptr;
 
   /// @brief  Direct const access to the material slap sorted in the grid
   ///
@@ -131,30 +77,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   inline const MaterialSlab& slab(
       const grid_type& grid, const typename grid_type::point_t& point) const {
     auto index = grid.atPosition(point);
-    return (*globalMaterial)[index];
-  }
-
-  /// @brief Scale the material (by scaling the thickness)
-  ///
-  /// @param grid the grid holding the indices into the global material vector
-  /// @param scale the amount of the scaling
-  ///
-  /// @note this will scale only the bins touched by this grid, however,
-  /// if there are shared bins, then it will throw an exception as the
-  /// outcome is unpredictable.
-  ///
-  template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
-    if (sharedEntries) {
-      throw std::invalid_argument(
-          "GloballyIndexedMaterialAccessor: shared entry scaling is not "
-          "supported.");
-    }
-    // Loop through the grid bins, get the indices and scale the material
-    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      auto index = grid.at(ib);
-      (*globalMaterial)[index].scaleThickness(static_cast<float>(scale));
-    }
+    return (*indexedMaterial)[index];
   }
 };
 
@@ -247,14 +170,6 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
-  /// Scale operator
-  ///
-  /// @param factor is the scale factor applied
-  ISurfaceMaterial& scale(double factor) final {
-    m_materialAccessor.scale(m_grid, factor);
-    return (*this);
-  }
-
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "GridSurfaceMaterial - material access via accessor.";
@@ -319,11 +234,6 @@ class GridSurfaceMaterialT
 template <typename grid_type>
 using IndexedSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, IndexedMaterialAccessor>;
-
-// Globally Indexed Surface material
-template <typename grid_type>
-using GloballyIndexedSurfaceMaterial =
-    GridSurfaceMaterialT<grid_type, GloballyIndexedMaterialAccessor>;
 
 // Grid Surface material
 template <typename grid_type>

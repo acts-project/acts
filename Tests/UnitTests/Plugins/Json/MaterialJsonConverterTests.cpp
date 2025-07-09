@@ -25,13 +25,13 @@
 BOOST_AUTO_TEST_SUITE(MaterialJsonIO)
 
 BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
-  std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
-  material.emplace_back(
+  auto material = std::make_shared<std::vector<Acts::MaterialSlab>>();
+  material->emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
+  material->emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
-  material.emplace_back(
+  material->emplace_back(
       Acts::Material::fromMolarDensity(11.0, 12.0, 13.0, 14.0, 15.0), 2.0);
-  material.emplace_back(
+  material->emplace_back(
       Acts::Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 3.0);
 
   using EqBound = Acts::GridAxisGenerators::EqBound;
@@ -87,22 +87,23 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   // Check the accessor is there and the material is filled
   const auto& accessorRead = ismReadTyped->materialAccessor();
 
-  auto materialRead = accessorRead.material;
-  BOOST_REQUIRE(materialRead.size() == 4);
-  CHECK_CLOSE_ABS(accessorRead.material[0].thickness(), 0.0, 1e-5);
-  CHECK_CLOSE_ABS(accessorRead.material[1].thickness(), 1.0, 1e-5);
-  CHECK_CLOSE_ABS(accessorRead.material[2].thickness(), 2.0, 1e-5);
-  CHECK_CLOSE_ABS(accessorRead.material[3].thickness(), 3.0, 1e-5);
+  auto materialRead = accessorRead.indexedMaterial;
+  BOOST_REQUIRE(materialRead != nullptr);
+  BOOST_REQUIRE(materialRead->size() == 4);
+  CHECK_CLOSE_ABS(accessorRead.indexedMaterial->at(0).thickness(), 0.0, 1e-5);
+  CHECK_CLOSE_ABS(accessorRead.indexedMaterial->at(1).thickness(), 1.0, 1e-5);
+  CHECK_CLOSE_ABS(accessorRead.indexedMaterial->at(2).thickness(), 2.0, 1e-5);
+  CHECK_CLOSE_ABS(accessorRead.indexedMaterial->at(3).thickness(), 3.0, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
-  std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material::Vacuum(), 1.0);  // vacuum
-  material.emplace_back(
+  auto material = std::make_shared<std::vector<Acts::MaterialSlab>>();
+  material->emplace_back(Acts::Material::Vacuum(), 1.0);  // vacuum
+  material->emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
-  material.emplace_back(
+  material->emplace_back(
       Acts::Material::fromMolarDensity(11.0, 12.0, 13.0, 14.0, 15.0), 1.0);
-  material.emplace_back(
+  material->emplace_back(
       Acts::Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 1.0);
 
   using EqBoundEqClosed = Acts::GridAxisGenerators::EqBoundEqClosed;

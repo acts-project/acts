@@ -47,11 +47,6 @@ class ISurfaceMaterial {
   /// Destructor
   virtual ~ISurfaceMaterial() = default;
 
-  /// Scale material
-  ///
-  /// @param factor is the scale factor applied
-  virtual ISurfaceMaterial& scale(double factor) = 0;
-
   /// Return method for full material description of the Surface
   /// - from local coordinate on the surface
   ///
