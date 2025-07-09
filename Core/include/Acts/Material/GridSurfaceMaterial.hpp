@@ -50,7 +50,7 @@ struct GridMaterialAccessor : public IGridMaterialAccessor {
 
 /// @brief  This is an accessor for cases where the material is indexed
 ///
-/// It can work for globally or locally indexed materials, depening if the
+/// It can work for globally or locally indexed materials, depending if the
 /// material store is shared or not.
 struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   /// Constructor for the indexed material accessor
