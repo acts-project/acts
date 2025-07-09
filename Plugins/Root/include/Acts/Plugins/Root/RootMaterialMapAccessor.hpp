@@ -82,19 +82,19 @@ class RootMaterialMapAccessor {
   struct MaterialTreePayload {
     std::size_t index = 0;
     /// geometry identifier
-    std::int64_t hGeoId;
+    std::int64_t hGeoId = 0;
     /// thickness
-    float ht;
+    float ht = 0.0f;
     /// X0
-    float hX0;
+    float hX0 = 0.0f;
     /// L0
-    float hL0;
+    float hL0 = 0.0f;
     /// A
-    float hA;
+    float hA = 0.0f;
     /// Z
-    float hZ;
+    float hZ = 0.0f;
     /// Rho
-    float hRho;
+    float hRho = 0.0f;
   };
 
   /// @brief Constructor from config struct
