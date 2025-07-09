@@ -62,6 +62,18 @@ class SpacePointProxy2 {
   /// @return The index of the space point in the container.
   IndexType index() const noexcept { return m_index; }
 
+  /// Assigns source links to the space point at the given index.
+  /// @param index The index of the space point to assign source links to.
+  /// @param sourceLinks A span of source links to assign to the space point.
+  /// @throws std::out_of_range if the index is out of range.
+  /// @throws std::logic_error if no source links column is available.
+  /// @throws std::logic_error if source links are already assigned to the space point.
+  void assignSourceLinks(std::span<const SourceLink> sourceLinks)
+    requires(!ReadOnly)
+  {
+    m_container->assignSourceLinks(m_index, sourceLinks);
+  }
+
   /// Mutable access to the source links of the space point.
   /// @return A mutable span of source links associated with the space point.
   std::span<SourceLink> sourceLinks() noexcept

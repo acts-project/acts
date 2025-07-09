@@ -36,22 +36,23 @@ using ConstSpacePointProxy2 = SpacePointProxy2<true>;
 enum class SpacePointColumns : std::uint32_t {
   None = 0,  ///< No columns
 
-  X = 1 << 0,                     ///< X coordinate
-  Y = 1 << 1,                     ///< Y coordinate
-  Z = 1 << 2,                     ///< Z coordinate
-  R = 1 << 3,                     ///< Radial coordinate
-  Phi = 1 << 4,                   ///< Azimuthal angle
-  Time = 1 << 5,                  ///< Time information
-  VarianceZ = 1 << 6,             ///< Variance in Z direction
-  VarianceR = 1 << 7,             ///< Variance in radial direction
-  TopStripVector = 1 << 8,        ///< Vector for the top strip
-  BottomStripVector = 1 << 9,     ///< Vector for the bottom strip
-  StripCenterDistance = 1 << 10,  ///< Distance to the strip center
-  TopStripCenter = 1 << 11,       ///< Center of the top strip
-  CopyFromIndex = 1 << 12,        ///< Copy from index
+  SourceLinks = 1 << 0,           ///< Source link information
+  X = 1 << 1,                     ///< X coordinate
+  Y = 1 << 2,                     ///< Y coordinate
+  Z = 1 << 3,                     ///< Z coordinate
+  R = 1 << 4,                     ///< Radial coordinate
+  Phi = 1 << 5,                   ///< Azimuthal angle
+  Time = 1 << 6,                  ///< Time information
+  VarianceZ = 1 << 7,             ///< Variance in Z direction
+  VarianceR = 1 << 8,             ///< Variance in radial direction
+  TopStripVector = 1 << 9,        ///< Vector for the top strip
+  BottomStripVector = 1 << 10,    ///< Vector for the bottom strip
+  StripCenterDistance = 1 << 11,  ///< Distance to the strip center
+  TopStripCenter = 1 << 12,       ///< Center of the top strip
+  CopyFromIndex = 1 << 13,        ///< Copy from index
 
   /// Default set of columns
-  Default = X | Y | Z,
+  Default = SourceLinks | X | Y | Z,
   /// All strip-related columns
   Strip =
       TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
@@ -164,7 +165,7 @@ class SpacePointContainer2 {
 
   /// Returns the number of space points in the container.
   /// @return The number of space points in the container.
-  std::size_t size() const noexcept { return m_sourceLinkOffsets.size(); }
+  std::uint32_t size() const noexcept { return m_size; }
   /// Checks if the container is empty.
   /// @return True if the container is empty, false otherwise.
   [[nodiscard]] bool empty() const noexcept { return size() == 0; }
@@ -173,17 +174,23 @@ class SpacePointContainer2 {
   /// This will reserve space for the source links and other columns as well.
   /// @param size The number of space points to reserve space for.
   /// @param averageSourceLinks The average number of source links per space point.
-  void reserve(std::size_t size, float averageSourceLinks = 1) noexcept;
+  void reserve(std::uint32_t size, float averageSourceLinks = 1) noexcept;
 
   /// Clears the container, removing all space points and columns.
   void clear() noexcept;
 
-  /// Emplaces a new space point with the given source links and coordinates.
-  /// This will create a new space point at the end of the container.
-  /// @param sourceLinks The source links associated with the space point.
+  /// Creates a new space point at the end of the container.
   /// @return A mutable proxy to the newly created space point.
-  MutableProxyType createSpacePoint(
-      std::span<const SourceLink> sourceLinks) noexcept;
+  MutableProxyType createSpacePoint() noexcept;
+
+  /// Assigns source links to the space point at the given index.
+  /// @param index The index of the space point to assign source links to.
+  /// @param sourceLinks A span of source links to assign to the space point.
+  /// @throws std::out_of_range if the index is out of range.
+  /// @throws std::logic_error if no source links column is available.
+  /// @throws std::logic_error if source links are already assigned to the space point.
+  void assignSourceLinks(IndexType index,
+                         std::span<const SourceLink> sourceLinks);
 
   /// Returns a mutable proxy to the space point at the given index.
   /// If the index is out of range, an exception is thrown.
@@ -211,10 +218,14 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A mutable reference to the source link at the given index.
   std::span<SourceLink> sourceLinks(IndexType index) {
-    assert(index < m_sourceLinkOffsets.size() && "Index out of bounds");
+    assert(m_sourceLinkOffsetColumn.has_value() &&
+           m_sourceLinkCountColumn.has_value() &&
+           "Column 'sourceLinks' does not exist");
+    assert(index < m_sourceLinkOffsetColumn->size() &&
+           index < m_sourceLinkCountColumn->size() && "Index out of bounds");
     return std::span<SourceLink>(
-        m_sourceLinks.data() + m_sourceLinkOffsets[index],
-        m_sourceLinkCounts[index]);
+        m_sourceLinks.data() + entry(m_sourceLinkOffsetColumn->proxy(), index),
+        entry(m_sourceLinkCountColumn->proxy(), index));
   }
   /// Mutable access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -343,11 +354,14 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A const span to the source links at the given index.
   std::span<const SourceLink> sourceLinks(IndexType index) const noexcept {
-    assert(index < m_sourceLinkCounts.size() && "Index out of bounds");
-    assert(index < m_sourceLinkOffsets.size() && "Index out of bounds");
+    assert(m_sourceLinkOffsetColumn.has_value() &&
+           m_sourceLinkCountColumn.has_value() &&
+           "Column 'sourceLinks' does not exist");
+    assert(index < m_sourceLinkOffsetColumn->size() &&
+           index < m_sourceLinkCountColumn->size() && "Index out of bounds");
     return std::span<const SourceLink>(
-        m_sourceLinks.data() + m_sourceLinkOffsets[index],
-        m_sourceLinkCounts[index]);
+        m_sourceLinks.data() + entry(m_sourceLinkOffsetColumn->proxy(), index),
+        entry(m_sourceLinkCountColumn->proxy(), index));
   }
   /// Const access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -493,7 +507,7 @@ class SpacePointContainer2 {
   /// @return True if the container has all the specified Columns, false
   ///         otherwise.
   bool hasColumns(SpacePointColumns columns) const noexcept {
-    return (m_allocatedColumns & columns) == columns;
+    return (m_knownColumns & columns) == columns;
   }
 
   /// Returns a proxy to the r coordinate column.
@@ -714,12 +728,19 @@ class SpacePointContainer2 {
   }
 
  private:
-  std::vector<std::size_t> m_sourceLinkOffsets;
-  std::vector<std::uint8_t> m_sourceLinkCounts;
+  std::uint32_t m_size{0};
+
+  std::unordered_map<std::string,
+                     std::pair<SpacePointColumnHolderBase *,
+                               std::unique_ptr<SpacePointColumnHolderBase>>>
+      m_namedColumns;
+  SpacePointColumns m_knownColumns{SpacePointColumns::None};
+
   std::vector<SourceLink> m_sourceLinks;
 
-  SpacePointColumns m_allocatedColumns{SpacePointColumns::None};
-  std::vector<SpacePointColumnHolderBase *> m_allColumns;
+  std::optional<SpacePointColumnHolder<SpacePointIndex2>>
+      m_sourceLinkOffsetColumn;
+  std::optional<SpacePointColumnHolder<std::uint8_t>> m_sourceLinkCountColumn;
 
   std::optional<SpacePointColumnHolder<float>> m_xColumn;
   std::optional<SpacePointColumnHolder<float>> m_yColumn;
@@ -743,18 +764,43 @@ class SpacePointContainer2 {
   // copy information
   std::optional<SpacePointColumnHolder<std::size_t>> m_copyFromIndexColumn;
 
-  std::unordered_map<std::string, std::unique_ptr<SpacePointColumnHolderBase>>
-      m_namedColumns;
+  static auto knownColumnMaks() noexcept {
+    return std::tuple(
+        SpacePointColumns::SourceLinks, SpacePointColumns::SourceLinks,
+        SpacePointColumns::X, SpacePointColumns::Y, SpacePointColumns::Z,
+        SpacePointColumns::R, SpacePointColumns::Phi, SpacePointColumns::Time,
+        SpacePointColumns::VarianceZ, SpacePointColumns::VarianceR,
+        SpacePointColumns::TopStripVector, SpacePointColumns::BottomStripVector,
+        SpacePointColumns::StripCenterDistance,
+        SpacePointColumns::TopStripCenter, SpacePointColumns::CopyFromIndex);
+  }
+
+  static auto knownColumnNames() noexcept {
+    return std::tuple("sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r",
+                      "phi", "time", "varianceZ", "varianceR", "topStripVector",
+                      "bottomStripVector", "stripCenterDistance",
+                      "topStripCenter", "copyFromIndex");
+  }
+
+  static auto knownColumnDefaults() noexcept {
+    return std::tuple(SpacePointIndex2{0}, std::uint8_t{0}, float{0}, float{0},
+                      float{0}, float{0}, float{0}, float{NoTime}, float{0},
+                      float{0}, Eigen::Vector3f{0, 0, 0},
+                      Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
+                      Eigen::Vector3f{0, 0, 0}, std::size_t{0});
+  }
 
   auto knownColumns() & noexcept {
-    return std::tie(m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
+    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
+                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
                     m_timeColumn, m_varianceZColumn, m_varianceRColumn,
                     m_topStripVectorColumn, m_bottomStripVectorColumn,
                     m_stripCenterDistanceColumn, m_topStripCenterColumn,
                     m_copyFromIndexColumn);
   }
   auto knownColumns() const & noexcept {
-    return std::tie(m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
+    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
+                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
                     m_timeColumn, m_varianceZColumn, m_varianceRColumn,
                     m_topStripVectorColumn, m_bottomStripVectorColumn,
                     m_stripCenterDistanceColumn, m_topStripCenterColumn,
@@ -762,6 +808,7 @@ class SpacePointContainer2 {
   }
   auto knownColumns() && noexcept {
     return std::tuple(
+        std::move(m_sourceLinkOffsetColumn), std::move(m_sourceLinkCountColumn),
         std::move(m_xColumn), std::move(m_yColumn), std::move(m_zColumn),
         std::move(m_rColumn), std::move(m_phiColumn), std::move(m_timeColumn),
         std::move(m_varianceZColumn), std::move(m_varianceRColumn),
@@ -773,27 +820,31 @@ class SpacePointContainer2 {
   void copyColumns(const SpacePointContainer2 &other);
   void moveColumns(SpacePointContainer2 &other) noexcept;
 
-  void initializeColumns() noexcept;
+  static bool reservedColumn(const std::string &name) noexcept;
 
   template <typename Holder>
   auto createColumnImpl(const std::string &name) {
+    if (reservedColumn(name)) {
+      throw std::runtime_error("Column name is reserved: " + name);
+    }
     if (hasColumn(name)) {
       throw std::runtime_error("Column already exists: " + name);
     }
     auto holder = std::make_unique<Holder>();
     holder->resize(size());
     auto proxy = holder->proxy();
-    m_allColumns.push_back(holder.get());
-    m_namedColumns[name] = std::move(holder);
+    m_namedColumns.try_emplace(name,
+                               std::pair{holder.get(), std::move(holder)});
     return proxy;
   }
+
   template <typename Holder>
   auto namedColumnImpl(const std::string &name) const {
     auto it = m_namedColumns.find(name);
     if (it == m_namedColumns.end()) {
       throw std::runtime_error("Column not found: " + name);
     }
-    auto &holder = dynamic_cast<Holder &>(*it->second);
+    auto &holder = dynamic_cast<Holder &>(*it->second.first);
     return holder.proxy();
   }
 };

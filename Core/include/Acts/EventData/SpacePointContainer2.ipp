@@ -14,15 +14,10 @@
 
 namespace Acts::Experimental {
 
-inline MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint(
-    std::span<const SourceLink> sourceLinks) noexcept {
-  m_sourceLinkOffsets.push_back(m_sourceLinks.size());
-  m_sourceLinkCounts.push_back(static_cast<std::uint8_t>(sourceLinks.size()));
-  m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
-                       sourceLinks.end());
-
-  for (auto &column : m_allColumns) {
-    column->emplace_back();
+inline MutableSpacePointProxy2
+SpacePointContainer2::createSpacePoint() noexcept {
+  for (const auto &[name, column] : m_namedColumns) {
+    column.first->emplace_back();
   }
 
   return MutableProxyType(*this, size() - 1);

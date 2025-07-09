@@ -114,7 +114,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   for (const auto& sp : spacePoints) {
     // check if the space point passes the selection
     if (m_spacePointSelector(sp)) {
-      auto newSp = coreSpacePoints.createSpacePoint(
+      auto newSp = coreSpacePoints.createSpacePoint();
+      newSp.assignSourceLinks(
           std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
       newSp.x() = sp.x();
       newSp.y() = sp.y();
