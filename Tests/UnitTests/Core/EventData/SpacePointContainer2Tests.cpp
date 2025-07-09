@@ -31,8 +31,7 @@ BOOST_AUTO_TEST_CASE(Create) {
   SpacePointContainer2 container;
   container.reserve(1);
 
-  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)}, 1, 2,
-                             3);
+  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
 
   BOOST_CHECK(!container.empty());
   BOOST_CHECK_EQUAL(container.size(), 1u);
@@ -49,8 +48,7 @@ BOOST_AUTO_TEST_CASE(Iterate) {
   SpacePointContainer2 container;
   container.reserve(1);
 
-  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)}, 1, 2,
-                             3);
+  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
 
   auto it = container.begin();
   BOOST_CHECK(it != container.end());
@@ -63,8 +61,7 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   SpacePointContainer2 container;
   container.reserve(1);
 
-  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)}, 1, 2,
-                             3);
+  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
 
   SpacePointContainer2 containerCopy = container;
   BOOST_CHECK(!containerCopy.empty());
@@ -85,8 +82,7 @@ BOOST_AUTO_TEST_CASE(Clear) {
   SpacePointContainer2 container;
   container.reserve(1);
 
-  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)}, 1, 2,
-                             3);
+  container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
 
   container.clear();
 
@@ -100,17 +96,16 @@ BOOST_AUTO_TEST_CASE(Clear) {
 BOOST_AUTO_TEST_CASE(KnownExtraColumns) {
   SpacePointContainer2 container;
 
-  BOOST_CHECK(!container.hasExtraColumns(SpacePointKnownExtraColumn::R |
-                                         SpacePointKnownExtraColumn::Phi));
+  BOOST_CHECK(
+      !container.hasColumns(SpacePointColumns::R | SpacePointColumns::Phi));
 
-  container.createExtraColumns(SpacePointKnownExtraColumn::R |
-                               SpacePointKnownExtraColumn::Phi);
+  container.createColumns(SpacePointColumns::R | SpacePointColumns::Phi);
 
-  BOOST_CHECK(container.hasExtraColumns(SpacePointKnownExtraColumn::R |
-                                        SpacePointKnownExtraColumn::Phi));
+  BOOST_CHECK(
+      container.hasColumns(SpacePointColumns::R | SpacePointColumns::Phi));
 
-  auto sp = container.createSpacePoint(
-      std::array<SourceLink, 1>{SourceLink(42)}, 1, 2, 3);
+  auto sp =
+      container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
   sp.r() = 100;
 
   BOOST_CHECK_EQUAL(sp.r(), 100);
@@ -120,22 +115,22 @@ BOOST_AUTO_TEST_CASE(KnownExtraColumns) {
 BOOST_AUTO_TEST_CASE(NamedExtraColumns) {
   SpacePointContainer2 container;
 
-  BOOST_CHECK(!container.hasExtraColumn("extra1"));
-  BOOST_CHECK(!container.hasExtraColumn("extra2"));
+  BOOST_CHECK(!container.hasColumn("extra1"));
+  BOOST_CHECK(!container.hasColumn("extra2"));
 
-  auto extra1 = container.createExtraColumn<int>("extra1");
+  auto extra1 = container.createColumn<int>("extra1");
 
-  BOOST_CHECK(container.hasExtraColumn("extra1"));
-  BOOST_CHECK(!container.hasExtraColumn("extra2"));
+  BOOST_CHECK(container.hasColumn("extra1"));
+  BOOST_CHECK(!container.hasColumn("extra2"));
 
-  auto sp = container.createSpacePoint(
-      std::array<SourceLink, 1>{SourceLink(42)}, 1, 2, 3);
+  auto sp =
+      container.createSpacePoint(std::array<SourceLink, 1>{SourceLink(42)});
   sp.extra(extra1) = 100;
 
-  auto extra2 = container.createExtraColumn<int>("extra2");
+  auto extra2 = container.createColumn<int>("extra2");
 
-  BOOST_CHECK(container.hasExtraColumn("extra1"));
-  BOOST_CHECK(container.hasExtraColumn("extra2"));
+  BOOST_CHECK(container.hasColumn("extra1"));
+  BOOST_CHECK(container.hasColumn("extra2"));
 
   BOOST_CHECK_EQUAL(sp.extra(extra1), 100);
   BOOST_CHECK_EQUAL(sp.extra(extra2), 0);

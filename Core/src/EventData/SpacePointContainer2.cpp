@@ -63,8 +63,8 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
 void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
   m_allColumns.reserve(other.m_allColumns.size());
 
-  for (const auto &[name, column] : other.m_namedExtraColumns) {
-    m_namedExtraColumns.try_emplace(name, column->copy());
+  for (const auto &[name, column] : other.m_namedColumns) {
+    m_namedColumns.try_emplace(name, column->copy());
   }
 
   m_allocatedColumns = other.m_allocatedColumns;
@@ -76,11 +76,11 @@ void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
 void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
   m_allColumns.reserve(other.m_allColumns.size());
 
-  for (auto &[name, column] : other.m_namedExtraColumns) {
-    m_namedExtraColumns.try_emplace(name, std::move(column));
+  for (auto &[name, column] : other.m_namedColumns) {
+    m_namedColumns.try_emplace(name, std::move(column));
   }
 
-  other.m_namedExtraColumns.clear();
+  other.m_namedColumns.clear();
   other.m_allColumns.clear();
 
   m_allocatedColumns = other.m_allocatedColumns;
@@ -92,7 +92,7 @@ void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
 void SpacePointContainer2::initializeColumns() noexcept {
   m_allColumns.clear();
 
-  for (const auto &[name, column] : m_namedExtraColumns) {
+  for (const auto &[name, column] : m_namedColumns) {
     m_allColumns.push_back(column.get());
   }
 

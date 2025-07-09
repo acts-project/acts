@@ -169,7 +169,7 @@ class SpacePointProxy2 {
   typename column_proxy::ValueType &extra(column_proxy column) noexcept
     requires(!ReadOnly)
   {
-    return m_container->extra(column, m_index);
+    return m_container->entry(column, m_index);
   }
 
   /// Const access to the x coordinate of the space point.
