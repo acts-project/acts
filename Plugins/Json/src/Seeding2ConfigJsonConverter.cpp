@@ -109,6 +109,7 @@ void Acts::Experimental::to_json(nlohmann::json& j,
 void Acts::Experimental::to_json(
     nlohmann::json& j, const DoubletSeedFinder::DerivedConfig& config) {
   to_json(j, static_cast<const DoubletSeedFinder::Config&>(config));
+  j["bFieldInZ"] = config.bFieldInZ;
   j["minHelixDiameter2"] = config.minHelixDiameter2;
 }
 
@@ -132,6 +133,7 @@ void Acts::Experimental::to_json(
 void Acts::Experimental::to_json(
     nlohmann::json& j, const BroadTripletSeedFinder::DerivedTripletCuts& cuts) {
   to_json(j, static_cast<const BroadTripletSeedFinder::TripletCuts&>(cuts));
+  j["bFieldInZ"] = cuts.bFieldInZ;
   j["highland"] = cuts.highland;
   j["pTPerHelixRadius"] = cuts.pTPerHelixRadius;
   j["minHelixDiameter2"] = cuts.minHelixDiameter2;
@@ -205,6 +207,7 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
 void Acts::Experimental::from_json(const nlohmann::json& j,
                                    DoubletSeedFinder::DerivedConfig& config) {
   from_json(j, static_cast<DoubletSeedFinder::Config&>(config));
+  j["bFieldInZ"].get_to(config.bFieldInZ);
   j["minHelixDiameter2"].get_to(config.minHelixDiameter2);
 }
 
@@ -228,6 +231,7 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
 void Acts::Experimental::from_json(
     const nlohmann::json& j, BroadTripletSeedFinder::DerivedTripletCuts& cuts) {
   from_json(j, static_cast<BroadTripletSeedFinder::TripletCuts&>(cuts));
+  j["bFieldInZ"].get_to(cuts.bFieldInZ);
   j["highland"].get_to(cuts.highland);
   j["pTPerHelixRadius"].get_to(cuts.pTPerHelixRadius);
   j["minHelixDiameter2"].get_to(cuts.minHelixDiameter2);
