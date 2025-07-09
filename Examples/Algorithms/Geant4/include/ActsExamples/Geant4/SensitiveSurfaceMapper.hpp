@@ -73,7 +73,7 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
-  std::unique_Ptr<const Acts::Logger> m_logger{};
+  std::unique_ptr<const Acts::Logger> m_logger{};
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
