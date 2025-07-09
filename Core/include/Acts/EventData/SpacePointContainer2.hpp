@@ -69,7 +69,8 @@ class SpacePointColumnProxy {
   using ValueType = T;
   using ContainerType = std::vector<ValueType>;
 
-  explicit SpacePointColumnProxy(const ContainerType &data) : m_data(&data) {}
+  explicit SpacePointColumnProxy(const ContainerType &container)
+      : m_container(&container) {}
   SpacePointColumnProxy(const SpacePointColumnProxy &other) = default;
   SpacePointColumnProxy(SpacePointColumnProxy &&other) noexcept = default;
   SpacePointColumnProxy &operator=(const SpacePointColumnProxy &other) =
@@ -77,11 +78,20 @@ class SpacePointColumnProxy {
   SpacePointColumnProxy &operator=(SpacePointColumnProxy &&other) noexcept =
       default;
 
- private:
-  const ContainerType *m_data{};
+  std::span<ValueType> data() {
+    return std::span<ValueType>(container().data(), container().size());
+  }
+  std::span<const ValueType> data() const {
+    return std::span<const ValueType>(container().data(), container().size());
+  }
 
-  ContainerType &data() { return const_cast<ContainerType &>(*m_data); }
-  const ContainerType &data() const { return *m_data; }
+ private:
+  const ContainerType *m_container{};
+
+  ContainerType &container() {
+    return const_cast<ContainerType &>(*m_container);
+  }
+  const ContainerType &container() const { return *m_container; }
 
   friend class SpacePointContainer2;
 };
@@ -516,6 +526,36 @@ class SpacePointContainer2 {
     return (m_knownColumns & columns) == columns;
   }
 
+  /// Returns a proxy to the x coordinate column.
+  /// If the column does not exist, an exception is thrown.
+  /// @return A proxy to the r coordinate column.
+  /// @throws std::runtime_error if the column does not exist.
+  SpacePointColumnProxy<float> xColumn() const {
+    if (!m_rColumn.has_value()) {
+      throw std::runtime_error("Column 'x' does not exist");
+    }
+    return m_rColumn->proxy();
+  }
+  /// Returns a proxy to the y coordinate column.
+  /// If the column does not exist, an exception is thrown.
+  /// @return A proxy to the y coordinate column.
+  /// @throws std::runtime_error if the column does not exist.
+  SpacePointColumnProxy<float> yColumn() const {
+    if (!m_yColumn.has_value()) {
+      throw std::runtime_error("Column 'y' does not exist");
+    }
+    return m_yColumn->proxy();
+  }
+  /// Returns a proxy to the z coordinate column.
+  /// If the column does not exist, an exception is thrown.
+  /// @return A proxy to the z coordinate column.
+  /// @throws std::runtime_error if the column does not exist.
+  SpacePointColumnProxy<float> zColumn() const {
+    if (!m_zColumn.has_value()) {
+      throw std::runtime_error("Column 'z' does not exist");
+    }
+    return m_zColumn->proxy();
+  }
   /// Returns a proxy to the r coordinate column.
   /// If the column does not exist, an exception is thrown.
   /// @return A proxy to the r coordinate column.
@@ -648,8 +688,8 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the Column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  SpacePointColumnProxy<T> namedColumn(const std::string &name) const {
-    return namedColumnImpl<SpacePointColumnHolder<T>>(name);
+  SpacePointColumnProxy<T> column(const std::string &name) const {
+    return columnImpl<SpacePointColumnHolder<T>>(name);
   }
 
   template <bool read_only>
@@ -853,7 +893,7 @@ class SpacePointContainer2 {
   }
 
   template <typename Holder>
-  auto namedColumnImpl(const std::string &name) const {
+  auto columnImpl(const std::string &name) const {
     auto it = m_namedColumns.find(name);
     if (it == m_namedColumns.end()) {
       throw std::runtime_error("Column not found: " + name);
