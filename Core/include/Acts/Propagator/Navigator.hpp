@@ -350,7 +350,6 @@ class Navigator {
       } else {
         ACTS_ERROR(volInfo(state)
                    << "No start volume resolved. Nothing left to do.");
-        throw std::runtime_error("Stonjek");
         state.navigationBreak = true;
       }
     }

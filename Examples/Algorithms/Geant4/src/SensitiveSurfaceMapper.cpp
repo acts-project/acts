@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -99,31 +98,44 @@ namespace ActsExamples::Geant4 {
 SensitiveCandidates::SensitiveCandidates(
     const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
     std::unique_ptr<const Acts::Logger> _logger)
-    : m_trackingGeo{trackingGeometry} {
-  Acts::Navigator::Config navCfg{};
-  navCfg.trackingGeometry = m_trackingGeo;
-  navCfg.resolveSensitive = true;
-  /// We're just interested in the active surfaces
-  navCfg.resolveMaterial = false;
-
-  m_navigator = std::make_shared<Acts::Navigator>(navCfg, std::move(_logger));
-}
+    : m_trackingGeo{trackingGeometry}, m_logger{std::move(_logger)} {}
 std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
     const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
-  std::vector<const Acts::Surface*> surfaces;
-  Acts::Navigator::Options navOpts{gctx};
-  Acts::Navigator::State navState{Acts::Navigator::Options{gctx}};
+  std::vector<const Acts::Surface*> surfaces{};
+  ACTS_VERBOSE("Try to fetch the surfaces close to " << position.transpose());
 
-  auto stateInit = m_navigator->initialize(
-      navState, position, position.normalized(), Acts::Direction::Forward());
-  if (!stateInit.ok()) {
-    return surfaces;
-  }
-  if (navState.startVolume != nullptr) {
-    constexpr bool restrictToSensitives = true;
-    navState.startVolume->visitSurfaces(
-        [&](const Acts::Surface* surface) { surfaces.push_back(surface); },
-        restrictToSensitives);
+  switch (m_trackingGeo->geometryVersion()) {
+    using enum Acts::TrackingGeometry::GeometryVersion;
+    case Gen1: {
+      // In case we do not find a layer at this position for whatever reason
+      const auto layer = m_trackingGeo->associatedLayer(gctx, position);
+      if (layer == nullptr) {
+        return surfaces;
+      }
+
+      const auto surfaceArray = layer->surfaceArray();
+      if (surfaceArray == nullptr) {
+        return surfaces;
+      }
+
+      for (const auto& surface : surfaceArray->surfaces()) {
+        if (surface->associatedDetectorElement() != nullptr) {
+          surfaces.push_back(surface);
+        }
+      }
+      break;
+    }
+    case Gen3: {
+      const auto* refVolume =
+          m_trackingVolume->lowestTrackingVolume(gctx, position);
+      if (refVolume != nullptr) {
+        constexpr bool restrictToSensitives = true;
+        refVolume->visitSurfaces(
+            [&](const Acts::Surface* surface) { surfaces.push_back(surface); },
+            restrictToSensitives);
+      }
+      break;
+    }
   }
   return surfaces;
 }

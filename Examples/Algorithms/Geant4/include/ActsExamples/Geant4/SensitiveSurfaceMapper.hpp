@@ -25,7 +25,6 @@ class G4VPhysicalVolume;
 
 namespace Acts {
 class Surface;
-class Navigator;
 }  // namespace Acts
 
 namespace ActsExamples::Geant4 {
@@ -74,7 +73,8 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
-  std::shared_ptr<Acts::Navigator> m_navigator{};
+  std::unique_Ptr<const Acts::Logger> m_logger{};
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 ///   @brief The SensitiveSurfaceMapper connects the Geant 4 geometry with the Acts::TrackingGeometry.
