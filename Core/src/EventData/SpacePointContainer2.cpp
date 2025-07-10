@@ -117,7 +117,7 @@ void SpacePointContainer2::clear() noexcept {
 }
 
 void SpacePointContainer2::assignSourceLinks(
-    IndexType index, std::span<const SourceLink> sourceLinks) {
+    Index index, std::span<const SourceLink> sourceLinks) {
   if (index >= size()) {
     throw std::out_of_range("Index out of range in SpacePointContainer2");
   }

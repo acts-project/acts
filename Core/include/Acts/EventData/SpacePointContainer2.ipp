@@ -22,31 +22,31 @@ SpacePointContainer2::createSpacePoint() noexcept {
 
   ++m_size;
 
-  return MutableProxyType(*this, size() - 1);
+  return MutableProxy(*this, size() - 1);
 }
 
-inline MutableSpacePointProxy2 SpacePointContainer2::at(IndexType index) {
+inline MutableSpacePointProxy2 SpacePointContainer2::at(Index index) {
   if (index >= size()) {
     throw std::out_of_range("Index out of range in SpacePointContainer2");
   }
-  return MutableProxyType(*this, index);
+  return MutableProxy(*this, index);
 }
 
-inline ConstSpacePointProxy2 SpacePointContainer2::at(IndexType index) const {
+inline ConstSpacePointProxy2 SpacePointContainer2::at(Index index) const {
   if (index >= size()) {
     throw std::out_of_range("Index out of range in SpacePointContainer2");
   }
-  return ConstProxyType(*this, index);
+  return ConstProxy(*this, index);
 }
 
 inline MutableSpacePointProxy2 SpacePointContainer2::operator[](
-    IndexType index) noexcept {
-  return MutableProxyType(*this, index);
+    Index index) noexcept {
+  return MutableProxy(*this, index);
 }
 
 inline ConstSpacePointProxy2 SpacePointContainer2::operator[](
-    IndexType index) const noexcept {
-  return ConstProxyType(*this, index);
+    Index index) const noexcept {
+  return ConstProxy(*this, index);
 }
 
 }  // namespace Acts::Experimental

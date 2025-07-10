@@ -30,14 +30,14 @@ class SpacePointProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
-  using IndexType = SpacePointIndex2;
+  using Index = SpacePointIndex2;
 
-  using ContainerType = const_if_t<ReadOnly, SpacePointContainer2>;
+  using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
   /// Constructs a space point proxy for the given container and index.
   /// @param container The container holding the space point.
   /// @param index The index of the space point in the container.
-  SpacePointProxy2(ContainerType &container, IndexType index) noexcept
+  SpacePointProxy2(Container &container, Index index) noexcept
       : m_container(&container), m_index(index) {}
 
   /// Copy construct a space point proxy.
@@ -60,7 +60,7 @@ class SpacePointProxy2 {
   }
   /// Gets the index of the space point in the container.
   /// @return The index of the space point in the container.
-  IndexType index() const noexcept { return m_index; }
+  Index index() const noexcept { return m_index; }
 
   /// Assigns source links to the space point at the given index.
   /// @param index The index of the space point to assign source links to.
@@ -178,7 +178,7 @@ class SpacePointProxy2 {
   /// @return A mutable reference to the value in the extra column for the space
   ///         point.
   template <typename column_proxy>
-  typename column_proxy::ValueType &extra(column_proxy column) noexcept
+  typename column_proxy::Value &extra(column_proxy column) noexcept
     requires(!ReadOnly)
   {
     return m_container->entry(column, m_index);
@@ -246,14 +246,14 @@ class SpacePointProxy2 {
   /// @return A const reference to the value in the extra column for the space
   ///         point.
   template <typename column_proxy>
-  const typename column_proxy::ValueType &extra(
+  const typename column_proxy::Value &extra(
       const column_proxy &column) const noexcept {
     return m_container->entry(column, m_index);
   }
 
  private:
-  ContainerType *m_container{};
-  IndexType m_index{};
+  Container *m_container{};
+  Index m_index{};
 };
 
 }  // namespace Acts::Experimental
