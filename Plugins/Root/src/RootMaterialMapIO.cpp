@@ -371,6 +371,14 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
   auto maxh = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
 
   std::vector<const TH1*> hists{n, v, o, minh, maxh};
+  if (std::ranges::any_of(hists,
+                          [](const auto* hist) { return hist == nullptr; })) {
+    ACTS_ERROR(
+        "Failed to read all required histograms for textured surface "
+        "material from file: "
+        << rFile.GetName());
+    return nullptr;
+  }
 
   // Now reconstruct the bin untilities
   BinUtility bUtility;
@@ -402,7 +410,7 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
     auto Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
     auto rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
 
-    std::vector<const TH1*> hists{t, x0, l0, A, Z, rho};
+    hists = {t, x0, l0, A, Z, rho};
 
     // Only go on when you have all histograms
     if (std::ranges::all_of(hists,
