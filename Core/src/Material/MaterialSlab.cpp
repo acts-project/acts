@@ -24,7 +24,13 @@ MaterialSlab::MaterialSlab(const Material& material, float thickness)
 
 MaterialSlab MaterialSlab::combineLayers(const MaterialSlab& layerA,
                                          const MaterialSlab& layerB) {
-  return detail::combineSlabs(layerA, layerB);
+  return detail::combineSlabs(layerA, layerB.material(), layerB.thickness());
+}
+
+MaterialSlab MaterialSlab::combine(const MaterialSlab& slab1,
+                                   const Material& material2,
+                                   float thickness2) {
+  return detail::combineSlabs(slab1, material2, thickness2);
 }
 
 MaterialSlab MaterialSlab::combineLayers(

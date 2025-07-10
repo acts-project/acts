@@ -38,6 +38,7 @@ target_link_libraries(
     ActsExamplesIoRoot
     PUBLIC
         ActsCore
+        ActsPluginRoot
         ActsExamplesDigitization
         ActsExamplesFramework
         ActsExamplesPropagation
