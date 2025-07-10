@@ -47,7 +47,7 @@ void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
     for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
-    for (auto surface : convertedObj.surfaces) {
+    for (const auto& surface : convertedObj.surfaces) {
       const Acts::SurfaceBounds& sbounds = surface->bounds();
       // check straws
       if (surface->type() == Acts::Surface::SurfaceType::Straw) {
