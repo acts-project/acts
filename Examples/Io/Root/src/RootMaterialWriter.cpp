@@ -14,7 +14,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Material/DetectorMaterialMaps.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
@@ -63,7 +63,7 @@ ActsExamples::RootMaterialWriter::RootMaterialWriter(
 }
 
 void ActsExamples::RootMaterialWriter::writeMaterial(
-    const Acts::DetectorMaterialMaps& detMaterial) {
+    const Acts::TrackingGeometryMaterial& detMaterial) {
   // Change to the output file
   m_outputFile->cd();
 
@@ -231,7 +231,7 @@ ActsExamples::RootMaterialWriter::~RootMaterialWriter() {
 void ActsExamples::RootMaterialWriter::write(
     const Acts::TrackingGeometry& tGeometry) {
   // Create a detector material map and loop recursively through it
-  Acts::DetectorMaterialMaps detMatMap;
+  Acts::TrackingGeometryMaterial detMatMap;
   auto hVolume = tGeometry.highestTrackingVolume();
   if (hVolume != nullptr) {
     collectMaterial(*hVolume, detMatMap);
@@ -242,7 +242,7 @@ void ActsExamples::RootMaterialWriter::write(
 
 void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
-    Acts::DetectorMaterialMaps& detMatMap) {
+    Acts::TrackingGeometryMaterial& detMatMap) {
   // If the volume has volume material, write that
   if (tVolume.volumeMaterialPtr() != nullptr && m_cfg.processVolumes) {
     detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
@@ -277,7 +277,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
 }
 
 void ActsExamples::RootMaterialWriter::collectMaterial(
-    const Acts::Layer& tLayer, Acts::DetectorMaterialMaps& detMatMap) {
+    const Acts::Layer& tLayer, Acts::TrackingGeometryMaterial& detMatMap) {
   // If the representing surface has material, collect it
   const auto& rSurface = tLayer.surfaceRepresentation();
   if (rSurface.surfaceMaterialSharedPtr() != nullptr &&

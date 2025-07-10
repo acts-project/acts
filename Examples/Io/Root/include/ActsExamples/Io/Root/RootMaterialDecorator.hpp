@@ -12,7 +12,7 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Material/DetectorMaterialMaps.hpp>
+#include <Acts/Material/TrackingGeometryMaterial.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
@@ -86,7 +86,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   }
 
   /// Return the maps
-  const Acts::DetectorMaterialMaps materialMaps() const {
+  const Acts::TrackingGeometryMaterial materialMaps() const {
     return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 

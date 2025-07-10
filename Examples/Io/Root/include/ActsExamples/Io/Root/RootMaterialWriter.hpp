@@ -89,7 +89,7 @@ class RootMaterialWriter : public IMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) override;
+  void writeMaterial(const Acts::TrackingGeometryMaterial& detMaterial) override;
 
   /// Write out the material map from Geometry
   ///
@@ -105,14 +105,14 @@ class RootMaterialWriter : public IMaterialWriter {
   /// @param tVolume The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
   void collectMaterial(const Acts::TrackingVolume& tVolume,
-                       Acts::DetectorMaterialMaps& detMatMap);
+                       Acts::TrackingGeometryMaterial& detMatMap);
 
   /// Collect the material from the tracking geometry
   ///
   /// @param tLayer The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
   void collectMaterial(const Acts::Layer& tLayer,
-                       Acts::DetectorMaterialMaps& detMatMap);
+                       Acts::TrackingGeometryMaterial& detMatMap);
 
   /// The config class
   Config m_cfg;

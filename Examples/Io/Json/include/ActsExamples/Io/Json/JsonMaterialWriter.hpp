@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Material/DetectorMaterialMaps.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
@@ -69,7 +69,7 @@ class JsonMaterialWriter : public IMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) override;
+  void writeMaterial(const Acts::TrackingGeometryMaterial& detMaterial) override;
 
   /// Write out the material map from Geometry
   ///

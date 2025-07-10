@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/DetectorMaterialMaps.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
@@ -76,7 +76,7 @@ class MaterialMapper {
       const Options& options = Options{}) const;
 
   /// Finalize the maps
-  DetectorMaterialMaps finalizeMaps(const State& state) const;
+  TrackingGeometryMaterial finalizeMaps(const State& state) const;
 
  private:
   /// Access method to the logger

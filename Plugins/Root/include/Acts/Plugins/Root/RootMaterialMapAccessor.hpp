@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/DetectorMaterialMaps.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -123,7 +123,7 @@ class RootMaterialMapAccessor {
   /// @param rFile the file to write to
   /// @param detectorMaterial the detector material maps
   /// @param options the options for writing
-  void write(TFile& rFile, const DetectorMaterialMaps& detectorMaterial,
+  void write(TFile& rFile, const TrackingGeometryMaterial& detectorMaterial,
              const Options& options);
 
   /// Write the material to file
@@ -137,7 +137,7 @@ class RootMaterialMapAccessor {
   /// Read the detector maps
   /// @param rFile the file to read from
   /// @param options the options for reading
-  DetectorMaterialMaps read(TFile& rFile, const Options& options);
+  TrackingGeometryMaterial read(TFile& rFile, const Options& options);
 
  private:
   /// @brief Connect the homogeneous material tree for writing

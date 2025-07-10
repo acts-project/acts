@@ -132,7 +132,7 @@ void Acts::RootMaterialMapAccessor::write(
 }
 
 void Acts::RootMaterialMapAccessor::write(
-    TFile& rFile, const DetectorMaterialMaps& detectorMaterial,
+    TFile& rFile, const TrackingGeometryMaterial& detectorMaterial,
     const Options& options) {
   const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
@@ -250,9 +250,9 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(
+Acts::TrackingGeometryMaterial Acts::RootMaterialMapAccessor::read(
     TFile& rFile, const Options& options) {
-  DetectorMaterialMaps detectorMaterial;
+  TrackingGeometryMaterial detectorMaterial;
 
   auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
 
