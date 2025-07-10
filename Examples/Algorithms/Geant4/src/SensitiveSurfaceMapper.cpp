@@ -243,9 +243,11 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
 
   Acts::detail::TransformComparator trfSorter{};
   for (const auto& candidateSurface : candidateSurfaces) {
-    if (trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition) !=
+    if (trfSorter.compare<3>(candidateSurface->center(gctx), g4AbsPosition) ==
         0) {
-      ACTS_VERBOSE("Successful match with center matching");
+      ACTS_DEBUG("Successful match with center: "
+                 << candidateSurface->center(gctx).transpose()
+                 << ", G4-position: " << g4AbsPosition.transpose());
       mappedSurface = candidateSurface;
       break;
     } else if (candidateSurface->bounds().type() ==
@@ -306,8 +308,12 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
         std::make_pair(g4PhysicalVolume, SurfacePosMap_t{trfSorter}));
   }
   // Insert into the multi-map
-  state.g4VolumeToSurfaces[g4PhysicalVolume].insert(
-      std::make_pair(g4AbsPosition, mappedSurface));
+  if (!state.g4VolumeToSurfaces[g4PhysicalVolume]
+           .insert(std::make_pair(g4AbsPosition, mappedSurface))
+           .second) {
+    ACTS_WARNING("Duplicate surface found for " << volumeName << " @ "
+                                                << g4AbsPosition.transpose());
+  }
 }
 
 bool SensitiveSurfaceMapper::checkMapping(
@@ -331,8 +337,7 @@ bool SensitiveSurfaceMapper::checkMapping(
                       found.end(), std::back_inserter(missing));
 
   ACTS_INFO("Number of overall sensitive surfaces: " << allSurfaces.size());
-  ACTS_INFO("Number of mapped volume->surface mappings: "
-            << state.g4VolumeToSurfaces.size());
+  ACTS_INFO("Number of mapped volume->surface mappings: " << found.size());
   ACTS_INFO(
       "Number of sensitive surfaces that are not mapped: " << missing.size());
   ACTS_INFO("Number of G4 volumes without a matching Surface: "
