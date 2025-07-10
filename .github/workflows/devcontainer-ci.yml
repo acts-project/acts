@@ -26,8 +26,8 @@ jobs:
         
     - name: Run configure_acts
       run: |
-        devcontainer exec --workspace-folder . configure_acts
+        devcontainer exec --workspace-folder . bash -c "configure_acts"
         
     - name: Run build_acts with ActsCore target
       run: |
-        devcontainer exec --workspace-folder . build_acts --target ActsCore
+        devcontainer exec --workspace-folder . bash -c "build_acts --target ActsCore"
