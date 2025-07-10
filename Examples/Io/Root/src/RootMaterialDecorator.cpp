@@ -236,11 +236,6 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 
       // Insert into the new collection
       m_volumeMaterialMap.insert({geoID, std::move(vMaterial)});
-
-      // Incorrect FolderName value
-    } else {
-      ACTS_ERROR(
-          "Invalid FolderName, does not match any entry in the root file");
     }
   }
 }

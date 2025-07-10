@@ -341,6 +341,8 @@ Acts::TrackingGeometryMaterial Acts::RootMaterialMapIO::read(
                        .withApproach(appID)
                        .withSensitive(senID);
 
+      ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
+
       auto texturedSurfaceMaterial =
           readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);
       surfaceMaterials.try_emplace(geoID, texturedSurfaceMaterial);
@@ -365,8 +367,10 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
   auto n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
   auto v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
   auto o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
-  auto min = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
-  auto max = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+  auto minh = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
+  auto maxh = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+
+  std::vector<const TH1*> hists{n, v, o, minh, maxh};
 
   // Now reconstruct the bin untilities
   BinUtility bUtility;
@@ -374,8 +378,8 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
     auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
     auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
     auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-    auto rmin = static_cast<float>(min->GetBinContent(ib));
-    auto rmax = static_cast<float>(max->GetBinContent(ib));
+    auto rmin = static_cast<float>(minh->GetBinContent(ib));
+    auto rmax = static_cast<float>(maxh->GetBinContent(ib));
     bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
   }
   ACTS_VERBOSE("Created " << bUtility);
@@ -398,7 +402,7 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
     auto Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
     auto rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
 
-    std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
+    std::vector<const TH1*> hists{t, x0, l0, A, Z, rho};
 
     // Only go on when you have all histograms
     if (std::ranges::all_of(hists,

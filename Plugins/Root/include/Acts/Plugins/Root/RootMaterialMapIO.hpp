@@ -50,7 +50,7 @@ class RootMaterialMapIO {
     /// The bin number tag
     std::string nBinsHistName = "n";
     /// The axis direction histogram name: AxisZ, AxisR, AxisPhi, etc.
-    std::string axisDirHistName = "axisDir";
+    std::string axisDirHistName = "v";
     /// The axis boundary type hist name
     std::string axisBoundaryTypeHistName = "o";
     /// The range histogram name: min value
