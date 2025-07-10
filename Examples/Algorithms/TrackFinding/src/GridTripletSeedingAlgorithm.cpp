@@ -103,6 +103,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints(
+      Acts::Experimental::SpacePointColumns::SourceLinks |
       Acts::Experimental::SpacePointColumns::X |
       Acts::Experimental::SpacePointColumns::Y |
       Acts::Experimental::SpacePointColumns::Z |
