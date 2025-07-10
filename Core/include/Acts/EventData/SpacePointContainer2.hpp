@@ -660,7 +660,6 @@ class SpacePointContainer2 {
   class Iterator {
    public:
     static constexpr bool ReadOnly = read_only;
-
     using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
     using iterator_category = std::forward_iterator_tag;
@@ -707,7 +706,7 @@ class SpacePointContainer2 {
    public:
     static constexpr bool ReadOnly = read_only;
     using Container = const_if_t<ReadOnly, SpacePointContainer2>;
-    using Iterator = Iterator<read_only>;
+    using RangeIterator = Iterator<read_only>;
 
     Range(Container &container, const IndexRange &range) noexcept
         : m_container(&container), m_range(range) {}
@@ -715,11 +714,11 @@ class SpacePointContainer2 {
     std::size_t size() const noexcept { return m_range.second - m_range.first; }
     bool empty() const noexcept { return size() == 0; }
 
-    Iterator begin() const noexcept {
-      return Iterator(*m_container, m_range.first);
+    RangeIterator begin() const noexcept {
+      return RangeIterator(*m_container, m_range.first);
     }
-    Iterator end() const noexcept {
-      return Iterator(*m_container, m_range.second);
+    RangeIterator end() const noexcept {
+      return RangeIterator(*m_container, m_range.second);
     }
 
    private:
@@ -866,15 +865,15 @@ class SpacePointContainer2 {
   /// Creates a zipped mutable range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
-  template <typename... Columns>
-  auto zip(const Columns &...columns) noexcept {
+  template <typename... Ts>
+  auto zip(const SpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
-  template <typename... Columns>
-  auto zip(const Columns &...columns) const noexcept {
+  template <typename... Ts>
+  auto zip(const SpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
   }
 
