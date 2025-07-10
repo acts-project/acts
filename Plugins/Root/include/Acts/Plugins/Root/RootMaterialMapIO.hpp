@@ -110,10 +110,10 @@ class RootMaterialMapIO {
   /// @brief Constructor from config struct
   /// @param cfg the configuration for the accessor
   /// @param mLogger the logger to use, default is INFO level
-  explicit RootMaterialMapIO(
-      const Config& cfg,
-      std::unique_ptr<const Logger> mLogger =
-          getDefaultLogger("RootMaterialMapIO", Logging::INFO))
+  explicit RootMaterialMapIO(const Config& cfg,
+                             std::unique_ptr<const Logger> mLogger =
+                                 getDefaultLogger("RootMaterialMapIO",
+                                                  Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor

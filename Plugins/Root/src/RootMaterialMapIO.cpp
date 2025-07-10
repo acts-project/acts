@@ -28,9 +28,10 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
 
-void Acts::RootMaterialMapIO::write(
-    TFile& rFile, const GeometryIdentifier& geoID,
-    const ISurfaceMaterial& surfaceMaterial, const Options& options) {
+void Acts::RootMaterialMapIO::write(TFile& rFile,
+                                    const GeometryIdentifier& geoID,
+                                    const ISurfaceMaterial& surfaceMaterial,
+                                    const Options& options) {
   /// Change to the file
   rFile.cd();
 
@@ -82,16 +83,20 @@ void Acts::RootMaterialMapIO::write(
     TH1F n(m_cfg.nBinsHistName.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
 
     // The binning value information
-    TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", bins, -0.5, fBins - 0.5);
+    TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", bins, -0.5,
+           fBins - 0.5);
 
     // The binning option information
-    TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", bins, -0.5, fBins - 0.5);
+    TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", bins,
+           -0.5, fBins - 0.5);
 
     // The binning option information - range min
-    TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", bins, -0.5, fBins - 0.5);
+    TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", bins, -0.5,
+              fBins - 0.5);
 
     // The binning option information - range max
-    TH1F rmax(m_cfg.maxRangeHistName.c_str(), "max; bin", bins, -0.5, fBins - 0.5);
+    TH1F rmax(m_cfg.maxRangeHistName.c_str(), "max; bin", bins, -0.5,
+              fBins - 0.5);
 
     // Now fill the histogram content
     for (auto [b, bData] : enumerate(binningData)) {
@@ -159,8 +164,8 @@ void Acts::RootMaterialMapIO::connectForWrite(
   rTree.Branch(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapIO::connectForRead(
-    TTree& rTree, MaterialTreePayload& treePayload) {
+void Acts::RootMaterialMapIO::connectForRead(TTree& rTree,
+                                             MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
   }
@@ -191,12 +196,12 @@ void Acts::RootMaterialMapIO::fillBinnedSurfaceMaterial(
 
   TH2F t(m_cfg.thicknessHistName.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
-  TH2F x0(m_cfg.x0HistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
-          bins1, -0.5, fBins1 - 0.5);
+  TH2F x0(m_cfg.x0HistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
+          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
   TH2F l0(m_cfg.l0HistName.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
           fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
-  TH2F A(m_cfg.aHistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
-         bins1, -0.5, fBins1 - 0.5);
+  TH2F A(m_cfg.aHistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
+         fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
   TH2F Z(m_cfg.zHistName.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
   TH2F rho(m_cfg.rhoHistName.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
@@ -233,9 +238,9 @@ void Acts::RootMaterialMapIO::fillBinnedSurfaceMaterial(
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1", static_cast<int>(bins0),
-           -0.5, static_cast<float>(bins0) - 0.5, static_cast<int>(bins1), -0.5,
-           static_cast<float>(bins1) - 0.5);
+  TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1",
+           static_cast<int>(bins0), -0.5, static_cast<float>(bins0) - 0.5,
+           static_cast<int>(bins1), -0.5, static_cast<float>(bins1) - 0.5);
   // lLop over the material matrix, record the index and fill the indexed tree
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {

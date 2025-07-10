@@ -101,8 +101,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOHomogeneousReadWrite) {
   rFile->Close();
 
   // Let's read it back
-  auto iFile =
-      TFile::Open("RootMaterialMapIOHomogeneousTests.root", "READ");
+  auto iFile = TFile::Open("RootMaterialMapIOHomogeneousTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
 
   auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
@@ -131,8 +130,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOHomogeneousReadWrite) {
 BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
   auto surfaceMaterials = createBinnedSurfaceMaterial();
 
-  auto rFile =
-      TFile::Open("RootMaterialMapIOBinnedTests.root", "RECREATE");
+  auto rFile = TFile::Open("RootMaterialMapIOBinnedTests.root", "RECREATE");
   rFile->cd();
   BOOST_REQUIRE(rFile != nullptr);
 
@@ -204,8 +202,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
   RootMaterialMapIO::Options optionsIndexed;
   optionsIndexed.indexedMaterial = true;
 
-  rFile =
-      TFile::Open("RootMaterialMapIOBinnedIndexedTests.root", "RECREATE");
+  rFile = TFile::Open("RootMaterialMapIOBinnedIndexedTests.root", "RECREATE");
   rFile->cd();
   BOOST_REQUIRE(rFile != nullptr);
 
@@ -215,6 +212,51 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
 
   rFile->Write();
   rFile->Close();
+
+  // Let's read it back
+  iFile = TFile::Open("RootMaterialMapIOBinnedIndexedTests.root", "READ");
+  BOOST_REQUIRE(iFile != nullptr);
+  auto [surfaceMapsIndexedRead, volumeMapsIndexedRead] =
+      accessorIndexed.read(*iFile, optionsIndexed);
+  BOOST_REQUIRE_EQUAL(surfaceMapsIndexedRead.size(), surfaceMaterials.size());
+  BOOST_REQUIRE_EQUAL(volumeMapsIndexedRead.size(), 0);
+
+  // Compare
+  for (const auto& [refGeoID, refSMaterial] : surfaceMaterials) {
+    auto binnedReferenceMaterial =
+        dynamic_cast<const BinnedSurfaceMaterial*>(refSMaterial.get());
+    BOOST_REQUIRE(binnedReferenceMaterial != nullptr);
+    auto it = surfaceMapsIndexedRead.find(refGeoID);
+    BOOST_REQUIRE(it != surfaceMapsIndexedRead.end());
+    const auto& readMaterial = it->second;
+    BOOST_REQUIRE(readMaterial != nullptr);
+    const auto* binnedMaterial =
+        dynamic_cast<const BinnedSurfaceMaterial*>(readMaterial.get());
+    BOOST_REQUIRE(binnedMaterial != nullptr);
+    // Check the binning
+    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
+                      binnedReferenceMaterial->binUtility().bins(0));
+    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
+                      binnedReferenceMaterial->binUtility().bins(1));
+    // Compare the material matrix
+    const auto& materialMatrix = binnedMaterial->fullMaterial();
+    const auto& referenceMaterialMatrix =
+        binnedReferenceMaterial->fullMaterial();
+    BOOST_REQUIRE_EQUAL(materialMatrix.size(), referenceMaterialMatrix.size());
+    for (std::size_t i = 0; i < materialMatrix.size(); ++i) {
+      BOOST_REQUIRE_EQUAL(materialMatrix[i].size(),
+                          referenceMaterialMatrix[i].size());
+      for (std::size_t j = 0; j < materialMatrix[i].size(); ++j) {
+        const auto& mat = materialMatrix[i][j];
+        const auto& refMat = referenceMaterialMatrix[i][j];
+        BOOST_CHECK_CLOSE(mat.material().X0(), refMat.material().X0(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().L0(), refMat.material().L0(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().Ar(), refMat.material().Ar(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.material().Z(), refMat.material().Z(), 1e-6);
+        BOOST_CHECK_CLOSE(mat.thickness(), refMat.thickness(), 1e-6);
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
