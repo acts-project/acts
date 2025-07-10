@@ -75,6 +75,110 @@ class RootMaterialTrackIO {
   RecordedMaterialTrack read() const;
 
  private:
+  struct MateriaSummaryPayload {
+    /// start global x
+    float vX = 0;
+    /// start global y
+    float vY = 0;
+    /// start global z
+    float vZ = 0;
+    /// start global momentum x
+    float vPx = 0;
+    /// start global momentum y
+    float vPy = 0;
+    /// start global momentum z
+    float vPz = 0;
+    /// start phi direction
+    float vPhi = 0;
+    /// start eta direction
+    float vEta = 0;
+    /// thickness in X0/L0
+    float tX0 = 0;
+    /// thickness in X0/L0
+    float tL0 = 0;
+  };
+
+  struct MaterialStepPayload {
+    /// (pre-)step x position (optional)
+    std::vector<float> stepXs;
+    /// (pre-)step y position (optional)
+    std::vector<float> stepYs;
+    /// (pre-)step z position (optional)
+    std::vector<float> stepZs;
+    /// (post-)step x position (optional)
+    std::vector<float> stepXe;
+    /// (post-)step y position (optional)
+    std::vector<float> stepYe;
+    /// (post-)step z position (optional)
+    std::vector<float> stepZe;
+
+    /// step x position
+    std::vector<float> stepX;
+    std::vector<float>* stepXPtr = &stepX;
+    /// step y position
+    std::vector<float> stepY;
+    std::vector<float>* stepYPtr = &stepY;
+    /// step z position
+    std::vector<float> stepZ;
+    std::vector<float>* stepZPtr = &stepZ;
+    /// step radial position
+    std::vector<float> stepR;
+    /// step x direction
+    std::vector<float> stepDx;
+    std::vector<float>* stepDxPtr = &stepDx;
+    /// step y direction
+    std::vector<float> stepDy;
+    std::vector<float>* stepDyPtr = &stepDy;
+    /// step z direction
+    std::vector<float> stepDz;
+    std::vector<float>* stepDzPtr = &stepDz;
+    /// step length
+    std::vector<float> stepLength;
+    std::vector<float>* stepLengthPtr = &stepLength;
+    /// step material x0
+    std::vector<float> stepMatX0;
+    std::vector<float>* stepMatX0Ptr = &stepMatX0;
+    /// step material l0
+    std::vector<float> stepMatL0;
+    std::vector<float>* stepMatL0Ptr = &stepMatL0;
+    /// step material A
+    std::vector<float> stepMatA;
+    std::vector<float>* stepMatAPtr = &stepMatA;
+    /// step material Z
+    std::vector<float> stepMatZ;
+    std::vector<float>* stepMatZPtr = &stepMatZ;
+    /// step material rho
+    std::vector<float> stepMatRho;
+    std::vector<float>* stepMatRhoPtr = &stepMatRho;
+  };
+
+  struct MaterialSurfacePayload {
+    /// ID of the surface associated with the step
+    std::vector<std::uint64_t> surfaceId;
+    std::vector<std::uint64_t>* surfaceIdPtr = &surfaceId;
+    /// x position of the center of the surface associated with the step
+    std::vector<float> surfaceX;
+    std::vector<float>* surfaceXPtr = &surfaceX;
+    /// y position of the center of the surface associated with the step
+    std::vector<float> surfaceY;
+    std::vector<float>* surfaceYPtr = &surfaceY;
+    /// z position of the center of the surface associated with the step
+    std::vector<float> surfaceZ;
+    std::vector<float>* surfaceZPtr = &surfaceZ;
+    /// r position of the center of the surface associated with the step
+    std::vector<float> surfaceR;
+    /// distance to the surface
+    std::vector<float> surfaceDistance;
+    /// path correction when associating material to the given surface
+    std::vector<float> surfacePathCorrection;
+    std::vector<float>* surfacePathCorrectionPtr = &surfacePathCorrection;
+  };
+
+  struct MaterialVolumePayload {
+    /// ID of the volume associated with the step
+    std::vector<std::uint64_t> volumeId;
+  };
+
   /// The configuration for the accessor
   Config m_cfg;
 
@@ -85,101 +189,17 @@ class RootMaterialTrackIO {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  /// start global x
-  float m_vX = 0;
-  /// start global y
-  float m_vY = 0;
-  /// start global z
-  float m_vZ = 0;
-  /// start global momentum x
-  float m_vPx = 0;
-  /// start global momentum y
-  float m_vPy = 0;
-  /// start global momentum z
-  float m_vPz = 0;
-  /// start phi direction
-  float m_vPhi = 0;
-  /// start eta direction
-  float m_vEta = 0;
-  /// thickness in X0/L0
-  float m_tX0 = 0;
-  /// thickness in X0/L0
-  float m_tL0 = 0;
+  /// The material summary payload
+  MateriaSummaryPayload m_summaryPayload = {};
 
-  /// (pre-)step x position (optional)
-  std::vector<float> m_stepXs;
-  /// (pre-)step y position (optional)
-  std::vector<float> m_stepYs;
-  /// (pre-)step z position (optional)
-  std::vector<float> m_stepZs;
-  /// (post-)step x position (optional)
-  std::vector<float> m_stepXe;
-  /// (post-)step y position (optional)
-  std::vector<float> m_stepYe;
-  /// (post-)step z position (optional)
-  std::vector<float> m_stepZe;
+  /// The material step payload
+  MaterialStepPayload m_stepPayload = {};
 
-  /// step x position
-  std::vector<float> m_stepX;
-  std::vector<float>* m_stepXPtr = &m_stepX;
-  /// step y position
-  std::vector<float> m_stepY;
-  std::vector<float>* m_stepYPtr = &m_stepY;
-  /// step z position
-  std::vector<float> m_stepZ;
-  std::vector<float>* m_stepZPtr = &m_stepZ;
-  /// step radial position
-  std::vector<float> m_stepR;
-  /// step x direction
-  std::vector<float> m_stepDx;
-  std::vector<float>* m_stepDxPtr = &m_stepDx;
-  /// step y direction
-  std::vector<float> m_stepDy;
-  std::vector<float>* m_stepDyPtr = &m_stepDy;
-  /// step z direction
-  std::vector<float> m_stepDz;
-  std::vector<float>* m_stepDzPtr = &m_stepDz;
-  /// step length
-  std::vector<float> m_stepLength;
-  std::vector<float>* m_stepLengthPtr = &m_stepLength;
-  /// step material x0
-  std::vector<float> m_stepMatX0;
-  std::vector<float>* m_stepMatX0Ptr = &m_stepMatX0;
-  /// step material l0
-  std::vector<float> m_stepMatL0;
-  std::vector<float>* m_stepMatL0Ptr = &m_stepMatL0;
-  /// step material A
-  std::vector<float> m_stepMatA;
-  std::vector<float>* m_stepMatAPtr = &m_stepMatA;
-  /// step material Z
-  std::vector<float> m_stepMatZ;
-  std::vector<float>* m_stepMatZPtr = &m_stepMatZ;
-  /// step material rho
-  std::vector<float> m_stepMatRho;
-  std::vector<float>* m_stepMatRhoPtr = &m_stepMatRho;
+  /// The material surface payload
+  MaterialSurfacePayload m_surfacePayload = {};
 
-  /// ID of the surface associated with the step
-  std::vector<std::uint64_t> m_surfaceId;
-  std::vector<std::uint64_t>* m_surfaceIdPtr = &m_surfaceId;
-  /// x position of the center of the surface associated with the step
-  std::vector<float> m_surfaceX;
-  std::vector<float>* m_surfaceXPtr = &m_surfaceX;
-  /// y position of the center of the surface associated with the step
-  std::vector<float> m_surfaceY;
-  std::vector<float>* m_surfaceYPtr = &m_surfaceY;
-  /// z position of the center of the surface associated with the step
-  std::vector<float> m_surfaceZ;
-  std::vector<float>* m_surfaceZPtr = &m_surfaceZ;
-  /// r position of the center of the surface associated with the step
-  std::vector<float> m_surfaceR;
-  /// distance to the surface
-  std::vector<float> m_surfaceDistance;
-  /// path correction when associating material to the given surface
-  std::vector<float> m_surfacePathCorrection;
-  std::vector<float>* m_surfacePathCorrectionPtr = &m_surfacePathCorrection;
-
-  /// ID of the volume associated with the step
-  std::vector<std::uint64_t> m_volumeId;
+  /// The material volume payload
+  MaterialVolumePayload m_volumePayload = {};
 };
 
 }  // namespace Acts

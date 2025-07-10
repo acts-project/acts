@@ -86,7 +86,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   }
 
   /// Return the maps
-  const Acts::TrackingGeometryMaterial materialMaps() const {
+  Acts::TrackingGeometryMaterial materialMaps() const {
     return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 
