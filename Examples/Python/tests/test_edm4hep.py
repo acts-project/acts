@@ -331,6 +331,8 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     ddsim.gun.direction = (1, 0, 0)
     ddsim.gun.particle = "pi-"
     ddsim.gun.distribution = "eta"
+    ddsim.gun.etaMin = -3.0
+    ddsim.gun.etaMax = 3.0
     ddsim.numberOfEvents = 10
     ddsim.outputFile = output
     ddsim.outputConfig.forceEDM4HEP = True
@@ -395,7 +397,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 
         s.addAlgorithm(
             EDM4hepSimInputConverter(
-                level=acts.logging.INFO,
+                level=acts.logging.DEBUG,
                 inputFrame="events",
                 inputSimHits=[
                     "PixelBarrelReadout",
