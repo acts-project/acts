@@ -160,11 +160,22 @@ void addRootOutput(Context& ctx) {
     auto ac = py::class_<RootMaterialMapAccessor::Config>(w, "AccessorConfig")
                   .def(py::init<>());
 
+    ACTS_PYTHON_STRUCT(ac, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
+                       otag, itag, mintag, maxtag, ttag, x0tag, l0tag, atag,
+                       ztag, rhotag);
+
+    auto ao = py::class_<RootMaterialMapAccessor::Options>(w, "AccessorOptions")
+                  .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,
+                       folderSurfaceNameBase, folderVolumeNameBase,
+                       indexedMaterial);
+
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches,
                        processRepresenting, processBoundaries, accessorConfig,
-                       filePath, fileMode);
+                       accessorOptions, filePath, fileMode);
   }
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSeedWriter, mex,

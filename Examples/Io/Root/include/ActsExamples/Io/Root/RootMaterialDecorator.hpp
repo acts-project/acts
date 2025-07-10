@@ -41,6 +41,8 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
    public:
     /// Accessor config
     Acts::RootMaterialMapAccessor::Config accessorConfig;
+    /// Accessor options
+    Acts::RootMaterialMapAccessor::Options accessorOptions;
     /// The name of the output file
     std::string fileName = "material-maps.root";
   };

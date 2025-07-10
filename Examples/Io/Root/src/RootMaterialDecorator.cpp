@@ -54,9 +54,9 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     : m_cfg(config),
       m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)} {
   // Validate the configuration
-  if (m_cfg.accessorConfig.folderSurfaceNameBase.empty()) {
+  if (m_cfg.accessorOptions.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");
-  } else if (m_cfg.accessorConfig.folderVolumeNameBase.empty()) {
+  } else if (m_cfg.accessorOptions.folderVolumeNameBase.empty()) {
     throw std::invalid_argument("Missing volume folder name base");
   } else if (m_cfg.fileName.empty()) {
     throw std::invalid_argument("Missing file name");
@@ -70,7 +70,8 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 
   Acts::RootMaterialMapAccessor accessor(
       m_cfg.accessorConfig, m_logger->clone("RootMaterialMapAccessor"));
-  auto [surfaceMaps, volumeMaps] = accessor.read(*m_inputFile);
+  auto [surfaceMaps, volumeMaps] =
+      accessor.read(*m_inputFile, m_cfg.accessorOptions);
 
   m_surfaceMaterialMap = std::move(surfaceMaps);
 
@@ -89,7 +90,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
                boost::algorithm::first_finder(m_cfg.accessorConfig.voltag));
 
     ACTS_VERBOSE("Processing directory: " << tdName);
-    if (splitNames[0] == m_cfg.accessorConfig.folderVolumeNameBase) {
+    if (splitNames[0] == m_cfg.accessorOptions.folderVolumeNameBase) {
       // The volume material to be read in for this
       std::shared_ptr<const Acts::IVolumeMaterial> vMaterial = nullptr;
       // Volume key

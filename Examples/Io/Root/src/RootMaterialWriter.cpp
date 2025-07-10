@@ -47,9 +47,9 @@ ActsExamples::RootMaterialWriter::RootMaterialWriter(
     : m_cfg(config),
       m_logger{Acts::getDefaultLogger("RootMaterialWriter", level)} {
   // Validate the configuration
-  if (m_cfg.accessorConfig.folderSurfaceNameBase.empty()) {
+  if (m_cfg.accessorOptions.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");
-  } else if (m_cfg.accessorConfig.folderVolumeNameBase.empty()) {
+  } else if (m_cfg.accessorOptions.folderVolumeNameBase.empty()) {
     throw std::invalid_argument("Missing volume folder name base");
   } else if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file name");
@@ -75,7 +75,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
   for (const auto& [geoId, sMap] : surfaceMaps) {
     // Get the Surface material
-    accessor.write(*m_outputFile, geoId, *sMap);
+    accessor.write(*m_outputFile, geoId, *sMap, m_cfg.accessorOptions);
   }
 
   // Write the volume material maps
@@ -93,7 +93,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
     const auto gvolID = geoID.volume();
 
     // create the directory
-    std::string tdName = m_cfg.accessorConfig.folderVolumeNameBase.c_str();
+    std::string tdName = m_cfg.accessorOptions.folderVolumeNameBase.c_str();
     tdName += m_cfg.accessorConfig.voltag + std::to_string(gvolID);
 
     // create a new directory

@@ -64,8 +64,13 @@ class RootMaterialWriter : public IMaterialWriter {
 
     /// Steering to handle volume data
     bool processVolumes = true;
-    // The accessor configuration
+
+    /// The accessor configuration
     Acts::RootMaterialMapAccessor::Config accessorConfig;
+
+    /// The accessor options
+    Acts::RootMaterialMapAccessor::Options accessorOptions;
+
     /// The name of the output file
     std::string filePath = "material-maps.root";
     /// The file mode

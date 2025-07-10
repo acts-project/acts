@@ -89,11 +89,12 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorHomogeneousReadWrite) {
   BOOST_REQUIRE(rFile != nullptr);
 
   // Create the accessor
-  Acts::RootMaterialMapAccessor::Config cfg;
-  Acts::RootMaterialMapAccessor accessor(cfg);
+  RootMaterialMapAccessor::Config cfg;
+  RootMaterialMapAccessor accessor(cfg);
+  RootMaterialMapAccessor::Options options;
 
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
-    accessor.write(*rFile, geoID, *sMaterial);
+    accessor.write(*rFile, geoID, *sMaterial, options);
   }
 
   rFile->Write();
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorHomogeneousReadWrite) {
       TFile::Open("RootMaterialMapAccessorHomogeneousTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
 
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile);
+  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -136,11 +137,12 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnedReadWrite) {
   BOOST_REQUIRE(rFile != nullptr);
 
   // Create the accessor
-  Acts::RootMaterialMapAccessor::Config cfg;
-  Acts::RootMaterialMapAccessor accessor(cfg);
+  RootMaterialMapAccessor::Config cfg;
+  RootMaterialMapAccessor accessor(cfg);
+  RootMaterialMapAccessor::Options options;
 
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
-    accessor.write(*rFile, geoID, *sMaterial);
+    accessor.write(*rFile, geoID, *sMaterial, options);
   }
 
   rFile->Write();
@@ -149,7 +151,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnedReadWrite) {
   // Let's read it back
   auto iFile = TFile::Open("RootMaterialMapAccessorBinnedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile);
+  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -195,9 +197,12 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnedReadWrite) {
     }
   }
 
-  // Create the accessor - compressed writing
-  Acts::RootMaterialMapAccessor::Config cfgIndexed{true};
-  Acts::RootMaterialMapAccessor accessorIndexed(cfgIndexed);
+  // Create the accessor - writing with indexed material
+  RootMaterialMapAccessor::Config cfgIndexed;
+  RootMaterialMapAccessor accessorIndexed(cfgIndexed);
+
+  RootMaterialMapAccessor::Options optionsIndexed;
+  optionsIndexed.indexedMaterial = true;
 
   rFile =
       TFile::Open("RootMaterialMapAccessorBinnedIndexedTests.root", "RECREATE");
@@ -205,7 +210,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapAccessorBinnedReadWrite) {
   BOOST_REQUIRE(rFile != nullptr);
 
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
-    accessorIndexed.write(*rFile, geoID, *sMaterial);
+    accessorIndexed.write(*rFile, geoID, *sMaterial, optionsIndexed);
   }
 
   rFile->Write();

@@ -30,7 +30,7 @@
 
 void Acts::RootMaterialMapAccessor::write(
     TFile& rFile, const GeometryIdentifier& geoID,
-    const ISurfaceMaterial& surfaceMaterial) {
+    const ISurfaceMaterial& surfaceMaterial, const Options& options) {
   /// Change to the file
   rFile.cd();
 
@@ -39,7 +39,7 @@ void Acts::RootMaterialMapAccessor::write(
       dynamic_cast<const HomogeneousSurfaceMaterial*>(&surfaceMaterial);
   if (homogeneousMaterial != nullptr) {
     if (m_hTree == nullptr) {
-      m_hTree = new TTree(m_cfg.homogeneousMaterialTree.c_str(),
+      m_hTree = new TTree(options.homogeneousMaterialTreeName.c_str(),
                           "Homogeneous Material Tree");
       connectForWrite(*m_hTree, m_homogenousMaterialTreePayload);
     }
@@ -61,7 +61,7 @@ void Acts::RootMaterialMapAccessor::write(
     const auto gappID = geoID.approach();
     const auto gsenID = geoID.sensitive();
     // create the directory
-    std::string tdName = m_cfg.folderSurfaceNameBase.c_str();
+    std::string tdName = options.folderSurfaceNameBase.c_str();
     tdName += m_cfg.voltag + std::to_string(gvolID);
     tdName += m_cfg.boutag + std::to_string(gbouID);
     tdName += m_cfg.laytag + std::to_string(glayID);
@@ -111,7 +111,7 @@ void Acts::RootMaterialMapAccessor::write(
 
     // If compressed writing is not enabled, write the binned surface material
     // as histograms
-    if (!m_cfg.indexedMaterial) {
+    if (!options.indexedMaterial) {
       fillBinnedSurfaceMaterial(*bsMaterial);
       return;
     }
@@ -120,7 +120,7 @@ void Acts::RootMaterialMapAccessor::write(
     if (m_gTree == nullptr) {
       // Back to file level
       rFile.cd();
-      m_gTree = new TTree(m_cfg.indexMaterialTreeName.c_str(),
+      m_gTree = new TTree(options.indexedMaterialTreeName.c_str(),
                           "Indexed Material Tree");
       connectForWrite(*m_gTree, m_indexedMaterialTreePayload);
       // Back to the directory
@@ -132,10 +132,11 @@ void Acts::RootMaterialMapAccessor::write(
 }
 
 void Acts::RootMaterialMapAccessor::write(
-    TFile& rFile, const DetectorMaterialMaps& DetectorMaterialMaps) {
-  const auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
+    TFile& rFile, const DetectorMaterialMaps& detectorMaterial,
+    const Options& options) {
+  const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
-    write(rFile, geoID, *sMaterial);
+    write(rFile, geoID, *sMaterial, options);
   }
   if (m_hTree != nullptr) {
     m_hTree->Write();
@@ -201,7 +202,7 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   TH2F rho(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
            fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
 
-  // loop over the material and fill
+  // Loop over the material matrix and fill the histograms
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
@@ -235,7 +236,7 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", static_cast<int>(bins0),
            -0.5, static_cast<float>(bins0) - 0.5, static_cast<int>(bins1), -0.5,
            static_cast<float>(bins1) - 0.5);
-  // loop over the material and fill
+  // lLop over the material matrix, record the index and fill the indexed tree
   const auto& materialMatrix = bsMaterial.fullMaterial();
   for (auto [b1, materialVector] : enumerate(materialMatrix)) {
     for (auto [b0, mat] : enumerate(materialVector)) {
@@ -249,13 +250,14 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
-  Acts::DetectorMaterialMaps DetectorMaterialMaps;
+Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(
+    TFile& rFile, const Options& options) {
+  DetectorMaterialMaps detectorMaterial;
 
-  auto& [surfaceMaterials, volumeMaterials] = DetectorMaterialMaps;
+  auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
 
-  auto homogeneousMaterialTree =
-      dynamic_cast<TTree*>(rFile.Get(m_cfg.homogeneousMaterialTree.c_str()));
+  auto homogeneousMaterialTree = dynamic_cast<TTree*>(
+      rFile.Get(options.homogeneousMaterialTreeName.c_str()));
 
   // Read homogeneous material tree
   if (homogeneousMaterialTree != nullptr) {
@@ -278,7 +280,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
 
   // Read the binned surface material, if there - connect it to the payload
   auto indexedMaterialTree =
-      dynamic_cast<TTree*>(rFile.Get(m_cfg.indexMaterialTreeName.c_str()));
+      dynamic_cast<TTree*>(rFile.Get(options.indexedMaterialTreeName.c_str()));
   if (indexedMaterialTree != nullptr) {
     connectForRead(*indexedMaterialTree, m_indexedMaterialTreePayload);
   }
@@ -300,7 +302,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.voltag));
     // Surface Material
-    if (splitNames[0] == m_cfg.folderSurfaceNameBase) {
+    if (splitNames[0] == options.folderSurfaceNameBase) {
       // The surface material to be read in for this
       std::shared_ptr<const Acts::ISurfaceMaterial> sMaterial = nullptr;
 
@@ -339,7 +341,7 @@ Acts::DetectorMaterialMaps Acts::RootMaterialMapAccessor::read(TFile& rFile) {
       surfaceMaterials.try_emplace(geoID, texturedSurfaceMaterial);
     }
   }
-  return DetectorMaterialMaps;
+  return detectorMaterial;
 }
 
 std::shared_ptr<const Acts::ISurfaceMaterial>
@@ -399,12 +401,10 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
       // Get the number of bins
       int nbins0 = t->GetNbinsX();
       int nbins1 = t->GetNbinsY();
-
       // The material matrix
       MaterialSlabMatrix materialMatrix(
           nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
-
-      // Fill the matrix first
+      // Fill the matrix from the histogram content
       for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
           double dt = t->GetBinContent(ib0, ib1);
@@ -429,31 +429,25 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     std::string indexName = tdName + "/" + m_cfg.itag;
     // Get the histograms
     auto ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
-
     if (ih != nullptr) {
       // Get the number of bins
       int nbins0 = ih->GetNbinsX();
       int nbins1 = ih->GetNbinsY();
-
       // The material matrix
       MaterialSlabMatrix materialMatrix(
           nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
-
-      // Fill the matrix first
+      // Fill the matrix from the tree entries
       for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
           auto idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
           indexedMaterialTree->GetEntry(idx);
-          float dt = m_indexedMaterialTreePayload.ht;
-          float dx0 = m_indexedMaterialTreePayload.hX0;
-          float dl0 = m_indexedMaterialTreePayload.hL0;
-          float da = m_indexedMaterialTreePayload.hA;
-          float dz = m_indexedMaterialTreePayload.hZ;
-          float drho = m_indexedMaterialTreePayload.hRho;
-          // Create material properties
-          const auto material =
-              Material::fromMassDensity(dx0, dl0, da, dz, drho);
-          materialMatrix[ib1 - 1][ib0 - 1] = MaterialSlab(material, dt);
+          const auto material = Material::fromMassDensity(
+              m_indexedMaterialTreePayload.hX0,
+              m_indexedMaterialTreePayload.hL0, m_indexedMaterialTreePayload.hA,
+              m_indexedMaterialTreePayload.hZ,
+              m_indexedMaterialTreePayload.hRho);
+          materialMatrix[ib1 - 1][ib0 - 1] =
+              MaterialSlab(material, m_indexedMaterialTreePayload.ht);
         }
       }  // Construct the binned material with the right bin utility
       texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(

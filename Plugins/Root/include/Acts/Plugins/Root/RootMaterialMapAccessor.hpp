@@ -33,16 +33,10 @@ class BinnedSurfaceMaterial;
 /// and writing.
 class RootMaterialMapAccessor {
  public:
+  /// @brief Configuration for the accessor
+  /// Contains the tags used for writing and reading, tag names are
+  /// configuration, as they are not very likely to change.
   struct Config {
-    bool indexedMaterial = false;
-    /// The name of the homogeneous material tree
-    std::string homogeneousMaterialTree = "HomogeneousMaterial";
-    /// The name of the indexed material tree
-    std::string indexMaterialTreeName = "IndexedMaterial";
-    /// The name of the output surface tree
-    std::string folderSurfaceNameBase = "SurfaceMaterial";
-    /// The name of the output volume tree
-    std::string folderVolumeNameBase = "VolumeMaterial";
     /// The volume identification string
     std::string voltag = "_vol";
     /// The boundary identification string
@@ -79,6 +73,22 @@ class RootMaterialMapAccessor {
     std::string rhotag = "rho";
   };
 
+  /// @brief Options for writing the material maps
+  /// Folder names are optional as it allows to write more maps into one
+  /// file, e.g. for the same detector with different configurations.
+  struct Options {
+    /// The name of the homogeneous material tree
+    std::string homogeneousMaterialTreeName = "HomogeneousMaterial";
+    /// The name of the indexed material tree
+    std::string indexedMaterialTreeName = "IndexedMaterial";
+    /// The name of the output surface tree
+    std::string folderSurfaceNameBase = "SurfaceMaterial";
+    /// The name of the output volume tree
+    std::string folderVolumeNameBase = "VolumeMaterial";
+    /// Use an indexed material tree
+    bool indexedMaterial = false;
+  };
+
   struct MaterialTreePayload {
     std::size_t index = 0;
     /// geometry identifier
@@ -112,18 +122,22 @@ class RootMaterialMapAccessor {
   /// Write the detector maps
   /// @param rFile the file to write to
   /// @param detectorMaterial the detector material maps
-  void write(TFile& rFile, const DetectorMaterialMaps& detectorMaterial);
+  /// @param options the options for writing
+  void write(TFile& rFile, const DetectorMaterialMaps& detectorMaterial,
+             const Options& options);
 
   /// Write the material to file
   /// @param rFile the file to write to
   /// @param geoID the geometry identifier for the surface
   /// @param surfaceMaterial is the surface associated with the material
+  /// @param options the options for writing
   void write(TFile& rFile, const GeometryIdentifier& geoID,
-             const ISurfaceMaterial& surfaceMaterial);
+             const ISurfaceMaterial& surfaceMaterial, const Options& options);
 
   /// Read the detector maps
   /// @param rFile the file to read from
-  DetectorMaterialMaps read(TFile& rFile);
+  /// @param options the options for reading
+  DetectorMaterialMaps read(TFile& rFile, const Options& options);
 
  private:
   /// @brief Connect the homogeneous material tree for writing
