@@ -151,10 +151,10 @@ def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> 
                 return content
         except urllib.error.URLError as e:
             print(f"Failed to fetch from {base_url}: {e}")
-            exit(1)
+            raise e
         except json.JSONDecodeError as e:
             print(f"Failed to parse JSON response: {e}")
-            exit(1)
+            raise e
 
 
 def main():
