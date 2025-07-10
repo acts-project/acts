@@ -10,6 +10,9 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
+
+#include <stdexcept>
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -144,6 +147,55 @@ BOOST_AUTO_TEST_CASE(NamedExtraColumns) {
 
   BOOST_CHECK_EQUAL(sp.extra(extra1), 100);
   BOOST_CHECK_EQUAL(sp.extra(extra2), 0);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowOnCreateReservedColumn) {
+  BOOST_CHECK_THROW(SpacePointContainer2().createColumn<int>("x"),
+                    std::runtime_error);
+  BOOST_CHECK_THROW(SpacePointContainer2().createColumn<int>("r"),
+                    std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowOnDropReservedColumn) {
+  BOOST_CHECK_THROW(SpacePointContainer2().dropColumn("x"), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(ThrowOnDropNonExistingColumn) {
+  BOOST_CHECK_THROW(SpacePointContainer2().dropColumn("foo"),
+                    std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(ZipIterate) {
+  SpacePointContainer2 container;
+  container.reserve(3);
+
+  MutableSpacePointProxy2 sp1 = container.createSpacePoint();
+  sp1.x() = 1;
+  sp1.y() = 2;
+  sp1.z() = 3;
+
+  MutableSpacePointProxy2 sp2 = container.createSpacePoint();
+  sp2.x() = 4;
+  sp2.y() = 5;
+  sp2.z() = 6;
+
+  MutableSpacePointProxy2 sp3 = container.createSpacePoint();
+  sp3.x() = 7;
+  sp3.y() = 8;
+  sp3.z() = 9;
+
+  BOOST_CHECK_EQUAL(container.size(), 3u);
+
+  SpacePointIndex2 checkIndex = 0;
+  for (auto [i, x, y, z] : container.zip(
+           container.xColumn(), container.yColumn(), container.zColumn())) {
+    BOOST_CHECK_EQUAL(i, checkIndex);
+    BOOST_CHECK_NE(x, 0);
+    BOOST_CHECK_NE(y, 0);
+    BOOST_CHECK_NE(z, 0);
+
+    ++checkIndex;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

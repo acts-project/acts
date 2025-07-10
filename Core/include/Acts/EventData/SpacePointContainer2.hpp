@@ -252,7 +252,7 @@ class SpacePointContainer2 {
   /// @return A proxy to the r coordinate column.
   SpacePointColumnProxy<float> xColumn() const noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
-    return m_rColumn->proxy(*this);
+    return m_xColumn->proxy(*this);
   }
   /// Returns a proxy to the y coordinate column.
   /// @return A proxy to the y coordinate column.
@@ -878,6 +878,25 @@ class SpacePointContainer2 {
   template <typename... Ts>
   auto zip(const SpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
+  }
+
+  /// Creates a zipped mutable range of space point data from the given columns.
+  /// @param columns The columns to zip.
+  /// @return A zipped mutable range of space point data.
+  template <typename... Ts>
+  auto zip(const IndexRange &range,
+           const SpacePointColumnProxy<Ts> &...columns) noexcept {
+    return Acts::zip(IndexIteratorRange(range),
+                     columns.data().subspan(range.first, range.second)...);
+  }
+  /// Creates a zipped const range of space point data from the given columns.
+  /// @param columns The columns to zip.
+  /// @return A zipped const range of space point data.
+  template <typename... Ts>
+  auto zip(const IndexRange &range,
+           const SpacePointColumnProxy<Ts> &...columns) const noexcept {
+    return Acts::zip(IndexIteratorRange(range),
+                     columns.data().subspan(range.first, range.second)...);
   }
 
  private:
