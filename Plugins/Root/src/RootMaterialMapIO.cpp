@@ -424,7 +424,7 @@ Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
       // Fill the matrix from the histogram content
       for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
         for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-          double dt = t->GetBinContent(ib0, ib1);
+          auto dt = static_cast<float>(t->GetBinContent(ib0, ib1));
           if (dt > 0.) {
             auto dx0 = static_cast<float>(x0->GetBinContent(ib0, ib1));
             auto dl0 = static_cast<float>(l0->GetBinContent(ib0, ib1));
