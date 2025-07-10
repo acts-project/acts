@@ -22,7 +22,7 @@ jobs:
         
     - name: Build devcontainer
       run: |
-        devcontainer build --workspace-folder .
+        devcontainer up --workspace-folder .
         
     - name: Run configure_acts
       run: |
