@@ -6,20 +6,22 @@ git config --global --add safe.directory $WORKSPACE
 
 pushd $WORKSPACE
 pre-commit install
+# Signing does not seem to work
+git config set commit.gpgsign false
 popd
 
-echo "export WORKSPACE=$WORKSPACE" >> $HOME/.bashrc
+echo "export DEVCONTAINER_WORKSPACE=$WORKSPACE" >> $HOME/.bashrc
 
 cat >> $HOME/.bashrc <<EOF
 function configure_acts() {
-    echo "+ cmake -S $WORKSPACE -B $WORKSPACE/build_devcontainer --preset github-ci"
-    cmake -S $WORKSPACE -B $WORKSPACE/build_devcontainer --preset github-ci
+    echo "+ cmake -S $DEVCONTAINER_WORKSPACE -B $DEVCONTAINER_WORKSPACE/build_devcontainer --preset github-ci"
+    cmake -S $DEVCONTAINER_WORKSPACE -B $DEVCONTAINER_WORKSPACE/build_devcontainer --preset github-ci
 }
 export configure_acts
 
 function build_acts() {
-    echo "+ cmake --build $WORKSPACE/build_devcontainer"
-    cmake --build $WORKSPACE/build_devcontainer
+    echo "+ cmake --build $DEVCONTAINER_WORKSPACE/build_devcontainer"
+    cmake --build $DEVCONTAINER_WORKSPACE/build_devcontainer
 }
 export build_acts
 EOF
