@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Plugins/Root/RootMaterialMapAccessor.hpp"
+#include "Acts/Plugins/Root/RootMaterialMapIO.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -157,14 +157,17 @@ void addRootOutput(Context& ctx) {
                  .def("write", py::overload_cast<const Acts::TrackingGeometry&>(
                                    &Writer::write));
 
-    auto ac = py::class_<RootMaterialMapAccessor::Config>(w, "AccessorConfig")
+    auto ac = py::class_<RootMaterialMapIO::Config>(w, "AccessorConfig")
                   .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(ac, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
-                       otag, itag, mintag, maxtag, ttag, x0tag, l0tag, atag,
-                       ztag, rhotag);
+    ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
+                       passivePrefix, sensitivePrefix, nBinsHistName,
+                       axisDirHistName, axisBoundaryTypeHistName, indexHistName,
+                       minRangeHistName, maxRangeHistName, thicknessHistName,
+                       x0HistName, l0HistName, aHistName, zHistName,
+                       rhoHistName);
 
-    auto ao = py::class_<RootMaterialMapAccessor::Options>(w, "AccessorOptions")
+    auto ao = py::class_<RootMaterialMapIO::Options>(w, "AccessorOptions")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,

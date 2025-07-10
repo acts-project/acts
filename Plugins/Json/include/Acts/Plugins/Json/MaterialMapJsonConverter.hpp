@@ -11,9 +11,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
@@ -88,7 +88,8 @@ class MaterialMapJsonConverter {
   /// Convert a json material map to a TrackingGeometryMaterial
   ///
   /// @param materialmaps The json material
-  TrackingGeometryMaterial jsonToMaterialMaps(const nlohmann::json& materialmaps);
+  TrackingGeometryMaterial jsonToMaterialMaps(
+      const nlohmann::json& materialmaps);
 
   /// Convert a TrackingGeometryMaterial to json
   ///

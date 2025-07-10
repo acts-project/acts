@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialTrackAccessor.hpp"
+#include "Acts/Plugins/Root/RootMaterialTrackIO.hpp"
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -15,7 +15,7 @@
 #include <TChain.h>
 #include <TTree.h>
 
-void Acts::RootMaterialTrackAccessor::connectForRead(TChain& materialChain) {
+void Acts::RootMaterialTrackIO::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_vX);
   materialChain.SetBranchAddress("v_y", &m_vY);
@@ -49,7 +49,7 @@ void Acts::RootMaterialTrackAccessor::connectForRead(TChain& materialChain) {
   }
 }
 
-void Acts::RootMaterialTrackAccessor::connectForWrite(TTree& materialTree) {
+void Acts::RootMaterialTrackIO::connectForWrite(TTree& materialTree) {
   // This sets the branch addresses for the material track
   // Set the branches
   materialTree.Branch("event_id", &m_eventId);
@@ -99,7 +99,7 @@ void Acts::RootMaterialTrackAccessor::connectForWrite(TTree& materialTree) {
   }
 }
 
-void Acts::RootMaterialTrackAccessor::write(
+void Acts::RootMaterialTrackIO::write(
     const GeometryContext& gctx, std::uint32_t eventNum,
     const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
@@ -277,7 +277,7 @@ void Acts::RootMaterialTrackAccessor::write(
   }
 }
 
-Acts::RecordedMaterialTrack Acts::RootMaterialTrackAccessor::read() const {
+Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() const {
   Acts::RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
   rmTrack.first.first = Acts::Vector3(m_vX, m_vY, m_vZ);

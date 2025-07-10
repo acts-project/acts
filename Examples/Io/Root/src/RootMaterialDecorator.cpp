@@ -68,8 +68,8 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
   }
 
-  Acts::RootMaterialMapAccessor accessor(
-      m_cfg.accessorConfig, m_logger->clone("RootMaterialMapAccessor"));
+  Acts::RootMaterialMapIO accessor(m_cfg.accessorConfig,
+                                   m_logger->clone("RootMaterialMapIO"));
   auto [surfaceMaps, volumeMaps] =
       accessor.read(*m_inputFile, m_cfg.accessorOptions);
 
@@ -86,8 +86,9 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     std::string tdName(key->GetName());
 
     std::vector<std::string> splitNames;
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.accessorConfig.voltag));
+    iter_split(
+        splitNames, tdName,
+        boost::algorithm::first_finder(m_cfg.accessorConfig.volumePrefix));
 
     ACTS_VERBOSE("Processing directory: " << tdName);
     if (splitNames[0] == m_cfg.accessorOptions.folderVolumeNameBase) {
@@ -102,16 +103,19 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
       // Construct the names
-      std::string nName = tdName + "/" + m_cfg.accessorConfig.ntag;
-      std::string vName = tdName + "/" + m_cfg.accessorConfig.vtag;
-      std::string oName = tdName + "/" + m_cfg.accessorConfig.otag;
-      std::string minName = tdName + "/" + m_cfg.accessorConfig.mintag;
-      std::string maxName = tdName + "/" + m_cfg.accessorConfig.maxtag;
-      std::string x0Name = tdName + "/" + m_cfg.accessorConfig.x0tag;
-      std::string l0Name = tdName + "/" + m_cfg.accessorConfig.l0tag;
-      std::string aName = tdName + "/" + m_cfg.accessorConfig.atag;
-      std::string zName = tdName + "/" + m_cfg.accessorConfig.ztag;
-      std::string rhoName = tdName + "/" + m_cfg.accessorConfig.rhotag;
+      std::string nName = tdName + "/" + m_cfg.accessorConfig.nBinsHistName;
+      std::string vName = tdName + "/" + m_cfg.accessorConfig.axisDirHistName;
+      std::string oName =
+          tdName + "/" + m_cfg.accessorConfig.axisBoundaryTypeHistName;
+      std::string minName =
+          tdName + "/" + m_cfg.accessorConfig.minRangeHistName;
+      std::string maxName =
+          tdName + "/" + m_cfg.accessorConfig.maxRangeHistName;
+      std::string x0Name = tdName + "/" + m_cfg.accessorConfig.x0HistName;
+      std::string l0Name = tdName + "/" + m_cfg.accessorConfig.l0HistName;
+      std::string aName = tdName + "/" + m_cfg.accessorConfig.aHistName;
+      std::string zName = tdName + "/" + m_cfg.accessorConfig.zHistName;
+      std::string rhoName = tdName + "/" + m_cfg.accessorConfig.rhoHistName;
 
       // Get the histograms
       TH1F* n = dynamic_cast<TH1F*>(m_inputFile->Get(nName.c_str()));

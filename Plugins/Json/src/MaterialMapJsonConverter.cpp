@@ -277,7 +277,8 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   return materialMap;
 }
 
-Acts::TrackingGeometryMaterial Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
+Acts::TrackingGeometryMaterial
+Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     const nlohmann::json& materialmap) {
   nlohmann::json materialVolume = materialmap["Volumes"];
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =

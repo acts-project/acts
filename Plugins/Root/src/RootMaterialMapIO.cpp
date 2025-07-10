@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialMapAccessor.hpp"
+#include "Acts/Plugins/Root/RootMaterialMapIO.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
@@ -28,7 +28,7 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
 
-void Acts::RootMaterialMapAccessor::write(
+void Acts::RootMaterialMapIO::write(
     TFile& rFile, const GeometryIdentifier& geoID,
     const ISurfaceMaterial& surfaceMaterial, const Options& options) {
   /// Change to the file
@@ -62,11 +62,11 @@ void Acts::RootMaterialMapAccessor::write(
     const auto gsenID = geoID.sensitive();
     // create the directory
     std::string tdName = options.folderSurfaceNameBase.c_str();
-    tdName += m_cfg.voltag + std::to_string(gvolID);
-    tdName += m_cfg.boutag + std::to_string(gbouID);
-    tdName += m_cfg.laytag + std::to_string(glayID);
-    tdName += m_cfg.apptag + std::to_string(gappID);
-    tdName += m_cfg.sentag + std::to_string(gsenID);
+    tdName += m_cfg.volumePrefix + std::to_string(gvolID);
+    tdName += m_cfg.portalPrefix + std::to_string(gbouID);
+    tdName += m_cfg.layerPrefix + std::to_string(glayID);
+    tdName += m_cfg.passivePrefix + std::to_string(gappID);
+    tdName += m_cfg.sensitivePrefix + std::to_string(gsenID);
     // create a new directory
     rFile.mkdir(tdName.c_str());
     rFile.cd(tdName.c_str());
@@ -79,19 +79,19 @@ void Acts::RootMaterialMapAccessor::write(
     auto fBins = static_cast<float>(bins);
 
     // The bin number information
-    TH1F n(m_cfg.ntag.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
+    TH1F n(m_cfg.nBinsHistName.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
 
     // The binning value information
-    TH1F v(m_cfg.vtag.c_str(), "binning values; bin", bins, -0.5, fBins - 0.5);
+    TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information
-    TH1F o(m_cfg.otag.c_str(), "binning options; bin", bins, -0.5, fBins - 0.5);
+    TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information - range min
-    TH1F rmin(m_cfg.mintag.c_str(), "min; bin", bins, -0.5, fBins - 0.5);
+    TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", bins, -0.5, fBins - 0.5);
 
     // The binning option information - range max
-    TH1F rmax(m_cfg.maxtag.c_str(), "max; bin", bins, -0.5, fBins - 0.5);
+    TH1F rmax(m_cfg.maxRangeHistName.c_str(), "max; bin", bins, -0.5, fBins - 0.5);
 
     // Now fill the histogram content
     for (auto [b, bData] : enumerate(binningData)) {
@@ -131,7 +131,7 @@ void Acts::RootMaterialMapAccessor::write(
   }
 }
 
-void Acts::RootMaterialMapAccessor::write(
+void Acts::RootMaterialMapIO::write(
     TFile& rFile, const TrackingGeometryMaterial& detectorMaterial,
     const Options& options) {
   const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
@@ -146,33 +146,33 @@ void Acts::RootMaterialMapAccessor::write(
   }
 }
 
-void Acts::RootMaterialMapAccessor::connectForWrite(
+void Acts::RootMaterialMapIO::connectForWrite(
     TTree& rTree, MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.Branch("hGeoId", &treePayload.hGeoId);
   }
-  rTree.Branch(m_cfg.ttag.c_str(), &treePayload.ht);
-  rTree.Branch(m_cfg.x0tag.c_str(), &treePayload.hX0);
-  rTree.Branch(m_cfg.l0tag.c_str(), &treePayload.hL0);
-  rTree.Branch(m_cfg.atag.c_str(), &treePayload.hA);
-  rTree.Branch(m_cfg.ztag.c_str(), &treePayload.hZ);
-  rTree.Branch(m_cfg.rhotag.c_str(), &treePayload.hRho);
+  rTree.Branch(m_cfg.thicknessHistName.c_str(), &treePayload.ht);
+  rTree.Branch(m_cfg.x0HistName.c_str(), &treePayload.hX0);
+  rTree.Branch(m_cfg.l0HistName.c_str(), &treePayload.hL0);
+  rTree.Branch(m_cfg.aHistName.c_str(), &treePayload.hA);
+  rTree.Branch(m_cfg.zHistName.c_str(), &treePayload.hZ);
+  rTree.Branch(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapAccessor::connectForRead(
+void Acts::RootMaterialMapIO::connectForRead(
     TTree& rTree, MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
   }
-  rTree.SetBranchAddress(m_cfg.ttag.c_str(), &treePayload.ht);
-  rTree.SetBranchAddress(m_cfg.x0tag.c_str(), &treePayload.hX0);
-  rTree.SetBranchAddress(m_cfg.l0tag.c_str(), &treePayload.hL0);
-  rTree.SetBranchAddress(m_cfg.atag.c_str(), &treePayload.hA);
-  rTree.SetBranchAddress(m_cfg.ztag.c_str(), &treePayload.hZ);
-  rTree.SetBranchAddress(m_cfg.rhotag.c_str(), &treePayload.hRho);
+  rTree.SetBranchAddress(m_cfg.thicknessHistName.c_str(), &treePayload.ht);
+  rTree.SetBranchAddress(m_cfg.x0HistName.c_str(), &treePayload.hX0);
+  rTree.SetBranchAddress(m_cfg.l0HistName.c_str(), &treePayload.hL0);
+  rTree.SetBranchAddress(m_cfg.aHistName.c_str(), &treePayload.hA);
+  rTree.SetBranchAddress(m_cfg.zHistName.c_str(), &treePayload.hZ);
+  rTree.SetBranchAddress(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapAccessor::fillMaterialSlab(
+void Acts::RootMaterialMapIO::fillMaterialSlab(
     MaterialTreePayload& payload, const MaterialSlab& materialSlab) {
   payload.ht = materialSlab.thickness();
   payload.hX0 = materialSlab.material().X0();
@@ -182,24 +182,24 @@ void Acts::RootMaterialMapAccessor::fillMaterialSlab(
   payload.hRho = materialSlab.material().massDensity();
 }
 
-void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
+void Acts::RootMaterialMapIO::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
   auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
   auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
   auto fBins0 = static_cast<float>(bins0);
   auto fBins1 = static_cast<float>(bins1);
 
-  TH2F t(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
+  TH2F t(m_cfg.thicknessHistName.c_str(), "thickness [mm] ;b0 ;b1", bins0, -0.5,
          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
-  TH2F x0(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
+  TH2F x0(m_cfg.x0HistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
           bins1, -0.5, fBins1 - 0.5);
-  TH2F l0(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
+  TH2F l0(m_cfg.l0HistName.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
           fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
-  TH2F A(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
+  TH2F A(m_cfg.aHistName.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5, fBins0 - 0.5,
          bins1, -0.5, fBins1 - 0.5);
-  TH2F Z(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
+  TH2F Z(m_cfg.zHistName.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0, -0.5,
          fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
-  TH2F rho(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
+  TH2F rho(m_cfg.rhoHistName.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0, -0.5,
            fBins0 - 0.5, bins1, -0.5, fBins1 - 0.5);
 
   // Loop over the material matrix and fill the histograms
@@ -228,12 +228,12 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   rho.Write();
 }
 
-void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
+void Acts::RootMaterialMapIO::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
 
-  TH2I idx(m_cfg.itag.c_str(), "indices; bin0; bin1", static_cast<int>(bins0),
+  TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1", static_cast<int>(bins0),
            -0.5, static_cast<float>(bins0) - 0.5, static_cast<int>(bins1), -0.5,
            static_cast<float>(bins1) - 0.5);
   // lLop over the material matrix, record the index and fill the indexed tree
@@ -250,7 +250,7 @@ void Acts::RootMaterialMapAccessor::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-Acts::TrackingGeometryMaterial Acts::RootMaterialMapAccessor::read(
+Acts::TrackingGeometryMaterial Acts::RootMaterialMapIO::read(
     TFile& rFile, const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
@@ -300,7 +300,7 @@ Acts::TrackingGeometryMaterial Acts::RootMaterialMapAccessor::read(
     // volume
     std::vector<std::string> splitNames;
     iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.voltag));
+               boost::algorithm::first_finder(m_cfg.volumePrefix));
     // Surface Material
     if (splitNames[0] == options.folderSurfaceNameBase) {
       // The surface material to be read in for this
@@ -310,22 +310,22 @@ Acts::TrackingGeometryMaterial Acts::RootMaterialMapAccessor::read(
       GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
       // boundary
       iter_split(splitNames, tdName,
-                 boost::algorithm::first_finder(m_cfg.boutag));
+                 boost::algorithm::first_finder(m_cfg.portalPrefix));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
       GeometryIdentifier::Value bouID = std::stoi(splitNames[0]);
       // layer
       iter_split(splitNames, tdName,
-                 boost::algorithm::first_finder(m_cfg.laytag));
+                 boost::algorithm::first_finder(m_cfg.layerPrefix));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
       GeometryIdentifier::Value layID = std::stoi(splitNames[0]);
       // approach
       iter_split(splitNames, tdName,
-                 boost::algorithm::first_finder(m_cfg.apptag));
+                 boost::algorithm::first_finder(m_cfg.passivePrefix));
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
       GeometryIdentifier::Value appID = std::stoi(splitNames[0]);
       // sensitive
       iter_split(splitNames, tdName,
-                 boost::algorithm::first_finder(m_cfg.sentag));
+                 boost::algorithm::first_finder(m_cfg.sensitivePrefix));
       GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
 
       // Reconstruct the geometry ID
@@ -345,17 +345,17 @@ Acts::TrackingGeometryMaterial Acts::RootMaterialMapAccessor::read(
 }
 
 std::shared_ptr<const Acts::ISurfaceMaterial>
-Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
+Acts::RootMaterialMapIO::readTextureSurfaceMaterial(
     TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
   std::shared_ptr<const Acts::ISurfaceMaterial> texturedSurfaceMaterial =
       nullptr;
 
   // Construct the common names & get the common histograms
-  std::string nName = tdName + "/" + m_cfg.ntag;
-  std::string vName = tdName + "/" + m_cfg.vtag;
-  std::string oName = tdName + "/" + m_cfg.otag;
-  std::string minName = tdName + "/" + m_cfg.mintag;
-  std::string maxName = tdName + "/" + m_cfg.maxtag;
+  std::string nName = tdName + "/" + m_cfg.nBinsHistName;
+  std::string vName = tdName + "/" + m_cfg.axisDirHistName;
+  std::string oName = tdName + "/" + m_cfg.axisBoundaryTypeHistName;
+  std::string minName = tdName + "/" + m_cfg.minRangeHistName;
+  std::string maxName = tdName + "/" + m_cfg.maxRangeHistName;
   // Get the histograms
   auto n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
   auto v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
@@ -378,12 +378,12 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
   /// Draw from histogram only source
   if (indexedMaterialTree == nullptr) {
     // Construct the names for histogram type storage
-    std::string tName = tdName + "/" + m_cfg.ttag;
-    std::string x0Name = tdName + "/" + m_cfg.x0tag;
-    std::string l0Name = tdName + "/" + m_cfg.l0tag;
-    std::string aName = tdName + "/" + m_cfg.atag;
-    std::string zName = tdName + "/" + m_cfg.ztag;
-    std::string rhoName = tdName + "/" + m_cfg.rhotag;
+    std::string tName = tdName + "/" + m_cfg.thicknessHistName;
+    std::string x0Name = tdName + "/" + m_cfg.x0HistName;
+    std::string l0Name = tdName + "/" + m_cfg.l0HistName;
+    std::string aName = tdName + "/" + m_cfg.aHistName;
+    std::string zName = tdName + "/" + m_cfg.zHistName;
+    std::string rhoName = tdName + "/" + m_cfg.rhoHistName;
 
     // Get the histograms
     auto t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
@@ -426,7 +426,7 @@ Acts::RootMaterialMapAccessor::readTextureSurfaceMaterial(
     }
   } else {
     // Construct the names for histogram type storage
-    std::string indexName = tdName + "/" + m_cfg.itag;
+    std::string indexName = tdName + "/" + m_cfg.indexHistName;
     // Get the histograms
     auto ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
     if (ih != nullptr) {

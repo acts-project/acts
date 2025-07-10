@@ -22,6 +22,7 @@ using SurfaceMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-using TrackingGeometryMaterial = std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
+using TrackingGeometryMaterial =
+    std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
 
 }  // namespace Acts

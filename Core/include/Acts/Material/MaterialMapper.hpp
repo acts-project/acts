@@ -10,9 +10,9 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
 #include "Acts/Utilities/Logger.hpp"

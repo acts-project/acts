@@ -31,46 +31,46 @@ class BinnedSurfaceMaterial;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
-class RootMaterialMapAccessor {
+class RootMaterialMapIO {
  public:
   /// @brief Configuration for the accessor
   /// Contains the tags used for writing and reading, tag names are
   /// configuration, as they are not very likely to change.
   struct Config {
     /// The volume identification string
-    std::string voltag = "_vol";
+    std::string volumePrefix = "_vol";
     /// The boundary identification string
-    std::string boutag = "_bou";
+    std::string portalPrefix = "_bou";
     /// The layer identification string
-    std::string laytag = "_lay";
+    std::string layerPrefix = "_lay";
     /// The approach identification string
-    std::string apptag = "_app";
+    std::string passivePrefix = "_app";
     /// The sensitive identification string
-    std::string sentag = "_sen";
+    std::string sensitivePrefix = "_sen";
     /// The bin number tag
-    std::string ntag = "n";
-    /// The value tag -> binning values: AxisZ, AxisR, AxisPhi, etc.
-    std::string vtag = "v";
-    /// The option tag -> binning options: open, closed
-    std::string otag = "o";
-    /// The index tag
-    std::string itag = "i";
-    /// The range min tag: min value
-    std::string mintag = "min";
-    /// The range max tag: max value
-    std::string maxtag = "max";
-    /// The thickness tag
-    std::string ttag = "t";
-    /// The x0 tag
-    std::string x0tag = "x0";
-    /// The l0 tag
-    std::string l0tag = "l0";
-    /// The A tag
-    std::string atag = "A";
-    /// The Z tag
-    std::string ztag = "Z";
-    /// The rho tag
-    std::string rhotag = "rho";
+    std::string nBinsHistName = "n";
+    /// The axis direction histogram name: AxisZ, AxisR, AxisPhi, etc.
+    std::string axisDirHistName = "axisDir";
+    /// The axis boundary type hist name
+    std::string axisBoundaryTypeHistName = "o";
+    /// The range histogram name: min value
+    std::string minRangeHistName = "min";
+    /// The range histogram name: max value
+    std::string maxRangeHistName = "max";
+    /// The thickness histogram name
+    std::string thicknessHistName = "t";
+    /// The x0 histogram name
+    std::string x0HistName = "x0";
+    /// The l0 histogram name
+    std::string l0HistName = "l0";
+    /// The A histogram name
+    std::string aHistName = "A";
+    /// The Z thisogram name
+    std::string zHistName = "Z";
+    /// The rho thisogram name
+    std::string rhoHistName = "rho";
+    /// The index histogram name
+    std::string indexHistName = "i";
   };
 
   /// @brief Options for writing the material maps
@@ -110,14 +110,14 @@ class RootMaterialMapAccessor {
   /// @brief Constructor from config struct
   /// @param cfg the configuration for the accessor
   /// @param mLogger the logger to use, default is INFO level
-  explicit RootMaterialMapAccessor(
+  explicit RootMaterialMapIO(
       const Config& cfg,
       std::unique_ptr<const Logger> mLogger =
-          getDefaultLogger("RootMaterialMapAccessor", Logging::INFO))
+          getDefaultLogger("RootMaterialMapIO", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor
-  ~RootMaterialMapAccessor() = default;
+  ~RootMaterialMapIO() = default;
 
   /// Write the detector maps
   /// @param rFile the file to write to

@@ -24,7 +24,8 @@ class IMaterialWriter {
   /// The single writer class
   ///
   /// @param detMaterial the detector material maps
-  virtual void writeMaterial(const Acts::TrackingGeometryMaterial& detMaterial) = 0;
+  virtual void writeMaterial(
+      const Acts::TrackingGeometryMaterial& detMaterial) = 0;
 };
 
 }  // namespace ActsExamples

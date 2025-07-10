@@ -12,11 +12,11 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Material/TrackingGeometryMaterial.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Plugins/Root/RootMaterialMapAccessor.hpp>
+#include <Acts/Material/TrackingGeometryMaterial.hpp>
+#include <Acts/Plugins/Root/RootMaterialMapIO.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -40,9 +40,9 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   class Config {
    public:
     /// Accessor config
-    Acts::RootMaterialMapAccessor::Config accessorConfig;
+    Acts::RootMaterialMapIO::Config accessorConfig;
     /// Accessor options
-    Acts::RootMaterialMapAccessor::Options accessorOptions;
+    Acts::RootMaterialMapIO::Options accessorOptions;
     /// The name of the output file
     std::string fileName = "material-maps.root";
   };

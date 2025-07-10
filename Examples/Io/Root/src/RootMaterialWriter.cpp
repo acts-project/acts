@@ -14,13 +14,13 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -70,8 +70,8 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
   const auto& [surfaceMaps, volumeMaps] = detMaterial;
 
   // Write the surface material maps
-  Acts::RootMaterialMapAccessor accessor(
-      m_cfg.accessorConfig, m_logger->clone("RootMaterialMapAccessor"));
+  Acts::RootMaterialMapIO accessor(m_cfg.accessorConfig,
+                                   m_logger->clone("RootMaterialMapIO"));
 
   for (const auto& [geoId, sMap] : surfaceMaps) {
     // Get the Surface material
@@ -94,7 +94,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
     // create the directory
     std::string tdName = m_cfg.accessorOptions.folderVolumeNameBase.c_str();
-    tdName += m_cfg.accessorConfig.voltag + std::to_string(gvolID);
+    tdName += m_cfg.accessorConfig.volumePrefix + std::to_string(gvolID);
 
     // create a new directory
     m_outputFile->mkdir(tdName.c_str());
@@ -127,24 +127,24 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       auto fBins = static_cast<float>(bins);
 
       // The bin number information
-      TH1F n(m_cfg.accessorConfig.ntag.c_str(), "bins; bin", bins, -0.5,
-             fBins - 0.5);
+      TH1F n(m_cfg.accessorConfig.nBinsHistName.c_str(), "bins; bin", bins,
+             -0.5, fBins - 0.5);
 
       // The binning value information
-      TH1F v(m_cfg.accessorConfig.vtag.c_str(), "binning values; bin", bins,
-             -0.5, fBins - 0.5);
+      TH1F v(m_cfg.accessorConfig.axisDirHistName.c_str(),
+             "binning values; bin", bins, -0.5, fBins - 0.5);
 
       // The binning option information
-      TH1F o(m_cfg.accessorConfig.otag.c_str(), "binning options; bin", bins,
-             -0.5, fBins - 0.5);
+      TH1F o(m_cfg.accessorConfig.axisBoundaryTypeHistName.c_str(),
+             "binning options; bin", bins, -0.5, fBins - 0.5);
 
       // The binning option information
-      TH1F rmin(m_cfg.accessorConfig.mintag.c_str(), "min; bin", bins, -0.5,
-                fBins - 0.5);
+      TH1F rmin(m_cfg.accessorConfig.minRangeHistName.c_str(), "min; bin", bins,
+                -0.5, fBins - 0.5);
 
       // The binning option information
-      TH1F rmax(m_cfg.accessorConfig.maxtag.c_str(), "max; bin", bins, -0.5,
-                fBins - 0.5);
+      TH1F rmax(m_cfg.accessorConfig.maxRangeHistName.c_str(), "max; bin", bins,
+                -0.5, fBins - 0.5);
 
       // Now fill the histogram content
       for (const auto& [b, bData] : enumerate(binningData)) {
@@ -166,16 +166,16 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
     }
 
     auto fPoints = static_cast<float>(points);
-    TH1F x0(m_cfg.accessorConfig.x0tag.c_str(), "X_{0} [mm] ;gridPoint", points,
-            -0.5, fPoints - 0.5);
-    TH1F l0(m_cfg.accessorConfig.l0tag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+    TH1F x0(m_cfg.accessorConfig.x0HistName.c_str(), "X_{0} [mm] ;gridPoint",
             points, -0.5, fPoints - 0.5);
-    TH1F A(m_cfg.accessorConfig.atag.c_str(), "X_{0} [mm] ;gridPoint", points,
-           -0.5, fPoints - 0.5);
-    TH1F Z(m_cfg.accessorConfig.ztag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+    TH1F l0(m_cfg.accessorConfig.l0HistName.c_str(),
+            "#Lambda_{0} [mm] ;gridPoint", points, -0.5, fPoints - 0.5);
+    TH1F A(m_cfg.accessorConfig.aHistName.c_str(), "X_{0} [mm] ;gridPoint",
            points, -0.5, fPoints - 0.5);
-    TH1F rho(m_cfg.accessorConfig.rhotag.c_str(), "#rho [g/mm^3] ;gridPoint",
-             points, -0.5, fPoints - 0.5);
+    TH1F Z(m_cfg.accessorConfig.zHistName.c_str(),
+           "#Lambda_{0} [mm] ;gridPoint", points, -0.5, fPoints - 0.5);
+    TH1F rho(m_cfg.accessorConfig.rhoHistName.c_str(),
+             "#rho [g/mm^3] ;gridPoint", points, -0.5, fPoints - 0.5);
     // homogeneous volume
     if (points == 1) {
       auto mat = vMaterial->material({0, 0, 0});
