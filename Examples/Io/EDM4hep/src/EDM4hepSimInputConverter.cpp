@@ -146,6 +146,15 @@ bool EDM4hepSimInputConverter::acceptParticle(
 }
 
 namespace {
+bool isGeneratorStable(const edm4hep::MCParticle& particle) {
+  // https://arxiv.org/pdf/1912.08005#subsection.1.A.1
+  constexpr int kUndecayedPhysicalParticleStatus = 1;
+  constexpr int kDecayedPhysicalParticleStatus = 2;
+  int status = particle.getGeneratorStatus();
+  return status == kUndecayedPhysicalParticleStatus ||
+         status == kDecayedPhysicalParticleStatus;
+}
+
 void findGeneratorStableParticles(
     const edm4hep::MCParticle& particle,
     std::vector<edm4hep::MCParticle>& outputParticles) {
@@ -154,13 +163,7 @@ void findGeneratorStableParticles(
     return;
   }
 
-  // https://arxiv.org/pdf/1912.08005#subsection.1.A.1
-  constexpr int kUndecayedPhysicalParticleStatus = 1;
-  constexpr int kDecayedPhysicalParticleStatus = 2;
-
-  int status = particle.getGeneratorStatus();
-  if (status == kUndecayedPhysicalParticleStatus ||
-      status == kDecayedPhysicalParticleStatus) {
+  if (isGeneratorStable(particle)) {
     // This is a generator stable particle, record and do not descend further
     if (std::ranges::find(outputParticles, particle) == outputParticles.end()) {
       outputParticles.push_back(particle);
@@ -224,8 +227,13 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       }
 
       assert(vertexParticles != nullptr);
-      nVertexParticles += particle.getDaughters().size();
 
+      if (isGeneratorStable(particle)) {
+        vertexParticles->push_back(particle.getObjectID().index);
+        nVertexParticles += 1;
+      }
+
+      nVertexParticles += particle.getDaughters().size();
       std::ranges::copy(
           particle.getDaughters() | std::views::transform([](const auto& p) {
             return p.getObjectID().index;
@@ -365,6 +373,12 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Found " << unorderedParticlesInitial.size()
                       << " particles in total");
 
+  if (unorderedParticlesInitial.empty()) {
+    ACTS_WARNING(
+        "No particles found in the input file, this will likely cause issues "
+        "if sim hits are converted");
+  }
+
   std::optional particlesSimulatedUnordered = std::vector<SimParticle>{};
 
   auto convertPosition4 = [&](const edm4hep::MCParticle& inParticle) {
@@ -376,6 +390,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     return vtxPos4;
   };
 
+  std::size_t nSkipped = 0;
   {
     Acts::ScopedTimer timer("Converting particles", logger(),
                             Acts::Logging::DEBUG);
@@ -385,6 +400,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
       if (particleIt == edm4hepParticleMap.end()) {
+        nSkipped += 1;
         continue;
       }
 
@@ -447,6 +463,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Converted " << particlesSimulatedUnordered->size()
                           << " simulated particles");
 
+  ACTS_DEBUG("Skipped particles: " << nSkipped << " (no hits or not accepted)");
+
   std::ranges::sort(*particlesGeneratorUnordered, detail::CompareParticleId{});
   std::ranges::sort(*particlesSimulatedUnordered, detail::CompareParticleId{});
 
@@ -470,6 +488,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
     for (const auto& name : m_cfg.inputSimHits) {
       const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
+      ACTS_VERBOSE("SimHit collection " << name << " has " << inputHits.size()
+                                        << " hits");
 
       simHitsUnordered->reserve(simHitsUnordered->size() + inputHits.size());
 
