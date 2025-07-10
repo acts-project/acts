@@ -881,6 +881,7 @@ class SpacePointContainer2 {
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.
+  /// @param range The index range to zip.
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
@@ -890,6 +891,7 @@ class SpacePointContainer2 {
                      columns.data().subspan(range.first, range.second)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
+  /// @param range The index range to create the zipped range from.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
