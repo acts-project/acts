@@ -67,3 +67,24 @@ set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # set relative library path for ACTS libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+
+# Check compiler features that we require.
+# This is an alternative to requiring compiler version checks and is more generic
+check_cxx_source_compiles(
+    "
+#include <format>
+#include <string>
+
+int main() {
+std::string s = std::format(\"Hello, {}!\", \"World\");
+}
+"
+    HAVE_STDFORMAT
+)
+
+if(NOT HAVE_STDFORMAT)
+    message(
+        SEND_ERROR
+        "C++20 std::format support is required, but not available in this compiler"
+    )
+endif()
