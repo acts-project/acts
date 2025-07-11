@@ -26,7 +26,7 @@ class TrackingVolume;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
-class RootMaterialTrackIO {
+class RootMaterialTrackIo {
  public:
   struct Config {
     /// Whether to store pre- and post-step information
@@ -42,10 +42,10 @@ class RootMaterialTrackIO {
   /// @brief Constructor from config struct
   ///
   /// @param cfg the configuration for the accessor
-  explicit RootMaterialTrackIO(const Config& cfg) : m_cfg(cfg) {}
+  explicit RootMaterialTrackIo(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Destructor
-  ~RootMaterialTrackIO() = default;
+  ~RootMaterialTrackIo() = default;
 
   /// @brief sets the branch connection for reading from a file
   ///

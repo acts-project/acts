@@ -31,7 +31,7 @@ class BinnedSurfaceMaterial;
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
-class RootMaterialMapIO {
+class RootMaterialMapIo {
  public:
   /// @brief Configuration for the accessor
   /// Contains the tags used for writing and reading, tag names are
@@ -110,14 +110,14 @@ class RootMaterialMapIO {
   /// @brief Constructor from config struct
   /// @param cfg the configuration for the accessor
   /// @param mLogger the logger to use, default is INFO level
-  explicit RootMaterialMapIO(const Config& cfg,
+  explicit RootMaterialMapIo(const Config& cfg,
                              std::unique_ptr<const Logger> mLogger =
-                                 getDefaultLogger("RootMaterialMapIO",
+                                 getDefaultLogger("RootMaterialMapIo",
                                                   Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor
-  ~RootMaterialMapIO() = default;
+  ~RootMaterialMapIo() = default;
 
   /// Write the detector maps
   /// @param rFile the file to write to

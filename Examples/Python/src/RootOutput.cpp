@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Plugins/Root/RootMaterialMapIO.hpp"
+#include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -157,7 +157,7 @@ void addRootOutput(Context& ctx) {
                  .def("write", py::overload_cast<const Acts::TrackingGeometry&>(
                                    &Writer::write));
 
-    auto ac = py::class_<RootMaterialMapIO::Config>(w, "AccessorConfig")
+    auto ac = py::class_<RootMaterialMapIo::Config>(w, "AccessorConfig")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
@@ -167,7 +167,7 @@ void addRootOutput(Context& ctx) {
                        x0HistName, l0HistName, aHistName, zHistName,
                        rhoHistName);
 
-    auto ao = py::class_<RootMaterialMapIO::Options>(w, "AccessorOptions")
+    auto ao = py::class_<RootMaterialMapIo::Options>(w, "AccessorOptions")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,
