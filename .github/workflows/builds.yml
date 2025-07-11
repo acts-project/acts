@@ -489,7 +489,7 @@ jobs:
           cat >comment-50-external-failure.md <<EOF
           # ❗️: Downstream build failure
 
-           - eic-shell (cc @veprbl)
+           - eic-shell (cc @acts-project/epic-contacts)
           EOF
 
       - name: Upload Artifact
