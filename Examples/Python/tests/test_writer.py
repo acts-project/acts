@@ -32,6 +32,7 @@ from acts.examples import (
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
+    CsvTrackParameterWriter,
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
@@ -446,3 +447,39 @@ def test_csv_multitrajectory_writer(tmp_path):
     )
     s.run()
     assert_csv_output(csv_dir, "CKFtracks", s.config.events, size_threshold=20)
+
+
+@pytest.mark.csv
+def test_csv_trackparameter_writer(tmp_path):
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Configs/generic-digi-smearing-config.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    csv_dir = tmp_path / "csv"
+    csv_dir.mkdir()
+    s.addWriter(
+        CsvTrackParameterWriter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputStem="track_parameters",
+            outputDir=str(csv_dir),
+        )
+    )
+    s.run()
+    assert_csv_output(csv_dir, "track_parameters", s.config.events, size_threshold=20)
