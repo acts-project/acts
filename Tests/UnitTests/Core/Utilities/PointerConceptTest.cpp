@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackStateProxy.hpp"
-#include "Acts/Utilities/PointerConcept.hpp"
+#include "Acts/Utilities/PointerTraits.hpp"
 
 #include <iostream>
 #include <memory>
@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
   BOOST_CHECK(!testPointer(PartialPointerLike{}));
 
   /** Ensure that the remove_pointer_t trait is doing what's supposed to do */
-  static_assert(std::is_same_v<remove_pointer_t<std::unique_ptr<int>>, int>);
-  static_assert(std::is_same_v<remove_pointer_t<std::shared_ptr<int>>, int>);
-  static_assert(std::is_same_v<remove_pointer_t<int>, int>);
-  static_assert(std::is_same_v<remove_pointer_t<int*>, int>);
+  static_assert(std::is_same_v<RemovePointer_t<std::unique_ptr<int>>, int>);
+  static_assert(std::is_same_v<RemovePointer_t<std::shared_ptr<int>>, int>);
+  static_assert(std::is_same_v<RemovePointer_t<int>, int>);
+  static_assert(std::is_same_v<RemovePointer_t<int*>, int>);
 }
 BOOST_AUTO_TEST_SUITE_END()
 

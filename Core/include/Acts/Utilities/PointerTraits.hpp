@@ -39,22 +39,22 @@ concept PointerConcept =
 ///        fetch the underlying type for the pointer concept and std::library
 ///        does not allow for an extension of the std::remove_pointer;
 template <typename T>
-struct remove_pointer {
+struct RemovePointer {
   using type = T;
 };
 
 /// @brief  This specialization allows std::remove_pointer to work with types satisfying
 ///         Acts::SmartPointerConcept, similar to how it works with raw pointers
 template <SmartPointerConcept T>
-struct remove_pointer<T> {
+struct RemovePointer<T> {
   using type = typename T::element_type;
 };
 /// @brief ordinary specialization for pointers
 template <PointerConcept T>
-struct remove_pointer<T> {
+struct RemovePointer<T> {
   using type = std::remove_pointer_t<T>;
 };
 template <typename T>
-using remove_pointer_t = remove_pointer<T>::type;
+using RemovePointer_t = RemovePointer<T>::type;
 
 }  // namespace Acts
