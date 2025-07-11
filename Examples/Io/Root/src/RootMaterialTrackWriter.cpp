@@ -35,8 +35,8 @@ RootMaterialTrackWriter::RootMaterialTrackWriter(
     const RootMaterialTrackWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputMaterialTracks, "RootMaterialTrackWriter", level),
       m_cfg(config),
-      m_accessor({config.prePostStep, config.storeSurface, config.storeVolume,
-                  config.recalculateTotals}) {
+      m_accessor(
+          {config.prePostStep, config.storeSurface, config.storeVolume}) {
   // An input collection name and tree name must be specified
   if (m_cfg.inputMaterialTracks.empty()) {
     throw std::invalid_argument("Missing input collection");

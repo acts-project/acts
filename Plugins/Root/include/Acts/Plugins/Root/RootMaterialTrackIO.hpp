@@ -35,8 +35,6 @@ class RootMaterialTrackIO {
     bool surfaceInfo = false;
     /// Whether to store volume information
     bool volumeInfo = false;
-    /// Whether to recalculate totals from the steps
-    bool recalculateTotals = false;
   };
 
   /// @brief Constructor from config struct
@@ -72,7 +70,7 @@ class RootMaterialTrackIO {
   /// @note the caller has to do the TChain::GetEntry() before this call
   ///
   /// @return the material track
-  RecordedMaterialTrack read() const;
+  RecordedMaterialTrack read();
 
  private:
   struct MateriaSummaryPayload {
@@ -150,6 +148,28 @@ class RootMaterialTrackIO {
     /// step material rho
     std::vector<float> stepMatRho;
     std::vector<float>* stepMatRhoPtr = &stepMatRho;
+
+    void clear() {
+      stepXs.clear();
+      stepYs.clear();
+      stepZs.clear();
+      stepXe.clear();
+      stepYe.clear();
+      stepZe.clear();
+      stepX.clear();
+      stepY.clear();
+      stepZ.clear();
+      stepR.clear();
+      stepDx.clear();
+      stepDy.clear();
+      stepDz.clear();
+      stepLength.clear();
+      stepMatX0.clear();
+      stepMatL0.clear();
+      stepMatA.clear();
+      stepMatZ.clear();
+      stepMatRho.clear();
+    }
   };
 
   struct MaterialSurfacePayload {
@@ -172,11 +192,23 @@ class RootMaterialTrackIO {
     /// path correction when associating material to the given surface
     std::vector<float> surfacePathCorrection;
     std::vector<float>* surfacePathCorrectionPtr = &surfacePathCorrection;
+
+    void clear() {
+      surfaceId.clear();
+      surfaceX.clear();
+      surfaceY.clear();
+      surfaceZ.clear();
+      surfaceR.clear();
+      surfaceDistance.clear();
+      surfacePathCorrection.clear();
+    }
   };
 
   struct MaterialVolumePayload {
     /// ID of the volume associated with the step
     std::vector<std::uint64_t> volumeId;
+
+    void clear() { volumeId.clear(); }
   };
 
   /// The configuration for the accessor

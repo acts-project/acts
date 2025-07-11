@@ -59,8 +59,6 @@ class RootMaterialTrackWriter
     /// name of the output tree
     std::string treeName = "material-tracks";
 
-    /// Re-calculate total values from individual steps (for cross-checks)
-    bool recalculateTotals = false;
     /// Write aut pre and post step (for G4), otherwise central step position
     bool prePostStep = false;
     /// Write the surface to which the material step correpond

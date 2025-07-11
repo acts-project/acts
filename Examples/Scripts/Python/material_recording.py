@@ -91,7 +91,6 @@ def runMaterialRecording(
     s.addWriter(
         acts.examples.RootMaterialTrackWriter(
             prePostStep=True,
-            recalculateTotals=True,
             inputMaterialTracks="material-tracks",
             filePath=os.path.join(outputDir, "geant4_material_tracks.root"),
             level=acts.logging.INFO,

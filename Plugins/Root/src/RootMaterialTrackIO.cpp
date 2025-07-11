@@ -169,15 +169,8 @@ void Acts::RootMaterialTrackIO::write(
   m_surfacePayload.surfacePathCorrection.reserve(mints);
 
   m_volumePayload.volumeId.reserve(mints);
-
-  // reset the global counter
-  if (m_cfg.recalculateTotals) {
-    m_summaryPayload.tX0 = 0.;
-    m_summaryPayload.tL0 = 0.;
-  } else {
-    m_summaryPayload.tX0 = materialTrack.second.materialInX0;
-    m_summaryPayload.tL0 = materialTrack.second.materialInL0;
-  }
+  m_summaryPayload.tX0 = materialTrack.second.materialInX0;
+  m_summaryPayload.tL0 = materialTrack.second.materialInL0;
 
   // set the track information at vertex
   m_summaryPayload.vX = materialTrack.first.first.x();
@@ -236,10 +229,12 @@ void Acts::RootMaterialTrackIO::write(
                             Acts::BoundaryTolerance::None())
                 .closest();
         m_surfacePayload.surfaceId.push_back(surface->geometryId().value());
-        m_surfacePayload.surfacePathCorrection.push_back(1.0);
         m_surfacePayload.surfaceX.push_back(sfIntersection.position().x());
         m_surfacePayload.surfaceY.push_back(sfIntersection.position().y());
         m_surfacePayload.surfaceZ.push_back(sfIntersection.position().z());
+        double pathCorrection =
+            surface->pathCorrection(gctx, mint.position, mint.direction);
+        m_surfacePayload.surfacePathCorrection.push_back(pathCorrection);
       } else {
         m_surfacePayload.surfaceId.push_back(
             Acts::GeometryIdentifier().value());
@@ -274,16 +269,12 @@ void Acts::RootMaterialTrackIO::write(
     m_stepPayload.stepMatA.push_back(mprops.material().Ar());
     m_stepPayload.stepMatZ.push_back(mprops.material().Z());
     m_stepPayload.stepMatRho.push_back(mprops.material().massDensity());
-    // re-calculate if defined to do so
-    if (m_cfg.recalculateTotals) {
-      m_summaryPayload.tX0 += mprops.thicknessInX0();
-      m_summaryPayload.tL0 += mprops.thicknessInL0();
-    }
   }
 }
 
-Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() const {
+Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() {
   Acts::RecordedMaterialTrack rmTrack;
+
   // Fill the position and momentum
   rmTrack.first.first = Acts::Vector3(m_summaryPayload.vX, m_summaryPayload.vY,
                                       m_summaryPayload.vZ);
@@ -293,8 +284,9 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() const {
   // Fill the individual steps
   std::size_t msteps = m_stepPayload.stepLength.size();
   rmTrack.second.materialInteractions.reserve(msteps);
-  rmTrack.second.materialInX0 = 0.;
-  rmTrack.second.materialInL0 = 0.;
+
+  rmTrack.second.materialInX0 = m_summaryPayload.tX0;
+  rmTrack.second.materialInL0 = m_summaryPayload.tL0;
 
   for (std::size_t is = 0; is < msteps; ++is) {
     float s = m_stepPayload.stepLength[is];
@@ -305,8 +297,6 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() const {
     float mX0 = m_stepPayload.stepMatX0[is];
     float mL0 = m_stepPayload.stepMatL0[is];
 
-    rmTrack.second.materialInX0 += s / mX0;
-    rmTrack.second.materialInL0 += s / mL0;
     /// Fill the position & the material
     Acts::MaterialInteraction mInteraction;
     mInteraction.position =
@@ -335,5 +325,10 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackIO::read() const {
     }
     rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
   }
+  // Clear the payloads now
+  m_stepPayload.clear();
+  m_surfacePayload.clear();
+  m_volumePayload.clear();
+
   return rmTrack;
 }
