@@ -47,8 +47,8 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     const AlgorithmContext& ctx) {
   const auto& inputTracks = m_inputTracks(ctx);
 
-  std::string path =
-      perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
+  std::string path = perEventFilepath(
+      m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
   ActsExamples::NamedTupleCsvWriter<TrackParameterData> writer(
       path, m_cfg.outputPrecision);
