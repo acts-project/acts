@@ -363,6 +363,7 @@ struct SpacepointData {
 };
 
 struct TrackParameterData {
+  std::size_t trackId;
   double d0;
   double z0;
   double phi;
