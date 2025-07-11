@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Plugins/Root/RootMaterialTrackIO.hpp"
+#include "Acts/Plugins/Root/RootMaterialTrackIo.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -51,7 +51,7 @@ std::vector<std::shared_ptr<Surface>> createTestSurfaces() {
   return surfaces;
 }
 
-BOOST_AUTO_TEST_SUITE(RootMaterialTrackIOTests)
+BOOST_AUTO_TEST_SUITE(RootMaterialTrackIoTests)
 
 BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   // Create the setup first
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   }
 
   // Create the IO object - standard writing
-  RootMaterialTrackIO::Config rmtConfig;
-  RootMaterialTrackIO rmtIO(rmtConfig);
+  RootMaterialTrackIo::Config rmtConfig;
+  RootMaterialTrackIo rmtIO(rmtConfig);
 
   auto materialFile = TFile::Open("MaterialTracksDefault.root", "RECREATE");
   TTree materialTree("materialTree", "Material Track Tree");
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   // Read the material tracks back
   auto materialChain = TChain("materialTree");
   materialChain.Add("MaterialTracksDefault.root");
-  RootMaterialTrackIO rmtIORead(rmtConfig);
+  RootMaterialTrackIo rmtIORead(rmtConfig);
   rmtIORead.connectForRead(materialChain);
 
   std::vector<RecordedMaterialTrack> readTracks;
@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   }
 
   // Create the IO object - full writing
-  RootMaterialTrackIO::Config rmtConfigFull;
+  RootMaterialTrackIo::Config rmtConfigFull;
   rmtConfigFull.prePostStepInfo = true;
   rmtConfigFull.surfaceInfo = true;
   rmtConfigFull.volumeInfo = true;
-  RootMaterialTrackIO rmtIOFull(rmtConfigFull);
+  RootMaterialTrackIo rmtIOFull(rmtConfigFull);
 
   auto materialFileFull = TFile::Open("MaterialTracksFull.root", "RECREATE");
   TTree materialTreeFull("materialTree", "Material Track Tree");
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   // Read the material tracks back
   auto materialChainFull = TChain("materialTree");
   materialChainFull.Add("MaterialTracksFull.root");
-  RootMaterialTrackIO rmtIOReadFull(rmtConfigFull);
+  RootMaterialTrackIo rmtIOReadFull(rmtConfigFull);
   rmtIOReadFull.connectForRead(materialChainFull);
 
   std::vector<RecordedMaterialTrack> readTracksFull;

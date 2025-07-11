@@ -272,7 +272,7 @@ void Acts::RootMaterialTrackIo::write(
   }
 }
 
-Acts::RecordedMaterialTrack Acts::RootMaterialTrackIo::read() const {
+Acts::RecordedMaterialTrack Acts::RootMaterialTrackIo::read() {
   Acts::RecordedMaterialTrack rmTrack;
 
   // Fill the position and momentum
