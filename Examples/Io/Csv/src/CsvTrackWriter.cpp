@@ -171,7 +171,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       << "pT,eta,phi,"
       << "truthMatchProbability,"
       << "good/duplicate/fake,"
-      << "Hits_ID";
+      << "Measurements_ID";
 
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);
