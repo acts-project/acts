@@ -37,9 +37,7 @@ struct AlgorithmContext;
 class CsvTrackParameterWriter final : public IWriter {
  public:
   struct Config {
-    /// Optional. Input track parameters collection
-    std::string inputTrackParameters;
-    /// Optional. Input track container.
+    /// Input track container.
     std::string inputTracks;
     /// Where to place output files
     std::string outputDir;
