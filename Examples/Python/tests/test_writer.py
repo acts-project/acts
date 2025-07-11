@@ -267,9 +267,7 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
     s.run()
 
     assert_csv_output(out, "measurements", s.config.events, size_threshold=10)
-    assert_csv_output(
-        out, "measurement_simhits_map", s.config.events, size_threshold=10
-    )
+    assert_csv_output(out, "measurement-simhit-map", s.config.events, size_threshold=10)
     assert_csv_output(out, "cells", s.config.events, size_threshold=10)
 
 
