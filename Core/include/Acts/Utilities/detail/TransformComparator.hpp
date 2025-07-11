@@ -12,14 +12,14 @@
 #include "Acts/Definitions/Units.hpp"
 
 namespace Acts::detail {
-/// @brief Auxiliary class to cohrently sort Tansforms and Vectors such that
-///        a not of a < operator between two objects may be defined and hence
-///        a sorted map or set becomes possible. In the case of vectors, the
+/// @brief Auxiliary class to coherently sort Transforms and Vectors such that
+///        a strict ordering between two objects may be defined and hence
+///        a sorted map or set of these objects becomes possible. In the case of Vectors, the
 ///        sorter compares the differences of each component. As soon as a
-///        difference exceeds the predefined tranlational tolerance threshold
+///        difference exceeds the predefined translational tolerance threshold
 ///        the < operator is assigned based on this difference. In the case of
-///        rotations, the three euler angles of the rotation matrix are
-///        evaluated and compared in an anlogous way
+///        rotations, the three Euler angles of the rotation matrix are
+///        evaluated and compared in an analogous way
 class TransformComparator {
  public:
   /// @brief Default constructor setting the predefined tolerance values
