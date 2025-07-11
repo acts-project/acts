@@ -92,7 +92,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     events = seq.config.events
 
-    runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
+    vtxGen = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 0),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
+
+    runPythia8(
+        str(tmp_path), outputRoot=True, outputCsv=True, vtxGen=vtxGen, s=seq
+    ).run()
 
     fp = tmp_path / "particles.root"
     assert fp.exists()
@@ -1219,6 +1226,11 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
+
+    if backend == "torch":
+        pytest.skip(
+            "Disabled torch support until replacement for torch-scatter is found"
+        )
 
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()

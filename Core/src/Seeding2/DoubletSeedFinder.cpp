@@ -298,18 +298,12 @@ void createDoubletsImpl(
 
 }  // namespace
 
-DoubletSeedFinder::DerivedConfig DoubletSeedFinder::Config::derive(
-    float bFieldInZ) const {
-  DerivedConfig result;
-
-  static_cast<Config&>(result) = *this;
-
+DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& cfg,
+                                                float bFieldInZ_)
+    : Config(cfg), bFieldInZ(bFieldInZ_) {
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
-  result.minHelixDiameter2 =
-      square(result.minPt * 2 / pTPerHelixRadius) * result.helixCutTolerance;
-
-  return result;
+  minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
 }
 
 DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
