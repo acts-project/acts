@@ -17,7 +17,7 @@
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Plugins/Root/RootMaterialMapIO.hpp>
+#include <Acts/Plugins/Root/RootMaterialMapIo.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -66,10 +66,10 @@ class RootMaterialWriter : public IMaterialWriter {
     bool processVolumes = true;
 
     /// The accessor configuration
-    Acts::RootMaterialMapIO::Config accessorConfig;
+    Acts::RootMaterialMapIo::Config accessorConfig;
 
     /// The accessor options
-    Acts::RootMaterialMapIO::Options accessorOptions;
+    Acts::RootMaterialMapIo::Options accessorOptions;
 
     /// The name of the output file
     std::string filePath = "material-maps.root";

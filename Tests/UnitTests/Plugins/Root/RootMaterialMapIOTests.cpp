@@ -13,7 +13,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/Root/RootMaterialMapIO.hpp"
+#include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -78,20 +78,20 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
   return binnedMaterials;
 }
 
-BOOST_AUTO_TEST_SUITE(RootMaterialMapIOTests)
+BOOST_AUTO_TEST_SUITE(RootMaterialMapIoTests)
 
-BOOST_AUTO_TEST_CASE(RootMaterialMapIOHomogeneousReadWrite) {
+BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   auto surfaceMaterials = createHomogeneousSurfaceMaterial();
 
   auto rFile =
-      TFile::Open("RootMaterialMapIOHomogeneousTests.root", "RECREATE");
+      TFile::Open("RootMaterialMapIoHomogeneousTests.root", "RECREATE");
   rFile->cd();
   BOOST_REQUIRE(rFile != nullptr);
 
   // Create the accessor
-  RootMaterialMapIO::Config cfg;
-  RootMaterialMapIO accessor(cfg);
-  RootMaterialMapIO::Options options;
+  RootMaterialMapIo::Config cfg;
+  RootMaterialMapIo accessor(cfg);
+  RootMaterialMapIo::Options options;
 
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     accessor.write(*rFile, geoID, *sMaterial, options);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOHomogeneousReadWrite) {
   rFile->Close();
 
   // Let's read it back
-  auto iFile = TFile::Open("RootMaterialMapIOHomogeneousTests.root", "READ");
+  auto iFile = TFile::Open("RootMaterialMapIoHomogeneousTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
 
   auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
@@ -127,17 +127,17 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOHomogeneousReadWrite) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
+BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
   auto surfaceMaterials = createBinnedSurfaceMaterial();
 
-  auto rFile = TFile::Open("RootMaterialMapIOBinnedTests.root", "RECREATE");
+  auto rFile = TFile::Open("RootMaterialMapIoBinnedTests.root", "RECREATE");
   rFile->cd();
   BOOST_REQUIRE(rFile != nullptr);
 
   // Create the accessor
-  RootMaterialMapIO::Config cfg;
-  RootMaterialMapIO accessor(cfg);
-  RootMaterialMapIO::Options options;
+  RootMaterialMapIo::Config cfg;
+  RootMaterialMapIo accessor(cfg);
+  RootMaterialMapIo::Options options;
 
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     accessor.write(*rFile, geoID, *sMaterial, options);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
   rFile->Close();
 
   // Let's read it back
-  auto iFile = TFile::Open("RootMaterialMapIOBinnedTests.root", "READ");
+  auto iFile = TFile::Open("RootMaterialMapIoBinnedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
   auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
@@ -196,13 +196,13 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
   }
 
   // Create the accessor - writing with indexed material
-  RootMaterialMapIO::Config cfgIndexed;
-  RootMaterialMapIO accessorIndexed(cfgIndexed);
+  RootMaterialMapIo::Config cfgIndexed;
+  RootMaterialMapIo accessorIndexed(cfgIndexed);
 
-  RootMaterialMapIO::Options optionsIndexed;
+  RootMaterialMapIo::Options optionsIndexed;
   optionsIndexed.indexedMaterial = true;
 
-  rFile = TFile::Open("RootMaterialMapIOBinnedIndexedTests.root", "RECREATE");
+  rFile = TFile::Open("RootMaterialMapIoBinnedIndexedTests.root", "RECREATE");
   rFile->cd();
   BOOST_REQUIRE(rFile != nullptr);
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIOBinnedReadWrite) {
   rFile->Close();
 
   // Let's read it back
-  iFile = TFile::Open("RootMaterialMapIOBinnedIndexedTests.root", "READ");
+  iFile = TFile::Open("RootMaterialMapIoBinnedIndexedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
   auto [surfaceMapsIndexedRead, volumeMapsIndexedRead] =
       accessorIndexed.read(*iFile, optionsIndexed);

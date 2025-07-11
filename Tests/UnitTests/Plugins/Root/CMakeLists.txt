@@ -1,7 +1,7 @@
 set(unittest_extra_libraries ActsPluginRoot)
 
-add_unittest(RootMaterialMapIO RootMaterialMapIOTests.cpp)
-add_unittest(RootMaterialTrackIO RootMaterialTrackIOTests.cpp)
+add_unittest(RootMaterialTrackIo RootMaterialTrackIoTests.cpp)
+add_unittest(RootMaterialMapIo RootMaterialMapIoTests.cpp)
 add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
 add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)
 add_unittest(TGeoTrd1Conversion TGeoTrd1ConversionTests.cpp)

@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/Plugins/Root/RootMaterialTrackIO.hpp>
+#include <Acts/Plugins/Root/RootMaterialTrackIo.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -106,7 +106,7 @@ class RootMaterialTrackWriter
   /// The output tree name
   TTree* m_outputTree = nullptr;
   /// The read - write payload
-  Acts::RootMaterialTrackIO m_accessor;
+  Acts::RootMaterialTrackIo m_accessor;
 };
 
 }  // namespace ActsExamples
