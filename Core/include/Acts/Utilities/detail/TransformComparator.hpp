@@ -14,11 +14,11 @@
 namespace Acts::detail {
 /// @brief Auxiliary class to coherently sort Transforms and Vectors such that
 ///        a strict ordering between two objects may be defined and hence
-///        a sorted map or set of these objects becomes possible. In the case of Vectors, the
-///        sorter compares the differences of each component. As soon as a
-///        difference exceeds the predefined translational tolerance threshold
-///        the < operator is assigned based on this difference. In the case of
-///        rotations, the three Euler angles of the rotation matrix are
+///        a sorted map or set of these objects becomes possible. In the case of
+///        Vectors, the sorter compares the differences of each component. As
+///        soon as a difference exceeds the predefined translational tolerance
+///        threshold the < operator is assigned based on this difference. In the
+///        case of rotations, the three Euler angles of the rotation matrix are
 ///        evaluated and compared in an analogous way
 class TransformComparator {
  public:
