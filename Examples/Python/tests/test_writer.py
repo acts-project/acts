@@ -43,6 +43,21 @@ from acts.examples import (
 from acts.examples.odd import getOpenDataDetectorDirectory
 
 
+def assert_csv_output(csv_path, stem, num_files, size_threshold=100):
+    __tracebackhide__ = True
+    assert (
+        len([f for f in csv_path.iterdir() if f.name.endswith(stem + ".csv")])
+        == num_files
+    )
+    assert all(
+        [
+            f.stat().st_size > size_threshold
+            for f in csv_path.iterdir()
+            if f.name.endswith(stem + ".csv")
+        ]
+    )
+
+
 @pytest.mark.obj
 def test_obj_propagation_step_writer(tmp_path, trk_geo, conf_const, basic_prop_seq):
     with pytest.raises(TypeError):
@@ -89,8 +104,7 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     s.run()
 
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
-    assert all(f.stat().st_size > 200 for f in out.iterdir())
+    assert_csv_output(out, "particle", s.config.events, size_threshold=200)
 
 
 @pytest.mark.root
@@ -252,8 +266,11 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
     )
     s.run()
 
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events * 3
-    assert all(f.stat().st_size > 10 for f in out.iterdir())
+    assert_csv_output(out, "measurements", s.config.events, size_threshold=10)
+    assert_csv_output(
+        out, "measurement_simhits_map", s.config.events, size_threshold=10
+    )
+    assert_csv_output(out, "cells", s.config.events, size_threshold=10)
 
 
 @pytest.mark.csv
@@ -275,8 +292,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     )
 
     s.run()
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
-    assert all(f.stat().st_size > 200 for f in out.iterdir())
+    assert_csv_output(out, "hits", s.config.events, size_threshold=200)
 
 
 @pytest.mark.parametrize(
@@ -431,5 +447,4 @@ def test_csv_multitrajectory_writer(tmp_path):
         )
     )
     s.run()
-    assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
-    assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
+    assert_csv_output(csv_dir, "CKFtracks", s.config.events, size_threshold=20)
