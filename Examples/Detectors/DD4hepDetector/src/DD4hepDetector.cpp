@@ -36,10 +36,6 @@ DD4hepDetector::DD4hepDetector(const Config& cfg)
 
   m_detector = buildDD4hepGeometry();
 
-  if (m_cfg.alignmentDecorator != nullptr) {
-    m_contextDecorators = {m_cfg.alignmentDecorator};
-  }
-
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
       m_detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,

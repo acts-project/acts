@@ -54,10 +54,10 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
             .def_property_readonly("field", &DD4hepDetector::field);
 
     auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, logLevel, dd4hepLogLevel, xmlFileNames, name, bTypePhi, bTypeR,
-        bTypeZ, envelopeR, envelopeZ, defaultLayerThickness, materialDecorator,
-        alignmentDecorator, geometryIdentifierHook, detectorElementFactory);
+    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
+                       bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
+                       defaultLayerThickness, materialDecorator,
+                       geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
 
     m.def("alignedDD4hepDetectorElementFactory",

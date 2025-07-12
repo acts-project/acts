@@ -27,12 +27,23 @@ class IAlignmentStore {
   /// @brief  Virtual destructor
   virtual ~IAlignmentStore() = default;
 
+  /// Clone the alignment store
+  ///
+  /// @return a unique pointer to the cloned store
+  virtual std::shared_ptr<IAlignmentStore> clone() const = 0;
+
   /// Retrieve the contextual transform for a given surface
   ///
   /// @param surface the  surface for which the contextual transform is requested
   /// @return a pointer to the transform if found, otherwise nullptr
   virtual const Acts::Transform3* contextualTransform(
       const Acts::Surface& surface) const = 0;
+
+  /// Visitor pattern to eventually generate an misalignment for demonstration
+  /// purposes.
+  /// @param visitor the visitor to be called with the store
+  virtual void visitStore(
+      const std::function<void(Acts::Transform3*)>& visitor) = 0;
 };
 
 /// A simple struct holding a store raw pointer, ownership should not be in the
@@ -56,7 +67,12 @@ class GeoIdAlignmentStore : public IAlignmentStore {
           transformMap)
       : m_transformMap(std::move(transformMap)) {}
 
-  /// @copydoc IAlignmentStore::contextualTransform
+  /// @copydoc IAlignmentStore::clone
+  std::shared_ptr<IAlignmentStore> clone() const override {
+    return std::make_shared<GeoIdAlignmentStore>(m_transformMap);
+  }
+
+  /// @copydoc ITransformStore::contextualTransform
   const Acts::Transform3* contextualTransform(
       const Acts::Surface& surface) const override {
     auto it = m_transformMap.find(surface.geometryId());
@@ -64,6 +80,14 @@ class GeoIdAlignmentStore : public IAlignmentStore {
       return &(it->second);
     }
     return nullptr;
+  }
+
+  /// @copydoc ITransformStore::visitStore
+  void visitStore(
+      const std::function<void(Acts::Transform3*)>& visitor) override {
+    for (auto& [id, trf] : m_transformMap) {
+      visitor(&trf);
+    }
   }
 
  private:
