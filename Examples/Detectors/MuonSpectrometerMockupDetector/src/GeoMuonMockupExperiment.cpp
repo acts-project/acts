@@ -111,11 +111,11 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     const double midWheelZ = barrelZ + 0.5 * m_stationHeightEndcap;
     const double outWheelZ =
         midWheelZ + m_stationHeightEndcap + m_cfg.bigWheelDistZ;
-
-    assembleBigWheel(muonEnvelope, MuonLayer::Middle, midWheelZ);
-    assembleBigWheel(muonEnvelope, MuonLayer::Middle, -midWheelZ);
-    assembleBigWheel(muonEnvelope, MuonLayer::Outer, outWheelZ);
-    assembleBigWheel(muonEnvelope, MuonLayer::Outer, -outWheelZ);
+    using enum ActsExamples::GeoMuonMockupExperiment::MuonLayer;
+    assembleBigWheel(muonEnvelope, Middle, midWheelZ);
+    assembleBigWheel(muonEnvelope, Middle, -midWheelZ);
+    assembleBigWheel(muonEnvelope, Outer, outWheelZ);
+    assembleBigWheel(muonEnvelope, Outer, -outWheelZ);
   }
   const unsigned nChambers =
       2 * m_cfg.nSectors * m_cfg.nEtaStations *
