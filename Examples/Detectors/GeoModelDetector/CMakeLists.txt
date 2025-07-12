@@ -40,6 +40,11 @@ else()
     )
 endif()
 
+target_sources(
+    ActsExamplesDetectorGeoModel
+    PUBLIC src/GeoModelMuonMockupBuilder.cpp
+)
+
 install(
     TARGETS ActsExamplesDetectorGeoModel
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

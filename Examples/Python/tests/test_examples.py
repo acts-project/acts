@@ -14,6 +14,7 @@ import pytest
 
 from helpers import (
     geant4Enabled,
+    geomodelEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
@@ -1308,3 +1309,31 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     rfp = tmp_path / root_file
 
     assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+def test_geomodel_G4(tmp_path):
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geomodel_G4.py"
+    )
+    assert script.exists()
+    # Prepare arguments for the script
+    mockup_det = "Muon"
+    out_dir = tmp_path / "geomodel_g4_out"
+    out_dir.mkdir()
+    args = [
+        "python3",
+        str(script),
+        "--mockupDetector",
+        str(mockup_det),
+        "--outDir",
+        str(out_dir),
+    ]
+    subprocess.check_call(args)
+
+    assert (out_dir / "obj").exists()

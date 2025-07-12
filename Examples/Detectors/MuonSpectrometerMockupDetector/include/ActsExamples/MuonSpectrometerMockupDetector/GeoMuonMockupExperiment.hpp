@@ -82,6 +82,8 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     double endCapWheelLowR{1. * GeoModelKernelUnits::m};
     /// @brief Separation between the two big wheels
     double bigWheelDistZ{5. * GeoModelKernelUnits::m};
+    /// @brief Switch toggling whether the endcaps should be built
+    bool buildEndcaps{true};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
