@@ -107,7 +107,7 @@ class SpacePointProxy2 {
   }
   /// Mutable access to the extra time information of the space point.
   /// @return A mutable reference to the time information of the space point.
-  std::optional<float> &time() noexcept
+  float &time() noexcept
     requires(!ReadOnly)
   {
     return m_container->time(m_index);
@@ -191,9 +191,7 @@ class SpacePointProxy2 {
   float phi() const noexcept { return m_container->phi(m_index); }
   /// Const access to the time information of the space point.
   /// @return An optional containing the time information of the space point, or
-  std::optional<float> time() const noexcept {
-    return m_container->time(m_index);
-  }
+  float time() const noexcept { return m_container->time(m_index); }
   /// Const access to the variance in Z direction of the space point.
   /// @return The variance in Z direction of the space point.
   float varianceZ() const noexcept { return m_container->varianceZ(m_index); }
