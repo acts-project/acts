@@ -303,7 +303,7 @@ bool SensitiveSurfaceMapper::checkMapping(
   std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
-  for (const auto [_, surfacePtr] : state.g4VolumeToSurfaces) {
+  for (const auto& [_, surfacePtr] : state.g4VolumeToSurfaces) {
     found.push_back(surfacePtr);
   }
   std::ranges::sort(found);
