@@ -156,7 +156,7 @@ class SeedContainer2 {
     IndexType m_index{};
 
     friend bool operator==(const SeedIterator &a, const SeedIterator &b) {
-      return a.m_index == b.m_index && a.m_container == b.m_container;
+      return a.m_index == b.m_index;
     }
   };
   using iterator = SeedIterator<false>;

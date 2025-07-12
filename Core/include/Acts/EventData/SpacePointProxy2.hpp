@@ -30,14 +30,14 @@ class SpacePointProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
-  using IndexType = SpacePointIndex2;
+  using Index = SpacePointIndex2;
 
-  using ContainerType = const_if_t<ReadOnly, SpacePointContainer2>;
+  using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
   /// Constructs a space point proxy for the given container and index.
   /// @param container The container holding the space point.
   /// @param index The index of the space point in the container.
-  SpacePointProxy2(ContainerType &container, IndexType index) noexcept
+  SpacePointProxy2(Container &container, Index index) noexcept
       : m_container(&container), m_index(index) {}
 
   /// Copy construct a space point proxy.
@@ -60,7 +60,18 @@ class SpacePointProxy2 {
   }
   /// Gets the index of the space point in the container.
   /// @return The index of the space point in the container.
-  IndexType index() const noexcept { return m_index; }
+  Index index() const noexcept { return m_index; }
+
+  /// Assigns source links to the space point.
+  /// @param sourceLinks A span of source links to assign to the space point.
+  /// @throws std::out_of_range if the index is out of range.
+  /// @throws std::logic_error if no source links column is available.
+  /// @throws std::logic_error if source links are already assigned to the space point.
+  void assignSourceLinks(std::span<const SourceLink> sourceLinks)
+    requires(!ReadOnly)
+  {
+    m_container->assignSourceLinks(m_index, sourceLinks);
+  }
 
   /// Mutable access to the source links of the space point.
   /// @return A mutable span of source links associated with the space point.
@@ -90,22 +101,21 @@ class SpacePointProxy2 {
   {
     return m_container->z(m_index);
   }
-
-  /// Mutable access to the extra r coordinate of the space point.
+  /// Mutable access to the r coordinate of the space point.
   /// @return A mutable reference to the r coordinate of the space point.
   float &r() noexcept
     requires(!ReadOnly)
   {
     return m_container->r(m_index);
   }
-  /// Mutable access to the extra phi coordinate of the space point.
+  /// Mutable access to the phi coordinate of the space point.
   /// @return A mutable reference to the phi coordinate of the space point.
   float &phi() noexcept
     requires(!ReadOnly)
   {
     return m_container->phi(m_index);
   }
-  /// Mutable access to the extra time information of the space point.
+  /// Mutable access to the time information of the space point.
   /// @return A mutable reference to the time information of the space point.
   std::optional<float> &time() noexcept
     requires(!ReadOnly)
@@ -126,28 +136,28 @@ class SpacePointProxy2 {
   {
     return m_container->varianceR(m_index);
   }
-  /// Mutable access to the extra top strip vector of the space point.
+  /// Mutable access to the top strip vector of the space point.
   /// @return A mutable reference to the top strip vector of the space point.
   Eigen::Vector3f &topStripVector() noexcept
     requires(!ReadOnly)
   {
     return m_container->topStripVector(m_index);
   }
-  /// Mutable access to the extra bottom strip vector of the space point.
+  /// Mutable access to the bottom strip vector of the space point.
   /// @return A mutable reference to the bottom strip vector of the space point.
   Eigen::Vector3f &bottomStripVector() noexcept
     requires(!ReadOnly)
   {
     return m_container->bottomStripVector(m_index);
   }
-  /// Mutable access to the extra strip center distance of the space point.
+  /// Mutable access to the strip center distance of the space point.
   /// @return A mutable reference to the strip center distance of the space point.
   Eigen::Vector3f &stripCenterDistance() noexcept
     requires(!ReadOnly)
   {
     return m_container->stripCenterDistance(m_index);
   }
-  /// Mutable access to the extra top strip center of the space point.
+  /// Mutable access to the top strip center of the space point.
   /// @return A mutable reference to the top strip center of the space point.
   Eigen::Vector3f &topStripCenter() noexcept
     requires(!ReadOnly)
@@ -167,12 +177,17 @@ class SpacePointProxy2 {
   /// @return A mutable reference to the value in the extra column for the space
   ///         point.
   template <typename column_proxy>
-  typename column_proxy::ValueType &extra(column_proxy column) noexcept
+  typename column_proxy::Value &extra(column_proxy column) noexcept
     requires(!ReadOnly)
   {
-    return m_container->extra(column, m_index);
+    return m_container->entry(column, m_index);
   }
 
+  /// Const access to the source links of the space point.
+  /// @return A const span of source links associated with the space point.
+  std::span<const SourceLink> sourceLinks() const noexcept {
+    return m_container->sourceLinks(m_index);
+  }
   /// Const access to the x coordinate of the space point.
   /// @return The x coordinate of the space point.
   float x() const noexcept { return m_container->x(m_index); }
@@ -182,7 +197,6 @@ class SpacePointProxy2 {
   /// Const access to the z coordinate of the space point.
   /// @return The z coordinate of the space point.
   float z() const noexcept { return m_container->z(m_index); }
-
   /// Const access to the r coordinate of the space point.
   /// @return The r coordinate of the space point.
   float r() const noexcept { return m_container->r(m_index); }
@@ -200,22 +214,22 @@ class SpacePointProxy2 {
   /// Const access to the variance in R direction of the space point.
   /// @return The variance in R direction of the space point.
   float varianceR() const noexcept { return m_container->varianceR(m_index); }
-  /// Const access to the extra top strip vector of the space point.
+  /// Const access to the top strip vector of the space point.
   /// @return A const reference to the top strip vector of the space point.
   const Eigen::Vector3f &topStripVector() const noexcept {
     return m_container->topStripVector(m_index);
   }
-  /// Const access to the extra bottom strip vector of the space point.
+  /// Const access to the bottom strip vector of the space point.
   /// @return A const reference to the bottom strip vector of the space point.
   const Eigen::Vector3f &bottomStripVector() const noexcept {
     return m_container->bottomStripVector(m_index);
   }
-  /// Const access to the extra strip center distance of the space point.
+  /// Const access to the strip center distance of the space point.
   /// @return A const reference to the strip center distance of the space point.
   const Eigen::Vector3f &stripCenterDistance() const noexcept {
     return m_container->stripCenterDistance(m_index);
   }
-  /// Const access to the extra top strip center of the space point.
+  /// Const access to the top strip center of the space point.
   /// @return A const reference to the top strip center of the space point.
   const Eigen::Vector3f &topStripCenter() const noexcept {
     return m_container->topStripCenter(m_index);
@@ -231,14 +245,14 @@ class SpacePointProxy2 {
   /// @return A const reference to the value in the extra column for the space
   ///         point.
   template <typename column_proxy>
-  const typename column_proxy::ValueType &extra(
+  const typename column_proxy::Value &extra(
       const column_proxy &column) const noexcept {
-    return m_container->extra(column, m_index);
+    return m_container->entry(column, m_index);
   }
 
  private:
-  ContainerType *m_container{};
-  IndexType m_index{};
+  Container *m_container{};
+  Index m_index{};
 };
 
 }  // namespace Acts::Experimental

@@ -23,7 +23,7 @@ float getBestSeedQuality(
     const SpacePointContainer2& spacePoints,
     const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 sp) {
-  if (spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::CopyFromIndex)) {
+  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
     sp = spacePoints[sp].extra(spacePoints.copyFromIndexColumn());
   }
   auto it = bestSeedQualityMap.find(sp);
@@ -38,7 +38,7 @@ void setBestSeedQuality(
     std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 top, SpacePointIndex2 middle, SpacePointIndex2 bottom,
     float quality) {
-  if (spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::CopyFromIndex)) {
+  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
     top = spacePoints[top].copyFromIndex();
     middle = spacePoints[middle].copyFromIndex();
     bottom = spacePoints[bottom].copyFromIndex();
