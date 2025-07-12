@@ -29,12 +29,16 @@ namespace Acts {
 /// from a json file
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
-  using SurfaceMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-
+  /// Constructor with configuration
+  /// @param rConfig the configuration for the material map reader
+  /// @param jFileName the json file name to read
+  /// @param level the logging level
+  /// @param clearSurfaceMaterial if true, clear the surface material before
+  /// decorating, this means if there is no material for a certain surface
+  /// within the json file, the surface WILL NOT have any material, eventually
+  /// assigned (proto-/)material will be cleared
+  /// @param clearVolumeMaterial if true, clear the volume material before
+  /// decorating, same as above, but for volumes
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
                         Acts::Logging::Level level,
@@ -53,8 +57,8 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
  private:
   MaterialMapJsonConverter::Config m_readerConfig;
-  SurfaceMaterialMap m_surfaceMaterialMap;
-  VolumeMaterialMap m_volumeMaterialMap;
+  SurfaceMaterialMaps m_surfaceMaterialMap;
+  VolumeMaterialMaps m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};
