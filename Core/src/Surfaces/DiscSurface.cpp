@@ -299,7 +299,7 @@ SurfaceMultiIntersection DiscSurface::intersect(
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
                           status),
            Intersection3D::invalid()},
-          this,
+          *this,
           boundaryTolerance};
 }
 

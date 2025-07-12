@@ -315,7 +315,7 @@ class DirectNavigator {
   }
 
  private:
-  ObjectIntersection<Surface> chooseIntersection(
+  SurfaceIntersection chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance, double nearLimit,
@@ -330,7 +330,7 @@ class DirectNavigator {
       }
     }
 
-    return ObjectIntersection<Surface>::invalid();
+    return SurfaceIntersection::invalid();
   }
 
   const Logger& logger() const { return *m_logger; }

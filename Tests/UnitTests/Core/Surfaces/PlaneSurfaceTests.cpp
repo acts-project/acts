@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   BOOST_CHECK_EQUAL(sfIntersection.position(), expectedIntersect.position());
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
-  BOOST_CHECK_EQUAL(sfIntersection.object(), planeSurfaceObject.get());
+  BOOST_CHECK_EQUAL(&sfIntersection.surface(), planeSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,

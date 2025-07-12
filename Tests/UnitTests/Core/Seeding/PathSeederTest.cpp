@@ -79,7 +79,7 @@ class NoFieldIntersectionFinder {
       if (closestForward.status() == IntersectionStatus::reachable &&
           closestForward.pathLength() > 0.0) {
         sIntersections.push_back(
-            {closestForward.object()->geometryId(),
+            {closestForward.surface().geometryId(),
              surface
                  ->globalToLocal(geoCtx, closestForward.position(),
                                  Vector3{0, 1, 0})
