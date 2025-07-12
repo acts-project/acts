@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <string_view>
 #include <unordered_set>
 
 namespace {
@@ -200,13 +201,14 @@ void SpacePointContainer2::dropColumn(const std::string &name) {
 }
 
 bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {
-  static const std::unordered_set<std::string> reservedColumns = std::apply(
+  static const auto reservedColumns = std::apply(
       [](auto... reservedNames) {
-        return std::unordered_set<std::string>({reservedNames...});
+        return std::unordered_set<std::string, std::hash<std::string_view>,
+                                  std::equal_to<>>({reservedNames...});
       },
       knownColumnNames());
 
-  return reservedColumns.find(name) != reservedColumns.end();
+  return reservedColumns.contains(name);
 }
 
 }  // namespace Acts::Experimental

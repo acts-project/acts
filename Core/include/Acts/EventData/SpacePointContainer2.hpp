@@ -846,9 +846,8 @@ class SpacePointContainer2 {
      private:
       SpacePointIndex2 m_index{0};
 
-      friend bool operator==(const Iterator &a, const Iterator &b) noexcept {
-        return a.m_index == b.m_index;
-      }
+      friend bool operator==(const Iterator &a,
+                             const Iterator &b) noexcept = default;
     };
     using iterator = Iterator;
 
@@ -906,7 +905,8 @@ class SpacePointContainer2 {
 
   std::unordered_map<std::string,
                      std::pair<SpacePointColumnHolderBase *,
-                               std::unique_ptr<SpacePointColumnHolderBase>>>
+                               std::unique_ptr<SpacePointColumnHolderBase>>,
+                     std::hash<std::string_view>, std::equal_to<>>
       m_namedColumns;
   SpacePointColumns m_knownColumns{SpacePointColumns::None};
 
@@ -939,14 +939,10 @@ class SpacePointContainer2 {
   std::optional<SpacePointColumnHolder<std::size_t>> m_copyFromIndexColumn;
 
   static auto knownColumnMaks() noexcept {
-    return std::tuple(
-        SpacePointColumns::SourceLinks, SpacePointColumns::SourceLinks,
-        SpacePointColumns::X, SpacePointColumns::Y, SpacePointColumns::Z,
-        SpacePointColumns::R, SpacePointColumns::Phi, SpacePointColumns::Time,
-        SpacePointColumns::VarianceZ, SpacePointColumns::VarianceR,
-        SpacePointColumns::TopStripVector, SpacePointColumns::BottomStripVector,
-        SpacePointColumns::StripCenterDistance,
-        SpacePointColumns::TopStripCenter, SpacePointColumns::CopyFromIndex);
+    using enum SpacePointColumns;
+    return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
+                      VarianceZ, VarianceR, TopStripVector, BottomStripVector,
+                      StripCenterDistance, TopStripCenter, CopyFromIndex);
   }
 
   static auto knownColumnNames() noexcept {
