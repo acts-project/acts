@@ -180,6 +180,10 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
                  std::get<Is>(knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
+
+  if (ACTS_CHECK_BIT(columns, SpacePointColumns::SourceLinks)) {
+    m_sourceLinks.clear();
+  }
 }
 
 void SpacePointContainer2::dropColumn(const std::string &name) {
