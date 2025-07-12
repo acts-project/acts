@@ -52,7 +52,7 @@ constexpr double polynomialSum(const double x,
   return result;
 }
 
-/// @brief Evaluates the D-th derivative of  a polynomial with degree (N-1)
+/// @brief Evaluates the D-th derivative of a polynomial with degree (N-1)
 ///        at domain value x
 /// @tparam D: Order of the derivative to calculate
 /// @tparam N: Order of the original polynomial
@@ -201,25 +201,20 @@ constexpr double evalSecondKind(const double x, const unsigned n,
 /// @param derivative: Requested derivative from the function call
 /// @param coeffGenerator: Templated function which returns the coefficients
 ///                        as an array
-/// @param runTimeEval: Evaluation function with the signature
-///                       double runTimeEval(const double x,
-///                                          const unsigned order,
-///                                          onst unsigned derivative)
-///       which is used as fallback if higher order derivatives are requested
-///       from the user.
-#define SETUP_POLY_ORDER(order, derivative, coeffGenerator, runTimeEval) \
-  case order: {                                                          \
-    constexpr auto polyCoeffs = coeffGenerator<order>();                 \
-    switch (derivative) {                                                \
-      case 0u:                                                           \
-        return derivativeSum<0>(x, polyCoeffs);                          \
-      case 1u:                                                           \
-        return derivativeSum<1>(x, polyCoeffs);                          \
-      case 2u:                                                           \
-        return derivativeSum<2>(x, polyCoeffs);                          \
-      default:                                                           \
-        return runTimeEval(x, order, derivative);                        \
-    }                                                                    \
+#define SETUP_POLY_ORDER(order, derivative, coeffGenerator) \
+  case order: {                                             \
+    constexpr auto polyCoeffs = coeffGenerator<order>();    \
+    switch (derivative) {                                   \
+      case 0u:                                              \
+        return derivativeSum<0>(x, polyCoeffs);             \
+      case 1u:                                              \
+        return derivativeSum<1>(x, polyCoeffs);             \
+      case 2u:                                              \
+        return derivativeSum<2>(x, polyCoeffs);             \
+      default:                                              \
+        break;                                              \
+    }                                                       \
+    break;                                                  \
   }
 /// @brief Helper macro to write a function to evaluate an orthogonal
 ///        polynomial. The first 10 polynomial terms together with their
@@ -229,27 +224,31 @@ constexpr double evalSecondKind(const double x, const unsigned n,
 /// @param coeffGenerator: Name of the templated function over the polynomial order
 ///                        generating the coefficients of the n-th orthogonal
 ///                        polynomial
-/// @param runTimeEval: Function implementation which calculates the coefficients at
-///                     runtime and evaluates the polynomial
+/// @param runTimeEval: Evaluation function with the signature
+///                       double runTimeEval(const double x,
+///                                          const unsigned order,
+///                                          onst unsigned derivative)
+///                     which is used as fallback if higher order derivatives or
+///                     higher order polynomials are requested from the user.
 #define EVALUATE_POLYNOMIAL(polyFuncName, coeffGenerator, runTimeEval) \
   constexpr double polyFuncName(double x, unsigned order,              \
                                 unsigned derivative = 0) {             \
     switch (order) {                                                   \
-      SETUP_POLY_ORDER(0u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(1u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(2u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(3u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(4u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(5u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(6u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(7u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(8u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(9u, derivative, coeffGenerator, runTimeEval)    \
-      SETUP_POLY_ORDER(10u, derivative, coeffGenerator, runTimeEval)   \
+      SETUP_POLY_ORDER(0u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(1u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(2u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(3u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(4u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(5u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(6u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(7u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(8u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(9u, derivative, coeffGenerator)                 \
+      SETUP_POLY_ORDER(10u, derivative, coeffGenerator)                \
       default:                                                         \
-        return runTimeEval(x, order, derivative);                      \
+        break;                                                         \
     }                                                                  \
-    return 0.;                                                         \
+    return runTimeEval(x, order, derivative);                          \
   }
 
 EVALUATE_POLYNOMIAL(chebychevPolyTn, Chebychev::coeffientsFirstKind,

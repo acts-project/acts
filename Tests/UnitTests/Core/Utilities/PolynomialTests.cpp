@@ -108,13 +108,13 @@ BOOST_AUTO_TEST_CASE(PowerTests) {
 BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
   using namespace Acts::detail::Legendre;
   using namespace Acts::detail;
-  std::cout << "Coefficients L=0: " << coefficients<0>() << std::endl;
-  std::cout << "Coefficients L=1: " << coefficients<1>() << std::endl;
-  std::cout << "Coefficients L=2: " << coefficients<2>() << std::endl;
-  std::cout << "Coefficients L=3: " << coefficients<3>() << std::endl;
-  std::cout << "Coefficients L=4: " << coefficients<4>() << std::endl;
-  std::cout << "Coefficients L=5: " << coefficients<5>() << std::endl;
-  std::cout << "Coefficients L=6: " << coefficients<6>() << std::endl;
+  std::cout << "Legdnre coefficients L=0: " << coefficients<0>() << std::endl;
+  std::cout << "Legdnre coefficients L=1: " << coefficients<1>() << std::endl;
+  std::cout << "Legdnre coefficients L=2: " << coefficients<2>() << std::endl;
+  std::cout << "Legdnre coefficients L=3: " << coefficients<3>() << std::endl;
+  std::cout << "Legdnre coefficients L=4: " << coefficients<4>() << std::endl;
+  std::cout << "Legdnre coefficients L=5: " << coefficients<5>() << std::endl;
+  std::cout << "Legdnre coefficients L=6: " << coefficients<6>() << std::endl;
   for (unsigned order = 0; order < 10; ++order) {
     const double sign = (order % 2 == 0 ? 1. : -1.);
     BOOST_CHECK_EQUAL(withinTolerance(legendrePoly(1., order), 1.), true);
