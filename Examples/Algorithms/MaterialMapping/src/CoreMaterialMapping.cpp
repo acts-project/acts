@@ -36,7 +36,7 @@ CoreMaterialMapping::CoreMaterialMapping(const CoreMaterialMapping::Config& cfg,
 }
 
 CoreMaterialMapping::~CoreMaterialMapping() {
-  Acts::DetectorMaterialMaps detectorMaterial =
+  Acts::TrackingGeometryMaterial detectorMaterial =
       m_cfg.materialMapper->finalizeMaps(*m_mappingState);
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materiaMaplWriters) {
