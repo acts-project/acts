@@ -73,7 +73,7 @@ void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
   m_namedColumns.reserve(other.m_namedColumns.size());
 
   for (const auto &[name, column] : other.m_namedColumns) {
-    std::unique_ptr<SpacePointColumnHolderBase> holder =
+    std::unique_ptr<ColumnHolderBase> holder =
         column.second != nullptr ? column.second->copy() : nullptr;
     m_namedColumns.try_emplace(name,
                                std::pair{holder.get(), std::move(holder)});
@@ -143,10 +143,9 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
 
   const auto createColumn =
       [&]<typename T>(SpacePointColumns mask, std::string_view name,
-                      T defaultValue,
-                      std::optional<SpacePointColumnHolder<T>> &column) {
+                      T defaultValue, std::optional<ColumnHolder<T>> &column) {
         if (ACTS_CHECK_BIT(columns, mask) && !column.has_value()) {
-          column = SpacePointColumnHolder<T>(std::move(defaultValue));
+          column = ColumnHolder<T>(std::move(defaultValue));
           column->resize(size());
           m_namedColumns.try_emplace(std::string(name),
                                      std::pair{&column.value(), nullptr});
@@ -165,15 +164,15 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
 void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
   using enum SpacePointColumns;
 
-  const auto dropColumn =
-      [&]<typename T>(SpacePointColumns mask, std::string_view name,
-                      std::optional<SpacePointColumnHolder<T>> &column) {
-        if (ACTS_CHECK_BIT(columns, mask) && column.has_value()) {
-          m_namedColumns.erase(std::string(name));
-          column.reset();
-          m_knownColumns = m_knownColumns & ~mask;
-        }
-      };
+  const auto dropColumn = [&]<typename T>(
+                              SpacePointColumns mask, std::string_view name,
+                              std::optional<ColumnHolder<T>> &column) {
+    if (ACTS_CHECK_BIT(columns, mask) && column.has_value()) {
+      m_namedColumns.erase(std::string(name));
+      column.reset();
+      m_knownColumns = m_knownColumns & ~mask;
+    }
+  };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     ((dropColumn(std::get<Is>(knownColumnMaks()),

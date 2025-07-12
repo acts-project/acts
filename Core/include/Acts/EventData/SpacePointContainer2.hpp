@@ -77,13 +77,6 @@ class SpacePointColumnProxy {
 
   const SpacePointContainer2 &container() const { return *m_container; }
 
-  std::span<Value> data() {
-    return std::span<Value>(column().data(), column().size());
-  }
-  std::span<const Value> data() const {
-    return std::span<const Value>(column().data(), column().size());
-  }
-
  private:
   const SpacePointContainer2 *m_container{};
   const Column *m_column{};
@@ -91,50 +84,14 @@ class SpacePointColumnProxy {
   Column &column() { return const_cast<Column &>(*m_column); }
   const Column &column() const { return *m_column; }
 
+  std::span<Value> data() {
+    return std::span<Value>(column().data(), column().size());
+  }
+  std::span<const Value> data() const {
+    return std::span<const Value>(column().data(), column().size());
+  }
+
   friend class SpacePointContainer2;
-};
-
-class SpacePointColumnHolderBase {
- public:
-  virtual ~SpacePointColumnHolderBase() = default;
-
-  virtual std::unique_ptr<SpacePointColumnHolderBase> copy() const = 0;
-
-  virtual std::size_t size() const = 0;
-  virtual void reserve(std::size_t size) = 0;
-  virtual void resize(std::size_t size) = 0;
-  virtual void clear() = 0;
-  virtual void emplace_back() = 0;
-};
-
-template <typename T>
-class SpacePointColumnHolder final : public SpacePointColumnHolderBase {
- public:
-  using Value = T;
-  using Container = std::vector<Value>;
-  using Proxy = SpacePointColumnProxy<Value>;
-
-  SpacePointColumnHolder() = default;
-  explicit SpacePointColumnHolder(Value defaultValue)
-      : m_default(std::move(defaultValue)) {}
-
-  Proxy proxy(const SpacePointContainer2 &container) const {
-    return Proxy(container, m_data);
-  }
-
-  std::unique_ptr<SpacePointColumnHolderBase> copy() const override {
-    return std::make_unique<SpacePointColumnHolder<T>>(*this);
-  }
-
-  std::size_t size() const override { return m_data.size(); }
-  void reserve(std::size_t size) override { m_data.reserve(size); }
-  void clear() override { m_data.clear(); }
-  void resize(std::size_t size) override { m_data.resize(size, m_default); }
-  void emplace_back() override { m_data.emplace_back(m_default); }
-
- private:
-  Value m_default{};
-  Container m_data;
 };
 
 /// A container for space points, which can hold additional columns of data
@@ -221,7 +178,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column name is reserved.
   template <typename T>
   SpacePointColumnProxy<T> createColumn(const std::string &name) {
-    return createColumnImpl<SpacePointColumnHolder<T>>(name);
+    return createColumnImpl<ColumnHolder<T>>(name);
   }
 
   /// Drops the column with the given name.
@@ -245,7 +202,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
   SpacePointColumnProxy<T> column(const std::string &name) const {
-    return columnImpl<SpacePointColumnHolder<T>>(name);
+    return columnImpl<ColumnHolder<T>>(name);
   }
 
   /// Returns a proxy to the x coordinate column.
@@ -640,6 +597,23 @@ class SpacePointContainer2 {
     return entry(m_copyFromIndexColumn->proxy(*this), index);
   }
 
+  /// Returns the data for the given column.
+  /// @param column The column to access.
+  /// @return A mutable span to the column.
+  template <typename T>
+  std::span<T> data(SpacePointColumnProxy<T> column) noexcept {
+    return column.data();
+  }
+
+  /// Returns the data for the given column.
+  /// @param column The column to access.
+  /// @return A const span to the column.
+  template <typename T>
+  std::span<const T> data(
+      const SpacePointColumnProxy<T> &column) const noexcept {
+    return column.data();
+  }
+
   /// Returns the entry for the given column and index.
   /// @param column The column to access.
   /// @param index The index of the space point.
@@ -901,42 +875,82 @@ class SpacePointContainer2 {
   }
 
  private:
+  class ColumnHolderBase {
+   public:
+    virtual ~ColumnHolderBase() = default;
+
+    virtual std::unique_ptr<ColumnHolderBase> copy() const = 0;
+
+    virtual std::size_t size() const = 0;
+    virtual void reserve(std::size_t size) = 0;
+    virtual void resize(std::size_t size) = 0;
+    virtual void clear() = 0;
+    virtual void emplace_back() = 0;
+  };
+
+  template <typename T>
+  class ColumnHolder final : public ColumnHolderBase {
+   public:
+    using Value = T;
+    using Container = std::vector<Value>;
+    using Proxy = SpacePointColumnProxy<Value>;
+
+    ColumnHolder() = default;
+    explicit ColumnHolder(Value defaultValue)
+        : m_default(std::move(defaultValue)) {}
+
+    Proxy proxy(const SpacePointContainer2 &container) const {
+      return Proxy(container, m_data);
+    }
+
+    std::unique_ptr<ColumnHolderBase> copy() const override {
+      return std::make_unique<ColumnHolder<T>>(*this);
+    }
+
+    std::size_t size() const override { return m_data.size(); }
+    void reserve(std::size_t size) override { m_data.reserve(size); }
+    void clear() override { m_data.clear(); }
+    void resize(std::size_t size) override { m_data.resize(size, m_default); }
+    void emplace_back() override { m_data.emplace_back(m_default); }
+
+   private:
+    Value m_default{};
+    Container m_data;
+  };
+
   std::uint32_t m_size{0};
 
-  std::unordered_map<std::string,
-                     std::pair<SpacePointColumnHolderBase *,
-                               std::unique_ptr<SpacePointColumnHolderBase>>,
-                     std::hash<std::string_view>, std::equal_to<>>
+  std::unordered_map<
+      std::string,
+      std::pair<ColumnHolderBase *, std::unique_ptr<ColumnHolderBase>>,
+      std::hash<std::string_view>, std::equal_to<>>
       m_namedColumns;
   SpacePointColumns m_knownColumns{SpacePointColumns::None};
 
   std::vector<SourceLink> m_sourceLinks;
 
-  std::optional<SpacePointColumnHolder<SpacePointIndex2>>
-      m_sourceLinkOffsetColumn;
-  std::optional<SpacePointColumnHolder<std::uint8_t>> m_sourceLinkCountColumn;
+  std::optional<ColumnHolder<SpacePointIndex2>> m_sourceLinkOffsetColumn;
+  std::optional<ColumnHolder<std::uint8_t>> m_sourceLinkCountColumn;
 
-  std::optional<SpacePointColumnHolder<float>> m_xColumn;
-  std::optional<SpacePointColumnHolder<float>> m_yColumn;
-  std::optional<SpacePointColumnHolder<float>> m_zColumn;
+  std::optional<ColumnHolder<float>> m_xColumn;
+  std::optional<ColumnHolder<float>> m_yColumn;
+  std::optional<ColumnHolder<float>> m_zColumn;
 
   // cylindrical coordinates
-  std::optional<SpacePointColumnHolder<float>> m_rColumn;
-  std::optional<SpacePointColumnHolder<float>> m_phiColumn;
+  std::optional<ColumnHolder<float>> m_rColumn;
+  std::optional<ColumnHolder<float>> m_phiColumn;
   // time information
-  std::optional<SpacePointColumnHolder<float>> m_timeColumn;
+  std::optional<ColumnHolder<float>> m_timeColumn;
   // covariance information
-  std::optional<SpacePointColumnHolder<float>> m_varianceZColumn;
-  std::optional<SpacePointColumnHolder<float>> m_varianceRColumn;
+  std::optional<ColumnHolder<float>> m_varianceZColumn;
+  std::optional<ColumnHolder<float>> m_varianceRColumn;
   // strip information
-  std::optional<SpacePointColumnHolder<Eigen::Vector3f>> m_topStripVectorColumn;
-  std::optional<SpacePointColumnHolder<Eigen::Vector3f>>
-      m_bottomStripVectorColumn;
-  std::optional<SpacePointColumnHolder<Eigen::Vector3f>>
-      m_stripCenterDistanceColumn;
-  std::optional<SpacePointColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
+  std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripVectorColumn;
+  std::optional<ColumnHolder<Eigen::Vector3f>> m_bottomStripVectorColumn;
+  std::optional<ColumnHolder<Eigen::Vector3f>> m_stripCenterDistanceColumn;
+  std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
   // copy information
-  std::optional<SpacePointColumnHolder<std::size_t>> m_copyFromIndexColumn;
+  std::optional<ColumnHolder<std::size_t>> m_copyFromIndexColumn;
 
   static auto knownColumnMaks() noexcept {
     using enum SpacePointColumns;
