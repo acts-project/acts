@@ -67,12 +67,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operation - dummy implementation
-  ///
-  ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
-    return (*this);
-  }
-
   /// Return the BinUtility
   const BinningType& binning() const { return (m_binning); }
 
