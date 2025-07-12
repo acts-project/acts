@@ -16,7 +16,7 @@ class TTree;
 namespace Acts {
 
 /// Root space point reading and writing utility
-class RootSpacePointAccessor {
+class RootSpacePointIo {
  public:
   /// @brief sets the branch connection for writing to a file
   ///

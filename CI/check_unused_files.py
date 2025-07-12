@@ -35,6 +35,7 @@ def main():
         ".git",
         ".github",
         ".idea",
+        ".devcontainer",
     )
     exclude_files = (
         "acts_logo_colored.svg",

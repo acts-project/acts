@@ -6,16 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootSpacePoints2Accessor.hpp"
-
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/Plugins/Root/RootSpacePoints2Accessor.hpp"
 
 #include <TChain.h>
 #include <TTree.h>
 
 namespace Acts {
 
-void RootSpacePointAccessor::connectForRead(
+void RootSpacePointIo::connectForRead(
     TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
   tchain.SetBranchAddress("index", &m_index);
 
@@ -43,7 +42,7 @@ void RootSpacePointAccessor::connectForRead(
   }
 }
 
-void RootSpacePointAccessor::connectForWrite(
+void RootSpacePointIo::connectForWrite(
     TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
   ttree.Branch("index", &m_index);
 
@@ -71,7 +70,7 @@ void RootSpacePointAccessor::connectForWrite(
   }
 }
 
-void RootSpacePointAccessor::write(
+void RootSpacePointIo::write(
     const Experimental::ConstSpacePointProxy2& spacePoint) {
   m_index = spacePoint.index();
 
@@ -99,7 +98,7 @@ void RootSpacePointAccessor::write(
   }
 }
 
-void RootSpacePointAccessor::write(
+void RootSpacePointIo::write(
     const Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
   connectForWrite(ttree, spacePoints);
 
@@ -109,8 +108,7 @@ void RootSpacePointAccessor::write(
   }
 }
 
-void RootSpacePointAccessor::read(
-    Experimental::MutableSpacePointProxy2& spacePoint) {
+void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint) {
   spacePoint.x() = m_x;
   spacePoint.y() = m_y;
   spacePoint.z() = m_z;
@@ -135,8 +133,8 @@ void RootSpacePointAccessor::read(
   }
 }
 
-void RootSpacePointAccessor::read(
-    TChain& tchain, Experimental::SpacePointContainer2& spacePoints) {
+void RootSpacePointIo::read(TChain& tchain,
+                            Experimental::SpacePointContainer2& spacePoints) {
   connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();

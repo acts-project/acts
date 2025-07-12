@@ -1,6 +1,7 @@
 set(library_sources
-    src/RootMaterialTrackAccessor.cpp
-    src/RootSpacePoints2Accessor.cpp
+    src/RootMaterialMapIo.cpp
+    src/RootMaterialTrackIo.cpp
+    src/RootSpacePointIo.cpp
     src/TGeoCylinderDiscSplitter.cpp
     src/TGeoDetectorElement.cpp
     src/TGeoLayerBuilder.cpp
