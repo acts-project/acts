@@ -251,14 +251,14 @@ class BlueprintNode {
   /// This type's iterators and accessors return mutable references when
   /// dereferenced.
   using MutableChildRange =
-      detail::TransformRange<detail::Dereference,
+      Acts::detail::TransformRange<Acts::detail::Dereference,
                              std::vector<std::shared_ptr<BlueprintNode>>>;
 
   /// A range-like object that allows range based for loops and index access.
   /// This type's iterators and accessors return const references when
   /// dereferenced.
   using ChildRange =
-      detail::TransformRange<detail::ConstDereference,
+      Acts::detail::TransformRange<Acts::detail::ConstDereference,
                              const std::vector<std::shared_ptr<BlueprintNode>>>;
 
   /// Return a @ref MutableChildRange to the children of this node.
