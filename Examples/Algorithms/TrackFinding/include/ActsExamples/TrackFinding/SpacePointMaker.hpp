@@ -75,6 +75,8 @@ class SpacePointMaker final : public IAlgorithm {
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  ProcessCode initialize() override;
+
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
