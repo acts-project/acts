@@ -1227,6 +1227,11 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
+    if backend == "torch":
+        pytest.skip(
+            "Disabled torch support until replacement for torch-scatter is found"
+        )
+
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
