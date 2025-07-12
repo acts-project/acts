@@ -127,11 +127,22 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       }
     }
 
+    if (!clusters.empty()) {
+      const auto& cluster = clusters.at(measIdx);
+      meas.global_x = cluster.globalPosition.x();
+      meas.global_y = cluster.globalPosition.y();
+      meas.global_z = cluster.globalPosition.z();
+    } else {
+      meas.global_x = std::numeric_limits<float>::quiet_NaN();
+      meas.global_y = std::numeric_limits<float>::quiet_NaN();
+      meas.global_z = std::numeric_limits<float>::quiet_NaN();
+    }
+
     writerMeasurements.append(meas);
 
     // CLUSTER / channel information ------------------------------
     if (!clusters.empty() && writerCells) {
-      auto cluster = clusters[measIdx];
+      const auto& cluster = clusters.at(measIdx);
       cell.geometry_id = meas.geometry_id;
       cell.measurement_id = meas.measurement_id;
       for (auto& c : cluster.channels) {
