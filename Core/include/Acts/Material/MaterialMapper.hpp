@@ -12,7 +12,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -25,6 +24,14 @@ namespace Acts {
 /// @brief material mapping procedure
 class MaterialMapper {
  public:
+  /// @brief The material maps
+  using SurfaceMaterialMaps =
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+  using VolumeMaterialMaps =
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+  using DetectorMaterialMaps =
+      std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
+
   /// @brief nested configuration struct
   struct Config {
     // The assignment finder
@@ -76,7 +83,7 @@ class MaterialMapper {
       const Options& options = Options{}) const;
 
   /// Finalize the maps
-  TrackingGeometryMaterial finalizeMaps(const State& state) const;
+  DetectorMaterialMaps finalizeMaps(const State& state) const;
 
  private:
   /// Access method to the logger

@@ -17,7 +17,6 @@
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Plugins/Root/RootMaterialMapIo.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -36,6 +35,11 @@ class Layer;
 class TrackingGeometry;
 class TrackingVolume;
 
+using SurfaceMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+using VolumeMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -65,12 +69,42 @@ class RootMaterialWriter : public IMaterialWriter {
     /// Steering to handle volume data
     bool processVolumes = true;
 
-    /// The accessor configuration
-    Acts::RootMaterialMapIo::Config accessorConfig;
-
-    /// The accessor options
-    Acts::RootMaterialMapIo::Options accessorOptions;
-
+    /// The name of the output surface tree
+    std::string folderSurfaceNameBase = "SurfaceMaterial";
+    /// The name of the output volume tree
+    std::string folderVolumeNameBase = "VolumeMaterial";
+    /// The volume identification string
+    std::string voltag = "_vol";
+    /// The boundary identification string
+    std::string boutag = "_bou";
+    /// The layer identification string
+    std::string laytag = "_lay";
+    /// The approach identification string
+    std::string apptag = "_app";
+    /// The sensitive identification string
+    std::string sentag = "_sen";
+    /// The bin number tag
+    std::string ntag = "n";
+    /// The value tag -> binning values: AxisZ, AxisR, AxisPhi, etc.
+    std::string vtag = "v";
+    /// The option tag -> binning options: open, closed
+    std::string otag = "o";
+    /// The range min tag: min value
+    std::string mintag = "min";
+    /// The range max tag: max value
+    std::string maxtag = "max";
+    /// The thickness tag
+    std::string ttag = "t";
+    /// The x0 tag
+    std::string x0tag = "x0";
+    /// The l0 tag
+    std::string l0tag = "l0";
+    /// The A tag
+    std::string atag = "A";
+    /// The Z tag
+    std::string ztag = "Z";
+    /// The rho tag
+    std::string rhotag = "rho";
     /// The name of the output file
     std::string filePath = "material-maps.root";
     /// The file mode
@@ -89,8 +123,7 @@ class RootMaterialWriter : public IMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void writeMaterial(
-      const Acts::TrackingGeometryMaterial& detMaterial) override;
+  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) override;
 
   /// Write out the material map from Geometry
   ///
@@ -106,14 +139,14 @@ class RootMaterialWriter : public IMaterialWriter {
   /// @param tVolume The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
   void collectMaterial(const Acts::TrackingVolume& tVolume,
-                       Acts::TrackingGeometryMaterial& detMatMap);
+                       Acts::DetectorMaterialMaps& detMatMap);
 
   /// Collect the material from the tracking geometry
   ///
   /// @param tLayer The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
   void collectMaterial(const Acts::Layer& tLayer,
-                       Acts::TrackingGeometryMaterial& detMatMap);
+                       Acts::DetectorMaterialMaps& detMatMap);
 
   /// The config class
   Config m_cfg;

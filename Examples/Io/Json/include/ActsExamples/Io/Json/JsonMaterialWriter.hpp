@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,7 +27,18 @@
 #include <utility>
 
 namespace Acts {
+
 class TrackingGeometry;
+class ISurfaceMaterial;
+class IVolumeMaterial;
+
+using SurfaceMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+
+using VolumeMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -69,8 +79,7 @@ class JsonMaterialWriter : public IMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void writeMaterial(
-      const Acts::TrackingGeometryMaterial& detMaterial) override;
+  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) override;
 
   /// Write out the material map from Geometry
   ///

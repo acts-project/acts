@@ -13,7 +13,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -33,7 +32,18 @@
 #include <vector>
 
 namespace Acts {
+
 class TrackingGeometry;
+class ISurfaceMaterial;
+class IVolumeMaterial;
+
+using SurfaceMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+
+using VolumeMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {
