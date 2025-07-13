@@ -49,7 +49,7 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
 
 ProcessCode MaterialMapping::finalize() {
   ACTS_INFO("Finalizing material mappig output");
-  Acts::TrackingGeometryMaterial detectorMaterial;
+  Acts::DetectorMaterialMaps detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
     // Finalize all the maps using the cached state
