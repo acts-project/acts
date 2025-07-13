@@ -874,7 +874,6 @@ class SpacePointContainer2 {
                      columns.data().subspan(range.first, range.second)...);
   }
 
- private:
   class ColumnHolderBase {
    public:
     virtual ~ColumnHolderBase() = default;
@@ -918,6 +917,7 @@ class SpacePointContainer2 {
     Container m_data;
   };
 
+ private:
   std::uint32_t m_size{0};
 
   std::unordered_map<
