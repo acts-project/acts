@@ -13,7 +13,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
@@ -53,6 +52,12 @@ using TrackingVolumeAndMaterial =
 /// @brief read the material from Json
 class MaterialMapJsonConverter {
  public:
+  using SurfaceMaterialMap =
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+  using VolumeMaterialMap =
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+  using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
+
   /// @class Config
   /// Configuration of the Converter
   class Config {
@@ -85,18 +90,17 @@ class MaterialMapJsonConverter {
   /// Destructor
   ~MaterialMapJsonConverter() = default;
 
-  /// Convert a json material map to a TrackingGeometryMaterial
+  /// Convert a json material map to a DetectorMaterialMaps
   ///
   /// @param materialmaps The json material
-  TrackingGeometryMaterial jsonToMaterialMaps(
-      const nlohmann::json& materialmaps);
+  DetectorMaterialMaps jsonToMaterialMaps(const nlohmann::json& materialmaps);
 
-  /// Convert a TrackingGeometryMaterial to json
+  /// Convert a DetectorMaterialMaps to json
   ///
   /// @param maps The material map collection
   /// @param decorator nullptr or a decorator to add extra attributes
   nlohmann::json materialMapsToJson(
-      const TrackingGeometryMaterial& maps,
+      const DetectorMaterialMaps& maps,
       const IVolumeMaterialJsonDecorator* decorator = nullptr);
 
   /// Convert a tracking geometry to json.

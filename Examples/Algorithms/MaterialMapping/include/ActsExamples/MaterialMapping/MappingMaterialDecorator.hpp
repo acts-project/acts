@@ -41,6 +41,9 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  public:
   using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
 
+  using VolumeMaterialMap =
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+
   MappingMaterialDecorator(const Acts::TrackingGeometry& tGeometry,
                            Acts::Logging::Level level,
                            bool clearSurfaceMaterial = true,
@@ -273,7 +276,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  private:
   BinningMap m_binningMap;
 
-  VolumeMaterialMaps m_volumeMaterialMap;
+  VolumeMaterialMap m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};
