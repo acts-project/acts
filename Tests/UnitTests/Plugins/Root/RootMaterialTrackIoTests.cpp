@@ -197,8 +197,6 @@ BOOST_AUTO_TEST_CASE(RootReadWriteMaterialTracks) {
   for (std::size_t i = 0; i < rmTracks.size(); ++i) {
     const auto& rmTrack = rmTracks[i];
     const auto& rmTrackRead = readTracksFull[i];
-    const auto& rPos = rmTrack.first.first;
-    const auto& rPosRead = rmTrackRead.first.first;
 
     CHECK_CLOSE_ABS(rmTrackRead.second.materialInX0,
                     rmTrack.second.materialInX0, 1e-6);
