@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -874,50 +875,11 @@ class SpacePointContainer2 {
                      columns.data().subspan(range.first, range.second)...);
   }
 
-  class ColumnHolderBase {
-   public:
-    virtual ~ColumnHolderBase() = default;
-
-    virtual std::unique_ptr<ColumnHolderBase> copy() const = 0;
-
-    virtual std::size_t size() const = 0;
-    virtual void reserve(std::size_t size) = 0;
-    virtual void resize(std::size_t size) = 0;
-    virtual void clear() = 0;
-    virtual void emplace_back() = 0;
-  };
-
-  template <typename T>
-  class ColumnHolder final : public ColumnHolderBase {
-   public:
-    using Value = T;
-    using Container = std::vector<Value>;
-    using Proxy = SpacePointColumnProxy<Value>;
-
-    ColumnHolder() = default;
-    explicit ColumnHolder(Value defaultValue)
-        : m_default(std::move(defaultValue)) {}
-
-    Proxy proxy(const SpacePointContainer2 &container) const {
-      return Proxy(container, m_data);
-    }
-
-    std::unique_ptr<ColumnHolderBase> copy() const override {
-      return std::make_unique<ColumnHolder<T>>(*this);
-    }
-
-    std::size_t size() const override { return m_data.size(); }
-    void reserve(std::size_t size) override { m_data.reserve(size); }
-    void clear() override { m_data.clear(); }
-    void resize(std::size_t size) override { m_data.resize(size, m_default); }
-    void emplace_back() override { m_data.emplace_back(m_default); }
-
-   private:
-    Value m_default{};
-    Container m_data;
-  };
-
  private:
+  using ColumnHolderBase = detail::sp::ColumnHolderBase;
+  template <typename T>
+  using ColumnHolder = detail::sp::ColumnHolder<T>;
+
   std::uint32_t m_size{0};
 
   std::unordered_map<
