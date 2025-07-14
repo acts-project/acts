@@ -688,12 +688,25 @@ DetrayPayloadConverter::convertTrackingGeometry(
     // Look for navigation policies that we need to convert!
     const auto* navPolicy = volume.navigationPolicy();
     if (navPolicy != nullptr) {
-      auto detrayGrids = navPolicy->toDetrayPayload();
+      // Create surface lookup function for this volume
+      auto surfaceLookupFn =
+          [&surfaceIndices](const Surface* surface) -> std::size_t {
+        auto it = surfaceIndices.find(surface);
+        if (it == surfaceIndices.end()) {
+          throw std::runtime_error("Surface not found in surface indices map");
+        }
+        return it->second;
+      };
+
+      auto detrayGrids = navPolicy->toDetrayPayload(surfaceLookupFn);
       if (detrayGrids != nullptr) {
         ACTS_DEBUG("Volume " << volume.volumeName()
                              << " (idx: " << volPayload.index.link
                              << ") has navigation policy which produced "
-                             << detrayGrids->grids.size() << " grids");
+                             << detrayGrids->bins.size() << " populated bins");
+
+        // Add the surface grid to the payload
+        surfaceGrids.grids[volPayload.index.link].push_back(*detrayGrids);
       }
       // per volume, we have a VECTOR of grids: what are they? are they always
       // tied to a surface? which one?

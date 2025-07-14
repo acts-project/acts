@@ -19,11 +19,11 @@
 
 namespace Acts {
 
-std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload()
-    const {
+std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
+    const SurfaceLookupFunction& surfaceLookup) const {
   // Only ONE of the child policies should return a non-nullptr payload
   for (const auto& policy : m_policyPtrs) {
-    auto payload = policy->toDetrayPayload();
+    auto payload = policy->toDetrayPayload(surfaceLookup);
     if (payload) {
       return payload;
     }
@@ -32,7 +32,8 @@ std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload()
 }
 
 std::unique_ptr<DetraySurfaceGrid>
-Experimental::MultiLayerNavigationPolicy::toDetrayPayload() const {
+Experimental::MultiLayerNavigationPolicy::toDetrayPayload(
+    const SurfaceLookupFunction& /*surfaceLookup*/) const {
   return nullptr;
 }
 
@@ -66,10 +67,48 @@ detray::io::axis_payload convertAxis(const IAxis& axis) {
   return payload;
 }
 
+detray::axis::label convertAxisDirection(AxisDirection direction) {
+  switch (direction) {
+    case AxisDirection::AxisX:
+      return detray::axis::label::e_x;
+    case AxisDirection::AxisY:
+      return detray::axis::label::e_y;
+    case AxisDirection::AxisZ:
+      return detray::axis::label::e_z;
+    case AxisDirection::AxisR:
+      return detray::axis::label::e_r;
+    case AxisDirection::AxisPhi:
+      return detray::axis::label::e_phi;
+    case AxisDirection::AxisRPhi:
+      return detray::axis::label::e_rphi;
+    default:
+      throw std::invalid_argument(
+          "SurfaceArrayNavigationPolicy: Unknown axis direction detected.");
+  }
+}
+
+detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
+  using enum Surface::SurfaceType;
+
+  switch (surfaceType) {
+    case Cylinder:
+      return detray::io::accel_id::concentric_cylinder2_grid;
+    case Disc:
+      return detray::io::accel_id::polar2_grid;
+    case Plane:
+      return detray::io::accel_id::cartesian2_grid;
+    default:
+      throw std::runtime_error(
+          "SurfaceArrayNavigationPolicy: Unsupported surface type for detray "
+          "conversion");
+  }
+}
+
 }  // namespace
 
 std::unique_ptr<DetraySurfaceGrid>
-SurfaceArrayNavigationPolicy::toDetrayPayload() const {
+SurfaceArrayNavigationPolicy::toDetrayPayload(
+    const SurfaceLookupFunction& surfaceLookup) const {
   const auto* gridLookup =
       dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
           &m_surfaceArray->gridLookup());
@@ -109,29 +148,108 @@ SurfaceArrayNavigationPolicy::toDetrayPayload() const {
         "2-dimensional grid. This is not currently convertible to detray");
   }
 
-  auto axis1 = convertAxis(*axes[0]);
-  auto axis2 = *axes[1];
-
-  DetraySurfaceGrid gridPayload;
-
-  switch (gridLookup->surfaceType()) {
-    using enum Surface::SurfaceType;
-    case Cylinder:
-      gridPayload.axes.emplace_back(convertAxis(const IAxis& axis))
+  // Get binning values to determine acceleration structure type
+  std::vector<AxisDirection> binValues = gridLookup->binningValues();
+  if (binValues.empty()) {
+    // Fall back to default based on surface type
+    switch (gridLookup->surfaceType()) {
+      using enum Surface::SurfaceType;
+      case Cylinder:
+        binValues = {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+        break;
+      case Disc:
+        binValues = {AxisDirection::AxisR, AxisDirection::AxisPhi};
+        break;
+      case Plane:
+        binValues = {AxisDirection::AxisX, AxisDirection::AxisY};
+        break;
+      default:
+        throw std::runtime_error(
+            "SurfaceArrayNavigationPolicy: Unsupported surface type");
+    }
   }
 
-  for (const auto* axis : axes) {
-    std::cout << "Axis: " << *axis << std::endl;
-    auto& axisPayload = gridPayload.axes.emplace_back(convertAxis(*axis));
+  // Create the detray surface grid payload
+  auto gridPayload = std::make_unique<DetraySurfaceGrid>();
 
-    // axisPayload.label = convertAxisDirection();
+  // Set up the grid link with appropriate acceleration structure type
+  detray::io::accel_id accelId = getDetrayAccelId(gridLookup->surfaceType());
+  gridPayload->grid_link =
+      detray::io::typed_link_payload<detray::io::accel_id>{accelId, 0u};
+
+  // Convert the axes
+  for (std::size_t i = 0; i < axes.size(); ++i) {
+    const auto* axis = axes[i];
+    std::cout << "Converting axis " << i << ": " << *axis << std::endl;
+
+    auto axisPayload = convertAxis(*axis);
+
+    // Set axis label based on binning values
+    if (i < binValues.size()) {
+      axisPayload.label = convertAxisDirection(binValues[i]);
+    } else {
+      // Default labels if binValues is insufficient
+      axisPayload.label =
+          (i == 0) ? detray::axis::label::e_x : detray::axis::label::e_y;
+    }
+
+    gridPayload->axes.push_back(axisPayload);
   }
 
-  return nullptr;
+  // Fill the grid bins with surface indices
+  std::size_t totalBins = gridLookup->size();
+  for (std::size_t globalBin = 0; globalBin < totalBins; ++globalBin) {
+    if (!gridLookup->isValidBin(globalBin)) {
+      continue;  // Skip under/overflow bins
+    }
+
+    const auto& surfaces = gridLookup->lookup(globalBin);
+    if (!surfaces.empty()) {
+      // Convert global bin to local bin coordinates
+      // For a 2D grid, we can calculate local bins from global bin and
+      // dimensions
+      auto numBins = gridView->numLocalBins();
+      if (numBins.size() != 2) {
+        throw std::runtime_error(
+            "SurfaceArrayNavigationPolicy: Expected 2D grid dimensions");
+      }
+
+      std::size_t numBins1 = std::any_cast<std::size_t>(numBins[1]);
+
+      // Calculate local bin indices (assuming row-major ordering)
+      unsigned int localBin0 = globalBin / numBins1;
+      unsigned int localBin1 = globalBin % numBins1;
+
+      std::vector<unsigned int> localBin = {localBin0, localBin1};
+
+      // Create surface indices vector using the provided lookup function
+      std::vector<std::size_t> surfaceIndices;
+      for (const auto* surface : surfaces) {
+        try {
+          std::size_t surfaceIndex = surfaceLookup(surface);
+          surfaceIndices.push_back(surfaceIndex);
+        } catch (const std::exception& e) {
+          std::cout << "Warning: Could not find surface index for surface "
+                    << surface->geometryId() << ": " << e.what() << std::endl;
+          // Skip this surface if we can't find its index
+        }
+      }
+
+      // Add the bin to the grid payload
+      detray::io::grid_bin_payload<std::size_t> binPayload{localBin,
+                                                           surfaceIndices};
+      gridPayload->bins.push_back(binPayload);
+    }
+  }
+
+  std::cout << "SurfaceArrayNavigationPolicy: Created detray payload with "
+            << gridPayload->bins.size() << " populated bins" << std::endl;
+
+  return gridPayload;
 }
 
-std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload()
-    const {
+std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
+    const SurfaceLookupFunction& /*surfaceLookup*/) const {
   return nullptr;
 }
 

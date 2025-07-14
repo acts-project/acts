@@ -15,9 +15,10 @@
 
 namespace Acts {
 
-#define STUB_METHOD(type)                                             \
-  std::unique_ptr<DetraySurfaceGrids> type::toDetrayPayload() const { \
-    throw DetrayNotAvailableException();                              \
+#define STUB_METHOD(type)                                   \
+  std::unique_ptr<DetraySurfaceGrid> type::toDetrayPayload( \
+      const SurfaceLookupFunction& surfaceLookup) const {   \
+    throw DetrayNotAvailableException();                    \
   }
 
 // In STUB mode: all navigation related methods throw an exception to indicate

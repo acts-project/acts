@@ -72,7 +72,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const;
 
-  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload() const override;
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& surfaceLookup) const override;
 
  private:
   // The tracking volume
