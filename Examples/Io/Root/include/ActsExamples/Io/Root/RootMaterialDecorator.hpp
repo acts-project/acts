@@ -15,8 +15,6 @@
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Material/TrackingGeometryMaterial.hpp>
-#include <Acts/Plugins/Root/RootMaterialMapIo.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
@@ -27,6 +25,17 @@
 #include <utility>
 
 class TFile;
+
+namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+
+using SurfaceMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+using VolumeMaterialMap =
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -39,10 +48,42 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Configuration of the Reader
   class Config {
    public:
-    /// Accessor config
-    Acts::RootMaterialMapIo::Config accessorConfig;
-    /// Accessor options
-    Acts::RootMaterialMapIo::Options accessorOptions;
+    /// The name of the output surface tree
+    std::string folderSurfaceNameBase = "SurfaceMaterial";
+    /// The name of the output volume tree
+    std::string folderVolumeNameBase = "VolumeMaterial";
+    /// The volume identification string
+    std::string voltag = "_vol";
+    /// The boundary identification string
+    std::string boutag = "_bou";
+    /// The layer identification string
+    std::string laytag = "_lay";
+    /// The approach identification string
+    std::string apptag = "_app";
+    /// The sensitive identification string
+    std::string sentag = "_sen";
+    /// The bin number tag
+    std::string ntag = "n";
+    /// The value tag -> binning values: AxisZ, AxisR, AxisPhi, etc.
+    std::string vtag = "v";
+    /// The option tag -> binning options: open, closed
+    std::string otag = "o";
+    /// The range min tag: min value
+    std::string mintag = "min";
+    /// The range max tag: max value
+    std::string maxtag = "max";
+    /// The thickness tag
+    std::string ttag = "t";
+    /// The x0 tag
+    std::string x0tag = "x0";
+    /// The l0 tag
+    std::string l0tag = "l0";
+    /// The A tag
+    std::string atag = "A";
+    /// The Z tag
+    std::string ztag = "Z";
+    /// The rho tag
+    std::string rhotag = "rho";
     /// The name of the output file
     std::string fileName = "material-maps.root";
   };
@@ -86,7 +127,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   }
 
   /// Return the maps
-  Acts::TrackingGeometryMaterial materialMaps() const {
+  const Acts::DetectorMaterialMaps materialMaps() const {
     return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 
@@ -103,10 +144,10 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   TFile* m_inputFile{nullptr};
 
   /// Surface based material
-  Acts::SurfaceMaterialMaps m_surfaceMaterialMap;
+  Acts::SurfaceMaterialMap m_surfaceMaterialMap;
 
   /// Volume based material
-  Acts::VolumeMaterialMaps m_volumeMaterialMap;
+  Acts::VolumeMaterialMap m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
 
