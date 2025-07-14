@@ -31,9 +31,9 @@ except ImportError:
         )
 
 try:
-    from acts import geomodel
+    import acts
 
-    geomodelEnabled = True
+    geomodelEnabled = hasattr(acts, "geomodel")
 except ImportError:
     geomodelEnabled = False
 
