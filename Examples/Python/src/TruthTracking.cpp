@@ -18,6 +18,9 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/TruthTracking/MeasurementCutter.hpp"
+#include "ActsExamples/TruthTracking/SpacePointCutter.hpp"
+#include "ActsExamples/TruthTracking/ClusterCutter.hpp"
 
 #include <memory>
 
@@ -146,6 +149,21 @@ void addTruthTracking(Context& ctx) {
       inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching,
       reweightVolumes);
+  
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SpacePointCutter, mex, "SpacePointCutter",
+      inputSpacePoints, outputSpacePoints, minZ, maxZ, minR, maxR);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MeasurementCutter, mex, "MeasurementCutter",
+      inputSpacePoints, inputMeasurementParticlesMap, inputParticles,
+      outputParticleMeasurementsMap, outputMeasurementsParticlesMap, 
+      outputParticles, minR, maxR, minZ, maxZ);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::ClusterCutter, mex, "ClusterCutter",
+      inputClusters, outputClusters, minR, maxR, minZ, maxZ);
+      
 }
 
 }  // namespace Acts::Python

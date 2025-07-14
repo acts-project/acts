@@ -167,6 +167,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   std::size_t nMeasurementConstant = 0;
   std::size_t nMeasurementDecrease = 0;
 
+  std::size_t extendedMeasurements = 0;
+  std::size_t removedMeasurements = 0;
+
   std::vector<std::size_t> nTracksPerSeeds;
   nTracksPerSeeds.reserve(initialParameters.size());
 
@@ -232,10 +235,12 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
                    << track.nMeasurements());
       if (protoTracks.at(i).size() < track.nMeasurements()) {
         nMeasurementIncrease++;
+        extendedMeasurements += track.nMeasurements() - protoTracks.at(i).size();
       } else if (protoTracks.at(i).size() == track.nMeasurements()) {
         nMeasurementConstant++;
       } else {
         nMeasurementDecrease++;
+        removedMeasurements += protoTracks.at(i).size() - track.nMeasurements();
       }
       if (track.nMeasurements() < protoTracks.at(i).size()) {
         for (auto mid : protoTracks.at(i)) {
@@ -262,7 +267,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   ACTS_DEBUG("Tracks with measurement increase: "
              << nMeasurementIncrease << ", decrease: " << nMeasurementDecrease
              << ", constant: " << nMeasurementConstant);
-
+  ACTS_DEBUG("Extended measurements: " << extendedMeasurements
+             << ", removed measurements: " << removedMeasurements << " in track finding");
   {
     std::lock_guard<std::mutex> guard(m_mutex);
 

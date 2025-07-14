@@ -11,6 +11,9 @@ add_library(
     ActsExamples/TruthTracking/TruthVertexFinder.cpp
     ActsExamples/TruthTracking/TruthSeedingAlgorithm.cpp
     ActsExamples/TruthTracking/HitSelector.cpp
+    ActsExamples/TruthTracking/MeasurementCutter.cpp
+    ActsExamples/TruthTracking/SpacePointCutter.cpp
+    ActsExamples/TruthTracking/ClusterCutter.cpp
 )
 target_include_directories(
     ActsExamplesTruthTracking
