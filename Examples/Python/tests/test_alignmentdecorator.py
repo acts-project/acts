@@ -80,6 +80,3 @@ def test_alignmentdecorator_gen_mode(capfd):
     # Count that the alignment store is decorated 37 times
     out, err = capfd.readouterr()
     assert out.count("Decorating AlgorithmContext with alignment store") == 37
-
-
-test_alignmentdecorator_gen_mode()
