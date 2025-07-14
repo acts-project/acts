@@ -126,13 +126,13 @@ void SpacePointContainer2::assignSourceLinks(
       !m_sourceLinkCountColumn.has_value()) {
     throw std::logic_error("No source links column available");
   }
-  if (entry(m_sourceLinkCountColumn->proxy(*this), index) != 0) {
+  if (m_sourceLinkCountColumn->proxy(*this)[index] != 0) {
     throw std::logic_error("Source links already assigned to the space point");
   }
 
-  entry(m_sourceLinkOffsetColumn->proxy(*this), index) =
+  m_sourceLinkOffsetColumn->proxy(*this)[index] =
       static_cast<SpacePointIndex2>(m_sourceLinks.size());
-  entry(m_sourceLinkCountColumn->proxy(*this), index) =
+  m_sourceLinkCountColumn->proxy(*this)[index] =
       static_cast<std::uint8_t>(sourceLinks.size());
   m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
                        sourceLinks.end());

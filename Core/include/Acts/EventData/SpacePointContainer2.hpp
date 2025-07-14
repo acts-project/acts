@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SpacePointColumnProxy2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
@@ -63,37 +64,6 @@ enum class SpacePointColumns : std::uint32_t {
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointColumns);
-
-/// Additional column of data that can be added to the space point container.
-/// The column is indexed by the space point index.
-template <typename T>
-class SpacePointColumnProxy {
- public:
-  using Value = T;
-  using Column = std::vector<Value>;
-
-  SpacePointColumnProxy(const SpacePointContainer2 &container,
-                        const Column &column)
-      : m_container{&container}, m_column(&column) {}
-
-  const SpacePointContainer2 &container() const { return *m_container; }
-
- private:
-  const SpacePointContainer2 *m_container{};
-  const Column *m_column{};
-
-  Column &column() { return const_cast<Column &>(*m_column); }
-  const Column &column() const { return *m_column; }
-
-  std::span<Value> data() {
-    return std::span<Value>(column().data(), column().size());
-  }
-  std::span<const Value> data() const {
-    return std::span<const Value>(column().data(), column().size());
-  }
-
-  friend class SpacePointContainer2;
-};
 
 /// A container for space points, which can hold additional columns of data
 /// and allows for efficient access to space points and their associated source
@@ -178,7 +148,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if a column with the same name already exists.
   /// @throws std::runtime_error if the column name is reserved.
   template <typename T>
-  SpacePointColumnProxy<T> createColumn(const std::string &name) {
+  MutableSpacePointColumnProxy<T> createColumn(const std::string &name) {
     return createColumnImpl<ColumnHolder<T>>(name);
   }
 
@@ -202,93 +172,185 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the Column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  SpacePointColumnProxy<T> column(const std::string &name) const {
+  ConstSpacePointColumnProxy<T> column(const std::string &name) const {
     return columnImpl<ColumnHolder<T>>(name);
   }
 
-  /// Returns a proxy to the x coordinate column.
-  /// @return A proxy to the r coordinate column.
-  SpacePointColumnProxy<float> xColumn() const noexcept {
+  /// Returns a mutable proxy to the x coordinate column.
+  /// @return A mutable proxy to the r coordinate column.
+  MutableSpacePointColumnProxy<float> xColumn() noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     return m_xColumn->proxy(*this);
   }
-  /// Returns a proxy to the y coordinate column.
-  /// @return A proxy to the y coordinate column.
-  SpacePointColumnProxy<float> yColumn() const noexcept {
+  /// Returns a mutable proxy to the y coordinate column.
+  /// @return A mutable proxy to the y coordinate column.
+  MutableSpacePointColumnProxy<float> yColumn() noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     return m_yColumn->proxy(*this);
   }
-  /// Returns a proxy to the z coordinate column.
-  /// @return A proxy to the z coordinate column.
-  SpacePointColumnProxy<float> zColumn() const noexcept {
+  /// Returns a mutable proxy to the z coordinate column.
+  /// @return A mutable proxy to the z coordinate column.
+  MutableSpacePointColumnProxy<float> zColumn() noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     return m_zColumn->proxy(*this);
   }
-  /// Returns a proxy to the r coordinate column.
-  /// @return A proxy to the r coordinate column.
-  SpacePointColumnProxy<float> rColumn() const noexcept {
+  /// Returns a mutable proxy to the r coordinate column.
+  /// @return A mutable proxy to the r coordinate column.
+  MutableSpacePointColumnProxy<float> rColumn() noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     return m_rColumn->proxy(*this);
   }
-  /// Returns a proxy to the phi coordinate column.
-  /// @return A proxy to the phi coordinate column.
-  SpacePointColumnProxy<float> phiColumn() const noexcept {
+  /// Returns a mutable proxy to the phi coordinate column.
+  /// @return A mutable proxy to the phi coordinate column.
+  MutableSpacePointColumnProxy<float> phiColumn() noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     return m_phiColumn->proxy(*this);
   }
-  /// Returns a proxy to the time column.
-  /// @return A proxy to the time column.
-  SpacePointColumnProxy<float> timeColumn() const noexcept {
+  /// Returns a mutable proxy to the time column.
+  /// @return A mutable proxy to the time column.
+  MutableSpacePointColumnProxy<float> timeColumn() noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     return m_timeColumn->proxy(*this);
   }
-  /// Returns a proxy to the variance in Z direction column.
-  /// @return A proxy to the variance in Z direction column.
-  SpacePointColumnProxy<float> varianceZColumn() const noexcept {
+  /// Returns a mutable proxy to the variance in Z direction column.
+  /// @return A mutable proxy to the variance in Z direction column.
+  MutableSpacePointColumnProxy<float> varianceZColumn() noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     return m_varianceZColumn->proxy(*this);
   }
-  /// Returns a proxy to the variance in R direction column.
-  /// @return A proxy to the variance in R direction column.
-  SpacePointColumnProxy<float> varianceRColumn() const noexcept {
+  /// Returns a mutable proxy to the variance in R direction column.
+  /// @return A mutable proxy to the variance in R direction column.
+  MutableSpacePointColumnProxy<float> varianceRColumn() noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
-  /// Returns a proxy to the top strip vector column.
-  /// @return A proxy to the top strip vector column.
-  SpacePointColumnProxy<Eigen::Vector3f> topStripVectorColumn() const noexcept {
+  /// Returns a mutable proxy to the top strip vector column.
+  /// @return A mutable proxy to the top strip vector column.
+  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  topStripVectorColumn() noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     return m_topStripVectorColumn->proxy(*this);
   }
-  /// Returns a proxy to the bottom strip vector column.
-  /// @return A proxy to the bottom strip vector column.
-  SpacePointColumnProxy<Eigen::Vector3f> bottomStripVectorColumn()
+  /// Returns a mutable proxy to the bottom strip vector column.
+  /// @return A mutable proxy to the bottom strip vector column.
+  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  bottomStripVectorColumn() noexcept {
+    assert(m_bottomStripVectorColumn.has_value() &&
+           "Column 'bottomStripVector' does not exist");
+    return m_bottomStripVectorColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the strip center distance column.
+  /// @return A mutable proxy to the strip center distance column.
+  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  stripCenterDistanceColumn() noexcept {
+    assert(m_stripCenterDistanceColumn.has_value() &&
+           "Column 'stripCenterDistance' does not exist");
+    return m_stripCenterDistanceColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the top strip center column.
+  /// @return A mutable proxy to the top strip center column.
+  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  topStripCenterColumn() noexcept {
+    assert(m_topStripCenterColumn.has_value() &&
+           "Column 'topStripCenter' does not exist");
+    return m_topStripCenterColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the copy from index column.
+  /// @return A mutable proxy to the copy from index column.
+  MutableSpacePointColumnProxy<std::size_t> copyFromIndexColumn() noexcept {
+    assert(m_copyFromIndexColumn.has_value() &&
+           "Column 'copyFromIndex' does not exist");
+    return m_copyFromIndexColumn->proxy(*this);
+  }
+
+  /// Returns a const proxy to the x coordinate column.
+  /// @return A const proxy to the r coordinate column.
+  ConstSpacePointColumnProxy<float> xColumn() const noexcept {
+    assert(m_xColumn.has_value() && "Column 'x' does not exist");
+    return m_xColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the y coordinate column.
+  /// @return A const proxy to the y coordinate column.
+  ConstSpacePointColumnProxy<float> yColumn() const noexcept {
+    assert(m_yColumn.has_value() && "Column 'y' does not exist");
+    return m_yColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the z coordinate column.
+  /// @return A const proxy to the z coordinate column.
+  ConstSpacePointColumnProxy<float> zColumn() const noexcept {
+    assert(m_zColumn.has_value() && "Column 'z' does not exist");
+    return m_zColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the r coordinate column.
+  /// @return A const proxy to the r coordinate column.
+  ConstSpacePointColumnProxy<float> rColumn() const noexcept {
+    assert(m_rColumn.has_value() && "Column 'r' does not exist");
+    return m_rColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the phi coordinate column.
+  /// @return A const proxy to the phi coordinate column.
+  ConstSpacePointColumnProxy<float> phiColumn() const noexcept {
+    assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
+    return m_phiColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the time column.
+  /// @return A const proxy to the time column.
+  ConstSpacePointColumnProxy<float> timeColumn() const noexcept {
+    assert(m_timeColumn.has_value() && "Column 'time' does not exist");
+    return m_timeColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the variance in Z direction column.
+  /// @return A const proxy to the variance in Z direction column.
+  ConstSpacePointColumnProxy<float> varianceZColumn() const noexcept {
+    assert(m_varianceZColumn.has_value() &&
+           "Column 'varianceZ' does not exist");
+    return m_varianceZColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the variance in R direction column.
+  /// @return A const proxy to the variance in R direction column.
+  ConstSpacePointColumnProxy<float> varianceRColumn() const noexcept {
+    assert(m_varianceRColumn.has_value() &&
+           "Column 'varianceR' does not exist");
+    return m_varianceRColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the top strip vector column.
+  /// @return A const proxy to the top strip vector column.
+  ConstSpacePointColumnProxy<Eigen::Vector3f> topStripVectorColumn()
+      const noexcept {
+    assert(m_topStripVectorColumn.has_value() &&
+           "Column 'topStripVector' does not exist");
+    return m_topStripVectorColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the bottom strip vector column.
+  /// @return A const proxy to the bottom strip vector column.
+  ConstSpacePointColumnProxy<Eigen::Vector3f> bottomStripVectorColumn()
       const noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     return m_bottomStripVectorColumn->proxy(*this);
   }
-  /// Returns a proxy to the strip center distance column.
-  /// @return A proxy to the strip center distance column.
-  SpacePointColumnProxy<Eigen::Vector3f> stripCenterDistanceColumn()
+  /// Returns a const proxy to the strip center distance column.
+  /// @return A const proxy to the strip center distance column.
+  ConstSpacePointColumnProxy<Eigen::Vector3f> stripCenterDistanceColumn()
       const noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
     return m_stripCenterDistanceColumn->proxy(*this);
   }
-  /// Returns a proxy to the top strip center column.
-  /// @return A proxy to the top strip center column.
-  SpacePointColumnProxy<Eigen::Vector3f> topStripCenterColumn() const noexcept {
+  /// Returns a const proxy to the top strip center column.
+  /// @return A const proxy to the top strip center column.
+  ConstSpacePointColumnProxy<Eigen::Vector3f> topStripCenterColumn()
+      const noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     return m_topStripCenterColumn->proxy(*this);
   }
-  /// Returns a proxy to the copy from index column.
-  /// @return A proxy to the copy from index column.
-  SpacePointColumnProxy<std::size_t> copyFromIndexColumn() const noexcept {
+  /// Returns a const proxy to the copy from index column.
+  /// @return A const proxy to the copy from index column.
+  ConstSpacePointColumnProxy<std::size_t> copyFromIndexColumn() const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
@@ -334,9 +396,8 @@ class SpacePointContainer2 {
     assert(index < m_sourceLinkOffsetColumn->size() &&
            index < m_sourceLinkCountColumn->size() && "Index out of bounds");
     return std::span<SourceLink>(
-        m_sourceLinks.data() +
-            entry(m_sourceLinkOffsetColumn->proxy(*this), index),
-        entry(m_sourceLinkCountColumn->proxy(*this), index));
+        m_sourceLinks.data() + m_sourceLinkOffsetColumn->proxy(*this)[index],
+        m_sourceLinkCountColumn->proxy(*this)[index]);
   }
   /// Mutable access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -344,7 +405,7 @@ class SpacePointContainer2 {
   float &x(Index index) noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     assert(index < m_xColumn->size() && "Index out of bounds");
-    return entry(m_xColumn->proxy(*this), index);
+    return m_xColumn->proxy(*this)[index];
   }
   /// Mutable access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -352,7 +413,7 @@ class SpacePointContainer2 {
   float &y(Index index) noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     assert(index < m_yColumn->size() && "Index out of bounds");
-    return entry(m_yColumn->proxy(*this), index);
+    return m_yColumn->proxy(*this)[index];
   }
   /// Mutable access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -360,7 +421,7 @@ class SpacePointContainer2 {
   float &z(Index index) noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     assert(index < m_zColumn->size() && "Index out of bounds");
-    return entry(m_zColumn->proxy(*this), index);
+    return m_zColumn->proxy(*this)[index];
   }
   /// Mutable access to the r coordinate of the space point at the given
   /// index.
@@ -369,7 +430,7 @@ class SpacePointContainer2 {
   float &r(Index index) noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     assert(index < m_rColumn->size() && "Index out of bounds");
-    return entry(m_rColumn->proxy(*this), index);
+    return m_rColumn->proxy(*this)[index];
   }
   /// Mutable access to the phi coordinate of the space point at the given
   /// index.
@@ -378,7 +439,7 @@ class SpacePointContainer2 {
   float &phi(Index index) noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     assert(index < m_phiColumn->size() && "Index out of bounds");
-    return entry(m_phiColumn->proxy(*this), index);
+    return m_phiColumn->proxy(*this)[index];
   }
   /// Mutable access to the time information of the space point at the
   /// given index.
@@ -387,7 +448,7 @@ class SpacePointContainer2 {
   float &time(Index index) noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     assert(index < m_timeColumn->size() && "Index out of bounds");
-    return entry(m_timeColumn->proxy(*this), index);
+    return m_timeColumn->proxy(*this)[index];
   }
   /// Mutable access to the variance in Z direction of the space point at
   /// the given index.
@@ -397,7 +458,7 @@ class SpacePointContainer2 {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     assert(index < m_varianceZColumn->size() && "Index out of bounds");
-    return entry(m_varianceZColumn->proxy(*this), index);
+    return m_varianceZColumn->proxy(*this)[index];
   }
   /// Mutable access to the variance in R direction of the space
   /// point at the given index.
@@ -407,7 +468,7 @@ class SpacePointContainer2 {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     assert(index < m_varianceRColumn->size() && "Index out of bounds");
-    return entry(m_varianceRColumn->proxy(*this), index);
+    return m_varianceRColumn->proxy(*this)[index];
   }
   /// Mutable access to the top strip vector of the space point at the
   /// given index.
@@ -417,7 +478,7 @@ class SpacePointContainer2 {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     assert(index < m_topStripVectorColumn->size() && "Index out of bounds");
-    return entry(m_topStripVectorColumn->proxy(*this), index);
+    return m_topStripVectorColumn->proxy(*this)[index];
   }
   /// Mutable access to the bottom strip vector of the space point at the
   /// given index.
@@ -427,7 +488,7 @@ class SpacePointContainer2 {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     assert(index < m_bottomStripVectorColumn->size() && "Index out of bounds");
-    return entry(m_bottomStripVectorColumn->proxy(*this), index);
+    return m_bottomStripVectorColumn->proxy(*this)[index];
   }
   /// Mutable access to the strip center distance of the space point at
   /// the given index.
@@ -438,7 +499,7 @@ class SpacePointContainer2 {
            "Column 'stripCenterDistance' does not exist");
     assert(index < m_stripCenterDistanceColumn->size() &&
            "Index out of bounds");
-    return entry(m_stripCenterDistanceColumn->proxy(*this), index);
+    return m_stripCenterDistanceColumn->proxy(*this)[index];
   }
   /// Mutable access to the top strip center of the space point at the
   /// given index.
@@ -448,7 +509,7 @@ class SpacePointContainer2 {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     assert(index < m_topStripCenterColumn->size() && "Index out of bounds");
-    return entry(m_topStripCenterColumn->proxy(*this), index);
+    return m_topStripCenterColumn->proxy(*this)[index];
   }
   /// Mutable access to the copy from index of the space point at the given
   /// index.
@@ -458,7 +519,7 @@ class SpacePointContainer2 {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
-    return entry(m_copyFromIndexColumn->proxy(*this), index);
+    return m_copyFromIndexColumn->proxy(*this)[index];
   }
 
   /// Const access to the source links at the given index.
@@ -471,9 +532,8 @@ class SpacePointContainer2 {
     assert(index < m_sourceLinkOffsetColumn->size() &&
            index < m_sourceLinkCountColumn->size() && "Index out of bounds");
     return std::span<const SourceLink>(
-        m_sourceLinks.data() +
-            entry(m_sourceLinkOffsetColumn->proxy(*this), index),
-        entry(m_sourceLinkCountColumn->proxy(*this), index));
+        m_sourceLinks.data() + m_sourceLinkOffsetColumn->proxy(*this)[index],
+        m_sourceLinkCountColumn->proxy(*this)[index]);
   }
   /// Const access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -481,7 +541,7 @@ class SpacePointContainer2 {
   float x(Index index) const noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     assert(index < m_xColumn->size() && "Index out of bounds");
-    return entry(m_xColumn->proxy(*this), index);
+    return m_xColumn->proxy(*this)[index];
   }
   /// Const access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -489,7 +549,7 @@ class SpacePointContainer2 {
   float y(Index index) const noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     assert(index < m_yColumn->size() && "Index out of bounds");
-    return entry(m_yColumn->proxy(*this), index);
+    return m_yColumn->proxy(*this)[index];
   }
   /// Const access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
@@ -497,7 +557,7 @@ class SpacePointContainer2 {
   float z(Index index) const noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     assert(index < m_zColumn->size() && "Index out of bounds");
-    return entry(m_zColumn->proxy(*this), index);
+    return m_zColumn->proxy(*this)[index];
   }
   /// Const access to the r coordinate of the space point at the given
   /// index.
@@ -506,7 +566,7 @@ class SpacePointContainer2 {
   float r(Index index) const noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     assert(index < m_rColumn->size() && "Index out of bounds");
-    return entry(m_rColumn->proxy(*this), index);
+    return m_rColumn->proxy(*this)[index];
   }
   /// Const access to the phi coordinate of the space point at the given
   /// index.
@@ -515,7 +575,7 @@ class SpacePointContainer2 {
   float phi(Index index) const noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     assert(index < m_phiColumn->size() && "Index out of bounds");
-    return entry(m_phiColumn->proxy(*this), index);
+    return m_phiColumn->proxy(*this)[index];
   }
   /// Const access to the time information of the space point at the
   /// given index.
@@ -524,7 +584,7 @@ class SpacePointContainer2 {
   float time(Index index) const noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     assert(index < m_timeColumn->size() && "Index out of bounds");
-    return entry(m_timeColumn->proxy(*this), index);
+    return m_timeColumn->proxy(*this)[index];
   }
   /// Const access to the variance in Z direction of the space point at
   /// the given index.
@@ -534,7 +594,7 @@ class SpacePointContainer2 {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     assert(index < m_varianceZColumn->size() && "Index out of bounds");
-    return entry(m_varianceZColumn->proxy(*this), index);
+    return m_varianceZColumn->proxy(*this)[index];
   }
   /// Const access to the variance in R direction of the space
   /// point at the given index.
@@ -544,7 +604,7 @@ class SpacePointContainer2 {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     assert(index < m_varianceRColumn->size() && "Index out of bounds");
-    return entry(m_varianceRColumn->proxy(*this), index);
+    return m_varianceRColumn->proxy(*this)[index];
   }
   /// Const access to the top strip vector of the space point at the
   /// given index.
@@ -554,7 +614,7 @@ class SpacePointContainer2 {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     assert(index < m_topStripVectorColumn->size() && "Index out of bounds");
-    return entry(m_topStripVectorColumn->proxy(*this), index);
+    return m_topStripVectorColumn->proxy(*this)[index];
   }
   /// Const access to the bottom strip vector of the space point at the
   /// given index.
@@ -564,7 +624,7 @@ class SpacePointContainer2 {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     assert(index < m_bottomStripVectorColumn->size() && "Index out of bounds");
-    return entry(m_bottomStripVectorColumn->proxy(*this), index);
+    return m_bottomStripVectorColumn->proxy(*this)[index];
   }
   /// Const access to the strip center distance of the space point at
   /// the given index.
@@ -575,7 +635,7 @@ class SpacePointContainer2 {
            "Column 'stripCenterDistance' does not exist");
     assert(index < m_stripCenterDistanceColumn->size() &&
            "Index out of bounds");
-    return entry(m_stripCenterDistanceColumn->proxy(*this), index);
+    return m_stripCenterDistanceColumn->proxy(*this)[index];
   }
   /// Const access to the top strip center of the space point at the
   /// given index.
@@ -585,7 +645,7 @@ class SpacePointContainer2 {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     assert(index < m_topStripCenterColumn->size() && "Index out of bounds");
-    return entry(m_topStripCenterColumn->proxy(*this), index);
+    return m_topStripCenterColumn->proxy(*this)[index];
   }
   /// Const access to the copy from index of the space point at the given
   /// index.
@@ -595,43 +655,7 @@ class SpacePointContainer2 {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
-    return entry(m_copyFromIndexColumn->proxy(*this), index);
-  }
-
-  /// Returns the data for the given column.
-  /// @param column The column to access.
-  /// @return A mutable span to the column.
-  template <typename T>
-  std::span<T> data(SpacePointColumnProxy<T> column) noexcept {
-    return column.data();
-  }
-
-  /// Returns the data for the given column.
-  /// @param column The column to access.
-  /// @return A const span to the column.
-  template <typename T>
-  std::span<const T> data(
-      const SpacePointColumnProxy<T> &column) const noexcept {
-    return column.data();
-  }
-
-  /// Returns the entry for the given column and index.
-  /// @param column The column to access.
-  /// @param index The index of the space point.
-  /// @return A mutable reference to the entry in the column at the given index.
-  template <typename T>
-  T &entry(SpacePointColumnProxy<T> column, Index index) noexcept {
-    return column.data()[index];
-  }
-
-  /// Returns the entry for the given column and index.
-  /// @param column The column to access.
-  /// @param index The index of the space point.
-  /// @return A const reference to the entry in the column at the given index.
-  template <typename T>
-  const T &entry(const SpacePointColumnProxy<T> &column,
-                 Index index) const noexcept {
-    return column.data()[index];
+    return m_copyFromIndexColumn->proxy(*this)[index];
   }
 
   template <bool read_only>
@@ -843,14 +867,14 @@ class SpacePointContainer2 {
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
-  auto zip(const SpacePointColumnProxy<Ts> &...columns) noexcept {
+  auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
-  auto zip(const SpacePointColumnProxy<Ts> &...columns) const noexcept {
+  auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
   }
 
@@ -860,7 +884,7 @@ class SpacePointContainer2 {
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const IndexRange &range,
-           const SpacePointColumnProxy<Ts> &...columns) noexcept {
+           const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(IndexIteratorRange(range),
                      columns.data().subspan(range.first, range.second)...);
   }
@@ -870,7 +894,7 @@ class SpacePointContainer2 {
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const IndexRange &range,
-           const SpacePointColumnProxy<Ts> &...columns) const noexcept {
+           const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(IndexIteratorRange(range),
                      columns.data().subspan(range.first, range.second)...);
   }

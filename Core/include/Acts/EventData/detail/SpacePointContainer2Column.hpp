@@ -14,8 +14,12 @@
 namespace Acts::Experimental {
 
 class SpacePointContainer2;
-template <typename T>
+template <typename T, bool read_only>
 class SpacePointColumnProxy;
+template <typename T>
+using MutableSpacePointColumnProxy = SpacePointColumnProxy<T, false>;
+template <typename T>
+using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
 
 namespace detail::sp {
 
@@ -40,14 +44,18 @@ class ColumnHolder final : public ColumnHolderBase {
  public:
   using Value = T;
   using Container = std::vector<Value>;
-  using Proxy = SpacePointColumnProxy<Value>;
+  using MutableProxy = MutableSpacePointColumnProxy<Value>;
+  using ConstProxy = ConstSpacePointColumnProxy<Value>;
 
   ColumnHolder() = default;
   explicit ColumnHolder(Value defaultValue)
       : m_default(std::move(defaultValue)) {}
 
-  Proxy proxy(const SpacePointContainer2 &container) const {
-    return Proxy(container, m_data);
+  MutableProxy proxy(SpacePointContainer2 &container) {
+    return MutableProxy(container, m_data);
+  }
+  ConstProxy proxy(const SpacePointContainer2 &container) const {
+    return ConstProxy(container, m_data);
   }
 
   std::unique_ptr<ColumnHolderBase> copy() const override {
