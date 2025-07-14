@@ -93,10 +93,13 @@ struct TGeoSurfaceConverter {
   /// @param degree The input in degree
   /// @return angle in radians
   static double toRadian(double degree) {
-    if (degree > 180. && degree < 360.) {
-      degree -= 360.;
-    }
-    return degree / 180. * std::numbers::pi;
+    // Normalize degree to [-180, 180)
+    degree = fmod(degree + 180.0, 360.0);
+    if (degree < 0)
+      degree += 360.0;
+    degree -= 180.0;
+
+    return degree / 180.0 * std::numbers::pi;
   }
 };
 
