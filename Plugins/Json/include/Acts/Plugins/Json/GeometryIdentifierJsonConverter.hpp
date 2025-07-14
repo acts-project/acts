@@ -21,7 +21,8 @@ namespace GeometryIdentifierJsonConverter {
 /// Encode the geometry identifier
 /// @param geoId is the geometry identifier that will be encoded
 /// @param compact if true, the raw value is stored
-inline nlohmann::json encodeIdentifier(const GeometryIdentifier& geoId, bool compact = false) {
+inline nlohmann::json encodeIdentifier(const GeometryIdentifier& geoId,
+                                       bool compact = false) {
   nlohmann::json encoded;
   if (compact) {
     // store the raw value directly
