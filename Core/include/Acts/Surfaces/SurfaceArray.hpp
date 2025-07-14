@@ -160,7 +160,7 @@ class SurfaceArray {
         using enum Surface::SurfaceType;
         case Cylinder:
           m_globalToLocal = [](const Vector3& pos) {
-            return Vector2(phi(pos), pos.z());
+            return Vector2(perp(pos) * phi(pos), pos.z());
           };
           m_localToGlobal = [R](const Vector2& loc) {
             // Technically, this is not correct, the radius is arbitrary
@@ -202,6 +202,10 @@ class SurfaceArray {
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
       for (const auto& srf : surfaces) {
+        // @FIXME: The AxisPosition::AxisR is not really correct. This happens
+        //         to work because CylinderSurface, DiscSurface and PlaneSurface
+        //         either don't check at all or just check if the argument is
+        //         `AxisR` OR `AxisRPhi` OR `AxisPhi`.
         Vector3 pos = srf->referencePosition(gctx, AxisDirection::AxisR);
         lookup(pos).push_back(srf);
       }

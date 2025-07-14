@@ -43,7 +43,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3 ftransform = transform;
   ProtoAxis pAxisPhi =
-      createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
+      createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisRPhi,
                             protoLayer, ftransform, binsPhi);
   ProtoAxis pAxisZ = createEquidistantAxis(
       gctx, surfacesRaw, AxisDirection::AxisZ, protoLayer, ftransform, binsZ);
@@ -80,10 +80,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   Transform3 ftransform = transform;
 
   if (bTypePhi == equidistant) {
-    pAxisPhi = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
+    pAxisPhi = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisRPhi,
                                      protoLayer, ftransform, 0);
   } else {
-    pAxisPhi = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
+    pAxisPhi = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisRPhi,
                                   protoLayer, ftransform);
   }
 
