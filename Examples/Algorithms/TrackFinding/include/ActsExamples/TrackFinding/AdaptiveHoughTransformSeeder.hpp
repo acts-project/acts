@@ -65,7 +65,9 @@ class AccumulatorSection {
   /// The box is recentred
   void expand(float xs, float ys);
 
-  inline unsigned count() const { return m_indices.size(); }
+  inline unsigned count() const {
+    return static_cast<unsigned>(m_indices.size());
+  }
   inline const std::vector<unsigned> &indices() const { return m_indices; }
   inline std::vector<unsigned> &indices() { return m_indices; }
 
@@ -101,11 +103,12 @@ class AccumulatorSection {
   AccumulatorSection topRight(float xFraction = 0.5,
                               float yFraction = 0.5) const;
 
-  ///  @brief true if the line defined by given parameters passes the section
-  /// a and b are line parameters y = ax + b
-  inline bool isLineInside(const std::function<float(float)> &f) const {
-    const float yB = f(m_xBegin);
-    const float yE = f(m_xBegin + m_xSize);
+  /// @brief true if the line defined by given parameters passes the section
+  /// @param function is callable used to check crossing at the edges
+  template <typename F>
+  inline bool isLineInside(F function) const {
+    const float yB = function(m_xBegin);
+    const float yE = function(m_xBegin + m_xSize);
     return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
                      : yB > m_yBegin && yE < m_yBegin + m_ySize;
   }
@@ -117,8 +120,8 @@ class AccumulatorSection {
   /// It may be incorrect assumption for rapidly changing function or large
   /// sections
   /// @return true if the lines cross in the section
-  inline bool isCrossingInside(const std::function<float(float)> &line1,
-                               const std::function<float(float)> &line2) const {
+  template <typename F>
+  inline bool isCrossingInside(F line1, F line2) const {
     // this microalgorithm idea is illustrated below
     // section left section right
     // example with crossing
@@ -143,8 +146,8 @@ class AccumulatorSection {
     float line1_right_y = line1(xBegin() + xSize());
     float line2_left_y = line2(xBegin());
     float line2_right_y = line2(xBegin() + xSize());
-    float left_mid = 0.5 * (line1_left_y + line2_left_y);
-    float right_mid = 0.5 * (line1_right_y + line2_right_y);
+    float left_mid = 0.5f * (line1_left_y + line2_left_y);
+    float right_mid = 0.5f * (line1_right_y + line2_right_y);
     return (line1_left_y - left_mid) * (line1_right_y - right_mid) < 0;
   }
 
@@ -205,21 +208,21 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     float phiWrap =
-        0.1;  // wrap size around angle domain limits (min pT dependent)
-    float qOverPtMin = 0.9;  // min q/pt, -1/1 GeV
+        0.1f;  // wrap size around angle domain limits (min pT dependent)
+    float qOverPtMin = 0.9f;  // min q/pt, -1/1 GeV
 
-    float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the
-                                     // algorithm should not go beyond (in GeV)
-    float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm
-                                 // should not go beyond
-    float zRange = 200;          // range in z
-    float cotThetaRange = 10;    // range in cotTheta
+    float qOverPtMinBinSize = 0.01f;  // minimal size of pT bin that the
+                                      // algorithm should not go beyond (in GeV)
+    float phiMinBinSize = 0.01f;  // minimal size of phi bin that the algorithm
+                                  // should not go beyond
+    float zRange = 200;           // range in z
+    float cotThetaRange = 10;     // range in cotTheta
 
     float zMinBinSize =
         1;  // minimal size of z bin that the algorithm should
             // not go beyond when exploring zvertex-cot(theta) space space
-    float cotThetaMinBinSize = 0.1;  // minimal size of cot(theta) bin that
-                                     // the algorithm should not go beyond
+    float cotThetaMinBinSize = 0.1f;  // minimal size of cot(theta) bin that
+                                      // the algorithm should not go beyond
     unsigned threshold =
         4;  // number of lines passing section for it to be still considered
     unsigned noiseThreshold = 12;  // number of lines passing section at the
@@ -254,20 +257,20 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   template <typename M = PreprocessedMeasurement>
   struct AHTExplorationOptions {
-    float xMinBinSize = 1;  // minimum bin size in x direction, beyond that
-                            // value the sections are not split
-    float yMinBinSize = 1;  // minimum bin size in y direction, beyond that
-                            // value the sections are not split
-    float expandX = 1.1;    // expand in x direaction (default by 10%) if Expand
-                            // Decision is made
-    float expandY = 1.1;    // expand in y direaction (default by 10%) if Expand
-                            // Decision is made
+    float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
+                               // value the sections are not split
+    float yMinBinSize = 1.0f;  // minimum bin size in y direction, beyond that
+                               // value the sections are not split
+    float expandX = 1.1f;  // expand in x direaction (default by 10%) if Expand
+                           // Decision is made
+    float expandY = 1.1f;  // expand in y direaction (default by 10%) if Expand
+                           // Decision is made
     using LineParamFunctor = std::function<float(const M &, float arg)>;
     LineParamFunctor lineParamFunctor;  // pair of functions needed to obtain
                                         // linear function ax+b parameters,
                                         // first for a, second for b
 
-    enum Decision {
+    enum class Decision {
       Discard,  // the section is not to be explored further
       Accept,   // the section should be accepted as solution without further
                 // exploration
@@ -294,7 +297,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     for (unsigned index : section.indices()) {
       const PreprocessedMeasurement &m = measurements[index];
       using namespace std::placeholders;
-      if (section.isLineInside(std::bind(lineFunctor, m, _1))) {
+      if (section.isLineInside(std::bind_front(lineFunctor, m))) {
         selectedIndices.push_back(index);
       }
     }
@@ -316,8 +319,10 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                    << " - " << thisSection.xBegin() + thisSection.xSize() << " "
                    << thisSection.yBegin() << " - "
                    << thisSection.yBegin() + thisSection.ySize()
-                   << " nlines: " << thisSection.count() << " div: "
-                   << thisSection.divisionLevel() << " decision " << whatNext);
+                   << " nlines: " << thisSection.count()
+                   << " div: " << thisSection.divisionLevel() << " decision "
+                   << (whatNext == Decision::Discard ? "Discard"
+                                                     : "Drill, Accept"));
 
       if (whatNext == Decision::Discard) {
         sectionsStack.pop_back();
@@ -389,9 +394,25 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
+
+  /// @brief fill vector pf measurements from input space points
+  /// @param measurements - vector to fill
+  void preparePreprocessedMeasurements(
+      const AlgorithmContext &ctx,
+      std::vector<PreprocessedMeasurement> &measurements) const;
+
+  /// @brief split the measurements into sections in phi
+  /// The pT is not take into account. An overlap in phi is assured.
+  /// @param stack - sections stack to fill
+  /// @param measurements - measurements to fill the stack
+  void fillStackPhiSplit(
+      std::deque<AccumulatorSection> &stack,
+      const std::vector<PreprocessedMeasurement> &measurements) const;
+
   /// @brief process sections on the stack
   /// and qualifying them for further division, discarding them or moving to
   /// solutions vector
+  /// the search happens in q/pt - phi space
   /// @param sections is the stack of sectoins to consider
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
@@ -400,6 +421,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       std::deque<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
+  /// @brief process sections on the stack
+  /// and qualifying them for further division, discarding them or moving to
+  /// solutions vector
+  /// the search happens in q/pt - phi space
+  /// @param sections is the stack of sectoins to consider
+  /// @param solutions is the output set of sections
+  /// @param measurements are input measurements
   void processStackZCotTheta(
       std::deque<AccumulatorSection> &input,
       std::deque<AccumulatorSection> &output,
@@ -408,6 +436,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   void processStackZCotThetaSplit(
       std::deque<AccumulatorSection> &input,
       std::deque<AccumulatorSection> &output,
+      const std::vector<PreprocessedMeasurement> &measurements) const;
+
+  /// @brief produce 3 Sp seeds out of solutions
+  /// @param seeds output to fill
+  /// @param solutions is the input to be translated
+  /// @param measurements are input measurements
+  void makeSeeds(
+      SimSeedContainer &seeds, const std::deque<AccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =
