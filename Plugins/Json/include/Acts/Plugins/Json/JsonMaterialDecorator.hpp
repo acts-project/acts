@@ -29,6 +29,13 @@ namespace Acts {
 /// from a json file
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
+  using SurfaceMaterialMap
+      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
+          SurfaceMaterialMaps;
+  using VolumeMaterialMap
+      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
+          VolumeMaterialMaps;
+
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader
   /// @param jFileName the json file name to read
