@@ -19,87 +19,90 @@ namespace Acts {
 
 void RootSpacePointIo::connectForRead(
     TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::X)) {
+  using enum Experimental::SpacePointColumns;
+
+  if (spacePoints.hasColumns(X)) {
     tchain.SetBranchAddress("x", &m_x);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Y)) {
+  if (spacePoints.hasColumns(Y)) {
     tchain.SetBranchAddress("y", &m_y);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Z)) {
+  if (spacePoints.hasColumns(Z)) {
     tchain.SetBranchAddress("z", &m_z);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Time)) {
+  if (spacePoints.hasColumns(Time)) {
     tchain.SetBranchAddress("t", &m_t);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::R)) {
+  if (spacePoints.hasColumns(R)) {
     tchain.SetBranchAddress("r", &m_r);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::VarianceZ)) {
+  if (spacePoints.hasColumns(VarianceZ)) {
     tchain.SetBranchAddress("var_z", &m_varZ);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::VarianceR)) {
+  if (spacePoints.hasColumns(VarianceR)) {
     tchain.SetBranchAddress("var_r", &m_varR);
   }
 }
 
 void RootSpacePointIo::connectForWrite(
     TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::X)) {
+  using enum Experimental::SpacePointColumns;
+
+  if (spacePoints.hasColumns(X)) {
     ttree.Branch("x", &m_x);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Y)) {
+  if (spacePoints.hasColumns(Y)) {
     ttree.Branch("y", &m_y);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Z)) {
+  if (spacePoints.hasColumns(Z)) {
     ttree.Branch("z", &m_z);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::Time)) {
+  if (spacePoints.hasColumns(Time)) {
     ttree.Branch("t", &m_t);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::R)) {
+  if (spacePoints.hasColumns(R)) {
     ttree.Branch("r", &m_r);
   }
 
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::VarianceZ)) {
+  if (spacePoints.hasColumns(VarianceZ)) {
     ttree.Branch("var_z", &m_varZ);
   }
-  if (spacePoints.hasColumns(Experimental::SpacePointColumns::VarianceR)) {
+  if (spacePoints.hasColumns(VarianceR)) {
     ttree.Branch("var_r", &m_varR);
   }
 }
 
 void RootSpacePointIo::write(
     const Experimental::ConstSpacePointProxy2& spacePoint) {
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::X)) {
+  using enum Experimental::SpacePointColumns;
+
+  if (spacePoint.container().hasColumns(X)) {
     m_x = spacePoint.x();
   }
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::Y)) {
+  if (spacePoint.container().hasColumns(Y)) {
     m_y = spacePoint.y();
   }
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::Z)) {
+  if (spacePoint.container().hasColumns(Z)) {
     m_z = spacePoint.z();
   }
 
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::Time)) {
+  if (spacePoint.container().hasColumns(Time)) {
     m_t = spacePoint.time();
   }
 
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::R)) {
+  if (spacePoint.container().hasColumns(R)) {
     m_r = spacePoint.r();
   }
 
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::VarianceZ)) {
+  if (spacePoint.container().hasColumns(VarianceZ)) {
     m_varZ = spacePoint.varianceZ();
   }
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::VarianceR)) {
+  if (spacePoint.container().hasColumns(VarianceR)) {
     m_varR = spacePoint.varianceR();
   }
 }
@@ -116,36 +119,34 @@ void RootSpacePointIo::write(
 
 void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
                             SpacePointIndex2 index) {
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::SourceLinks)) {
+  using enum Experimental::SpacePointColumns;
+
+  if (spacePoint.container().hasColumns(SourceLinks)) {
     spacePoint.assignSourceLinks(std::array<SourceLink, 1>{SourceLink(index)});
   }
 
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::X)) {
+  if (spacePoint.container().hasColumns(X)) {
     spacePoint.x() = m_x;
   }
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::Y)) {
+  if (spacePoint.container().hasColumns(Y)) {
     spacePoint.y() = m_y;
   }
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::Z)) {
+  if (spacePoint.container().hasColumns(Z)) {
     spacePoint.z() = m_z;
   }
 
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::Time)) {
+  if (spacePoint.container().hasColumns(Time)) {
     spacePoint.time() = m_t;
   }
 
-  if (spacePoint.container().hasColumns(Experimental::SpacePointColumns::R)) {
+  if (spacePoint.container().hasColumns(R)) {
     spacePoint.r() = m_r;
   }
 
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::VarianceZ)) {
+  if (spacePoint.container().hasColumns(VarianceZ)) {
     spacePoint.varianceZ() = m_varZ;
   }
-  if (spacePoint.container().hasColumns(
-          Experimental::SpacePointColumns::VarianceR)) {
+  if (spacePoint.container().hasColumns(VarianceR)) {
     spacePoint.varianceR() = m_varR;
   }
 }
