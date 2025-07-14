@@ -165,7 +165,9 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     GMDBManager db{m_cfg.dbName};
     // check the DB connection
     if (!db.checkIsDBOpen()) {
-      THROW_EXCEPTION("It was not possible to open the DB correctly!");
+      throw std::runtime_error(
+          "GeoMuonMockupExperiment::constructMS() - It was not possible to "
+          "open the DB correctly!");
     }
     // init the GeoModel node action
     GeoModelIO::WriteGeoModel writeGeoDB{db};

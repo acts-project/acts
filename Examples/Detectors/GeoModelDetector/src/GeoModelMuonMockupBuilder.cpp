@@ -45,8 +45,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   cyl.setResizeStrategy(Acts::VolumeResizeStrategy::Gap);
 
   if (boundingBoxes.empty()) {
-    THROW_EXCEPTION(
-        "No converted bounding boxes in the configuration - provide volumes "
+    throw std::invalid_argument(
+        "GeoModelMuonMockupBuilder() -- No converted bounding boxes in the "
+        "configuration - provide volumes "
         "(e.g from the GeModelDetectorObjectFactory) ");
   }
 
@@ -86,7 +87,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     auto parent = box.fullPhysVol->getParent().get();
 
     if (parent == nullptr) {
-      THROW_EXCEPTION("No parent found for " << name);
+      throw std::domain_error("buildBarrelNode() No parent found for " + name);
     }
     commonStations[parent].push_back(box);
   }

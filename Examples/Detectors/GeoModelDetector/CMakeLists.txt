@@ -3,6 +3,7 @@ add_library(
     SHARED
     src/GeoModelDetector.cpp
     src/AlignedGeoModelDetectorElement.cpp
+    src/GeoModelMuonMockupBuilder.cpp
 )
 
 target_include_directories(
@@ -39,11 +40,6 @@ else()
         PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()
-
-target_sources(
-    ActsExamplesDetectorGeoModel
-    PUBLIC src/GeoModelMuonMockupBuilder.cpp
-)
 
 install(
     TARGETS ActsExamplesDetectorGeoModel
