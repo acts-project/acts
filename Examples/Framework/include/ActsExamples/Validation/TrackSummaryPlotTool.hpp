@@ -55,6 +55,18 @@ class TrackSummaryPlotTool {
     TProfile* nOutliers_vs_pt;
     /// Number of Shared Hits vs pt
     TProfile* nSharedHits_vs_pt;
+    /// Matching probability vs eta
+    TH2F* nHoles_vs_eta_2D;  
+    /// Number of measurements vs eta
+    TH2F* nMeasurements_vs_eta_2D;  
+    /// Number of outliers vs eta
+    TH2F* nOutliers_vs_eta_2D;  
+    /// Matching probability vs pt
+    TH2F* nHoles_vs_pt_2D;  
+    /// Number of measurements vs pt
+    TH2F* nMeasurements_vs_pt_2D;  
+    /// Number of outliers vs pt
+    TH2F* nOutliers_vs_pt_2D;  
   };
 
   /// Constructor
