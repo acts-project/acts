@@ -27,14 +27,18 @@ SpacePointContainer2::createSpacePoint() noexcept {
 
 inline MutableSpacePointProxy2 SpacePointContainer2::at(Index index) {
   if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
+    throw std::out_of_range(
+        "Index out of range in SpacePointContainer2: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
   }
   return MutableProxy(*this, index);
 }
 
 inline ConstSpacePointProxy2 SpacePointContainer2::at(Index index) const {
   if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
+    throw std::out_of_range(
+        "Index out of range in SpacePointContainer2: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
   }
   return ConstProxy(*this, index);
 }

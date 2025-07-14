@@ -63,7 +63,9 @@ class SpacePointColumnProxy {
   /// @throws std::out_of_range if the index is out of range.
   Reference at(Index index) const {
     if (index >= column().size()) {
-      throw std::out_of_range("Index out of range");
+      throw std::out_of_range("Index out of range in SpacePointContainer2: " +
+                              std::to_string(index) +
+                              " >= " + std::to_string(size()));
     }
     return data()[index];
   }
@@ -79,6 +81,8 @@ class SpacePointColumnProxy {
  private:
   Container *m_container{};
   Column *m_column{};
+
+  std::uint32_t size() const noexcept { return column().size(); }
 
   Column &column() const noexcept
     requires(!ReadOnly)
