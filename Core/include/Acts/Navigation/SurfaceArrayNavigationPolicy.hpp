@@ -78,7 +78,8 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   /// @return The surface array
   const SurfaceArray& surfaceArray() const;
 
-  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload() const override;
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& surfaceLookup) const override;
 
  private:
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
