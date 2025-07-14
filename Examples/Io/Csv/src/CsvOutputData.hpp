@@ -67,36 +67,36 @@ struct SimHitData {
 
 // Write out muon simhits before digitization
 struct MuonSegmentData {
-  /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
   int sectorId{0};
-  /** @brief  Position in the global coordinate system */
+  /// @brief Position in the global coordinate system
   float globalPositionX{0.f};
   float globalPositionY{0.f};
   float globalPositionZ{0.f};
-  /** @brief Segment direction in the global coordinate system */
+  /// @brief Segment direction in the global coordinate system
   float globalDirectionX{0.f};
   float globalDirectionY{0.f};
   float globalDirectionZ{0.f};
-  /** @brief Position in the local coordinate system */
+  /// @brief Position in the local coordinate system
   float localPositionX{0.f};
   float localPositionY{0.f};
   float localPositionZ{0.f};
-  /** @brief Segment direction in the local coordinate system  */
+  /// @brief Segment direction in the local coordinate system
   float localDirectionX{0.f};
   float localDirectionY{0.f};
   float localDirectionZ{0.f};
-  /** @brief Segment time & associated error */
+  /// @brief Segment time & associated error
   float time{0.f};
   float timeError{0.f};
-  /** @brief segment chi2 & number of degrees of freedom */
+  /// @brief segment chi2 & number of degrees of freedom
   float chiSquared{0.f};
   unsigned nDoF{0u};
 
-  /** @brief how many precision hits are on the segment (Straw tubes or Mm) */
+  /// @brief how many precision hits are on the segment (Straw tubes or Mm)
   unsigned precisionHits{0u};
-  /** @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc) */
+  /// @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc)
   unsigned phiLayers{0u};
-  /** @brief  Complementary hits in the bending direction (Rpc / Tgc) */
+  /// @brief  Complementary hits in the bending direction (Rpc / Tgc)
   unsigned trigEtaLayers{0u};
   DFE_NAMEDTUPLE(MuonSegmentData, sectorId, globalPositionX, globalPositionY,
                  globalPositionZ, globalDirectionX, globalDirectionY,
@@ -107,37 +107,37 @@ struct MuonSegmentData {
 };
 
 struct MuonSpacePointData {
-  /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
   int sectorId{0};
-  /** @brief Number of the associated bucket inside the container. A change of bucket Id
-   *         pushes the space point into a new bucket container */
+  /// @brief Number of the associated bucket inside the container. A change of bucket Id
+  ///         pushes the space point into a new bucket container
   int bucketId{0};
-  /** @brief Local position of the space point measurement */
+  /// @brief Local position of the space point measurement
   float locPositionX{0.f};
   float locPositionY{0.f};
   float locPositionZ{0.f};
-  /** @brief Direction of the sensor line */
+  /// @brief Direction of the sensor line
   float locSensorDirX{0.f};
   float locSensorDirY{0.f};
   float locSensorDirZ{0.f};
-  /** @brief Direction of the vector normal to the plane */
+  /// @brief Direction of the vector normal to the plane
   float locPlaneNormX{0.f};
   float locPlaneNormY{0.f};
   float locPlaneNormZ{0.f};
-  /** @brief Measurement covariance entries in the local x-y plane */
+  /// @brief Measurement covariance entries in the local x-y plane
   float covXX{0.f};
   float covXY{0.f};
   float covYX{0.f};
   float covYY{0.f};
-  /** @brief Drift radius */
+  /// @brief Drift radius
   float driftR{0.f};
-  /** @brief Associated gasGap type */
+  //// @brief Associated gasGap type
   unsigned short gasGap{0u};
-  /** @brief Primary measurement channel */
+  /// @brief Primary measurement channel
   unsigned short primaryCh{0u};
-  /** @brief Flag toggling whether the measurement is a precision one */
+  /// @brief Flag toggling whether the measurement is a precision one
   bool measuresEta{false};
-  /** @brief Flag togglign whether the measurement is a non-precision one */
+  /// @brief Flag togglign whether the measurement is a non-precision one
   bool measuresPhi{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
                  locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
