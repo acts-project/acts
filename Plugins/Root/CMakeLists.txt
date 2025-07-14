@@ -1,4 +1,5 @@
 set(library_sources
+    src/RootSpacePointIo.cpp
     src/RootMaterialTrackAccessor.cpp
     src/TGeoCylinderDiscSplitter.cpp
     src/TGeoDetectorElement.cpp
