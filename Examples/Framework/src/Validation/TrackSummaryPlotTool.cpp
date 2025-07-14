@@ -67,6 +67,30 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
   cache.nSharedHits_vs_pt =
       PlotHelpers::bookProf(addPrefix("nSharedHits_vs_pT").c_str(),
                             "Number of Shared Hits vs. pT", bPt, bNum);
+       // 2D histograms for holes vs eta
+  cache.nHoles_vs_eta_2D = PlotHelpers::bookHisto(
+      addPrefix("nHoles_vs_eta_2D").c_str(),
+      "Number of holes vs. #eta;#eta;Number of holes", bEta, bNum);
+  // 2D histograms for measurements vs eta
+  cache.nMeasurements_vs_eta_2D = PlotHelpers::bookHisto(
+      addPrefix("nMeasurements_vs_eta_2D").c_str(),
+      "Number of measurements vs. #eta;#eta;Number of measurements", bEta, bNum);
+  // 2D histograms for outliers vs eta
+  cache.nOutliers_vs_eta_2D = PlotHelpers::bookHisto(
+      addPrefix("nOutliers_vs_eta_2D").c_str(),
+      "Number of outliers vs. #eta;#eta;Number of outliers", bEta, bNum);
+  // 2D histograms for nHoles vs pt
+  cache.nHoles_vs_pt_2D = PlotHelpers::bookHisto(
+      addPrefix("nHoles_vs_pT_2D").c_str(),
+      "Number of holes vs. pT;pT;Number of holes", bPt, bNum);
+  // 2D histograms for nMeasurements vs pt
+  cache.nMeasurements_vs_pt_2D = PlotHelpers::bookHisto(
+      addPrefix("nMeasurements_vs_pT_2D").c_str(),
+      "Number of measurements vs. pT;pT;Number of measurements", bPt, bNum);
+  // 2D histograms for nOutliers vs pt
+  cache.nOutliers_vs_pt_2D = PlotHelpers::bookHisto(
+      addPrefix("nOutliers_vs_pT_2D").c_str(),
+      "Number of outliers vs. pT;pT;Number of outliers", bPt, bNum);
 }
 
 void TrackSummaryPlotTool::clear(Cache& cache) const {
@@ -80,6 +104,12 @@ void TrackSummaryPlotTool::clear(Cache& cache) const {
   delete cache.nOutliers_vs_pt;
   delete cache.nHoles_vs_pt;
   delete cache.nSharedHits_vs_pt;
+  delete cache.nHoles_vs_eta_2D;
+  delete cache.nMeasurements_vs_eta_2D;
+  delete cache.nOutliers_vs_eta_2D;
+  delete cache.nHoles_vs_pt_2D;
+  delete cache.nMeasurements_vs_pt_2D;
+  delete cache.nOutliers_vs_pt_2D;
 }
 
 void TrackSummaryPlotTool::write(const Cache& cache) const {
@@ -94,6 +124,12 @@ void TrackSummaryPlotTool::write(const Cache& cache) const {
   cache.nOutliers_vs_pt->Write();
   cache.nHoles_vs_pt->Write();
   cache.nSharedHits_vs_pt->Write();
+  cache.nHoles_vs_eta_2D->Write();
+  cache.nMeasurements_vs_eta_2D->Write();
+  cache.nOutliers_vs_eta_2D->Write();
+  cache.nHoles_vs_pt_2D->Write();
+  cache.nMeasurements_vs_pt_2D->Write();
+  cache.nOutliers_vs_pt_2D->Write();
 }
 
 void TrackSummaryPlotTool::fill(
@@ -117,6 +153,18 @@ void TrackSummaryPlotTool::fill(
   PlotHelpers::fillProf(cache.nOutliers_vs_pt, fit_pT, nOutliers);
   PlotHelpers::fillProf(cache.nHoles_vs_pt, fit_pT, nHoles);
   PlotHelpers::fillProf(cache.nSharedHits_vs_pt, fit_pT, nSharedHits);
+
+  PlotHelpers::fillHisto(cache.nHoles_vs_eta_2D, fit_eta,
+                         nHoles);
+  PlotHelpers::fillHisto(cache.nMeasurements_vs_eta_2D,
+                         fit_eta, nMeasurements);
+  PlotHelpers::fillHisto(cache.nOutliers_vs_eta_2D, fit_eta,
+                         nOutliers);
+  PlotHelpers::fillHisto(cache.nHoles_vs_pt_2D, fit_pT, nHoles);
+  PlotHelpers::fillHisto(cache.nMeasurements_vs_pt_2D,
+                         fit_pT, nMeasurements);
+  PlotHelpers::fillHisto(cache.nOutliers_vs_pt_2D, fit_pT,
+                         nOutliers);
 }
 
 }  // namespace ActsExamples

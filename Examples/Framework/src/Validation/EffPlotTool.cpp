@@ -43,7 +43,7 @@ void EffPlotTool::book(Cache& cache) const {
   // efficiency vs z0
   cache.trackEff_vs_z0 = PlotHelpers::bookEff(
       "trackeff_vs_z0", "Tracking efficiency;Truth z_0 [mm];Efficiency", bZ0);
-  // efficiancy vs distance to the closest truth particle
+  // efficiency vs distance to the closest truth particle
   cache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
       "trackeff_vs_DeltaR",
       "Tracking efficiency;Closest track #Delta R;Efficiency", bDeltaR);
