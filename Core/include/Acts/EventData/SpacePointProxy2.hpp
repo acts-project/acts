@@ -185,7 +185,7 @@ class SpacePointProxy2 {
   /// @param column The extra column proxy to access.
   /// @return A mutable reference to the value in the extra column for the space point.
   template <typename T>
-  T &extra(const MutableSpacePointColumnProxy<T> &column) const noexcept {
+  T &extra(MutableSpacePointColumnProxy<T> &column) const noexcept {
     return column[m_index];
   }
 
