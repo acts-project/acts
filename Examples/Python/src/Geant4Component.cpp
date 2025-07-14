@@ -136,10 +136,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
               const std::shared_ptr<const TrackingGeometry>& tGeometry) {
              // Set a new surface finder
              Config ccfg = cfg;
-             auto candidateSurfaces =
-                 std::make_shared<Geant4::SensitiveCandidates>();
-             candidateSurfaces->trackingGeometry = tGeometry;
-             ccfg.candidateSurfaces = candidateSurfaces;
+             ccfg.candidateSurfaces =
+                 std::make_shared<Geant4::SensitiveCandidates>(
+                     tGeometry, getDefaultLogger("SensitiveCandidates", level));
              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
