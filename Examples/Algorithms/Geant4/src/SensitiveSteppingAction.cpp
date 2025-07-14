@@ -14,6 +14,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -53,31 +54,19 @@ BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
 namespace {
 
 std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
-  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
-  static constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
-
   const G4StepPoint* preStepPoint = step->GetPreStepPoint();
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
+  using namespace ActsExamples::Geant4;
+  Acts::Vector4 preStepPosition = convertPosition(
+      preStepPoint->GetPosition(), preStepPoint->GetGlobalTime());
 
-  Acts::Vector4 preStepPosition(convertLength * preStepPoint->GetPosition().x(),
-                                convertLength * preStepPoint->GetPosition().y(),
-                                convertLength * preStepPoint->GetPosition().z(),
-                                convertTime * preStepPoint->GetGlobalTime());
-  Acts::Vector4 preStepMomentum(convertEnergy * preStepPoint->GetMomentum().x(),
-                                convertEnergy * preStepPoint->GetMomentum().y(),
-                                convertEnergy * preStepPoint->GetMomentum().z(),
-                                convertEnergy * preStepPoint->GetTotalEnergy());
-  Acts::Vector4 postStepPosition(
-      convertLength * postStepPoint->GetPosition().x(),
-      convertLength * postStepPoint->GetPosition().y(),
-      convertLength * postStepPoint->GetPosition().z(),
-      convertTime * postStepPoint->GetGlobalTime());
-  Acts::Vector4 postStepMomentum(
-      convertEnergy * postStepPoint->GetMomentum().x(),
-      convertEnergy * postStepPoint->GetMomentum().y(),
-      convertEnergy * postStepPoint->GetMomentum().z(),
-      convertEnergy * postStepPoint->GetTotalEnergy());
+  Acts::Vector4 preStepMomentum = convertMomentum(
+      preStepPoint->GetMomentum(), preStepPoint->GetTotalEnergy());
+  Acts::Vector4 postStepPosition = convertPosition(
+      postStepPoint->GetPosition(), postStepPoint->GetGlobalTime());
+
+  Acts::Vector4 postStepMomentum = convertMomentum(
+      postStepPoint->GetMomentum(), postStepPoint->GetTotalEnergy());
 
   return {preStepPosition, preStepMomentum, postStepPosition, postStepMomentum};
 }
@@ -165,39 +154,28 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   const G4VTouchable* touchable = track->GetTouchable();
 
   Acts::GeometryIdentifier geoId{};
-
-  // Find the range of candidate surfaces for the current position in the
-  // mapping multimap
-  auto [bsf, esf] = m_surfaceMapping.equal_range(volume);
-  std::size_t nSurfaces = std::distance(bsf, esf);
-
-  ACTS_VERBOSE("Found " << nSurfaces << " candidate surfaces for volume "
-                        << volumeName);
-
   const Acts::Surface* surface = nullptr;
-  if (nSurfaces == 0 && !m_cfg.stepLogging) {
+
+  // Find the range of candidate surfaces for the current position in the map
+  const auto surfaceMap_itr = m_surfaceMapping.find(volume);
+  if (surfaceMap_itr != m_surfaceMapping.end()) {
+    const auto& surfacesToG4Vol = surfaceMap_itr->second;
+    ACTS_VERBOSE("Found " << surfacesToG4Vol.size()
+                          << " candidate surfaces for volume " << volumeName);
+    const Acts::Vector3 volumePos =
+        convertPosition(touchable->GetTranslation());
+    const auto lookUp_itr = surfacesToG4Vol.find(volumePos);
+    if (lookUp_itr == surfacesToG4Vol.end() && !m_cfg.stepLogging) {
+      ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
+      return;
+    }
+    surface = lookUp_itr->second;
+    geoId = surface->geometryId();
+    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
+  } else if (!m_cfg.stepLogging) {
     ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
     return;
-  } else if (nSurfaces == 1u) {
-    geoId = bsf->second->geometryId();
-    ACTS_VERBOSE("Unique assignment successful -> to surface " << geoId);
-  } else {
-    // Find the closest surface to the current position
-    Acts::GeometryContext gctx;
-    for (; bsf != esf; ++bsf) {
-      surface = bsf->second;
-      const G4ThreeVector& translation = touchable->GetTranslation();
-      Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
-                                     convertLength * translation.y(),
-                                     convertLength * translation.z());
-      if (surface->center(gctx).isApprox(g4VolumePosition)) {
-        geoId = surface->geometryId();
-        break;
-      }
-    }
-    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
   }
-
   // This is not the case if we have a particle-ID collision
   if (!eventStore().trackIdMapping.contains(track->GetTrackID())) {
     return;
@@ -210,18 +188,13 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   } else if (m_cfg.stepLogging) {
     if (!eventStore().propagationRecords.contains(track->GetTrackID())) {
       // Create the propagation summary
-      double xVtx = track->GetVertexPosition().x() * convertLength;
-      double yVtx = track->GetVertexPosition().y() * convertLength;
-      double zVtx = track->GetVertexPosition().z() * convertLength;
-      double xDirVtx = track->GetVertexMomentumDirection().x();
-      double yDirVtx = track->GetVertexMomentumDirection().y();
-      double zDirVtx = track->GetVertexMomentumDirection().z();
       double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
       PropagationSummary iSummary(Acts::BoundTrackParameters::createCurvilinear(
-          Acts::Vector4(xVtx, yVtx, zVtx, 0.),
-          Acts::Vector3(xDirVtx, yDirVtx, zDirVtx), absCharge / absMomentum,
-          std::nullopt, Acts::ParticleHypothesis::pion()));
+          convertPosition(track->GetVertexPosition(), 0.),
+          convertDirection(track->GetVertexMomentumDirection()),
+          absCharge / absMomentum, std::nullopt,
+          Acts::ParticleHypothesis::pion()));
 
       eventStore().propagationRecords.insert({track->GetTrackID(), iSummary});
     }
