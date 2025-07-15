@@ -746,7 +746,7 @@ class SpacePointContainer2 {
       return lhs.m_index - rhs.m_index;
     }
 
-    friend constexpr bool operator<=>(const Iterator &a,
+    friend constexpr auto operator<=>(const Iterator &a,
                                       const Iterator &b) noexcept {
       return a.m_index <=> b.m_index;
     }
@@ -919,7 +919,7 @@ class SpacePointContainer2 {
         return lhs.m_iterator - rhs.m_iterator;
       }
 
-      friend constexpr bool operator<=>(const Iterator &a,
+      friend constexpr auto operator<=>(const Iterator &a,
                                         const Iterator &b) noexcept {
         return a.m_iterator <=> b.m_iterator;
       }
