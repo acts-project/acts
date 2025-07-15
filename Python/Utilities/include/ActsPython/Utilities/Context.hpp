@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <tuple>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 
 #include <pybind11/pybind11.h>
@@ -21,11 +21,11 @@ struct Context {
   std::unordered_map<std::string, pybind11::module_> modules;
 
   /// @brief Retrieve a module by name
-  /// @param name the name of the module you retrive
+  /// @param name the name of the module you retrieve
   /// @return a reference to the module
   pybind11::module_& get(const std::string& name) { return modules.at(name); }
 
-  /// @brief Retrieve multiple moudles
+  /// @brief Retrieve multiple modules
   /// @tparam ...Args parameter pack of module names
   /// @param ...args
   /// @return

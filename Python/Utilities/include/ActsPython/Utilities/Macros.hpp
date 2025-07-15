@@ -11,7 +11,6 @@
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
 
-
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
 
@@ -70,7 +69,7 @@
             .def_property_readonly("config", &Writer::config);              \
                                                                             \
     constexpr bool has_write_method =                                       \
-        ActsPython::Concepts::has_write_method<Writer>;                           \
+        ActsPython::Concepts::has_write_method<Writer>;                     \
                                                                             \
     if constexpr (has_write_method) {                                       \
       w.def("write", &Writer::write);                                       \

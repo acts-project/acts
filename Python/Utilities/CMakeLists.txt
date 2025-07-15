@@ -1,7 +1,4 @@
-add_library(
-    ActsPythonUtilities
-    INTERFACE
-)
+add_library(ActsPythonUtilities INTERFACE)
 
 target_include_directories(
     ActsPythonUtilities

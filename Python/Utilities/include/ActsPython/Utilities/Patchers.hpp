@@ -37,4 +37,4 @@ void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::*begin,
       });
 }
 
-} // namespace ActsPython
+}  // namespace ActsPython
