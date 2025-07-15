@@ -20,6 +20,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
 #include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 

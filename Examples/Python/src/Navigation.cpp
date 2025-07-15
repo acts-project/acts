@@ -105,7 +105,7 @@ class NavigationPolicyFactory : public Acts::NavigationPolicyFactory {
   // arguments
   NavigationPolicyFactory& addNoArguments(const py::object& cls) {
     auto m = py::module_::import("acts");
-    if (py::object o = m.attr("Acts::TryAllNavigationPolicy"); cls.is(o)) {
+    if (py::object o = m.attr("TryAllNavigationPolicy"); cls.is(o)) {
       m_impl = m_impl->add(Acts::Type<Acts::TryAllNavigationPolicy>);
     }
     // Add other policies here
@@ -176,8 +176,8 @@ void addNavigation(Context& ctx) {
       m, "_NavigationPolicyFactory");
 
   {
-    auto tryAll = py::class_<Acts::TryAllNavigationPolicy>(
-        m, "Acts::TryAllNavigationPolicy");
+    auto tryAll =
+        py::class_<Acts::TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
     using Config = Acts::TryAllNavigationPolicy::Config;
     auto c = py::class_<Config>(tryAll, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, portals, sensitives);
@@ -213,7 +213,7 @@ void addNavigation(Context& ctx) {
 
   {
     auto saPolicy = py::class_<Acts::SurfaceArrayNavigationPolicy>(
-        m, "Acts::SurfaceArrayNavigationPolicy");
+        m, "SurfaceArrayNavigationPolicy");
 
     using LayerType = Acts::SurfaceArrayNavigationPolicy::LayerType;
     py::enum_<LayerType>(saPolicy, "LayerType")
