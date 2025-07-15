@@ -13,7 +13,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
-#include <optional>
 #include <span>
 
 #include <Eigen/Core>

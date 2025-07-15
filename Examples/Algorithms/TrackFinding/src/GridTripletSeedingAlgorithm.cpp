@@ -125,7 +125,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::CylindricalSpacePointGrid2 grid(
       m_gridConfig, logger().cloneWithSuffix("Grid"));
 
-  grid.fill(coreSpacePoints);
+  grid.extend(Acts::Experimental::SpacePointContainer2::ConstRange(
+      coreSpacePoints.range({0, coreSpacePoints.size()})));
+  grid.sortBinsByR(coreSpacePoints);
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies

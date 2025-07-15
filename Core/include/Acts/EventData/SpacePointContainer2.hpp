@@ -686,13 +686,20 @@ class SpacePointContainer2 {
   class Range {
    public:
     static constexpr bool ReadOnly = read_only;
-    using ContainerType = const_if_t<ReadOnly, SpacePointContainer2>;
+    using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
     using iterator = Iterator<read_only>;
     using const_iterator = Iterator<true>;
 
-    Range(ContainerType &container, const IndexRangeType &range) noexcept
+    Range(Container &container, const IndexRangeType &range) noexcept
         : m_container(&container), m_range(range) {}
+    explicit Range(const Range<false> &other) noexcept
+      requires(ReadOnly)
+        : m_container(&other.container()), m_range(other.range()) {}
+    Range(const Range &other) noexcept = default;
+
+    Container &container() const noexcept { return *m_container; }
+    const IndexRangeType &range() const noexcept { return m_range; }
 
     std::size_t size() const noexcept { return m_range.second - m_range.first; }
     bool empty() const noexcept { return size() == 0; }
@@ -712,7 +719,7 @@ class SpacePointContainer2 {
     }
 
    private:
-    ContainerType *m_container{};
+    Container *m_container{};
     IndexRangeType m_range{};
   };
   using MutableRange = Range<false>;
