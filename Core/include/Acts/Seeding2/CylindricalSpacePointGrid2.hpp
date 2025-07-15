@@ -30,12 +30,14 @@ class CylindricalSpacePointGrid2 {
   /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
   using BinType = std::vector<SpacePointIndex>;
-  /// Cylindrical space point bin is a 2D (phi,z) grid. It stores a vector of
-  /// space point indices.
-  using GridType =
-      Grid<BinType, Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
-           Axis<AxisType::Variable, AxisBoundaryType::Open>,
-           Axis<AxisType::Variable, AxisBoundaryType::Open>>;
+  using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  /// Cylindrical space point grid type, which is a grid over `BinType` with
+  /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
+  /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
+  /// z-coordinate, and radial distance (r).
+  using GridType = Grid<BinType, PhiAxisType, ZAxisType, RAxisType>;
   using BinnedGroupType = BinnedGroup<GridType>;
 
   struct Config {

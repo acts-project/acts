@@ -105,7 +105,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     phiBins = std::min(phiBins, m_cfg.maxPhiBins);
   }
 
-  Axis phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
+  PhiAxisType phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<double> zValues{};
@@ -142,8 +142,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
                    m_cfg.rBinEdges.end());
   }
 
-  Axis zAxis(AxisOpen, std::move(zValues));
-  Axis rAxis(AxisOpen, std::move(rValues));
+  ZAxisType zAxis(AxisOpen, std::move(zValues));
+  RAxisType rAxis(AxisOpen, std::move(rValues));
 
   ACTS_VERBOSE("Defining Grid:");
   ACTS_VERBOSE("- Phi Axis: " << phiAxis);
