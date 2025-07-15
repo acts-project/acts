@@ -115,7 +115,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     }
 
     float phi = std::atan2(sp.y(), sp.x());
-    grid.insert(i, phi, sp.r(), sp.z());
+    grid.insert(i, phi, sp.z(), sp.r());
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
