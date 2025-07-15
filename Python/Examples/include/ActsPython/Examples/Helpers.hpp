@@ -11,12 +11,10 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-namespace ActsPython {
-namespace Concepts {
+namespace ActsPython::Concepts {
 template <typename T>
 concept has_write_method =
     requires(T& t, const ActsExamples::AlgorithmContext& ctx) {
       { t.write(ctx) } -> std::same_as<ActsExamples::ProcessCode>;
     };
-}  // namespace Concepts
-}  // namespace ActsPython
+}  // namespace ActsPython::Concepts

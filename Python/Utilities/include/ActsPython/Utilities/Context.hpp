@@ -18,7 +18,9 @@ namespace ActsPython {
 
 /// A Context class that holds the Python modules used in ACTS
 struct Context {
-  std::unordered_map<std::string, pybind11::module_> modules;
+  std::unordered_map<std::string, pybind11::module_,
+                     std::hash<std::string_view>, std::equal_to<>>
+      modules;
 
   /// @brief Retrieve a module by name
   /// @param name the name of the module you retrieve
