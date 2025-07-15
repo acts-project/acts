@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 
 class TChain;
 class TTree;
@@ -49,7 +50,9 @@ class RootSpacePointIo {
   /// @note the caller has to do the TChain::GetEntry() before this call
   ///
   /// @param spacePoint the space point to read into
-  void read(Experimental::MutableSpacePointProxy2& spacePoint);
+  /// @param index the original index of the space point in the ROOT file
+  void read(Experimental::MutableSpacePointProxy2& spacePoint,
+            SpacePointIndex2 index);
 
   /// @brief Read the space points from the tree
   ///
@@ -58,8 +61,6 @@ class RootSpacePointIo {
   void read(TChain& tchain, Experimental::SpacePointContainer2& spacePoints);
 
  private:
-  std::uint32_t m_index = 0;
-
   float m_x = 0;
   float m_y = 0;
   float m_z = 0;
