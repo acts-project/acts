@@ -22,9 +22,9 @@ namespace Acts::Experimental {
 
 /// A cylindrical space point grid used for seeding in a cylindrical detector
 /// geometry.
-/// The grid is defined in cylindrical coordinates (phi, r, z) and allows for
-/// efficient access to space points based on their azimuthal angle, radial
-/// distance, and z-coordinate.
+/// The grid is defined in cylindrical coordinates (phi, z, r) and allows for
+/// efficient access to space points based on their azimuthal angle,
+/// z-coordinate, and radial distance.
 class CylindricalSpacePointGrid2 {
  public:
   /// Space point index type used in the grid.
@@ -102,7 +102,7 @@ class CylindricalSpacePointGrid2 {
 
   /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.
-  /// @param position The position of the space point in (phi, r, z) coordinates
+  /// @param position The position of the space point in (phi, z, r) coordinates
   /// @return The index of the bin in which the space point is located, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> binIndex(const Vector3& position) const {
@@ -114,19 +114,19 @@ class CylindricalSpacePointGrid2 {
   /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.
   /// @param phi The azimuthal angle of the space point in radians
-  /// @param r The radial distance of the space point from the origin
   /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
   /// @return The index of the bin in which the space point is located, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> binIndex(float phi, float r, float z) const {
-    return binIndex(Vector3(phi, r, z));
+  std::optional<std::size_t> binIndex(float phi, float z, float r) const {
+    return binIndex(Vector3(phi, z, r));
   }
 
   /// Insert a space point into the grid.
   /// @param index The index of the space point to insert
   /// @param phi The azimuthal angle of the space point in radians
-  /// @param r The radial distance of the space point from the origin
   /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(SpacePointIndex index, float phi, float r,
@@ -136,7 +136,7 @@ class CylindricalSpacePointGrid2 {
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(const ConstSpacePointProxy2& sp) {
-    return insert(sp.index(), sp.phi(), sp.r(), sp.z());
+    return insert(sp.index(), sp.phi(), sp.z(), sp.r());
   }
 
   /// Fill the grid with space points from the container.
