@@ -114,13 +114,7 @@ struct ProxyAccessorBase {
   /// @return true if the column exists, false otherwise
   template <detail::ProxyType proxy_t>
   bool hasColumn(proxy_t proxy) const {
-    if constexpr (proxy_t::ReadOnly) {
-      return proxy.container().hasColumn(key);
-    } else {
-      using const_proxy_t = typename proxy_t::ConstProxyType;
-      const_proxy_t cproxy{proxy};
-      return cproxy.container().hasColumn(key);
-    }
+    return proxy.container().hasColumn(key);
   }
 };
 
