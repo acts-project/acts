@@ -26,9 +26,9 @@ void addOnnxNeuralCalibrator(Context &ctx) {
       "makeNeuralCalibrator",
       [](const char *modelPath, std::size_t nComp,
          std::vector<std::size_t> volumeIds)
-          -> std::shared_ptr<Acts::MeasurementCalibrator> {
-        return std::make_shared<Acts::NeuralCalibrator>(modelPath, nComp,
-                                                        volumeIds);
+          -> std::shared_ptr<ActsExamples::MeasurementCalibrator> {
+        return std::make_shared<ActsExamples::NeuralCalibrator>(
+            modelPath, nComp, volumeIds);
       },
       py::arg("modelPath"), py::arg("nComp") = 1,
       py::arg("volumeIds") = std::vector<std::size_t>({7, 8, 9}));
