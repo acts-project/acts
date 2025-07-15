@@ -20,15 +20,24 @@
 
 namespace Acts::Experimental {
 
+/// A cylindrical space point grid used for seeding in a cylindrical detector
+/// geometry.
+/// The grid is defined in cylindrical coordinates (phi, z, r) and allows for
+/// efficient access to space points based on their azimuthal angle,
+/// z-coordinate, and radial distance.
 class CylindricalSpacePointGrid2 {
  public:
-  /// Cylindrical Space Point bin is a 2D (phi,z) grid. It stores a vector of
-  /// space point indices.
-  using GridType = Grid<std::vector<SpacePointIndex2>,
-                        Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
-                        Axis<AxisType::Variable, AxisBoundaryType::Open>,
-                        Axis<AxisType::Variable, AxisBoundaryType::Open>>;
-  /// Cylindrical Binned Group
+  /// Space point index type used in the grid.
+  using SpacePointIndex = std::uint32_t;
+  using BinType = std::vector<SpacePointIndex>;
+  using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  /// Cylindrical space point grid type, which is a grid over `BinType` with
+  /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
+  /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
+  /// z-coordinate, and radial distance (r).
+  using GridType = Grid<BinType, PhiAxisType, ZAxisType, RAxisType>;
   using BinnedGroupType = BinnedGroup<GridType>;
 
   struct Config {
@@ -80,31 +89,100 @@ class CylindricalSpacePointGrid2 {
     std::array<std::vector<std::size_t>, 3ul> navigation;
   };
 
+  /// Construct a cylindrical space point grid with the given configuration and
+  /// an optional logger.
   explicit CylindricalSpacePointGrid2(
       const Config& config,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalSpacePointGrid2", Logging::Level::INFO));
 
+  /// Clear the grid and drop all state. The object will behave like a newly
+  /// constructed one.
   void clear();
 
-  void insert(const ConstSpacePointProxy2& sp);
+  /// Get the bin index for a space point given its azimuthal angle, radial
+  /// distance, and z-coordinate.
+  /// @param position The position of the space point in (phi, z, r) coordinates
+  /// @return The index of the bin in which the space point is located, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
+  std::optional<std::size_t> binIndex(const Vector3& position) const {
+    if (!grid().isInside(position)) {
+      return std::nullopt;
+    }
+    return grid().globalBinFromPosition(position);
+  }
+  /// Get the bin index for a space point given its azimuthal angle, radial
+  /// distance, and z-coordinate.
+  /// @param phi The azimuthal angle of the space point in radians
+  /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
+  /// @return The index of the bin in which the space point is located, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
+  std::optional<std::size_t> binIndex(float phi, float z, float r) const {
+    return binIndex(Vector3(phi, z, r));
+  }
 
+  /// Insert a space point into the grid.
+  /// @param index The index of the space point to insert
+  /// @param phi The azimuthal angle of the space point in radians
+  /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
+  /// @return The index of the bin in which the space point was inserted, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
+  std::optional<std::size_t> insert(SpacePointIndex index, float phi, float r,
+                                    float z);
+  /// Insert a space point into the grid.
+  /// @param sp The space point to insert
+  /// @return The index of the bin in which the space point was inserted, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
+  std::optional<std::size_t> insert(const ConstSpacePointProxy2& sp) {
+    return insert(sp.index(), sp.phi(), sp.z(), sp.r());
+  }
+
+  /// Fill the grid with space points from the container.
+  /// @param spacePoints The space point container to fill the grid with
   void extend(const SpacePointContainer2::ConstRange& spacePoints);
 
-  void fill(const SpacePointContainer2& spacePoints);
+  /// Sort the bins in the grid by the space point radius, which is required by
+  /// some algorithms that operate on the grid.
+  /// @param spacePoints The space point container to sort the bins by radius
+  void sortBinsByR(const SpacePointContainer2& spacePoints);
 
-  void sort(const SpacePointContainer2& spacePoints);
-
+  /// Compute the range of radii in the grid. This requires the grid to be
+  /// filled with space points and sorted by radius. The sorting can be done
+  /// with the `sortBinsByR` method.
+  /// @param spacePoints The space point container to compute the radius range
+  /// @return The range of radii in the grid
   Range1D<float> computeRadiusRange(
       const SpacePointContainer2& spacePoints) const;
 
-  auto& at(std::size_t index) { return grid().at(index); }
-  const auto& at(std::size_t index) const { return grid().at(index); }
+  /// Mutable bin access by index.
+  /// @param index The index of the bin to access
+  /// @return Mutable reference to the bin at the specified index
+  BinType& at(std::size_t index) { return grid().at(index); }
+  /// Const bin access by index.
+  /// @param index The index of the bin to access
+  /// @return Const reference to the bin at the specified index
+  const BinType& at(std::size_t index) const { return grid().at(index); }
 
+  /// Mutable grid access.
+  /// @return Mutable reference to the grid
   GridType& grid() { return *m_grid; }
+  /// Const grid access.
+  /// @return Const reference to the grid
   const GridType& grid() const { return *m_grid; }
 
+  /// Access to the binned group.
+  /// @return Reference to the binned group
   const BinnedGroupType& binnedGroup() const { return *m_binnedGroup; }
+
+  /// Get the number of space points in the grid.
+  /// @return The number of space points in the grid
+  std::size_t spacePointCount() const { return m_counter; }
+
+  /// Get the number of bins in the grid.
+  /// @return The number of bins in the grid
+  std::size_t numberOfBins() const { return grid().size(); }
 
  private:
   Config m_cfg;
