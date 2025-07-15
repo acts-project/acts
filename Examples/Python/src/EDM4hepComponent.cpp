@@ -17,6 +17,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 #include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>

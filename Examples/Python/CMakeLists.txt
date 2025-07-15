@@ -172,10 +172,10 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     target_link_libraries(
         ActsPythonBindingsGeant4
         PUBLIC
-            ActsExamplesGeant4
-            ActsExamplesDetectorGeant4
             ActsPythonUtilities
             ActsPythonExamples
+            ActsExamplesGeant4
+            ActsExamplesDetectorGeant4
             ActsExamplesMuonSpectrometerMockupDetector
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
@@ -210,7 +210,7 @@ if(ACTS_BUILD_EXAMPLES_EDM4HEP)
     pybind11_add_module(ActsPythonBindingsEDM4hep src/EDM4hepComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsEDM4hep
-        PUBLIC ActsPythonExamples ActsExamplesIoEDM4hep
+        PUBLIC ActsPythonUtilities ActsPythonExamples ActsExamplesIoEDM4hep
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsEDM4hep)
     install(
@@ -231,7 +231,7 @@ if(ACTS_BUILD_EXAMPLES_PODIO)
     pybind11_add_module(ActsPythonBindingsPodio src/PodioComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsPodio
-        PUBLIC ActsPythonExamples ActsExamplesIoPodio
+        PUBLIC ActsPythonUtilities ActsPythonExamples ActsExamplesIoPodio
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsPodio)
     install(TARGETS ActsPythonBindingsPodio DESTINATION ${_python_install_dir})
