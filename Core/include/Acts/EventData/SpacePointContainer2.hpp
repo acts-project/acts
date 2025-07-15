@@ -712,6 +712,13 @@ class SpacePointContainer2 {
 
     Range(Container &container, const IndexRange &range) noexcept
         : m_container(&container), m_range(range) {}
+    explicit Range(const Range<false> &other) noexcept
+      requires(ReadOnly)
+        : m_container(&other.container()), m_range(other.range()) {}
+    Range(const Range &other) noexcept = default;
+
+    Container &container() const noexcept { return *m_container; }
+    const IndexRange &range() const noexcept { return m_range; }
 
     std::size_t size() const noexcept { return m_range.second - m_range.first; }
     bool empty() const noexcept { return size() == 0; }
