@@ -10,6 +10,8 @@
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
 #include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <memory>
 

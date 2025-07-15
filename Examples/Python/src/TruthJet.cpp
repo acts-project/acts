@@ -9,6 +9,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 #include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
 #include <memory>
