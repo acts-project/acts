@@ -107,6 +107,21 @@ struct ProxyAccessorBase {
       return cproxy.template component<T>(key);
     }
   }
+
+  /// Check if the stored key exists on the proxy given as an argument
+  /// @tparam proxy_t the type of the proxy
+  /// @param proxy the proxy object to check
+  /// @return true if the column exists, false otherwise
+  template <detail::ProxyType proxy_t>
+  bool hasColumn(proxy_t proxy) const {
+    if constexpr (proxy_t::ReadOnly) {
+      return proxy.container().hasColumn(key);
+    } else {
+      using const_proxy_t = typename proxy_t::ConstProxyType;
+      const_proxy_t cproxy{proxy};
+      return cproxy.container().hasColumn(key);
+    }
+  }
 };
 
 template <typename T>
