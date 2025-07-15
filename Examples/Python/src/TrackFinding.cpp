@@ -195,9 +195,9 @@ void addTrackFinding(Context& ctx) {
       phiMinBinSize, threshold, noiseThreshold, deduplicate, inverseA,
       doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize, zMinBinSize);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inTruthSegments,
-                                inSpacePoints, outHoughMax);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments,
+      inSpacePoints, outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
