@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -27,6 +26,10 @@
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
+#include "ActsPython/Examples/Helpers.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <memory>
 #include <string>
@@ -73,7 +76,7 @@ void register_csv_bfield_writer_binding(
 }
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -89,7 +92,7 @@ void addOutput(Context& ctx) {
                              nInterpolatedPoints, keepOriginalHits);
 
   {
-    auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
+    auto c = py::class_<Acts::ViewConfig>(m, "ViewConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness,
                        surfaceThickness, quarterSegments, triangulate,
@@ -97,17 +100,17 @@ void addOutput(Context& ctx) {
 
     patchKwargsConstructor(c);
 
-    py::class_<Color>(m, "Color")
+    py::class_<Acts::Color>(m, "Color")
         .def(py::init<>())
         .def(py::init<int, int, int>())
         .def(py::init<double, double, double>())
         .def(py::init<std::string_view>())
-        .def_readonly("rgb", &Color::rgb);
+        .def_readonly("rgb", &Acts::Color::rgb);
   }
 
-  py::class_<IVisualization3D>(m, "IVisualization3D")
+  py::class_<Acts::IVisualization3D>(m, "IVisualization3D")
       .def("write", py::overload_cast<const std::filesystem::path&>(
-                        &IVisualization3D::write, py::const_));
+                        &Acts::IVisualization3D::write, py::const_));
 
   {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
@@ -198,4 +201,4 @@ void addOutput(Context& ctx) {
       mex, "ITrackParamsLookupWriter");
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

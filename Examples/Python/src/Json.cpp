@@ -14,13 +14,14 @@
 #include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
 #include <initializer_list>
@@ -52,7 +53,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addJson(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
@@ -264,4 +265,4 @@ void addJson(Context& ctx) {
             });
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

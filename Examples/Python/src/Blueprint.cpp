@@ -19,9 +19,10 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
 #include <random>
@@ -37,19 +38,20 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 namespace {
 using std::uniform_real_distribution;
 
 // This is temporary!
-void pseudoNavigation(const TrackingGeometry& trackingGeometry,
-                      const GeometryContext& gctx, std::filesystem::path& path,
-                      std::size_t runs, std::size_t substepsPerCm,
+void pseudoNavigation(const Acts::TrackingGeometry& trackingGeometry,
+                      const Acts::GeometryContext& gctx,
+                      std::filesystem::path& path, std::size_t runs,
+                      std::size_t substepsPerCm,
                       std::pair<double, double> etaRange,
-                      Logging::Level logLevel) {
+                      Acts::Logging::Level logLevel) {
   using namespace Acts::UnitLiterals;
 
-  ACTS_LOCAL_LOGGER(getDefaultLogger("pseudoNavigation", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("pseudoNavigation", logLevel));
 
   std::ofstream csv{path};
   csv << "x,y,z,volume,boundary,sensitive,material" << std::endl;
@@ -66,12 +68,12 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   using namespace Acts::UnitLiterals;
 
   for (std::size_t run = 0; run < runs; run++) {
-    Vector3 position = Vector3::Zero();
+    Acts::Vector3 position = Acts::Vector3::Zero();
 
     double theta = thetaDist(rnd);
     double phi = 2 * std::numbers::pi * dist(rnd);
 
-    Vector3 direction;
+    Acts::Vector3 direction;
     direction[0] = std::sin(theta) * std::cos(phi);
     direction[1] = std::sin(theta) * std::sin(phi);
     direction[2] = std::cos(theta);
@@ -87,8 +89,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     assert(volume != nullptr);
     ACTS_VERBOSE(volume->volumeName());
 
-    NavigationStream main;
-    const TrackingVolume* currentVolume = volume;
+    Acts::NavigationStream main;
+    const Acts::TrackingVolume* currentVolume = volume;
 
     csv << run << "," << position[0] << "," << position[1] << ","
         << position[2];
@@ -100,7 +102,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     ACTS_VERBOSE("start pseudo navigation");
 
-    auto writeIntersection = [&](const Vector3& pos, const Surface& surface) {
+    auto writeIntersection = [&](const Acts::Vector3& pos,
+                                 const Acts::Surface& surface) {
       csv << run << "," << pos[0] << "," << pos[1] << "," << pos[2];
       csv << "," << surface.geometryId().volume();
       csv << "," << surface.geometryId().boundary();
@@ -111,9 +114,9 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     for (std::size_t i = 0; i < 100; i++) {
       assert(currentVolume != nullptr);
-      main = NavigationStream{};
+      main = Acts::NavigationStream{};
 
-      AppendOnlyNavigationStream navStream{main};
+      Acts::AppendOnlyNavigationStream navStream{main};
       currentVolume->initializeNavigationCandidates(
           {.position = position, .direction = direction}, navStream, logger());
 
@@ -125,7 +128,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       }
 
       ACTS_VERBOSE("initializing candidates");
-      main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
+      main.initialize(gctx, {position, direction},
+                      Acts::BoundaryTolerance::None());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates remaining");
 
@@ -154,17 +158,17 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         ACTS_VERBOSE(candidate.portal);
         ACTS_VERBOSE(candidate.intersection.position().transpose());
 
-        ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
-                                            << VectorHelpers::perp(position)
-                                            << ")");
+        ACTS_VERBOSE("moving to position: "
+                     << position.transpose()
+                     << " (r=" << Acts::VectorHelpers::perp(position) << ")");
 
-        Vector3 delta = candidate.intersection.position() - position;
+        Acts::Vector3 delta = candidate.intersection.position() - position;
 
         std::size_t substeps =
             std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
 
         for (std::size_t j = 0; j < substeps; j++) {
-          Vector3 subpos = position + subStepDist(rng) * delta;
+          Acts::Vector3 subpos = position + subStepDist(rng) * delta;
           csv << run << "," << subpos[0] << "," << subpos[1] << ","
               << subpos[2];
           csv << "," << currentVolume->geometryId().volume();
@@ -175,7 +179,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         position = candidate.intersection.position();
         ACTS_VERBOSE("                 -> "
                      << position.transpose()
-                     << " (r=" << VectorHelpers::perp(position) << ")");
+                     << " (r=" << Acts::VectorHelpers::perp(position) << ")");
 
         writeIntersection(position, candidate.surface());
 
@@ -241,13 +245,13 @@ void addBlueprint(Context& ctx) {
       .def(
           "construct",
           [](Blueprint& self, const BlueprintOptions& options,
-             const GeometryContext& gctx,
-             Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
+             const Acts::GeometryContext& gctx, Acts::Logging::Level level)
+              -> std::shared_ptr<Acts::TrackingGeometry> {
             return self.construct(options, gctx,
-                                  *getDefaultLogger("Blueprint", level));
+                                  *Acts::getDefaultLogger("Blueprint", level));
           },
           py::arg("options"), py::arg("gctx"),
-          py::arg("level") = Logging::INFO);
+          py::arg("level") = Acts::Logging::INFO);
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
@@ -320,8 +324,8 @@ void addBlueprint(Context& ctx) {
   auto staticNode =
       py::class_<StaticBlueprintNode, BlueprintNode,
                  std::shared_ptr<StaticBlueprintNode>>(m, "StaticBlueprintNode")
-          .def(py::init([](const Transform3& transform,
-                           const std::shared_ptr<VolumeBounds>& bounds,
+          .def(py::init([](const Acts::Transform3& transform,
+                           const std::shared_ptr<Acts::VolumeBounds>& bounds,
                            const std::string& name) {
                  return std::make_shared<StaticBlueprintNode>(
                      std::make_unique<Acts::TrackingVolume>(transform, bounds,
@@ -337,10 +341,11 @@ void addBlueprint(Context& ctx) {
 
   addNodeMethods(
       {"StaticVolume", "addStaticVolume"},
-      [](BlueprintNode& self, const Transform3& transform,
-         const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
+      [](BlueprintNode& self, const Acts::Transform3& transform,
+         const std::shared_ptr<Acts::VolumeBounds>& bounds,
+         const std::string& name) {
         auto node = std::make_shared<StaticBlueprintNode>(
-            std::make_unique<TrackingVolume>(transform, bounds, name));
+            std::make_unique<Acts::TrackingVolume>(transform, bounds, name));
         self.addChild(node);
         return node;
       },
@@ -350,18 +355,21 @@ void addBlueprint(Context& ctx) {
       py::class_<CylinderContainerBlueprintNode, BlueprintNode,
                  std::shared_ptr<CylinderContainerBlueprintNode>>(
           m, "CylinderContainerBlueprintNode")
-          .def(py::init<const std::string&, AxisDirection,
-                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
+          .def(py::init<const std::string&, Acts::AxisDirection,
+                        Acts::VolumeAttachmentStrategy,
+                        Acts::VolumeResizeStrategy>(),
                py::arg("name"), py::arg("direction"),
-               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
-               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
+               py::arg("attachmentStrategy") =
+                   Acts::VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = Acts::VolumeResizeStrategy::Gap)
           .def_property("attachmentStrategy",
                         &CylinderContainerBlueprintNode::attachmentStrategy,
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
           .def_property("resizeStrategies",
                         &CylinderContainerBlueprintNode::resizeStrategies,
                         [](CylinderContainerBlueprintNode& self,
-                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                           std::pair<Acts::VolumeResizeStrategy,
+                                     Acts::VolumeResizeStrategy>
                                strategies) {
                           self.setResizeStrategies(strategies.first,
                                                    strategies.second);
@@ -374,7 +382,7 @@ void addBlueprint(Context& ctx) {
   addNodeMethods(
       {"CylinderContainer", "addCylinderContainer"},
       [](BlueprintNode& self, const std::string& name,
-         AxisDirection direction) {
+         Acts::AxisDirection direction) {
         auto cylinder =
             std::make_shared<CylinderContainerBlueprintNode>(name, direction);
         self.addChild(cylinder);
@@ -386,11 +394,13 @@ void addBlueprint(Context& ctx) {
       py::class_<CuboidContainerBlueprintNode, BlueprintNode,
                  std::shared_ptr<CuboidContainerBlueprintNode>>(
           m, "CuboidContainerBlueprintNode")
-          .def(py::init<const std::string&, AxisDirection,
-                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
+          .def(py::init<const std::string&, Acts::AxisDirection,
+                        Acts::VolumeAttachmentStrategy,
+                        Acts::VolumeResizeStrategy>(),
                py::arg("name"), py::arg("direction"),
-               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
-               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
+               py::arg("attachmentStrategy") =
+                   Acts::VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = Acts::VolumeResizeStrategy::Gap)
           .def_property("attachmentStrategy",
                         &CuboidContainerBlueprintNode::attachmentStrategy,
                         &CuboidContainerBlueprintNode::setAttachmentStrategy)
@@ -405,7 +415,7 @@ void addBlueprint(Context& ctx) {
   addNodeMethods(
       {"CuboidContainer", "addCuboidContainer"},
       [](BlueprintNode& self, const std::string& name,
-         AxisDirection direction) {
+         Acts::AxisDirection direction) {
         auto cylinder =
             std::make_shared<CuboidContainerBlueprintNode>(name, direction);
         self.addChild(cylinder);
@@ -418,15 +428,15 @@ void addBlueprint(Context& ctx) {
                      m, "MaterialDesignatorBlueprintNode")
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
-                          py::overload_cast<CylinderVolumeBounds::Face,
-                                            const DirectedProtoAxis&,
-                                            const DirectedProtoAxis&>(
+                          py::overload_cast<Acts::CylinderVolumeBounds::Face,
+                                            const Acts::DirectedProtoAxis&,
+                                            const Acts::DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
-                          py::overload_cast<CuboidVolumeBounds::Face,
-                                            const DirectedProtoAxis&,
-                                            const DirectedProtoAxis&>(
+                          py::overload_cast<Acts::CuboidVolumeBounds::Face,
+                                            const Acts::DirectedProtoAxis&,
+                                            const Acts::DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 
@@ -496,10 +506,10 @@ void addBlueprint(Context& ctx) {
                   throw std::invalid_argument(
                       "sortBy requires a comparison function");
                 }
-                return self.sortBy(
-                    [func](const TrackingVolume& a, const TrackingVolume& b) {
-                      return func(&a, &b).cast<bool>();
-                    });
+                return self.sortBy([func](const Acts::TrackingVolume& a,
+                                          const Acts::TrackingVolume& b) {
+                  return func(&a, &b).cast<bool>();
+                });
               },
               py::arg("compare"));
 
@@ -516,7 +526,8 @@ void addBlueprint(Context& ctx) {
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
         "path"_a, "runs"_a, "substepsPerCm"_a = 2,
-        "etaRange"_a = std::pair{-4.5, 4.5}, "logLevel"_a = Logging::INFO);
+        "etaRange"_a = std::pair{-4.5, 4.5},
+        "logLevel"_a = Acts::Logging::INFO);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

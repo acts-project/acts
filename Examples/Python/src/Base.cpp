@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <array>
 #include <exception>
@@ -32,7 +32,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addContext(Context& ctx) {
   auto& m = ctx.get("main");
@@ -114,10 +114,10 @@ class PythonLogger {
 
  private:
   std::string m_name;
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-void addLogging(Acts::Python::Context& ctx) {
+void addLogging(ActsPython::Context& ctx) {
   auto& m = ctx.get("main");
   auto logging = m.def_submodule("logging", "");
 
@@ -159,7 +159,7 @@ void addLogging(Acts::Python::Context& ctx) {
         };
   };
 
-  py::class_<Logger>(m, "Logger");
+  py::class_<Acts::Logger>(m, "Logger");
 
   auto logger =
       py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(logging, "Logger")
@@ -207,15 +207,15 @@ void addLogging(Acts::Python::Context& ctx) {
     };
   };
 
-  logging.def("setFailureThreshold", &Logging::setFailureThreshold);
-  logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+  logging.def("setFailureThreshold", &Acts::Logging::setFailureThreshold);
+  logging.def("getFailureThreshold", &Acts::Logging::getFailureThreshold);
 
   struct ScopedFailureThresholdContextManager {
-    std::optional<Logging::ScopedFailureThreshold> m_scopedFailureThreshold =
-        std::nullopt;
-    Logging::Level m_level;
+    std::optional<Acts::Logging::ScopedFailureThreshold>
+        m_scopedFailureThreshold = std::nullopt;
+    Acts::Logging::Level m_level;
 
-    explicit ScopedFailureThresholdContextManager(Logging::Level level)
+    explicit ScopedFailureThresholdContextManager(Acts::Logging::Level level)
         : m_level(level) {}
 
     void enter() { m_scopedFailureThreshold.emplace(m_level); }
@@ -228,11 +228,11 @@ void addLogging(Acts::Python::Context& ctx) {
 
   py::class_<ScopedFailureThresholdContextManager>(logging,
                                                    "ScopedFailureThreshold")
-      .def(py::init<Logging::Level>(), "level"_a)
+      .def(py::init<Acts::Logging::Level>(), "level"_a)
       .def("__enter__", &ScopedFailureThresholdContextManager::enter)
       .def("__exit__", &ScopedFailureThresholdContextManager::exit);
 
-  static py::exception<Logging::ThresholdFailure> exc(
+  static py::exception<Acts::Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
   py::register_exception_translator([](std::exception_ptr p) {
@@ -258,7 +258,7 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def("fatal", makeModuleLogFunction(Acts::Logging::FATAL));
 }
 
-void addPdgParticle(Acts::Python::Context& ctx) {
+void addPdgParticle(ActsPython::Context& ctx) {
   auto& m = ctx.get("main");
   py::enum_<Acts::PdgParticle>(m, "PdgParticle")
       .value("eInvalid", Acts::PdgParticle::eInvalid)
@@ -282,7 +282,7 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eLead", Acts::PdgParticle::eLead);
 }
 
-void addAlgebra(Acts::Python::Context& ctx) {
+void addAlgebra(ActsPython::Context& ctx) {
   auto& m = ctx.get("main");
 
   py::class_<Acts::Vector2>(m, "Vector2")
@@ -307,9 +307,12 @@ void addAlgebra(Acts::Python::Context& ctx) {
         v << a[0], a[1], a[2];
         return v;
       }))
-      .def_static("UnitX", []() -> Vector3 { return Acts::Vector3::UnitX(); })
-      .def_static("UnitY", []() -> Vector3 { return Acts::Vector3::UnitY(); })
-      .def_static("UnitZ", []() -> Vector3 { return Acts::Vector3::UnitZ(); })
+      .def_static("UnitX",
+                  []() -> Acts::Vector3 { return Acts::Vector3::UnitX(); })
+      .def_static("UnitY",
+                  []() -> Acts::Vector3 { return Acts::Vector3::UnitY(); })
+      .def_static("UnitZ",
+                  []() -> Acts::Vector3 { return Acts::Vector3::UnitZ(); })
 
       .def("__getitem__",
            [](const Acts::Vector3& self, Eigen::Index i) { return self[i]; })
@@ -331,11 +334,11 @@ void addAlgebra(Acts::Python::Context& ctx) {
 
   py::class_<Acts::Transform3>(m, "Transform3")
       .def(py::init<>())
-      .def(py::init([](const Vector3& translation) -> Transform3 {
-        return Transform3{Translation3{translation}};
+      .def(py::init([](const Acts::Vector3& translation) -> Acts::Transform3 {
+        return Acts::Transform3{Acts::Translation3{translation}};
       }))
       .def_property_readonly("translation",
-                             [](const Acts::Transform3& self) -> Vector3 {
+                             [](const Acts::Transform3& self) -> Acts::Vector3 {
                                return self.translation();
                              })
       .def_static("Identity", &Acts::Transform3::Identity)
@@ -404,4 +407,4 @@ void addBinning(Context& ctx) {
                       .value("variable", Acts::AxisType::Variable);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

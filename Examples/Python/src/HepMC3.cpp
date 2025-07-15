@@ -6,12 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3OutputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
+#include "ActsPython/Examples/Helpers.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -22,7 +24,7 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addHepMC3(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
@@ -65,4 +67,4 @@ void addHepMC3(Context& ctx) {
   hepmc3.def("compressionExtension",
              &ActsExamples::HepMC3Util::compressionExtension);
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

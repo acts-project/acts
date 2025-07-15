@@ -11,10 +11,12 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <memory>
 #include <utility>
@@ -27,7 +29,7 @@
 
 namespace py = pybind11;
 using namespace ActsExamples;
-using namespace Acts::Python;
+using namespace ActsPython;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {

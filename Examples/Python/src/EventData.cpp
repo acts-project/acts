@@ -8,7 +8,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <type_traits>
 
@@ -19,7 +19,7 @@ namespace py = pybind11;
 
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addEventData(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -80,4 +80,4 @@ void addEventData(Context& ctx) {
           });
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

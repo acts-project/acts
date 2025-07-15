@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -16,6 +15,8 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -23,7 +24,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 using namespace ActsExamples;
-using namespace Acts::Python;
+using namespace ActsPython;
 
 namespace {
 #if defined(__clang__)
@@ -96,7 +97,7 @@ void trigger_invalid() {
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addFramework(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
@@ -275,4 +276,4 @@ void addFramework(Context& ctx) {
       .def_readwrite("seed", &RandomNumbers::Config::seed);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

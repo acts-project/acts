@@ -15,11 +15,11 @@
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <memory>
 
@@ -54,7 +54,7 @@ using namespace ActsExamples;
 using namespace Acts;
 using namespace py::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addExaTrkXTrackFinding(Context &ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -227,4 +227,4 @@ void addExaTrkXTrackFinding(Context &ctx) {
       measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

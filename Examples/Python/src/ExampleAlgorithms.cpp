@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
@@ -15,6 +14,9 @@
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <vector>
 
@@ -23,10 +25,11 @@
 
 namespace py = pybind11;
 
+using namespace ActsPython;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addExampleAlgorithms(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -110,4 +113,4 @@ void addExampleAlgorithms(Context& ctx) {
     }
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

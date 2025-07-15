@@ -1,6 +1,3 @@
-add_library(ActsPythonUtilities INTERFACE)
-target_include_directories(ActsPythonUtilities INTERFACE include)
-
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
@@ -49,6 +46,7 @@ target_link_libraries(
     PUBLIC
         ActsCore
         ActsPythonUtilities
+        ActsPythonExamples
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
@@ -143,7 +141,7 @@ if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
     pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsDD4hep
-        PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep
+        PUBLIC ActsPythonUtilities ActsPythonExamples ActsExamplesDetectorDD4hep
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
 
@@ -177,6 +175,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
             ActsExamplesGeant4
             ActsExamplesDetectorGeant4
             ActsPythonUtilities
+            ActsPythonExamples
             ActsExamplesMuonSpectrometerMockupDetector
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
@@ -211,7 +210,7 @@ if(ACTS_BUILD_EXAMPLES_EDM4HEP)
     pybind11_add_module(ActsPythonBindingsEDM4hep src/EDM4hepComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsEDM4hep
-        PUBLIC ActsPythonUtilities ActsExamplesIoEDM4hep
+        PUBLIC ActsPythonExamples ActsExamplesIoEDM4hep
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsEDM4hep)
     install(
@@ -232,7 +231,7 @@ if(ACTS_BUILD_EXAMPLES_PODIO)
     pybind11_add_module(ActsPythonBindingsPodio src/PodioComponent.cpp)
     target_link_libraries(
         ActsPythonBindingsPodio
-        PUBLIC ActsPythonUtilities ActsExamplesIoPodio
+        PUBLIC ActsPythonExamples ActsExamplesIoPodio
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsPodio)
     install(TARGETS ActsPythonBindingsPodio DESTINATION ${_python_install_dir})

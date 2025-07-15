@@ -23,7 +23,6 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -33,6 +32,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 #include <actsvg/core/draw.hpp>
 
 #include <algorithm>
@@ -201,7 +202,7 @@ std::vector<actsvg::svg::object> drawDetector(
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addSvg(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
@@ -449,4 +450,4 @@ void addSvg(Context& ctx) {
       py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
       py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

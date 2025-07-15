@@ -7,13 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -29,7 +30,7 @@ class IReader;
 
 namespace py = pybind11;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addGenerators(Context& ctx) {
   auto mex = ctx.get("examples");
@@ -231,4 +232,4 @@ void addGenerators(Context& ctx) {
       .def_readwrite("mean", &ActsExamples::PoissonMultiplicityGenerator::mean);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

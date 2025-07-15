@@ -22,7 +22,6 @@
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -30,6 +29,9 @@
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <string>
 
@@ -41,16 +43,16 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
   auto gm = m.def_submodule("geomodel");
 
-  py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
+  py::class_<Acts::GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
       .def(py::init<>())
-      .def("get", &GeoModelTree::FpvConstLink::get,
+      .def("get", &Acts::GeoModelTree::FpvConstLink::get,
            py::return_value_policy::reference);
 
   py::class_<Acts::GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
@@ -142,7 +144,7 @@ void addGeoModel(Context& ctx) {
                    const std::string& name, Acts::Logging::Level level) {
                   return std::make_shared<
                       ActsExamples::GeoMuonMockupExperiment>(
-                      config, getDefaultLogger(name, level));
+                      config, Acts::getDefaultLogger(name, level));
                 }))
             .def("constructMS",
                  &ActsExamples::GeoMuonMockupExperiment::constructMS);
@@ -252,7 +254,7 @@ void addGeoModel(Context& ctx) {
   gm.def(
       "splitBarrelModule",
       [](const Acts::GeometryContext& gctx,
-         std::shared_ptr<const GeoModelDetectorElement> detElement,
+         std::shared_ptr<const Acts::GeoModelDetectorElement> detElement,
          unsigned nSegments, Acts::Logging::Level logLevel) {
         auto logger = Acts::getDefaultLogger("ITkSlitBarrel", logLevel);
         auto name = detElement->databaseEntryName();
@@ -273,7 +275,7 @@ void addGeoModel(Context& ctx) {
   gm.def(
       "splitDiscModule",
       [](const Acts::GeometryContext& gctx,
-         std::shared_ptr<const GeoModelDetectorElement> detElement,
+         std::shared_ptr<const Acts::GeoModelDetectorElement> detElement,
          const std::vector<std::pair<double, double>>& patterns,
          Acts::Logging::Level logLevel) {
         auto logger = Acts::getDefaultLogger("ITkSlitBarrel", logLevel);
@@ -298,7 +300,8 @@ void addGeoModel(Context& ctx) {
       .def("surface", [](Acts::GeoModelDetectorElementITk& self) {
         return self.surface().getSharedPtr();
       });
-  gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
+  gm.def("convertToItk",
+         &Acts::GeoModelDetectorElementITk::convertFromGeomodel);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

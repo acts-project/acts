@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
@@ -27,6 +26,9 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
+#include "ActsPython/Examples/Helpers.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -48,7 +50,7 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addRootOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -157,7 +159,7 @@ void addRootOutput(Context& ctx) {
                  .def("write", py::overload_cast<const Acts::TrackingGeometry&>(
                                    &Writer::write));
 
-    auto ac = py::class_<RootMaterialMapIo::Config>(w, "AccessorConfig")
+    auto ac = py::class_<Acts::RootMaterialMapIo::Config>(w, "AccessorConfig")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ac, volumePrefix, portalPrefix, layerPrefix,
@@ -167,7 +169,7 @@ void addRootOutput(Context& ctx) {
                        x0HistName, l0HistName, aHistName, zHistName,
                        rhoHistName);
 
-    auto ao = py::class_<RootMaterialMapIo::Options>(w, "AccessorOptions")
+    auto ao = py::class_<Acts::RootMaterialMapIo::Options>(w, "AccessorOptions")
                   .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(ao, homogeneousMaterialTreeName, indexedMaterialTreeName,
@@ -227,4 +229,4 @@ void addRootOutput(Context& ctx) {
       nSimulatedEvents);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

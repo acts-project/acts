@@ -9,7 +9,8 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <string>
@@ -26,7 +27,7 @@ using namespace Acts;
 using namespace detray;
 using namespace detray::io::detail;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addDetray(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -65,4 +66,4 @@ void addDetray(Context& ctx) {
                        writeToJson);
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

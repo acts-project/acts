@@ -620,6 +620,9 @@ if(ACTS_BUILD_ODD)
     endif()
 endif()
 
+# python bindings
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 
