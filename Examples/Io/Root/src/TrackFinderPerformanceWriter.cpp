@@ -205,13 +205,13 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 track.nTrackStates(), track.nMeasurements(),
                                 track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+                                track.nSharedHits(), track.nChangedMeasurements());
 
     // Potentially fill other track summary caches for the given volumes
     for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
       ACTS_VERBOSE("Fill track summary stats for subset " << key);
       std::size_t nTrackStates{}, nMeasurements{}, nOutliers{}, nHoles{},
-          nSharedHits{};
+          nSharedHits{}, nChangedMeasurements{};
       for (auto state : track.trackStatesReversed()) {
         if (!state.hasReferenceSurface() ||
             !volumes.contains(state.referenceSurface().geometryId().volume())) {
@@ -232,7 +232,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       }
       m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
                                   fittedParameters, nTrackStates, nMeasurements,
-                                  nOutliers, nHoles, nSharedHits);
+                                  nOutliers, nHoles, nSharedHits, nChangedMeasurements);
     }
 
     // Get the truth matching information

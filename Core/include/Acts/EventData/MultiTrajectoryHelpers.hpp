@@ -28,6 +28,8 @@ struct TrajectoryState {
   std::size_t nMeasurements = 0;
   std::size_t nOutliers = 0;
   std::size_t nHoles = 0;
+  std::size_t nSharedHits = 0;
+  std::ptrdiff_t nChangedMeasurements = 0;
   double chi2Sum = 0;
   std::vector<double> measurementChi2 = {};
   std::vector<double> outlierChi2 = {};
@@ -36,7 +38,6 @@ struct TrajectoryState {
   std::vector<unsigned int> measurementLayer = {};
   std::vector<unsigned int> outlierVolume = {};
   std::vector<unsigned int> outlierLayer = {};
-  std::size_t nSharedHits = 0;
 };
 
 // Container for trajectory summary info at a specific volume

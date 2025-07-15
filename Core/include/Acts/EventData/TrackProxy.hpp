@@ -416,6 +416,22 @@ class TrackProxy {
     return component<unsigned int, hashString("nSharedHits")>();
   }
 
+  /// Return the number of changed measurements for the track.
+  /// Mutable version
+  /// @note Only available if the track proxy is not read-only
+  /// @return The number of changed measurements
+  signed int& nChangedMeasurements()
+    requires(!ReadOnly)
+  {
+    return component<signed int, hashString("nChangedMeasurements")>();
+  }
+
+  /// Return the number of changed measurements for the track. Const version
+  /// @return The number of changed measurements
+  signed int nChangedMeasurements() const {
+    return component<signed int, hashString("nChangedMeasurements")>();
+  }
+
   /// Return a mutable reference to the chi squared
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
@@ -627,6 +643,7 @@ class TrackProxy {
     nHoles() = other.nHoles();
     nOutliers() = other.nOutliers();
     nSharedHits() = other.nSharedHits();
+    nChangedMeasurements() = other.nChangedMeasurements();
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 

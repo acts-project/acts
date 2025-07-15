@@ -242,6 +242,8 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
         nMeasurementDecrease++;
         removedMeasurements += protoTracks.at(i).size() - track.nMeasurements();
       }
+      track.nChangedMeasurements() = track.nMeasurements() -
+                                     protoTracks.at(i).size();
       if (track.nMeasurements() < protoTracks.at(i).size()) {
         for (auto mid : protoTracks.at(i)) {
           auto geoId = measurements.getMeasurement(mid).geometryId();

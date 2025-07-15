@@ -23,6 +23,7 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
+  PlotHelpers::Binning bpmNum = m_cfg.varBinning.at("pmNum");
   ACTS_DEBUG("Initialize the histograms for track info plots, use prefix '"
              << prefix << "'");
   auto addPrefix = [&](const std::string& name) {
@@ -79,6 +80,11 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
   cache.nOutliers_vs_eta_2D = PlotHelpers::bookHisto(
       addPrefix("nOutliers_vs_eta_2D").c_str(),
       "Number of outliers vs. #eta;#eta;Number of outliers", bEta, bNum);
+  // 2D histograms for Changed Measurements vs eta
+  cache.nChangedMeasurements_vs_eta_2D = PlotHelpers::bookHisto(
+      addPrefix("nChangedMeasurements_vs_eta_2D").c_str(),
+      "Number of Changed Measurements vs. #eta;#eta;Number of Changed Measurements",
+      bEta, bpmNum);
   // 2D histograms for nHoles vs pt
   cache.nHoles_vs_pt_2D = PlotHelpers::bookHisto(
       addPrefix("nHoles_vs_pT_2D").c_str(),
@@ -91,6 +97,12 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
   cache.nOutliers_vs_pt_2D = PlotHelpers::bookHisto(
       addPrefix("nOutliers_vs_pT_2D").c_str(),
       "Number of outliers vs. pT;pT;Number of outliers", bPt, bNum);
+  // 2D histograms for Changed Measurements vs pt
+  cache.nChangedMeasurements_vs_pt_2D = PlotHelpers::bookHisto(
+      addPrefix("nChangedMeasurements_vs_pT_2D").c_str(),
+      "Number of Changed Measurements vs. pT;pT;Number of Changed Measurements",
+      bPt, bpmNum);
+
 }
 
 void TrackSummaryPlotTool::clear(Cache& cache) const {
@@ -107,9 +119,11 @@ void TrackSummaryPlotTool::clear(Cache& cache) const {
   delete cache.nHoles_vs_eta_2D;
   delete cache.nMeasurements_vs_eta_2D;
   delete cache.nOutliers_vs_eta_2D;
+  delete cache.nChangedMeasurements_vs_eta_2D;
   delete cache.nHoles_vs_pt_2D;
   delete cache.nMeasurements_vs_pt_2D;
   delete cache.nOutliers_vs_pt_2D;
+  delete cache.nChangedMeasurements_vs_pt_2D;
 }
 
 void TrackSummaryPlotTool::write(const Cache& cache) const {
@@ -127,15 +141,17 @@ void TrackSummaryPlotTool::write(const Cache& cache) const {
   cache.nHoles_vs_eta_2D->Write();
   cache.nMeasurements_vs_eta_2D->Write();
   cache.nOutliers_vs_eta_2D->Write();
+  cache.nChangedMeasurements_vs_eta_2D->Write();
   cache.nHoles_vs_pt_2D->Write();
   cache.nMeasurements_vs_pt_2D->Write();
   cache.nOutliers_vs_pt_2D->Write();
+  cache.nChangedMeasurements_vs_pt_2D->Write();
 }
 
 void TrackSummaryPlotTool::fill(
     Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
     std::size_t nStates, std::size_t nMeasurements, std::size_t nOutliers,
-    std::size_t nHoles, std::size_t nSharedHits) const {
+    std::size_t nHoles, std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto momentum = fittedParameters.momentum();
@@ -160,11 +176,16 @@ void TrackSummaryPlotTool::fill(
                          fit_eta, nMeasurements);
   PlotHelpers::fillHisto(cache.nOutliers_vs_eta_2D, fit_eta,
                          nOutliers);
+  PlotHelpers::fillHisto(cache.nChangedMeasurements_vs_eta_2D,
+                         fit_eta, nChangedMeasurements);
   PlotHelpers::fillHisto(cache.nHoles_vs_pt_2D, fit_pT, nHoles);
   PlotHelpers::fillHisto(cache.nMeasurements_vs_pt_2D,
                          fit_pT, nMeasurements);
   PlotHelpers::fillHisto(cache.nOutliers_vs_pt_2D, fit_pT,
                          nOutliers);
+  PlotHelpers::fillHisto(cache.nChangedMeasurements_vs_pt_2D,
+                         fit_pT, nChangedMeasurements);
+
 }
 
 }  // namespace ActsExamples

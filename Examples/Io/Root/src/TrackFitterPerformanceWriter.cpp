@@ -156,7 +156,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 track.nTrackStates(), track.nMeasurements(),
                                 track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
+                                track.nSharedHits(), track.nChangedMeasurements());
   }
 
   if (missingParameters > 0) {

@@ -92,6 +92,8 @@ class VectorTrackContainerBase {
         return &instance.m_nOutliers[itrack];
       case "nSharedHits"_hash:
         return &instance.m_nSharedHits[itrack];
+      case "nChangedMeasurements"_hash:
+        return &instance.m_nChangedMeasurements[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -133,6 +135,8 @@ class VectorTrackContainerBase {
     result = result && m_nOutliers.size() == size;
     assert(result);
     result = result && m_nSharedHits.size() == size;
+    assert(result);
+    result = result && m_nChangedMeasurements.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
       (void)key;
@@ -184,6 +188,7 @@ class VectorTrackContainerBase {
   std::vector<unsigned int> m_ndf;
   std::vector<unsigned int> m_nOutliers;
   std::vector<unsigned int> m_nSharedHits;
+  std::vector<signed int> m_nChangedMeasurements;
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;

@@ -30,7 +30,8 @@ class TrackSummaryPlotTool {
         {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
         {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
         {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning("N", 30, -0.5, 29.5)}};
+        {"Num", PlotHelpers::Binning("N", 30, -0.5, 29.5)},
+        {"pmNum", PlotHelpers::Binning("N", 60, -30, 30)}};
   };
 
   /// @brief Nested Cache struct
@@ -61,12 +62,16 @@ class TrackSummaryPlotTool {
     TH2F* nMeasurements_vs_eta_2D;  
     /// Number of outliers vs eta
     TH2F* nOutliers_vs_eta_2D;  
+    /// Number of Changed Measurements vs eta
+    TH2F* nChangedMeasurements_vs_eta_2D;
     /// Matching probability vs pt
     TH2F* nHoles_vs_pt_2D;  
     /// Number of measurements vs pt
     TH2F* nMeasurements_vs_pt_2D;  
     /// Number of outliers vs pt
-    TH2F* nOutliers_vs_pt_2D;  
+    TH2F* nOutliers_vs_pt_2D;
+    /// Number of Changed Measurements vs pt
+    TH2F* nChangedMeasurements_vs_pt_2D;
   };
 
   /// Constructor
@@ -89,10 +94,12 @@ class TrackSummaryPlotTool {
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
+  /// @param nSharedHits number of shared hits
+  /// @param nChangedMeasurements number of changed measurements
   void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             std::size_t nStates, std::size_t nMeasurements,
-            std::size_t Outliers, std::size_t nHoles,
-            std::size_t nSharedHits) const;
+            std::size_t nOutliers, std::size_t nHoles,
+            std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements) const;
 
   /// @brief write the track info plots to file
   ///

@@ -389,6 +389,7 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nMeasurements() = 0;
   track.nSharedHits() = 0;
   track.nOutliers() = 0;
+  track.nChangedMeasurements() = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
     ConstTrackStateType typeFlags = trackState.typeFlags();
