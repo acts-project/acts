@@ -36,23 +36,8 @@ constexpr T pow(T x, P p) {
       p = -p;
     }
   }
-  switch (p) {
-    case 0:
-      return one;
-    case 1:
-      return x;
-    case 2:
-      return x * x;
-    case 3:
-      return x * x * x;
-    case 4:
-      return x * x * x * x;
-    default:
-      break;
-  }
   using unsigned_p = std::make_unsigned_t<P>;
-  constexpr unsigned_p four = 4;
-  return pow(x, four) * pow(x, static_cast<unsigned_p>(p) - four);
+  return  p == 0? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
 }
 
 /// @brief Returns the square of the passed number
@@ -75,7 +60,7 @@ constexpr auto fastHypot(T... args) {
 ///        Gaussian sum formula
 /// @param N: Number until which the sum runs
 template <std::integral T>
-constexpr T sumAllNumUpTo(const T N) {
+constexpr T sumUpToN(const T N) {
   return N * (N + 1) / 2;
 }
 /// @brief Calculates the factorial of a number
@@ -92,7 +77,7 @@ constexpr T factorial(const T upperN, const T lowerN = 1) {
   return result;
 }
 /// @brief Calculate the binomial coefficient
-///              n         n!
+///              n        n!
 ///                 =  --------
 ///              k     k!(n-k)!
 template <std::integral T>
