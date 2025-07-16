@@ -11,10 +11,16 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <ranges>
+#include <sstream>
+#include <stdexcept>
 
+#include <_strings.h>
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
@@ -122,12 +128,15 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
         "detray");
   }
 
-  auto gridView = gridLookup->getGridView();
-  if (gridView == std::nullopt) {
-    throw std::runtime_error(
-        "SurfaceArrayNavigationPolicy: The surface array does not provide a "
-        "grid view. This is not currently convertible to detray");
-  }
+  AnyGridConstView gridView = [&] {
+    auto r = gridLookup->getGridView();
+    if (r == std::nullopt) {
+      throw std::runtime_error(
+          "SurfaceArrayNavigationPolicy: The surface array does not provide a "
+          "grid view. This is not currently convertible to detray");
+    }
+    return r.value();
+  }();
 
   const auto& transform = gridLookup->getTransform();
 
@@ -140,9 +149,9 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
         "rotation. This is not currently convertible to detray");
   }
 
-  std::cout << "SurfaceArrayNavigationPolicy: Converting surface array with "
-            << gridView->dimensions() << " dims to detray payload" << std::endl;
-  auto axes = gridLookup->getAxes();
+  ACTS_DEBUG("Converting surface array with " << gridView.dimensions()
+                                              << " dims to detray payload");
+  std::vector axes = gridLookup->getAxes();
 
   if (axes.size() != 2) {
     throw std::runtime_error(
@@ -150,14 +159,17 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
         "2-dimensional grid. This is not currently convertible to detray");
   }
 
+  const IAxis& axis0 = *axes.at(0);
+  const IAxis& axis1 = *axes.at(1);
+
   // Get binning values to determine acceleration structure type
-  std::vector<AxisDirection> binValues = gridLookup->binningValues();
+  std::vector binValues = gridLookup->binningValues();
   if (binValues.empty()) {
     // Fall back to default based on surface type
     switch (gridLookup->surfaceType()) {
       using enum Surface::SurfaceType;
       case Cylinder:
-        binValues = {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+        binValues = {AxisDirection::AxisPhi, AxisDirection::AxisZ};
         break;
       case Disc:
         binValues = {AxisDirection::AxisR, AxisDirection::AxisPhi};
@@ -179,10 +191,13 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
   gridPayload->grid_link =
       detray::io::typed_link_payload<detray::io::accel_id>{accelId, 0u};
 
+  // @FIXME: We might have to change the order of the axis based on the surface type
+
   // Convert the axes
   for (std::size_t i = 0; i < axes.size(); ++i) {
     const auto* axis = axes[i];
-    std::cout << "Converting axis " << i << ": " << *axis << std::endl;
+    ACTS_DEBUG("- Converting axis " << i << " (" << binValues[i]
+                                    << "): " << *axis);
 
     auto axisPayload = convertAxis(*axis);
 
@@ -198,54 +213,82 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
     gridPayload->axes.push_back(axisPayload);
   }
 
-  // Fill the grid bins with surface indices
-  std::size_t totalBins = gridLookup->size();
-  for (std::size_t globalBin = 0; globalBin < totalBins; ++globalBin) {
-    if (!gridLookup->isValidBin(globalBin)) {
-      continue;  // Skip under/overflow bins
+  std::set<const Surface*> seenSurfaces;
+
+  using index_type = std::pair<unsigned int, unsigned int>;
+
+  auto fillGeneric = [&](const auto& mapi, const auto& mapj,
+                         index_type indices) {
+    auto [i, j] = indices;
+
+    auto di = mapi(i);
+    auto dj = mapj(j);
+
+    const auto& surfaces = gridView.atLocalBins({i, j});
+
+    std::vector<std::size_t> surfaceIndices;
+
+    for (const auto* surface : surfaces) {
+      try {
+        std::size_t surfaceIndex = surfaceLookup(surface);
+        surfaceIndices.push_back(surfaceIndex);
+        seenSurfaces.insert(surface);
+      } catch (const std::exception& e) {
+        std::stringstream ss;
+        ss << "Warning: Could not find surface index for surface "
+           << surface->geometryId() << ": " << e.what();
+        throw std::runtime_error{ss.str()};
+      }
     }
 
-    const auto& surfaces = gridLookup->lookup(globalBin);
-    if (!surfaces.empty()) {
-      // Convert global bin to local bin coordinates
-      // For a 2D grid, we can calculate local bins from global bin and
-      // dimensions
-      auto numBins = gridView->numLocalBins();
-      if (numBins.size() != 2) {
-        throw std::runtime_error(
-            "SurfaceArrayNavigationPolicy: Expected 2D grid dimensions");
-      }
+    // Add the bin to the grid payload
+    detray::io::grid_bin_payload<std::size_t> binPayload{{{di, dj}},
+                                                         surfaceIndices};
+    gridPayload->bins.push_back(binPayload);
+  };
 
-      std::size_t numBins1 = std::any_cast<std::size_t>(numBins[1]);
+  // Depending on the axis boundary type, we need to skip over the
+  // under/overflow bins, or include them. This needs to be decided by-axis.
+  auto makeIndexRange = [](const IAxis& axis) {
+    if (axis.getBoundaryType() == AxisBoundaryType::Open) {
+      return std::views::iota(0u, axis.getNBins() + 2);
+    }
+    return std::views::iota(1u, axis.getNBins() + 1);
+  };
 
-      // Calculate local bin indices (assuming row-major ordering)
-      unsigned int localBin0 = globalBin / numBins1;
-      unsigned int localBin1 = globalBin % numBins1;
+  auto idx0 = makeIndexRange(axis0);
+  auto idx1 = makeIndexRange(axis1);
 
-      std::vector<unsigned int> localBin = {localBin0, localBin1};
+  auto makeIndexMap =
+      [&](const IAxis& axis) -> std::function<unsigned int(unsigned int)> {
+    if (axis.getBoundaryType() == AxisBoundaryType::Open) {
+      // In case of Open, we loop from [0, N+1], where N is the number of bins.
+      // This includes under/overflow bins.
+      // Detray also has under/overflow bins in this case, so we keep the
+      // indices the same
+      return [](unsigned int i) { return i; };
+    }
 
-      // Create surface indices vector using the provided lookup function
-      std::vector<std::size_t> surfaceIndices;
-      for (const auto* surface : surfaces) {
-        try {
-          std::size_t surfaceIndex = surfaceLookup(surface);
-          surfaceIndices.push_back(surfaceIndex);
-        } catch (const std::exception& e) {
-          std::cout << "Warning: Could not find surface index for surface "
-                    << surface->geometryId() << ": " << e.what() << std::endl;
-          // Skip this surface if we can't find its index
-        }
-      }
+    // For Closed/Bound, detray does not have under/overflow bins.
+    // In ACTS, the bins a physically still present, so we only loop
+    // [1, N]. Detray's indices however still go [0, N-1], so we subtract 1 from
+    // the indices in the direction.
+    return [](unsigned int i) { return i - 1; };
+  };
 
-      // Add the bin to the grid payload
-      detray::io::grid_bin_payload<std::size_t> binPayload{localBin,
-                                                           surfaceIndices};
-      gridPayload->bins.push_back(binPayload);
+  auto fill = std::bind_front(std::bind_front(fillGeneric, makeIndexMap(axis0)),
+                              makeIndexMap(axis1));
+
+  for (auto i : idx0) {
+    for (auto j : idx1) {
+      fill(index_type{i, j});
     }
   }
 
-  std::cout << "SurfaceArrayNavigationPolicy: Created detray payload with "
-            << gridPayload->bins.size() << " populated bins" << std::endl;
+  ACTS_DEBUG("Filled surfaces " << seenSurfaces.size() << " into grid");
+
+  ACTS_DEBUG("Created detray payload with " << gridPayload->bins.size()
+                                            << " populated bins");
 
   return gridPayload;
 }

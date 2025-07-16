@@ -422,12 +422,15 @@ DetrayPayloadConverter::convertMaterial(
   detray::io::material_volume_payload homogeneous;
   homogeneous.volume_link.link = volPayload.index.link;
 
-  ACTS_WARNING(
-      "Adding dummy material slabs to homogeneous collection (detray "
-      "hack)");
+  ACTS_WARNING("Adding dummy material slabs to homogeneous collection for "
+               << volPayload.surfaces.size()
+               << " surfaces (detray "
+                  "hack)");
   for (const auto& surface : volPayload.surfaces) {
     auto& slabPayload = homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
-    slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
+    // @FIXME: Joana says this should be surface-in-volume index
+    // slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
+    slabPayload.index_in_coll = surface.index_in_coll.value();
     slabPayload.surface.link = surface.index_in_coll.value();
   }
 
@@ -435,12 +438,32 @@ DetrayPayloadConverter::convertMaterial(
                             std::size_t srfIdx) {
     auto handleHomogeneous =
         [&](const detray::io::material_slab_payload& slab) {
-          // ACTS_DEBUG("Assigning homogeneous material slab to surface "
-          //            << srfIdx);
-          homogeneous.mat_slabs.emplace_back(slab);
-          homogeneous.mat_slabs.back().index_in_coll =
-              homogeneous.mat_slabs.size() - 1;
-          homogeneous.mat_slabs.back().surface.link = srfIdx;
+          // Given the pseudo slabs from before, we need to either update an
+          // existing slab or create a new one.
+
+          auto it = std::ranges::find_if(homogeneous.mat_slabs,
+                                         [srfIdx](const auto& slab) {
+                                           return slab.surface.link == srfIdx;
+                                         });
+
+          if (it != homogeneous.mat_slabs.end()) {
+            ACTS_VERBOSE("Adding slab to homogeneous material for surface "
+                         << srfIdx);
+            auto& targetSlab = *it;
+            targetSlab = slab;
+            // Redundant index?
+            targetSlab.index_in_coll = srfIdx;
+            targetSlab.surface.link = srfIdx;
+          } else {
+            ACTS_VERBOSE("Updating slab in homogeneous material for surface "
+                         << srfIdx);
+            homogeneous.mat_slabs.emplace_back(slab);
+            // @FIXME: Joana says this should be surface-in-volume index
+            // homogeneous.mat_slabs.back().index_in_coll =
+            //     homogeneous.mat_slabs.size() - 1;
+            homogeneous.mat_slabs.back().index_in_coll = srfIdx;
+            homogeneous.mat_slabs.back().surface.link = srfIdx;
+          }
         };
 
     auto handleGrid =
@@ -635,8 +658,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
       handlePortal(gctx, volume, volPayload, lookup, surfaceIndices, portal);
     }
 
-    ACTS_DEBUG("Volume " << volume.volumeName()
-                         << " (idx: " << volPayload.index.link << ") has "
+    ACTS_DEBUG("Volume " << volume.volumeName() << " (detray idx: "
+                         << volPayload.index.link << ") has "
                          << volPayload.surfaces.size() << " total surfaces");
 
     std::size_t nPortals =
@@ -654,7 +677,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
 
     for (const auto& [surface, idx] : surfaceIndices) {
       ACTS_VERBOSE("Surface " << surface->geometryId() << " (&: " << surface
-                              << ") has index " << idx);
+                              << ") has detray index " << idx);
     }
 
     // Portals have produced surfaces and are added in volume payload, handle
@@ -663,8 +686,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
     auto [grids, homogeneous] =
         convertMaterial(volume, surfaceIndices, volPayload);
 
-    ACTS_DEBUG("Volume " << volume.volumeName()
-                         << " (idx: " << volPayload.index.link << ") has "
+    ACTS_DEBUG("Volume " << volume.volumeName() << " (detray idx: "
+                         << volPayload.index.link << ") has "
                          << homogeneous.mat_slabs.size() << " material slabs");
 
     if (!homogeneous.mat_slabs.empty()) {
@@ -676,8 +699,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
 
     ACTS_DEBUG("Volume " << volume.volumeName()
-                         << " (idx: " << volPayload.index.link << ") has "
-                         << grids.size() << " grids");
+                         << " (detray idx: " << volPayload.index.link
+                         << ") has " << grids.size() << " material grids");
     if (!grids.empty()) {
       // Only add if we have grids
       // NOTE: Volume association is EXTERNAL, i.e. we need to fill a map keyed
@@ -698,12 +721,14 @@ DetrayPayloadConverter::convertTrackingGeometry(
         return it->second;
       };
 
-      auto detrayGrids = navPolicy->toDetrayPayload(surfaceLookupFn);
+      auto detrayGrids = navPolicy->toDetrayPayload(surfaceLookupFn, logger());
       if (detrayGrids != nullptr) {
         ACTS_DEBUG("Volume " << volume.volumeName()
-                             << " (idx: " << volPayload.index.link
+                             << " (detray idx: " << volPayload.index.link
                              << ") has navigation policy which produced "
                              << detrayGrids->bins.size() << " populated bins");
+
+        detrayGrids->owner_link.link = volPayload.index.link;
 
         // Add the surface grid to the payload
         surfaceGrids.grids[volPayload.index.link].push_back(*detrayGrids);
@@ -719,9 +744,14 @@ DetrayPayloadConverter::convertTrackingGeometry(
                                  << ") index: " << beampipeIdx);
   ACTS_DEBUG("Volume at index 0 is " << detPayload.volumes.at(0).name);
 
-  // Swap beampipe volume to index 0
+  // Swap beampipe and world volumes self-index
+  std::swap(detPayload.volumes.at(0).index.link,
+            detPayload.volumes.at(beampipeIdx).index.link);
+
+  // Swap beampipe and world volumes location in vector
   std::swap(detPayload.volumes.at(0), detPayload.volumes.at(beampipeIdx));
 
+  // Adjust volume indices in surfaces after swapping
   for (auto& vol : detPayload.volumes) {
     for (auto& srf : vol.surfaces) {
       if (srf.mask.volume_link.link == beampipeIdx) {
@@ -732,32 +762,71 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
+  // Adjust homogeneous material volume links after swapping
   for (auto& mat : dthmPayload.volumes) {
     if (mat.volume_link.link == beampipeIdx) {
+      ACTS_DEBUG("Reassigning beampipe homogoenous material to index 0");
       mat.volume_link.link = 0;
     } else if (mat.volume_link.link == 0) {
+      ACTS_DEBUG("Reassigning world homogoenous material to beampipe index "
+                 << beampipeIdx);
       mat.volume_link.link = beampipeIdx;
     }
   }
 
-  auto beampipeGridIt = materialGrids.grids.find(beampipeIdx);
-  auto worldGridIt = materialGrids.grids.find(0);
+  {
+    // Adjust material grids after swapping
+    auto beampipeGridIt = materialGrids.grids.find(beampipeIdx);
+    auto worldGridIt = materialGrids.grids.find(0);
 
-  if (beampipeGridIt != materialGrids.grids.end() &&
-      worldGridIt != materialGrids.grids.end()) {
-    // BOTH world and beampipe have grid specifiers: swap them
-    ACTS_DEBUG("Swapping beampipe and world grid specifiers");
-    std::swap(beampipeGridIt->second, worldGridIt->second);
-  } else if (beampipeGridIt != materialGrids.grids.end()) {
-    // ONLY beampipe has grid specifier: move it to world
-    ACTS_DEBUG("Moving beampipe grid specifier to world");
-    materialGrids.grids[0] = std::move(beampipeGridIt->second);
-    materialGrids.grids.erase(beampipeGridIt);
-  } else if (worldGridIt != materialGrids.grids.end()) {
-    // ONLY world has grid specifier: move it to beampipe
-    ACTS_DEBUG("Moving world grid specifier to beampipe");
-    materialGrids.grids[beampipeIdx] = std::move(worldGridIt->second);
-    materialGrids.grids.erase(worldGridIt);
+    if (beampipeGridIt != materialGrids.grids.end() &&
+        worldGridIt != materialGrids.grids.end()) {
+      // BOTH world and beampipe have grid specifiers: swap them
+      ACTS_DEBUG("Swapping beampipe and world material grid specifiers");
+      std::swap(beampipeGridIt->second, worldGridIt->second);
+    } else if (beampipeGridIt != materialGrids.grids.end()) {
+      // ONLY beampipe has grid specifier: move it to world
+      ACTS_DEBUG("Moving beampipe material grid specifier to world");
+      materialGrids.grids[0] = std::move(beampipeGridIt->second);
+      materialGrids.grids.erase(beampipeGridIt);
+    } else if (worldGridIt != materialGrids.grids.end()) {
+      // ONLY world has grid specifier: move it to beampipe
+      ACTS_DEBUG("Moving world material grid specifier to beampipe");
+      materialGrids.grids[beampipeIdx] = std::move(worldGridIt->second);
+      materialGrids.grids.erase(worldGridIt);
+    }
+  }
+
+  {
+    // Adjust surface grids after swapping
+    // @NOTE: The beampipe should **generally** not have a surface grid, but
+    //        let's be safe and swap them regardless
+
+    auto beampipeGridIt = surfaceGrids.grids.find(beampipeIdx);
+    auto worldGridIt = surfaceGrids.grids.find(0);
+
+    if (beampipeGridIt != surfaceGrids.grids.end() &&
+        worldGridIt != surfaceGrids.grids.end()) {
+      // BOTH world and beampipe have grid specifiers: swap them
+      ACTS_DEBUG("Swapping beampipe and world surface grid specifiers");
+      std::swap(beampipeGridIt->second, worldGridIt->second);
+    } else if (beampipeGridIt != surfaceGrids.grids.end()) {
+      // ONLY beampipe has grid specifier: move it to world
+      ACTS_DEBUG("Moving beampipe surface grid specifier to world");
+      surfaceGrids.grids[0] = std::move(beampipeGridIt->second);
+      surfaceGrids.grids.erase(beampipeGridIt);
+    } else if (worldGridIt != surfaceGrids.grids.end()) {
+      // ONLY world has grid specifier: move it to beampipe
+      ACTS_DEBUG("Moving world surface grid specifier to beampipe");
+      surfaceGrids.grids[beampipeIdx] = std::move(worldGridIt->second);
+      surfaceGrids.grids.erase(worldGridIt);
+    }
+  }
+
+  // This needs to happen after swapping so that the indices are correct
+  payloads.names = {{0, "Detector"}};
+  for (const auto& volume : detPayload.volumes) {
+    payloads.names.emplace(volume.index.link + 1, volume.name);
   }
 
   ACTS_DEBUG("Collected " << detPayload.volumes.size() << " volumes");

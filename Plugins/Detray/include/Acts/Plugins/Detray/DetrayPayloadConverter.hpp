@@ -12,6 +12,7 @@
 #include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <map>
 #include <memory>
 
 namespace Acts {
@@ -70,6 +71,8 @@ class DetrayPayloadConverter {
     std::unique_ptr<
         detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>>
         surfaceGrids;
+
+    std::map<detray::dindex, std::string> names;
   };
 
   Payloads convertTrackingGeometry(const GeometryContext& gctx,
