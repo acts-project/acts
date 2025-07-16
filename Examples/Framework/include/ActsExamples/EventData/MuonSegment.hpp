@@ -19,61 +19,63 @@ namespace ActsExamples {
 class MuonSegment {
  public:
   using MuonId = MuonSpacePoint::MuonId;
-  /** @brief Empty default constructor */
+  /// @brief Empty default constructor
   MuonSegment() = default;
-  /** @brief Standard copy constructor */
+  /// @brief Standard copy constructor
   MuonSegment(const MuonSegment& other) = default;
-  /** @brief Standard move constructor */
+  /// @brief Standard move constructor
   MuonSegment(MuonSegment&& other) = default;
-  /** @brief Standard copy assignment */
+  /// @brief Standard copy assignment
   MuonSegment& operator=(const MuonSegment& other) = default;
 
-  /** @brief Returns the reconstructed segment position in global coordinates */
+  /// @brief Returns the reconstructed segment position in global coordinates
   const Acts::Vector3& globalPosition() const { return m_globPos; }
-  /** @brief Returns the reconstructed segment direction in global coordinates */
+  /// @brief Returns the reconstructed segment direction in global coordinates
   const Acts::Vector3& globalDirection() const { return m_globDir; }
-  /** @brief Returns the reconstructed segment position expressed in the local space point frame*/
+  /// @brief Returns the reconstructed segment position expressed in the local space point frame
   const Acts::Vector3& localPosition() const { return m_localPos; }
-  /** @brief Returns the reconstructed segment direction expressed in the local space point frame*/
+  /// @brief Returns the reconstructed segment direction expressed in the local space point frame
   const Acts::Vector3& localDirection() const { return m_localDir; }
-  /** @brief Returns the associated MS sector identifier */
+  /// @brief Returns the associated MS sector identifier
   const MuonId& id() const { return m_id; }
-  /** @brief returns the fitted segment time & uncertainty */
+  /// @brief returns the fitted segment time & uncertainty
   double time() const { return m_time; }
   double timeUncert() const { return m_timeError; }
-  /** @brief Returns the chiSquared & degreed of freedom */
+  /// @brief Returns the chiSquared & degreed of freedom
   double chiSquared() const { return m_chiSquared; }
   double nDoF() const { return m_nDoF; }
-  /** @brief Returns the number of precision hits building the segment */
+  /// @brief Returns the number of precision hits building the segment
   unsigned nPrecisionHits() const { return m_precisionHits; }
-  /** @brief Returns the number of complementary trigger hits in the bending plane */
+  /// @brief Returns the number of complementary trigger hits in the bending plane
   unsigned nTrigEtaLayers() const { return m_triEtaLayers; }
-  /** @brief Returns the number of complementary trigger hits in the non-bending plane */
+  /// @brief Returns the number of complementary trigger hits in the non-bending plane
   unsigned nTrigPhiLayers() const { return m_phiLayers; }
-  /** @brief Set the global segment position & direction */
+  /// @brief Set the global segment position & direction
   void setGlobalCoords(const Acts::Vector3& pos, const Acts::Vector3& dir) {
     m_globPos = pos;
     m_globDir = dir;
   }
-  /** @brief Set the local segment position & direction */
+  /// @brief Set the local segment position & direction
+  /// @param pos: Position of the segment in the local frame
+  /// @param dir: Direction of the segment in the local frame
   void setLocalCoords(const Acts::Vector3& pos, const Acts::Vector3& dir) {
     m_localPos = pos;
     m_localDir = dir;
   }
-  /** @brief Set the Identifier */
+  /// @brief Set the Identifier
   void setId(const MuonId& id) { m_id = id; }
-  /** @brief Set the time & unceratinty */
+  /// @brief Set the time & unceratinty
   void setTime(const double time, const double timeError) {
     m_time = time;
     m_timeError = timeError;
   }
-  /** @brief Set the chi2 & the number of degrees of freedom */
+  /// @brief Set the chi2 & the number of degrees of freedom
   void setFitQuality(const double chi2, const unsigned nDoF) {
     m_chiSquared = chi2;
     m_nDoF = nDoF;
   }
-  /** @brief Set the segment hit summary in terms of precision hits (Straw/ Mm /sTgc)
-   *         & trigger eta (Rpc /Tgc) & trigger phi (Rpc / Tgc) hits  */
+  /// @brief Set the segment hit summary in terms of precision hits (Straw/ Mm /sTgc)
+  ///        & trigger eta (Rpc /Tgc) & trigger phi (Rpc / Tgc) hits
   void setHitSummary(unsigned nPrec, unsigned nTrigEta, unsigned nTrigPhi) {
     m_precisionHits = nPrec;
     m_triEtaLayers = nTrigEta;
@@ -86,18 +88,18 @@ class MuonSegment {
   Acts::Vector3 m_globDir{Acts::Vector3::Zero()};
   Acts::Vector3 m_localPos{Acts::Vector3::Zero()};
   Acts::Vector3 m_localDir{Acts::Vector3::Zero()};
-  /** @brief Fitted segment time of arrival */
+  /// @brief Fitted segment time of arrival
   double m_time{0.f};
-  /** @brief Uncertainty on the time of arrival */
+  /// @brief Uncertainty on the time of arrival
   double m_timeError{0.f};
-  /** @brief segment chi2 & number of degrees of freedom */
+  /// @brief segment chi2 & number of degrees of freedom
   double m_chiSquared{0.f};
   unsigned m_nDoF{0u};
-  /** @brief how many precision hits are on the segment (Straw tubes or Mm) */
+  /// @brief how many precision hits are on the segment (Straw tubes or Mm)
   unsigned m_precisionHits{0u};
-  /** @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc) */
+  /// @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc)
   unsigned m_phiLayers{0u};
-  /** @brief  Complementary hits in the bending direction (Rpc / Tgc) */
+  /// @brief  Complementary hits in the bending direction (Rpc / Tgc)
   unsigned m_triEtaLayers{0u};
 };
 using MuonSegmentContainer = std::vector<MuonSegment>;

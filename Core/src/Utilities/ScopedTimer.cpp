@@ -22,10 +22,10 @@ ScopedTimer::ScopedTimer(const std::string& name, const Logger& logger,
 ScopedTimer::~ScopedTimer() {
   auto end = clock_type::now();
   auto duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start);
+      std::chrono::duration_cast<std::chrono::microseconds>(end - m_start);
   if (m_logger->doPrint(m_lvl)) {
     std::ostringstream oss;
-    oss << m_name << " took " << duration.count() << " ms";
+    oss << m_name << " took " << (duration.count() * 1e-3) << " ms";
     m_logger->log(m_lvl, oss.str());
   }
 }
@@ -35,7 +35,7 @@ AveragingScopedTimer::AveragingScopedTimer(const std::string& name,
                                            Logging::Level lvl)
     : m_name(name), m_lvl(lvl), m_logger(&logger) {}
 
-void AveragingScopedTimer::addSample(std::chrono::milliseconds duration) {
+void AveragingScopedTimer::addSample(std::chrono::nanoseconds duration) {
   m_sumDuration += duration.count();
   m_sumDurationSquared += duration.count() * duration.count();
   m_nSamples++;
@@ -59,7 +59,7 @@ AveragingScopedTimer::Sample::~Sample() {
   if (m_parent != nullptr) {
     auto end = clock_type::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start);
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end - m_start);
     m_parent->addSample(duration);
   }
 }
@@ -71,10 +71,12 @@ AveragingScopedTimer::~AveragingScopedTimer() {
       double mean = m_sumDuration / m_nSamples;
       double stddev =
           std::sqrt(m_sumDurationSquared / m_nSamples - mean * mean);
-      oss << m_name << " took " << m_sumDuration << " ms total, " << mean
-          << " ms +- " << stddev << " ms per sample (#" << m_nSamples << ")";
+      oss << m_name << " took " << (m_sumDuration * 1e-6) << " ms total, "
+          << (mean * 1e-3) << " us +- " << (stddev * 1e-3)
+          << " us per sample (#" << m_nSamples << ")";
     } else {
-      oss << m_name << " took " << m_sumDuration << " ms total (no samples)";
+      oss << m_name << " took " << (m_sumDuration * 1e-6)
+          << " ms total (no samples)";
     }
     m_logger->log(m_lvl, oss.str());
   }

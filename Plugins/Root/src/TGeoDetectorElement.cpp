@@ -12,31 +12,26 @@
 #include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <tuple>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
 
 #include "RtypesCore.h"
-#include "TGeoArb8.h"
-#include "TGeoBBox.h"
 #include "TGeoBoolNode.h"
-#include "TGeoCompositeShape.h"
-#include "TGeoTrd2.h"
-#include "TGeoTube.h"
 
 using Line2D = Eigen::Hyperplane<double, 2>;
 
-Acts::TGeoDetectorElement::TGeoDetectorElement(
+namespace Acts {
+
+TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
-    std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : Acts::DetectorElementBase(),
-      m_detElement(&tGeoNode),
-      m_identifier(identifier) {
+    std::shared_ptr<const ISurfaceMaterial> material)
+    : DetectorElementBase(), m_detElement(&tGeoNode), m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the
   // material)
   const Double_t* translation = tGeoMatrix.GetTranslation();
@@ -87,11 +82,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   }
 }
 
-Acts::TGeoDetectorElement::TGeoDetectorElement(
+TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
-    : Acts::DetectorElementBase(),
+    : DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
@@ -100,11 +95,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
 }
 
-Acts::TGeoDetectorElement::TGeoDetectorElement(
+TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
-    : Acts::DetectorElementBase(),
+    : DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
@@ -113,8 +108,10 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
 }
 
-Acts::TGeoDetectorElement::~TGeoDetectorElement() = default;
+TGeoDetectorElement::~TGeoDetectorElement() = default;
 
-const Acts::Transform3& Acts::TGeoDetectorElement::nominalTransform() const {
+const Transform3& TGeoDetectorElement::nominalTransform() const {
   return m_transform;
 }
+
+}  // namespace Acts

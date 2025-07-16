@@ -42,6 +42,12 @@ jobs:
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/physmon.zip`, Buffer.from(download.data));
             let = url = `https://acts-herald.app.cern.ch/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
 
+            // Check if any other comment artifacts are available
+            let matchCommentArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name.startsWith('comment-')
+            });
+            core.setOutput('comment-artifacts-found', matchCommentArtifacts.length >= 1);
+
             core.exportVariable('ARTIFACT_URL', url)
             return true;
 
@@ -78,6 +84,15 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: actions/download-artifact@v4
+        if: steps.dl-af.outputs.comment-artifacts-found
+        with:
+          pattern: comment-*.md
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.event.workflow_run.repository.full_name }}
+          run-id: ${{ github.event.workflow_run.id }}
+
       - name: Render comment
         if: steps.get-pr-number.outcome == 'success'
         env:
@@ -91,6 +106,7 @@ jobs:
           else
             echo "🟥 summary not found!" >> comment.md
           fi
+          cat comment-*.md >> comment.md || true
           cat comment.md
 
       - name: Find Comment

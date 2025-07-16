@@ -16,6 +16,12 @@ class GeoShape;
 
 namespace Acts::GeoModel {
 
+/// @brief Calculates the absolute volume position w.r.t. the world node
+///        This is only possible, if the volume is not shared in multiple
+///        branches of the GeoModelTree.
+/// @param physVol: Reference to the physical volume from which the position
+///                 shall be calculated
+Acts::Transform3 volumePosInSpace(const PVConstLink& physVol);
 /// @brief Converts a GeoShape into a bounded volume. For the supported shape types and the
 ///        chosen strategie please consult the cpp file. May throw an exception
 /// f the GeoShape is not yet considered.

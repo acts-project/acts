@@ -28,7 +28,7 @@ ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
 ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() = default;
 
 void ActsExamples::JsonMaterialWriter::writeMaterial(
-    const Acts::DetectorMaterialMaps& detMaterial) {
+    const Acts::TrackingGeometryMaterial& detMaterial) {
   // Evoke the converter
   auto jOut = m_converter->materialMapsToJson(detMaterial);
   // And write the file(s)

@@ -1231,10 +1231,7 @@ class Gx2Fitter {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1406,11 +1403,8 @@ class Gx2Fitter {
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
     ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // Setup the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1569,11 +1563,8 @@ class Gx2Fitter {
       // update covariance
       params.covariance() = fullCovariancePredicted;
 
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // set up the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;

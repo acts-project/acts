@@ -18,7 +18,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <ranges>
 #include <stdexcept>
 
 namespace Acts {

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -159,10 +160,15 @@ class ObjectIntersection {
   /// @param intersection is the intersection
   /// @param object is the object to be instersected
   /// @param index is the intersection index
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object,
-                               std::uint8_t index = 0) noexcept
-      : m_intersection(intersection), m_object(object), m_index(index) {}
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  constexpr ObjectIntersection(
+      const Intersection3D& intersection, const object_t* object,
+      std::uint8_t index = 0,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None()) noexcept
+      : m_intersection(intersection),
+        m_object(object),
+        m_index(index),
+        m_boundaryTolerance(boundaryTolerance) {}
 
   ObjectIntersection(const ObjectIntersection&) noexcept = default;
   ObjectIntersection(ObjectIntersection&&) noexcept = default;
@@ -194,6 +200,10 @@ class ObjectIntersection {
   constexpr const object_t* object() const { return m_object; }
 
   constexpr std::uint8_t index() const { return m_index; }
+
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
 
   constexpr static ObjectIntersection invalid(
       const object_t* object = nullptr) {
@@ -227,6 +237,8 @@ class ObjectIntersection {
   const object_t* m_object = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 
   constexpr ObjectIntersection() = default;
 };
@@ -245,12 +257,16 @@ class ObjectMultiIntersection {
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections), m_object(object) {}
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  constexpr ObjectMultiIntersection(
+      const MultiIntersection3D& intersections, const object_t* object,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None())
+      : m_intersections(intersections),
+        m_object(object),
+        m_boundaryTolerance(boundaryTolerance) {}
 
   constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
-    return {m_intersections[index], m_object, index};
+    return {m_intersections[index], m_object, index, m_boundaryTolerance};
   }
 
   constexpr const MultiIntersection3D& intersections() const {
@@ -260,6 +276,10 @@ class ObjectMultiIntersection {
   constexpr std::size_t size() const { return m_intersections.size(); }
 
   constexpr const object_t* object() const { return m_object; }
+
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
 
   constexpr SplitIntersections split() const {
     SplitIntersections result;
@@ -288,6 +308,8 @@ class ObjectMultiIntersection {
   MultiIntersection3D m_intersections;
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 };
 
 namespace detail {

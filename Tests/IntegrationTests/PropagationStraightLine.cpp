@@ -36,6 +36,7 @@ constexpr auto epsCov = 0.0125;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
+
 const Stepper stepper;
 const Propagator propagator(stepper);
 const RiddersPropagator riddersPropagator(propagator);

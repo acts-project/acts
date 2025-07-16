@@ -160,7 +160,8 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
 std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
   os << std::setiosflags(std::ios::fixed);
   os << std::setprecision(5);
-  os << "TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+  os << "TrapezoidVolumeBounds: (halfX @-Y, halfX @+Y, halfY, halfZ, alpha, "
+        "beta) "
         "= ";
   os << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
      << get(eHalfLengthY) << ", " << get(eHalfLengthZ);

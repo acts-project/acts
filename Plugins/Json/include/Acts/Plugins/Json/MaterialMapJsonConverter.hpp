@@ -11,15 +11,16 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
 #include <memory>
@@ -52,11 +53,15 @@ using TrackingVolumeAndMaterial =
 /// @brief read the material from Json
 class MaterialMapJsonConverter {
  public:
-  using SurfaceMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-  using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
+  using SurfaceMaterialMap
+      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
+          SurfaceMaterialMaps;
+  using VolumeMaterialMap
+      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
+          VolumeMaterialMaps;
+  using DetectorMaterialMaps
+      [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
+          TrackingGeometryMaterial;
 
   /// @class Config
   /// Configuration of the Converter
@@ -90,17 +95,18 @@ class MaterialMapJsonConverter {
   /// Destructor
   ~MaterialMapJsonConverter() = default;
 
-  /// Convert a json material map to a DetectorMaterialMaps
+  /// Convert a json material map to a TrackingGeometryMaterial
   ///
   /// @param materialmaps The json material
-  DetectorMaterialMaps jsonToMaterialMaps(const nlohmann::json& materialmaps);
+  TrackingGeometryMaterial jsonToMaterialMaps(
+      const nlohmann::json& materialmaps);
 
-  /// Convert a DetectorMaterialMaps to json
+  /// Convert a TrackingGeometryMaterial to json
   ///
   /// @param maps The material map collection
   /// @param decorator nullptr or a decorator to add extra attributes
   nlohmann::json materialMapsToJson(
-      const DetectorMaterialMaps& maps,
+      const TrackingGeometryMaterial& maps,
       const IVolumeMaterialJsonDecorator* decorator = nullptr);
 
   /// Convert a tracking geometry to json.

@@ -4,7 +4,7 @@ message(STATUS "Configuring codegen: preparing uv")
 
 find_program(uv_exe uv)
 
-set(_uv_version "0.6.1")
+set(_uv_version "0.7.19")
 set(_base_url
     "https://github.com/astral-sh/uv/releases/download/${_uv_version}"
 )
@@ -20,24 +20,24 @@ if(uv_exe STREQUAL "uv_exe-NOTFOUND")
         if(APPLE)
             set(UV_NAME "${_base_url}/uv-x86_64-apple-darwin.tar.gz")
             set(UV_HASH
-                "SHA256=d8609b53f280d5e784a7586bf7a3fd90c557656af109cee8572b24a0c1443191"
+                "SHA256=698d24883fd441960fb4bc153b7030b89517a295502017ff3fdbba2fb0a0aa67"
             )
         elseif(UNIX)
             set(UV_URL "${_base_url}/uv-x86_64-unknown-linux-musl.tar.gz")
             set(UV_HASH
-                "SHA256=143dba84867f72107048e1f95be8f894d59f456e018a34276d9d2d6bacdf8f99"
+                "SHA256=6236ed00a7442ab2c0f56f807d5a3331f3fb5c7640a357482fbc8492682641b2"
             )
         endif()
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)|(aarch64)")
         if(APPLE)
             set(UV_URL "${_base_url}/uv-aarch64-apple-darwin.tar.gz")
             set(UV_HASH
-                "SHA256=90e10cc7f26cbaf3eaa867cf99344ffd550e942fd4b660e88f2f91c23022dc5a"
+                "SHA256=698d24883fd441960fb4bc153b7030b89517a295502017ff3fdbba2fb0a0aa67"
             )
         elseif(UNIX)
             set(UV_URL "${_base_url}/uv-aarch64-unknown-linux-musl.tar.gz")
             set(UV_HASH
-                "SHA256=6455886f9aef3392df0af630dee9df892787fdffda0f0800245f86a735bd810d"
+                "SHA256=e83c7c6d86c8e7456078c736a72550ce20222df8083f9317fc58cd49422ce5eb"
             )
         endif()
     else()
@@ -132,9 +132,9 @@ function(acts_code_generation)
     add_custom_command(
         OUTPUT ${_output_file}
         COMMAND
-            env -i ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
-            --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
-            ${_output_file}
+            env -i UV_NO_CACHE=1 ${uv_exe} run --quiet --python
+            ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated} ${_with_args}
+            ${ARGS_PYTHON} ${_output_file}
         DEPENDS ${_depends}
         COMMENT "Generating ${ARGS_OUTPUT}"
         VERBATIM

@@ -40,23 +40,26 @@ struct TripletCandidate2 {
 
 class CandidatesForMiddleSp2 {
  public:
-  std::size_t size() const { return m_storage.size(); }
+  using Index = std::uint32_t;
+  using Size = std::uint32_t;
+
+  Size size() const { return m_storage.size(); }
 
   /// @brief Setting maximum number of candidates to keep
   /// @param nLow Maximum number of candidates in the low-quality collection
   /// @param nHigh Maximum number of candidates in the high-quality collection
-  void setMaxElements(std::size_t nLow, std::size_t nHigh);
+  void setMaxElements(Size nLow, Size nHigh);
 
   /// @brief Clear the internal storage
   void clear();
 
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
-  std::size_t nLowQualityCandidates() const { return m_nLow; }
+  Size nLowQualityCandidates() const { return m_nLow; }
 
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
-  std::size_t nHighQualityCandidates() const { return m_nHigh; }
+  Size nHighQualityCandidates() const { return m_nHigh; }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -79,15 +82,15 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  std::size_t m_maxSizeHigh{0};
-  std::size_t m_maxSizeLow{0};
+  Size m_maxSizeHigh{0};
+  Size m_maxSizeLow{0};
   // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
-  std::size_t m_nHigh{0};
-  std::size_t m_nLow{0};
+  Size m_nHigh{0};
+  Size m_nLow{0};
 
   // storage contains the collection of the candidates
-  std::vector<TripletCandidate2> m_storage{};
+  std::vector<TripletCandidate2> m_storage;
 
   // The following vectors store indexes to elements in the storage
   // They are sorted as a min heap tree, in which
@@ -99,9 +102,9 @@ class CandidatesForMiddleSp2 {
   // and std::priority_queue were tried and were found to be slower.
 
   // list of indexes of candidates with high quality in the storage
-  std::vector<std::size_t> m_indicesHigh{};
+  std::vector<Index> m_indicesHigh;
   // list of indexes of candidates with low quality in the storage
-  std::vector<std::size_t> m_indicesLow{};
+  std::vector<Index> m_indicesLow;
 
   /// @brief A function for sorting the triplet candidates from higher to lower quality
   /// @param spacePoints The input spacepoints from which to create seeds.
@@ -133,16 +136,20 @@ class CandidatesForMiddleSp2 {
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
-  bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t nMax, SpacePointIndex2 spB, SpacePointIndex2 spM,
-            SpacePointIndex2 spT, float weight, float zOrigin, bool isQuality);
+  bool push(std::vector<Index>& indices, Size& n, Size nMax,
+            SpacePointIndex2 spB, SpacePointIndex2 spM, SpacePointIndex2 spT,
+            float weight, float zOrigin, bool isQuality);
 
   /// @brief Check if an element exists in the collection. The element to be checked
   /// is supposed to be in the n position of the collection.
   /// @param n Index of the requested element
   /// @param maxSize Number of elements currently stored in the collection
   /// @returns Whether the element exists
-  bool exists(const std::size_t n, const std::size_t maxSize) const;
+  bool exists(Index n, Size maxSize) const {
+    // If the element exists, its index is lower than the current number
+    // of stored elements
+    return n < maxSize;
+  }
 
   /// @brief Pop an element from a collection. The removal of the element from the collection
   /// does not imply its destruction. In fact, the number of stored elements is
@@ -151,20 +158,20 @@ class CandidatesForMiddleSp2 {
   /// @param indices Index collection pointing to the triplet candidates
   /// @param currentSize The current number of element stored in the collection. The function will
   /// diminish this value by 1
-  void pop(std::vector<std::size_t>& indices, std::size_t& currentSize);
+  void pop(std::vector<Index>& indices, Size& currentSize);
 
   /// @brief Return the weight for a candidate
   /// @param indices Index collection pointing to the triplet candidates
   /// @param n Index of the element in the collection
   /// @returns The weight of the candidate
-  float weight(const std::vector<std::size_t>& indices, std::size_t n) const;
+  float weight(const std::vector<Index>& indices, Index n) const;
 
   /// @brief Move an element up in the min heap tree. The function checks whether the element's
   /// weight is lower of its parent's weight. If so, it swaps them. Reiterate
   /// the process until the element is in the correct position on the tree
   /// @param indices Index collection pointing to the triplet candidates
   /// @param n The index of the element to place in the correct position
-  void bubbleup(std::vector<std::size_t>& indices, std::size_t n);
+  void bubbleup(std::vector<Index>& indices, Index n);
 
   /// @brief Move an element down in the min heap tree. The function checks whether the elements's
   /// weight is lower of its child's weights. If so, it swaps the element with
@@ -173,8 +180,7 @@ class CandidatesForMiddleSp2 {
   /// @param indices Index collection pointing to the triplet candidates
   /// @param n The index of the element to place in the correct position
   /// @param actualSize The current number of elements stored in the collection
-  void bubbledw(std::vector<std::size_t>& indices, std::size_t n,
-                std::size_t actualSize);
+  void bubbledw(std::vector<Index>& indices, Index n, Size actualSize);
 
   /// @brief Adding a new triplet candidate to the collection. The function is called after the candidate has satisfied
   /// all the selection criteria
@@ -182,8 +188,7 @@ class CandidatesForMiddleSp2 {
   /// @param n Current number of stored elements in the collection
   /// @param nMax The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
-  void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
-                       const std::size_t nMax,
+  void addToCollection(std::vector<Index>& indices, Index& n, Size nMax,
                        const TripletCandidate2& element);
 };
 

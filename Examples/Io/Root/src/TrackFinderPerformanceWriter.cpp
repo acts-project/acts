@@ -304,7 +304,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
 
       // Add number for total matched tracks here
       m_nTotalMatchedTracks += nMatchedTracks;
-      m_nTotalMatchedParticles += 1;
+      m_nTotalMatchedParticles += imatched->second.track.has_value() ? 1 : 0;
 
       // Check if the particle has more than one matched track for the duplicate
       // rate/ratio

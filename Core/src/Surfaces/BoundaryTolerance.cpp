@@ -11,36 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <stdexcept>
-#include <utility>
 
 namespace Acts {
-
-BoundaryTolerance::BoundaryTolerance(Variant variant) : m_variant{variant} {}
-
-bool BoundaryTolerance::isInfinite() const {
-  return holdsVariant<InfiniteParams>();
-}
-
-bool BoundaryTolerance::isNone() const {
-  return holdsVariant<NoneParams>();
-}
-
-bool BoundaryTolerance::hasAbsoluteBound(bool isCartesian) const {
-  return holdsVariant<NoneParams>() || holdsVariant<AbsoluteBoundParams>() ||
-         (isCartesian && holdsVariant<AbsoluteCartesianParams>());
-}
-
-bool BoundaryTolerance::hasAbsoluteCartesian() const {
-  return holdsVariant<AbsoluteCartesianParams>();
-}
-
-bool BoundaryTolerance::hasAbsoluteEuclidean() const {
-  return holdsVariant<AbsoluteEuclideanParams>();
-}
-
-bool BoundaryTolerance::hasChi2Bound() const {
-  return holdsVariant<Chi2BoundParams>();
-}
 
 BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
   using enum ToleranceMode;
@@ -111,28 +83,6 @@ BoundaryTolerance::AbsoluteBoundParams BoundaryTolerance::asAbsoluteBound(
   return getVariant<AbsoluteBoundParams>();
 }
 
-const BoundaryTolerance::AbsoluteCartesianParams&
-BoundaryTolerance::asAbsoluteCartesian() const {
-  return getVariant<AbsoluteCartesianParams>();
-}
-
-const BoundaryTolerance::AbsoluteEuclideanParams&
-BoundaryTolerance::asAbsoluteEuclidean() const {
-  return getVariant<AbsoluteEuclideanParams>();
-}
-
-const BoundaryTolerance::Chi2BoundParams& BoundaryTolerance::asChi2Bound()
-    const {
-  return getVariant<Chi2BoundParams>();
-}
-
-std::optional<BoundaryTolerance::AbsoluteBoundParams>
-BoundaryTolerance::asAbsoluteBoundOpt(bool isCartesian) const {
-  return hasAbsoluteBound(isCartesian)
-             ? std::optional(asAbsoluteBound(isCartesian))
-             : std::nullopt;
-}
-
 bool BoundaryTolerance::isTolerated(
     const Vector2& distance,
     const std::optional<SquareMatrix2>& jacobianOpt) const {
@@ -186,10 +136,6 @@ bool BoundaryTolerance::isTolerated(
   }
 
   throw std::logic_error("Unsupported tolerance type");
-}
-
-bool BoundaryTolerance::hasMetric(bool hasJacobian) const {
-  return hasJacobian || hasChi2Bound();
 }
 
 SquareMatrix2 BoundaryTolerance::getMetric(

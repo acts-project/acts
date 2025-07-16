@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
+#include "Acts/Plugins/Json/GeometryIdentifierJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -30,7 +30,6 @@ JsonSurfacesReader::readHierarchyMap(
 
   using SurfaceHierachyMap =
       Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>;
-  using GeometryIdHelper = Acts::GeometryHierarchyMapJsonConverter<bool>;
   std::vector<SurfaceHierachyMap::InputElement> surfaceElements;
 
   // Walk down the path to the surface entries
@@ -43,8 +42,8 @@ JsonSurfacesReader::readHierarchyMap(
   surfaceElements.reserve(jSurfaces.size());
   for (const auto& jSurface : jSurfaces) {
     // Decode the surface identifier
-    Acts::GeometryIdentifier geoId =
-        GeometryIdHelper::decodeIdentifier(jSurface);
+    GeometryIdentifier geoId =
+        GeometryIdentifierJsonConverter::decodeIdentifier(jSurface);
     auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface["value"]);
     surfaceElements.emplace_back(geoId, surface);
   }

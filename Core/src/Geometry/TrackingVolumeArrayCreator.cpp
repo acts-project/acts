@@ -18,8 +18,10 @@
 #include <algorithm>
 #include <vector>
 
-std::shared_ptr<const Acts::TrackingVolumeArray>
-Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
+namespace Acts {
+
+std::shared_ptr<const TrackingVolumeArray>
+TrackingVolumeArrayCreator::trackingVolumeArray(
     const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
     AxisDirection aDir) const {
   // MSG_VERBOSE("Create VolumeArray of "<< tVolumes.size() << " TrackingVolumes
@@ -63,3 +65,5 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   return std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
       tVolumesOrdered, std::move(binUtility));
 }
+
+}  // namespace Acts

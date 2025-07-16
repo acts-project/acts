@@ -11,7 +11,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
-#include <iostream>
 
 namespace Acts {
 
@@ -119,8 +118,8 @@ class AveragingScopedTimer {
  private:
   /// @brief Add a timing sample to the statistics
   ///
-  /// @param duration Duration of the sample in milliseconds
-  void addSample(std::chrono::milliseconds duration);
+  /// @param duration Duration of the sample in nanoseconds
+  void addSample(std::chrono::nanoseconds duration);
 
   double m_sumDuration = 0;  ///< Sum of all sample durations
   double m_sumDurationSquared =

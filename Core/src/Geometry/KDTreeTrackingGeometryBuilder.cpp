@@ -23,8 +23,6 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
@@ -34,15 +32,17 @@
 #include <stdexcept>
 #include <utility>
 
-Acts::KDTreeTrackingGeometryBuilder::KDTreeTrackingGeometryBuilder(
-    const Acts::KDTreeTrackingGeometryBuilder::Config& cfg,
+namespace Acts {
+
+KDTreeTrackingGeometryBuilder::KDTreeTrackingGeometryBuilder(
+    const KDTreeTrackingGeometryBuilder::Config& cfg,
     std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   m_cfg.protoDetector.harmonize();
 }
 
-std::unique_ptr<const Acts::TrackingGeometry>
-Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
+std::unique_ptr<const TrackingGeometry>
+KDTreeTrackingGeometryBuilder::trackingGeometry(
     const GeometryContext& gctx) const {
   using MeasuredSurface =
       std::pair<std::array<double, 2u>, std::shared_ptr<Surface>>;
@@ -73,19 +73,18 @@ Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
                          << " surfaces from the KDTree.");
 
   // return the geometry to the service
-  return std::make_unique<const Acts::TrackingGeometry>(worldTrackingVolume);
+  return std::make_unique<const TrackingGeometry>(worldTrackingVolume);
 }
 
-std::shared_ptr<Acts::TrackingVolume>
-Acts::KDTreeTrackingGeometryBuilder::translateVolume(
+std::shared_ptr<TrackingVolume> KDTreeTrackingGeometryBuilder::translateVolume(
     Cache& cCache, const GeometryContext& gctx, const SurfaceKDT& kdt,
     const ProtoVolume& ptVolume, const std::string& indent) const {
   ACTS_DEBUG(indent << "Processing ProtoVolume: " << ptVolume.name);
   std::vector<std::shared_ptr<const TrackingVolume>> translatedVolumes = {};
 
   // Volume extent
-  auto rangeR = ptVolume.extent.range(Acts::AxisDirection::AxisR);
-  auto rangeZ = ptVolume.extent.range(Acts::AxisDirection::AxisZ);
+  auto rangeR = ptVolume.extent.range(AxisDirection::AxisR);
+  auto rangeZ = ptVolume.extent.range(AxisDirection::AxisZ);
 
   // Simple gap volume
   if (!ptVolume.container.has_value()) {
@@ -147,8 +146,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
 }
 
 /// @return a new tracking volume
-std::shared_ptr<const Acts::Layer>
-Acts::KDTreeTrackingGeometryBuilder::translateLayer(
+std::shared_ptr<const Layer> KDTreeTrackingGeometryBuilder::translateLayer(
     Cache& cCache, const GeometryContext& gctx, const SurfaceKDT& kdt,
     const ProtoVolume& plVolume, const std::string& indent) const {
   ACTS_DEBUG(indent + "Processing ProtoVolume: " << plVolume.name);
@@ -158,8 +156,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
   // Try to pull from the kd tree
   RangeXD<2u, double> zrRange;
-  zrRange[0u] = plVolume.extent.range(Acts::AxisDirection::AxisZ);
-  zrRange[1u] = plVolume.extent.range(Acts::AxisDirection::AxisR);
+  zrRange[0u] = plVolume.extent.range(AxisDirection::AxisZ);
+  zrRange[1u] = plVolume.extent.range(AxisDirection::AxisR);
 
   auto layerSurfaces = kdt.rangeSearchWithKey(zrRange);
   ACTS_VERBOSE(indent + ">> looking z/r range = " << zrRange.toString());
@@ -167,12 +165,12 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
                                     << " surfaces in the KDTree.");
   cCache.surfaceCounter += layerSurfaces.size();
 
-  std::shared_ptr<const Acts::Layer> tLayer = nullptr;
+  std::shared_ptr<const Layer> tLayer = nullptr;
 
   if (layerSurfaces.size() == 1u) {
     auto surface = layerSurfaces[0u].second;
     const auto& transform = surface->transform(gctx);
-    if (its.layerType == Acts::Surface::SurfaceType::Cylinder) {
+    if (its.layerType == Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent +
                    ">> creating cylinder layer from a single surface.");
       // Get the bounds
@@ -184,7 +182,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
           CylinderLayer::create(transform, cylinderBoundsClone, nullptr, 1.);
       cylinderLayer->assignSurfaceMaterial(surface->surfaceMaterialSharedPtr());
       tLayer = cylinderLayer;
-    } else if (its.layerType == Acts::Surface::SurfaceType::Disc) {
+    } else if (its.layerType == Surface::SurfaceType::Disc) {
       ACTS_VERBOSE(indent +
                    ">> creating cylinder layer from a single surface.");
       // Get the bounds
@@ -210,8 +208,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
       cLayerSurfaces.push_back(s.second);
     }
 
-    Acts::BinningType bType0 = Acts::equidistant;
-    Acts::BinningType bType1 = Acts::equidistant;
+    BinningType bType0 = equidistant;
+    BinningType bType1 = equidistant;
     std::size_t bins0 = 0;
     std::size_t bins1 = 0;
     // In case explicit binning is given
@@ -219,7 +217,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
       bType0 = its.surfaceBinning[0u].type;
       bType1 = its.surfaceBinning[1u].type;
       // In case explicit bin numbers are given in addition
-      if (bType0 == Acts::equidistant && bType1 == Acts::equidistant &&
+      if (bType0 == equidistant && bType1 == equidistant &&
           its.surfaceBinning[0u].bins() > 1u &&
           its.surfaceBinning[1u].bins() > 1u) {
         bins0 = its.surfaceBinning[0u].bins();
@@ -229,9 +227,9 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
       }
     }
 
-    Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
+    ProtoLayer pLayer(gctx, cLayerSurfaces);
     pLayer.envelope = plVolume.extent.envelope();
-    if (its.layerType == Acts::Surface::SurfaceType::Cylinder) {
+    if (its.layerType == Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent + ">> creating cylinder layer with "
                    << cLayerSurfaces.size() << " surfaces.");
       // Forced equidistant or auto-binned
@@ -241,7 +239,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
                    : m_cfg.layerCreator->cylinderLayer(gctx, cLayerSurfaces,
                                                        bType0, bType1, pLayer);
 
-    } else if (its.layerType == Acts::Surface::SurfaceType::Disc) {
+    } else if (its.layerType == Surface::SurfaceType::Disc) {
       ACTS_VERBOSE(indent + ">> creating disc layer with "
                    << cLayerSurfaces.size() << " surfaces.");
       // Forced equidistant or auto-binned
@@ -267,3 +265,5 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
   return tLayer;
 }
+
+}  // namespace Acts

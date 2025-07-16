@@ -13,17 +13,19 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/TransformComparator.hpp"
 
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class G4VPhysicalVolume;
 
 namespace Acts {
 class Surface;
-}
+}  // namespace Acts
 
 namespace ActsExamples::Geant4 {
 
@@ -57,15 +59,22 @@ struct SensitiveCandidatesBase {
   virtual ~SensitiveCandidatesBase() = default;
 };
 
-/// Implementation of the SensitiveCandidates for Gen1 geometry
+/// Implementation of the SensitiveCandidates for Gen1 && Gen3 geometry
 struct SensitiveCandidates : public SensitiveCandidatesBase {
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  SensitiveCandidates(
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+      std::unique_ptr<const Acts::Logger> _logger);
 
   std::vector<const Acts::Surface*> queryPosition(
       const Acts::GeometryContext& gctx,
       const Acts::Vector3& position) const override;
 
   std::vector<const Acts::Surface*> queryAll() const override;
+
+ private:
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
+  std::unique_ptr<const Acts::Logger> m_logger{};
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 ///   @brief The SensitiveSurfaceMapper connects the Geant 4 geometry with the Acts::TrackingGeometry.
@@ -86,8 +95,11 @@ class SensitiveSurfaceMapper {
   /// This prefix is used to indicate a sensitive volume that is matched
   constexpr static std::string_view mappingPrefix = "ActsSensitive#";
   /// @brief Abrivation of the association between G4 volumes and surfaces
+
+  using SurfacePosMap_t = std::map<Acts::Vector3, const Acts::Surface*,
+                                   Acts::detail::TransformComparator>;
   using VolumeToSurfAssocMap_t =
-      std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>;
+      std::unordered_map<const G4VPhysicalVolume*, SurfacePosMap_t>;
 
   /// Configuration struct for the surface mapper
   struct Config {

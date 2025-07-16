@@ -9,6 +9,7 @@ add_library(
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/DetectorVolumeFinderJsonConverter.cpp
+    src/GeometryIdentifierJsonConverter.cpp
     src/IndexedSurfacesJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp
@@ -25,6 +26,8 @@ add_library(
     src/DetrayJsonHelper.cpp
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
+    src/DefinitionsJsonConverter.cpp
+    src/Seeding2ConfigJsonConverter.cpp
 )
 target_include_directories(
     ActsPluginJson

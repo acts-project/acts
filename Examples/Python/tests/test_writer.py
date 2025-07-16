@@ -355,24 +355,22 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_root_material_writer(tmp_path, assert_root_hash):
-    from acts.examples.dd4hep import DD4hepDetector
+    from acts.examples.odd import getOpenDataDetector
 
-    detector = DD4hepDetector(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
-    trackingGeometry = detector.trackingGeometry()
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
 
-    out = tmp_path / "material.root"
+        out = tmp_path / "material.root"
 
-    assert not out.exists()
+        assert not out.exists()
 
-    rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
-    assert out.exists()
-    assert out.stat().st_size > 0 and out.stat().st_size < 500
-    rmw.write(trackingGeometry)
+        rmw = RootMaterialWriter(level=acts.logging.WARNING, filePath=str(out))
+        assert out.exists()
+        assert out.stat().st_size > 0 and out.stat().st_size < 500
+        rmw.write(trackingGeometry)
 
-    assert out.stat().st_size > 1000
-    assert_root_hash(out.name, out)
+        assert out.stat().st_size > 1000
+        assert_root_hash(out.name, out)
 
 
 @pytest.mark.json

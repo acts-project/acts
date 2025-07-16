@@ -21,13 +21,18 @@
 
 namespace edm4hep {
 class MCParticle;
-}
+class SimTrackerHit;
+}  // namespace edm4hep
 
 namespace podio {
 class Frame;
 }
 
 namespace ActsExamples {
+
+namespace detail {
+struct ParticleInfo;
+}
 
 class DD4hepDetector;
 
@@ -54,10 +59,6 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
     /// Output simulated vertices collection.
     std::string outputSimVertices;
 
-    /// Directory into which to write graphviz files for particles
-    /// Empty string means no output
-    std::string graphvizOutput = "";
-
     /// DD4hep detector for cellID resolution.
     std::shared_ptr<DD4hepDetector> dd4hepDetector;
 
@@ -66,6 +67,15 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
 
     /// Whether to sort sim hits in time to produce index sequence
     bool sortSimHitsInTime = false;
+
+    std::optional<double> particleRMin = std::nullopt;
+    std::optional<double> particleRMax = std::nullopt;
+
+    std::optional<double> particleZMin = std::nullopt;
+    std::optional<double> particleZMax = std::nullopt;
+
+    std::optional<double> particlePtMin = std::nullopt;
+    std::optional<double> particlePtMax = std::nullopt;
   };
 
   using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;
@@ -83,14 +93,16 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
   ProcessCode convert(const AlgorithmContext& ctx,
                       const podio::Frame& frame) const override;
 
-  void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
-                       std::vector<SimParticle>& particles,
-                       ParentRelationship& parentRelationship,
-                       std::unordered_map<int, std::size_t>& particleMap,
-                       std::size_t& nSecondaryVertices,
-                       std::size_t& maxGen) const;
+  void processChildren(
+      const edm4hep::MCParticle& particle, SimBarcode parentId,
+      std::vector<SimBarcode>& particles,
+      ParentRelationship& parentRelationship,
+      std::unordered_map<int, detail::ParticleInfo>& particleMap,
+      std::size_t& nSecondaryVertices, std::size_t& maxGen) const;
 
-  static void setSubParticleIds(std::span<SimParticle> particles);
+  static void setSubParticleIds(std::span<SimBarcode> particles);
+
+  bool acceptParticle(const edm4hep::MCParticle& particle) const;
 
   Config m_cfg;
 
@@ -105,9 +117,6 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
                                                           "OutputSimVertices"};
-
-  void graphviz(std::ostream& os, const std::vector<SimParticle>& particles,
-                const ParentRelationship& parents) const;
 };
 
 }  // namespace ActsExamples

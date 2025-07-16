@@ -82,9 +82,7 @@ void addRootInput(Context& ctx) {
     using Config = RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
-                       otag, mintag, maxtag, ttag, x0tag, l0tag, atag, ztag,
-                       rhotag, fileName);
+    ACTS_PYTHON_STRUCT(c, accessorConfig, accessorOptions, fileName);
   }
 }
 

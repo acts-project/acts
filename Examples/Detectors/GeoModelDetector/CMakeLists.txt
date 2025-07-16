@@ -3,6 +3,7 @@ add_library(
     SHARED
     src/GeoModelDetector.cpp
     src/AlignedGeoModelDetectorElement.cpp
+    src/GeoModelMuonMockupBuilder.cpp
 )
 
 target_include_directories(

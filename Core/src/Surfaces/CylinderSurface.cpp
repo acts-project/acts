@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -230,7 +229,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()},
+            this,
+            boundaryTolerance};
   }
 
   // Check the validity of the first solution
@@ -269,7 +270,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
   if (qe.solutions == 1) {
-    return {{first, first}, this};
+    return {{first, first}, this, boundaryTolerance};
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -281,9 +282,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, this};
+    return {{first, second}, this, boundaryTolerance};
   }
-  return {{second, first}, this};
+  return {{second, first}, this, boundaryTolerance};
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(

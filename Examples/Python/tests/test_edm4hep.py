@@ -316,7 +316,7 @@ def test_edm4hep_tracks_writer(tmp_path):
             assert abs(perigee.Z0) < 1e1
 
 
-def generate_input_test_edm4hep_simhit_reader(input, output):
+def generate_input_test_edm4hep_simhit_reader(input, output, particle_type):
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     ddsim = DD4hepSimulation()
@@ -329,8 +329,10 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
         ddsim.compactFile = input
     ddsim.enableGun = True
     ddsim.gun.direction = (1, 0, 0)
-    ddsim.gun.particle = "pi-"
+    ddsim.gun.particle = particle_type
     ddsim.gun.distribution = "eta"
+    ddsim.gun.etaMin = -3.0
+    ddsim.gun.etaMax = 3.0
     ddsim.numberOfEvents = 10
     ddsim.outputFile = output
     ddsim.outputConfig.forceEDM4HEP = True
@@ -338,8 +340,9 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
 
 
 # Session scoped fixture that uses a temp folder
-@pytest.fixture(scope="session")
-def ddsim_input_session():
+@pytest.fixture(scope="session", params=["mu-", "pi-"])
+def ddsim_input_session(request):
+    particle_type = request.param
     with tempfile.TemporaryDirectory() as tmp_dir:
         odd_xml_file = str(
             getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
@@ -352,7 +355,7 @@ def ddsim_input_session():
             spawn_context = multiprocessing.get_context("spawn")
             p = spawn_context.Process(
                 target=generate_input_test_edm4hep_simhit_reader,
-                args=(odd_xml_file, output_file),
+                args=(odd_xml_file, output_file, particle_type),
             )
             p.start()
             p.join()
@@ -395,7 +398,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 
         s.addAlgorithm(
             EDM4hepSimInputConverter(
-                level=acts.logging.INFO,
+                level=acts.logging.DEBUG,
                 inputFrame="events",
                 inputSimHits=[
                     "PixelBarrelReadout",

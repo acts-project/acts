@@ -17,6 +17,17 @@ target_link_libraries(
         ActsPluginGeant4
 )
 
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    target_link_libraries(
+        ActsExamplesMuonSpectrometerMockupDetector
+        PUBLIC ActsPluginGeoModel GeoModelIO::GeoModelWrite
+    )
+    target_sources(
+        ActsExamplesMuonSpectrometerMockupDetector
+        PUBLIC src/GeoMuonMockupExperiment.cpp
+    )
+endif()
+
 install(
     TARGETS ActsExamplesMuonSpectrometerMockupDetector
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

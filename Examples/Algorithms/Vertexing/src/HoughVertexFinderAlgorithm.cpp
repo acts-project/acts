@@ -65,6 +65,10 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
   } else {
     ACTS_INFO("Not found a vertex in the event after "
               << (t2 - t1).count() / 1e6 << " ms");
+
+    // store empty container
+    std::vector<Acts::Vertex> vertexCollection;
+    m_outputVertices(ctx, std::move(vertexCollection));
   }
 
   return ProcessCode::SUCCESS;

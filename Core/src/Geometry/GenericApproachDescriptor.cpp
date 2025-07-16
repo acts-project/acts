@@ -16,7 +16,9 @@
 
 #include <boost/container/small_vector.hpp>
 
-void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
+namespace Acts {
+
+void GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
   for (auto& sf : m_surfaceCache) {
     auto mutableSf = const_cast<Surface*>(sf);
@@ -24,7 +26,7 @@ void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
   }
 }
 
-Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
+SurfaceIntersection GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double nearLimit, double farLimit) const {
@@ -49,12 +51,13 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
                            SurfaceIntersection::pathLengthOrder);
 }
 
-const std::vector<const Acts::Surface*>&
-Acts::GenericApproachDescriptor::containedSurfaces() const {
+const std::vector<const Surface*>&
+GenericApproachDescriptor::containedSurfaces() const {
   return m_surfaceCache;
 }
 
-std::vector<const Acts::Surface*>&
-Acts::GenericApproachDescriptor::containedSurfaces() {
+std::vector<const Surface*>& GenericApproachDescriptor::containedSurfaces() {
   return m_surfaceCache;
 }
+
+}  // namespace Acts

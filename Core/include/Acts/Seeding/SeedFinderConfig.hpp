@@ -210,7 +210,7 @@ struct SeedFinderOptions {
   // used as offset for Space Points
   Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
   // field induction
-  float bFieldInZ = 2.08 * UnitConstants::T;
+  float bFieldInZ = 2 * UnitConstants::T;
 
   // derived quantities
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();

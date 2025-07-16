@@ -14,9 +14,9 @@
 #include <iostream>
 #include <utility>
 
-using namespace Acts::UnitLiterals;
-
 namespace Acts {
+
+using namespace UnitLiterals;
 
 Volume::Volume(const Transform3& transform,
                std::shared_ptr<VolumeBounds> volbounds)

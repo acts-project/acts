@@ -36,16 +36,26 @@ namespace ActsExamples {
 /// given station.
 class MuonHoughSeeder final : public IAlgorithm {
  public:
-  /// config
+  /// @brief Configuration object of the Hough seeder
   struct Config {
+    /// @brief Container name of the truth segments (used for validation)
     std::string inTruthSegments{};
+    /// @brief Container name of the space point collection
     std::string inSpacePoints{};
+    /// @brief Container name of the output hough seed collection
     std::string outHoughMax{};
-
-    /** @brief Extra margin added to both y-sides of the eta-hough accumulator plane */
+    /// @brief Extra margin added to both y-sides of the eta-hough accumulator plane
     double etaPlaneMarginIcept{10. * Acts::UnitConstants::cm};
-    /** @brief Extra margin added to both y-sides of the phi-hough accumulator plane */
+    /// @brief Extra margin added to both y-sides of the phi-hough accumulator plane
     double phiPlaneMarginIcept{10. * Acts::UnitConstants::cm};
+    /// @brief Number of bins to scan tan (theta)
+    unsigned nBinsTanTheta = 25;
+    /// @brief Number of bins in y0 space (complementary to tan (theta))
+    unsigned nBinsY0 = 25;
+    /// @brief Number of bins to scan tan (phi)
+    unsigned nBinsTanPhi = 10;
+    /// @brief Number of bins in x0 space (omplementary to tan (phi))
+    unsigned nBinsX0 = 10;
   };
 
   MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
@@ -63,46 +73,45 @@ class MuonHoughSeeder final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  /** @brief Abbrivation of the HoughPlane_t */
+  /// @brief Abbrivation of the HoughPlane_t
   using HoughPlane_t =
       Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>;
-  /** @brief Abbrivation of the PeakFinder */
+  /// @brief Abbrivation of the PeakFinder
   using PeakFinder_t = Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       const MuonSpacePoint*>;
-  /** @brief Abbrivation of the PeakFinder configuration object  */
+  /// @brief Abbrivation of the PeakFinder configuration object
   using PeakFinderCfg_t =
       Acts::HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig;
-  /** @brief Abbrivation of the HoughMaximum type returned by the PeakFinder */
+  /// @brief Abbrivation of the HoughMaximum type returned by the PeakFinder
   using Maximum_t = PeakFinder_t::Maximum;
-  /** @brief Abbrivation of the HoughMaximum vector */
+  /// @brief Abbrivation of the HoughMaximum vector
   using MaximumVec_t = std::vector<Maximum_t>;
-  /** @brief Abbrivation of the HoughTransform axis utils */
+  /// @brief Abbrivation of the HoughTransform axis utils
   using AxisRange_t = Acts::HoughTransformUtils::HoughAxisRanges;
-  /** @brief Abbrivation of the space point id */
+  /// @brief Abbrivation of the space point id
   using MuonId = MuonSpacePoint::MuonId;
 
-  /** @brief Find eta maxima from the space point bucket and fills them into a new
-   *         maximum container
-   *  @param ctx: Algorithm context needed for the display of the truth-parameters
-   *  @param bucket: Spacepoint bucket of interest
-   *  @param plane: Allocated hough plane to be recycled for all hough searches in the event*/
+  /// @brief Find eta maxima from the space point bucket and fills them into a new
+  ///        maximum container
+  /// @param ctx: Algorithm context needed for the display of the truth-parameters
+  /// @param bucket: Spacepoint bucket of interest
+  /// @param plane: Allocated hough plane to be recycled for all hough searches in the event
   MuonHoughMaxContainer constructEtaMaxima(const AlgorithmContext& ctx,
                                            const MuonSpacePointBucket& bucket,
                                            HoughPlane_t& plane) const;
-  /** @brief Extends the obtained eta maxima and tries to attach straight line parameters
-   *         in the non-precision plane (phi).
-   */
+  /// @brief Extends the obtained eta maxima and tries to attach straight line parameters
+  ///        in the non-precision plane (phi).
   MuonHoughMaxContainer extendMaximaWithPhi(const AlgorithmContext& ctx,
                                             MuonHoughMaxContainer&& etaMaxima,
                                             HoughPlane_t& plane) const;
 
-  /** @brief Displays the found maxima onto a TCanvas
-   *  @param ctx: Algorithm context to fetch the truth segment parameters
-   *  @param bucketId: identifier of the bucket to display on the Canvas and also
-   *                   to determine whether it's an eta / phi maximum
-   *  @param maxima: List of maxima from the PeakFinder
-   *  @param plane: Filled hough plane
-   *  @param axis: Axis range needed to interpret the hough binning */
+  /// @brief Displays the found maxima onto a TCanvas
+  /// @param ctx: Algorithm context to fetch the truth segment parameters
+  /// @param bucketId: identifier of the bucket to display on the Canvas and also
+  ///                  to determine whether it's an eta / phi maximum
+  /// @param maxima: List of maxima from the PeakFinder
+  /// @param plane: Filled hough plane
+  /// @param axis: Axis range needed to interpret the hough binning
   void displayMaxima(const AlgorithmContext& ctx, const MuonId& bucketId,
                      const MaximumVec_t& maxima, const HoughPlane_t& plane,
                      const AxisRange_t& axis) const;

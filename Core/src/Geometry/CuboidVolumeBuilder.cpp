@@ -9,7 +9,6 @@
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -31,9 +30,10 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include <type_traits>
 
-std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
+namespace Acts {
+
+std::shared_ptr<const Surface> CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
     const CuboidVolumeBuilder::SurfaceConfig& cfg) const {
   std::shared_ptr<PlaneSurface> surface;
@@ -54,9 +54,8 @@ std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
   return surface;
 }
 
-std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
-    const GeometryContext& gctx,
-    Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
+std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
+    const GeometryContext& gctx, CuboidVolumeBuilder::LayerConfig& cfg) const {
   if (cfg.surfaces.empty() && cfg.surfaceCfg.empty()) {
     throw std::runtime_error{
         "Neither surfaces nor config to build surfaces was provided. Cannot "
@@ -100,9 +99,9 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
                                  cfg.binningDimension, pl, trafo);
 }
 
-std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
+std::pair<double, double> CuboidVolumeBuilder::binningRange(
     const GeometryContext& gctx,
-    const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
+    const CuboidVolumeBuilder::VolumeConfig& cfg) const {
   using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
@@ -144,9 +143,8 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   return minMax;
 }
 
-std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
-    const GeometryContext& gctx,
-    Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
+std::shared_ptr<TrackingVolume> CuboidVolumeBuilder::buildVolume(
+    const GeometryContext& gctx, CuboidVolumeBuilder::VolumeConfig& cfg) const {
   // Build transformation
   Transform3 trafo(Transform3::Identity());
   trafo.translation() = cfg.position;
@@ -200,8 +198,8 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   return trackVolume;
 }
 
-Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
+MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
+    const GeometryContext& gctx, TrackingVolumePtr /*gctx*/,
     std::shared_ptr<const VolumeBounds> /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
@@ -263,3 +261,5 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   return mtvp;
 }
+
+}  // namespace Acts

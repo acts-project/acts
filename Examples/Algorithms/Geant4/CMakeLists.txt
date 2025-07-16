@@ -1,6 +1,7 @@
 add_library(
     ActsExamplesGeant4
     SHARED
+    src/AlgebraConverters.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp

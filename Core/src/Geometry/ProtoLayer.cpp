@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
 
 namespace Acts {
+
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
 namespace detail {
 
 void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
