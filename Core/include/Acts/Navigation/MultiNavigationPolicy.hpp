@@ -37,7 +37,8 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   const std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
   std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup) const override;
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const override;
 
  private:
   void initializeCandidates(const NavigationArguments& args,
