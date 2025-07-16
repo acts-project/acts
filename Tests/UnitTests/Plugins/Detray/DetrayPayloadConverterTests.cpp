@@ -33,6 +33,7 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <memory>
@@ -474,61 +475,102 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   DetrayPayloadConverter converter(cfg, std::move(logger));
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
+  const auto& detector = *payloads.detector;
+  BOOST_CHECK_EQUAL(detector.volumes.size(), 6);
+  for (const auto& volume : detector.volumes) {
+    BOOST_CHECK(volume.type == detray::volume_id::e_cylinder);
+  }
+  BOOST_CHECK_EQUAL(detector.volumes.at(0).name, "Beampipe");
+  BOOST_CHECK_EQUAL(detector.volumes.at(1).name, "World");
+  BOOST_CHECK_EQUAL(detector.volumes.at(2).name, "L0");
+  BOOST_CHECK_EQUAL(detector.volumes.at(3).name, "L1");
+  BOOST_CHECK_EQUAL(detector.volumes.at(4).name, "L2");
+  BOOST_CHECK_EQUAL(detector.volumes.at(5).name, "L3");
+
+  auto& homogeneousMaterial = *payloads.homogeneousMaterial;
+
+  // @HACK: At this time, the conversion introduces a number of dummy material slabs which
+  //        should ultimately not be there.
+
+  BOOST_CHECK_EQUAL(homogeneousMaterial.volumes.size(), 6);
+
+  for (const auto& volume : detector.volumes) {
+    auto it = std::ranges::find_if(
+        homogeneousMaterial.volumes, [&](const auto& hMat) {
+          return hMat.volume_link.link == volume.index.link;
+        });
+
+    if (it == homogeneousMaterial.volumes.end()) {
+      BOOST_FAIL("No material slab found for volume: " + volume.name);
+      continue;
+    }
+
+    auto& hMat = *it;
+
+    // Currently, we expect exactly one slab per surface!
+    BOOST_CHECK_EQUAL(volume.surfaces.size(), hMat.mat_slabs.size());
+  }
+
+  auto& materialGrids = *payloads.materialGrids;
+
+  BOOST_CHECK_EQUAL(materialGrids.grids.size(), 6);
+
+  auto& surfaceGrids = *payloads.surfaceGrids;
+
+  BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
+
+  // Empirical binning config from construction
+  const std::vector<std::pair<int, int>> kLayerBinning = {
+      {16, 14}, {32, 14}, {52, 14}, {78, 14}};
+
+  for (const auto& [idx, it] : enumerate(surfaceGrids.grids)) {
+    const auto [b0, b1] = kLayerBinning.at(idx);
+
+    const auto [key, grids] = it;
+
+    // We're only building one surface grid for each layer
+    BOOST_CHECK_EQUAL(grids.size(), 1);
+
+    auto& grid = grids.front();
+
+    // All grids in this case are 2D
+    BOOST_CHECK_EQUAL(grid.axes.size(), 2);
+
+    BOOST_CHECK_EQUAL(b0, grid.axes.front().bins);
+    BOOST_CHECK_EQUAL(b1, grid.axes.back().bins);
+
+    std::size_t nBinsExp = grid.axes.front().bins * grid.axes.back().bins;
+    BOOST_CHECK_EQUAL(grid.bins.size(), nBinsExp);
+  }
+
+  BOOST_CHECK_EQUAL(payloads.names.size(), 7);
+
   using detector_t =
       detray::detector<detray::default_metadata<detray::array<double>>>;
-
-  detector_t::name_map names = {{0u, "Detector"}};
 
   // build detector
   detray::detector_builder<detector_t::metadata> detectorBuilder{};
   // (1) geometry
   detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        *payloads.detector);
+                                                        detector);
 
   detray::io::homogeneous_material_reader::from_payload<detector_t>(
       detectorBuilder, *payloads.homogeneousMaterial);
 
   detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-      from_payload<detector_t>(detectorBuilder,
-                               std::move(*payloads.materialGrids));
+      from_payload<detector_t>(detectorBuilder, std::move(materialGrids));
 
-#if 0
-  // (2b) material grids
-  if constexpr (detray::concepts::has_material_maps<detector_t>) {
-    if (options.convertMaterial) {
-      detray::io::detector_grids_payload<detray::io::material_slab_payload,
-                                         detray::io::material_id>
-          materialGridsPayload =
-              DetrayMaterialConverter::convertGridSurfaceMaterial(
-                  cCache, detector, logger());
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder, names,
-                                   std::move(materialGridsPayload));
-    }
-  }
-
-  // (3) surface grids
-  if (options.convertSurfaceGrids) {
-    detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
-        surfaceGridsPayload =
-            DetraySurfaceGridsConverter::convertSurfaceGrids(detector);
-
-    // Capacity 0 (dynamic bin size) and dimension 2 (2D grids)
-    detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                    std::integral_constant<std::size_t, 0>,
-                                    std::integral_constant<std::size_t, 2>>::
-        template from_payload<detector_t>(detectorBuilder, names,
-                                          std::move(surfaceGridsPayload));
-  }
-
-#endif
+  detray::io::surface_grid_reader<detector_t::surface_type,
+                                  std::integral_constant<std::size_t, 0>,
+                                  std::integral_constant<std::size_t, 2>>::
+      from_payload<detector_t>(detectorBuilder, surfaceGrids);
 
   detector_t detrayDetector(detectorBuilder.build(mr));
 
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
 
-  detray::svgtools::illustrator illustrator(detrayDetector, names);
+  detray::svgtools::illustrator illustrator(detrayDetector, payloads.names);
   illustrator.hide_eta_lines(true);
   illustrator.show_info(true);
 
@@ -553,12 +595,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
                         .format(detray::io::format::json)
                         .replace_files(true);
 
-  detray::io::write_detector(detrayDetector, names, writer_cfg);
-
-  // // Check payload size
-  // BOOST_CHECK_EQUAL(payload.volumes.size(), 1);
-  // BOOST_CHECK_EQUAL(payload.volumes[0].type, detray::volume_id::e_cylinder);
-  // BOOST_CHECK_EQUAL(payload.volumes[0].name, "CylinderVolume");
+  detray::io::write_detector(detrayDetector, payloads.names, writer_cfg);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
