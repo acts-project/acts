@@ -24,7 +24,9 @@ template <int N>
 inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
                                      const ActsVector<N>& lineDirA,
                                      const ActsVector<N>& linePosB,
-                                     const ActsVector<N>& lineDirB) requires(N>=2) {
+                                     const ActsVector<N>& lineDirB)
+  requires(N >= 2)
+{
   static_assert(N >= 2, "One dimensional intersect not sensible");
   /// Use the formula
   ///   A + lambda dirA  = B + mu dirB
@@ -60,37 +62,6 @@ inline Intersection3D lineSurfaceIntersect(
   return lineIntersect<3>(
       lineSurfTrf1.translation(), lineSurfTrf1.linear().col(2),
       lineSurfTrf2.translation(), lineSurfTrf2.linear().col(2));
-}
-/// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
-/// @param linePos: Arbitrary point on the line to intersect
-/// @param lineDir: Direction of the line to intersect
-/// @param planeNorm: Normal vector of the plane
-/// @param offSet: Offset to move the plane along the normal vector
-inline Intersection3D intersectPlane(const Vector3& linePos,
-                                     const Vector3& lineDir,
-                                     const Vector3& planeNorm,
-                                     const double offset) {
-  /// Use the formula: <P, N> - C = 0
-  ///  --> insert line equation: <A + lambda * B, N> - C = 0
-  ///  --> lambda = (C - <A,N>)/ <N, B> */
-  const double normDot = planeNorm.dot(lineDir);
-  if (std::abs(normDot) < std::numeric_limits<double>::epsilon()) {
-    return Intersection3D::invalid();
-  }
-  const double path = (offset - linePos.dot(planeNorm)) / normDot;
-  return Intersection3D{linePos + path * lineDir, path,
-                        IntersectionStatus::onSurface};
-}
-/// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
-/// @param linePos: Arbitrary point on the line to intersect
-/// @param lineDir: Direction of the line to intersect
-/// @param planeNorm: Normal vector of the plane
-/// @param planePoint: Point on the plane
-inline Intersection3D intersectPlane(const Vector3& linePos,
-                                     const Vector3& lineDir,
-                                     const Vector3& planeNorm,
-                                     const Vector3& planePoint) {
-  return intersectPlane(linePos, lineDir, planeNorm, planePoint.dot(planeNorm));
 }
 /// @brief Calculates the signed distance between two lines in 3D space
 /// @param linePosA: Arbitrary point on the first line

@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <format>
@@ -19,7 +20,7 @@ BOOST_AUTO_TEST_SUITE(LineInterSectionTests)
 
 BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
   using namespace Acts;
-  using namespace Acts::detail::LineHelper;
+  using namespace Acts::PlanarHelper;
 
   const Vector3 pointInPlane{561., 0., 0.};
   const Vector3 planeNormal{Vector3::UnitX()};

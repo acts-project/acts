@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(PowerTests) {
 BOOST_AUTO_TEST_CASE(SumOfIntegers) {
   std::array<unsigned, 100> numberSeq{Acts::filledArray<unsigned, 100>(1)};
   std::iota(numberSeq.begin(), numberSeq.end(), 1);
-  for (unsigned  i = 1; i <= numberSeq.size(); ++i) {
+  for (unsigned i = 1; i <= numberSeq.size(); ++i) {
     const unsigned sum =
         std::accumulate(numberSeq.begin(), numberSeq.begin() + i, 0);
     BOOST_CHECK_EQUAL(sum, Acts::sumUpToN(i));
@@ -116,23 +116,24 @@ BOOST_AUTO_TEST_CASE(SumOfIntegers) {
 }
 
 BOOST_AUTO_TEST_CASE(BinomialTests) {
-
   BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
-  for (unsigned  n= 2; n <= 10; ++n) {
-      /// Check that the binomial of (n 1 is always n)
-      BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
-       for (unsigned  k = 1; k <= n; ++k) {
-          /// Use recursive formula
-          ///  n      n -1       n -1
-          ///     =          + 
-          ///  k      k -1        k
-          std::cout<<"n: "<<n<<", k: "<<k<<", binom(n,k): "<<Acts::binomial(n,k)
-                   <<", binom(n-1, k-1): "<<Acts::binomial(n-1, k-1)<<", binom(n-1,k): "<<Acts::binomial(n-1, k)<<std::endl;
-          BOOST_CHECK_EQUAL( Acts::binomial(n,k), Acts::binomial(n-1, k-1) +
-                              Acts::binomial(n-1, k));
-          BOOST_CHECK_EQUAL( Acts::binomial(n,k), Acts::binomial(n, n-k) );
-      }
+  for (unsigned n = 2; n <= 10; ++n) {
+    /// Check that the binomial of (n 1 is always n)
+    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
+    for (unsigned k = 1; k <= n; ++k) {
+      /// Use recursive formula
+      ///  n      n -1       n -1
+      ///     =          +
+      ///  k      k -1        k
+      std::cout << "n: " << n << ", k: " << k
+                << ", binom(n,k): " << Acts::binomial(n, k)
+                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
+                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
+      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
+                                                  Acts::binomial(n - 1, k));
+      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
     }
+  }
 }
 BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
   using namespace Acts::detail::Legendre;
@@ -145,7 +146,6 @@ BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
   std::cout << "Legdnre coefficients L=5: " << coefficients<5>() << std::endl;
   std::cout << "Legdnre coefficients L=6: " << coefficients<6>() << std::endl;
   for (unsigned order = 0; order < 10; ++order) {
-
     const double sign = (order % 2 == 0 ? 1. : -1.);
     BOOST_CHECK_EQUAL(withinTolerance(legendrePoly(1., order), 1.), true);
     BOOST_CHECK_EQUAL(withinTolerance(legendrePoly(-1., order), sign * 1.),
