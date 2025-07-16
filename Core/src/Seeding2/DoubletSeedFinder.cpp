@@ -97,7 +97,7 @@ void createDoubletsImpl(
     candidateSps = candidateSps.subrange(offset);
   }
 
-  const SpacePointContainer2 container = candidateSps.container();
+  const SpacePointContainer2& container = candidateSps.container();
   for (auto [indexO, xO, yO, zO, rO, varianceZO, varianceRO] : candidateSps.zip(
            container.xColumn(), container.yColumn(), container.zColumn(),
            container.rColumn(), container.varianceZColumn(),
