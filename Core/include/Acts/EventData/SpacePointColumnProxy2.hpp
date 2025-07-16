@@ -27,7 +27,7 @@ class SpacePointColumnProxy {
   constexpr static bool ReadOnly = read_only;
   using Index = SpacePointIndex2;
   using IndexRange = SpacePointIndexRange2;
-  using IndexSubset = SpacePointSubset2;
+  using IndexSubset = SpacePointIndexSubset2;
   using Value = T;
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
   using Column = const_if_t<ReadOnly, std::vector<Value>>;

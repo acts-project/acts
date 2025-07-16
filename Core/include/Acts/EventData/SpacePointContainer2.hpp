@@ -73,7 +73,7 @@ class SpacePointContainer2 {
  public:
   using Index = SpacePointIndex2;
   using IndexRange = SpacePointIndexRange2;
-  using IndexSubset = SpacePointSubset2;
+  using IndexSubset = SpacePointIndexSubset2;
   using MutableProxy = MutableSpacePointProxy2;
   using ConstProxy = ConstSpacePointProxy2;
 
