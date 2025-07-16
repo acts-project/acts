@@ -55,6 +55,14 @@ class SpacePointProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  /// Returns a const proxy of the space point.
+  /// @return A const proxy of the space point.
+  SpacePointProxy2<true> asConst() const noexcept
+    requires(!ReadOnly)
+  {
+    return {*m_container, m_index};
+  }
+
   /// Gets the container holding the space point.
   /// @return A reference to the container holding the space point.
   SpacePointContainer2 &container() const noexcept

@@ -47,6 +47,14 @@ class SpacePointColumnProxy {
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
+  /// Returns a const proxy of the space point column.
+  /// @return A const proxy of the space point column.
+  SpacePointColumnProxy<T, true> asConst() const noexcept
+    requires(!ReadOnly)
+  {
+    return {*m_container, *m_column};
+  }
+
   /// Gets the container holding the space point.
   /// @return A reference to the container holding the space point.
   SpacePointContainer2 &container() noexcept

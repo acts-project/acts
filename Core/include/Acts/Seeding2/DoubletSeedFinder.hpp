@@ -114,34 +114,29 @@ class DoubletSeedFinder {
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
   ///
-  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
-  /// @param candidateSps Group of space points to be used as candidates for
-  ///                     middle SP in a seed
+  /// @param candidateSps Subset of space points to be used as candidates for
+  ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoublets(const SpacePointContainer2& spacePoints,
-                      const ConstSpacePointProxy2& middleSp,
+  void createDoublets(const ConstSpacePointProxy2& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      std::span<const SpacePointIndex2> candidateSps,
+                      const SpacePointContainer2::ConstSubset& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const;
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs. Input space points need to be sorted by radius.
   ///
-  /// @param spacePoints Space point container
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
-  /// @param candidateSps Group of space points to be used as candidates for
-  ///                     middle SP in a seed
-  /// @param candidateOffset Offset in the candidateSps span to start from
+  /// @param candidateSpRange Range of space points to be used as candidates for
+  ///   middle SP in a seed. An offset will be applied based on the middle SP
+  ///   radius.
   /// @param compatibleDoublets Output container for compatible doublets
-  void createSortedDoublets(const SpacePointContainer2& spacePoints,
-                            const ConstSpacePointProxy2& middleSp,
-                            const MiddleSpInfo& middleSpInfo,
-                            std::span<const SpacePointIndex2> candidateSps,
-                            std::size_t& candidateOffset,
-                            DoubletsForMiddleSp& compatibleDoublets) const;
+  void createDoubletsFromSortedInR(
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer2::ConstRange& candidateSpRange,
+      DoubletsForMiddleSp& compatibleDoublets) const;
 
  private:
   DerivedConfig m_cfg;
