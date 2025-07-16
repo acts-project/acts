@@ -12,7 +12,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-namespace Acts::LineHelper {
+namespace Acts::detail::LineHelper {
 /// @brief Intersect two straight N-dimensional lines with each other or more generally
 ///        calculate the point of closest approach of the second line to the
 ///        first line.

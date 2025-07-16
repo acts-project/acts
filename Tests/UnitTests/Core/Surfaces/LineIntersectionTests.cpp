@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(LineInterSectionTests)
 
 BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
   using namespace Acts;
-  using namespace Acts::LineHelper;
+  using namespace Acts::detail::LineHelper;
 
   const Vector3 pointInPlane{561., 0., 0.};
   const Vector3 planeNormal{Vector3::UnitX()};
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(checkPlaneIsection) {
 }
 
 BOOST_AUTO_TEST_CASE(lineDistance) {
-  using namespace Acts::LineHelper;
+  using namespace Acts::detail::LineHelper;
   using namespace Acts;
   using namespace Acts::UnitLiterals;
   const Vector3 posA{100, 0., 0.};
