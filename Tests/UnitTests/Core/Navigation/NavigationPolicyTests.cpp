@@ -40,7 +40,9 @@ struct APolicy : public INavigationPolicy {
     connectDefault<APolicy>(delegate);
   }
 
-  std::unique_ptr<DetraySurfaceGrids> toDetrayPayload() const override {
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& /*surfaceLookup*/,
+      const Logger& /*logger*/) const override {
     return nullptr;
   }
 
@@ -67,7 +69,9 @@ struct BPolicy : public INavigationPolicy {
     const_cast<BPolicy*>(this)->value = m_config.value;
   }
 
-  std::unique_ptr<DetraySurfaceGrids> toDetrayPayload() const override {
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& /*surfaceLookup*/,
+      const Logger& /*logger*/) const override {
     return nullptr;
   }
 
@@ -195,7 +199,9 @@ struct CPolicySpecialized : public CPolicy {
     self->value = m_config.value;
   }
 
-  std::unique_ptr<DetraySurfaceGrids> toDetrayPayload() const override {
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& /*surfaceLookup*/,
+      const Logger& /*logger*/) const override {
     return nullptr;
   }
 

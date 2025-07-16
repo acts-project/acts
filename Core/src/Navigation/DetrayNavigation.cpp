@@ -11,6 +11,7 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
@@ -20,10 +21,10 @@
 namespace Acts {
 
 std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& surfaceLookup) const {
+    const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
   // Only ONE of the child policies should return a non-nullptr payload
   for (const auto& policy : m_policyPtrs) {
-    auto payload = policy->toDetrayPayload(surfaceLookup);
+    auto payload = policy->toDetrayPayload(surfaceLookup, logger);
     if (payload) {
       return payload;
     }
@@ -33,7 +34,8 @@ std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
 
 std::unique_ptr<DetraySurfaceGrid>
 Experimental::MultiLayerNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& /*surfaceLookup*/) const {
+    const SurfaceLookupFunction& /*surfaceLookup*/,
+    const Logger& /*logger*/) const {
   return nullptr;
 }
 
@@ -108,7 +110,7 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 
 std::unique_ptr<DetraySurfaceGrid>
 SurfaceArrayNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& surfaceLookup) const {
+    const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
   const auto* gridLookup =
       dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
           &m_surfaceArray->gridLookup());
@@ -249,7 +251,8 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
 }
 
 std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& /*surfaceLookup*/) const {
+    const SurfaceLookupFunction& /*surfaceLookup*/,
+    const Logger& /*logger*/) const {
   return nullptr;
 }
 
