@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include <torch/script.h>
-
 namespace torch::jit {
 class Module;
 }
@@ -30,7 +28,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   struct Config {
     std::string modelPath;
     std::vector<int> selectedFeatures = {};
-    float cut = 0.21;
+    float cut = 0.5;
     int nChunks = 1;  // NOTE for GNN use 1
     bool undirected = false;
     int deviceID = 0;
@@ -40,20 +38,16 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any, std::any> operator()(
-      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      torch::Device device = torch::Device(torch::kCPU)) override;
+  PipelineTensors operator()(PipelineTensors tensors,
+                             const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
-  torch::Device device() const override { return m_device; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
 
   Config m_cfg;
-  c10::DeviceType m_deviceType;
-  torch::Device m_device;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 

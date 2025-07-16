@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstddef>
@@ -22,27 +24,12 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-class TGeoDetectorElement;
-class TrackingGeometry;
-class IMaterialDecorator;
-}  // namespace Acts
-
 namespace ActsExamples {
 
-class IContextDecorator;
-
-struct TGeoDetector {
-  using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
-  using DetectorStore = std::vector<DetectorElementPtr>;
-
-  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
-  /// The Store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
-
+class TGeoDetector : public Detector {
+ public:
   struct Config {
+    Acts::Logging::Level logLevel = Acts::Logging::WARNING;
     Acts::Logging::Level surfaceLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level layerLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level volumeLogLevel = Acts::Logging::WARNING;
@@ -59,12 +46,14 @@ struct TGeoDetector {
 
     double unitScalor = 1.0;
 
-    Acts::TGeoLayerBuilder::ElementFactory elementFactory =
+    Acts::TGeoLayerBuilder::ElementFactory detectorElementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
+
+    std::shared_ptr<Acts::IMaterialDecorator> materialDecorator;
 
     enum SubVolume : std::size_t { Negative = 0, Central, Positive };
 
@@ -147,9 +136,10 @@ struct TGeoDetector {
   static void readTGeoLayerBuilderConfigsFile(const std::string& path,
                                               Config& config);
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  explicit TGeoDetector(const Config& cfg);
+
+ private:
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples

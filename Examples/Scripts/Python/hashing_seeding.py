@@ -7,9 +7,11 @@ import acts
 import acts.examples
 from acts.examples.simulation import (
     addPythia8,
-    addFatras,
     ParticleSelectorConfig,
+    addGenParticleSelection,
+    addFatras,
     addDigitization,
+    addDigiParticleSelection,
 )
 
 from acts.examples.reconstruction import (
@@ -56,7 +58,7 @@ class Config:
         self.zBins = zBins
         self.phiBins = phiBins
 
-        if seedingAlgorithm == SeedingAlgorithm.Default:
+        if seedingAlgorithm == SeedingAlgorithm.GridTriplet:
             self.bucketSize = 0
             self.metric = HashingMetric.dphi
             self.annoySeed = 123456789
@@ -110,7 +112,7 @@ class Config:
         return outDir
 
     def getDetectorInfo(self):
-        actsExamplesDir = getActsExamplesDirectory()
+        actsExamplesDir = Path(__file__).parent.parent.parent
 
         if self.detector == DetectorName.ODD:
             from acts.examples.odd import (
@@ -121,13 +123,14 @@ class Config:
             geoDir = getOpenDataDetectorDirectory()
 
             oddMaterialMap = geoDir / "data/odd-material-maps.root"
-            oddDigiConfig = geoDir / "config/odd-digi-smearing-config.json"
-            oddSeedingSel = geoDir / "config/odd-seeding-config.json"
+            oddDigiConfig = actsExamplesDir / "Configs/odd-digi-smearing-config.json"
+            oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector, trackingGeometry, decorators = getOpenDataDetector(
-                odd_dir=geoDir, mdecorator=oddMaterialDeco
+            detector = getOpenDataDetector(
+                odd_dir=geoDir, materialDecorator=oddMaterialDeco
             )
+            trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
 
@@ -136,14 +139,11 @@ class Config:
         elif self.detector == DetectorName.generic:
             print("Create detector and tracking geometry")
 
-            detector, trackingGeometry, a = acts.examples.GenericDetector.create()
-            digiConfig = (
-                actsExamplesDir
-                / "Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
+            detector = acts.examples.GenericDetector()
+            trackingGeometry = detector.trackingGeometry()
+            digiConfig = actsExamplesDir / "Configs/generic-digi-smearing-config.json"
             geoSelectionConfigFile = (
-                actsExamplesDir
-                / "Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+                actsExamplesDir / "Configs/generic-seeding-config.json"
             )
         else:
             exit("Detector not supported")
@@ -153,10 +153,6 @@ class Config:
 
 def extractEnumName(enumvar):
     return str(enumvar).split(".")[-1]
-
-
-def getActsExamplesDirectory():
-    return Path(__file__).parent.parent.parent
 
 
 def runHashingSeeding(
@@ -204,20 +200,18 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         trackingGeometry,
         field,
-        preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta),
-            pt=(150 * u.MeV, None),
-        ),
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(1.0 * u.GeV, None),
-            eta=(-eta, eta),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
         enableInteractions=True,
         # outputDirRoot=outputDir,  # RootParticle ERROR when setting the outputDirRoot
         outputDirCsv=outputDir if saveFiles else None,
@@ -234,12 +228,22 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     import numpy as np
 
     cotThetaMax = 1 / (np.tan(2 * np.arctan(np.exp(-eta))))  # =1/tan(2×atan(e^(-eta)))
     seedFinderConfigArg = SeedFinderConfigArg(
         r=(None, 200 * u.mm),  # rMin=default, 33mm
-        deltaR=(1 * u.mm, 60 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
         collisionRegion=(-250 * u.mm, 250 * u.mm),
         z=(-2000 * u.mm, 2000 * u.mm),
         maxSeedsPerSpM=maxSeedsPerSpM,

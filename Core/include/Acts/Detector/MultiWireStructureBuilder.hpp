@@ -9,16 +9,17 @@
 #pragma once
 
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -41,7 +42,7 @@ class MultiWireStructureBuilder {
     std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
-    std::vector<ProtoBinning> mlBinning = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
     float toleranceOverlap = 10.;
@@ -51,7 +52,7 @@ class MultiWireStructureBuilder {
   /// @param config The configure of the MultiWireStructureBuilder
   /// @param logger logging instance for screen output
 
-  MultiWireStructureBuilder(
+  explicit MultiWireStructureBuilder(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "MultiWireStructureBuilder", Acts::Logging::VERBOSE));

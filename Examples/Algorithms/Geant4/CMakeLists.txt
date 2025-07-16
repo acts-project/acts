@@ -1,8 +1,7 @@
 add_library(
     ActsExamplesGeant4
     SHARED
-    src/GdmlDetectorConstruction.cpp
-    src/TelescopeG4DetectorConstruction.cpp
+    src/AlgebraConverters.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
@@ -32,43 +31,9 @@ target_link_libraries(
     PUBLIC
         ActsCore
         ActsExamplesFramework
-        ActsExamplesDetectorTelescope
+        ActsExamplesDetectorsCommon
         Boost::headers
         ${Geant4_LIBRARIES}
 )
-
-if(ACTS_BUILD_EXAMPLES_DD4HEP)
-    if(${DD4hep_VERSION} VERSION_LESS 1.11)
-        target_include_directories(
-            ActsExamplesGeant4
-            PRIVATE ${DD4hep_INCLUDE_DIRS}
-        )
-        target_link_libraries(
-            ActsExamplesGeant4
-            PRIVATE ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY}
-        )
-    else()
-        target_link_libraries(
-            ActsExamplesGeant4
-            PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4
-        )
-    endif()
-
-    target_sources(ActsExamplesGeant4 PUBLIC src/DDG4DetectorConstruction.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_sources(
-        ActsExamplesGeant4
-        PUBLIC src/GeoModelDetectorConstruction.cpp
-    )
-
-    find_library(GeoModel2G4_LIBRARY GeoModel2G4 REQUIRED)
-
-    target_link_libraries(
-        ActsExamplesGeant4
-        PUBLIC ActsPluginGeoModel ${GeoModel2G4_LIBRARY}
-    )
-endif()
 
 install(TARGETS ActsExamplesGeant4 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

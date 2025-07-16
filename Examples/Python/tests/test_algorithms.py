@@ -4,6 +4,7 @@ from acts.examples import (
     AdaptiveMultiVertexFinderAlgorithm,
     VertexFitterAlgorithm,
     IterativeVertexFinderAlgorithm,
+    HoughVertexFinderAlgorithm,
     SpacePointMaker,
     TrackFindingAlgorithm,
     SeedingAlgorithm,
@@ -17,7 +18,6 @@ from acts.examples import (
     TrackParameterSmearing,
     TrackSelectorAlgorithm,
     TrackFittingAlgorithm,
-    SurfaceSortingAlgorithm,
     ParticlesPrinter,
     TrackParametersPrinter,
     PropagationAlgorithm,
@@ -34,6 +34,7 @@ from helpers import geant4Enabled, hepmc3Enabled
         AdaptiveMultiVertexFinderAlgorithm,
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
+        HoughVertexFinderAlgorithm,
         SpacePointMaker,
         TrackFindingAlgorithm,
         SeedingAlgorithm,
@@ -47,7 +48,6 @@ from helpers import geant4Enabled, hepmc3Enabled
         TrackParameterSmearing,
         TrackSelectorAlgorithm,
         TrackFittingAlgorithm,
-        SurfaceSortingAlgorithm,
         ParticlesPrinter,
         TrackParametersPrinter,
         PropagationAlgorithm,
@@ -60,20 +60,10 @@ def test_algorithm_interface(alg):
 
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")
 def test_g4_algorithms():
-    from acts.examples.geant4.hepmc3 import EventRecording
     from acts.examples.geant4 import Geant4Simulation
 
-    for alg in (EventRecording, Geant4Simulation):
-        assert hasattr(alg, "Config")
-
-
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")
-def test_hepmc_algorithms():
-    from acts.examples.hepmc3 import HepMCProcessExtractor
-
-    assert hasattr(HepMCProcessExtractor, "Config")
+    assert hasattr(Geant4Simulation, "Config")
 
 
 def test_special_algorithm_interfaces():

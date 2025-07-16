@@ -129,8 +129,8 @@ std::pair<double, double> PhotonConversion::generatePathLimits(
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
       particle.absoluteMomentum() < (2 * kElectronMass)) {
-    return std::make_pair(std::numeric_limits<double>::infinity(),
-                          std::numeric_limits<double>::infinity());
+    return {std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity()};
   }
 
   // Use for the moment only Al data - Yung Tsai - Rev.Mod.Particle Physics Vol.
@@ -155,11 +155,11 @@ std::pair<double, double> PhotonConversion::generatePathLimits(
 
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
   // This is a transformation of eq. 3.75
-  return std::make_pair(-9. / 7. *
-                            std::log(conversionProbScaleFactor *
-                                     (1 - uniformDistribution(generator))) /
-                            (1. - xi),
-                        std::numeric_limits<double>::infinity());
+  return {-9. / 7. *
+              std::log(conversionProbScaleFactor *
+                       (1 - uniformDistribution(generator))) /
+              (1. - xi),
+          std::numeric_limits<double>::infinity()};
 }
 
 template <typename generator_t>
@@ -248,7 +248,7 @@ Acts::Vector3 PhotonConversion::generateChildDirection(
       // rotation of the scattering deflector axis relative to the reference
       Acts::AngleAxis3(psi, direction) *
       // rotation by the scattering angle around the deflector axis
-      Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
+      Acts::AngleAxis3(theta, Acts::createCurvilinearUnitU(direction)));
   direction.applyOnTheLeft(rotation);
   return direction;
 }

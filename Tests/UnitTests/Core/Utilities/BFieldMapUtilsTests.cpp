@@ -19,7 +19,6 @@
 #include <array>
 #include <cstddef>
 #include <random>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;

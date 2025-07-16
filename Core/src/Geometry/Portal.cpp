@@ -16,7 +16,6 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cstdlib>
@@ -40,7 +39,7 @@ Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
 
   m_surface = link->surfacePtr();
 
-  if (direction == Direction::AlongNormal) {
+  if (direction == Direction::AlongNormal()) {
     m_alongNormal = std::move(link);
   } else {
     m_oppositeNormal = std::move(link);
@@ -60,10 +59,10 @@ Portal::Portal(const GeometryContext& gctx,
   }
 
   if (alongNormal != nullptr) {
-    setLink(gctx, Direction::AlongNormal, std::move(alongNormal));
+    setLink(gctx, Direction::AlongNormal(), std::move(alongNormal));
   }
   if (oppositeNormal != nullptr) {
-    setLink(gctx, Direction::OppositeNormal, std::move(oppositeNormal));
+    setLink(gctx, Direction::OppositeNormal(), std::move(oppositeNormal));
   }
 }
 
@@ -73,12 +72,12 @@ Portal::Portal(const GeometryContext& gctx, Arguments&& args) {
   }
 
   if (args.alongNormal.surface) {
-    setLink(gctx, Direction::AlongNormal,
+    setLink(gctx, Direction::AlongNormal(),
             std::make_unique<TrivialPortalLink>(
                 std::move(args.alongNormal.surface), *args.alongNormal.volume));
   }
   if (args.oppositeNormal.surface) {
-    setLink(gctx, Direction::OppositeNormal,
+    setLink(gctx, Direction::OppositeNormal(),
             std::make_unique<TrivialPortalLink>(
                 std::move(args.oppositeNormal.surface),
                 *args.oppositeNormal.volume));
@@ -92,9 +91,9 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
   }
 
   auto& target =
-      direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
+      direction == Direction::AlongNormal() ? m_alongNormal : m_oppositeNormal;
   const auto& other =
-      direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
+      direction == Direction::AlongNormal() ? m_oppositeNormal : m_alongNormal;
 
   // check if surfaces are identical
   if (m_surface != nullptr &&
@@ -136,7 +135,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
 }
 
 const PortalLinkBase* Portal::getLink(Direction direction) const {
-  if (direction == Direction::AlongNormal) {
+  if (direction == Direction::AlongNormal()) {
     return m_alongNormal.get();
   } else {
     return m_oppositeNormal.get();
@@ -150,7 +149,7 @@ Result<const TrackingVolume*> Portal::resolveVolume(
   const Vector3 normal = m_surface->normal(gctx, position);
   Direction side = Direction::fromScalarZeroAsPositive(normal.dot(direction));
 
-  const PortalLinkBase* link = side == Direction::AlongNormal
+  const PortalLinkBase* link = side == Direction::AlongNormal()
                                    ? m_alongNormal.get()
                                    : m_oppositeNormal.get();
 
@@ -182,7 +181,7 @@ RegularSurface& Portal::surface() {
 }
 
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
-                     Portal& bPortal, BinningValue direction,
+                     Portal& bPortal, AxisDirection direction,
                      const Logger& logger) {
   ACTS_VERBOSE("Merging two portals along " << direction);
 

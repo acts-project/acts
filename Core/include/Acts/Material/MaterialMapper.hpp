@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -24,13 +25,15 @@ namespace Acts {
 /// @brief material mapping procedure
 class MaterialMapper {
  public:
-  /// @brief The material maps
-  using SurfaceMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-  using VolumeMaterialMaps =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-  using DetectorMaterialMaps =
-      std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
+  using SurfaceMaterialMap
+      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
+          SurfaceMaterialMaps;
+  using VolumeMaterialMap
+      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
+          VolumeMaterialMaps;
+  using DetectorMaterialMaps
+      [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
+          TrackingGeometryMaterial;
 
   /// @brief nested configuration struct
   struct Config {
@@ -60,9 +63,10 @@ class MaterialMapper {
   ///
   /// @param cfg the configuration struct
   /// @param mlogger the logger instance
-  MaterialMapper(const Config& cfg,
-                 std::unique_ptr<const Logger> mlogger = getDefaultLogger(
-                     "BinnedSurfaceMaterialAccumulater", Logging::INFO));
+  explicit MaterialMapper(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger =
+          getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// @brief Factory for creating the state
   std::unique_ptr<State> createState() const;
@@ -82,7 +86,7 @@ class MaterialMapper {
       const Options& options = Options{}) const;
 
   /// Finalize the maps
-  DetectorMaterialMaps finalizeMaps(const State& state) const;
+  TrackingGeometryMaterial finalizeMaps(const State& state) const;
 
  private:
   /// Access method to the logger

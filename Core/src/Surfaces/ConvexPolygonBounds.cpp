@@ -12,11 +12,12 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
-#include <algorithm>
 #include <optional>
 #include <ostream>
 
-std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
+namespace Acts {
+
+std::ostream& ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   std::vector<Vector2> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
   for (std::size_t i = 0; i < vtxs.size(); i++) {
@@ -30,7 +31,7 @@ std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
+std::vector<double> ConvexPolygonBoundsBase::values() const {
   std::vector<double> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
@@ -39,35 +40,32 @@ std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
   return values;
 }
 
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
+ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
     const std::vector<Vector2>& vertices)
     : m_vertices(vertices.begin(), vertices.end()),
       m_boundingBox(makeBoundingBox(vertices)) {}
 
-Acts::SurfaceBounds::BoundsType
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
-  return SurfaceBounds::eConvexPolygon;
-}
-
-bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool ConvexPolygonBounds<PolygonDynamic>::inside(
+    const Vector2& lposition,
+    const BoundaryTolerance& boundaryTolerance) const {
   return detail::insidePolygon(
       std::span<const Vector2>(m_vertices.data(), m_vertices.size()),
       boundaryTolerance, lposition, std::nullopt);
 }
 
-std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<
-    Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
+std::vector<Vector2> ConvexPolygonBounds<PolygonDynamic>::vertices(
+    unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 
-const Acts::RectangleBounds&
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::boundingBox() const {
+const RectangleBounds& ConvexPolygonBounds<PolygonDynamic>::boundingBox()
+    const {
   return m_boundingBox;
 }
 
-void Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
+void ConvexPolygonBounds<PolygonDynamic>::checkConsistency() const
     noexcept(false) {
   convex_impl(m_vertices);
 }
+
+}  // namespace Acts

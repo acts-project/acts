@@ -8,7 +8,6 @@ import pathlib, acts
 from acts.examples import (
     CsvSpacePointReader,
     TrackParamsEstimationAlgorithm,
-    SeedingPerformanceWriter,
 )
 from acts.examples.reconstruction import (
     addStandardSeeding,
@@ -148,7 +147,8 @@ if "__main__" == __name__:
     geo_dir = pathlib.Path("acts-itk")
     outputDir = pathlib.Path.cwd() / "itk_output"
 
-    detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+    detector = acts.examples.itk.buildITkGeometry(geo_dir)
+    trackingGeometry = detector.trackingGeometry()
     field = acts.examples.MagneticFieldMapXyz(
         str(geo_dir / "bfield/ATLAS-BField-xyz.root")
     )

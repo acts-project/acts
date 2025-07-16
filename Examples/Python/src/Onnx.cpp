@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
 
 #include <pybind11/pybind11.h>
@@ -30,11 +29,6 @@ void addOnnx(Context& ctx) {
                                 onnx, "AmbiguityResolutionMLAlgorithm",
                                 inputTracks, inputDuplicateNN, outputTracks,
                                 nMeasurementsMin);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, onnx,
-      "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
-      outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedFilterMLAlgorithm, onnx,
                                 "SeedFilterMLAlgorithm", inputTrackParameters,

@@ -20,11 +20,12 @@ auto nameSelector =
     std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
         std::vector<std::string>{"yl"}, false);
 
+Acts::Geant4DetectorSurfaceFactory::Config config;
 Acts::Geant4DetectorSurfaceFactory::Cache cache;
 Acts::Geant4DetectorSurfaceFactory::Options options;
 options.sensitiveSurfaceSelector = nameSelector;
 
-Acts::Geant4DetectorSurfaceFactory factory;
+Acts::Geant4DetectorSurfaceFactory factory(config);
 factory.construct(cache, nominal, *cylinderPV, options);
 
 BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);

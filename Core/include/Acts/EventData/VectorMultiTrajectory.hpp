@@ -16,6 +16,7 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
+#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -191,7 +192,7 @@ class VectorMultiTrajectoryBase {
     TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
 
-  VectorMultiTrajectoryBase() = default;
+  VectorMultiTrajectoryBase() noexcept = default;
 
   VectorMultiTrajectoryBase(const VectorMultiTrajectoryBase& other)
       : m_index{other.m_index},
@@ -387,7 +388,7 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
-  VectorMultiTrajectory(VectorMultiTrajectory&& other)
+  VectorMultiTrajectory(VectorMultiTrajectory&& other) noexcept
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
   Statistics statistics() const {
@@ -495,13 +496,11 @@ class VectorMultiTrajectory final
   void allocateCalibrated_impl(IndexType istate,
                                const Eigen::DenseBase<val_t>& val,
                                const Eigen::DenseBase<cov_t>& cov)
-
-    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
-             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+    requires(Concepts::eigen_base_is_fixed_size<val_t> &&
+             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
+             Concepts::eigen_base_is_square<cov_t> &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
+                 toUnderlying(eBoundSize))
   {
     constexpr std::size_t measdim = val_t::RowsAtCompileTime;
 
@@ -570,10 +569,10 @@ class ConstVectorMultiTrajectory final
   ConstVectorMultiTrajectory(const ConstVectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
-  ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
+  explicit ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
-  ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
+  explicit ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
   ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;

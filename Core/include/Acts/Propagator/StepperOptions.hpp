@@ -8,16 +8,36 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+
+#include <functional>
 #include <limits>
 
 namespace Acts {
 
+class GeometryContext;
+class MagneticFieldContext;
+
 struct StepperPlainOptions {
+  /// StepperPlainOptions with context
+  StepperPlainOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx)
+      : geoContext(gctx), magFieldContext(mctx) {}
+
+  /// Context object for the geometry
+  std::reference_wrapper<const GeometryContext> geoContext;
+
+  /// Context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+
   /// Tolerance for the error of the integration
   double stepTolerance = 1e-4;
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
+
+  /// Initial step size
+  double initialStepSize = 10 * Acts::UnitConstants::m;
 
   /// Absolute maximum step size
   double maxStepSize = std::numeric_limits<double>::max();
@@ -32,7 +52,7 @@ struct StepperPlainOptions {
     /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
     bool includeGradient = true;
 
-    /// Cut-off value for the momentum in SI units
+    /// Cut-off value for the momentum
     double momentumCutOff = 0.;
   } dense;
 };

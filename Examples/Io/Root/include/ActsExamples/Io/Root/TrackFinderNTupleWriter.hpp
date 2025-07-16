@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write track finder performance measures.
 ///
@@ -31,8 +30,8 @@ class TrackFinderNTupleWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// Input particle-measurements map collection.
+    std::string inputParticleMeasurementsMap;
     /// Input proto track-particle matching.
     std::string inputTrackParticleMatching;
     /// Output filename.

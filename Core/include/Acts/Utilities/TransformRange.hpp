@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include <concepts>
 #include <iterator>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 
@@ -31,7 +33,8 @@ struct TransformRangeIterator;
 /// @tparam Callable The callable to apply to each element.
 /// @tparam container_t The container to wrap.
 template <typename Callable, typename container_t>
-struct TransformRange {
+struct TransformRange : public std::ranges::view_interface<
+                            TransformRange<Callable, container_t>> {
  private:
   using internal_value_type = typename container_t::value_type;
 
@@ -169,6 +172,8 @@ struct TransformRangeIterator {
   /// Construct an iterator from an underlying iterator
   explicit TransformRangeIterator(iterator_t iterator) : m_iterator(iterator) {}
 
+  TransformRangeIterator() = default;
+
   /// Return a reference to the value that is transformed by the callable
   /// @return Reference to the transformed value
   reference operator*() { return Callable::apply(*m_iterator); }
@@ -184,11 +189,25 @@ struct TransformRangeIterator {
     return *this;
   }
 
-  /// Compare two iterators for equality
-  /// @param other The other iterator to compare to
-  bool operator==(const TransformRangeIterator& other) const {
+  /// Advance the iterator
+  /// @return Reference to the iterator
+  TransformRangeIterator operator++(int) {
+    auto tmp = *this;
+    ++m_iterator;
+    return tmp;
+  }
+
+  /// Equality operator between arbitrary iterators whose internal iterators are
+  /// comparable. Needed for C++20 range interface
+  template <typename I, bool F>
+  bool operator==(const TransformRangeIterator<Callable, I, F>& other) const
+    requires(std::equality_comparable_with<iterator_t, I>)
+  {
     return m_iterator == other.m_iterator;
   }
+
+  template <typename C, typename I, bool F>
+  friend struct TransformRangeIterator;
 
  private:
   iterator_t m_iterator;
@@ -219,3 +238,9 @@ struct DotGet {
 };
 
 }  // namespace Acts::detail
+
+/// @cond
+template <typename Callable, typename container_t>
+constexpr bool std::ranges::enable_borrowed_range<
+    Acts::detail::TransformRange<Callable, container_t>> = true;
+/// @endcond

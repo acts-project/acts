@@ -35,7 +35,7 @@
 
 ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
                                                      Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
+    : ActsExamples::IAlgorithm("RefittingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
@@ -64,7 +64,8 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack++)) {
+    if (m_cfg.pickTrack > -1 &&
+        static_cast<std::size_t>(m_cfg.pickTrack) != itrack++) {
       continue;
     }
 
@@ -126,6 +127,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
                    << itrack << " with error: " << result.error() << ", "
                    << result.error().message());
     }
+    ++itrack;
   }
 
   std::stringstream ss;

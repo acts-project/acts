@@ -9,8 +9,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
@@ -54,9 +54,10 @@ void addVertexing(Context& ctx) {
                                 inputProtoVertices, outputVertices, bField,
                                 doConstrainedFit, constraintPos, constraintCov);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
-                                mex, "SingleSeedVertexFinderAlgorithm",
-                                inputSpacepoints, outputVertices);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HoughVertexFinderAlgorithm, mex,
+                                "HoughVertexFinderAlgorithm", inputSpacepoints,
+                                outputVertices, targetSPs, minAbsEta, maxAbsEta,
+                                minHits, defVtxPosition);
 }
 
 }  // namespace Acts::Python

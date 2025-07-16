@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -23,9 +25,38 @@ struct AlgorithmContext;
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {
  public:
+  struct MeasurementCounter {
+    // Combination of a geometry hierarchy map and a minimum hit count
+    using CounterElement =
+        std::pair<Acts::GeometryHierarchyMap<unsigned int>, unsigned int>;
+
+    boost::container::small_vector<CounterElement, 4> counters;
+
+    bool isValidParticle(
+        const SimParticle& particle,
+        const InverseMultimap<SimBarcode>& particleMeasurementsMap,
+        const MeasurementContainer& measurements) const;
+
+    void addCounter(const std::vector<Acts::GeometryIdentifier>& identifiers,
+                    unsigned int threshold) {
+      std::vector<Acts::GeometryHierarchyMap<unsigned int>::InputElement>
+          elements;
+      for (const auto& id : identifiers) {
+        elements.emplace_back(id, 0);
+      }
+      counters.emplace_back(std::move(elements), threshold);
+    }
+  };
+
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
+    /// (Optionally) The input particle measurements map. Only required for
+    /// measurement-based cuts.
+    std::string inputParticleMeasurementsMap;
+    /// (Optionally) The input measurements collection. Only required for
+    /// measurement-based cuts.
+    std::string inputMeasurements;
     /// The output particles collection.
     std::string outputParticles;
 
@@ -51,7 +82,10 @@ class ParticleSelector final : public IAlgorithm {
     // Rest mass cuts
     double mMin = 0;
     double mMax = std::numeric_limits<double>::infinity();
-    /// Measurement number cuts
+    // Hit count cuts
+    std::size_t hitsMin = 0;
+    std::size_t hitsMax = std::numeric_limits<std::size_t>::max();
+    // Measurement number cuts
     std::size_t measurementsMin = 0;
     std::size_t measurementsMax = std::numeric_limits<std::size_t>::max();
     /// Remove charged particles.
@@ -68,6 +102,9 @@ class ParticleSelector final : public IAlgorithm {
     /// Max primary vertex ID cut
     std::uint64_t maxPrimaryVertexId =
         std::numeric_limits<std::uint64_t>::max();
+
+    /// The measurement counter to be used for the measurement cuts.
+    MeasurementCounter measurementCounter;
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
@@ -81,6 +118,10 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+      this, "InputParticleMeasurementsMap"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

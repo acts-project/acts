@@ -16,19 +16,19 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetector.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -48,10 +48,6 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace Acts;
 using namespace Acts::Python;
-
-namespace Acts::Python {
-void addGeant4HepMC3(Context& ctx);
-}
 
 struct ExperimentalSensitiveCandidates
     : public Geant4::SensitiveCandidatesBase {
@@ -86,10 +82,6 @@ struct ExperimentalSensitiveCandidates
 };
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  py::class_<Geant4::DetectorConstructionFactory,
-             std::shared_ptr<Geant4::DetectorConstructionFactory>>(
-      mod, "DetectorConstructionFactory");
-
   py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
       mod, "Geant4Manager")
       .def_static("instance", &Geant4Manager::instance,
@@ -98,6 +90,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle")
       .def("tweakLogging", &Geant4Handle::tweakLogging);
+
+  {
+    py::class_<Geant4ConstructionOptions,
+               std::shared_ptr<Geant4ConstructionOptions>>(
+        mod, "Geant4ConstructionOptions")
+        .def(py::init<>())
+        .def_readwrite("regionCreators",
+                       &Geant4ConstructionOptions::regionCreators);
+  }
 
   {
     using Algorithm = Geant4SimulationBase;
@@ -109,12 +110,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
-    ACTS_PYTHON_MEMBER(geant4Handle);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector,
+                       geant4Handle);
   }
 
   {
@@ -132,21 +129,16 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     py::class_<State>(sm, "State").def(py::init<>());
 
     auto c = py::class_<Config>(sm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(materialMappings);
-    ACTS_PYTHON_MEMBER(volumeMappings);
-    ACTS_PYTHON_MEMBER(candidateSurfaces);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, materialMappings, volumeMappings, candidateSurfaces);
 
     sm.def("create",
            [](const Config& cfg, Acts::Logging::Level level,
-              const std::shared_ptr<const TrackingGeometry> tGeometry) {
+              const std::shared_ptr<const TrackingGeometry>& tGeometry) {
              // Set a new surface finder
              Config ccfg = cfg;
-             auto candidateSurfaces =
-                 std::make_shared<Geant4::SensitiveCandidates>();
-             candidateSurfaces->trackingGeometry = tGeometry;
-             ccfg.candidateSurfaces = candidateSurfaces;
+             ccfg.candidateSurfaces =
+                 std::make_shared<Geant4::SensitiveCandidates>(
+                     tGeometry, getDefaultLogger("SensitiveCandidates", level));
              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
@@ -169,10 +161,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     sm.def(
         "remapSensitiveNames",
         [](Geant4::SensitiveSurfaceMapper& self, State& state,
-           GeometryContext& gctx, Geant4::DetectorConstructionFactory& factory,
-           Transform3& transform) {
+           GeometryContext& gctx, Detector& detector, Transform3& transform) {
           return self.remapSensitiveNames(
-              state, gctx, factory.factorize()->Construct(), transform);
+              state, gctx,
+              detector.buildGeant4DetectorConstruction({})->Construct(),
+              transform);
         },
         "state"_a, "gctx"_a, "g4physicalVolume"_a, "motherTransform"_a);
     sm.def("checkMapping", &Geant4::SensitiveSurfaceMapper::checkMapping,
@@ -192,23 +185,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto c1 = py::class_<Config, Geant4SimulationBase::Config,
                          std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(outputPropagationSummaries);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(physicsList);
-    ACTS_PYTHON_MEMBER(killVolume);
-    ACTS_PYTHON_MEMBER(killAfterTime);
-    ACTS_PYTHON_MEMBER(killSecondaries);
-    ACTS_PYTHON_MEMBER(recordHitsOfCharged);
-    ACTS_PYTHON_MEMBER(recordHitsOfNeutrals);
-    ACTS_PYTHON_MEMBER(recordHitsOfPrimaries);
-    ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
-    ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
-    ACTS_PYTHON_MEMBER(recordPropagationSummaries);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(
+        c1, outputSimHits, outputParticles, outputPropagationSummaries,
+        sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
+        killAfterTime, killSecondaries, recordHitsOfCharged,
+        recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
+        keepParticlesWithoutHits, recordPropagationSummaries);
   }
 
   {
@@ -224,34 +206,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto c = py::class_<Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(outputMaterialTracks);
-    ACTS_PYTHON_MEMBER(excludeMaterials);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    py::class_<GdmlDetectorConstructionFactory,
-               Geant4::DetectorConstructionFactory,
-               std::shared_ptr<GdmlDetectorConstructionFactory>>(
-        mod, "GdmlDetectorConstructionFactory")
-        .def(py::init<std::string,
-                      std::vector<std::shared_ptr<Geant4::RegionCreator>>>(),
-             py::arg("path"),
-             py::arg("regionCreators") =
-                 std::vector<std::shared_ptr<Geant4::RegionCreator>>());
-  }
-
-  {
-    py::class_<TelescopeG4DetectorConstructionFactory,
-               Geant4::DetectorConstructionFactory,
-               std::shared_ptr<TelescopeG4DetectorConstructionFactory>>(
-        mod, "TelescopeG4DetectorConstructionFactory")
-        .def(py::init<const TelescopeDetector::Config&,
-                      std::vector<std::shared_ptr<Geant4::RegionCreator>>>(),
-             py::arg("cfg"),
-             py::arg("regionCreators") =
-                 std::vector<std::shared_ptr<Geant4::RegionCreator>>());
+    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
   }
 
   {
@@ -267,50 +222,29 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using Factory = Acts::Geant4DetectorSurfaceFactory;
     auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Factory::Options);
-    ACTS_PYTHON_MEMBER(scaleConversion);
-    ACTS_PYTHON_MEMBER(convertMaterial);
-    ACTS_PYTHON_MEMBER(convertedMaterialThickness);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceSelector);
-    ACTS_PYTHON_MEMBER(passiveSurfaceSelector);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(o, scaleConversion, convertMaterial,
+                       convertedMaterialThickness, sensitiveSurfaceSelector,
+                       passiveSurfaceSelector);
   }
 
   {
-    py::class_<Acts::Geant4DetectorElement,
-               std::shared_ptr<Acts::Geant4DetectorElement>>(
-        mod, "Geant4DetectorElement");
+    auto f =
+        py::class_<Geant4Detector, Detector, std::shared_ptr<Geant4Detector>>(
+            mod, "Geant4Detector")
+            .def(py::init<const Geant4Detector::Config&>());
 
-    using Detector = Geant4Detector;
-    using Config = Detector::Config;
+    auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, protoDetector,
+                       geometryIdentifierHook, logLevel);
+  }
 
-    auto g =
-        py::class_<Detector, std::shared_ptr<Detector>>(mod, "Geant4Detector")
-            .def(py::init<>())
-            .def(
-                "constructDetector",
-                [](Detector& self, const Config& cfg, Logging::Level logLevel) {
-                  auto logger = getDefaultLogger("Geant4Detector", logLevel);
-                  return self.constructDetector(cfg, *logger);
-                },
-                py::arg("cfg"), py::arg("logLevel") = Logging::INFO)
-            .def(
-                "constructTrackingGeometry",
-                [](Detector& self, const Config& cfg, Logging::Level logLevel) {
-                  auto logger = getDefaultLogger("Geant4Detector", logLevel);
-                  return self.constructTrackingGeometry(cfg, *logger);
-                },
-                py::arg("cfg"), py::arg("logLevel") = Logging::INFO);
+  {
+    auto f = py::class_<GdmlDetector, Detector, std::shared_ptr<GdmlDetector>>(
+                 mod, "GdmlDetector")
+                 .def(py::init<const GdmlDetector::Config&>());
 
-    auto c = py::class_<Config>(g, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(g4World);
-    ACTS_PYTHON_MEMBER(g4SurfaceOptions);
-    ACTS_PYTHON_MEMBER(protoDetector);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_STRUCT_END();
+    auto c = py::class_<GdmlDetector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, path, logLevel);
   }
 
   {
@@ -326,7 +260,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                                       passiveMatches,
                                   bool convertMaterial) {
       // Initiate the detector construction & retrieve world
-      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName);
+      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName, {});
       const auto* world = gdmlContruction.Construct();
 
       // Create the selectors
@@ -337,6 +271,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
               passiveMatches, false);
 
+      Acts::Geant4DetectorSurfaceFactory::Config config;
       Acts::Geant4DetectorSurfaceFactory::Cache cache;
       Acts::Geant4DetectorSurfaceFactory::Options options;
       options.sensitiveSurfaceSelector = sensitiveSelectors;
@@ -344,7 +279,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       options.convertMaterial = convertMaterial;
 
       G4Transform3D nominal;
-      Acts::Geant4DetectorSurfaceFactory factory;
+      Acts::Geant4DetectorSurfaceFactory factory(config);
       factory.construct(cache, nominal, *world, options);
 
       // Capture the sensitive elements and the surfaces
@@ -355,11 +290,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
       Surfaces surfaces;
       surfaces.reserve(cache.sensitiveSurfaces.size());
-      std::for_each(cache.sensitiveSurfaces.begin(),
-                    cache.sensitiveSurfaces.end(), [&](const auto& sensitive) {
-                      detectorElements.push_back(std::get<0>(sensitive));
-                      surfaces.push_back(std::get<1>(sensitive));
-                    });
+      std::ranges::for_each(
+          cache.sensitiveSurfaces, [&](const auto& sensitive) {
+            detectorElements.push_back(std::get<0>(sensitive));
+            surfaces.push_back(std::get<1>(sensitive));
+          });
 
       // Capture the passive surfaces
       Surfaces passiveSurfaces;
@@ -389,41 +324,24 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def("drawSector", &MockupSectorBuilder::drawSector);
 
     auto c = py::class_<Config>(ms, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(gdmlPath);
-    ACTS_PYTHON_MEMBER(NumberOfSectors);
-    ACTS_PYTHON_MEMBER(toleranceOverlap);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, gdmlPath, NumberOfSectors, toleranceOverlap);
 
     auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(SensitiveNames);
-    ACTS_PYTHON_MEMBER(PassiveNames);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(cch, name, SensitiveNames, PassiveNames);
   }
 
   {
     using Tool = Geant4::RegionCreator;
     using Config = Tool::Config;
-    auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
-                    .def(py::init<const Config&, std::string, Logging::Level>(),
-                         py::arg("config"), py::arg("name"),
-                         py::arg("logLevel") = Logging::INFO)
+    auto tool = py::class_<Tool>(mod, "RegionCreator")
+                    .def(py::init<const Config&>(), py::arg("config"))
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(gammaCut);
-    ACTS_PYTHON_MEMBER(electronCut);
-    ACTS_PYTHON_MEMBER(positronCut);
-    ACTS_PYTHON_MEMBER(protonCut);
-    ACTS_PYTHON_MEMBER(volumes);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
+                       volumes);
   }
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = mod;
-
-  addGeant4HepMC3(ctx);
 }

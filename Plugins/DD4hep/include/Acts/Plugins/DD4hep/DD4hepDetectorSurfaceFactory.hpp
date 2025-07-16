@@ -14,10 +14,11 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <tuple>
 #include <vector>
@@ -34,6 +35,7 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
+class ISurfaceMaterial;
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
@@ -42,6 +44,11 @@ class DD4hepDetectorElement;
 ///
 class DD4hepDetectorSurfaceFactory {
  public:
+  /// DD4hepDetectorElement construction factory
+  using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
+      const dd4hep::DetElement&, const std::string&, double, bool,
+      std::shared_ptr<const ISurfaceMaterial>)>;
+
   /// Collect the sensitive surface & detector element
   using DD4hepSensitiveSurface =
       std::tuple<std::shared_ptr<DD4hepDetectorElement>,
@@ -50,6 +57,18 @@ class DD4hepDetectorSurfaceFactory {
   /// Collect the passive surfaces, bool whether it should be
   /// added as an "always try, i.e. assignToAll=true" surface
   using DD4hepPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
+
+  /// Configuration struct
+  struct Config {
+    /// The factory to create the DD4hepDetectorElement
+    ElementFactory detectorElementFactory =
+        [](const dd4hep::DetElement& detElem, const std::string& axes,
+           double scalor, bool isDisc,
+           const std::shared_ptr<const ISurfaceMaterial>& material) {
+          return std::make_shared<DD4hepDetectorElement>(detElem, axes, scalor,
+                                                         isDisc, material);
+        };
+  };
 
   /// Nested cache that records the conversion status
   struct Cache {
@@ -62,7 +81,7 @@ class DD4hepDetectorSurfaceFactory {
     /// matching and conversion statistics: materials
     std::size_t convertedMaterials = 0;
     /// The collected binnings
-    std::vector<Experimental::ProtoBinning> binnings = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
     /// The collected supports
     std::vector<Experimental::ProtoSupport> supports = {};
     /// Optionally provide an Extent object to measure the sensitives
@@ -70,7 +89,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Optionally provide an Extent object to measure the passive
     std::optional<Extent> pExtent = std::nullopt;
     /// Optionally provide an Extent constraints to measure the layers
-    std::vector<BinningValue> extentConstraints = {};
+    std::vector<AxisDirection> extentConstraints = {};
     /// The approximination of a circle quarter for extent measuring
     std::size_t nExtentQSegments = 1u;
   };
@@ -89,8 +108,10 @@ class DD4hepDetectorSurfaceFactory {
 
   /// The DD4hep detector element factory
   ///
+  /// @param config the configuration struct
   /// @param mlogger a screen output logger
   explicit DD4hepDetectorSurfaceFactory(
+      const Config& config,
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
 
@@ -107,9 +128,12 @@ class DD4hepDetectorSurfaceFactory {
                  const Options& options);
 
  private:
-  /// @brief  auto-calculate the unit length conversion
+  /// Auto-calculate the unit length conversion
   static constexpr double unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
+
+  /// The configuration of the factory
+  Config m_config;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

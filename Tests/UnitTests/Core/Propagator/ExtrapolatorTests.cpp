@@ -10,12 +10,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
@@ -23,25 +22,18 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <numbers>
-#include <optional>
 #include <random>
-#include <tuple>
 #include <utility>
-#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -110,15 +102,70 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   EigenPropagatorType::Options<> options(tgContext, mfContext);
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
-  BOOST_CHECK(
-      epropagator.propagate(start, options).value().endParameters.has_value());
+  auto result = epropagator.propagate(start, options);
+  BOOST_CHECK(result.ok());
+  BOOST_CHECK(result.value().endParameters.has_value());
+  auto endParameters = result.value().endParameters.value();
+
+  // we expect the end parameters to be bound to a curvillinear surface i.e. no
+  // geometry id because it is not part of the tracking geometry
+  auto geometryId = endParameters.referenceSurface().geometryId();
+  BOOST_CHECK(geometryId == GeometryIdentifier());
+}
+
+BOOST_DATA_TEST_CASE(
+    test_extrapolation_end_of_world_,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::xrange(ntests),
+    pT, phi, theta, charge, index) {
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+  (void)index;
+
+  // define start parameters
+  /// a covariance matrix to transport
+  Covariance cov;
+  // take some major correlations (off-diagonals)
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
+
+  EigenPropagatorType::Options<ActorList<EndOfWorldReached>> options(tgContext,
+                                                                     mfContext);
+  options.stepping.maxStepSize = 10_cm;
+  options.pathLimit = 10_m;
+
+  auto result = epropagator.propagate(start, options);
+  BOOST_CHECK(result.ok());
+  BOOST_CHECK(result.value().endParameters.has_value());
+  auto endParameters = result.value().endParameters.value();
+
+  // we expect the end parameters to be bound to the tracking geometry i.e.
+  // geometry id is set because it is part of the tracking geometry
+  auto geometryId = endParameters.referenceSurface().geometryId();
+  BOOST_CHECK(geometryId != GeometryIdentifier());
 }
 
 // This test case checks that no segmentation fault appears
@@ -152,8 +199,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -218,8 +265,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
       tgContext, mfContext);
@@ -265,8 +312,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(

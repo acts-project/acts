@@ -9,16 +9,15 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include <numbers>
-#include <utility>
 
-void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
+namespace Acts {
+
+void Polyhedron::merge(const Polyhedron& other) {
   std::size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
@@ -36,12 +35,12 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   join(triangularMesh, other.triangularMesh);
 }
 
-void Acts::Polyhedron::move(const Transform3& transform) {
+void Polyhedron::move(const Transform3& transform) {
   for_each(vertices.begin(), vertices.end(),
            [&](auto& v) { v = transform * v; });
 }
 
-Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
+Extent Polyhedron::extent(const Transform3& transform) const {
   Extent extent;
   auto vtxs = vertices;
   std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {
@@ -50,11 +49,11 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
     return (vt);
   });
 
-  // Special checks of BinningValue::binR for hyper plane surfaces
+  // Special checks of AxisDirection::AxisR for hyper plane surfaces
   if (detail::VerticesHelper::onHyperPlane(vtxs)) {
     // Check inclusion of origin (i.e. convex around origin)
     Vector3 origin =
-        transform * Vector3(0., 0., extent.medium(BinningValue::binZ));
+        transform * Vector3(0., 0., extent.medium(AxisDirection::AxisZ));
     for (const auto& face : faces) {
       std::vector<Vector3> tface;
       tface.reserve(face.size());
@@ -62,8 +61,8 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
         tface.push_back(vtxs[f]);
       }
       if (detail::VerticesHelper::isInsidePolygon(origin, tface)) {
-        extent.range(BinningValue::binR).setMin(0.);
-        extent.range(BinningValue::binPhi)
+        extent.range(AxisDirection::AxisR).setMin(0.);
+        extent.range(AxisDirection::AxisPhi)
             .set(-std::numbers::pi, std::numbers::pi);
         break;
       }
@@ -93,15 +92,15 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
       for (std::size_t iv = 1; iv < vtxs.size() + 1; ++iv) {
         std::size_t fpoint = iv < vtxs.size() ? iv : 0;
         double testR = radialDistance(vtxs[fpoint], vtxs[iv - 1]);
-        extent.range(BinningValue::binR).expandMin(testR);
+        extent.range(AxisDirection::AxisR).expandMin(testR);
       }
     }
   }
   return extent;
 }
 
-void Acts::Polyhedron::visualize(IVisualization3D& helper,
-                                 const ViewConfig& viewConfig) const {
+void Polyhedron::visualize(IVisualization3D& helper,
+                           const ViewConfig& viewConfig) const {
   if (viewConfig.visible) {
     if (!viewConfig.triangulate) {
       helper.faces(vertices, faces, viewConfig.color);
@@ -110,3 +109,5 @@ void Acts::Polyhedron::visualize(IVisualization3D& helper,
     }
   }
 }
+
+}  // namespace Acts

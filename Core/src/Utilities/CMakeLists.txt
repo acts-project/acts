@@ -2,10 +2,14 @@ target_sources(
     ActsCore
     PRIVATE
         AnnealingUtility.cpp
+        AxisDefinitions.cpp
         Logger.cpp
         SpacePointUtility.cpp
         TrackHelpers.cpp
-        BinningType.cpp
         Intersection.cpp
+        IAxis.cpp
         GraphViz.cpp
+        ProtoAxis.cpp
+        ScopedTimer.cpp
+        TransformComparator.cpp
 )

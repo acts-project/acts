@@ -21,6 +21,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+using namespace py::literals;
 using namespace ActsExamples;
 using namespace Acts::Python;
 
@@ -71,6 +72,8 @@ class PyIAlgorithm : public IAlgorithm {
       throw py::type_error("Python algorithm did not conform to interface");
     }
   }
+
+  std::string_view typeName() const override { return "Algorithm"; }
 };
 
 void trigger_divbyzero() {
@@ -114,16 +117,19 @@ void addFramework(Context& ctx) {
                  Acts::getDefaultLogger(name, level));
            }),
            py::arg("level"), py::arg("name") = "WhiteBoard")
-      .def("exists", &WhiteBoard::exists);
+      .def("exists", &WhiteBoard::exists)
+      .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
-      .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
+      .def(py::init<std::size_t, std::size_t, WhiteBoard&, std::size_t>(),
+           "alg"_a, "event"_a, "store"_a, "thread"_a)
       .def_readonly("algorithmNumber", &AlgorithmContext::algorithmNumber)
       .def_readonly("eventNumber", &AlgorithmContext::eventNumber)
       .def_property_readonly("eventStore",
                              [](const AlgorithmContext& self) -> WhiteBoard& {
                                return self.eventStore;
                              })
+      .def_readonly("threadId", &AlgorithmContext::threadId)
       .def_readonly("magFieldContext", &AlgorithmContext::magFieldContext)
       .def_readonly("geoContext", &AlgorithmContext::geoContext)
       .def_readonly("calibContext", &AlgorithmContext::calibContext)
@@ -133,7 +139,6 @@ void addFramework(Context& ctx) {
       py::class_<ActsExamples::SequenceElement, PySequenceElement,
                  std::shared_ptr<ActsExamples::SequenceElement>>(
           mex, "SequenceElement")
-          .def(py::init_alias<>())
           .def("internalExecute", &SequenceElement::internalExecute)
           .def("name", &SequenceElement::name);
 
@@ -179,18 +184,9 @@ void addFramework(Context& ctx) {
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-  ACTS_PYTHON_MEMBER(skip);
-  ACTS_PYTHON_MEMBER(events);
-  ACTS_PYTHON_MEMBER(logLevel);
-  ACTS_PYTHON_MEMBER(numThreads);
-  ACTS_PYTHON_MEMBER(outputDir);
-  ACTS_PYTHON_MEMBER(outputTimingFile);
-  ACTS_PYTHON_MEMBER(trackFpes);
-  ACTS_PYTHON_MEMBER(fpeMasks);
-  ACTS_PYTHON_MEMBER(failOnFirstFpe);
-  ACTS_PYTHON_MEMBER(fpeStackTraceLength);
-  ACTS_PYTHON_STRUCT_END();
+  ACTS_PYTHON_STRUCT(c, skip, events, logLevel, numThreads, outputDir,
+                     outputTimingFile, trackFpes, fpeMasks, failOnFirstFpe,
+                     fpeStackTraceLength);
 
   auto fpem =
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
@@ -203,12 +199,7 @@ void addFramework(Context& ctx) {
             return ss.str();
           });
 
-  ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
-  ACTS_PYTHON_MEMBER(file);
-  ACTS_PYTHON_MEMBER(lines);
-  ACTS_PYTHON_MEMBER(type);
-  ACTS_PYTHON_MEMBER(count);
-  ACTS_PYTHON_STRUCT_END();
+  ACTS_PYTHON_STRUCT(fpem, file, lines, type, count);
 
   struct FpeMonitorContext {
     std::optional<Acts::FpeMonitor> mon;

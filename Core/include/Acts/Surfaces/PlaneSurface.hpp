@@ -13,16 +13,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <memory>
 #include <string>
 
@@ -69,13 +65,10 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @param transform transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3& transform,
-               std::shared_ptr<const PlanarBounds> pbounds = nullptr);
+  explicit PlaneSurface(const Transform3& transform,
+                        std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
-  ~PlaneSurface() override = default;
-  PlaneSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
@@ -108,15 +101,15 @@ class PlaneSurface : public RegularSurface {
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
 
-  /// The binning position is the position calculated
-  /// for a certain binning type
+  /// The axis position is the position calculated
+  /// for a certain axis type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the binning type to be used
+  /// @param aDir is the axis direction of reference position request
   ///
-  /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  /// @return position that can be used for this axis
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -221,6 +214,20 @@ class PlaneSurface : public RegularSurface {
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
+
+  /// Merge two plane surfaces into a single one.
+  /// @note The surfaces need to be *compatible*, i.e. have bounds
+  ///       that align along merging direction, and have the same bound size
+  ///       along the non-merging direction
+  /// @param other The other plane surface to merge with
+  /// @param direction The direction: either @c AxisX or @c AxisY
+  /// @param logger The logger to use
+  /// @return The merged plane surface and a boolean indicating if surfaces are reversed
+  /// @note The returned boolean is `false` if `this` is *left* or
+  ///       *counter-clockwise* of @p other, and `true` if not.
+  std::pair<std::shared_ptr<PlaneSurface>, bool> mergedWith(
+      const PlaneSurface& other, AxisDirection direction,
+      const Logger& logger = getDummyLogger()) const;
 
  protected:
   /// the bounds of this surface

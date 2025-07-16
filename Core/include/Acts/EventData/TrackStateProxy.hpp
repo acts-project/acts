@@ -16,6 +16,7 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -41,10 +42,10 @@ template <typename T>
 class TransitiveConstPointer {
  public:
   TransitiveConstPointer() = default;
-  TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
+  explicit TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
 
   template <typename U>
-  TransitiveConstPointer(const TransitiveConstPointer<U>& other)
+  explicit TransitiveConstPointer(const TransitiveConstPointer<U>& other)
       : m_ptr{other.ptr()} {}
 
   template <typename U>
@@ -213,17 +214,29 @@ class TrackStateProxy {
   ///
   /// @{
 
-  /// Constructor and assignment operator to construct TrackStateProxy
-  /// from mutable
+  /// Copy constructor: const to const or mutable to mutable
   /// @param other The other TrackStateProxy to construct from
-  TrackStateProxy(const TrackStateProxy<Trajectory, M, false>& other)
+  TrackStateProxy(const TrackStateProxy& other) = default;
+
+  /// Copy assignment operator: const to const or mutable to mutable
+  /// @param other The other TrackStateProxy to assign from
+  /// @return Reference to this TrackStateProxy
+  TrackStateProxy& operator=(const TrackStateProxy& other) = default;
+
+  /// Constructor from mutable TrackStateProxy
+  /// @note Only available if the track state proxy is read-only
+  /// @param other The other TrackStateProxy to construct from
+  explicit TrackStateProxy(const TrackStateProxy<Trajectory, M, false>& other)
+    requires ReadOnly
       : m_traj{other.m_traj}, m_istate{other.m_istate} {}
 
   /// Assignment operator to from mutable @c TrackStateProxy
-  /// @param other The other TrackStateProxy to construct from
+  /// @param other The other TrackStateProxy to assign from
+  /// @note Only available if the track state proxy is read-only
   /// @return Reference to this TrackStateProxy
-  TrackStateProxy& operator=(
-      const TrackStateProxy<Trajectory, M, false>& other) {
+  TrackStateProxy& operator=(const TrackStateProxy<Trajectory, M, false>& other)
+    requires ReadOnly
+  {
     m_traj = other.m_traj;
     m_istate = other.m_istate;
 
@@ -782,12 +795,11 @@ class TrackStateProxy {
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
-    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
-             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+    requires(Concepts::eigen_base_is_fixed_size<val_t> &&
+             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
+             Concepts::eigen_base_is_square<cov_t> &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
+                 static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
   {
     m_traj->template allocateCalibrated<
         Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);

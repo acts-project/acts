@@ -12,5 +12,5 @@ dependencies and are thus disabled by default.
    exatrkx
    geant4
    json
-   tgeo
+   root
    MLAlgorithms

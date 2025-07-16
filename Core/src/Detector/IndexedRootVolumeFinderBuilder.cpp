@@ -22,37 +22,47 @@ void fillGridIndices2D(
     const std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
         rootVolumes,
     const std::array<std::vector<double>, 2u>& boundaries,
-    const std::array<Acts::BinningValue, 2u>& casts) {
+    const std::array<Acts::AxisDirection, 2u>& casts) {
+  if (casts != std::array<Acts::AxisDirection, 2u>{
+                   Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR}) {
+    return;
+  }
+
   // Brute force loop over all bins & all volumes
   for (const auto [ic0, c0] : Acts::enumerate(boundaries[0u])) {
-    if (ic0 > 0) {
-      double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
-      for (const auto [ic1, c1] : Acts::enumerate(boundaries[1u])) {
-        if (ic1 > 0) {
-          double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
-          if (casts ==
-              std::array<Acts::BinningValue, 2u>{Acts::BinningValue::binZ,
-                                                 Acts::BinningValue::binR}) {
-            Acts::Vector3 zrPosition{v1, 0., v0};
-            for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
-              if (v->inside(gctx, zrPosition)) {
-                typename Grid2D::point_t p{v0, v1};
-                grid.atPosition(p) = iv;
-              }
-            }
-          }
+    if (ic0 == 0) {
+      continue;
+    }
+
+    const double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
+
+    for (const auto [ic1, c1] : Acts::enumerate(boundaries[1u])) {
+      if (ic1 == 0) {
+        continue;
+      }
+
+      const double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
+      const Acts::Vector3 zrPosition{v1, 0., v0};
+
+      for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
+        if (!v->inside(gctx, zrPosition)) {
+          continue;
         }
+
+        typename Grid2D::point_t p{v0, v1};
+        grid.atPosition(p) = iv;
       }
     }
   }
 }
+
 }  // namespace
 
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
-    IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning)
+    IndexedRootVolumeFinderBuilder(std::vector<Acts::AxisDirection> binning)
     : m_casts(std::move(binning)) {
-  if (m_casts != std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
-                                                 Acts::BinningValue::binR}) {
+  if (m_casts != std::vector<Acts::AxisDirection>{Acts::AxisDirection::AxisZ,
+                                                  Acts::AxisDirection::AxisR}) {
     throw std::invalid_argument("Online (z,r) binning is currently supported.");
   }
 }
@@ -72,7 +82,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   using GridType = typename AxesGeneratorType::template grid_type<std::size_t>;
   GridType grid(zrAxes());
 
-  auto casts = std::array<BinningValue, 2u>{m_casts[0u], m_casts[1u]};
+  auto casts = std::array<AxisDirection, 2u>{m_casts[0u], m_casts[1u]};
 
   auto boundaries = std::array<std::vector<double>, 2u>{rzphis[1], rzphis[0]};
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);

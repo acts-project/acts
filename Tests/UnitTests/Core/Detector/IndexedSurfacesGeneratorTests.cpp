@@ -20,12 +20,12 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <cmath>
@@ -52,17 +52,20 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
-
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {BinningValue::binPhi}};
-
-  GridAxisGenerators::EqClosed aGenerator{{-std::numbers::pi, std::numbers::pi},
-                                          44u};
+  // Polyhedron reference generator
   PolyhedronReferenceGenerator<1u, true> rGenerator;
+  // A single proto axis clused in phi with 44 bins
+  DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                          -std::numbers::pi, std::numbers::pi, 44u);
 
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          IndexedSurfacesNavigation, decltype(rSurfaces), decltype(rGenerator)>(
+          tContext, rSurfaces, rGenerator, pAxis, 0u);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
@@ -94,21 +97,24 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
 
-  auto rBounds = std::make_shared<RadialBounds>(20., 20.);
+  auto rBounds = std::make_shared<RadialBounds>(10., 20.);
   auto dSurface = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    std::move(rBounds));
   rSurfaces.push_back(dSurface.get());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {rSurfaces.size() - 1u}, {BinningValue::binPhi}};
-
-  GridAxisGenerators::EqClosed aGenerator{{-std::numbers::pi, std::numbers::pi},
-                                          44u};
+  // Polyhedron reference generator
   PolyhedronReferenceGenerator<1u, true> rGenerator;
+  // A single proto axis clused in phi with 44 bins
+  DirectedProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                          -std::numbers::pi, std::numbers::pi, 44u);
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          Experimental::IndexedSurfacesNavigation>(
+          tContext, rSurfaces, rGenerator, pAxis, 0u, {rSurfaces.size() - 1u});
 
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
-
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
@@ -147,16 +153,22 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   decltype(rSurfacesR0) rSurfaces = rSurfacesR0;
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound,
+                           {24., 74., 110});
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 44u);
 
-  GridAxisGenerators::VarBoundEqClosed aGenerator{
-      {24., 74., 110.}, {-std::numbers::pi, std::numbers::pi}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          Experimental::IndexedSurfacesNavigation>(
+          tContext, rSurfaces, rGenerator, pAxisR, 0u, pAxisPhi, 0u);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
@@ -193,17 +205,22 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
-
-  GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {24., 152}, 8u, {-std::numbers::pi, std::numbers::pi}, 88u};
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24.,
+                           152, 8u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 88u);
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          Experimental::IndexedSurfacesNavigation>(
+          tContext, rSurfaces, rGenerator, pAxisR, 0u, pAxisPhi, 0u);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
@@ -240,17 +257,23 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{
-          rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}, {2u, 4u}};
-
-  GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {24., 152}, 8u, {-std::numbers::pi, std::numbers::pi}, 88u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+  DirectedProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24.,
+                           152, 8u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 88u);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          Experimental::IndexedSurfacesNavigation>(
+          tContext, rSurfaces, rGenerator, pAxisR, 2u, pAxisPhi, 4u);
+
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
+
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
@@ -275,17 +298,22 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
   auto surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                              116., 3., 2., {52, 14});
 
-  IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesNavigation>
-      icSurfaces{
-          surfaces, {}, {BinningValue::binZ, BinningValue::binPhi}, {1u, 1u}};
-
-  GridAxisGenerators::EqBoundEqClosed aGenerator{
-      {-500., 500}, 28, {-std::numbers::pi, std::numbers::pi}, 52u};
+  DirectedProtoAxis pAxisZ(AxisDirection::AxisZ, AxisBoundaryType::Bound, -500.,
+                           500., 28u);
+  DirectedProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 52u);
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  auto indexedCylinder = icSurfaces(tContext, aGenerator, rGenerator);
+  auto indexedCylinder =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+          Experimental::IndexedSurfacesNavigation>(
+          tContext, surfaces, rGenerator, pAxisZ, 1u, pAxisPhi, 1u);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType =
+      Grid<std::vector<std::size_t>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+           Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
+
   using DelegateType =
       IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 

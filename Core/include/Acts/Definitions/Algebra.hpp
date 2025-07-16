@@ -77,8 +77,8 @@ using Translation2 = Eigen::Translation<double, 2>;
 using Translation3 = Eigen::Translation<double, 3>;
 
 // linear (rotation) matrices
-using RotationMatrix2 = ActsMatrix<2, 2>;
-using RotationMatrix3 = ActsMatrix<3, 3>;
+using RotationMatrix2 = SquareMatrix2;
+using RotationMatrix3 = SquareMatrix3;
 
 // pure rotation defined by a rotation angle around a rotation axis
 using AngleAxis3 = Eigen::AngleAxis<double>;

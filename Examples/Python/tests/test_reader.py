@@ -1,11 +1,8 @@
 import pytest
-import os
 from pathlib import Path
-import multiprocessing
 
 from helpers import (
     geant4Enabled,
-    edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
 
@@ -31,14 +28,14 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     # need to write out some particles first
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     file = tmp_path / "particles.root"
     s.addWriter(
         conf_const(
             RootParticleWriter,
             acts.logging.WARNING,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             filePath=str(file),
         )
     )
@@ -53,13 +50,13 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             RootParticleReader,
             acts.logging.WARNING,
-            outputParticles="particles_input",
+            outputParticles="particles_generated",
             filePath=str(file),
         )
     )
 
     alg = AssertCollectionExistsAlg(
-        "particles_input", "check_alg", acts.logging.WARNING
+        "particles_generated", "check_alg", acts.logging.WARNING
     )
     s2.addAlgorithm(alg)
 
@@ -71,7 +68,7 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
 @pytest.mark.csv
 def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     out = tmp_path / "csv"
 
@@ -81,7 +78,7 @@ def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             CsvParticleWriter,
             acts.logging.WARNING,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             outputStem="particle",
             outputDir=str(out),
         )
@@ -264,168 +261,50 @@ def test_csv_simhits_reader(tmp_path, fatras, conf_const):
     assert alg.events_seen == 10
 
 
-def generate_input_test_edm4hep_simhit_reader(input, output):
-    from DDSim.DD4hepSimulation import DD4hepSimulation
+@pytest.mark.root
+def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
+    # Test the buffered reader with the ROOT particle reader
+    # need to write out some particles first
+    eventsInBuffer = 5
+    eventsToProcess = 10
 
-    ddsim = DD4hepSimulation()
-    if isinstance(ddsim.compactFile, list):
-        ddsim.compactFile = [input]
-    else:
-        ddsim.compactFile = input
-    ddsim.enableGun = True
-    ddsim.gun.direction = (1, 0, 0)
-    ddsim.gun.particle = "pi-"
-    ddsim.gun.distribution = "eta"
-    ddsim.numberOfEvents = 10
-    ddsim.outputFile = output
-    ddsim.run()
+    s = Sequencer(numThreads=1, events=eventsInBuffer, logLevel=acts.logging.WARNING)
+    _, h3conv = ptcl_gun(s)
 
-
-@pytest.mark.slow
-@pytest.mark.edm4hep
-@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_simhit_particle_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepReader
-
-    tmp_file = str(tmp_path / "output_edm4hep.root")
-    odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
-
-    p = multiprocessing.Process(
-        target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
-    )
-    p.start()
-    p.join()
-
-    assert os.path.exists(tmp_file)
-
-    s = Sequencer(numThreads=1)
-
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
-        s.addReader(
-            EDM4hepReader(
-                level=acts.logging.INFO,
-                inputPath=tmp_file,
-                inputSimHits=[
-                    "PixelBarrelReadout",
-                    "PixelEndcapReadout",
-                    "ShortStripBarrelReadout",
-                    "ShortStripEndcapReadout",
-                    "LongStripBarrelReadout",
-                    "LongStripEndcapReadout",
-                ],
-                outputParticlesGenerator="particles_input",
-                outputParticlesSimulation="particles_simulated",
-                outputSimHits="simhits",
-                dd4hepDetector=detector,
-                trackingGeometry=trackingGeometry,
-            )
-        )
-
-        alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
-        s.addAlgorithm(alg)
-
-        alg = AssertCollectionExistsAlg(
-            "particles_input", "check_alg", acts.logging.WARNING
-        )
-        s.addAlgorithm(alg)
-
-        s.run()
-
-    assert alg.events_seen == 10
-
-
-@pytest.mark.edm4hep
-@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
-    from acts.examples.edm4hep import (
-        EDM4hepMeasurementWriter,
-        EDM4hepMeasurementReader,
-    )
-
-    s = Sequencer(numThreads=1, events=10)
-    _, simAlg, digiAlg = fatras(s)
-
-    out = tmp_path / "measurements_edm4hep.root"
-
-    config = EDM4hepMeasurementWriter.Config(
-        inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=digiAlg.config.outputClusters,
-        outputPath=str(out),
-    )
-    s.addWriter(EDM4hepMeasurementWriter(level=acts.logging.INFO, config=config))
-    s.run()
-
-    # read back in
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        conf_const(
-            EDM4hepMeasurementReader,
-            level=acts.logging.WARNING,
-            outputMeasurements="measurements",
-            outputMeasurementSimHitsMap="simhitsmap",
-            inputPath=str(out),
-        )
-    )
-
-    algs = [
-        AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap")
-    ]
-    for alg in algs:
-        s.addAlgorithm(alg)
-
-    s.run()
-
-    for alg in algs:
-        assert alg.events_seen == 10
-
-
-@pytest.mark.edm4hep
-@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_tracks_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
-
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    from truth_tracking_kalman import runTruthTrackingKalman
-
-    s = Sequencer(numThreads=1, events=10)
-    runTruthTrackingKalman(
-        trackingGeometry,
-        field,
-        digiConfigFile=Path(
-            str(
-                Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
-        ),
-        outputDir=tmp_path,
-        s=s,
-    )
-
-    out = tmp_path / "tracks_edm4hep.root"
-
+    file = tmp_path / "particles.root"
     s.addWriter(
-        EDM4hepTrackWriter(
-            level=acts.logging.VERBOSE,
-            inputTracks="kf_tracks",
-            outputPath=str(out),
-            Bz=2 * u.T,
+        conf_const(
+            RootParticleWriter,
+            acts.logging.WARNING,
+            inputParticles=h3conv.config.outputParticles,
+            filePath=str(file),
         )
     )
 
     s.run()
 
-    s = Sequencer(numThreads=1)
-    s.addReader(
-        EDM4hepTrackReader(
-            level=acts.logging.VERBOSE,
-            outputTracks="kf_tracks",
-            inputPath=str(out),
-            Bz=2 * u.T,
+    # reset sequencer for reading
+    s2 = Sequencer(events=eventsToProcess, numThreads=1, logLevel=acts.logging.WARNING)
+
+    reader = acts.examples.RootParticleReader(
+        level=acts.logging.WARNING,
+        outputParticles="particles_input",
+        filePath=str(file),
+    )
+
+    s2.addReader(
+        acts.examples.BufferedReader(
+            level=acts.logging.WARNING,
+            upstreamReader=reader,
+            bufferSize=eventsInBuffer,
         )
     )
 
-    s.run()
+    alg = AssertCollectionExistsAlg(
+        "particles_input", "check_alg", acts.logging.WARNING
+    )
+    s2.addAlgorithm(alg)
+
+    s2.run()
+
+    assert alg.events_seen == eventsToProcess

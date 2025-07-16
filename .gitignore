@@ -15,7 +15,7 @@ genConf
 x86_64-slc6-gcc48-opt
 x86_64-slc6-gcc49-opt
 .*
-build*
+/build*
 .asetup.save
 
 #json output
@@ -28,10 +28,15 @@ build*
 /cmake_cmd
 /cleanup.sh
 
+#codegen related
+codegen/build/
+codegen/src/codegen.egg-info/
+
 # dont ignore hidden configs
 !.clang-format
-!.github/**
+!.github
 !.gitignore
 !.gitlab-ci.yml
 !.clang-tidy
 !.oclint
+!.devcontainer

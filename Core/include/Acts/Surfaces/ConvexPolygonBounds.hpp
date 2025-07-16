@@ -15,10 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
-#include <cmath>
-#include <concepts>
 #include <cstddef>
-#include <exception>
 #include <iosfwd>
 #include <vector>
 
@@ -82,27 +79,24 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
-  ConvexPolygonBounds() = delete;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(false);
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(
+      false);
 
   /// Constructor from a fixed size array of vertices.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The vertices
-  ConvexPolygonBounds(const vertex_array& vertices) noexcept(false);
+  explicit ConvexPolygonBounds(const vertex_array& vertices) noexcept(false);
 
   /// Constructor from a fixed size array of parameters
   /// This will throw if the vertices do not form a convex polygon.
   /// @param values The values to build up the vertices
-  ConvexPolygonBounds(const value_array& values) noexcept(false);
+  explicit ConvexPolygonBounds(const value_array& values) noexcept(false);
 
-  ~ConvexPolygonBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
@@ -146,20 +140,14 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
   constexpr static int eSize = -1;
 
-  /// Default constructor, deleted
-  ConvexPolygonBounds() = delete;
-
-  /// Defaulted destructor
-  ~ConvexPolygonBounds() override = default;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2>& vertices);
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices);
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.

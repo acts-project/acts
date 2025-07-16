@@ -17,7 +17,7 @@ This page will explain how to perform the material mapping with the ACTS Example
 
 Prerequisites
 -------------
-As a prerequisite you will need to build ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``) enabled, please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
+As a prerequisite you will need to build ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``) enabled, please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_ROOT`` are needed.
 
 For this particular example the ODD will also be needed. To use it, don't forget to get the corresponding submodule and then recompile the ACTS code if needed.
 
@@ -55,7 +55,9 @@ For the following example we will be remapping the material of the ODD, we will 
 
 .. code-block::  console
 
-   detector, trackingGeometry, decorators = getOpenDataDetector()
+   detector = getOpenDataDetector()
+   trackingGeometry = detector.trackingGeometry()
+   decorators = detector.contextDecorators()
 
 This algorithm is useful to obtain a visualisation of your detector using the different types of output available (``output-obj`` gives ``.obj`` with a 3D representation of the different subdetectors, for example). Here, we use ``output-json`` to obtain a map of all the surfaces and volumes in the detector with a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``), ``mat-output-allmaterial`` ensure that a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``) is associated to all the surfaces (or volumes), enforcing all of them to be written.
 Four types of surfaces exist:

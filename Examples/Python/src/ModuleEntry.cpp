@@ -7,25 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <unordered_map>
-#include <vector>
 
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
@@ -67,14 +52,19 @@ void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
+void addTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilities(Context& ctx);
+
+void addRootInput(Context& ctx);
+void addRootOutput(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addGeoModel(Context& ctx);
+void addTGeo(Context& ctx);
 void addJson(Context& ctx);
 void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
@@ -138,6 +128,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTruthTracking(ctx);
   addTrackFitting(ctx);
   addTrackFinding(ctx);
+  addTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addUtilities(ctx);
@@ -146,6 +137,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPythia8(ctx);
   addJson(ctx);
   addGeoModel(ctx);
+  addTGeo(ctx);
   addDetray(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
@@ -156,4 +148,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addCovfie(ctx);
   addTraccc(ctx);
   addHashing(ctx);
+
+  addRootInput(ctx);
+  addRootOutput(ctx);
 }

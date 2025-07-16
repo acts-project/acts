@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+class G4Region;
+
 namespace ActsExamples::Geant4 {
 
 /// Geant4 Region Creator
@@ -24,6 +26,9 @@ class RegionCreator {
  public:
   /// Nested configuration struct for the Geant4 region creator
   struct Config {
+    /// Region name
+    std::string name;
+
     /// Process cut to be applied for gammas, in mm
     double gammaCut{};
 
@@ -37,35 +42,25 @@ class RegionCreator {
     double protonCut{};
 
     /// Volume list to be included in this region
-    std::vector<std::string> volumes{};
+    std::vector<std::string> volumes;
   };
 
   /// Region creator constructor
   ///
   /// @param cfg is the configuration struct
-  /// @param name is the region name
-  /// @param level is the logging level to be used
-  RegionCreator(const Config& cfg, std::string name,
-                Acts::Logging::Level level);
+  explicit RegionCreator(const Config& cfg);
 
   /// Construct the region
-  void construct();
+  /// @note The lifetime of the returned region is managed by Geant4
+  G4Region* buildRegion(
+      const Acts::Logger& logger = Acts::getDummyLogger()) const;
 
   /// Readonly access to the configuration
   const Config& config() const { return m_cfg; }
 
  private:
-  /// Region name
-  std::string m_name;
-
   /// Config instance
   Config m_cfg;
-
-  /// Private access method to the logging instance
-  const Acts::Logger& logger() const { return *m_logger; }
-
-  /// The looging instance
-  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 }  // namespace ActsExamples::Geant4

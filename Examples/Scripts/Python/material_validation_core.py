@@ -171,8 +171,8 @@ if "__main__" == __name__:
             gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
             gmBlueprintConfig.detectorSurfaces = gmSurfaces
             gmBlueprintConfig.kdtBinning = [
-                acts.BinningValue.binZ,
-                acts.BinningValue.binR,
+                acts.AxisDirection.AxisZ,
+                acts.AxisDirection.AxisR,
             ]
 
             gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
@@ -244,9 +244,8 @@ if "__main__" == __name__:
             materialSurfaces = detector.extractMaterialSurfaces()
 
     else:
-        [detector, trackingGeometry, decorators] = getOpenDataDetector(
-            materialDecorator
-        )
+        detector = getOpenDataDetector(materialDecorator)
+        trackingGeometry = detector.trackingGeometry()
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 

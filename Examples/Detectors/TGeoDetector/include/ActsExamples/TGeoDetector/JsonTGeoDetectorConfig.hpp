@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
@@ -17,6 +17,8 @@
 
 #include <map>
 #include <string>
+
+#include <nlohmann/json.hpp>
 
 // Namespace of the module splitters
 namespace Acts {
@@ -53,9 +55,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
 
 }  // namespace Acts
 
-namespace ActsExamples {
-
-namespace Options {
+namespace ActsExamples::Options {
 
 /// Read config for options interval
 void from_json(const nlohmann::json& j, Interval& interval) {
@@ -70,7 +70,9 @@ void to_json(nlohmann::json& j, const Interval& interval) {
                      {"upper", interval.upper.value_or(0)}};
 }
 
-}  // namespace Options
+}  // namespace ActsExamples::Options
+
+namespace ActsExamples {
 
 void from_json(const nlohmann::json& j, TGeoITkModuleSplitter::Config& msc) {
   msc.barrelMap =

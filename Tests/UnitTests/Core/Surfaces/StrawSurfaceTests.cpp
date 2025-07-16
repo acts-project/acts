@@ -20,10 +20,6 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-class PlanarBounds;
-}  // namespace Acts
-
 namespace Acts::Test {
 
 // Create a test context

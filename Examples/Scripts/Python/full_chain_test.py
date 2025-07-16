@@ -81,7 +81,12 @@ interactive testing with one-off configuration specified by command-line options
         "--output-csv",
         action="count",
         default=0,
-        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+        help="Use CSV output instead of ROOT. Specify -cc to output all formats (ROOT, CSV, and obj).",
+    )
+    parser.add_argument(
+        "--output-obj",
+        action="store_true",
+        help="Enable obj output",
     )
     parser.add_argument(
         "-n",
@@ -181,7 +186,7 @@ interactive testing with one-off configuration specified by command-line options
         "--seeding-algorithm",
         action=EnumAction,
         enum=SeedingAlgorithm,
-        default=SeedingAlgorithm.Default,
+        default=SeedingAlgorithm.GridTriplet,
         help="Select the seeding algorithm to use",
     )
     parser.add_argument(
@@ -272,6 +277,13 @@ def full_chain(args):
     outputDirCsv = outputDir if args.output_csv != 0 else None
     outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
     outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
+    outputDirObj = (
+        outputDirLess
+        if args.output_obj
+        else outputDir if args.output_csv == 2 else None
+    )
+
+    acts_dir = pathlib.Path(__file__).parent.parent.parent.parent
 
     # fmt: off
     if args.generic_detector:
@@ -282,10 +294,12 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Generic Detector from {geo_dir}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            args.digi_config = geo_dir / "Examples/Configs/generic-digi-smearing-config.json"
+        seedingConfigFile = geo_dir / "Examples/Configs/generic-seeding-config.json"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetector()
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
         etaRange = (-3.0, 3.0)
@@ -296,15 +310,17 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
-        seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
+            args.digi_config = acts_dir / "Examples/Configs/odd-digi-smearing-config.json"
+        seedingConfigFile = acts_dir / "Examples/Configs/odd-seeding-config.json"
         if args.material_config is None:
             args.material_config = geo_dir / "data/odd-material-maps.root"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
+        detector = getOpenDataDetector(
             odd_dir=geo_dir,
-            mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
+            materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
         etaRange = (-4.0, 4.0)
@@ -319,12 +335,14 @@ def full_chain(args):
         seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
         # args.material_config defaulted in itk.buildITkGeometry: geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
         bFieldFile = geo_dir / "bfield/ATLAS-BField-xyz.root"
-        detector, trackingGeometry, decorators = itk.buildITkGeometry(
+        detector = itk.buildITkGeometry(
             geo_dir,
             customMaterialFile=args.material_config,
             material=not args.bf_constant,
             logLevel=acts.logging.Level(args.loglevel),
         )
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     # fmt: on
 
     if args.bf_constant:
@@ -370,7 +388,7 @@ def full_chain(args):
     postSelectParticles = ParticleSelectorConfig(
         pt=(ptMin, None),
         eta=etaRange if not args.generic_detector else (None, None),
-        measurements=(9, None),
+        hits=(9, None),
         removeNeutral=True,
     )
 
@@ -387,9 +405,8 @@ def full_chain(args):
                 "LongStripBarrelReadout",
                 "LongStripEndcapReadout",
             ],
-            outputParticlesGenerator="particles_input",
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticlesGenerator="particles_generated",
+            outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
             graphvizOutput="graphviz",
             dd4hepDetector=detector,
@@ -479,6 +496,7 @@ def full_chain(args):
                 postSelectParticles=postSelectParticles,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
         else:
             if s.config.numThreads != 1:
@@ -504,6 +522,7 @@ def full_chain(args):
                 killAfterTime=25 * u.ns,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
 
     addDigitization(
@@ -532,7 +551,7 @@ def full_chain(args):
         VertexFinder,
     )
 
-    if args.itk and args.seeding_algorithm == SeedingAlgorithm.Default:
+    if args.itk and args.seeding_algorithm == SeedingAlgorithm.GridTriplet:
         seedingAlgConfig = itk.itkSeedingAlgConfig(
             itk.InputSpacePointsType.PixelSpacePoints
         )
@@ -558,9 +577,10 @@ def full_chain(args):
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=seedingConfigFile,
@@ -712,14 +732,9 @@ def full_chain(args):
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                pTMax=1400,
-                pTMin=0.5,
-                phiMax=math.pi,
-                phiMin=-math.pi,
-                etaMax=4,
-                etaMin=-4,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             ambiVolumeFile=args.ambi_config,
             **writeCovMat,

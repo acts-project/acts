@@ -72,3 +72,41 @@ def test_solenoid(conf_const):
     )
 
     assert isinstance(field, acts.examples.InterpolatedMagneticField2)
+
+
+def test_multiregion_bfield():
+    with pytest.raises(TypeError):
+        acts.MultiRangeBField()
+
+    rs = [
+        (acts.RangeXDDim3((0, 3), (0, 3), (0, 3)), acts.Vector3(0.0, 0.0, 2.0)),
+        (acts.RangeXDDim3((1, 2), (1, 2), (1, 10)), acts.Vector3(2.0, 0.0, 0.0)),
+    ]
+    f = acts.MultiRangeBField(rs)
+    assert f
+
+    ctx = acts.MagneticFieldContext()
+    assert ctx
+
+    fc = f.makeCache(ctx)
+    assert fc
+
+    rv = f.getField(acts.Vector3(0.5, 0.5, 0.5), fc)
+    assert rv[0] == pytest.approx(0.0)
+    assert rv[1] == pytest.approx(0.0)
+    assert rv[2] == pytest.approx(2.0)
+
+    rv = f.getField(acts.Vector3(1.5, 1.5, 5.0), fc)
+    assert rv[0] == pytest.approx(2.0)
+    assert rv[1] == pytest.approx(0.0)
+    assert rv[2] == pytest.approx(0.0)
+
+    rv = f.getField(acts.Vector3(2.5, 2.5, 2.5), fc)
+    assert rv[0] == pytest.approx(0.0)
+    assert rv[1] == pytest.approx(0.0)
+    assert rv[2] == pytest.approx(2.0)
+
+    rv = f.getField(acts.Vector3(1.5, 1.5, 1.5), fc)
+    assert rv[0] == pytest.approx(2.0)
+    assert rv[1] == pytest.approx(0.0)
+    assert rv[2] == pytest.approx(0.0)

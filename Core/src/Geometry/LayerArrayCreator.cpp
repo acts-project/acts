@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -28,20 +27,22 @@
 #include <utility>
 #include <vector>
 
-std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
+namespace Acts {
+
+std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
     const GeometryContext& gctx, const LayerVector& layersInput, double min,
-    double max, BinningType bType, BinningValue bValue) const {
+    double max, BinningType bType, AxisDirection aDir) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
                                         << " layers at input.");
   ACTS_VERBOSE("       min/max provided : " << min << " / " << max);
   ACTS_VERBOSE("       binning type     : " << bType);
-  ACTS_VERBOSE("       binning value    : " << bValue);
+  ACTS_VERBOSE("       binning value    : " << aDir);
 
   // create a local copy of the layer vector
   LayerVector layers(layersInput);
 
   // sort it accordingly to the binning value
-  GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, bValue);
+  GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, aDir);
   std::ranges::sort(layers, layerSorter);
   // useful typedef
   using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3>;
@@ -57,13 +58,13 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       // loop over layers and put them in
       for (auto& layIter : layers) {
         ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
-                     << (layIter->binningPosition(gctx, bValue)));
+                     << (layIter->referencePosition(gctx, aDir)));
         layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->binningPosition(gctx, bValue)));
+            layIter, layIter->referencePosition(gctx, aDir)));
       }
       // create the binUitlity
       binUtility = std::make_unique<const BinUtility>(layers.size(), min, max,
-                                                      open, bValue);
+                                                      open, aDir);
       ACTS_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
     } break;
 
@@ -80,7 +81,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       for (auto& layIter : layers) {
         // estimate the offset
         layerThickness = layIter->thickness();
-        layerValue = layIter->binningPositionValue(gctx, bValue);
+        layerValue = layIter->referencePositionValue(gctx, aDir);
         // register the new boundaries in the step vector
         boundaries.push_back(layerValue - 0.5 * layerThickness);
         boundaries.push_back(layerValue + 0.5 * layerThickness);
@@ -107,25 +108,25 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *layIter, bValue,
+            createNavigationSurface(gctx, *layIter, aDir,
                                     -std::abs(layerValue - navigationValue));
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
-            << (navLayerSurface->binningPosition(gctx, bValue)).x() << ", "
-            << (navLayerSurface->binningPosition(gctx, bValue)).y() << ", "
-            << (navLayerSurface->binningPosition(gctx, bValue)).z());
+            << (navLayerSurface->referencePosition(gctx, aDir)).x() << ", "
+            << (navLayerSurface->referencePosition(gctx, aDir)).y() << ", "
+            << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->binningPosition(gctx, bValue)));
+            navLayer, navLayer->referencePosition(gctx, aDir)));
 
         // push the original layer in
         layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->binningPosition(gctx, bValue)));
+            layIter, layIter->referencePosition(gctx, aDir)));
         ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
-                     << (layIter->binningPosition(gctx, bValue)).x() << ", "
-                     << (layIter->binningPosition(gctx, bValue)).y() << ", "
-                     << (layIter->binningPosition(gctx, bValue)).z());
+                     << (layIter->referencePosition(gctx, aDir)).x() << ", "
+                     << (layIter->referencePosition(gctx, aDir)).y() << ", "
+                     << (layIter->referencePosition(gctx, aDir)).z());
         // remember the last
         lastLayer = layIter;
       }
@@ -137,17 +138,17 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       if (navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *lastLayer, bValue,
+            createNavigationSurface(gctx, *lastLayer, aDir,
                                     navigationValue - layerValue);
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
-            << (navLayerSurface->binningPosition(gctx, bValue)).x() << ", "
-            << (navLayerSurface->binningPosition(gctx, bValue)).y() << ", "
-            << (navLayerSurface->binningPosition(gctx, bValue)).z());
+            << (navLayerSurface->referencePosition(gctx, aDir)).x() << ", "
+            << (navLayerSurface->referencePosition(gctx, aDir)).y() << ", "
+            << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
         layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->binningPosition(gctx, bValue)));
+            navLayer, navLayer->referencePosition(gctx, aDir)));
       }
       // now close the boundaries
       boundaries.push_back(max);
@@ -155,7 +156,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       ACTS_VERBOSE(layerOrderVector.size()
                    << " Layers (material + navigation) built. ");
       // create the BinUtility
-      binUtility = std::make_unique<const BinUtility>(boundaries, open, bValue);
+      binUtility = std::make_unique<const BinUtility>(boundaries, open, aDir);
       ACTS_VERBOSE("arbitrary : created a BinUtility as " << *binUtility);
 
     } break;
@@ -169,29 +170,29 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
                                                          std::move(binUtility));
 }
 
-std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
-    const GeometryContext& gctx, const Layer& layer, BinningValue bValue,
+std::shared_ptr<Surface> LayerArrayCreator::createNavigationSurface(
+    const GeometryContext& gctx, const Layer& layer, AxisDirection aDir,
     double offset) const {
   // surface reference
   const Surface& layerSurface = layer.surfaceRepresentation();
   // translation to be applied
   Vector3 translation(0., 0., 0.);
   // switching he binnig values
-  switch (bValue) {
+  switch (aDir) {
     // case x
-    case BinningValue::binX: {
+    case AxisDirection::AxisX: {
       translation = Vector3(offset, 0., 0.);
     } break;
     // case y
-    case BinningValue::binY: {
+    case AxisDirection::AxisY: {
       translation = Vector3(0., offset, 0.);
     } break;
     // case z
-    case BinningValue::binZ: {
+    case AxisDirection::AxisZ: {
       translation = Vector3(0., 0., offset);
     } break;
     // case R
-    case BinningValue::binR: {
+    case AxisDirection::AxisR: {
       // binning in R and cylinder surface means something different
       if (layerSurface.type() == Surface::Cylinder) {
         break;
@@ -233,3 +234,5 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   }
   return navigationSurface;
 }
+
+}  // namespace Acts

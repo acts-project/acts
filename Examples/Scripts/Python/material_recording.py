@@ -15,7 +15,7 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
-import acts.examples.geant4.dd4hep
+import acts.examples.hepmc3
 from acts.examples.odd import getOpenDataDetector
 
 try:
@@ -30,7 +30,7 @@ _material_recording_executed = False
 
 
 def runMaterialRecording(
-    detectorConstructionFactory,
+    detector,
     outputDir,
     tracksPerEvent=10000,
     s=None,
@@ -64,18 +64,25 @@ def runMaterialRecording(
                 ),
             )
         ],
-        outputParticles="particles_initial",
-        outputVertices="vertices_initial",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
+    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+        level=acts.logging.INFO,
+        inputEvent=evGen.config.outputEvent,
+        outputParticles="particles_initial",
+        outputVertices="vertices_initial",
+        mergePrimaries=False,
+    )
+    s.addAlgorithm(hepmc3Converter)
+
     g4Alg = acts.examples.geant4.Geant4MaterialRecording(
         level=acts.logging.INFO,
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         randomNumbers=rnd,
-        inputParticles=evGen.config.outputParticles,
+        inputParticles=hepmc3Converter.config.outputParticles,
         outputMaterialTracks="material-tracks",
     )
 
@@ -108,27 +115,17 @@ def main():
 
     args = p.parse_args()
 
-    detectorConstructionFactory = None
+    detector = None
     if args.input == "":
-        detector, trackingGeometry, decorators = getOpenDataDetector()
-
-        detectorConstructionFactory = (
-            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-        )
+        detector = getOpenDataDetector()
     elif args.input.endswith(".gdml"):
-        detectorConstructionFactory = (
-            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
-        )
+        detector = acts.examples.geant4.GdmlDetector(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
-        geoModelTree = acts.geomodel.readFromDb(args.input)
-        detectorConstructionFactory = (
-            acts.examples.geant4.geomodel.GeoModelDetectorConstructionFactory(
-                geoModelTree
-            )
-        )
+        gmdConfig = acts.geomodel.GeoModelDetector.Config(path=args.input)
+        detector = acts.geomodel.GeoModelDetector(gmdConfig)
 
     runMaterialRecording(
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         tracksPerEvent=args.tracks,
         outputDir=os.getcwd(),
         s=acts.examples.Sequencer(events=args.events, numThreads=1),

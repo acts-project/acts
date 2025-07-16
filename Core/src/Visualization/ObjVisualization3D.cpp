@@ -63,7 +63,7 @@ void ObjVisualization3D::faces(const std::vector<Vector3>& vtxs,
     o.vertices.insert(o.vertices.end(), vtxs.begin(), vtxs.end());
     for (const auto& face : faces) {
       if (face.size() == 2) {
-        o.lines.push_back({face[0] + vtxoffs, face[2] + vtxoffs});
+        o.lines.push_back({face[0] + vtxoffs, face[1] + vtxoffs});
       } else {
         FaceType rawFace;
         std::ranges::transform(

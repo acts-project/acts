@@ -201,12 +201,12 @@ constexpr double mol = 1.0;
 
 namespace UnitLiterals {
 // define user literal functions for the given unit constant
-#define ACTS_DEFINE_UNIT_LITERAL(name)                        \
-  constexpr double operator"" _##name(long double x) {        \
-    return ::Acts::UnitConstants::name * x;                   \
-  }                                                           \
-  constexpr double operator"" _##name(unsigned long long x) { \
-    return ::Acts::UnitConstants::name * x;                   \
+#define ACTS_DEFINE_UNIT_LITERAL(name)                       \
+  constexpr double operator""_##name(long double x) {        \
+    return ::Acts::UnitConstants::name * x;                  \
+  }                                                          \
+  constexpr double operator""_##name(unsigned long long x) { \
+    return ::Acts::UnitConstants::name * x;                  \
   }
 ACTS_DEFINE_UNIT_LITERAL(fm)
 ACTS_DEFINE_UNIT_LITERAL(pm)

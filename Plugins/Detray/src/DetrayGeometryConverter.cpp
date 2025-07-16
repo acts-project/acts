@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <algorithm>
+#include <ranges>
 
 #include <detray/io/frontend/detector_writer.hpp>
 
@@ -135,8 +136,7 @@ Acts::DetrayGeometryConverter::convertPortal(
 
       // Apply the correction from local to global boundaries
       double gCorr = VectorHelpers::cast(transform.translation(), cast);
-      std::for_each(boundaries.begin(), boundaries.end(),
-                    [&gCorr](double& b) { b -= gCorr; });
+      std::ranges::for_each(boundaries, [&gCorr](double& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -149,13 +149,13 @@ Acts::DetrayGeometryConverter::convertPortal(
       std::array<double, 2u> clipRange = {0., 0.};
       std::vector<double> boundValues = surfaceAdjusted->bounds().values();
       if (surfaceType == Surface::SurfaceType::Cylinder &&
-          cast == BinningValue::binZ) {
+          cast == AxisDirection::AxisZ) {
         double zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
       } else if (surfaceType == Surface::SurfaceType::Disc &&
-                 cast == BinningValue::binR) {
+                 cast == AxisDirection::AxisR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
@@ -300,7 +300,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     ACTS_VERBOSE(" > portal " << ip << " split into " << portals.size()
                               << " surfaces");
     GeometryIdentifier geoID = p->surface().geometryId();
-    std::for_each(portals.begin(), portals.end(), [&](auto& portalPayload) {
+    std::ranges::for_each(portals, [&](auto& portalPayload) {
       // Set the index in the collection & remember it in the cache
       portalPayload.index_in_coll = sIndex++;
       localSurfaceLinks.insert({geoID, portalPayload.index_in_coll.value()});

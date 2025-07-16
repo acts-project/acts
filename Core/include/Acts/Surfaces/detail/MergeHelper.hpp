@@ -8,13 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
-
-#include <utility>
 
 namespace Acts::detail {
 

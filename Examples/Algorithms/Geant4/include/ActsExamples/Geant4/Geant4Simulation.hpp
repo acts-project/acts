@@ -10,6 +10,7 @@
 
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -17,6 +18,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
@@ -44,10 +46,8 @@ namespace ActsExamples {
 struct Geant4Handle;
 
 namespace Geant4 {
-class DetectorConstructionFactory;
 class SensitiveSurfaceMapper;
 struct EventStore;
-class RegionCreator;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -61,10 +61,11 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
 
-    /// Detector construction object.
-    /// G4RunManager will take care of deletion
-    std::shared_ptr<Geant4::DetectorConstructionFactory>
-        detectorConstructionFactory;
+    /// Geant4 construction options.
+    Geant4ConstructionOptions constructionOptions;
+
+    /// Detector instance to access Geant4 geometry construction.
+    std::shared_ptr<Detector> detector;
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
@@ -81,8 +82,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -158,16 +158,15 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  Geant4Simulation(const Config& cfg,
-                   Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit Geant4Simulation(const Config& cfg,
+                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   ~Geant4Simulation() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -201,16 +200,15 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  Geant4MaterialRecording(const Config& cfg,
-                          Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit Geant4MaterialRecording(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   ~Geant4MaterialRecording() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

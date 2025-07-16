@@ -26,7 +26,6 @@ add_library(
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
     src/TrackFinderPerformanceWriter.cpp
-    src/SeedingPerformanceWriter.cpp
     src/TrackFinderNTupleWriter.cpp
     src/TrackFitterPerformanceWriter.cpp
     src/VertexNTupleWriter.cpp
@@ -39,6 +38,7 @@ target_link_libraries(
     ActsExamplesIoRoot
     PUBLIC
         ActsCore
+        ActsPluginRoot
         ActsExamplesDigitization
         ActsExamplesFramework
         ActsExamplesPropagation

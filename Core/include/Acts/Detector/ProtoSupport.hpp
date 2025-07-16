@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -55,7 +55,7 @@ struct ProtoSupport {
   /// The internal constraint would overwrite the volume one in order to allow
   /// support surfaces to be fitted from global volume extensions to the
   /// actually contained internal objects.
-  std::vector<BinningValue> internalConstraints = {};
+  std::vector<AxisDirection> internalConstraints = {};
 
   // Building instructions 2 (surface is provided):
 
@@ -63,13 +63,13 @@ struct ProtoSupport {
   std::shared_ptr<Surface> surface = nullptr;
 
   /// The (optional) binning description for proto material
-  std::optional<BinningDescription> protoMaterialBinning = std::nullopt;
+  std::optional<std::vector<ProtoAxis>> protoMaterialBinning = std::nullopt;
 
   /// Potential splits into planar approximations (valid for cylinder/disc)
   unsigned int splits = 1u;
 
   /// Planar placement (only valid for planar support surfaces)
-  BinningValue pPlacement = BinningValue::binZ;
+  AxisDirection pPlacement = AxisDirection::AxisZ;
 
   /// Indicate if the support surface(s) should always be addressed in
   /// navigation

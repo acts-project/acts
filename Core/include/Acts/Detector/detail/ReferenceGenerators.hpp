@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <ranges>
 #include <vector>
 
 namespace Acts::Experimental::detail {
@@ -41,8 +42,8 @@ struct CenterReferenceGenerator {
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
-template <BinningValue bVAL>
-struct BinningValueReferenceGenerator {
+template <AxisDirection bVAL>
+struct AxisDirectionReferenceGenerator {
   /// Helper to access a reference position based on binning value
   ///
   /// @param gctx the geometry context of this operation
@@ -51,7 +52,7 @@ struct BinningValueReferenceGenerator {
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const {
-    return {surface.binningPosition(gctx, bVAL)};
+    return {surface.referencePosition(gctx, bVAL)};
   }
 };
 
@@ -83,8 +84,7 @@ struct PolyhedronReferenceGenerator {
     // Add the barycenter if configured
     if constexpr (aBARY) {
       Vector3 bc(0., 0., 0.);
-      std::for_each(rPositions.begin(), rPositions.end(),
-                    [&](const auto& p) { bc += p; });
+      std::ranges::for_each(rPositions, [&](const auto& p) { bc += p; });
       bc *= 1. / rPositions.size();
       rPositions.push_back(bc);
     }

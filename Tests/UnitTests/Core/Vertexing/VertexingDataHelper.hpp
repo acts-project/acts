@@ -143,7 +143,7 @@ readTracksAndVertexCSV(const std::string& toolString,
     vertices.push_back(vertexInfo);
   }
 
-  return std::make_tuple(beamspotConstraint, vertices, tracks);
+  return {beamspotConstraint, vertices, tracks};
 }
 
 }  // namespace Acts::Test

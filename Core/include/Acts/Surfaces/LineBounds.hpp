@@ -14,7 +14,6 @@
 
 #include <array>
 #include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -26,27 +25,24 @@ class LineBounds : public SurfaceBounds {
  public:
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
 
-  LineBounds() = delete;
-
   /// Constructor
   ///
-  /// @param r is the radius of the cylinder, default = 0.
-  /// @param halfZ is the half length in z, default = 0.
-  LineBounds(double r, double halfZ) noexcept(false) : m_values({r, halfZ}) {
+  /// @param r The radius of the line
+  /// @param halfZ The half length in z
+  explicit LineBounds(double r, double halfZ) noexcept(false)
+      : m_values({r, halfZ}) {
     checkConsistency();
   }
 
   /// Constructor - from fixed size array
   ///
-  /// @param values The parameter values
-  LineBounds(const std::array<double, eSize>& values) noexcept(false)
+  /// @param values The bound values stored in a fixed size array
+  explicit LineBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
   }
 
-  ~LineBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eLine; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -80,20 +76,5 @@ class LineBounds : public SurfaceBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> LineBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void LineBounds::checkConsistency() noexcept(false) {
-  if (get(eR) < 0.) {
-    throw std::invalid_argument("LineBounds: zero radius.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("LineBounds: zero/negative length.");
-  }
-}
 
 }  // namespace Acts

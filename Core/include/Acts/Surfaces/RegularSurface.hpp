@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
 
@@ -116,4 +115,5 @@ class RegularSurface : public Surface {
 
   using Surface::isOnSurface;
 };
+
 }  // namespace Acts

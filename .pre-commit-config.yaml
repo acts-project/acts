@@ -14,6 +14,7 @@ repos:
     - id: end-of-file-fixer
       exclude: \.(diff|patch)$
     - id: check-yaml
+      exclude: \.gitlab-ci.yml$
     - id: check-added-large-files
 
 
@@ -35,7 +36,8 @@ repos:
     - id: codespell
       args: [
         "-S", "*.ipynb,*.onnx,_build,*.svg",
-        "-I", "./CI/codespell_ignore.txt"
+        "-I", "./CI/codespell_ignore.txt",
+        "-w"
       ]
       exclude: ^CI/.*$
 
@@ -61,14 +63,14 @@ repos:
       name: pragma_once
       language: system
       entry: CI/check_pragma_once.sh
-      files: \.hpp$
+      files: \.(hpp|ipp)$
 
   - repo: local
     hooks:
     - id: type_t
       name: type_t
       language: system
-      entry: CI/check_type_t.py
+      entry: CI/check_type_t.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
   - repo: local
@@ -101,3 +103,12 @@ repos:
       language: system
       entry: CI/check_math_macros.py
       files: \.(cpp|hpp|ipp|cu|cuh)$
+
+  - repo: local
+    hooks:
+    - id: codegen_dependencies
+      name: codegen_dependencies
+      language: python
+      entry: CI/check_codegen_dependencies.sh
+      additional_dependencies: ["uv"]
+      files: pyproject.toml$

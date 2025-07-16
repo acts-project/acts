@@ -21,8 +21,9 @@ Acts::detail::clusterDuplicateTracks(
   // different clusters.
   std::unordered_map<std::size_t, std::size_t> hitToTrack;
 
-  // Loop over all the tracks
-  for (const auto& [_, trackValue] : trackMap) {
+  // Loop backward over all the tracks
+  for (auto track = trackMap.rbegin(); track != trackMap.rend(); ++track) {
+    const auto& trackValue = track->second;
     std::vector<std::size_t> hits = trackValue.second;
     auto matchedTrack = hitToTrack.end();
     // Loop over all the hits in the track

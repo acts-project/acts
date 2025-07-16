@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-import json
+from pathlib import Path
 
 import acts
 from acts import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
-    GenericDetector,
-    AlignedDetector,
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
@@ -23,7 +21,7 @@ from acts.examples import (
 def runGeometry(
     trackingGeometry,
     decorators,
-    outputDir,
+    outputDir: Path,
     events=1,
     outputObj=True,
     outputCsv=True,
@@ -32,8 +30,9 @@ def runGeometry(
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
+        ithread = 0
 
-        context = AlgorithmContext(ialg, ievt, eventStore)
+        context = AlgorithmContext(ialg, ievt, eventStore, ithread)
 
         for cdr in decorators:
             r = cdr.decorate(context)
@@ -46,14 +45,14 @@ def runGeometry(
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "csv"),
+                outputDir=str(outputDir / "csv"),
                 writePerEvent=True,
             )
             writer.write(context)
 
         if outputObj:
             writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=os.path.join(outputDir, "obj")
+                level=acts.logging.INFO, outputDir=outputDir / "obj"
             )
             writer.write(context, trackingGeometry)
 
@@ -63,7 +62,7 @@ def runGeometry(
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "json"),
+                outputDir=str(outputDir / "json"),
                 writePerEvent=True,
                 writeSensitive=True,
             )
@@ -82,7 +81,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "geometry-map"),
+                fileName=str(outputDir / "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -90,11 +89,12 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector, trackingGeometry, decorators = AlignedDetector.create()
-    # detector, trackingGeometry, decorators = GenericDetector.create()
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    # detector = GenericDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
-    runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
+    runGeometry(trackingGeometry, decorators, outputDir=Path.cwd())
 
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)

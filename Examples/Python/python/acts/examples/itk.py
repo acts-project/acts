@@ -53,13 +53,13 @@ def buildITkGeometry(
     if jsonconfig:
         jsonFile = geo_dir / "itk-hgtd/tgeo-atlas-itk-hgtd.json"
         logger.info("Create geometry from %s", jsonFile.absolute())
-        return TGeoDetector.create(
+        return TGeoDetector(
             jsonFile=str(jsonFile),
             fileName=str(tgeo_fileName),
             surfaceLogLevel=customLogLevel(),
             layerLogLevel=customLogLevel(),
             volumeLogLevel=customLogLevel(),
-            mdecorator=matDeco,
+            materialDecorator=matDeco,
         )
 
     Volume = TGeoDetector.Config.Volume
@@ -72,7 +72,7 @@ def buildITkGeometry(
     # in the root file (it changed ATLAS-P2-23 -> ATLAS-P2-RUN4-01-00-00).
     # `TGeoParser` searches the tree below `subVolumeName` for all elements that match any of the
     # list of `sensitiveNames` wildcards and also fall inside the `rRange`/`zRange` selections.
-    # If no `TGeoDetectorElements`` are found for an ACTS `Volume()`, then `TGeoDetector.create()`
+    # If no `TGeoDetectorElements`` are found for an ACTS `Volume()`, then `TGeoDetector()`
     # raises an exception along the lines of:
     # 1. Missing tracking geometry - or
     # 2. Incorrect binning configuration found: Number of configurations does not match number of protolayers
@@ -83,9 +83,9 @@ def buildITkGeometry(
     # * browsing `TGeoManager` with ROOT's `TBrowser` (easy to navigate, but have to scan through long lists by eye).
     # If the detector has moved significantly, it may be necessary to change the `rRange`/`zRange`.
     # This specification should be kept in sync with `itk-hgtd/tgeo-atlas-itk-hgtd.json`.
-    return TGeoDetector.create(
+    return TGeoDetector(
         fileName=str(tgeo_fileName),
-        mdecorator=matDeco,
+        materialDecorator=matDeco,
         buildBeamPipe=True,
         unitScalor=1.0,  # explicit units
         beamPipeRadius=23.934 * u.mm,
@@ -581,6 +581,7 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=numPhiNeighbors,
+        useExtraCuts=highOccupancyConfig,
     )
 
     return (

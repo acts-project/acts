@@ -30,6 +30,13 @@ except ImportError:
             "ROOT likely built without/with incompatible PyROOT. Skipping tests that need ROOT"
         )
 
+try:
+    import acts
+
+    geomodelEnabled = hasattr(acts, "geomodel")
+except ImportError:
+    geomodelEnabled = False
+
 dd4hepEnabled = "DD4hep_DIR" in os.environ
 if dd4hepEnabled:
     try:
@@ -94,8 +101,10 @@ try:
     podioEnabled = True
 except ModuleNotFoundError:
     podioEnabled = False
+except ImportError:
+    podioEnabled = False
 
-isCI = os.environ.get("CI", "false") == "true"
+isCI = os.environ.get("CI") is not None
 
 if isCI:
     for k, v in dict(locals()).items():
@@ -122,10 +131,15 @@ class AssertCollectionExistsAlg(IAlgorithm):
         IAlgorithm.__init__(self, name=name, level=level, *args, **kwargs)
 
     def execute(self, ctx):
-        for collection in self.collections:
-            assert ctx.eventStore.exists(collection), f"{collection} does not exist"
-        self.events_seen += 1
-        return acts.examples.ProcessCode.SUCCESS
+        try:
+            for collection in self.collections:
+                assert ctx.eventStore.exists(collection), f"{collection} does not exist"
+            self.events_seen += 1
+            return acts.examples.ProcessCode.SUCCESS
+        except AssertionError:
+            print("Available collections:")
+            print(ctx.eventStore.keys)
+            raise
 
 
 doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ

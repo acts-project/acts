@@ -11,57 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Visualization/Interpolation3D.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
-
-#include <unsupported/Eigen/Splines>
-
-namespace {
-
-/// @brief Helper function to interpolate points
-///
-/// @tparam input_vector_type
-/// @param inputs input vector points
-/// @param nPoints number of interpolation points
-///
-/// @return std::vector<Acts::Vector3> interpolated points
-template <typename input_vector_type>
-std::vector<Acts::Vector3> interpolatedPoints(
-    const std::vector<input_vector_type>& inputs, std::size_t nPoints) {
-  std::vector<Acts::Vector3> output;
-
-  if (nPoints < 2) {
-    // No interpolation done return simply the output vector
-    for (const auto& input : inputs) {
-      output.push_back(input.template head<3>());
-    }
-
-  } else {
-    Eigen::MatrixXd points(3, inputs.size());
-    for (std::size_t i = 0; i < inputs.size(); ++i) {
-      points.col(i) = inputs[i].template head<3>().transpose();
-    }
-    Eigen::Spline<double, 3> spline3D =
-        Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
-
-    double step = 1. / (nPoints - 1);
-    for (std::size_t i = 0; i < nPoints; ++i) {
-      double t = i * step;
-      output.push_back(spline3D(t));
-    }
-  }
-  return output;
-}
-
-}  // namespace
 
 ActsExamples::ObjSimHitWriter::ObjSimHitWriter(
     const ActsExamples::ObjSimHitWriter::Config& config,
@@ -139,10 +100,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     std::size_t lOffset = 1;
     for (auto& [pId, pHits] : particleHits) {
       // Draw the particle hits
-      std::sort(pHits.begin(), pHits.end(),
-                [](const Acts::Vector4& a, const Acts::Vector4& b) {
-                  return a[Acts::eTime] < b[Acts::eTime];
-                });
+      std::ranges::sort(pHits,
+                        [](const Acts::Vector4& a, const Acts::Vector4& b) {
+                          return a[Acts::eTime] < b[Acts::eTime];
+                        });
 
       osHits << "o particle_" << pId << std::endl;
       for (const auto& hit : pHits) {
@@ -152,15 +113,17 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
       }
       osHits << '\n';
 
-      // Interpolate the points
-      std::vector<Acts::Vector3> trajectory;
-      if (pHits.size() < 3) {
-        for (const auto& hit : pHits) {
-          trajectory.push_back(hit.template head<3>());
-        }
+      // Interpolate the points, a minimum number of 3 hits is necessary for
+      // that
+      std::vector<Acts::Vector4> trajectory;
+      if (pHits.size() < 3 || m_cfg.nInterpolatedPoints == 0) {
+        trajectory = pHits;
       } else {
-        trajectory =
-            interpolatedPoints(pHits, pHits.size() * m_cfg.nInterpolatedPoints);
+        // The total number of points is the number of hits times the number of
+        // interpolated points plus the number of hits
+        trajectory = Acts::Interpolation3D::spline(
+            pHits, pHits.size() * (m_cfg.nInterpolatedPoints + 1) - 1,
+            m_cfg.keepOriginalHits);
       }
 
       osTrajectory << "o particle_trajectory_" << pId << std::endl;

@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -42,9 +42,9 @@ class PortalFusingException : public std::exception {
 /// portals that describes which volumes lie behind the portal in that
 /// direction. Portals use associated portal links to perform lookups of target
 /// volumes.
-/// Each portal has two links, and a corresponding surface. One link is
-/// associated with the direction along the surface's normal vector, and one
-/// with the opposite direction.
+/// Each portal has two links (at least one non-null), and a corresponding
+/// surface. One link is associated with the direction along the surface's
+/// normal vector, and one with the opposite direction.
 class Portal {
  public:
   /// Constructor for a portal from a single link
@@ -88,8 +88,8 @@ class Portal {
     };
 
     /// Entry for the link along normal
-    /// Entry for the link opposite normal
     Link alongNormal{};
+    /// Entry for the link opposite normal
     Link oppositeNormal{};
   };
 
@@ -110,6 +110,7 @@ class Portal {
   /// precision). The resulting portal will have one portal along the shared
   /// surface's normal vector, and one opposite that vector.
   ///
+  /// ```
   ///    portal1   portal2
   ///      +---+   +---+
   ///      |   |   |   |
@@ -118,6 +119,7 @@ class Portal {
   ///      |   |   |   |
   ///      |   |   |   |
   ///      +---+   +---+
+  /// ```
   ///
   /// @note The input portals need to have compatible link loadaout, e.g. one
   ///       portal needs to have the *along normal* slot filled, and the
@@ -140,6 +142,7 @@ class Portal {
   /// relative to one another (e.g. one along one opposite), the function will
   /// throw an exception.
   ///
+  /// ```
   ///         ^                     ^
   ///         |                     |
   ///  portal1|              portal2|
@@ -149,6 +152,7 @@ class Portal {
   ///         |                     |
   ///         |                     |
   ///         v                     v
+  /// ```
   ///
   /// @note This is a destructive operation on both portals, their
   ///       links will be moved to produce merged links, which can fail
@@ -159,7 +163,7 @@ class Portal {
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
-                      Portal& bPortal, BinningValue direction,
+                      Portal& bPortal, AxisDirection direction,
                       const Logger& logger = getDummyLogger());
 
   /// Resolve the volume for a 3D position and a direction

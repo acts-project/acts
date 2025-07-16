@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -30,16 +30,17 @@ struct ProtoLayer;
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
-  using SortingConfig = std::pair<BinningValue, double>;
+  using SortingConfig = std::pair<AxisDirection, double>;
 
   struct Config {};
 
   /// Constructor with explicit config
   ///
   /// @param logger logging instance
-  ProtoLayerHelper(const Config& /*config*/,
-                   std::unique_ptr<const Logger> logger =
-                       getDefaultLogger("ProtoLayerHelper", Logging::INFO))
+  explicit ProtoLayerHelper(const Config& /*config*/,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("ProtoLayerHelper",
+                                                 Logging::INFO))
       : m_logger(std::move(logger)) {}
   ~ProtoLayerHelper() = default;
 

@@ -61,7 +61,9 @@ def runGeant4EventRange(detector, trackingGeometry, beginEvent, endEvent, output
 if "__main__" == __name__:
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     n_events = 100
     n_jobs = 8

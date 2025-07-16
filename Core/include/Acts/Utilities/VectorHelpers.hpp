@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <limits>
@@ -145,29 +145,35 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
 /// Helper method to extract the binning value from a 3D vector.
 ///
 /// For this method a 3D vector is required to guarantee all potential
-/// binning values.
-inline double cast(const Vector3& position, BinningValue bval) {
-  switch (bval) {
-    case BinningValue::binX:
+/// axis directions to be casted from
+///
+/// @param position is the position in global
+/// @param aDir is the axis direction to be extracted
+///
+/// @return the value of the binning direction
+inline double cast(const Vector3& position, AxisDirection aDir) {
+  using enum AxisDirection;
+  switch (aDir) {
+    case AxisX:
       return position[0];
-    case BinningValue::binY:
+    case AxisY:
       return position[1];
-    case BinningValue::binZ:
+    case AxisZ:
       return position[2];
-    case BinningValue::binR:
+    case AxisR:
       return perp(position);
-    case BinningValue::binPhi:
+    case AxisPhi:
       return phi(position);
-    case BinningValue::binRPhi:
+    case AxisRPhi:
       return perp(position) * phi(position);
-    case BinningValue::binH:
+    case AxisTheta:
       return theta(position);
-    case BinningValue::binEta:
+    case AxisEta:
       return eta(position);
-    case BinningValue::binMag:
+    case AxisMag:
       return position.norm();
     default:
-      assert(false && "Invalid BinningValue enum value");
+      assert(false && "Invalid AxisDirection enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }
@@ -178,8 +184,8 @@ inline double cast(const Vector3& position, BinningValue bval) {
 /// @param [in] m Matrix that will be used for cross products
 /// @param [in] v Vector for cross products
 /// @return Constructed matrix
-inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3& v) {
-  ActsMatrix<3, 3> r;
+inline SquareMatrix3 cross(const SquareMatrix3& m, const Vector3& v) {
+  SquareMatrix3 r;
   r.col(0) = m.col(0).cross(v);
   r.col(1) = m.col(1).cross(v);
   r.col(2) = m.col(2).cross(v);

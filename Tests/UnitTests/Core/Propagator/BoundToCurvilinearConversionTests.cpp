@@ -17,7 +17,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
@@ -137,7 +136,7 @@ T_Matrix matrixRatio(const T_Matrix &a, const T_Matrix &b) {
 
 struct TestData {
   enum ESurfaceType { kPlane, kPolarDisk, kCylinder };
-  TestData(Vector3 &&a_surface_center, ActsMatrix<3, 3> &&a_surface_rot,
+  TestData(Vector3 &&a_surface_center, SquareMatrix3 &&a_surface_rot,
            ESurfaceType a_surface_type, BoundVector &&a_param_vec,
            BoundSquareMatrix &&a_param_cov, Vector3 &&a_bfield)
       : surface_center(std::move(a_surface_center)),
@@ -148,7 +147,7 @@ struct TestData {
         bfield(std::move(a_bfield)) {}
 
   Vector3 surface_center;
-  ActsMatrix<3, 3> surface_rot;
+  SquareMatrix3 surface_rot;
   ESurfaceType surface_type;
   BoundVector param_vec;
   BoundSquareMatrix param_cov;
@@ -169,7 +168,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
     // create bound parameters from test data
     const Vector3 &surface_center = test_data.surface_center;
-    const ActsMatrix<3, 3> &surface_rot = test_data.surface_rot;
+    const SquareMatrix3 &surface_rot = test_data.surface_rot;
     const BoundVector &param_vec = test_data.param_vec;
     const BoundSquareMatrix &cov = test_data.param_cov;
 
@@ -220,9 +219,10 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
+      FreeToBoundMatrix freeToBoundJacobian;
       Acts::detail::boundToCurvilinearTransportJacobian(
           direction, surface->boundToFreeJacobian(geoCtx, position, direction),
-          Acts::FreeMatrix::Identity(),
+          Acts::FreeMatrix::Identity(), freeToBoundJacobian,
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],
               local_bfield.value(), ParticleHypothesis::pion()),

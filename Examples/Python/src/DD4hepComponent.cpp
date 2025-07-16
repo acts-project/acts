@@ -13,13 +13,15 @@
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <memory>
 #include <utility>
 
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Fields.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -29,41 +31,43 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = DD4hepGeometryService::Config;
-    auto s = py::class_<DD4hepGeometryService,
-                        std::shared_ptr<DD4hepGeometryService>>(
-                 m, "DD4hepGeometryService")
-                 .def(py::init<const Config&>())
-                 .def("drop", &DD4hepGeometryService::drop);
+    py::class_<Acts::DD4hepDetectorElement, Acts::DetectorElementBase,
+               std::shared_ptr<Acts::DD4hepDetectorElement>>(
+        m, "DD4hepDetectorElement");
 
-    auto c = py::class_<Config>(s, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_MEMBER(dd4hepLogLevel);
-    ACTS_PYTHON_MEMBER(xmlFileNames);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(bTypePhi);
-    ACTS_PYTHON_MEMBER(bTypeR);
-    ACTS_PYTHON_MEMBER(bTypeZ);
-    ACTS_PYTHON_MEMBER(envelopeR);
-    ACTS_PYTHON_MEMBER(envelopeZ);
-    ACTS_PYTHON_MEMBER(defaultLayerThickness);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
-    ACTS_PYTHON_STRUCT_END();
+    py::class_<ActsExamples::AlignedDD4hepDetectorElement,
+               Acts::DD4hepDetectorElement,
+               std::shared_ptr<ActsExamples::AlignedDD4hepDetectorElement>>(
+        m, "AlignedDD4hepDetectorElement");
+  }
 
+  {
+    py::class_<dd4hep::DetElement, std::shared_ptr<dd4hep::DetElement>>(
+        m, "DD4hepDetElement");
+  }
+
+  {
+    auto f =
+        py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(
+            m, "DD4hepDetector")
+            .def(py::init<const DD4hepDetector::Config&>())
+            .def_property_readonly("field", &DD4hepDetector::field);
+
+    auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(
+        c, logLevel, dd4hepLogLevel, xmlFileNames, name, bTypePhi, bTypeR,
+        bTypeZ, envelopeR, envelopeZ, defaultLayerThickness, materialDecorator,
+        alignmentDecorator, geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
+
+    m.def("alignedDD4hepDetectorElementFactory",
+          &ActsExamples::alignedDD4hepDetectorElementFactory);
   }
 
   {
     py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider,
                std::shared_ptr<Acts::DD4hepFieldAdapter>>(m,
                                                           "DD4hepFieldAdapter");
-  }
-
-  {
-    py::class_<Acts::DD4hepDetectorElement,
-               std::shared_ptr<Acts::DD4hepDetectorElement>>(
-        m, "DD4hepDetectorElement");
   }
 
   {
@@ -102,12 +106,8 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
     using Options = Acts::Experimental::DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Options);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_MEMBER(emulateToGraph);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(o, logLevel, emulateToGraph, geoIdGenerator,
+                       materialDecorator);
 
     patchKwargsConstructor(o);
 
@@ -145,23 +145,5 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
 
           options.geoIdGenerator = chainedGeoIdGenerator;
         });
-  }
-
-  {
-    py::class_<DD4hepDetector, std::shared_ptr<DD4hepDetector>>(
-        m, "DD4hepDetector")
-        .def(py::init<>())
-        .def(py::init<std::shared_ptr<DD4hepGeometryService>>())
-        .def("finalize",
-             py::overload_cast<DD4hepGeometryService::Config,
-                               std::shared_ptr<const Acts::IMaterialDecorator>>(
-                 &DD4hepDetector::finalize))
-        .def("finalize",
-             py::overload_cast<
-                 const Acts::GeometryContext&,
-                 const Acts::Experimental::DD4hepDetectorStructure::Options&>(
-                 &DD4hepDetector::finalize))
-        .def("drop", &DD4hepDetector::drop)
-        .def_property_readonly("field", &DD4hepDetector::field);
   }
 }

@@ -54,6 +54,10 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
   buildSurfaceBounds();
 }
 
+std::vector<double> TrapezoidVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
 std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
@@ -70,12 +74,12 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
   auto nzTransform = transform * Translation3(0., 0., -get(eHalfLengthZ));
   auto sf =
       Surface::makeShared<PlaneSurface>(nzTransform, m_faceXYTrapezoidBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
   //   (2) - At positive local z
   auto pzTransform = transform * Translation3(0., 0., get(eHalfLengthZ));
   sf = Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
   double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
   double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
@@ -90,7 +94,7 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
       s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
 
   // (4) - At point A, attached to alpha opening angle
   Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
@@ -101,7 +105,7 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
   // Face surfaces zx
   //   (5) - At negative local y
@@ -109,14 +113,14 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(nxTransform,
                                          m_faceZXRectangleBoundsBottom);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
   //   (6) - At positive local y
   auto pxTransform =
       transform * Translation3(topShift, get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(pxTransform,
                                          m_faceZXRectangleBoundsTop);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
   return oSurfaces;
 }
@@ -149,14 +153,15 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   }
   Vector2 locp(pos.x(), pos.y());
   bool inside(m_faceXYTrapezoidBounds->inside(
-      locp, BoundaryTolerance::AbsoluteBound{tol, tol}));
+      locp, BoundaryTolerance::AbsoluteBound(tol, tol)));
   return inside;
 }
 
 std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
   os << std::setiosflags(std::ios::fixed);
   os << std::setprecision(5);
-  os << "TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+  os << "TrapezoidVolumeBounds: (halfX @-Y, halfX @+Y, halfY, halfZ, alpha, "
+        "beta) "
         "= ";
   os << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
      << get(eHalfLengthY) << ", " << get(eHalfLengthZ);
@@ -196,12 +201,6 @@ Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
   }
 
   return {entity, vmin - envelope, vmax + envelope};
-}
-
-std::vector<double> TrapezoidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {

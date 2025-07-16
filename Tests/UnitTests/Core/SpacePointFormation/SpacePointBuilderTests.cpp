@@ -10,10 +10,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -25,7 +23,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
@@ -34,10 +31,8 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <optional>
 #include <random>
@@ -49,13 +44,13 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
-// Construct initial track parameters.
-CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
-                                          double q) {
+
+/// Construct initial track parameters.
+BoundTrackParameters makeParameters(double phi, double theta, double p,
+                                    double q) {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -67,8 +62,8 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
-                                    ParticleHypothesis::pionLike(q));
+  return BoundTrackParameters::createCurvilinear(
+      mPos4, phi, theta, q / p, cov, ParticleHypothesis::pionLike(q));
 }
 
 std::pair<Vector3, Vector3> stripEnds(
@@ -93,7 +88,7 @@ std::pair<Vector3, Vector3> stripEnds(
   auto gPos1 = surface->localToGlobal(gctx, lpos1, globalFakeMom);
   auto gPos2 = surface->localToGlobal(gctx, lpos2, globalFakeMom);
 
-  return std::make_pair(gPos1, gPos2);
+  return {gPos1, gPos2};
 }
 
 // Create a test context
@@ -112,11 +107,11 @@ const MeasurementResolution resPixel = {MeasurementType::eLoc01,
 const MeasurementResolution resStrip = {MeasurementType::eLoc01,
                                         {100_um, 100_um}};
 const MeasurementResolutionMap resolutions = {
-    {GeometryIdentifier().setVolume(2), resPixel},
-    {GeometryIdentifier().setVolume(3).setLayer(2), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(4), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(6), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(8), resStrip},
+    {GeometryIdentifier().withVolume(2), resPixel},
+    {GeometryIdentifier().withVolume(3).withLayer(2), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(4), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(6), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(8), resStrip},
 };
 
 std::default_random_engine rng(42);

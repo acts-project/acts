@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 }
 
 struct NoCopy {
-  NoCopy(int i) : num(i) {}
+  explicit NoCopy(int i) : num(i) {}
   NoCopy(const NoCopy&) = delete;
   NoCopy& operator=(const NoCopy&) = delete;
   NoCopy(NoCopy&&) = default;
@@ -253,7 +253,7 @@ Result<NoCopy> make_nocopy(int i, bool v = true) {
   if (!v) {
     return MyError::Failure;
   }
-  return i;
+  return NoCopy{i};
 }
 
 BOOST_AUTO_TEST_CASE(CopyBehaviour) {
@@ -333,6 +333,94 @@ BOOST_AUTO_TEST_CASE(BoolResult) {
   BOOST_CHECK_EQUAL(res.error(), MyError::Failure);
 }
 
+BOOST_AUTO_TEST_CASE(ValueOrResult) {
+  using Result = Result<int>;
+
+  Result res = Result::success(5);
+  BOOST_CHECK_EQUAL(res.value_or(42), 5);
+
+  res = Result::failure(MyError::Failure);
+  BOOST_CHECK_EQUAL(res.value_or(42), 42);
+
+  BOOST_CHECK_EQUAL(Result::success(5).value_or(42), 5);
+  BOOST_CHECK_EQUAL(Result::failure(MyError::Failure).value_or(42), 42);
+
+  int val = 25;
+  const int cval = 30;
+
+  BOOST_CHECK_EQUAL(Result::success(5).value_or(val), 5);
+  BOOST_CHECK_EQUAL(Result::success(5).value_or(cval), 5);
+  BOOST_CHECK_EQUAL(Result::failure(MyError::Failure).value_or(val), 25);
+  BOOST_CHECK_EQUAL(Result::failure(MyError::Failure).value_or(cval), 30);
+
+  res = Result::success(5);
+
+  BOOST_CHECK_EQUAL(res.value_or(val), 5);
+  BOOST_CHECK_EQUAL(&(res.value_or(val)), &res.value());
+  BOOST_CHECK_EQUAL(res.value_or(cval), 5);
+  BOOST_CHECK_EQUAL(&(res.value_or(cval)), &res.value());
+
+  res = Result::failure(MyError::Failure);
+
+  BOOST_CHECK_EQUAL(res.value_or(val), 25);
+  BOOST_CHECK_EQUAL(res.value_or(cval), 30);
+  BOOST_CHECK_EQUAL(&(res.value_or(val)), &val);
+  BOOST_CHECK_EQUAL(&(res.value_or(cval)), &cval);
+}
+
+BOOST_AUTO_TEST_CASE(TransformResult) {
+  using Result = Result<int>;
+
+  auto f1 = [](int x) { return 2 * x; };
+
+  Result res = Result::success(5);
+  Result res2 = res.transform(f1);
+  BOOST_CHECK(res2.ok());
+  BOOST_CHECK_EQUAL(*res2, 10);
+
+  res = Result::failure(MyError::Failure);
+  res2 = res.transform(f1);
+  BOOST_CHECK(!res2.ok());
+
+  BOOST_CHECK(Result::success(5).transform(f1).ok());
+  BOOST_CHECK_EQUAL(Result::success(5).transform(f1).value(), 10);
+
+  BOOST_CHECK(!Result::failure(MyError::Failure).transform(f1).ok());
+}
+
+BOOST_AUTO_TEST_CASE(AndThenResult) {
+  using Result1 = Result<int>;
+  using Result2 = Result<std::string>;
+
+  auto f1 = [](int x) -> Result2 {
+    return Result2::success("hello " + std::to_string(x));
+  };
+  auto f2 = [](int) -> Result2 { return Result2::failure(MyError::Failure); };
+
+  Result1 res = Result1::success(5);
+  Result2 res2 = res.and_then(f1);
+  BOOST_CHECK(res2.ok());
+  BOOST_CHECK_EQUAL(*res2, "hello 5");
+
+  res2 = res.and_then(f2);
+  BOOST_CHECK(!res2.ok());
+
+  res = Result1::failure(MyError::Failure);
+  res2 = res.and_then(f1);
+  BOOST_CHECK(!res2.ok());
+
+  res2 = res.and_then(f2);
+  BOOST_CHECK(!res2.ok());
+
+  BOOST_CHECK(Result1::success(5).and_then(f1).ok());
+  BOOST_CHECK_EQUAL(Result1::success(5).and_then(f1).value(), "hello 5");
+
+  BOOST_CHECK(!Result1::success(5).and_then(f2).ok());
+
+  BOOST_CHECK(!Result1::failure(MyError::Failure).and_then(f1).ok());
+
+  BOOST_CHECK(!Result1::failure(MyError::Failure).and_then(f2).ok());
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

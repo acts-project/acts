@@ -38,51 +38,6 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
-  license:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          sudo apt-get install -y git
-          && CI/check_license.py . --exclude "*thirdparty/*"
-  include_guards:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
-  pragma_once:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check
-        run: >
-          CI/check_pragma_once.sh
-  type_t:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          CI/check_type_t.py . --exclude "thirdparty/*"
-  boost_test_macro:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check
-        run: >
-          CI/check_boost_test_macro.sh
   smearing_config:
     runs-on: ubuntu-latest
     steps:
@@ -93,39 +48,7 @@ jobs:
       - name: Check
         run: >
           CI/check_smearing_config.py .
-  cmake_options:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          docs/parse_cmake_options.py CMakeLists.txt --write docs/getting_started.md --verify
-  spelling:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install codespell
-        run: >
-          pip install codespell==2.2.5
-      - name: Check
-        run: >
-          CI/check_spelling
-  math_macros:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check
-        run: >
-          CI/check_math_macros.py . --exclude "thirdparty/*"
+
   missing_includes:
     runs-on: ubuntu-latest
     steps:
@@ -136,6 +59,7 @@ jobs:
       - name: Check
         run: >
           CI/missing_include_check.sh
+
   fpe_masks:
     runs-on: ubuntu-latest
     steps:
@@ -149,6 +73,7 @@ jobs:
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+
   unused_files:
     runs-on: ubuntu-latest
     steps:
@@ -159,22 +84,3 @@ jobs:
       - name: Check
         run: >
           CI/check_unused_files.py
-
-  codegen:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install dependencies
-        run: >
-          pip install -r codegen/requirements.txt
-      - name: Check
-        run: >
-          CI/check_codegen
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: changed
-          path: changed

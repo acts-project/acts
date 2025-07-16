@@ -95,7 +95,7 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
     prev_ts = ts;
   });
 
-  return std::make_pair(fullGlobalTrackParamsCov, stateRowIndices);
+  return {fullGlobalTrackParamsCov, stateRowIndices};
 }
 
 }  // namespace Acts::detail

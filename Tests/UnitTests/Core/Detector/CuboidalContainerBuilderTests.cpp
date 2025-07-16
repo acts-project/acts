@@ -13,7 +13,6 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -27,6 +26,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <memory>
@@ -102,8 +102,7 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
                         DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
-    Acts::GeometryIdentifier geoID;
-    geoID.setVolume(ccache.volumeCount);
+    auto geoID = Acts::GeometryIdentifier().withVolume(ccache.volumeCount);
     dVolume.assignGeometryId(geoID);
   }
 
@@ -125,15 +124,15 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in x, y, z
   misCfg.builders = {nullptr};
-  misCfg.binning = Acts::BinningValue::binR;
+  misCfg.binning = Acts::AxisDirection::AxisR;
   BOOST_CHECK_THROW(auto b = CuboidalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
-  std::array<Acts::BinningValue, 3> binningValues = {Acts::BinningValue::binX,
-                                                     Acts::BinningValue::binY,
-                                                     Acts::BinningValue::binZ};
+  std::array<Acts::AxisDirection, 3> binningValues = {
+      Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
+      Acts::AxisDirection::AxisZ};
   for (auto bVal : binningValues) {
     // A perfect box shape
     auto box = Acts::CuboidVolumeBounds(10, 10, 10);

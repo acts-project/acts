@@ -102,23 +102,6 @@ class AmbiguityTrackClassifier {
     return goodTracks;
   }
 
-  /// Select the track associated with each cluster
-  ///
-  /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
-  /// @param tracks is the input track container
-  /// @return a vector of trackID corresponding tho the good tracks
-  template <TrackContainerFrontend track_container_t>
-  std::vector<std::size_t> solveAmbiguity(
-      std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
-      const track_container_t& tracks) const {
-    std::vector<std::vector<float>> outputTensor =
-        inferScores(clusters, tracks);
-    std::vector<std::size_t> goodTracks =
-        trackSelection(clusters, outputTensor);
-
-    return goodTracks;
-  }
-
  private:
   // ONNX environment
   Ort::Env m_env;

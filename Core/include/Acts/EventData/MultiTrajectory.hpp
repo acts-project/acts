@@ -14,24 +14,16 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxy.hpp"
-#include "Acts/EventData/TrackStateProxyConcept.hpp"
-#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <bitset>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <string_view>
 #include <type_traits>
-#include <vector>
 
 #include <Eigen/Core>
 
@@ -108,13 +100,13 @@ class TrackStateRange {
     ProxyType operator*() { return *proxy; }
   };
 
-  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  explicit TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
   TrackStateRange() : m_begin{std::nullopt} {}
 
-  Iterator begin() { return m_begin; }
+  Iterator begin() { return Iterator{m_begin}; }
   Iterator end() { return Iterator{std::nullopt}; }
 
-  Iterator cbegin() const { return m_begin; }
+  Iterator cbegin() const { return Iterator{m_begin}; }
   Iterator cend() const { return Iterator{std::nullopt}; }
 
  private:

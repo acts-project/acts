@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
 
@@ -35,18 +36,19 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
         "CuboidalContainerBuilder: no sub builders provided.");
   }
   // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX &&
-      m_cfg.binning != Acts::BinningValue::binY &&
-      m_cfg.binning != Acts::BinningValue::binZ) {
+  if (m_cfg.binning != Acts::AxisDirection::AxisX &&
+      m_cfg.binning != Acts::AxisDirection::AxisY &&
+      m_cfg.binning != Acts::AxisDirection::AxisZ) {
     throw std::invalid_argument(
         "CuboidalContainerBuilder: Invalid binning value. Only "
-        "Acts::BinningValue::binX, "
-        "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
+        "Acts::AxisDirection::AxisX, "
+        "Acts::AxisDirection::AxisY, Acts::AxisDirection::AxisZ are "
+        "supported.");
   }
 }
 
 Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
-    const Acts::Experimental::Blueprint::Node& bpNode,
+    const Acts::Experimental::Gen2Blueprint::Node& bpNode,
     Acts::Logging::Level logLevel)
     : IDetectorComponentBuilder(),
       m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
@@ -94,13 +96,14 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
   }
   m_cfg.binning = bpNode.binning.at(0);
   // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX &&
-      m_cfg.binning != Acts::BinningValue::binY &&
-      m_cfg.binning != Acts::BinningValue::binZ) {
+  if (m_cfg.binning != Acts::AxisDirection::AxisX &&
+      m_cfg.binning != Acts::AxisDirection::AxisY &&
+      m_cfg.binning != Acts::AxisDirection::AxisZ) {
     throw std::invalid_argument(
         "CuboidalContainerBuilder: Invalid binning value. Only "
-        "Acts::BinningValue::binX, "
-        "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
+        "Acts::AxisDirection::AxisX, "
+        "Acts::AxisDirection::AxisY, Acts::AxisDirection::AxisZ are "
+        "supported.");
   }
 
   m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
@@ -126,17 +129,16 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Run through the builders
-  std::for_each(
-      m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
-        auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
-        ACTS_VERBOSE("Number of volumes: " << cVolumes.size());
-        // Collect individual components, volumes, containers, roots
-        volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
-        containers.push_back(cContainer);
-        rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
-                           cRoots.volumes.end());
-      });
+  std::ranges::for_each(m_cfg.builders, [&](const auto& builder) {
+    auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
+    atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
+    ACTS_VERBOSE("Number of volumes: " << cVolumes.size());
+    // Collect individual components, volumes, containers, roots
+    volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
+    containers.push_back(cContainer);
+    rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
+                       cRoots.volumes.end());
+  });
   // Navigation level detected, connect volumes (cleaner and faster than
   // connect containers)
   if (atNavigationLevel) {
@@ -159,12 +161,12 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
     ACTS_DEBUG("Assigning geometry ids to the detector");
     auto cache = m_cfg.geoIdGenerator->generateCache();
     if (m_cfg.geoIdReverseGen) {
-      std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
+      std::ranges::for_each(rootVolumes, [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
     } else {
-      std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
+      std::ranges::for_each(rootVolumes, [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });

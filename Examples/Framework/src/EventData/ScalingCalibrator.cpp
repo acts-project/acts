@@ -52,22 +52,21 @@ std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
   std::regex reg("^map_([0-9]+)-([0-9]+)-([0-9]+)_([xy]_.*)$");
   std::smatch matches;
 
-  if (std::regex_search(mapkey, matches, reg) && matches.size() == 5) {
-    std::size_t vol = std::stoull(matches[1].str());
-    std::size_t lyr = std::stoull(matches[2].str());
-    std::size_t mod = std::stoull(matches[3].str());
-
-    Acts::GeometryIdentifier geoId;
-    geoId.setVolume(vol);
-    geoId.setLayer(lyr);
-    geoId.setSensitive(mod);
-
-    std::string var(matches[4].str());
-
-    return std::make_pair(geoId, var);
-  } else {
+  if (!std::regex_search(mapkey, matches, reg) || matches.size() != 5) {
     throw std::runtime_error("Invalid map key: " + mapkey);
   }
+
+  std::size_t vol = std::stoull(matches[1].str());
+  std::size_t lyr = std::stoull(matches[2].str());
+  std::size_t mod = std::stoull(matches[3].str());
+
+  auto geoId =
+      Acts::GeometryIdentifier().withVolume(vol).withLayer(lyr).withSensitive(
+          mod);
+
+  std::string var(matches[4].str());
+
+  return {geoId, var};
 }
 
 std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
@@ -141,13 +140,15 @@ void ActsExamples::ScalingCalibrator::calibrate(
          "Source link index is outside the container bounds");
 
   auto geoId = trackState.referenceSurface().geometryId();
-  Acts::GeometryIdentifier mgid;
-  mgid.setVolume(geoId.volume() *
-                 static_cast<Acts::GeometryIdentifier::Value>(m_mask[2]));
-  mgid.setLayer(geoId.layer() *
-                static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]));
-  mgid.setSensitive(geoId.sensitive() *
-                    static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
+  auto mgid =
+      Acts::GeometryIdentifier()
+          .withVolume(geoId.volume() *
+                      static_cast<Acts::GeometryIdentifier::Value>(m_mask[2]))
+          .withLayer(geoId.layer() *
+                     static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]))
+          .withSensitive(
+              geoId.sensitive() *
+              static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 

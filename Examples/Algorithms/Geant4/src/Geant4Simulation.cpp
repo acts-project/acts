@@ -15,7 +15,6 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -54,7 +53,7 @@ Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }
-  if (cfg.detectorConstructionFactory == nullptr) {
+  if (cfg.detector == nullptr) {
     throw std::invalid_argument("Missing detector construction factory");
   }
   if (cfg.randomNumbers == nullptr) {
@@ -82,7 +81,10 @@ void Geant4SimulationBase::commonInitialization() {
     }
     // G4RunManager will take care of deletion
     m_detectorConstruction =
-        config().detectorConstructionFactory->factorize().release();
+        config()
+            .detector
+            ->buildGeant4DetectorConstruction(config().constructionOptions)
+            .release();
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();
   }
@@ -91,7 +93,7 @@ void Geant4SimulationBase::commonInitialization() {
 }
 
 G4RunManager& Geant4SimulationBase::runManager() const {
-  return *m_geant4Instance->runManager.get();
+  return *m_geant4Instance->runManager;
 }
 
 Geant4::EventStore& Geant4SimulationBase::eventStore() const {

@@ -37,6 +37,14 @@ class GenericFreeTrackParameters {
   using CovarianceMatrix = FreeSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
 
+  /// Converts an unknown bound track parameter.
+  template <FreeTrackParametersConcept other_track_parameter_t>
+  static GenericFreeTrackParameters create(
+      const other_track_parameter_t& other) {
+    return GenericFreeTrackParameters(
+        other.parameters(), other.particleHypothesis(), other.covariance());
+  }
+
   /// Construct from a parameters vector and particle charge.
   ///
   /// @param params Free parameters vector
@@ -111,30 +119,11 @@ class GenericFreeTrackParameters {
 
   /// Converts a free track parameter with a different hypothesis.
   template <typename other_particle_hypothesis_t>
-  GenericFreeTrackParameters(
+  explicit GenericFreeTrackParameters(
       const GenericFreeTrackParameters<other_particle_hypothesis_t>& other)
       : GenericFreeTrackParameters(other.parameters(),
                                    other.particleHypothesis(),
                                    other.covariance()) {}
-
-  /// Converts an unknown bound track parameter.
-  template <typename other_track_parameter_t>
-  static GenericFreeTrackParameters create(
-      const other_track_parameter_t& other) {
-    static_assert(FreeTrackParametersConcept<other_track_parameter_t>);
-
-    return GenericFreeTrackParameters(
-        other.parameters(), other.particleHypothesis(), other.covariance());
-  }
-
-  /// Parameters are not default constructible due to the charge type.
-  GenericFreeTrackParameters() = delete;
-  GenericFreeTrackParameters(const GenericFreeTrackParameters&) = default;
-  GenericFreeTrackParameters(GenericFreeTrackParameters&&) = default;
-  ~GenericFreeTrackParameters() = default;
-  GenericFreeTrackParameters& operator=(const GenericFreeTrackParameters&) =
-      default;
-  GenericFreeTrackParameters& operator=(GenericFreeTrackParameters&&) = default;
 
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }

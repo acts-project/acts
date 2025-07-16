@@ -9,44 +9,47 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
-#include <utility>
-#include <vector>
+#include <optional>
 
 namespace Acts {
-class TrackingGeometry;
 class IMaterialDecorator;
-}  // namespace Acts
-
-namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
+}
 
 namespace ActsExamples {
 
 class GenericDetectorElement;
 
-struct GenericDetector {
-  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
+class GenericDetector : public Detector {
+ public:
   struct Config {
-    std::size_t buildLevel{3};
-    Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
-    Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
-    Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};
-    bool buildProto{false};
+    std::size_t buildLevel = 3;
+    Acts::Logging::Level logLevel = Acts::Logging::INFO;
+    Acts::Logging::Level surfaceLogLevel = Acts::Logging::INFO;
+    Acts::Logging::Level layerLogLevel = Acts::Logging::INFO;
+    Acts::Logging::Level volumeLogLevel = Acts::Logging::INFO;
+    bool buildProto = false;
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
+    bool gen3 = false;
+    std::optional<std::filesystem::path> graphvizFile;
   };
 
-  /// The Store of the detector elements (lifetime: job)
-  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
-      detectorStore;
+  explicit GenericDetector(const Config& cfg);
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+ protected:
+  struct NoBuildTag {};
+  explicit GenericDetector(const Config& cfg, NoBuildTag /*tag*/);
+
+  void buildTrackingGeometry(
+      const Generic::ProtoLayerCreator::DetectorElementFactory&
+          detectorElementFactory);
+
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples

@@ -21,7 +21,9 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <ranges>
 
 #include <boost/algorithm/string.hpp>
 
@@ -39,13 +41,12 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   Acts::GeoModelBlueprintCreater::Blueprint blueprint;
 
   // The GeoModel tree must have a reader
-  if (gmTree.geoReader == nullptr) {
+  if (gmTree.dbMgr == nullptr) {
     throw std::invalid_argument(
-        "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
+        "GeoModelBlueprintCreater: GeoModelTree has no dbMgr");
   }
 
-  auto blueprintTable =
-      gmTree.geoReader->getTableFromTableName_String(options.table);
+  auto blueprintTable = gmTree.dbMgr->getTableRecords_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;
@@ -54,8 +55,8 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   // Prepare the KdtSurfaces if configured to do so
   //
   if (!m_cfg.detectorSurfaces.empty()) {
-    std::array<BinningValue, 3u> kdtBinning = {
-        BinningValue::binX, BinningValue::binY, BinningValue::binZ};
+    std::array<AxisDirection, 3u> kdtBinning = {
+        AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
     if (m_cfg.kdtBinning.empty()) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: At least one binning value for KDTree "
@@ -143,7 +144,7 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   return blueprint;
 }
 
-std::unique_ptr<Acts::Experimental::Blueprint::Node>
+std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node>
 Acts::GeoModelBlueprintCreater::createNode(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
@@ -152,10 +153,10 @@ Acts::GeoModelBlueprintCreater::createNode(
 
   // Peak into the volume entry to understand which one should be constraint
   // by the internals building
-  std::vector<BinningValue> internalConstraints =
+  std::vector<AxisDirection> internalConstraints =
       detail::GeoModelExentHelper::readBoundsConstaints(entry.bounds, "i");
   // Check if the binnning will also use the internal constraints
-  std::vector<BinningValue> binningConstraints =
+  std::vector<AxisDirection> binningConstraints =
       detail::GeoModelExentHelper::readBinningConstraints(entry.binnings);
   // Concatenate the binning constraints
   for (const auto& bc : binningConstraints) {
@@ -168,7 +169,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     ACTS_VERBOSE("Found " << internalConstraints.size()
                           << " internal constraints to check for: ");
     for (const auto& ic : internalConstraints) {
-      ACTS_VERBOSE("- " << binningValueName(ic));
+      ACTS_VERBOSE("- " << axisDirectionName(ic));
     }
   }
 
@@ -195,8 +196,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   std::string entryType = entryTypeSplit[0u];
 
   // Check if material has to be attached
-  std::map<unsigned int, Experimental::BinningDescription>
-      portalMaterialBinning;
+  std::map<unsigned int, std::vector<DirectedProtoAxis>> portalMaterialBinning;
   if (!entry.materials.empty()) {
     for (const auto& material : entry.materials) {
       std::vector<std::string> materialTokens;
@@ -212,14 +212,14 @@ Acts::GeoModelBlueprintCreater::createNode(
         std::vector<std::string> binningTokens;
         boost::split(binningTokens, materialTokens[1u], boost::is_any_of(";"));
 
-        std::vector<Experimental::ProtoBinning> protoBinnings;
+        std::vector<DirectedProtoAxis> protoBinnings;
         for (const auto& bToken : binningTokens) {
           ACTS_VERBOSE("   - Binning: " << bToken);
-          protoBinnings.push_back(
-              detail::GeoModelBinningHelper::toProtoBinning(bToken));
+          auto [dpAxis, nB] =
+              detail::GeoModelBinningHelper::toProtoAxis(bToken, extent);
+          protoBinnings.push_back(dpAxis);
         }
-        portalMaterialBinning[portalNumber] =
-            Experimental::BinningDescription{protoBinnings};
+        portalMaterialBinning[portalNumber] = protoBinnings;
       }
     }
     ACTS_VERBOSE("Node " << entry.name << " has "
@@ -230,7 +230,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   // Block for branch or container nodes that have children
   if (entryType == "branch" || entryType == "container" ||
       entryType == "root") {
-    std::vector<std::unique_ptr<Experimental::Blueprint::Node>> children;
+    std::vector<std::unique_ptr<Experimental::Gen2Blueprint::Node>> children;
     // Check for gap filling
     bool gapFilling = false;
     // Check if the entry has children
@@ -263,15 +263,13 @@ Acts::GeoModelBlueprintCreater::createNode(
     }
 
     // Create the binnings
-    std::vector<Acts::BinningValue> binnings;
-    std::for_each(
-        entry.binnings.begin(), entry.binnings.end(),
-        [&binnings](const std::string& b) {
-          binnings.push_back(detail::GeoModelBinningHelper::toBinningValue(b));
-        });
+    std::vector<Acts::AxisDirection> binnings;
+    std::ranges::for_each(entry.binnings, [&binnings](const std::string& b) {
+      binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
+    });
 
     // Complete the children
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
         std::move(children), extent);
     node->portalMaterialBinning = portalMaterialBinning;
@@ -299,7 +297,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     return node;
 
   } else if (entryType == "leaf") {
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, internalsBuilder,
         extent);
     node->portalMaterialBinning = portalMaterialBinning;
@@ -317,10 +315,10 @@ std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
 Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const Extent& externalExtent,
-    const std::vector<BinningValue>& internalConstraints) const {
+    const std::vector<AxisDirection>& internalConstraints) const {
   // Check if the internals entry is empty
   if (entry.internals.empty()) {
-    return std::make_tuple(nullptr, Extent());
+    return {nullptr, Extent()};
   }
 
   // Build a layer structure
@@ -351,7 +349,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
       // Fill what we have - follow the convention to fill up with the last
       for (std::size_t ibv = 0; ibv < 3u; ++ibv) {
         if (ibv < m_cfg.kdtBinning.size()) {
-          BinningValue v = m_cfg.kdtBinning[ibv];
+          AxisDirection v = m_cfg.kdtBinning[ibv];
           mins[ibv] = rangeExtent.min(v);
           maxs[ibv] = rangeExtent.max(v);
           continue;
@@ -385,18 +383,18 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           if (!binning.empty()) {
             ACTS_VERBOSE("- Adding binning: " << binning);
             lsbCfg.binnings.push_back(
-                detail::GeoModelBinningHelper::toProtoBinning(binning,
-                                                              internalExtent));
+                detail::GeoModelBinningHelper::toProtoAxis(binning,
+                                                           internalExtent));
           }
         }
       } else {
         lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
       }
 
-      return std::make_tuple(
+      return {
           std::make_shared<Experimental::LayerStructureBuilder>(
               lsbCfg, m_logger->clone(entry.name + "_LayerStructureBuilder")),
-          internalExtent);
+          internalExtent};
 
     } else {
       throw std::invalid_argument(
@@ -404,7 +402,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           entry.internals[1u] + "' / or now kdt surfaces provided.");
     }
   }
-  return std::make_tuple(nullptr, Extent());
+  return {nullptr, Extent()};
 }
 
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
@@ -424,15 +422,15 @@ Acts::GeoModelBlueprintCreater::parseBounds(
   // Switch on the bounds type
   if (boundsType == VolumeBounds::BoundsType::eCylinder) {
     // Create the translation & bound values
-    translation = Acts::Vector3(0., 0., extent.medium(BinningValue::binZ));
-    boundValues = {extent.min(BinningValue::binR),
-                   extent.max(BinningValue::binR),
-                   0.5 * extent.interval(BinningValue::binZ)};
+    translation = Acts::Vector3(0., 0., extent.medium(AxisDirection::AxisZ));
+    boundValues = {extent.min(AxisDirection::AxisR),
+                   extent.max(AxisDirection::AxisR),
+                   0.5 * extent.interval(AxisDirection::AxisZ)};
   } else {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Unknown bounds type, only 'cyl' is "
         "supported for the moment.");
   }
 
-  return std::make_tuple(boundsType, extent, boundValues, translation);
+  return {boundsType, extent, boundValues, translation};
 }

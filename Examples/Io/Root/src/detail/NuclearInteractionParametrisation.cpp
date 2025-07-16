@@ -87,7 +87,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
   }
   covariance /= events.size();
 
-  return std::make_pair(mean, covariance);
+  return {mean, covariance};
 }
 
 EigenspaceComponents calculateEigenspace(const Vector& mean,
@@ -99,7 +99,7 @@ EigenspaceComponents calculateEigenspace(const Vector& mean,
   // Transform the mean vector into eigenspace
   Vector meanEigenspace = eigenvectors * mean;
 
-  return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
+  return {eigenvalues, eigenvectors, meanEigenspace};
 }
 
 Parametrisation buildMomentumParameters(const EventCollection& events,
@@ -122,7 +122,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
   // Calculate the cumulative distributions
-  return std::make_pair(eigenspaceElements, histos);
+  return {eigenspaceElements, histos};
 }
 
 EventProperties prepareMomenta(const EventCollection& events,
@@ -255,7 +255,7 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
   // Calculate the cumulative distributions
-  return std::make_pair(eigenspaceElements, histos);
+  return {eigenspaceElements, histos};
 }
 
 std::unordered_map<int, std::unordered_map<int, float>>
@@ -341,7 +341,7 @@ cumulativeMultiplicityProbability(const EventCollection& events,
     }
   }
 
-  return std::make_pair(softHisto, hardHisto);
+  return {softHisto, hardHisto};
 }
 
 TVectorF softProbability(const EventCollection& events) {

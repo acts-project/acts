@@ -46,7 +46,7 @@ constexpr HashedString hashStringDynamic(std::string_view s) {
 }
 
 namespace HashedStringLiteral {
-constexpr HashedString operator"" _hash(char const* s, std::size_t count) {
+constexpr HashedString operator""_hash(char const* s, std::size_t count) {
   return detail::fnv1a_32(s, count);
 }
 

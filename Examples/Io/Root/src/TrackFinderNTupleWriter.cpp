@@ -9,8 +9,7 @@
 #include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -18,7 +17,6 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -32,11 +30,13 @@
 #include <TFile.h>
 #include <TTree.h>
 
-struct ActsExamples::TrackFinderNTupleWriter::Impl {
+namespace ActsExamples {
+
+struct TrackFinderNTupleWriter::Impl {
   Config cfg;
 
   ReadDataHandle<SimParticleContainer> inputParticles;
-  ReadDataHandle<HitParticlesMap> inputMeasurementParticlesMap;
+  ReadDataHandle<ParticleMeasurementsMap> inputParticleMeasurementsMap;
   ReadDataHandle<TrackParticleMatching> inputTrackParticleMatching;
 
   TFile* file = nullptr;
@@ -78,7 +78,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
   // particle charge in e
   float prtQ = 0;
   // particle reconstruction
-  UShort_t prtNumHits = 0;  // number of hits for this particle
+  UShort_t prtNumMeasurements = 0;  // number of hits for this particle
   UShort_t prtNumTracks =
       0;  // number of tracks this particle was reconstructed in
   UShort_t prtNumTracksMajority =
@@ -89,7 +89,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
   Impl(TrackFinderNTupleWriter* parent, Config&& c, const Acts::Logger& l)
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
-        inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
+        inputParticleMeasurementsMap{parent, "InputParticleMeasurementsMap"},
         inputTrackParticleMatching{parent, "InputTrackParticleMatching"},
         _logger(l) {
     if (cfg.inputTracks.empty()) {
@@ -98,8 +98,9 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
     if (cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
-    if (cfg.inputMeasurementParticlesMap.empty()) {
-      throw std::invalid_argument("Missing hit-particles map input collection");
+    if (cfg.inputParticleMeasurementsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing particle-measurements map input collection");
     }
     if (cfg.inputTrackParticleMatching.empty()) {
       throw std::invalid_argument(
@@ -110,7 +111,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
     }
 
     inputParticles.initialize(cfg.inputParticles);
-    inputMeasurementParticlesMap.initialize(cfg.inputMeasurementParticlesMap);
+    inputParticleMeasurementsMap.initialize(cfg.inputParticleMeasurementsMap);
     inputTrackParticleMatching.initialize(cfg.inputTrackParticleMatching);
 
     // the output file can not be given externally since TFile accesses to the
@@ -146,7 +147,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
     prtTree->Branch("pz", &prtPz);
     prtTree->Branch("m", &prtM);
     prtTree->Branch("q", &prtQ);
-    prtTree->Branch("nhits", &prtNumHits);
+    prtTree->Branch("nhits", &prtNumMeasurements);
     prtTree->Branch("ntracks", &prtNumTracks);
     prtTree->Branch("ntracks_majority", &prtNumTracksMajority);
   }
@@ -155,10 +156,8 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
 
   void write(std::uint64_t eventId, const ConstTrackContainer& tracks,
              const SimParticleContainer& particles,
-             const HitParticlesMap& hitParticlesMap,
+             const ParticleMeasurementsMap& particleMeasurementsMap,
              const TrackParticleMatching& trackParticleMatching) {
-    const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
-
     // How often a particle was reconstructed.
     std::unordered_map<ActsFatras::Barcode, std::size_t> reconCount;
     reconCount.reserve(particles.size());
@@ -210,7 +209,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
           trkParticleId.push_back(phc.particleId.value());
           // count total number of hits for this particle
           auto trueParticleHits =
-              makeRange(particleHitsMap.equal_range(phc.particleId.value()));
+              makeRange(particleMeasurementsMap.equal_range(phc.particleId));
           trkParticleNumHitsTotal.push_back(trueParticleHits.size());
           trkParticleNumHitsOnTrack.push_back(phc.hitCount);
         }
@@ -223,9 +222,9 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
     {
       std::lock_guard<std::mutex> guardPrt(trkMutex);
       for (const auto& particle : particles) {
-        // find all hits for this particle
-        auto hits =
-            makeRange(particleHitsMap.equal_range(particle.particleId()));
+        // find all measurements for this particle
+        auto measurements = makeRange(
+            particleMeasurementsMap.equal_range(particle.particleId()));
 
         // identification
         prtEventId = eventId;
@@ -243,7 +242,7 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
         prtM = particle.mass() / Acts::UnitConstants::GeV;
         prtQ = particle.charge() / Acts::UnitConstants::e;
         // reconstruction
-        prtNumHits = hits.size();
+        prtNumMeasurements = measurements.size();
         auto nt = reconCount.find(particle.particleId());
         prtNumTracks = (nt != reconCount.end()) ? nt->second : 0u;
         auto nm = majorityCount.find(particle.particleId());
@@ -265,31 +264,31 @@ struct ActsExamples::TrackFinderNTupleWriter::Impl {
   }
 };
 
-ActsExamples::TrackFinderNTupleWriter::TrackFinderNTupleWriter(
-    ActsExamples::TrackFinderNTupleWriter::Config config,
-    Acts::Logging::Level level)
+TrackFinderNTupleWriter::TrackFinderNTupleWriter(
+    TrackFinderNTupleWriter::Config config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "TrackFinderNTupleWriter", level),
       m_impl(std::make_unique<Impl>(this, std::move(config), logger())) {}
 
-ActsExamples::TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
+TrackFinderNTupleWriter::~TrackFinderNTupleWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const ActsExamples::ConstTrackContainer& tracks) {
+ProcessCode TrackFinderNTupleWriter::writeT(const AlgorithmContext& ctx,
+                                            const ConstTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
-  const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
+  const auto& particleMeasurementsMap =
+      m_impl->inputParticleMeasurementsMap(ctx);
   const auto& trackParticleMatching = m_impl->inputTrackParticleMatching(ctx);
-  m_impl->write(ctx.eventNumber, tracks, particles, hitParticlesMap,
+  m_impl->write(ctx.eventNumber, tracks, particles, particleMeasurementsMap,
                 trackParticleMatching);
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderNTupleWriter::finalize() {
+ProcessCode TrackFinderNTupleWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }
 
-const ActsExamples::TrackFinderNTupleWriter::Config&
-ActsExamples::TrackFinderNTupleWriter::config() const {
+const TrackFinderNTupleWriter::Config& TrackFinderNTupleWriter::config() const {
   return m_impl->cfg;
 }
+
+}  // namespace ActsExamples

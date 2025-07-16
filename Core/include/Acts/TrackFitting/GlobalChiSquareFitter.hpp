@@ -14,25 +14,20 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
@@ -361,6 +356,29 @@ struct Gx2fSystem {
   std::size_t m_ndf = 0u;
 };
 
+/// @brief Adds a measurement to the GX2F equation system in a modular backend function.
+///
+/// This function processes measurement data and integrates it into the GX2F
+/// system.
+///
+/// @param extendedSystem All parameters of the current equation system to update.
+/// @param jacobianFromStart The Jacobian matrix from the start to the current state.
+/// @param covarianceMeasurement The covariance matrix of the measurement.
+/// @param predicted The predicted state vector based on the track state.
+/// @param measurement The measurement vector.
+/// @param projector The projection matrix.
+/// @param logger A logger instance.
+///
+/// @note The dynamic Eigen matrices are suboptimal. We could think of
+/// templating again in the future on kMeasDims. We currently use dynamic
+/// matrices to reduce the memory during compile time.
+void addMeasurementToGx2fSumsBackend(
+    Gx2fSystem& extendedSystem,
+    const std::vector<BoundMatrix>& jacobianFromStart,
+    const Eigen::MatrixXd& covarianceMeasurement, const BoundVector& predicted,
+    const Eigen::VectorXd& measurement, const Eigen::MatrixXd& projector,
+    const Logger& logger);
+
 /// @brief Process measurements and fill the aMatrix and bVector
 ///
 /// The function processes each measurement for the GX2F Actor fitting process.
@@ -370,7 +388,7 @@ struct Gx2fSystem {
 /// @tparam kMeasDim Number of dimensions of the measurement
 /// @tparam track_state_t The type of the track state
 ///
-/// @param extendedSystem All parameters of the current equation system
+/// @param extendedSystem All parameters of the current equation system to update
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
@@ -379,43 +397,8 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
-  // First we get back the covariance and try to invert it. If the inversion
-  // fails, we can already abort.
   const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
-
-  const auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
-  if (!safeInvCovMeasurement) {
-    ACTS_WARNING("addMeasurementToGx2fSums: safeInvCovMeasurement failed.");
-    ACTS_VERBOSE("    covarianceMeasurement:\n" << covarianceMeasurement);
-    return;
-  }
-
-  // Create an extended Jacobian. This one contains only eBoundSize rows,
-  // because the rest is irrelevant. We fill it in the next steps.
-  // TODO make dimsExtendedParams template with unrolling
-  Eigen::MatrixXd extendedJacobian =
-      Eigen::MatrixXd::Zero(eBoundSize, extendedSystem.nDims());
-
-  // This part of the Jacobian comes from the material-less propagation
-  extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() =
-      jacobianFromStart[0];
-
-  // If we have material, loop here over all Jacobians. We add extra columns for
-  // their phi-theta projections. These parts account for the propagation of the
-  // scattering angles.
-  for (std::size_t matSurface = 1; matSurface < jacobianFromStart.size();
-       matSurface++) {
-    const BoundMatrix jac = jacobianFromStart[matSurface];
-
-    const ActsMatrix<eBoundSize, 2> jacPhiTheta =
-        jac * Gx2fConstants::phiThetaProjector;
-
-    // The position, where we need to insert the values in the extended Jacobian
-    const std::size_t deltaPosition = eBoundSize + 2 * (matSurface - 1);
-
-    extendedJacobian.block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
-  }
 
   const BoundVector predicted = trackState.smoothed();
 
@@ -425,54 +408,9 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
   const ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
-  const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
-
-  const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
-
-  const ActsVector<kMeasDim> residual = measurement - projPredicted;
-
-  // Finally contribute to chi2sum, aMatrix, and bVector
-  extendedSystem.chi2() +=
-      (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-
-  extendedSystem.aMatrix() +=
-      (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-          .eval();
-
-  extendedSystem.bVector() +=
-      (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
-          .eval()
-          .transpose();
-
-  ACTS_VERBOSE(
-      "Contributions in addMeasurementToGx2fSums:\n"
-      << "    kMeasDim:    " << kMeasDim << "\n"
-      << "    predicted:   " << predicted.transpose() << "\n"
-      << "    measurement: " << measurement.transpose() << "\n"
-      << "    covarianceMeasurement:\n"
-      << covarianceMeasurement << "\n"
-      << "    projector:\n"
-      << projector.eval() << "\n"
-      << "    projJacobian:\n"
-      << projJacobian.eval() << "\n"
-      << "    projPredicted: " << (projPredicted.transpose()).eval() << "\n"
-      << "    residual: " << (residual.transpose()).eval() << "\n"
-      << "    extendedJacobian:\n"
-      << extendedJacobian << "\n"
-      << "    aMatrix contribution:\n"
-      << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-             .eval()
-      << "\n"
-      << "    bVector contribution: "
-      << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
-      << "\n"
-      << "    chi2sum contribution: "
-      << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
-      << "\n"
-      << "    safeInvCovMeasurement:\n"
-      << (*safeInvCovMeasurement));
-
-  return;
+  addMeasurementToGx2fSumsBackend(extendedSystem, jacobianFromStart,
+                                  covarianceMeasurement, predicted, measurement,
+                                  projector, logger);
 }
 
 /// @brief Process material and fill the aMatrix and bVector
@@ -694,6 +632,15 @@ std::size_t countMaterialStates(
   return nMaterialSurfaces;
 }
 
+/// @brief Solve the gx2f system to get the delta parameters for the update
+///
+/// This function computes the delta parameters for the GX2F Actor fitting
+/// process by solving the linear equation system [a] * delta = b. It uses the
+/// column-pivoting Householder QR decomposition for numerical stability.
+///
+/// @param extendedSystem All parameters of the current equation system
+Eigen::VectorXd computeGx2fDeltaParams(const Gx2fSystem& extendedSystem);
+
 /// @brief Update parameters (and scattering angles if applicable)
 ///
 /// @param params Parameters to be updated
@@ -736,9 +683,9 @@ class Gx2Fitter {
       std::is_same_v<Gx2fNavigator, DirectNavigator>;
 
  public:
-  Gx2Fitter(propagator_t pPropagator,
-            std::unique_ptr<const Logger> _logger =
-                getDefaultLogger("Gx2Fitter", Logging::INFO))
+  explicit Gx2Fitter(propagator_t pPropagator,
+                     std::unique_ptr<const Logger> _logger =
+                         getDefaultLogger("Gx2Fitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
@@ -1284,10 +1231,7 @@ class Gx2Fitter {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1304,7 +1248,15 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState = m_propagator.makeState(propagatorOptions);
+
+      auto propagatorInitResult =
+          m_propagator.initialize(propagatorState, params);
+      if (!propagatorInitResult.ok()) {
+        ACTS_ERROR("Propagation initialization failed: "
+                   << propagatorInitResult.error());
+        return propagatorInitResult.error();
+      }
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
@@ -1384,6 +1336,9 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
+      // We skip the check during the first iteration, since we cannot guarantee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
       if ((nUpdate > 0) && !extendedSystem.isWellDefined()) {
         ACTS_INFO("Not enough measurements. Require "
                   << extendedSystem.findRequiredNdf() + 1 << ", but only "
@@ -1391,10 +1346,8 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
-      // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          extendedSystem.aMatrix().colPivHouseholderQr().solve(
-              extendedSystem.bVector());
+          computeGx2fDeltaParams(extendedSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
@@ -1450,11 +1403,8 @@ class Gx2Fitter {
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
     ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // Setup the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1471,7 +1421,15 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState = m_propagator.makeState(propagatorOptions);
+
+      auto propagatorInitResult =
+          m_propagator.initialize(propagatorState, params);
+      if (!propagatorInitResult.ok()) {
+        ACTS_ERROR("Propagation initialization failed: "
+                   << propagatorInitResult.error());
+        return propagatorInitResult.error();
+      }
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
@@ -1558,10 +1516,8 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
-      // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          extendedSystem.aMatrix().colPivHouseholderQr().solve(
-              extendedSystem.bVector());
+          computeGx2fDeltaParams(extendedSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
@@ -1607,11 +1563,8 @@ class Gx2Fitter {
       // update covariance
       params.covariance() = fullCovariancePredicted;
 
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // set up the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
@@ -1621,7 +1574,15 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState = m_propagator.makeState(propagatorOptions);
+
+      auto propagatorInitResult =
+          m_propagator.initialize(propagatorState, params);
+      if (!propagatorInitResult.ok()) {
+        ACTS_ERROR("Propagation initialization failed: "
+                   << propagatorInitResult.error());
+        return propagatorInitResult.error();
+      }
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
@@ -1650,8 +1611,15 @@ class Gx2Fitter {
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");
-        return Experimental::GlobalChiSquareFitterError::
-            UsedUnreachableMeasurements;
+        tipIndex = gx2fResult.lastMeasurementIndex;
+
+        // It could happen, that no measurements were found. Then the track
+        // would be empty and the following operations would be invalid.
+        if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+          ACTS_INFO("Did not find any measurements in final propagation.");
+          return Experimental::GlobalChiSquareFitterError::
+              NotEnoughMeasurements;
+        }
       }
     }
 

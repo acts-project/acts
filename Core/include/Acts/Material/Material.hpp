@@ -10,6 +10,7 @@
 
 #include <iosfwd>
 #include <limits>
+#include <optional>
 
 #include <Eigen/Dense>
 
@@ -40,6 +41,8 @@ class Material {
  public:
   using ParametersVector = Eigen::Matrix<float, 5, 1>;
 
+  static constexpr Material Vacuum() { return Material(); }
+
   // Both mass and molar density are stored as a float and can thus not be
   // distinguished by their types. Just changing the last element in the
   // previously existing constructor that took five floats as input to represent
@@ -55,8 +58,23 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
+  /// @param molarElectronRho is the molar electron density
+  /// @param meanExcitationEnergy is the mean electron excitation energy.
+  ///        If not provided it will be approximated.
+  static Material fromMolarDensity(float x0, float l0, float ar, float z,
+                                   float molarRho, float molarElectronRho,
+                                   std::optional<float> meanExcitationEnergy);
+
+  /// Construct from material parameters using the molar density.
+  ///
+  /// @param x0 is the radiation length
+  /// @param l0 is the nuclear interaction length
+  /// @param ar is the relative atomic mass
+  /// @param z is the nuclear charge number
+  /// @param molarRho is the molar density
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
                                    float molarRho);
+
   /// Construct from material parameters using the mass density.
   ///
   /// @param x0 is the radiation length
@@ -70,19 +88,12 @@ class Material {
   ///   computations with values differing by 20+ orders of magnitude.
   static Material fromMassDensity(float x0, float l0, float ar, float z,
                                   float massRho);
-  /// Construct a vacuum representation.
-  Material() = default;
+
   /// Construct from an encoded parameters vector.
   explicit Material(const ParametersVector& parameters);
 
-  Material(Material&& mat) = default;
-  Material(const Material& mat) = default;
-  ~Material() = default;
-  Material& operator=(Material&& mat) = default;
-  Material& operator=(const Material& mat) = default;
-
-  /// Check if the material is valid, i.e. it is not vacuum.
-  bool isValid() const { return 0.0f < m_ar; }
+  /// Check if the material is vacuum.
+  bool isVacuum() const { return m_ar <= 0.f; }
 
   /// Return the radiation length. Infinity in case of vacuum.
   constexpr float X0() const { return m_x0; }
@@ -95,11 +106,13 @@ class Material {
   /// Return the molar density.
   constexpr float molarDensity() const { return m_molarRho; }
   /// Return the molar electron density.
-  constexpr float molarElectronDensity() const { return m_z * m_molarRho; }
+  constexpr float molarElectronDensity() const { return m_molarElectronRho; }
   /// Return the mass density.
   float massDensity() const;
   /// Return the mean electron excitation energy.
-  float meanExcitationEnergy() const;
+  constexpr float meanExcitationEnergy() const {
+    return m_meanExcitationEnergy;
+  }
 
   /// Encode the properties into an opaque parameters vector.
   ParametersVector parameters() const;
@@ -110,6 +123,10 @@ class Material {
   float m_ar = 0.0f;
   float m_z = 0.0f;
   float m_molarRho = 0.0f;
+  float m_molarElectronRho = 0.0f;
+  float m_meanExcitationEnergy = 0.0f;
+
+  constexpr Material() = default;
 
   /// @brief Check if two materials are exactly equal.
   ///
@@ -123,7 +140,9 @@ class Material {
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
            (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&
-           (lhs.m_molarRho == rhs.m_molarRho);
+           (lhs.m_molarRho == rhs.m_molarRho) &&
+           (lhs.m_molarElectronRho == rhs.m_molarElectronRho) &&
+           (lhs.m_meanExcitationEnergy == rhs.m_meanExcitationEnergy);
   }
 };
 

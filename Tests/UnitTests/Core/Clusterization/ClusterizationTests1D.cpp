@@ -23,17 +23,13 @@
 namespace Acts::Test {
 
 struct Cell1D {
-  Cell1D(int colv) : col(colv) {}
+  explicit Cell1D(int colv) : col(colv) {}
   int col;
   Ccl::Label label{Ccl::NO_LABEL};
 };
 
 bool cellComp(const Cell1D& left, const Cell1D& right) {
   return left.col < right.col;
-}
-
-Ccl::Label& getCellLabel(Cell1D& cell) {
-  return cell.label;
 }
 
 int getCellColumn(const Cell1D& cell) {

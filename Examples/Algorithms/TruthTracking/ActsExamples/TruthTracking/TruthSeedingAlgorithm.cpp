@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
 #include <array>
@@ -25,18 +24,16 @@
 #include <utility>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
-    ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("TruthSeedingAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
+                                             Acts::Logging::Level lvl)
+    : IAlgorithm("TruthSeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing input hit-particles map collection");
+  if (m_cfg.inputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing input particle-measurements map collection");
   }
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing seeds or space point collection");
@@ -65,20 +62,16 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
-ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // prepare input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
-  // compute particle_id -> {hit_id...} map from the
-  // hit_id -> {particle_id...} map on the fly.
-  const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
+  const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
 
   // construct the combined input container of space point pointers from all
   // configured input sources.
@@ -120,27 +113,28 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   }
 
   for (const auto& particle : particles) {
-    // find the corresponding hits for this particle
-    const auto& hits =
-        makeRange(particleHitsMap.equal_range(particle.particleId()));
-    // fill hit indices to create the proto track
+    // find the corresponding measurements for this particle
+    const auto& measurements =
+        makeRange(particleMeasurementsMap.equal_range(particle.particleId()));
+    // fill measurement indices to create the proto track
     ProtoTrack track;
-    track.reserve(hits.size());
-    for (const auto& hit : hits) {
-      track.push_back(hit.second);
+    track.reserve(measurements.size());
+    for (const auto& measurement : measurements) {
+      track.push_back(measurement.second);
     }
 
-    // The list of hits and the initial start parameters
+    // The list of measurements and the initial start parameters
     if (track.size() < 3) {
-      ACTS_WARNING("Particle " << particle << " has less than 3 hits");
+      ACTS_WARNING("Particle " << particle << " has less than 3 measurements");
       continue;
     }
     // Space points on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
     spacePointsOnTrack.reserve(track.size());
-    // Loop over the hit index on the proto track to find the space points
-    for (const auto& hitIndex : track) {
-      auto it = spMap.find(hitIndex);
+    // Loop over the measurement index on the proto track to find the space
+    // points
+    for (const auto& measurementIndex : track) {
+      auto it = spMap.find(measurementIndex);
       if (it != spMap.end()) {
         spacePointsOnTrack.push_back(it->second);
       }
@@ -168,12 +162,11 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
           double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
                                      spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
-              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax) {
-            if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
-              maxDeltaR = bmDeltaR + mtDeltaR;
-              bestSPIndices = {ib, im, it};
-              seedFound = true;
-            }
+              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax &&
+              (bmDeltaR + mtDeltaR) > maxDeltaR) {
+            maxDeltaR = bmDeltaR + mtDeltaR;
+            bestSPIndices = {ib, im, it};
+            seedFound = true;
           }
         }
       }
@@ -198,5 +191,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

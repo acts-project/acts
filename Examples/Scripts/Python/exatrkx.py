@@ -1,16 +1,53 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
+import os
+import sys
 
 import acts.examples
 import acts
+from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
 from acts import UnitConstants as u
+
+from digitization import runDigitization
+
+
+def runGNNTrackFinding(
+    trackingGeometry,
+    field,
+    outputDir,
+    digiConfigFile,
+    geometrySelection,
+    backend,
+    modelDir,
+    outputRoot=False,
+    outputCsv=False,
+    s=None,
+):
+    s = runDigitization(
+        trackingGeometry,
+        field,
+        outputDir,
+        digiConfigFile=digiConfigFile,
+        particlesInput=None,
+        outputRoot=outputRoot,
+        outputCsv=outputCsv,
+        s=s,
+    )
+
+    addExaTrkX(
+        s,
+        trackingGeometry,
+        geometrySelection,
+        modelDir,
+        backend=backend,
+        outputDirRoot=outputDir if outputRoot else None,
+    )
+
+    s.run()
 
 
 if "__main__" == __name__:
-    import os
-    import sys
-    from digitization import runDigitization
-    from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
 
     backend = ExaTrkXBackend.Torch
 
@@ -19,28 +56,17 @@ if "__main__" == __name__:
     if "torch" in sys.argv:
         backend = ExaTrkXBackend.Torch
 
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    inputParticlePath = Path("particles.root")
-    if not inputParticlePath.exists():
-        inputParticlePath = None
-
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    geometrySelection = (
-        srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-    )
+    geometrySelection = srcdir / "Examples/Configs/generic-seeding-config.json"
     assert geometrySelection.exists()
 
-    digiConfigFile = (
-        srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
     if backend == ExaTrkXBackend.Torch:
@@ -60,24 +86,15 @@ if "__main__" == __name__:
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    s = runDigitization(
+    runGNNTrackFinding(
         trackingGeometry,
         field,
         outputDir,
-        digiConfigFile=digiConfigFile,
-        particlesInput=inputParticlePath,
+        digiConfigFile,
+        geometrySelection,
+        backend,
+        modelDir,
         outputRoot=True,
-        outputCsv=True,
+        outputCsv=False,
         s=s,
     )
-
-    addExaTrkX(
-        s,
-        trackingGeometry,
-        geometrySelection,
-        modelDir,
-        outputDir,
-        backend=backend,
-    )
-
-    s.run()

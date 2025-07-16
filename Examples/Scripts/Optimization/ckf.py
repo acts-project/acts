@@ -116,9 +116,10 @@ def runCKFTracks(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
 
     from acts.examples.reconstruction import (
@@ -160,7 +161,7 @@ def runCKFTracks(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                outputParticles="particles_input",
+                outputParticles="particles_generated",
             )
         )
 
@@ -169,11 +170,6 @@ def runCKFTracks(
         trackingGeometry,
         field,
         rnd=rnd,
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     addDigitization(
@@ -182,6 +178,15 @@ def runCKFTracks(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addSeeding(
@@ -222,7 +227,7 @@ def runCKFTracks(
             else (
                 SeedingAlgorithm.TruthEstimated
                 if truthEstimatedSeeded
-                else SeedingAlgorithm.Default
+                else SeedingAlgorithm.GridTriplet
             )
         ),
         initialSigmas=[
@@ -230,10 +235,11 @@ def runCKFTracks(
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
-        initialSigmaPtRel=0.01,
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
+        initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
@@ -259,7 +265,9 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -271,10 +279,8 @@ if "__main__" == __name__:
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        geometrySelection=srcdir / "Examples/Configs/generic-seeding-config.json",
+        digiConfigFile=srcdir / "Examples/Configs/generic-digi-smearing-config.json",
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
