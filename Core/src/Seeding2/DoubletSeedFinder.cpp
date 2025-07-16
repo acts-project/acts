@@ -28,22 +28,19 @@ enum class SpacePointCandidateType { Bottom, Top };
 /// @tparam sorted_in_r Whether the space points are sorted in radius
 ///
 /// @param config Doublet cuts that define the compatibility of space points
-/// @param spacePoints Space point container to be used
 /// @param middleSp Space point candidate to be used as middle SP in a seed
 /// @param middleSpInfo Information about the middle space point
-/// @param candidateSps Group of space points to be used as candidates for
-///                     middle SP in a seed
-/// @param candidateOffset Offset in the candidateSps to start from
+/// @param candidateSps Range or subet of space points to be used as candidates
+///   for middle SP in a seed. In case of `sortedInR` - an offset will be
+///   applied based on the middle SP radius.
 /// @param compatibleDoublets Output container for compatible doublets
 template <SpacePointCandidateType candidateType, bool interactionPointCut,
-          bool sortedInR>
+          bool sortedInR, typename CandidateSps>
 void createDoubletsImpl(
     const DoubletSeedFinder::DerivedConfig& config,
-    const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp,
     const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
-    std::span<const SpacePointIndex2> candidateSps,
-    std::size_t& candidateOffset,
+    CandidateSps& candidateSps,
     DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) {
   constexpr bool isBottomCandidate =
       candidateType == SpacePointCandidateType::Bottom;
@@ -84,10 +81,8 @@ void createDoubletsImpl(
   if constexpr (sortedInR) {
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
-    for (; candidateOffset < candidateSps.size(); ++candidateOffset) {
-      ConstSpacePointProxy2 otherSp =
-          spacePoints[candidateSps[candidateOffset]];
-
+    std::uint32_t offset = 0;
+    for (ConstSpacePointProxy2 otherSp : candidateSps) {
       if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
         if (rM - otherSp.r() <= config.deltaRMax) {
@@ -99,12 +94,13 @@ void createDoubletsImpl(
           break;
         }
       }
+
+      ++offset;
     }
+    candidateSps = candidateSps.subrange(offset);
   }
 
-  for (SpacePointIndex2 otherSpIndex : candidateSps.subspan(candidateOffset)) {
-    ConstSpacePointProxy2 otherSp = spacePoints[otherSpIndex];
-
+  for (ConstSpacePointProxy2 otherSp : candidateSps) {
     const float xO = otherSp.x();
     const float yO = otherSp.y();
     const float zO = otherSp.z();
@@ -320,75 +316,62 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg) : m_cfg(cfg) {}
 
 void DoubletSeedFinder::createDoublets(
-    const SpacePointContainer2& spacePoints,
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    std::span<const SpacePointIndex2> candidateSps,
+    const SpacePointContainer2::ConstSubset& candidateSps,
     DoubletsForMiddleSp& compatibleDoublets) const {
-  std::size_t candidateOffset = 0;
-
   if (m_cfg.candidateDirection == Direction::Backward() &&
       m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, true, false>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Backward() &&
       !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, false, false>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Forward() &&
       m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, true, false>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Forward() &&
       !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, false, false>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
   }
 
   throw std::logic_error("DoubletSeedFinder: unhandled configuration");
 }
 
-void DoubletSeedFinder::createSortedDoublets(
-    const SpacePointContainer2& spacePoints,
+void DoubletSeedFinder::createDoubletsFromSortedInR(
     const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    std::span<const SpacePointIndex2> candidateSps,
-    std::size_t& candidateOffset,
+    SpacePointContainer2::ConstRange& candidateSpRange,
     DoubletsForMiddleSp& compatibleDoublets) const {
   if (m_cfg.candidateDirection == Direction::Backward() &&
       m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, true, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Backward() &&
       !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Bottom, false, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Forward() &&
       m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, true, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
   }
 
   if (m_cfg.candidateDirection == Direction::Forward() &&
       !m_cfg.interactionPointCut) {
     return createDoubletsImpl<SpacePointCandidateType::Top, false, true>(
-        config(), spacePoints, middleSp, middleSpInfo, candidateSps,
-        candidateOffset, compatibleDoublets);
+        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
   }
 
   throw std::logic_error("DoubletSeedFinder: unhandled configuration");

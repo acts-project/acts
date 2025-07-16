@@ -178,7 +178,7 @@ class CylindricalSpacePointGrid2 {
 
   /// Get the number of space points in the grid.
   /// @return The number of space points in the grid
-  std::size_t spacePointCount() const { return m_counter; }
+  std::size_t numberOfSpacePoints() const { return m_counter; }
 
   /// Get the number of bins in the grid.
   /// @return The number of bins in the grid
