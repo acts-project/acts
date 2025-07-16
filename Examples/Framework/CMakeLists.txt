@@ -21,6 +21,7 @@ add_library(
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
     src/Utilities/Helpers.cpp
+    src/Utilities/ParametricParticleGenerator.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
@@ -43,6 +44,7 @@ target_link_libraries(
         Boost::boost
         ROOT::Core
         ROOT::Hist
+        HepMC3::HepMC3
     PRIVATE std::filesystem
 )
 target_compile_definitions(

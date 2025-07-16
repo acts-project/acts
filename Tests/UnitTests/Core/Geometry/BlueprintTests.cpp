@@ -22,6 +22,7 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -50,7 +51,7 @@ using Acts::Experimental::StaticBlueprintNode;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::INFO);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 GeometryContext gctx;
 
@@ -1200,6 +1201,43 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
                       1e-6);
   }
+}
+
+BOOST_AUTO_TEST_CASE(GeometryIdnetifiersForPortals) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  auto& cubcontainer =
+      root.addCuboidContainer("CuboidContainer", AxisDirection::AxisX);
+  auto parentBounds = std::make_shared<CuboidVolumeBounds>(1_m, 20_mm, 20_mm);
+  auto parentVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                    parentBounds, "parent");
+  parentVol->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(1));
+  auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
+  std::size_t nChambers = 50;
+  // start from the edge of the parent volume
+  double startX = -1000. + 3. + 0.5;
+  Transform3 trf = Transform3(Translation3(startX, 0, 0));
+  auto tbounds =
+      std::make_shared<TrapezoidVolumeBounds>(3_mm, 3_mm, 10_mm, 15_mm);
+
+  for (std::size_t i = 0; i < nChambers; i++) {
+    // move the chambers position
+    trf.translation() += Vector3::UnitX() * i * 7_mm;
+
+    auto childVol = std::make_unique<TrackingVolume>(
+        trf, tbounds, "child" + std::to_string(i));
+    childVol->assignGeometryId(
+        Acts::GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
+    auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
+    parentNode->addChild(std::move(childNode));
+  }
+
+  cubcontainer.addChild(std::move(parentNode));
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

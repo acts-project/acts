@@ -320,6 +320,22 @@ class TrackProxy {
   /// @return the global momentum vector
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
+  /// Get the four-momentum vector: (px, py, pz, e)
+  /// @return the four-momentum vector
+  Vector4 fourMomentum() const {
+    Vector4 p4 = Vector4::Zero();
+
+    Vector3 p3 = momentum();
+    p4[eMom0] = p3[eMom0];
+    p4[eMom1] = p3[eMom1];
+    p4[eMom2] = p3[eMom2];
+
+    float m = particleHypothesis().mass();
+    p4[eEnergy] = std::sqrt(m * m + p3.squaredNorm());
+
+    return p4;
+  }
+
   /// Return the number of track states associated to this track
   /// @note This is calculated by iterating over the track states which is
   ///       somewhat expensive. Consider caching this value if you need It
