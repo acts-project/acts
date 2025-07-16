@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
-#include "ActsPython/Examples/Helpers.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

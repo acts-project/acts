@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
-#include "ActsPython/Examples/Helpers.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

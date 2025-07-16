@@ -78,8 +78,10 @@ void addHashing(Context& ctx);
 
 }  // namespace ActsPython
 
+using namespace ActsPython;
+
 PYBIND11_MODULE(ActsPythonBindings, m) {
-  ActsPython::Context ctx;
+  Context ctx;
   ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
   ctx.modules["examples"] = mex;
@@ -101,53 +103,53 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
     mv.attr("commit_hash_short") = Acts::CommitHashShort;
   }
 
-  ActsPython::addContext(ctx);
-  ActsPython::addAny(ctx);
-  ActsPython::addUnits(ctx);
-  ActsPython::addFramework(ctx);
-  ActsPython::addLogging(ctx);
-  ActsPython::addPdgParticle(ctx);
-  ActsPython::addAlgebra(ctx);
-  ActsPython::addBinning(ctx);
-  ActsPython::addEventData(ctx);
-  ActsPython::addOutput(ctx);
+  addContext(ctx);
+  addAny(ctx);
+  addUnits(ctx);
+  addFramework(ctx);
+  addLogging(ctx);
+  addPdgParticle(ctx);
+  addAlgebra(ctx);
+  addBinning(ctx);
+  addEventData(ctx);
+  addOutput(ctx);
 
-  ActsPython::addPropagation(ctx);
-  ActsPython::addNavigation(ctx);
-  ActsPython::addGeometryBuildingGen1(ctx);
-  ActsPython::addGeometry(ctx);
-  ActsPython::addExperimentalGeometry(ctx);
+  addPropagation(ctx);
+  addNavigation(ctx);
+  addGeometryBuildingGen1(ctx);
+  addGeometry(ctx);
+  addExperimentalGeometry(ctx);
 
-  ActsPython::addMagneticField(ctx);
-  ActsPython::addMaterial(ctx);
-  ActsPython::addDetector(ctx);
-  ActsPython::addExampleAlgorithms(ctx);
-  ActsPython::addInput(ctx);
-  ActsPython::addGenerators(ctx);
-  ActsPython::addTruthTracking(ctx);
-  ActsPython::addTrackFitting(ctx);
-  ActsPython::addTrackFinding(ctx);
-  ActsPython::addTruthJet(ctx);
-  ActsPython::addVertexing(ctx);
-  ActsPython::addAmbiguityResolution(ctx);
-  ActsPython::addUtilities(ctx);
+  addMagneticField(ctx);
+  addMaterial(ctx);
+  addDetector(ctx);
+  addExampleAlgorithms(ctx);
+  addInput(ctx);
+  addGenerators(ctx);
+  addTruthTracking(ctx);
+  addTrackFitting(ctx);
+  addTrackFinding(ctx);
+  addTruthJet(ctx);
+  addVertexing(ctx);
+  addAmbiguityResolution(ctx);
+  addUtilities(ctx);
 
-  ActsPython::addDigitization(ctx);
-  ActsPython::addPythia8(ctx);
-  ActsPython::addJson(ctx);
-  ActsPython::addGeoModel(ctx);
-  ActsPython::addTGeo(ctx);
-  ActsPython::addDetray(ctx);
-  ActsPython::addHepMC3(ctx);
-  ActsPython::addExaTrkXTrackFinding(ctx);
-  ActsPython::addObj(ctx);
-  ActsPython::addSvg(ctx);
-  ActsPython::addOnnx(ctx);
-  ActsPython::addOnnxNeuralCalibrator(ctx);
-  ActsPython::addCovfie(ctx);
-  ActsPython::addTraccc(ctx);
-  ActsPython::addHashing(ctx);
+  addDigitization(ctx);
+  addPythia8(ctx);
+  addJson(ctx);
+  addGeoModel(ctx);
+  addTGeo(ctx);
+  addDetray(ctx);
+  addHepMC3(ctx);
+  addExaTrkXTrackFinding(ctx);
+  addObj(ctx);
+  addSvg(ctx);
+  addOnnx(ctx);
+  addOnnxNeuralCalibrator(ctx);
+  addCovfie(ctx);
+  addTraccc(ctx);
+  addHashing(ctx);
 
-  ActsPython::addRootInput(ctx);
-  ActsPython::addRootOutput(ctx);
+  addRootInput(ctx);
+  addRootOutput(ctx);
 }

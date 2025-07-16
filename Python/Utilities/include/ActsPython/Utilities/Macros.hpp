@@ -11,6 +11,19 @@
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
 
+namespace ActsExamples {
+struct AlgorithmContext;
+enum class ProcessCode;
+}  // namespace ActsExamples
+
+namespace ActsPython::Concepts {
+template <typename T>
+concept has_write_method =
+    requires(T& t, const ActsExamples::AlgorithmContext& ctx) {
+      { t.write(ctx) } -> std::same_as<ActsExamples::ProcessCode>;
+    };
+}  // namespace ActsPython::Concepts
+
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
 

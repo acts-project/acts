@@ -11,7 +11,6 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
-#include "ActsPython/Examples/Helpers.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

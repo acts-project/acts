@@ -101,7 +101,7 @@ void addGeoModel(Context& ctx) {
                              const std::string& name,
                              Acts::Logging::Level level) {
               return std::make_shared<ActsExamples::GeoModelMuonMockupBuilder>(
-                  config, getDefaultLogger(name, level));
+                  config, Acts::getDefaultLogger(name, level));
             }))
             .def("trackingGeometry",
                  &ActsExamples::GeoModelMuonMockupBuilder::trackingGeometry);

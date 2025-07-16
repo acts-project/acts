@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
-#include "ActsPython/Examples/Helpers.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
