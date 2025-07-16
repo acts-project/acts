@@ -442,8 +442,8 @@ def addSeeding(
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
             adaptiveHoughTransformConfig.threshold = 4
             adaptiveHoughTransformConfig.noiseThreshold = 12
-            adaptiveHoughTransformConfig.phiMinBinSize = 3.14/(2*257.)
-            adaptiveHoughTransformConfig.qOverPtMinBinSize = 1.1/(2.*257.)
+            adaptiveHoughTransformConfig.phiMinBinSize = 3.14 / (2.0 * 257.)
+            adaptiveHoughTransformConfig.qOverPtMinBinSize = 1.1 / (2.0 * 257.)
             adaptiveHoughTransformConfig.qOverPtMin = 1.1
             adaptiveHoughTransformConfig.doSecondPhase = True
             adaptiveHoughTransformConfig.zMinBinSize = 1 * u.mm
