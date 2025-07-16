@@ -558,3 +558,30 @@ lcg_107:
           - gcc13
           - gcc14
           - clang19
+
+lcg_107a:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107a"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+
+lcg_108:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "108"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc14
+          - gcc15
+          - clang19
