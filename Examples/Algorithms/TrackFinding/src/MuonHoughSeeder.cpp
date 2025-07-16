@@ -87,12 +87,12 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
 
   // configure the binning of the hough plane
   Acts::HoughTransformUtils::HoughPlaneConfig etaPlaneCfg;
-  etaPlaneCfg.nBinsX = 25;
-  etaPlaneCfg.nBinsY = 25;
+  etaPlaneCfg.nBinsX = m_cfg.nBinsTanTheta;
+  etaPlaneCfg.nBinsY = m_cfg.nBinsY0;
 
   Acts::HoughTransformUtils::HoughPlaneConfig phiPlaneCfg;
-  phiPlaneCfg.nBinsX = 10;
-  phiPlaneCfg.nBinsY = 10;
+  phiPlaneCfg.nBinsX = m_cfg.nBinsTanPhi;
+  phiPlaneCfg.nBinsY = m_cfg.nBinsX0;
 
   // instantiate the hough plane
   HoughPlane_t etaPlane{etaPlaneCfg};
