@@ -24,7 +24,7 @@ template <int N>
 inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
                                      const ActsVector<N>& lineDirA,
                                      const ActsVector<N>& linePosB,
-                                     const ActsVector<N>& lineDirB) {
+                                     const ActsVector<N>& lineDirB) requires(N>=2) {
   static_assert(N >= 2, "One dimensional intersect not sensible");
   /// Use the formula
   ///   A + lambda dirA  = B + mu dirB
