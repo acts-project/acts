@@ -8,3 +8,6 @@ add_subdirectory(Utilities)
 
 # This creates the ActsPythonBindings library
 add_subdirectory(Module)
+
+# Add the core module
+add_subdirectory(Core)

@@ -6,7 +6,6 @@ target_sources(
     PRIVATE
         src/ModuleEntry.cpp
         src/Framework.cpp
-        src/Base.cpp
         src/Detector.cpp
         src/Digitization.cpp
         src/Material.cpp

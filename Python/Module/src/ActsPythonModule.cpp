@@ -41,5 +41,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
     mv.attr("commit_hash_short") = Acts::CommitHashShort;
   }
 
+  addCoreModule(ctx);
   addLegacyExamplesModule(ctx);
 }

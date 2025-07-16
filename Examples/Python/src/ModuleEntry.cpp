@@ -23,26 +23,19 @@
 namespace py = pybind11;
 
 namespace ActsPython {
-void addContext(Context& ctx);
-void addAny(Context& ctx);
-void addUnits(Context& ctx);
 void addFramework(Context& ctx);
-void addLogging(Context& ctx);
-void addPdgParticle(Context& ctx);
-void addAlgebra(Context& ctx);
-void addBinning(Context& ctx);
 void addEventData(Context& ctx);
 
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
-void addGeometry(Context& ctx);
+void addGeometryLegacy(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
 
-void addMagneticField(Context& ctx);
+void addMagneticFieldLegacy(Context& ctx);
 
-void addMaterial(Context& ctx);
+void addMaterialLegacy(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
@@ -54,7 +47,7 @@ void addTrackFinding(Context& ctx);
 void addTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
-void addUtilities(Context& ctx);
+void addUtilitiesLegacy(Context& ctx);
 
 void addRootInput(Context& ctx);
 void addRootOutput(Context& ctx);
@@ -86,25 +79,18 @@ void ActsPython::addLegacyExamplesModule(Context& ctx) {
   auto prop = m.def_submodule("_propagator");
   ctx.modules["propagation"] = prop;
 
-  addContext(ctx);
-  addAny(ctx);
-  addUnits(ctx);
   addFramework(ctx);
-  addLogging(ctx);
-  addPdgParticle(ctx);
-  addAlgebra(ctx);
-  addBinning(ctx);
   addEventData(ctx);
   addOutput(ctx);
 
   addPropagation(ctx);
   addNavigation(ctx);
   addGeometryBuildingGen1(ctx);
-  addGeometry(ctx);
+  addGeometryLegacy(ctx);
   addExperimentalGeometry(ctx);
 
-  addMagneticField(ctx);
-  addMaterial(ctx);
+  addMagneticFieldLegacy(ctx);
+  addMaterialLegacy(ctx);
   addDetector(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
@@ -115,7 +101,7 @@ void ActsPython::addLegacyExamplesModule(Context& ctx) {
   addTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
-  addUtilities(ctx);
+  addUtilitiesLegacy(ctx);
 
   addDigitization(ctx);
   addPythia8(ctx);

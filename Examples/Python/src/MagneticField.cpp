@@ -36,42 +36,10 @@ using namespace pybind11::literals;
 
 namespace ActsPython {
 
-/// @brief Get the value of a field, throwing an exception if the result is
-/// invalid.
-Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
-                       const Acts::Vector3& position,
-                       Acts::MagneticFieldProvider::Cache& cache) {
-  if (Acts::Result<Acts::Vector3> res = self.getField(position, cache);
-      !res.ok()) {
-    std::stringstream ss;
 
-    ss << "Field lookup failure with error: \"" << res.error() << "\"";
 
-    throw std::runtime_error{ss.str()};
-  } else {
-    return *res;
-  }
-}
-
-void addMagneticField(Context& ctx) {
+void addMagneticFieldLegacy(Context& ctx) {
   auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
-
-  py::class_<Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::MagneticFieldProvider>>(
-      m, "MagneticFieldProvider")
-      .def("getField", &getField)
-      .def("makeCache", &Acts::MagneticFieldProvider::makeCache);
-
-  py::class_<Acts::InterpolatedMagneticField,
-             std::shared_ptr<Acts::InterpolatedMagneticField>>(
-      m, "InterpolatedMagneticField");
-
-  m.def("solenoidFieldMap", &Acts::solenoidFieldMap, py::arg("rlim"),
-        py::arg("zlim"), py::arg("nbins"), py::arg("field"));
-
-  py::class_<Acts::ConstantBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::ConstantBField>>(m, "ConstantBField")
-      .def(py::init<Acts::Vector3>());
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
@@ -82,38 +50,6 @@ void addMagneticField(Context& ctx) {
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
              std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
       mex, "InterpolatedMagneticField3");
-
-  py::class_<Acts::NullBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::NullBField>>(m, "NullBField")
-      .def(py::init<>());
-
-  py::class_<Acts::MultiRangeBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::MultiRangeBField>>(m, "MultiRangeBField")
-      .def(py::init<
-           std::vector<std::pair<Acts::RangeXD<3, double>, Acts::Vector3>>>());
-
-  {
-    using Config = Acts::SolenoidBField::Config;
-
-    auto sol =
-        py::class_<Acts::SolenoidBField, Acts::MagneticFieldProvider,
-                   std::shared_ptr<Acts::SolenoidBField>>(m, "SolenoidBField")
-            .def(py::init<Config>())
-            .def(py::init([](double radius, double length, std::size_t nCoils,
-                             double bMagCenter) {
-                   return Acts::SolenoidBField{
-                       Config{radius, length, nCoils, bMagCenter}};
-                 }),
-                 py::arg("radius"), py::arg("length"), py::arg("nCoils"),
-                 py::arg("bMagCenter"));
-
-    py::class_<Config>(sol, "Config")
-        .def(py::init<>())
-        .def_readwrite("radius", &Config::radius)
-        .def_readwrite("length", &Config::length)
-        .def_readwrite("nCoils", &Config::nCoils)
-        .def_readwrite("bMagCenter", &Config::bMagCenter);
-  }
 
   mex.def(
       "MagneticFieldMapXyz",

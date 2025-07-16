@@ -1,0 +1,11 @@
+target_sources(
+    ActsPythonBindings
+    PRIVATE
+    src/CoreModuleEntry.cpp
+    src/Definitions.cpp
+    src/MagneticField.cpp
+    src/Material.cpp
+    src/Surfaces.cpp
+    src/Geometry.cpp
+    src/Utilities.cpp
+)

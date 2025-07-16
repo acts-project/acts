@@ -12,6 +12,7 @@ namespace ActsPython {
 
 struct Context;
 
+void addCoreModule(Context& ctx);
 void addLegacyExamplesModule(Context& ctx);
 
 }  // namespace ActsPython
