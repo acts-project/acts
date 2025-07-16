@@ -72,7 +72,8 @@ class INavigationPolicy {
   }
 
   virtual std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup) const = 0;
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const = 0;
 
  protected:
   /// Internal helper function for derived classes that conform to the concept
