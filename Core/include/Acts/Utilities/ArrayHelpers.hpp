@@ -14,11 +14,11 @@ namespace Acts {
 ///  @brief creates an array of type T and size N and assigns all elements to the parsed
 ///         default value def_val. This basically allows for inline construction
 ///         and initialization of class-member arrays
-///  @param def_val: Default value to assign
+///  @param defVal: Default value to assign
 template <typename T, std::size_t N>
-constexpr std::array<T, N> filledArray(const T& def_val) {
+constexpr std::array<T, N> filledArray(const T& defVal) {
   std::array<T, N> arr{};
-  arr.fill(def_val);
+  arr.fill(defVal);
   return arr;
 }
 }  // namespace Acts

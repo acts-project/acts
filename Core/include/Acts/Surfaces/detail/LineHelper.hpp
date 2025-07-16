@@ -108,4 +108,4 @@ inline double signedDistance(const Vector3& linePosA, const Vector3& lineDirA,
   const Vector3 projDir = (lineDirA - dirDots * lineDirB).normalized();
   return aMinusB.cross(lineDirB).dot(projDir);
 }
-}  // namespace Acts::LineHelper
+}  // namespace Acts::detail::LineHelper
