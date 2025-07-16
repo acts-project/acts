@@ -13,12 +13,7 @@ set_target_properties(
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
 )
 
-target_link_libraries(
-    ActsPythonBindings
-    PUBLIC
-        ActsCore
-        ActsPythonUtilities
-)
+target_link_libraries(ActsPythonBindings PUBLIC ActsCore ActsPythonUtilities)
 
 target_include_directories(
     ActsPythonBindings

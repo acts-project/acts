@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Module/Entries.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
@@ -21,7 +21,6 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(ActsPythonBindings, m) {
-
   using namespace ActsPython;
 
   Context ctx;
@@ -43,5 +42,4 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   }
 
   addLegacyExamplesModule(ctx);
-
 }
