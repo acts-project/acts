@@ -282,7 +282,7 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
   for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
     const float startPhi =
         static_cast<float>(wedgeWidth * phiIndex - std::numbers::pi);
-    stack.emplace_back(1.05f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
+    stack.emplace_back(1.1f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
                        -config().qOverPtMin);
     stack.back().indices().resize(measurements.size());
     std::iota(std::begin(stack.back().indices()),
