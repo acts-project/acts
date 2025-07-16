@@ -8,11 +8,13 @@ import subprocess
 import sys
 import re
 import collections
+import shutil
 
 import pytest
 
 from helpers import (
     geant4Enabled,
+    geomodelEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
@@ -27,7 +29,6 @@ import acts
 from acts.examples import (
     Sequencer,
     GenericDetector,
-    AlignedDetector,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -92,7 +93,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     events = seq.config.events
 
-    runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
+    vtxGen = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 0),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
+
+    runPythia8(
+        str(tmp_path), outputRoot=True, outputCsv=True, vtxGen=vtxGen, s=seq
+    ).run()
 
     fp = tmp_path / "particles.root"
     assert fp.exists()
@@ -182,7 +190,10 @@ def test_geant4(tmp_path, assert_root_hash):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
+        if e.stderr is not None:
+            print(e.stderr.decode("utf-8"))
         raise
 
     assert_csv_output(csv, "particles_simulated")
@@ -432,8 +443,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        digiConfigFile=srcdir / "Examples/Configs/generic-digi-smearing-config.json",
         rnd=rnd,
     )
 
@@ -458,8 +468,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         field,
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
-        geoSelectionConfigFile=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        geoSelectionConfigFile=srcdir / "Examples/Configs/generic-seeding-config.json",
         outputDirRoot=str(tmp_path),
     )
 
@@ -523,64 +532,6 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
-
-
-@pytest.mark.slow
-@pytest.mark.odd
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-def test_event_recording(tmp_path):
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "event_recording.py"
-    )
-    assert script.exists()
-
-    env = os.environ.copy()
-    env["NEVENTS"] = "1"
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    try:
-        subprocess.check_call(
-            [sys.executable, str(script)],
-            cwd=tmp_path,
-            env=env,
-            stderr=subprocess.STDOUT,
-        )
-    except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
-        raise
-
-    from acts.examples.hepmc3 import HepMC3AsciiReader
-
-    out_path = tmp_path / "hepmc3"
-    # out_path.mkdir()
-
-    assert len([f for f in out_path.iterdir() if f.name.endswith("events.hepmc3")]) > 0
-    assert all([f.stat().st_size > 100 for f in out_path.iterdir()])
-
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        HepMC3AsciiReader(
-            level=acts.logging.INFO,
-            inputDir=str(out_path),
-            inputStem="events",
-            outputEvents="hepmc-events",
-        )
-    )
-
-    alg = AssertCollectionExistsAlg(
-        "hepmc-events", name="check_alg", level=acts.logging.INFO
-    )
-    s.addAlgorithm(alg)
-
-    s.run()
-
-    assert alg.events_seen == 1
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
@@ -752,7 +703,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     odd_dir = getOpenDataDetectorDirectory()
     config = acts.MaterialMapJsonConverter.Config()
-    mdecorator = acts.JsonMaterialDecorator(
+    materialDecorator = acts.JsonMaterialDecorator(
         level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
@@ -760,7 +711,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as detector:
+    with getOpenDataDetector(materialDecorator) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
@@ -797,7 +748,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -832,7 +783,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        materialDecorator=acts.IMaterialDecorator.fromFile(geo_map)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -871,7 +822,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
@@ -894,80 +845,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     assert_root_hash(val_file.name, val_file)
 
 
-@pytest.mark.parametrize(
-    "detectorFactory,aligned,nobj",
-    [
-        (GenericDetector, True, 450),
-        pytest.param(
-            getOpenDataDetector,
-            True,
-            540,
-            marks=[
-                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
-                pytest.mark.slow,
-                pytest.mark.odd,
-            ],
-        ),
-        (functools.partial(AlignedDetector, iovSize=1), False, 450),
-    ],
-)
-@pytest.mark.slow
-def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
-    detector = detectorFactory()
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
-
-    from geometry import runGeometry
-
-    json_dir = tmp_path / "json"
-    csv_dir = tmp_path / "csv"
-    obj_dir = tmp_path / "obj"
-
-    for d in (json_dir, csv_dir, obj_dir):
-        d.mkdir()
-
-    events = 5
-
-    kwargs = dict(
-        trackingGeometry=trackingGeometry,
-        decorators=decorators,
-        events=events,
-        outputDir=str(tmp_path),
-    )
-
-    runGeometry(outputJson=True, **kwargs)
-    runGeometry(outputJson=False, **kwargs)
-
-    assert len(list(obj_dir.iterdir())) == nobj
-    assert all(f.stat().st_size > 200 for f in obj_dir.iterdir())
-
-    assert len(list(csv_dir.iterdir())) == 3 * events
-    assert all(f.stat().st_size > 200 for f in csv_dir.iterdir())
-
-    detector_files = [csv_dir / f"event{i:>09}-detectors.csv" for i in range(events)]
-    for detector_file in detector_files:
-        assert detector_file.exists()
-        assert detector_file.stat().st_size > 200
-
-    contents = [f.read_text() for f in detector_files]
-    ref = contents[0]
-    for c in contents[1:]:
-        if aligned:
-            assert c == ref, "Detector writeout is expected to be identical"
-        else:
-            assert c != ref, "Detector writeout is expected to be different"
-
-    if aligned:
-        for f in [json_dir / f"event{i:>09}-detector.json" for i in range(events)]:
-            assert detector_file.exists()
-            with f.open() as fh:
-                data = json.load(fh)
-                assert data
-        material_file = tmp_path / "geometry-map.json"
-        assert material_file.exists()
-        assert material_file.stat().st_size > 200
-
-
+ACTS_DIR = Path(__file__).parent.parent.parent.parent
+CONFIG_DIR = ACTS_DIR / "Examples/Configs"
 DIGI_SHARE_DIR = (
     Path(__file__).parent.parent.parent.parent
     / "Examples/Algorithms/Digitization/share"
@@ -977,8 +856,8 @@ DIGI_SHARE_DIR = (
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1012,24 +891,16 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-smearing-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-geometric-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
@@ -1040,14 +911,14 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples import readDigiConfigFromJson
 
-    acts.examples.readDigiConfigFromJson(str(digi_config_file))
+    readDigiConfigFromJson(str(digi_config_file))
 
 
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1107,7 +978,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
     input = (
         Path(__file__).parent
-        / "../../../Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        / "../../../Examples/Configs/generic-digi-smearing-config.json"
     )
     assert input.exists(), input.resolve()
 
@@ -1357,17 +1228,28 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
+    if backend == "torch":
+        pytest.skip(
+            "Disabled torch support until replacement for torch-scatter is found"
+        )
+
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    if backend == "onnx":
-        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
-    else:
-        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+    # Extract both models, since we currently don't have a working implementation
+    # of metric learning with ONNX and we need to use torch here
+    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
 
-    tarfile_name = tmp_path / "models.tar"
-    urllib.request.urlretrieve(url, tarfile_name)
-    tarfile.open(tarfile_name).extractall(tmp_path)
+    for url in [onnx_url, torch_url]:
+        tarfile_name = tmp_path / "models.tar"
+        urllib.request.urlretrieve(url, tarfile_name)
+        tarfile.open(tarfile_name).extractall(tmp_path)
+
+    shutil.copyfile(
+        tmp_path / "torchscript_models/embed.pt", tmp_path / "onnx_models/embed.pt"
+    )
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -1399,31 +1281,59 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     assert_root_hash(root_file, rfp)
 
 
-def test_geometry_visitor(trk_geo):
-    class Visitor(acts.TrackingGeometryMutableVisitor):
-        def __init__(self):
-            super().__init__()
-            self.num_surfaces = 0
-            self.num_layers = 0
-            self.num_volumes = 0
-            self.num_portals = 0
+@pytest.mark.odd
+def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+    if detector_config.name == "generic":
+        pytest.skip("No strip spacepoint formation for the generic detector currently")
 
-        def visitSurface(self, surface: acts.Surface):
-            self.num_surfaces += 1
+    from strip_spacepoints import createStripSpacepoints
 
-        def visitLayer(self, layer: acts.Layer):
-            self.num_layers += 1
+    s = Sequencer(events=20, numThreads=-1)
 
-        def visitVolume(self, volume: acts.Volume):
-            self.num_volumes += 1
+    config_path = Path(__file__).parent.parent.parent.parent / "Examples" / "Configs"
 
-        def visitPortal(self, portal: acts.Portal):
-            self.num_portals += 1
+    geo_selection = config_path / "odd-strip-spacepoint-selection.json"
+    digi_config_file = config_path / "odd-digi-smearing-config.json"
 
-    visitor = Visitor()
-    trk_geo.apply(visitor)
+    with detector_config.detector:
+        createStripSpacepoints(
+            trackingGeometry=detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=digi_config_file,
+            geoSelection=geo_selection,
+            outputDir=tmp_path,
+            s=s,
+        ).run()
 
-    assert visitor.num_surfaces == 19078
-    assert visitor.num_layers == 111
-    assert visitor.num_volumes == 18
-    assert visitor.num_portals == 0
+    root_file = "strip_spacepoints.root"
+    rfp = tmp_path / root_file
+
+    assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+def test_geomodel_G4(tmp_path):
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geomodel_G4.py"
+    )
+    assert script.exists()
+    # Prepare arguments for the script
+    mockup_det = "Muon"
+    out_dir = tmp_path / "geomodel_g4_out"
+    out_dir.mkdir()
+    args = [
+        "python3",
+        str(script),
+        "--mockupDetector",
+        str(mockup_det),
+        "--outDir",
+        str(out_dir),
+    ]
+    subprocess.check_call(args)
+
+    assert (out_dir / "obj").exists()

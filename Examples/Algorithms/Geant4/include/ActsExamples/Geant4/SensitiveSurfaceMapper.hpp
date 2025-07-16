@@ -13,20 +13,30 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/TransformComparator.hpp"
 
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class G4VPhysicalVolume;
 
 namespace Acts {
 class Surface;
-}
+}  // namespace Acts
 
 namespace ActsExamples::Geant4 {
 
+///   @brief Interface class to query sensitive surfaces from the TrackingGeometry based on the
+///          external global position. It serves  the `SensitiveSurfaceMapper`
+///          to
+///  map the Acts::Surfaces to the G4PhysicalVolumes. Based on the global
+///  position of the G4PhyicalVolume or on the position of the volume bound
+///  vertices, the tracking geometry is queried to provide the candidate
+///  sensitive surfaces. Due to the concurrent TrackingGeometry schemes
+///  currently in use, concrete implementations need to follow
 struct SensitiveCandidatesBase {
   /// Get the sensitive surfaces for a given position
   ///
@@ -49,30 +59,47 @@ struct SensitiveCandidatesBase {
   virtual ~SensitiveCandidatesBase() = default;
 };
 
-/// Implementation of the SensitiveCandidates for Gen1 geometry
+/// Implementation of the SensitiveCandidates for Gen1 && Gen3 geometry
 struct SensitiveCandidates : public SensitiveCandidatesBase {
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  SensitiveCandidates(
+      const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+      std::unique_ptr<const Acts::Logger> _logger);
 
   std::vector<const Acts::Surface*> queryPosition(
       const Acts::GeometryContext& gctx,
       const Acts::Vector3& position) const override;
 
   std::vector<const Acts::Surface*> queryAll() const override;
+
+ private:
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
+  std::unique_ptr<const Acts::Logger> m_logger{};
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
-/// This Mapper takes a (non-const) Geant4 geometry and maps
-/// it such that name will be containing the mapping prefix
-/// and the Acts::GeometryIdentifier of the surface.
+///   @brief The SensitiveSurfaceMapper connects the Geant 4 geometry with the Acts::TrackingGeometry.
+///          The Geant 4 geometry tree is traversed and logical volumes where
+///  either its name or the name of the volume's material satisfies the
+///  user-configured tokens, the name of the associated physical volume is
+///  prepended with the `mappingPrefix` to mark the volume as sensitive for the
+///  `SensitiveSteppingAction`. In the next step, the global position of the
+///  volume or of the boundary vertices is used to query the tracking geometry
+///  for candidate Acts::Surfaces. In case of multiple candidates, the closest
+///  one is chosen. The surface's geometry identifier is later used to associate
+///  the recorded G4 hits to the surfaces.
 ///
-/// The mapping is done by matching the position of the G4 physical volume with
-/// the center position of an Acts::Surface.
-///
-/// This allows to directly associate Geant4 hits to the sensitive
-/// elements of the Acts::TrackingGeoemtry w/o map lookup.
+///  The constructed pair of G4PhysicalVolume* and Surface* is then
+///  inserted into the connection map.
 class SensitiveSurfaceMapper {
  public:
   /// This prefix is used to indicate a sensitive volume that is matched
   constexpr static std::string_view mappingPrefix = "ActsSensitive#";
+  /// @brief Abrivation of the association between G4 volumes and surfaces
+
+  using SurfacePosMap_t = std::map<Acts::Vector3, const Acts::Surface*,
+                                   Acts::detail::TransformComparator>;
+  using VolumeToSurfAssocMap_t =
+      std::unordered_map<const G4VPhysicalVolume*, SurfacePosMap_t>;
 
   /// Configuration struct for the surface mapper
   struct Config {
@@ -91,8 +118,7 @@ class SensitiveSurfaceMapper {
   struct State {
     /// The map of G4 physical volumes to the mapped surfaces (can be many as
     /// there can be replicas)
-    std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>
-        g4VolumeToSurfaces;
+    VolumeToSurfAssocMap_t g4VolumeToSurfaces{};
 
     /// Record of the missing volumes
     std::vector<std::pair<const G4VPhysicalVolume*, Acts::Transform3>>
@@ -103,10 +129,10 @@ class SensitiveSurfaceMapper {
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging instance
-  SensitiveSurfaceMapper(const Config& cfg,
-                         std::unique_ptr<const Acts::Logger> logger =
-                             Acts::getDefaultLogger("SensitiveSurfaceMapper",
-                                                    Acts::Logging::INFO));
+  explicit SensitiveSurfaceMapper(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "SensitiveSurfaceMapper", Acts::Logging::INFO));
   ~SensitiveSurfaceMapper() = default;
 
   /// Recursive mapping function that walks through the Geant4

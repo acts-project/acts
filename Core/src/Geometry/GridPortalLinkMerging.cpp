@@ -9,10 +9,12 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -502,57 +504,59 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
   ACTS_VERBOSE("Filling merged grid");
   assert(a.dim() == b.dim());
   assert(a.direction() == b.direction());
-  const auto locBinsA = a.numLocalBins();
-  const auto locBinsB = b.numLocalBins();
+  const auto locBinsA = a.grid().numLocalBinsAny();
+  const auto locBinsB = b.grid().numLocalBinsAny();
 
   ACTS_VERBOSE("a: " << a.grid());
   ACTS_VERBOSE("b: " << b.grid());
   ACTS_VERBOSE("merged: " << merged.grid());
+
+  AnyGridView<const TrackingVolume*> mergedView(merged.grid());
+  AnyGridConstView<const TrackingVolume*> aView(a.grid());
+  AnyGridConstView<const TrackingVolume*> bView(b.grid());
 
   if (a.dim() == 1) {
     std::size_t nBinsA = locBinsA.at(0);
     std::size_t nBinsB = locBinsB.at(0);
 
     for (std::size_t i = 1; i <= nBinsA; ++i) {
-      merged.atLocalBins({i}) = a.atLocalBins({i});
+      mergedView.atLocalBins({i}) = aView.atLocalBins({i});
     }
     for (std::size_t i = 1; i <= nBinsB; ++i) {
-      merged.atLocalBins({nBinsA + i}) = b.atLocalBins({i});
+      mergedView.atLocalBins({nBinsA + i}) = bView.atLocalBins({i});
+    }
+  } else if (a.direction() == direction) {
+    std::size_t nBinsA = locBinsA.at(0);
+    std::size_t nBinsB = locBinsB.at(0);
+    std::size_t nBinsCommon = locBinsB.at(1);
+
+    for (std::size_t i = 1; i <= nBinsA; ++i) {
+      for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+        mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
+      }
+    }
+
+    for (std::size_t i = 1; i <= nBinsB; ++i) {
+      for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+        std::size_t ti = i + nBinsA;
+        mergedView.atLocalBins({ti, j}) = bView.atLocalBins({i, j});
+      }
     }
   } else {
-    if (a.direction() == direction) {
-      std::size_t nBinsA = locBinsA.at(0);
-      std::size_t nBinsB = locBinsB.at(0);
-      std::size_t nBinsCommon = locBinsB.at(1);
+    std::size_t nBinsA = locBinsA.at(1);
+    std::size_t nBinsB = locBinsB.at(1);
+    std::size_t nBinsCommon = locBinsB.at(0);
 
-      for (std::size_t i = 1; i <= nBinsA; ++i) {
-        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
-          merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
-        }
+    for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+      for (std::size_t j = 1; j <= nBinsA; ++j) {
+        mergedView.atLocalBins({i, j}) = aView.atLocalBins({i, j});
       }
+    }
 
-      for (std::size_t i = 1; i <= nBinsB; ++i) {
-        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
-          std::size_t ti = i + nBinsA;
-          merged.atLocalBins({ti, j}) = b.atLocalBins({i, j});
-        }
-      }
-    } else {
-      std::size_t nBinsA = locBinsA.at(1);
-      std::size_t nBinsB = locBinsB.at(1);
-      std::size_t nBinsCommon = locBinsB.at(0);
-
-      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
-        for (std::size_t j = 1; j <= nBinsA; ++j) {
-          merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
-        }
-      }
-
-      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
-        for (std::size_t j = 1; j <= nBinsB; ++j) {
-          std::size_t tj = j + nBinsA;
-          merged.atLocalBins({i, tj}) = b.atLocalBins({i, j});
-        }
+    for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+      for (std::size_t j = 1; j <= nBinsB; ++j) {
+        std::size_t tj = j + nBinsA;
+        mergedView.atLocalBins({i, tj}) = bView.atLocalBins({i, j});
       }
     }
   }

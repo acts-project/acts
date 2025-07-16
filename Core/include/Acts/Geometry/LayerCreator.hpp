@@ -61,12 +61,9 @@ class LayerCreator {
   ///
   /// @param lcConfig is the configuration object
   /// @param logger logging instance
-  LayerCreator(const Config& lcConfig,
-               std::unique_ptr<const Logger> logger =
-                   getDefaultLogger("LayerCreator", Logging::INFO));
-
-  /// Destructor
-  ~LayerCreator() = default;
+  explicit LayerCreator(const Config& lcConfig,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("LayerCreator", Logging::INFO));
 
   /// returning a cylindrical layer
   ///

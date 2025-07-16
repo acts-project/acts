@@ -8,17 +8,24 @@
 
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-
-#include <G4GDMLParser.hh>
 
 namespace ActsExamples {
 
 GeoModelDetector::GeoModelDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GeoModelDetector", cfg.logLevel)),
       m_cfg(cfg) {
-  m_geoModel = Acts::GeoModelReader::readFromDb(m_cfg.path);
+  if (!m_cfg.geoModelTree.worldVolume) {
+    m_cfg.geoModelTree = Acts::GeoModelReader::readFromDb(m_cfg.path);
+  }
+  if (!m_cfg.geoModelTree.worldVolume) {
+    throw std::runtime_error(
+        "GeoModelDetector() - Failed to load geometry from '" + m_cfg.path +
+        "'");
+  }
 }
 
 }  // namespace ActsExamples

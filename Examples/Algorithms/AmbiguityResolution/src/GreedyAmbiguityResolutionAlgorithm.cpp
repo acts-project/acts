@@ -79,8 +79,8 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
 
   m_core.resolve(state);
 
-  ACTS_INFO("Resolved to " << state.selectedTracks.size() << " tracks from "
-                           << tracks.size());
+  ACTS_DEBUG("Resolved to " << state.selectedTracks.size() << " tracks from "
+                            << tracks.size());
 
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};

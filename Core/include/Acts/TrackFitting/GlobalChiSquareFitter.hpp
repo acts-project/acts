@@ -683,9 +683,9 @@ class Gx2Fitter {
       std::is_same_v<Gx2fNavigator, DirectNavigator>;
 
  public:
-  Gx2Fitter(propagator_t pPropagator,
-            std::unique_ptr<const Logger> _logger =
-                getDefaultLogger("Gx2Fitter", Logging::INFO))
+  explicit Gx2Fitter(propagator_t pPropagator,
+                     std::unique_ptr<const Logger> _logger =
+                         getDefaultLogger("Gx2Fitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
@@ -1231,10 +1231,7 @@ class Gx2Fitter {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1339,6 +1336,9 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
+      // We skip the check during the first iteration, since we cannot guarantee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
       if ((nUpdate > 0) && !extendedSystem.isWellDefined()) {
         ACTS_INFO("Not enough measurements. Require "
                   << extendedSystem.findRequiredNdf() + 1 << ", but only "
@@ -1403,11 +1403,8 @@ class Gx2Fitter {
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
     ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // Setup the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1566,11 +1563,8 @@ class Gx2Fitter {
       // update covariance
       params.covariance() = fullCovariancePredicted;
 
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // set up the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
@@ -1617,8 +1611,15 @@ class Gx2Fitter {
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");
-        return Experimental::GlobalChiSquareFitterError::
-            UsedUnreachableMeasurements;
+        tipIndex = gx2fResult.lastMeasurementIndex;
+
+        // It could happen, that no measurements were found. Then the track
+        // would be empty and the following operations would be invalid.
+        if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+          ACTS_INFO("Did not find any measurements in final propagation.");
+          return Experimental::GlobalChiSquareFitterError::
+              NotEnoughMeasurements;
+        }
       }
     }
 

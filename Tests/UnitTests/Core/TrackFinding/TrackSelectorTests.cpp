@@ -62,14 +62,14 @@ struct MockTrack {
  private:
   struct MockTrackState {
     const Surface& referenceSurface() const {
-      static const auto srf =
+      static const std::shared_ptr<PlaneSurface> srf =
           CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
       return *srf;
     }
 
     ConstTrackStateType typeFlags() const {
       static const ConstTrackStateType::raw_type raw{0};
-      return {raw};
+      return ConstTrackStateType{raw};
     }
   };
 
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
 
 BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
   auto makeSurface = [](GeometryIdentifier id) {
-    auto srf =
+    std::shared_ptr<PlaneSurface> srf =
         CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
 
     srf->assignGeometryId(id);

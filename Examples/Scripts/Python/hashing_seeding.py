@@ -58,7 +58,7 @@ class Config:
         self.zBins = zBins
         self.phiBins = phiBins
 
-        if seedingAlgorithm == SeedingAlgorithm.Default:
+        if seedingAlgorithm == SeedingAlgorithm.GridTriplet:
             self.bucketSize = 0
             self.metric = HashingMetric.dphi
             self.annoySeed = 123456789
@@ -112,7 +112,7 @@ class Config:
         return outDir
 
     def getDetectorInfo(self):
-        actsExamplesDir = getActsExamplesDirectory()
+        actsExamplesDir = Path(__file__).parent.parent.parent
 
         if self.detector == DetectorName.ODD:
             from acts.examples.odd import (
@@ -123,11 +123,13 @@ class Config:
             geoDir = getOpenDataDetectorDirectory()
 
             oddMaterialMap = geoDir / "data/odd-material-maps.root"
-            oddDigiConfig = geoDir / "config/odd-digi-smearing-config.json"
-            oddSeedingSel = geoDir / "config/odd-seeding-config.json"
+            oddDigiConfig = actsExamplesDir / "Configs/odd-digi-smearing-config.json"
+            oddSeedingSel = actsExamplesDir / "Configs/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+            detector = getOpenDataDetector(
+                odd_dir=geoDir, materialDecorator=oddMaterialDeco
+            )
             trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
@@ -139,13 +141,9 @@ class Config:
 
             detector = acts.examples.GenericDetector()
             trackingGeometry = detector.trackingGeometry()
-            digiConfig = (
-                actsExamplesDir
-                / "Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
+            digiConfig = actsExamplesDir / "Configs/generic-digi-smearing-config.json"
             geoSelectionConfigFile = (
-                actsExamplesDir
-                / "Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+                actsExamplesDir / "Configs/generic-seeding-config.json"
             )
         else:
             exit("Detector not supported")
@@ -155,10 +153,6 @@ class Config:
 
 def extractEnumName(enumvar):
     return str(enumvar).split(".")[-1]
-
-
-def getActsExamplesDirectory():
-    return Path(__file__).parent.parent.parent
 
 
 def runHashingSeeding(
@@ -249,7 +243,7 @@ def runHashingSeeding(
     cotThetaMax = 1 / (np.tan(2 * np.arctan(np.exp(-eta))))  # =1/tan(2×atan(e^(-eta)))
     seedFinderConfigArg = SeedFinderConfigArg(
         r=(None, 200 * u.mm),  # rMin=default, 33mm
-        deltaR=(1 * u.mm, 60 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
         collisionRegion=(-250 * u.mm, 250 * u.mm),
         z=(-2000 * u.mm, 2000 * u.mm),
         maxSeedsPerSpM=maxSeedsPerSpM,

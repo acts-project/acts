@@ -9,17 +9,17 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 
 #include "Acts/Geometry/Blueprint.hpp"
-#include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
-#include <concepts>
 #include <ostream>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 namespace {
 bool hasDescendent(const BlueprintNode& descendent,
@@ -107,7 +107,7 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     const std::string& volumeName,
-    const std::function<void(StaticBlueprintNode& cylinder)>& callback) {
+    const std::function<void(StaticBlueprintNode& node)>& callback) {
   return addStaticVolume(std::make_unique<TrackingVolume>(
                              transform, std::move(volumeBounds), volumeName),
                          callback);
@@ -124,6 +124,17 @@ CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(
     callback(*cylinder);
   }
   return *cylinder;
+}
+
+CuboidContainerBlueprintNode& BlueprintNode::addCuboidContainer(
+    const std::string& name, AxisDirection direction,
+    const std::function<void(CuboidContainerBlueprintNode& box)>& callback) {
+  auto box = std::make_shared<CuboidContainerBlueprintNode>(name, direction);
+  addChild(box);
+  if (callback) {
+    callback(*box);
+  }
+  return *box;
 }
 
 MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(
@@ -149,6 +160,17 @@ LayerBlueprintNode& BlueprintNode::addLayer(
   return *layer;
 }
 
+GeometryIdentifierBlueprintNode& BlueprintNode::withGeometryIdentifier(
+    const std::function<
+        void(GeometryIdentifierBlueprintNode& geometryIdentifier)>& callback) {
+  auto geometryIdentifier = std::make_shared<GeometryIdentifierBlueprintNode>();
+  addChild(geometryIdentifier);
+  if (callback) {
+    callback(*geometryIdentifier);
+  }
+  return *geometryIdentifier;
+}
+
 void BlueprintNode::clearChildren() {
   for (auto& child : children()) {
     child.setDepth(0);
@@ -170,4 +192,4 @@ void BlueprintNode::addToGraphviz(std::ostream& os) const {
   }
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

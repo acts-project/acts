@@ -32,8 +32,6 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
         return "Gx2f: Not enough measurements.";
       case GlobalChiSquareFitterError::UpdatePushedToNewVolume:
         return "Gx2f: Update pushed the parameters to a new volume.";
-      case GlobalChiSquareFitterError::UsedUnreachableMeasurements:
-        return "Gx2f: Final fit used unreachable measurements.";
       default:
         return "unknown";
     }

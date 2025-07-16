@@ -159,10 +159,13 @@ class CombinatorialKalmanFilter {
  public:
   /// Default constructor is deleted
   CombinatorialKalmanFilter() = delete;
-  /// Constructor from arguments
-  CombinatorialKalmanFilter(propagator_t pPropagator,
-                            std::unique_ptr<const Logger> _logger =
-                                getDefaultLogger("CKF", Logging::INFO))
+
+  /// Constructor with propagator and logging level
+  /// @param pPropagator The propagator used for the track finding
+  /// @param _logger The logger for messages
+  explicit CombinatorialKalmanFilter(propagator_t pPropagator,
+                                     std::unique_ptr<const Logger> _logger =
+                                         getDefaultLogger("CKF", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger(std::move(_logger)),
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
@@ -186,16 +189,11 @@ class CombinatorialKalmanFilter {
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
-  /// @tparam parameters_t The type of parameters used for "local" parameters.
-  ///
   /// The CombinatorialKalmanFilter Actor does not rely on the measurements to
   /// be sorted along the track.
-  template <typename parameters_t>
   class Actor {
    public:
-    using BoundState = std::tuple<parameters_t, BoundMatrix, double>;
-    using CurvilinearState =
-        std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
+    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<track_container_t>;
 
@@ -472,15 +470,11 @@ class CombinatorialKalmanFilter {
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
-        if (!tsRes.ok()) {
-          ACTS_ERROR("Track state creation failed on surface "
-                     << surface->geometryId() << ": " << tsRes.error());
-          return tsRes.error();
-        }
       }
-      const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
 
-      if (!newTrackStateList.empty()) {
+      if (tsRes.ok() && !(*tsRes).empty()) {
+        const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
+            *tsRes;
         Result<unsigned int> procRes =
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
@@ -503,6 +497,19 @@ class CombinatorialKalmanFilter {
         currentBranch = result.activeBranches.back();
         prevTip = currentBranch.tipIndex();
       } else {
+        if (!tsRes.ok()) {
+          if (static_cast<CombinatorialKalmanFilterError>(
+                  tsRes.error().value()) ==
+              CombinatorialKalmanFilterError::NoMeasurementExpected) {
+            // recoverable error returned by track state creator
+            expectMeasurements = false;
+          } else {
+            ACTS_ERROR("Track state creation failed on surface "
+                       << surface->geometryId() << ": " << tsRes.error());
+            return tsRes.error();
+          }
+        }
+
         if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
@@ -511,8 +518,9 @@ class CombinatorialKalmanFilter {
         auto stateMask = PM::Predicted | PM::Jacobian;
 
         // Add a hole or material track state to the multitrajectory
-        TrackIndexType currentTip = addNonSourcelinkState(
-            stateMask, boundState, result, expectMeasurements, prevTip);
+        TrackIndexType currentTip =
+            addNonSourcelinkState(stateMask, boundState, result, isSensitive,
+                                  expectMeasurements, prevTip);
         currentBranch.tipIndex() = currentTip;
         auto currentState = currentBranch.outermostTrackState();
         if (expectMeasurements) {
@@ -670,22 +678,27 @@ class CombinatorialKalmanFilter {
     /// @param boundState The bound state on current surface
     /// @param result is the mutable result state object and which to leave invalid
     /// @param isSensitive The surface is sensitive or passive
+    /// @param expectMeasurements True if measurements where expected for this surface
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
     TrackIndexType addNonSourcelinkState(TrackStatePropMask stateMask,
                                          const BoundState& boundState,
                                          result_type& result, bool isSensitive,
+                                         bool expectMeasurements,
                                          TrackIndexType prevTip) const {
       using PM = TrackStatePropMask;
 
       // Add a track state
       auto trackStateProxy =
           result.trackStates->makeTrackState(stateMask, prevTip);
-      ACTS_VERBOSE("Create " << (isSensitive ? "Hole" : "Material")
-                             << " output track state #"
-                             << trackStateProxy.index()
-                             << " with mask: " << stateMask);
+      ACTS_VERBOSE("Create "
+                   << (isSensitive
+                           ? (expectMeasurements ? "Hole"
+                                                 : "noMeasurementExpected")
+                           : "Material")
+                   << " output track state #" << trackStateProxy.index()
+                   << " with mask: " << stateMask);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
@@ -704,7 +717,8 @@ class CombinatorialKalmanFilter {
       }
       typeFlags.set(TrackStateFlag::ParameterFlag);
       if (isSensitive) {
-        typeFlags.set(TrackStateFlag::HoleFlag);
+        typeFlags.set(expectMeasurements ? TrackStateFlag::HoleFlag
+                                         : TrackStateFlag::NoExpectedHitFlag);
       }
 
       // Set the filtered parameter index to be the same with predicted
@@ -836,8 +850,7 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters>
+  template <typename start_parameters_t>
   auto findTracks(
       const start_parameters_t& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
@@ -846,7 +859,7 @@ class CombinatorialKalmanFilter {
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     // Create the ActorList
-    using CombinatorialKalmanFilterActor = Actor<parameters_t>;
+    using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;
 
     // Create relevant options for the propagation options

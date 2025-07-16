@@ -38,12 +38,10 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   // fill config struct
   m_cfg.layerMappingFile = m_cfg.layerMappingFile;
 
-  m_cfg.seedFinderConfig =
-      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
+  m_cfg.seedFinderConfig = m_cfg.seedFinderConfig.calculateDerivedQuantities();
 
-  m_cfg.seedFinderOptions =
-      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
-          m_cfg.seedFinderConfig);
+  m_cfg.seedFinderOptions = m_cfg.seedFinderOptions.calculateDerivedQuantities(
+      m_cfg.seedFinderConfig);
 
   for (const auto &spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/Root/ITGeoDetectorElementSplitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -47,10 +47,10 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging object
-  TGeoITkModuleSplitter(const Config& cfg,
-                        std::unique_ptr<const Acts::Logger> logger =
-                            Acts::getDefaultLogger("TGeoITkModuleSplitter",
-                                                   Acts::Logging::INFO));
+  explicit TGeoITkModuleSplitter(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("TGeoITkModuleSplitter", Acts::Logging::INFO));
 
   ~TGeoITkModuleSplitter() override = default;
 

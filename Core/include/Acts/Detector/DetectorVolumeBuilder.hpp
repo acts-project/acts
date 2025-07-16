@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <memory>
 #include <string>
@@ -43,7 +43,8 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
+    std::map<unsigned int, std::vector<DirectedProtoAxis>>
+        portalMaterialBinning = {};
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
     /// Auxiliary information
@@ -54,10 +55,10 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param mlogger logging instance for screen output
-  DetectorVolumeBuilder(const Config& cfg,
-                        std::unique_ptr<const Logger> mlogger =
-                            getDefaultLogger("DetectorVolumeBuilder",
-                                             Logging::INFO));
+  explicit DetectorVolumeBuilder(const Config& cfg,
+                                 std::unique_ptr<const Logger> mlogger =
+                                     getDefaultLogger("DetectorVolumeBuilder",
+                                                      Logging::INFO));
 
   /// Final implementation of a volume builder that is purely defined
   /// by an internal and external structure builder

@@ -201,7 +201,7 @@ struct Fixture {
 
 // make a surface without material.
 std::shared_ptr<Acts::Surface> makeEmptySurface() {
-  auto surface =
+  std::shared_ptr<Acts::PlaneSurface> surface =
       Acts::CurvilinearSurface(Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0))
           .planeSurface();
   return surface;

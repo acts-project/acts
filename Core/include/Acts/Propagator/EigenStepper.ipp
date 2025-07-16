@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Propagator/EigenStepper.hpp"
+
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-
-#include <limits>
 
 template <typename E>
 Acts::EigenStepper<E>::EigenStepper(
@@ -46,7 +48,9 @@ void Acts::EigenStepper<E>::initialize(State& state,
   state.pathAccumulated = 0;
   state.nSteps = 0;
   state.nStepTrials = 0;
-  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+  state.stepSize = ConstrainedStep();
+  state.stepSize.setAccuracy(state.options.initialStepSize);
+  state.stepSize.setUser(state.options.maxStepSize);
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
@@ -72,8 +76,8 @@ auto Acts::EigenStepper<E>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      state.particleHypothesis, state.covTransport && transportCov,
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, state.particleHypothesis, state.covTransport && transportCov,
       state.pathAccumulated, freeToBoundCorrection);
 }
 
@@ -113,10 +117,10 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 
 template <typename E>
 auto Acts::EigenStepper<E>::curvilinearState(
-    State& state, bool transportCov) const -> CurvilinearState {
+    State& state, bool transportCov) const -> BoundState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.jacToGlobal, std::nullopt, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
@@ -145,9 +149,9 @@ void Acts::EigenStepper<E>::update(State& state, const Vector3& uposition,
 template <typename E>
 void Acts::EigenStepper<E>::transportCovarianceToCurvilinear(
     State& state) const {
-  detail::transportCovarianceToCurvilinear(state.cov, state.jacobian,
-                                           state.jacTransport, state.derivative,
-                                           state.jacToGlobal, direction(state));
+  detail::transportCovarianceToCurvilinear(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, std::nullopt, direction(state));
 }
 
 template <typename E>
@@ -156,8 +160,8 @@ void Acts::EigenStepper<E>::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      freeToBoundCorrection);
+      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
+      state.pars, freeToBoundCorrection);
 }
 
 template <typename E>

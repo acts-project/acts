@@ -54,6 +54,21 @@ Not complete yet
 :::{doxygenclass} Acts::CylinderStackPortalShell
 :::
 
+:::{doxygenclass} Acts::CuboidPortalShell
+:::
+
+:::{doxygenclass} Acts::SingleCuboidPortalShell
+:::
+
+:::{doxygenclass} Acts::CuboidStackPortalShell
+:::
+
+:::{doxygenclass} Acts::TrapezoidPortalShell
+:::
+
+:::{doxygenclass} Acts::SingleTrapezoidPortalShell
+:::
+
 ### Navigation policy
 
 :::{doxygenclass} Acts::INavigationPolicy
@@ -69,6 +84,9 @@ Not complete yet
 :::
 
 :::{doxygenclass} Acts::TryAllNavigationPolicy
+:::
+
+:::{doxygenclass} Acts::Experimental::MultiLayerNavigationPolicy
 :::
 
 :::{doxygenstruct} Acts::ProtoLayer

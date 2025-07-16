@@ -67,18 +67,6 @@ def test_odd():
         assert count_surfaces(trackingGeometry) == 18824
 
 
-def test_aligned_detector():
-    detector = acts.examples.AlignedDetector()
-    trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
-
-    assert detector is not None
-    assert trackingGeometry is not None
-    assert decorators is not None
-
-    assert count_surfaces(trackingGeometry) == 18728
-
-
 import itertools
 
 
@@ -174,7 +162,7 @@ def test_coordinate_converter(trk_geo):
         digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),

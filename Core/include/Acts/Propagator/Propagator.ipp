@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Propagator/Propagator.hpp"
+
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -13,7 +17,6 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <concepts>
@@ -52,8 +55,16 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
           ConstrainedStep::Type::Navigator, logger());
-      if (preStepSurfaceStatus == IntersectionStatus::reachable ||
-          preStepSurfaceStatus == IntersectionStatus::onSurface) {
+      if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
+        // This indicates a geometry overlap which is not handled by the
+        // navigator, so we skip this target.
+        // This can also happen in a well-behaved geometry with external
+        // surfaces.
+        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
+                     << nextTarget.surface->geometryId());
+        continue;
+      }
+      if (preStepSurfaceStatus == IntersectionStatus::reachable) {
         return nextTarget;
       }
     }
@@ -183,11 +194,11 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
                                        const propagator_options_t& options,
-                                       bool makeCurvilinear) const
+                                       bool createFinalParameters) const
     -> Result<
-        actor_list_t_result_t<StepperCurvilinearTrackParameters,
+        actor_list_t_result_t<StepperBoundTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
-  static_assert(std::copy_constructible<StepperCurvilinearTrackParameters>,
+  static_assert(std::copy_constructible<StepperBoundTrackParameters>,
                 "return track parameter type must be copy-constructible");
 
   auto state = makeState<propagator_options_t, path_aborter_t>(options);
@@ -202,7 +213,7 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
   auto propagationResult = propagate(state);
 
   return makeResult(std::move(state), propagationResult, options,
-                    makeCurvilinear);
+                    createFinalParameters);
 }
 
 template <typename S, typename N>
@@ -238,7 +249,7 @@ template <typename propagator_options_t, typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
     const propagator_options_t& options) const {
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = StepperCurvilinearTrackParameters;
+  using ReturnParameterType = StepperBoundTrackParameters;
 
   static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
@@ -299,7 +310,7 @@ Acts::Result<void> Acts::Propagator<S, N>::initialize(
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
-  m_stepper.initialize(state.stepping, start);
+  m_stepper.initialize(state.stepping, start.toBound());
 
   state.position = m_stepper.position(state.stepping);
   state.direction =
@@ -328,12 +339,12 @@ template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
                                         Result<void> propagationResult,
                                         const propagator_options_t& /*options*/,
-                                        bool makeCurvilinear) const
+                                        bool createFinalParameters) const
     -> Result<
-        actor_list_t_result_t<StepperCurvilinearTrackParameters,
+        actor_list_t_result_t<StepperBoundTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = StepperCurvilinearTrackParameters;
+  using ReturnParameterType = StepperBoundTrackParameters;
 
   static_assert(std::copy_constructible<ReturnParameterType>,
                 "return track parameter type must be copy-constructible");
@@ -350,7 +361,8 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   ResultType result{};
   moveStateToResult(state, result);
 
-  if (makeCurvilinear) {
+  const Surface* currentSurface = m_navigator.currentSurface(state.navigation);
+  if (createFinalParameters && currentSurface == nullptr) {
     if (!m_stepper.prepareCurvilinearState(state.stepping)) {
       // information to compute curvilinearState is incomplete.
       return propagationResult.error();
@@ -358,11 +370,20 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
-    result.endParameters =
-        std::get<StepperCurvilinearTrackParameters>(curvState);
+    result.endParameters = std::get<StepperBoundTrackParameters>(curvState);
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       result.transportJacobian = std::get<Jacobian>(curvState);
+    }
+  } else if (createFinalParameters && currentSurface != nullptr) {
+    // We are at a surface, so we need to compute the bound state
+    auto boundState =
+        m_stepper.boundState(state.stepping, *currentSurface).value();
+    // Fill the end parameters
+    result.endParameters = std::get<StepperBoundTrackParameters>(boundState);
+    // Only fill the transport jacobian when covariance transport was done
+    if (state.stepping.covTransport) {
+      result.transportJacobian = std::get<Jacobian>(boundState);
     }
   }
 

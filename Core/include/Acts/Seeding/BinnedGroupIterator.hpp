@@ -8,17 +8,16 @@
 
 #pragma once
 
-#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
-#include <memory>
 #include <tuple>
 
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+
 template <typename grid_t>
 class BinnedGroup;
 
@@ -34,7 +33,7 @@ class BinnedGroupIterator {
   /// @param [in] index Current local position in the grid
   /// @param [in] navigation The navigation pattern in the grid
   BinnedGroupIterator(
-      Acts::BinnedGroup<grid_t>&& group, std::array<std::size_t, DIM> index,
+      BinnedGroup<grid_t>&& group, std::array<std::size_t, DIM> index,
       std::array<std::vector<std::size_t>, DIM> navigation) = delete;
 
   /// @brief Constructor
@@ -43,16 +42,15 @@ class BinnedGroupIterator {
   /// @param [in] group The group we are iterating on
   /// @param [in] index Current local position in the grid
   /// @param [in] navigation The navigation pattern in the grid
-  BinnedGroupIterator(const Acts::BinnedGroup<grid_t>&& group,
-                      std::array<std::size_t, DIM> index,
-                      std::array<std::vector<std::size_t>, DIM> navigation) =
-      delete;
+  BinnedGroupIterator(
+      const BinnedGroup<grid_t>&& group, std::array<std::size_t, DIM> index,
+      std::array<std::vector<std::size_t>, DIM> navigation) = delete;
 
   /// @brief Constructor
   /// @param [in] group The group we are iterating on
   /// @param [in] index Current local position in the grid
   /// @param [in] navigation The navigation pattern in the grid
-  BinnedGroupIterator(const Acts::BinnedGroup<grid_t>& group,
+  BinnedGroupIterator(const BinnedGroup<grid_t>& group,
                       std::array<std::size_t, DIM> index,
                       std::array<std::vector<std::size_t>, DIM> navigation);
 
@@ -92,11 +90,10 @@ class BinnedGroupIterator {
   /// bins with the possible bottom and top candidates
   ///
   /// @return The collection of all the bins in the grid
-  std::tuple<boost::container::small_vector<std::size_t,
-                                            Acts::detail::ipow(3, grid_t::DIM)>,
-             std::size_t,
-             boost::container::small_vector<std::size_t,
-                                            Acts::detail::ipow(3, grid_t::DIM)>>
+  std::tuple<
+      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>,
+      std::size_t,
+      boost::container::small_vector<std::size_t, detail::ipow(3, grid_t::DIM)>>
   operator*() const;
 
  private:
@@ -105,7 +102,7 @@ class BinnedGroupIterator {
 
  private:
   /// @brief The group that contains the grid and the bin finders
-  Acts::detail::RefHolder<const Acts::BinnedGroup<grid_t>> m_group{nullptr};
+  detail::RefHolder<const BinnedGroup<grid_t>> m_group{nullptr};
   /// @brief Current N-dimentional grid iterator
   typename grid_t::local_iterator_t m_gridItr;
   /// @brief End iterator;

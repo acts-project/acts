@@ -52,10 +52,8 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
-        ActsExamplesDetectorContextual
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
-        ActsExamplesIoRoot
         ActsExamplesIoCsv
         ActsExamplesIoObj
         ActsExamplesIoJson
@@ -84,6 +82,16 @@ set(py_files
     _adapter.py
 )
 
+if(ACTS_BUILD_EXAMPLES_ROOT)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoRoot)
+    target_sources(
+        ActsPythonBindings
+        PRIVATE src/RootInput.cpp src/RootOutput.cpp
+    )
+else()
+    target_sources(ActsPythonBindings PRIVATE src/RootStub.cpp)
+endif()
+
 if(ACTS_BUILD_PLUGIN_JSON)
     target_link_libraries(ActsPythonBindings PUBLIC ActsPluginJson)
     target_sources(ActsPythonBindings PRIVATE src/Json.cpp)
@@ -94,15 +102,18 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+        PUBLIC
+            ActsPluginGeoModel
+            ActsExamplesDetectorGeoModel
+            ActsExamplesMuonSpectrometerMockupDetector
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_TGEO)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginTGeo)
+if(ACTS_BUILD_PLUGIN_ROOT)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginRoot)
     target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
@@ -180,29 +191,11 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/geant4/__init__.py)
-
-    if(ACTS_BUILD_EXAMPLES_HEPMC3)
-        target_link_libraries(
-            ActsPythonBindingsGeant4
-            PUBLIC ActsExamplesEventRecording
-        )
-        target_sources(ActsPythonBindingsGeant4 PRIVATE src/Geant4HepMC3.cpp)
-        list(APPEND py_files examples/geant4/hepmc3.py)
-    else()
-        target_sources(
-            ActsPythonBindingsGeant4
-            PRIVATE src/Geant4HepMC3Stub.cpp
-        )
-    endif()
 endif()
 
-if(ACTS_BUILD_EXAMPLES_HEPMC3)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesHepMC3)
-    target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
-    list(APPEND py_files examples/hepmc3.py)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/HepMC3Stub.cpp)
-endif()
+target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoHepMC3)
+target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
+list(APPEND py_files examples/hepmc3.py)
 
 if(ACTS_BUILD_EXAMPLES_EXATRKX)
     target_link_libraries(
@@ -235,6 +228,25 @@ if(ACTS_BUILD_EXAMPLES_EDM4HEP)
     list(APPEND py_files examples/edm4hep.py)
 endif()
 
+if(ACTS_BUILD_EXAMPLES_PODIO)
+    pybind11_add_module(ActsPythonBindingsPodio src/PodioComponent.cpp)
+    target_link_libraries(
+        ActsPythonBindingsPodio
+        PUBLIC ActsPythonUtilities ActsExamplesIoPodio
+    )
+    add_dependencies(ActsPythonBindings ActsPythonBindingsPodio)
+    install(TARGETS ActsPythonBindingsPodio DESTINATION ${_python_install_dir})
+    set_target_properties(
+        ActsPythonBindingsPodio
+        PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    )
+    set_target_properties(
+        ActsPythonBindingsPodio
+        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
+    )
+    list(APPEND py_files examples/podio.py)
+endif()
+
 if(ACTS_BUILD_PLUGIN_ONNX)
     target_link_libraries(
         ActsPythonBindings
@@ -246,6 +258,13 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
     target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_FASTJET)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
+    target_sources(ActsPythonBindings PRIVATE src/TruthJet.cpp)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/TruthJetStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_HASHING)

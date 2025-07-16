@@ -31,6 +31,7 @@
 #include <optional>
 #include <string>
 
+using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 namespace Acts::Test {
@@ -56,8 +57,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   slsOptions.maxStepSize = stepSize;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                std::nullopt, ParticleHypothesis::pion());
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, std::nullopt,
+      ParticleHypothesis::pion());
 
   StraightLineStepper sls;
   StraightLineStepper::State slsState = sls.makeState(slsOptions);
@@ -79,14 +81,16 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
-  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
-                                 std::nullopt, ParticleHypothesis::pion0());
+  BoundTrackParameters ncp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, 1 / absMom, std::nullopt,
+      ParticleHypothesis::pion0());
   sls.initialize(slsState, ncp);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
-                                   ParticleHypothesis::pion0());
+  ncp = BoundTrackParameters::createCurvilinear(makeVector4(pos, time), dir,
+                                                1 / absMom, cov,
+                                                ParticleHypothesis::pion0());
   sls.initialize(slsState, ncp);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(slsState.covTransport);
@@ -109,11 +113,13 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom = 8.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov, ParticleHypothesis::pion());
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, cov,
+      ParticleHypothesis::pion());
 
   StraightLineStepper::Options options(tgContext, mfContext);
   options.maxStepSize = stepSize;
+  options.initialStepSize = 10_m;
 
   // Build the stepper and the state
   StraightLineStepper sls;
@@ -208,9 +214,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
-                                 charge2 / absMom2, cov2,
-                                 ParticleHypothesis::pion());
+  BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
+      makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
+      ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
@@ -240,16 +246,17 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
-  auto plane = CurvilinearSurface(pos, dir).planeSurface();
+  std::shared_ptr<PlaneSurface> plane =
+      CurvilinearSurface(pos, dir).planeSurface();
   auto bp = BoundTrackParameters::create(
-                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                tgContext, plane, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
   slsState = sls.makeState(options);
   sls.initialize(slsState, bp);
 
   // Test the intersection in the context of a surface
-  auto targetSurface =
+  std::shared_ptr<PlaneSurface> targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
                           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,

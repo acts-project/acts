@@ -14,8 +14,14 @@
 
 Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
                                               const MaterialSlab& slab2) {
+  return combineSlabs(slab1, slab2.material(), slab2.thickness());
+}
+
+Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
+                                              const Material& material2,
+                                              float thickness2_) {
   const auto& mat1 = slab1.material();
-  const auto& mat2 = slab2.material();
+  const auto& mat2 = material2;
 
   // NOTE 2020-08-26 msmk
   // the following computations provide purely geometrical averages of the
@@ -30,7 +36,14 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // use double for (intermediate) computations to avoid precision loss
   const double thickness1 = static_cast<double>(slab1.thickness());
-  const double thickness2 = static_cast<double>(slab2.thickness());
+  const double thickness2 = static_cast<double>(thickness2_);
+
+  if (thickness1 == 0) {
+    return MaterialSlab(material2, thickness2_);
+  }
+  if (thickness2 == 0) {
+    return slab1;
+  }
 
   // the thickness properties are purely additive
   const double thickness = thickness1 + thickness2;
@@ -50,15 +63,15 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   const double molarAmount = molarAmount1 + molarAmount2;
 
   // handle vacuum specially
-  if (!(0.0 < molarAmount)) {
-    return {Material(), static_cast<float>(thickness)};
+  if (molarAmount <= 0) {
+    return {Material::Vacuum(), static_cast<float>(thickness)};
   }
 
   // radiation/interaction length follows from consistency argument
   const double thicknessX01 = static_cast<double>(slab1.thicknessInX0());
-  const double thicknessX02 = static_cast<double>(slab2.thicknessInX0());
+  const double thicknessX02 = thickness2 / static_cast<double>(mat2.X0());
   const double thicknessL01 = static_cast<double>(slab1.thicknessInL0());
-  const double thicknessL02 = static_cast<double>(slab2.thicknessInL0());
+  const double thicknessL02 = thickness2 / static_cast<double>(mat2.L0());
 
   const double thicknessInX0 = thicknessX01 + thicknessX02;
   const double thicknessInL0 = thicknessL01 + thicknessL02;
@@ -120,6 +133,26 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // the total volume for the same unit area, i.e. volume = totalThickness*1*1
   const float molarDensity = static_cast<float>(molarAmount / thickness);
 
-  return {Material::fromMolarDensity(x0, l0, ar, z, molarDensity),
-          static_cast<float>(thickness)};
+  const double molarElectronAmount1 = mat1.molarElectronDensity() * thickness1;
+  const double molarElectronAmount2 = mat2.molarElectronDensity() * thickness2;
+  const double molarElectronAmount =
+      molarElectronAmount1 + molarElectronAmount2;
+  const float molarElectronDensity =
+      static_cast<float>(molarElectronAmount / thickness);
+
+  float meanExcitationEnergy = 0.f;
+  if (mat1.meanExcitationEnergy() > 0 && mat2.meanExcitationEnergy() > 0) {
+    meanExcitationEnergy = static_cast<float>(
+        std::exp(thicknessWeight1 * std::log(mat1.meanExcitationEnergy())) *
+        std::exp(thicknessWeight2 * std::log(mat2.meanExcitationEnergy())));
+  } else {
+    meanExcitationEnergy =
+        static_cast<float>(thicknessWeight1 * mat1.meanExcitationEnergy() +
+                           thicknessWeight2 * mat2.meanExcitationEnergy());
+  }
+
+  return {
+      Material::fromMolarDensity(x0, l0, ar, z, molarDensity,
+                                 molarElectronDensity, meanExcitationEnergy),
+      static_cast<float>(thickness)};
 }

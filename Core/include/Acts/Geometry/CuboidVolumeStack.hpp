@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Geometry/VolumeStack.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -31,7 +32,7 @@ namespace Acts {
 /// the input volumes are either extended or gap volumes are created.
 ///
 /// @note The size adjustment convention is that volumes are never shrunk
-class CuboidVolumeStack : public Volume {
+class CuboidVolumeStack : public VolumeStack {
  public:
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
@@ -55,28 +56,6 @@ class CuboidVolumeStack : public Volume {
       VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
 
-  /// Constructor from a vector of volumes and direction
-  /// @param volumes is the vector of volumes
-  /// @param direction is the vector specifying the global direction
-  /// @param strategy is the attachment strategy
-  /// @param resizeStrategy is the resize strategy
-  /// @note @p resizeStrategy only affects resizing along
-  ///       @p direction. Resizing in the other direction
-  ///       is always delegated to the child volumes,
-  ///       which might in turn be @c CuboidVolumeStack
-  /// @param logger is the logger
-  /// @pre The volumes need to have a common coordinate
-  ///      system relative to @p direction. I.e. they need
-  ///      to be aligned in @c z and cannot have a rotation
-  ///      in @c x or @c y.
-  /// @pre The volumes all need to have @c CuboidVolumeBounds
-  /// @note Preconditions are checked on construction
-  CuboidVolumeStack(
-      std::vector<Volume*>& volumes, const Vector3& direction,
-      VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
-      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
-      const Logger& logger = Acts::getDummyLogger());
-
   /// Update the volume bounds and transform. This
   /// will update the bounds of all volumes in the stack
   /// to accommodate the new bounds and optionally create
@@ -91,10 +70,6 @@ class CuboidVolumeStack : public Volume {
               std::optional<Transform3> transform = std::nullopt,
               const Logger& logger = getDummyLogger()) override;
 
-  /// Access the gap volume that were created during attachment or resizing.
-  /// @return the vector of gap volumes
-  const std::vector<std::shared_ptr<Volume>>& gaps() const;
-
   /// Convert axis direction to an array index according to
   /// stack convention. For example, AxisX --> 0
   /// @param direction is the axis direction to convert
@@ -107,12 +82,6 @@ class CuboidVolumeStack : public Volume {
       AxisDirection direction);
 
  private:
-  /// Helper to get the first volume in the input, and throw an exception if
-  /// there is not one.
-  /// @param volumes is the vector of volumes
-  /// @return the first volume
-  static Volume& initialVolume(const std::vector<Volume*>& volumes);
-
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
   /// @param strategy is the attachment strategy
@@ -161,27 +130,13 @@ class CuboidVolumeStack : public Volume {
   std::pair<double, double> synchronizeBounds(std::vector<VolumeTuple>& volumes,
                                               const Logger& logger);
 
-  /// Helper function to create a gap volume with given bounds and register it.
-  /// @param transform is the transform of the gap volume
-  /// @param bounds is the bounds of the gap volume
-  /// @return the shared pointer to the gap volume
-  std::shared_ptr<Volume> addGapVolume(
-      const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
-
-  /// Merging direction of the stack
-  /// in local group coordinates
-  AxisDirection m_dir{};
-
   /// Directions orthogonal to the
   /// merging direction of the stack
   /// in local group coordinates
   AxisDirection m_dirOrth1{};
   AxisDirection m_dirOrth2{};
 
-  VolumeResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
-  std::vector<std::shared_ptr<Volume>> m_gaps{};
-  std::vector<Volume*>& m_volumes;
 };
 
 }  // namespace Acts

@@ -1,4 +1,10 @@
-add_library(ActsExamplesDetectorGeoModel SHARED src/GeoModelDetector.cpp)
+add_library(
+    ActsExamplesDetectorGeoModel
+    SHARED
+    src/GeoModelDetector.cpp
+    src/AlignedGeoModelDetectorElement.cpp
+    src/GeoModelMuonMockupBuilder.cpp
+)
 
 target_include_directories(
     ActsExamplesDetectorGeoModel
@@ -30,7 +36,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     )
 else()
     target_sources(
-        ActsExamplesDetectorDD4hep
+        ActsExamplesDetectorGeoModel
         PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()

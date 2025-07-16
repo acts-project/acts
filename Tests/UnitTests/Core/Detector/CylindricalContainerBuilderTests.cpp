@@ -13,7 +13,6 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -30,6 +29,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <any>
 #include <cmath>
@@ -61,9 +61,8 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
                         DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
-    Acts::GeometryIdentifier geoID;
-    geoID.setVolume(ccache.volumeCount);
-    dVolume.assignGeometryId(geoID);
+    dVolume.assignGeometryId(
+        Acts::GeometryIdentifier().withVolume(ccache.volumeCount));
   }
 
   void assignGeometryId(
@@ -130,10 +129,10 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.binning = {AxisDirection::AxisZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
-  tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
-                    -std::numbers::pi, std::numbers::pi, 12)}};
+  tripleZCfg.portalMaterialBinning[2u] = {
+      DirectedProtoAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, 50),
+      DirectedProtoAxis(AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
+                        -std::numbers::pi, std::numbers::pi, 12)};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;

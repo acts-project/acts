@@ -8,15 +8,24 @@
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <iostream>
 #include <numbers>
 
 namespace Acts {
+
+GridPortalLink::GridPortalLink(std::shared_ptr<RegularSurface> surface,
+                               AxisDirection direction)
+    : PortalLinkBase(std::move(surface)), m_direction(direction) {}
+
+GridPortalLink::~GridPortalLink() = default;
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
     const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
@@ -282,8 +291,10 @@ void GridPortalLink::printContents(std::ostream& os) const {
     throw std::invalid_argument{"Unsupported surface type"};
   }
 
+  AnyGridConstView<const TrackingVolume*> view(grid());
+
   if (dim == 1) {
-    auto loc = numLocalBins();
+    auto loc = grid().numLocalBinsAny();
 
     if (flipped) {
       os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
@@ -295,7 +306,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
       os << std::string(4, ' ');
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
         std::string name = "0x0";
-        if (const auto* v = atLocalBins({i}); v != nullptr) {
+        if (const auto* v = view.atLocalBins({i}); v != nullptr) {
           name = v->volumeName();
         }
         name = name.substr(0, std::min(name.size(), std::size_t{13}));
@@ -308,7 +319,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
       for (std::size_t i = 0; i <= loc.at(0) + 1; i++) {
         os << "i=" << i << " ";
         std::string name = "0x0";
-        if (const auto* v = atLocalBins({i}); v != nullptr) {
+        if (const auto* v = view.atLocalBins({i}); v != nullptr) {
           name = v->volumeName();
         }
         name = name.substr(0, std::min(name.size(), std::size_t{13}));
@@ -318,7 +329,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
     }
 
   } else {
-    auto loc = numLocalBins();
+    auto loc = grid().numLocalBinsAny();
     os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
     for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
       os << lpad("j=" + std::to_string(j), 13) << " ";
@@ -328,7 +339,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
       os << "i=" << i << " ";
       for (std::size_t j = 0; j <= loc.at(1) + 1; j++) {
         std::string name = "0x0";
-        if (const auto* v = atLocalBins({i, j}); v != nullptr) {
+        if (const auto* v = view.atLocalBins({i, j}); v != nullptr) {
           name = v->volumeName();
         }
         name = name.substr(0, std::min(name.size(), std::size_t{13}));
@@ -342,21 +353,26 @@ void GridPortalLink::printContents(std::ostream& os) const {
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
                                     const GridPortalLink& grid1d,
                                     GridPortalLink& grid2d) {
-  const auto locSource = grid1d.numLocalBins();
-  const auto locDest = grid2d.numLocalBins();
+  const auto locSource = grid1d.grid().numLocalBinsAny();
+  const auto locDest = grid2d.grid().numLocalBinsAny();
+  assert(grid1d.grid().dimensions() == 1);
+  assert(grid2d.grid().dimensions() == 2);
   assert(locSource.size() == 1);
   assert(locDest.size() == 2);
 
+  AnyGridConstView<const TrackingVolume*> sourceView(grid1d.grid());
+  AnyGridView<const TrackingVolume*> destView(grid2d.grid());
+
   for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
-    const TrackingVolume* source = grid1d.atLocalBins({i});
+    const TrackingVolume* source = sourceView.atLocalBins({i});
 
     if (dir == FillDirection::loc1) {
       for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {
-        grid2d.atLocalBins({i, j}) = source;
+        destView.atLocalBins({i, j}) = source;
       }
     } else if (dir == FillDirection::loc0) {
       for (std::size_t j = 0; j <= locDest[0] + 1; ++j) {
-        grid2d.atLocalBins({j, i}) = source;
+        destView.atLocalBins({j, i}) = source;
       }
     }
   }
@@ -501,6 +517,15 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 
   fillGrid1dTo2d(fillDir, *this, *grid);
   return grid;
+}
+
+std::span<const TrivialPortalLink> GridPortalLink::artifactPortalLinks() const {
+  return {m_artifactPortalLinks};
+}
+
+void GridPortalLink::setArtifactPortalLinks(
+    std::vector<TrivialPortalLink> links) {
+  m_artifactPortalLinks = std::move(links);
 }
 
 }  // namespace Acts

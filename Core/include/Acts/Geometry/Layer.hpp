@@ -23,7 +23,6 @@
 
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
@@ -219,9 +218,10 @@ class Layer : public virtual GeometryObject {
   /// @param thickness is the normal thickness of the Layer
   /// @param ades oapproach descriptor
   /// @param laytyp is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
-        std::unique_ptr<ApproachDescriptor> ades = nullptr,
-        LayerType laytyp = passive);
+  explicit Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+                 double thickness = 0.,
+                 std::unique_ptr<ApproachDescriptor> ades = nullptr,
+                 LayerType laytyp = passive);
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only
@@ -298,4 +298,4 @@ using LayerArray = BinnedArray<LayerPtr>;
 
 }  // namespace Acts
 
-#include "Acts/Geometry/detail/Layer.ipp"
+#include "Acts/Geometry/Layer.ipp"

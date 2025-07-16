@@ -1,9 +1,12 @@
 add_library(
     ActsExamplesDetectorGeneric
     SHARED
-    src/BuildGenericDetector.cpp
+    src/AlignedGenericDetector.cpp
     src/GenericDetector.cpp
     src/GenericDetectorElement.cpp
+    src/LayerBuilder.cpp
+    src/ProtoLayerCreator.cpp
+    src/GenericDetectorBuilder.cpp
 )
 
 acts_compile_headers(ActsExamplesDetectorGeneric GLOB "include/**/*.hpp")

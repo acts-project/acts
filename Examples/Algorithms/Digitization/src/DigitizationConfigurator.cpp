@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -34,10 +33,13 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
                           ActsExamples::DigiComponentsConfig &b) {
   // Check smearing config
   for (const auto &[as, bs] :
-       Acts::zip(a.smearingDigiConfig, b.smearingDigiConfig)) {
+       Acts::zip(a.smearingDigiConfig.params, b.smearingDigiConfig.params)) {
     if (as.index != bs.index) {
       return false;
     }
+  }
+  if (a.smearingDigiConfig.maxRetries != b.smearingDigiConfig.maxRetries) {
+    return false;
   }
   // Check geometric config
   const auto &ag = a.geometricDigiConfig;

@@ -21,7 +21,9 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <ranges>
 
 #include <boost/algorithm/string.hpp>
 
@@ -39,13 +41,12 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   Acts::GeoModelBlueprintCreater::Blueprint blueprint;
 
   // The GeoModel tree must have a reader
-  if (gmTree.geoReader == nullptr) {
+  if (gmTree.dbMgr == nullptr) {
     throw std::invalid_argument(
-        "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
+        "GeoModelBlueprintCreater: GeoModelTree has no dbMgr");
   }
 
-  auto blueprintTable =
-      gmTree.geoReader->getTableFromTableName_String(options.table);
+  auto blueprintTable = gmTree.dbMgr->getTableRecords_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;
@@ -143,7 +144,7 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   return blueprint;
 }
 
-std::unique_ptr<Acts::Experimental::Blueprint::Node>
+std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node>
 Acts::GeoModelBlueprintCreater::createNode(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
@@ -195,8 +196,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   std::string entryType = entryTypeSplit[0u];
 
   // Check if material has to be attached
-  std::map<unsigned int, Experimental::BinningDescription>
-      portalMaterialBinning;
+  std::map<unsigned int, std::vector<DirectedProtoAxis>> portalMaterialBinning;
   if (!entry.materials.empty()) {
     for (const auto& material : entry.materials) {
       std::vector<std::string> materialTokens;
@@ -212,14 +212,14 @@ Acts::GeoModelBlueprintCreater::createNode(
         std::vector<std::string> binningTokens;
         boost::split(binningTokens, materialTokens[1u], boost::is_any_of(";"));
 
-        std::vector<Experimental::ProtoBinning> protoBinnings;
+        std::vector<DirectedProtoAxis> protoBinnings;
         for (const auto& bToken : binningTokens) {
           ACTS_VERBOSE("   - Binning: " << bToken);
-          protoBinnings.push_back(
-              detail::GeoModelBinningHelper::toProtoBinning(bToken));
+          auto [dpAxis, nB] =
+              detail::GeoModelBinningHelper::toProtoAxis(bToken, extent);
+          protoBinnings.push_back(dpAxis);
         }
-        portalMaterialBinning[portalNumber] =
-            Experimental::BinningDescription{protoBinnings};
+        portalMaterialBinning[portalNumber] = protoBinnings;
       }
     }
     ACTS_VERBOSE("Node " << entry.name << " has "
@@ -230,7 +230,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   // Block for branch or container nodes that have children
   if (entryType == "branch" || entryType == "container" ||
       entryType == "root") {
-    std::vector<std::unique_ptr<Experimental::Blueprint::Node>> children;
+    std::vector<std::unique_ptr<Experimental::Gen2Blueprint::Node>> children;
     // Check for gap filling
     bool gapFilling = false;
     // Check if the entry has children
@@ -264,14 +264,12 @@ Acts::GeoModelBlueprintCreater::createNode(
 
     // Create the binnings
     std::vector<Acts::AxisDirection> binnings;
-    std::for_each(
-        entry.binnings.begin(), entry.binnings.end(),
-        [&binnings](const std::string& b) {
-          binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
-        });
+    std::ranges::for_each(entry.binnings, [&binnings](const std::string& b) {
+      binnings.push_back(detail::GeoModelBinningHelper::toAxisDirection(b));
+    });
 
     // Complete the children
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
         std::move(children), extent);
     node->portalMaterialBinning = portalMaterialBinning;
@@ -299,7 +297,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     return node;
 
   } else if (entryType == "leaf") {
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, internalsBuilder,
         extent);
     node->portalMaterialBinning = portalMaterialBinning;
@@ -385,8 +383,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           if (!binning.empty()) {
             ACTS_VERBOSE("- Adding binning: " << binning);
             lsbCfg.binnings.push_back(
-                detail::GeoModelBinningHelper::toProtoBinning(binning,
-                                                              internalExtent));
+                detail::GeoModelBinningHelper::toProtoAxis(binning,
+                                                           internalExtent));
           }
         }
       } else {

@@ -13,6 +13,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <cstddef>
@@ -61,7 +62,7 @@ class BinUtility {
                       const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(bData);
+    m_binningData.emplace_back(bData);
   }
 
   /// Constructor for equidistant
@@ -77,7 +78,7 @@ class BinUtility {
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bins, min, max));
+    m_binningData.emplace_back(opt, value, bins, min, max);
   }
 
   /// Constructor for arbitrary
@@ -86,12 +87,12 @@ class BinUtility {
   /// @param opt is the binning option : open, closed
   /// @param value is the axis direction : AxisX, AxisY, AxisZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<float>& bValues, BinningOption opt = open,
-             AxisDirection value = AxisDirection::AxisPhi,
-             const Transform3& tForm = Transform3::Identity())
+  explicit BinUtility(std::vector<float>& bValues, BinningOption opt = open,
+                      AxisDirection value = AxisDirection::AxisPhi,
+                      const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bValues));
+    m_binningData.emplace_back(opt, value, bValues);
   }
 
   /// Copy constructor
@@ -100,6 +101,30 @@ class BinUtility {
   BinUtility(const BinUtility& sbu) = default;
 
   BinUtility(BinUtility&& sbu) = default;
+
+  /// Create from a DirectedProtoAxis
+  ///
+  /// @param dpAxis the DirectedProtoAxis to be used
+  explicit BinUtility(const DirectedProtoAxis& dpAxis)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    m_binningData.emplace_back(dpAxis);
+  }
+
+  /// Create from several DirectedProtoAxis objects
+  ///
+  /// @param dpAxes the DirectedProtoAxis to be used with axis directions
+  explicit BinUtility(const std::vector<DirectedProtoAxis>& dpAxes)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    for (const auto& dpAxis : dpAxes) {
+      m_binningData.emplace_back(dpAxis);
+    }
+  }
 
   /// Assignment operator
   ///

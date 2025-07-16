@@ -259,9 +259,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  TryAllNavigator(Config cfg,
-                  std::unique_ptr<const Logger> logger =
-                      getDefaultLogger("TryAllNavigator", Logging::INFO))
+  explicit TryAllNavigator(Config cfg, std::unique_ptr<const Logger> logger =
+                                           getDefaultLogger("TryAllNavigator",
+                                                            Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
   State makeState(const Options& options) const {
@@ -314,15 +314,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    // Navigator preStep always resets the current surface
-    state.currentSurface = nullptr;
 
     double nearLimit = state.options.nearLimit;
     double farLimit = state.options.farLimit;
@@ -583,10 +583,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  TryAllOverstepNavigator(Config cfg,
-                          std::unique_ptr<const Logger> logger =
-                              getDefaultLogger("TryAllOverstepNavigator",
-                                               Logging::INFO))
+  explicit TryAllOverstepNavigator(
+      Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
+                      "TryAllOverstepNavigator", Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
   State makeState(const Options& options) const {
@@ -643,13 +642,15 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                               const Vector3& direction) const {
     (void)direction;
 
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
+    // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    state.currentSurface = nullptr;
 
     // We cannot do anything without a last position
     if (!state.lastPosition.has_value() && state.endOfCandidates()) {
