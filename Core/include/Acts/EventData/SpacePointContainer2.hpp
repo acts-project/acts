@@ -1104,8 +1104,9 @@ class SpacePointContainer2 {
   template <typename... Ts>
   auto zip(const IndexRange &range,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
-    return Acts::zip(IndexIteratorRange(range),
-                     columns.data().subspan(range.first, range.second)...);
+    return Acts::zip(
+        IndexIteratorRange(range),
+        columns.data().subspan(range.first, range.second - range.first)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param range The index range to create the zipped range from.
@@ -1114,8 +1115,9 @@ class SpacePointContainer2 {
   template <typename... Ts>
   auto zip(const IndexRange &range,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-    return Acts::zip(IndexIteratorRange(range),
-                     columns.data().subspan(range.first, range.second)...);
+    return Acts::zip(
+        IndexIteratorRange(range),
+        columns.data().subspan(range.first, range.second - range.first)...);
   }
 
   template <typename... Ts>
