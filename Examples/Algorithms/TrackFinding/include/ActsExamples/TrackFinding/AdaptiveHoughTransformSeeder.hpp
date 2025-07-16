@@ -289,19 +289,20 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                       // further (and how), or is a solution
   };
 
+  /// @brief  remove indices pointing to measurements that do not cross this section
+  /// @tparam M - measurements type
+  /// @param section - section to update
+  /// @param measurements - measurements vector
+  /// @param lineFunctor - line definition
   template <typename M>
   void updateSection(
       AccumulatorSection &section, const std::vector<M> &measurements,
       const AHTExplorationOptions<M>::LineParamFunctor &lineFunctor) const {
-    std::vector<unsigned> selectedIndices;
-    for (unsigned index : section.indices()) {
+    std::erase_if(section.indices(), [lineFunctor, &measurements,
+                                      &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
-      using namespace std::placeholders;
-      if (section.isLineInside(std::bind_front(lineFunctor, m))) {
-        selectedIndices.push_back(index);
-      }
-    }
-    section.indices() = std::move(selectedIndices);
+      return !section.isLineInside(std::bind_front(lineFunctor, m));
+    });
   }
 
   template <typename M>
@@ -374,7 +375,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext &ctx) const final;
+  ProcessCode execute(const AlgorithmContext &ctx) const override;
 
   /// Const access to the config
   const Config &config() const { return m_cfg; }

@@ -252,19 +252,19 @@ void AdaptiveHoughTransformSeeder::preparePreprocessedMeasurements(
     for (const SimSpacePoint &sp : spContainer) {
       const double phi = std::atan2(sp.y(), sp.x());
       const double invr = 1.0 / sp.r();
-      measurements.emplace_back(PreprocessedMeasurement(
+      measurements.emplace_back(
           invr, phi, sp.z(),
-          Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+          Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
       // wrap phi by duplicating some seeds
       if (phi < -std::numbers::pi + config().phiWrap * std::numbers::pi) {
-        measurements.emplace_back(PreprocessedMeasurement(
+        measurements.emplace_back(
             invr, phi + 2 * std::numbers::pi, sp.z(),
-            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
       }
       if (phi > std::numbers::pi - config().phiWrap * std::numbers::pi) {
-        measurements.emplace_back(PreprocessedMeasurement(
+        measurements.emplace_back(
             invr, phi - 2 * std::numbers::pi, sp.z(),
-            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
+            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
       }
     }
   }
@@ -277,14 +277,13 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
     const std::vector<PreprocessedMeasurement> &measurements) const {
   Acts::ScopedTimer st("splitInQuadrants", logger());
   const int nSplits = 8;
-  float wedgeWidth = 2.0f * std::numbers::pi / nSplits;
+  float wedgeWidth = static_cast<float>(2.0 * std::numbers::pi / nSplits);
 
   for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
     const float startPhi =
         static_cast<float>(wedgeWidth * phiIndex - std::numbers::pi);
-    stack.emplace_back(AccumulatorSection(1.05f * wedgeWidth,
-                                          2.0f * config().qOverPtMin, startPhi,
-                                          -config().qOverPtMin));
+    stack.emplace_back(1.05f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
+                       -config().qOverPtMin);
     stack.back().indices().resize(measurements.size());
     std::iota(std::begin(stack.back().indices()),
               std::end(stack.back().indices()), 0);
@@ -314,43 +313,40 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
     int discardedByThresholdCut{};
     int discardedByCrossingCut{};
   };
-
   std::map<int, Stats> sStat;
   AHTExplorationOptions opt;
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
-  opt.decisionFunctor = [&sStat, this](
+  opt.decisionFunctor = [&sStat, &cfg = m_cfg, &opt, this](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &mes) {
+    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
     if (section.divisionLevel() <= 8) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Drill;
+      return Drill;
     }
 
-    if (section.count() < this->m_cfg.threshold) {
+    if (section.count() < cfg.threshold) {
       sStat[section.divisionLevel()].discardedByThresholdCut += 1;
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Discard;
+      return Discard;
     }
-    if (section.count() < 3 * this->m_cfg.threshold) {
-      if (!passIntersectionsCheck(
-              section, mes, m_qOverPtPhiLineParams,
-              this->m_cfg.threshold * (this->m_cfg.threshold - 1))) {
-        sStat[section.divisionLevel()].discardedByCrossingCut += 1;
-        return AHTExplorationOptions<
-            PreprocessedMeasurement>::Decision::Discard;
-      }
+    if (section.count() < 3 * cfg.threshold &&
+        !passIntersectionsCheck(section, mes, opt.lineParamFunctor,
+                                cfg.threshold * (cfg.threshold - 1))) {
+      sStat[section.divisionLevel()].discardedByCrossingCut += 1;
+      return Discard;
     }
 
-    if (section.count() >= this->m_cfg.threshold &&
-        section.count() <= this->m_cfg.noiseThreshold &&
-        section.xSize() <= this->m_cfg.phiMinBinSize &&
-        section.ySize() <= this->m_cfg.qOverPtMinBinSize) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Accept;
+    if (section.count() >= cfg.threshold &&
+        section.count() <= cfg.noiseThreshold &&
+        section.xSize() <= cfg.phiMinBinSize &&
+        section.ySize() <= cfg.qOverPtMinBinSize) {
+      return Accept;
     }
     sStat[section.divisionLevel()].area += section.xSize() * section.ySize();
     sStat[section.divisionLevel()].nSections += 1;
     sStat[section.divisionLevel()].nLines += section.count();
-    return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Drill;
+    return Drill;
   };
 
   exploreParametersSpace(input, measurements, opt, output);
@@ -380,18 +376,20 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
   opt.xMinBinSize = config().zMinBinSize;
   opt.yMinBinSize = config().cotThetaMinBinSize;
   opt.lineParamFunctor = m_zCotThetaLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg](
+  opt.decisionFunctor = [&cfg = m_cfg](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    if (section.count() < m_cfg.threshold) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Discard;
+    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
+
+    if (section.count() < cfg.threshold) {
+      return Discard;
     }
-    if (section.count() >= m_cfg.threshold &&
-        section.xSize() <= m_cfg.zMinBinSize &&
-        section.ySize() <= m_cfg.cotThetaMinBinSize) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Accept;
+    if (section.count() >= cfg.threshold &&
+        section.xSize() <= cfg.zMinBinSize &&
+        section.ySize() <= cfg.cotThetaMinBinSize) {
+      return Accept;
     }
-    return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Drill;
+    return Drill;
   };
 
   exploreParametersSpace(input, measurements, opt, output);
@@ -412,18 +410,19 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
   opt.xMinBinSize = 101.0f * Acts::UnitConstants::mm;
   opt.yMinBinSize = 10.1f;
   opt.lineParamFunctor = m_zCotThetaLineParams;
-  opt.decisionFunctor = [&m_cfg = m_cfg, &opt](
+  opt.decisionFunctor = [&cfg = m_cfg, &opt](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    if (section.count() < m_cfg.threshold) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Discard;
+    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
+    if (section.count() < cfg.threshold) {
+      return Discard;
     }
-    if (section.count() >= m_cfg.threshold &&
+    if (section.count() >= cfg.threshold &&
         section.xSize() <= opt.xMinBinSize &&
         section.ySize() <= opt.yMinBinSize) {
-      return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Accept;
+      return Accept;
     }
-    return AHTExplorationOptions<PreprocessedMeasurement>::Decision::Drill;
+    return Drill;
   };
 
   exploreParametersSpace(input, measurements, opt, output);
@@ -444,12 +443,11 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
     unsigned spIndex = 0;
     std::array<const SimSpacePoint *, 3> sp = {nullptr, nullptr, nullptr};
     std::vector<unsigned> sortedIndices = s.indices();
-    std::ranges::sort(sortedIndices.begin(), sortedIndices.end(),
-                      [&measurements](unsigned i1, unsigned i2) {
-                        const auto &m1 = measurements[i1];
-                        const auto &m2 = measurements[i2];
-                        return m1.invr > m2.invr;
-                      });
+    std::ranges::sort(sortedIndices, [&measurements](unsigned i1, unsigned i2) {
+      const auto &m1 = measurements[i1];
+      const auto &m2 = measurements[i2];
+      return m1.invr > m2.invr;
+    });
 
     for (unsigned sidx : sortedIndices) {
       const PreprocessedMeasurement &m = measurements[sidx];
@@ -467,19 +465,19 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
       continue;
     }
 
-    float cotThetaEstimate = static_cast<float>((sp[2]->z() - sp[0]->z()) /
-                                                (sp[2]->r() - sp[0]->r()));
-    float cotThetaEstimate01 = static_cast<float>((sp[1]->z() - sp[0]->z()) /
-                                                  (sp[1]->r() - sp[0]->r()));
-    float cotThetaEstimate12 = static_cast<float>((sp[2]->z() - sp[1]->z()) /
-                                                  (sp[2]->r() - sp[1]->r()));
+    auto cotThetaEstimate = static_cast<float>((sp[2]->z() - sp[0]->z()) /
+                                               (sp[2]->r() - sp[0]->r()));
+    auto cotThetaEstimate01 = static_cast<float>((sp[1]->z() - sp[0]->z()) /
+                                                 (sp[1]->r() - sp[0]->r()));
+    auto cotThetaEstimate12 = static_cast<float>((sp[2]->z() - sp[1]->z()) /
+                                                 (sp[2]->r() - sp[1]->r()));
     if (std::abs(cotThetaEstimate01 - cotThetaEstimate12) > 0.1f) {
       ACTS_VERBOSE("Large difference in cotTheta " << cotThetaEstimate01 << " "
                                                    << cotThetaEstimate12);
       continue;
     }
     seeds.emplace_back(*sp[0], *sp[1], *sp[2]);
-    float z = static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
+    auto z = static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
     seeds.back().setVertexZ(z);
 
     ACTS_VERBOSE(seedIndex << ": solution x: " << s.xBegin() << " " << s.xSize()
@@ -537,11 +535,10 @@ void AdaptiveHoughTransformSeeder::deduplicate(
     return a->indices() == b->indices();
   };
 
-  std::ranges::sort(std::begin(op), std::end(op), binaryPredSort);
-  auto endOfUniqueSections =
-      std::unique(std::begin(op), std::end(op), binaryPredUnique);
+  std::ranges::sort(op, binaryPredSort);
+  auto [rbegin, rend] = std::ranges::unique(op, binaryPredUnique);
   std::deque<AccumulatorSection> temp;
-  for (auto sPtr = std::begin(op); sPtr != endOfUniqueSections; ++sPtr) {
+  for (auto sPtr = std::begin(op); sPtr != rbegin; ++sPtr) {
     temp.push_back(**sPtr);
   }
   input = std::move(temp);
