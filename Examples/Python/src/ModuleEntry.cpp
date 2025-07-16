@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/ActsVersion.hpp"
+#include "ActsPython/Module/Entries.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 
 #include <tuple>
@@ -78,30 +78,13 @@ void addHashing(Context& ctx);
 
 }  // namespace ActsPython
 
-using namespace ActsPython;
+void ActsPython::addLegacyExamplesModule(Context& ctx) {
+  auto& m = ctx.get("main");
 
-PYBIND11_MODULE(ActsPythonBindings, m) {
-  Context ctx;
-  ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
   ctx.modules["examples"] = mex;
   auto prop = m.def_submodule("_propagator");
   ctx.modules["propagation"] = prop;
-  m.doc() = "Acts";
-
-  m.attr("__version__") =
-      std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
-
-  {
-    auto mv = m.def_submodule("version");
-
-    mv.attr("major") = Acts::VersionMajor;
-    mv.attr("minor") = Acts::VersionMinor;
-    mv.attr("patch") = Acts::VersionPatch;
-
-    mv.attr("commit_hash") = Acts::CommitHash;
-    mv.attr("commit_hash_short") = Acts::CommitHashShort;
-  }
 
   addContext(ctx);
   addAny(ctx);

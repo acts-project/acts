@@ -620,11 +620,12 @@ if(ACTS_BUILD_ODD)
     endif()
 endif()
 
-# python bindings
-add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
+# python bindings
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+add_subdirectory_if(Examples/Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

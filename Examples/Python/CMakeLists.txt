@@ -1,51 +1,38 @@
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
-file(MAKE_DIRECTORY ${_python_dir})
-file(MAKE_DIRECTORY ${_python_dir}/acts)
-
 set(_python_install_dir "python/acts")
 
-pybind11_add_module(ActsPythonBindings
-  src/ModuleEntry.cpp
-  src/Framework.cpp
-  src/Base.cpp
-  src/Detector.cpp
-  src/Digitization.cpp
-  src/Material.cpp
-  src/Geometry.cpp
-  src/GeometryBuildingGen1.cpp
-  src/Blueprint.cpp
-  src/ExampleAlgorithms.cpp
-  src/MagneticField.cpp
-  src/Output.cpp
-  src/Input.cpp
-  src/Propagation.cpp
-  src/Navigation.cpp
-  src/Generators.cpp
-  src/Obj.cpp
-  src/TruthTracking.cpp
-  src/TrackFitting.cpp
-  src/TrackFinding.cpp
-  src/Vertexing.cpp
-  src/AmbiguityResolution.cpp
-  src/EventData.cpp
-  src/Utilities.cpp
-)
-install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
-
-set_target_properties(
+target_sources(
     ActsPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-)
-set_target_properties(
-    ActsPythonBindings
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
+    PRIVATE
+        src/ModuleEntry.cpp
+        src/Framework.cpp
+        src/Base.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/Material.cpp
+        src/Geometry.cpp
+        src/GeometryBuildingGen1.cpp
+        src/Blueprint.cpp
+        src/ExampleAlgorithms.cpp
+        src/MagneticField.cpp
+        src/Output.cpp
+        src/Input.cpp
+        src/Propagation.cpp
+        src/Navigation.cpp
+        src/Generators.cpp
+        src/Obj.cpp
+        src/TruthTracking.cpp
+        src/TrackFitting.cpp
+        src/TrackFinding.cpp
+        src/Vertexing.cpp
+        src/AmbiguityResolution.cpp
+        src/EventData.cpp
+        src/Utilities.cpp
 )
 
 target_link_libraries(
     ActsPythonBindings
     PUBLIC
-        ActsCore
-        ActsPythonUtilities
         ActsExamplesFramework
         ActsExamplesGeometry
         ActsExamplesDetectorGeneric
