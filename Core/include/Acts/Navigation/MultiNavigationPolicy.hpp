@@ -52,7 +52,8 @@ class MultiNavigationPolicy final : public INavigationPolicy {
       const override;
 
   std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup) const override;
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const override;
 
  private:
   /// Initialize navigation candidates by calling all contained policies

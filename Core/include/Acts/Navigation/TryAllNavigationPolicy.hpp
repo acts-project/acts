@@ -55,7 +55,8 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   void connect(NavigationDelegate& delegate) const override;
 
   std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup) const override;
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const override;
 
  private:
   Config m_cfg;
