@@ -10,7 +10,12 @@
 
 #include <variant>
 
-namespace detray::io {
+namespace detray {
+
+using dindex = unsigned int;
+
+namespace io {
+
 struct detector_payload;
 struct transform_payload;
 struct mask_payload;
@@ -29,7 +34,8 @@ struct detector_grids_payload;
 
 enum class accel_id : unsigned int;
 
-}  // namespace detray::io
+}  // namespace io
+}  // namespace detray
 
 namespace Acts {
 using DetraySurfaceMaterial =
