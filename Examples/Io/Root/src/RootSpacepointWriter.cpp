@@ -104,7 +104,7 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     m_geometryId1 = sl1.geometryId().value();
     if (sp.sourceLinks().size() == 2) {
       const auto& sl2 = sp.sourceLinks().at(1).get<IndexSourceLink>();
-      m_measurementId2 = sl1.index();
+      m_measurementId2 = sl2.index();
       m_geometryId2 = sl2.geometryId().value();
     }
     // A spacepoint is fake if the measurements have no common particle
