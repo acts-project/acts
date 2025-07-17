@@ -69,11 +69,8 @@ void createDoubletsImpl(
                              static_cast<int>(value > max));
   };
 
-  const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
+  const auto calculateError = [&](float varianceZO, float varianceRO,
                                   float iDeltaR2, float cotTheta) {
-    const float varianceZO = otherSp.varianceZ();
-    const float varianceRO = otherSp.varianceR();
-
     return iDeltaR2 * ((varianceZM + varianceZO) +
                        (cotTheta * cotTheta) * (varianceRM + varianceRO));
   };
@@ -100,12 +97,11 @@ void createDoubletsImpl(
     candidateSps = candidateSps.subrange(offset);
   }
 
-  for (ConstSpacePointProxy2 otherSp : candidateSps) {
-    const float xO = otherSp.x();
-    const float yO = otherSp.y();
-    const float zO = otherSp.z();
-    const float rO = otherSp.r();
-
+  const SpacePointContainer2& container = candidateSps.container();
+  for (auto [indexO, xO, yO, zO, rO, varianceZO, varianceRO] : candidateSps.zip(
+           container.xColumn(), container.yColumn(), container.zColumn(),
+           container.rColumn(), container.varianceZColumn(),
+           container.varianceRColumn())) {
     if constexpr (isBottomCandidate) {
       deltaR = rM - rO;
 
@@ -185,12 +181,12 @@ void createDoubletsImpl(
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
 
-      const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+      const float er =
+          calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
       // fill output vectors
       compatibleDoublets.emplace_back(
-          otherSp.index(),
-          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+          indexO, {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
       continue;
     }
 
@@ -256,11 +252,11 @@ void createDoubletsImpl(
       }
     }
 
-    const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+    const float er = calculateError(varianceZO, varianceRO, iDeltaR2, cotTheta);
 
     // fill output vectors
     compatibleDoublets.emplace_back(
-        otherSp.index(), {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+        indexO, {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
   }
 }
 
