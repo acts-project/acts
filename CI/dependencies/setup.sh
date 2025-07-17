@@ -133,7 +133,7 @@ echo "Location:"
 # spack location --help
 # spack location --repo builtin
 # @TODO: Fix this with --repo builtin for newer spack version
-pushd /root/.spack/package_repos/*/builtin
+pushd /root/.spack/package_repos/*/repos/spack_repo/builtin
 git status
 git log -1
 git checkout ${_spack_repo_version}
