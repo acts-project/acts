@@ -130,9 +130,10 @@ _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
 echo "Location:"
-spack location --help
-spack location --repo builtin
-pushd $(spack location --repo builtin)
+# spack location --help
+# spack location --repo builtin
+# @TODO: Fix this with --repo builtin for newer spack version
+pushd /root/.spack/package_repos/*/builtin
 git status
 git log -1
 git checkout ${_spack_repo_version}
