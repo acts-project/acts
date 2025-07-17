@@ -133,7 +133,12 @@ echo "Location:"
 # spack location --help
 # spack location --repo builtin
 # @TODO: Fix this with --repo builtin for newer spack version
+#
+if [ -n "${GITLAB_CI:-}" ]; then
 pushd /root/.spack/package_repos/*/repos/spack_repo/builtin
+else
+pushd /github/home/.spack/package_repos/*/repos/spack_repo/builtin
+fi
 git status
 git log -1
 git checkout ${_spack_repo_version}
