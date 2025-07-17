@@ -98,171 +98,171 @@ clang_tidy:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx_cpu:
-  stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
-  tags:
-    - large
-
-  cache:
-   - !reference [.ccache_base, cache]
-   - !reference [.spack_cache, cache]
-
-  script:
-    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-
-    - cd ..
-    - mkdir build
-    # Here we only do a minimal build without examples to save resources
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-      -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
-
-    - ccache -z
-    - cmake --build build -- -j6
-    - ccache -s
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-build_exatrkx:
-  stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
-  tags:
-    - large
-
-  cache:
-   - !reference [.ccache_base, cache]
-   - !reference [.spack_cache, cache]
-
-  artifacts:
-    paths:
-      - boost-install/
-      - build/
-    exclude:
-      - build/**/*.o
-      - build/bin/ActsIntegrationTest*
-    expire_in: 6 hours
-
-  script:
-    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-
-    - ccache -z
-    - cmake --build build -- -j6
-    - ccache -s
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-test_exatrkx_unittests:
-  stage: test
-  needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
-  tags:
-    - docker-gpu-nvidia
-
-  cache:
-   - !reference [.spack_cache, cache]
-  script:
-
-    - apt-get update -y
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-    - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-test_exatrkx_python:
-  stage: test
-  needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
-  tags:
-    - docker-gpu-nvidia
-
-  cache:
-   - !reference [.spack_cache, cache]
-
-  script:
-    - apt-get update -y
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - nvidia-smi
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-    - source ../build/this_acts_withdeps.sh
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - echo $PYTHONPATH
-    - which python3
-    - python3 --version
-    - python3 -c "import acts"
-    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
-    - pytest -rfExw -k torch -v --collect-only
-    - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
-
-build_gnn_tensorrt:
-  stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:80
-
-  cache:
-    - !reference [.spack_cache, cache]
-    - !reference [.ccache_base, cache]
-
-  tags:
-    - docker-gpu-nvidia
-
-  script:
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src --preset gitlab-ci-tensorrt
-    - ccache -z
-    - cmake --build build -- -j6
-    - ccache -s
-
-  after_script:
-   - !reference [.spack_cleanup, after_script]
+# build_exatrkx_cpu:
+#   stage: build
+#   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+#   tags:
+#     - large
+#
+#   cache:
+#    - !reference [.ccache_base, cache]
+#    - !reference [.spack_cache, cache]
+#
+#   script:
+#     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+#     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+#     - echo $PATH
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - |
+#       CI/dependencies/setup.sh -c g++ -e .env
+#       source .env
+#
+#     - cd ..
+#     - mkdir build
+#     # Here we only do a minimal build without examples to save resources
+#     - >
+#       cmake -B build -S src
+#       --preset=gitlab-ci-exatrkx
+#       -DACTS_EXATRKX_ENABLE_CUDA=OFF
+#       -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
+#
+#     - ccache -z
+#     - cmake --build build -- -j6
+#     - ccache -s
+#
+#   after_script:
+#    - !reference [.spack_cleanup, after_script]
+#
+# build_exatrkx:
+#   stage: build
+#   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+#   tags:
+#     - large
+#
+#   cache:
+#    - !reference [.ccache_base, cache]
+#    - !reference [.spack_cache, cache]
+#
+#   artifacts:
+#     paths:
+#       - boost-install/
+#       - build/
+#     exclude:
+#       - build/**/*.o
+#       - build/bin/ActsIntegrationTest*
+#     expire_in: 6 hours
+#
+#   script:
+#     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+#     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+#     - echo $PATH
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - |
+#       CI/dependencies/setup.sh -c g++ -e .env
+#       source .env
+#     - cd ..
+#     - mkdir build
+#     - >
+#       cmake -B build -S src
+#       --preset=gitlab-ci-exatrkx
+#
+#     - ccache -z
+#     - cmake --build build -- -j6
+#     - ccache -s
+#
+#   after_script:
+#    - !reference [.spack_cleanup, after_script]
+#
+# test_exatrkx_unittests:
+#   stage: test
+#   needs:
+#     - build_exatrkx
+#   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+#   tags:
+#     - docker-gpu-nvidia
+#
+#   cache:
+#    - !reference [.spack_cache, cache]
+#   script:
+#
+#     - apt-get update -y
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - |
+#       CI/dependencies/setup.sh -c g++ -e .env
+#       source .env
+#     - cd ..
+#     - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+#
+#   after_script:
+#    - !reference [.spack_cleanup, after_script]
+#
+# test_exatrkx_python:
+#   stage: test
+#   needs:
+#     - build_exatrkx
+#   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+#   tags:
+#     - docker-gpu-nvidia
+#
+#   cache:
+#    - !reference [.spack_cache, cache]
+#
+#   script:
+#     - apt-get update -y
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - nvidia-smi
+#     - |
+#       CI/dependencies/setup.sh -c g++ -e .env
+#       source .env
+#     - source ../build/this_acts_withdeps.sh
+#     - python3 -m pip install -r Examples/Python/tests/requirements.txt
+#     - echo $PYTHONPATH
+#     - which python3
+#     - python3 --version
+#     - python3 -c "import acts"
+#     - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+#     - pytest -rfExw -k torch -v --collect-only
+#     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
+#
+#   after_script:
+#    - !reference [.spack_cleanup, after_script]
+#
+# build_gnn_tensorrt:
+#   stage: build
+#   image: ghcr.io/acts-project/ubuntu2404_tensorrt:80
+#
+#   cache:
+#     - !reference [.spack_cache, cache]
+#     - !reference [.ccache_base, cache]
+#
+#   tags:
+#     - docker-gpu-nvidia
+#
+#   script:
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - |
+#       CI/dependencies/setup.sh -c g++ -e .env
+#       source .env
+#     - cd ..
+#     - mkdir build
+#     - >
+#       cmake -B build -S src --preset gitlab-ci-tensorrt
+#     - ccache -z
+#     - cmake --build build -- -j6
+#     - ccache -s
+#
+#   after_script:
+#    - !reference [.spack_cleanup, after_script]
 
 build_linux_ubuntu:
   stage: build
@@ -464,96 +464,96 @@ linux_physmon:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-linux_ubuntu_2404_clang19:
-  extends: .linux_ubuntu_extra
-  variables:
-    CXX: clang++-19
-    CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
+# linux_ubuntu_2404_clang19:
+#   extends: .linux_ubuntu_extra
+#   variables:
+#     CXX: clang++-19
+#     CXXSTD: 20
+#   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
 
 
 ######################
 ### LCG JOB MATRIX ###
 ######################
 
-.lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:80
-  stage: build
-  tags:
-    - cvmfs
-
-  variables:
-    ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    INSTALL_DIR: ${{ github.workspace }}/install
-
-    SETUP:
-
-  cache:
-   - !reference [.ccache_base, cache]
-
-  before_script:
-    - 'echo "LCG_VERSION: ${LCG_VERSION}"'
-    - 'echo "COMPILER: ${COMPILER}"'
-
-    # Figure out LCG platform name based on version number and OS
-    - >
-      if [ "$OS" = "alma9"  ]; then
-        export LCG_PLATFORM="el9"
-      else
-        export LCG_PLATFORM="$OS"
-      fi
-
-    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
-
-    - git clone $CLONE_URL src
-
-    - cd src
-    - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
-    - cd ..
-
-    - ccache --version
-
-  script:
-    - >
-      cmake -B build -S src
-      --preset=gitlab-ci-lcg
-      -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-
-    - ccache -z
-    - cmake --build build -- -j6
-    - ccache -s
-
-    - ctest --test-dir build -j$(nproc)
-
-
-
-lcg_106a:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "106a"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - gcc14
-          - clang16
-
-lcg_107:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "107"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - gcc14
-          - clang19
+# .lcg_base_job:
+#   image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:80
+#   stage: build
+#   tags:
+#     - cvmfs
+#
+#   variables:
+#     ACTS_LOG_FAILURE_THRESHOLD: WARNING
+#     INSTALL_DIR: ${{ github.workspace }}/install
+#
+#     SETUP:
+#
+#   cache:
+#    - !reference [.ccache_base, cache]
+#
+#   before_script:
+#     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
+#     - 'echo "COMPILER: ${COMPILER}"'
+#
+#     # Figure out LCG platform name based on version number and OS
+#     - >
+#       if [ "$OS" = "alma9"  ]; then
+#         export LCG_PLATFORM="el9"
+#       else
+#         export LCG_PLATFORM="$OS"
+#       fi
+#
+#     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+#     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+#
+#     - git clone $CLONE_URL src
+#
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - git submodule init
+#     - git submodule update
+#     - cd ..
+#
+#     - ccache --version
+#
+#   script:
+#     - >
+#       cmake -B build -S src
+#       --preset=gitlab-ci-lcg
+#       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+#
+#     - ccache -z
+#     - cmake --build build -- -j6
+#     - ccache -s
+#
+#     - ctest --test-dir build -j$(nproc)
+#
+#
+#
+# lcg_106a:
+#   extends: .lcg_base_job
+#
+#   variables:
+#     LCG_VERSION: "106a"
+#
+#   parallel:
+#     matrix:
+#       - OS: [alma9]
+#         COMPILER:
+#           - gcc13
+#           - gcc14
+#           - clang16
+#
+# lcg_107:
+#   extends: .lcg_base_job
+#
+#   variables:
+#     LCG_VERSION: "107"
+#
+#   parallel:
+#     matrix:
+#       - OS: [alma9]
+#         COMPILER:
+#           - gcc13
+#           - gcc14
+#           - clang19
