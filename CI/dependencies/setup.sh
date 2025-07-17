@@ -129,6 +129,9 @@ fi
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
+echo "Location:"
+spack location --help
+spack location --repo builtin
 pushd $(spack location --repo builtin)
 git status
 git log -1
