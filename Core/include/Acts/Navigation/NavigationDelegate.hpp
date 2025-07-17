@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Frustum.hpp"
 
 namespace Acts {
 
@@ -19,6 +20,7 @@ class NavigationStream;
 class AppendOnlyNavigationStream;
 class NavigationPolicyState;
 class Logger;
+
 
 /// Struct that serves as the argument to the navigation delegate.
 /// It is not supposed to be used as an lvalue.
@@ -29,6 +31,7 @@ struct NavigationArguments {
   Vector3 direction{};
 
   /// Boundary tolerance for surface intersection calculations
+
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 };
 
