@@ -4,7 +4,7 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-06-08
+  SPACK_VERSION: develop-2025-07-06
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
   DEPENDENCY_TAG: v11.1.0
@@ -23,7 +23,7 @@ variables:
    - key:
        files:
          - CI/dependencies/setup_spack.sh
-       prefix: spack_${SPACK_VERSION}_r1
+       prefix: spack_${SPACK_VERSION}
      paths:
       - spack
       - .spack
