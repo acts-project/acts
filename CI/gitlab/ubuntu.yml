@@ -1,0 +1,186 @@
+build_linux_ubuntu:
+  extends: .ccache_and_spack_base
+  stage: build
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+
+  artifacts:
+    paths:
+      - build/
+    exclude:
+      - build/bin/ActsUnitTest*
+      - build/bin/ActsIntegrationTest*
+      - build/**/*.o
+    expire_in: 1 day
+
+  script:
+    - echo $PATH
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+
+    - |
+      src/CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+
+    - mkdir build
+    - >
+      cmake -B build -S src
+      --preset=gitlab-ci
+      -DACTS_BUILD_PLUGIN_ONNX=ON
+
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
+
+linux_test_examples:
+  extends: .spack_base
+  stage: test
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  needs: [build_linux_ubuntu]
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+    - cd ..
+
+    - geant4-config --install-datasets
+    - source build/this_acts_withdeps.sh
+    - cd src
+    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - pytest -rfExw -k "not exatrkx" -v
+
+linux_physmon:
+  extends: .spack_base
+  stage: test
+  needs: [build_linux_ubuntu]
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+
+  artifacts:
+    when: always
+    paths:
+      - src/physmon
+    expire_in: 1 week
+
+  script:
+    - apt-get update && apt-get install -y git-lfs time
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+    - cd ..
+
+    - git config --global safe.directory "$GITHUB_WORKSPACE"
+    - python3 -m pip install histcmp==0.8.1 matplotlib
+    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
+    - geant4-config --install-datasets
+    - venv_python=$(which python3)
+    - echo $venv_python
+    - source build/this_acts_withdeps.sh
+    - export PATH=$(dirname $venv_python):$PATH
+    - echo $PATH
+    - which python3
+    - cd src
+    - CI/physmon/phys_perf_mon.sh all physmon
+
+###############################
+### UBUNTU EXTRA JOB MATRIX ###
+###############################
+
+.linux_ubuntu_extra:
+  extends: .ccache_and_spack_base
+  variables:
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+
+  stage: build
+
+  script:
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - |
+      CI/dependencies/setup.sh -c ${CXX} -e .env
+      source .env
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      --preset=gitlab-ci
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_CXX_COMPILER=${CXX}
+
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build > install.log
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_CXX_COMPILER=${CXX}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
+
+linux_ubuntu_2404_clang19:
+  extends: .linux_ubuntu_extra
+  variables:
+    CXX: clang++-19
+    CXXSTD: 20
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
