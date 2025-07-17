@@ -12,158 +12,164 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <memory>
 #include <stdexcept>
+#include <type_traits>
+
+#include <boost/mp11.hpp>
 
 namespace Acts::Experimental {
 
-namespace {
-
-enum class SpacePointCandidateType { Bottom, Top };
-
-/// Iterates over dublets and tests the compatibility by applying a series of
-/// cuts that can be tested with only two SPs.
-///
-/// @tparam candidate_type Type of space point candidate (e.g. Bottom or Top)
-/// @tparam interaction_point_cut Whether to apply the interaction point cut
-/// @tparam sorted_in_r Whether the space points are sorted in radius
-///
-/// @param config Doublet cuts that define the compatibility of space points
-/// @param middleSp Space point candidate to be used as middle SP in a seed
-/// @param middleSpInfo Information about the middle space point
-/// @param candidateSps Range or subet of space points to be used as candidates
-///   for middle SP in a seed. In case of `sortedInR` - an offset will be
-///   applied based on the middle SP radius.
-/// @param compatibleDoublets Output container for compatible doublets
-template <SpacePointCandidateType candidateType, bool interactionPointCut,
-          bool sortedInR, typename CandidateSps>
-void createDoubletsImpl(
-    const DoubletSeedFinder::DerivedConfig& config,
-    const ConstSpacePointProxy2& middleSp,
-    const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
-    CandidateSps& candidateSps,
-    DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) {
-  constexpr bool isBottomCandidate =
+template <DoubletSeedFinder::SpacePointCandidateType candidateType,
+          bool interactionPointCut, bool sortedInR>
+class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
+ public:
+  static constexpr bool isBottomCandidate =
       candidateType == SpacePointCandidateType::Bottom;
 
-  const float impactMax =
-      isBottomCandidate ? -config.impactMax : config.impactMax;
+  ~Impl() override = default;
 
-  const float xM = middleSp.x();
-  const float yM = middleSp.y();
-  const float zM = middleSp.z();
-  const float rM = middleSp.r();
-  const float varianceZM = middleSp.varianceZ();
-  const float varianceRM = middleSp.varianceR();
+  /// Iterates over dublets and tests the compatibility by applying a series of
+  /// cuts that can be tested with only two SPs.
+  ///
+  /// @param config Doublet cuts that define the compatibility of space points
+  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle space point
+  /// @param candidateSps Range or subet of space points to be used as candidates
+  ///   for middle SP in a seed. In case of `sortedInR` - an offset will be
+  ///   applied based on the middle SP radius.
+  /// @param compatibleDoublets Output container for compatible doublets
+  template <typename CandidateSps>
+  void createDoubletsImpl(
+      const DoubletSeedFinder::DerivedConfig& config,
+      const ConstSpacePointProxy2& middleSp,
+      const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
+      const CandidateSps& candidateSps,
+      DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) const {
+    const float impactMax =
+        isBottomCandidate ? -config.impactMax : config.impactMax;
 
-  // equivalent to impactMax / (rM * rM);
-  const float vIPAbs = impactMax * middleSpInfo.uIP2;
+    const float xM = middleSp.x();
+    const float yM = middleSp.y();
+    const float zM = middleSp.z();
+    const float rM = middleSp.r();
+    const float varianceZM = middleSp.varianceZ();
+    const float varianceRM = middleSp.varianceR();
 
-  float deltaR = 0.;
-  float deltaZ = 0.;
+    // equivalent to impactMax / (rM * rM);
+    const float vIPAbs = impactMax * middleSpInfo.uIP2;
 
-  const auto outsideRangeCheck = [](const float value, const float min,
-                                    const float max) {
-    // intentionally using `|` after profiling. faster due to better branch
-    // prediction
-    return static_cast<bool>(static_cast<int>(value < min) |
-                             static_cast<int>(value > max));
-  };
+    float deltaR = 0.;
+    float deltaZ = 0.;
 
-  const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
-                                  float iDeltaR2, float cotTheta) {
-    const float varianceZO = otherSp.varianceZ();
-    const float varianceRO = otherSp.varianceR();
+    const auto outsideRangeCheck = [](const float value, const float min,
+                                      const float max) {
+      // intentionally using `|` after profiling. faster due to better branch
+      // prediction
+      return static_cast<bool>(static_cast<int>(value < min) |
+                               static_cast<int>(value > max));
+    };
 
-    return iDeltaR2 * ((varianceZM + varianceZO) +
-                       (cotTheta * cotTheta) * (varianceRM + varianceRO));
-  };
+    const auto calculateError = [&](const ConstSpacePointProxy2& otherSp,
+                                    float iDeltaR2, float cotTheta) {
+      const float varianceZO = otherSp.varianceZ();
+      const float varianceRO = otherSp.varianceR();
 
-  if constexpr (sortedInR) {
-    // find the first SP inside the radius region of interest and update
-    // the iterator so we don't need to look at the other SPs again
-    std::uint32_t offset = 0;
+      return iDeltaR2 * ((varianceZM + varianceZO) +
+                         (cotTheta * cotTheta) * (varianceRM + varianceRO));
+    };
+
     for (ConstSpacePointProxy2 otherSp : candidateSps) {
+      const float xO = otherSp.x();
+      const float yO = otherSp.y();
+      const float zO = otherSp.z();
+      const float rO = otherSp.r();
+
       if constexpr (isBottomCandidate) {
-        // if r-distance is too big, try next SP in bin
-        if (rM - otherSp.r() <= config.deltaRMax) {
-          break;
+        deltaR = rM - rO;
+
+        if constexpr (sortedInR) {
+          // if r-distance is too small we are done
+          if (deltaR < config.deltaRMin) {
+            break;
+          }
         }
       } else {
-        // if r-distance is too small, try next SP in bin
-        if (otherSp.r() - rM >= config.deltaRMin) {
-          break;
+        deltaR = rO - rM;
+
+        if constexpr (sortedInR) {
+          // if r-distance is too big we are done
+          if (deltaR > config.deltaRMax) {
+            break;
+          }
         }
       }
 
-      ++offset;
-    }
-    candidateSps = candidateSps.subrange(offset);
-  }
-
-  for (ConstSpacePointProxy2 otherSp : candidateSps) {
-    const float xO = otherSp.x();
-    const float yO = otherSp.y();
-    const float zO = otherSp.z();
-    const float rO = otherSp.r();
-
-    if constexpr (isBottomCandidate) {
-      deltaR = rM - rO;
-
-      if constexpr (sortedInR) {
-        // if r-distance is too small we are done
-        if (deltaR < config.deltaRMin) {
-          break;
+      if constexpr (!sortedInR) {
+        if (outsideRangeCheck(deltaR, config.deltaRMin, config.deltaRMax)) {
+          continue;
         }
       }
-    } else {
-      deltaR = rO - rM;
 
-      if constexpr (sortedInR) {
-        // if r-distance is too big we are done
-        if (deltaR > config.deltaRMax) {
-          break;
-        }
+      if constexpr (isBottomCandidate) {
+        deltaZ = zM - zO;
+      } else {
+        deltaZ = zO - zM;
       }
-    }
 
-    if constexpr (!sortedInR) {
-      if (outsideRangeCheck(deltaR, config.deltaRMin, config.deltaRMax)) {
+      if (outsideRangeCheck(deltaZ, config.deltaZMin, config.deltaZMax)) {
         continue;
       }
-    }
 
-    if constexpr (isBottomCandidate) {
-      deltaZ = zM - zO;
-    } else {
-      deltaZ = zO - zM;
-    }
+      // the longitudinal impact parameter zOrigin is defined as (zM - rM *
+      // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
+      // point duplet but instead we calculate (zOrigin * deltaR) and multiply
+      // collisionRegion by deltaR to avoid divisions
+      const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
+      // check if duplet origin on z axis within collision region
+      if (outsideRangeCheck(zOriginTimesDeltaR,
+                            config.collisionRegionMin * deltaR,
+                            config.collisionRegionMax * deltaR)) {
+        continue;
+      }
 
-    if (outsideRangeCheck(deltaZ, config.deltaZMin, config.deltaZMax)) {
-      continue;
-    }
+      // if interactionPointCut is false we apply z cuts before coordinate
+      // transformation to avoid unnecessary calculations. If
+      // interactionPointCut is true we apply the curvature cut first because it
+      // is more frequent but requires the coordinate transformation
+      if constexpr (!interactionPointCut) {
+        // check if duplet cotTheta is within the region of interest
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
+                              config.cotThetaMax * deltaR)) {
+          continue;
+        }
 
-    // the longitudinal impact parameter zOrigin is defined as (zM - rM *
-    // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
-    // point duplet but instead we calculate (zOrigin * deltaR) and multiply
-    // collisionRegion by deltaR to avoid divisions
-    const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
-    // check if duplet origin on z axis within collision region
-    if (outsideRangeCheck(zOriginTimesDeltaR,
-                          config.collisionRegionMin * deltaR,
-                          config.collisionRegionMax * deltaR)) {
-      continue;
-    }
+        // transform SP coordinates to the u-v reference frame
+        const float deltaX = xO - xM;
+        const float deltaY = yO - yM;
 
-    // if interactionPointCut is false we apply z cuts before coordinate
-    // transformation to avoid unnecessary calculations. If
-    // interactionPointCut is true we apply the curvature cut first because it
-    // is more frequent but requires the coordinate transformation
-    if constexpr (!interactionPointCut) {
-      // check if duplet cotTheta is within the region of interest
-      // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-      // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                            config.cotThetaMax * deltaR)) {
+        const float xNewFrame =
+            deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
+        const float yNewFrame =
+            deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
+
+        const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
+        const float iDeltaR2 = 1 / deltaR2;
+
+        const float uT = xNewFrame * iDeltaR2;
+        const float vT = yNewFrame * iDeltaR2;
+
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        const float cotTheta = deltaZ * iDeltaR;
+
+        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+
+        // fill output vectors
+        compatibleDoublets.emplace_back(
+            otherSp.index(),
+            {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
         continue;
       }
 
@@ -182,43 +188,61 @@ void createDoubletsImpl(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      const float cotTheta = deltaZ * iDeltaR;
+      // We check the interaction point by evaluating the minimal distance
+      // between the origin and the straight line connecting the two points in
+      // the doublets. Using a geometric similarity, the Im is given by
+      // yNewFrame * rM / deltaR <= config.impactMax
+      // However, we make here an approximation of the impact parameter
+      // which is valid under the assumption yNewFrame / xNewFrame is small
+      // The correct computation would be:
+      // yNewFrame * yNewFrame * rM * rM <= config.impactMax *
+      // config.impactMax * deltaR2
+      if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
+        // check if duplet cotTheta is within the region of interest
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
+                              config.cotThetaMax * deltaR)) {
+          continue;
+        }
 
-      const float er = calculateError(otherSp, iDeltaR2, cotTheta);
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        const float cotTheta = deltaZ * iDeltaR;
 
-      // fill output vectors
-      compatibleDoublets.emplace_back(
-          otherSp.index(),
-          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
-      continue;
-    }
+        // discard bottom-middle doublets in a certain (r, eta) region according
+        // to detector specific cuts
+        if constexpr (isBottomCandidate) {
+          if (config.experimentCuts.connected() &&
+              !config.experimentCuts(rO, cotTheta)) {
+            continue;
+          }
+        }
 
-    // transform SP coordinates to the u-v reference frame
-    const float deltaX = xO - xM;
-    const float deltaY = yO - yM;
+        const float er = calculateError(otherSp, iDeltaR2, cotTheta);
 
-    const float xNewFrame =
-        deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
-    const float yNewFrame =
-        deltaY * middleSpInfo.cosPhiM - deltaX * middleSpInfo.sinPhiM;
+        // fill output vectors
+        compatibleDoublets.emplace_back(
+            otherSp.index(),
+            {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+        continue;
+      }
 
-    const float deltaR2 = deltaX * deltaX + deltaY * deltaY;
-    const float iDeltaR2 = 1 / deltaR2;
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
 
-    const float uT = xNewFrame * iDeltaR2;
-    const float vT = yNewFrame * iDeltaR2;
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
+      const float bCoef = vIP - aCoef * middleSpInfo.uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) * config.minHelixDiameter2 > 1 + aCoef * aCoef) {
+        continue;
+      }
 
-    // We check the interaction point by evaluating the minimal distance
-    // between the origin and the straight line connecting the two points in
-    // the doublets. Using a geometric similarity, the Im is given by
-    // yNewFrame * rM / deltaR <= config.impactMax
-    // However, we make here an approximation of the impact parameter
-    // which is valid under the assumption yNewFrame / xNewFrame is small
-    // The correct computation would be:
-    // yNewFrame * yNewFrame * rM * rM <= config.impactMax *
-    // config.impactMax * deltaR2
-    if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
@@ -245,54 +269,116 @@ void createDoubletsImpl(
       compatibleDoublets.emplace_back(
           otherSp.index(),
           {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
-      continue;
     }
-
-    // in the rotated frame the interaction point is positioned at x = -rM
-    // and y ~= impactParam
-    const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
-
-    // we can obtain aCoef as the slope dv/du of the linear function,
-    // estimated using du and dv between the two SP bCoef is obtained by
-    // inserting aCoef into the linear equation
-    const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
-    const float bCoef = vIP - aCoef * middleSpInfo.uIP;
-    // the distance of the straight line from the origin (radius of the
-    // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-    // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-    if ((bCoef * bCoef) * config.minHelixDiameter2 > 1 + aCoef * aCoef) {
-      continue;
-    }
-
-    // check if duplet cotTheta is within the region of interest
-    // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-    // cotThetaMax by deltaR to avoid division
-    if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                          config.cotThetaMax * deltaR)) {
-      continue;
-    }
-
-    const float iDeltaR = std::sqrt(iDeltaR2);
-    const float cotTheta = deltaZ * iDeltaR;
-
-    // discard bottom-middle doublets in a certain (r, eta) region according
-    // to detector specific cuts
-    if constexpr (isBottomCandidate) {
-      if (config.experimentCuts.connected() &&
-          !config.experimentCuts(rO, cotTheta)) {
-        continue;
-      }
-    }
-
-    const float er = calculateError(otherSp, iDeltaR2, cotTheta);
-
-    // fill output vectors
-    compatibleDoublets.emplace_back(
-        otherSp.index(), {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
   }
-}
 
-}  // namespace
+  void createDoublets(const DerivedConfig& config,
+                      const ConstSpacePointProxy2& middleSp,
+                      const MiddleSpInfo& middleSpInfo,
+                      SpacePointContainer2::ConstSubset& candidateSps,
+                      DoubletsForMiddleSp& compatibleDoublets) const override {
+    if constexpr (sortedInR) {
+      const float rM = middleSp.r();
+
+      // find the first SP inside the radius region of interest and update
+      // the iterator so we don't need to look at the other SPs again
+      std::uint32_t offset = 0;
+      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+        if constexpr (isBottomCandidate) {
+          // if r-distance is too big, try next SP in bin
+          if (rM - otherSp.r() <= config.deltaRMax) {
+            break;
+          }
+        } else {
+          // if r-distance is too small, try next SP in bin
+          if (otherSp.r() - rM >= config.deltaRMin) {
+            break;
+          }
+        }
+
+        ++offset;
+      }
+      candidateSps = candidateSps.container().subset(
+          candidateSps.subset().subspan(offset));
+    }
+
+    createDoubletsImpl(config, middleSp, middleSpInfo, candidateSps,
+                       compatibleDoublets);
+  }
+
+  void createDoublets(const DerivedConfig& config,
+                      const ConstSpacePointProxy2& middleSp,
+                      const MiddleSpInfo& middleSpInfo,
+                      SpacePointContainer2::ConstRange& candidateSps,
+                      DoubletsForMiddleSp& compatibleDoublets) const override {
+    if constexpr (sortedInR) {
+      const float rM = middleSp.r();
+
+      // find the first SP inside the radius region of interest and update
+      // the iterator so we don't need to look at the other SPs again
+      std::uint32_t offset = 0;
+      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+        if constexpr (isBottomCandidate) {
+          // if r-distance is too big, try next SP in bin
+          if (rM - otherSp.r() <= config.deltaRMax) {
+            break;
+          }
+        } else {
+          // if r-distance is too small, try next SP in bin
+          if (otherSp.r() - rM >= config.deltaRMin) {
+            break;
+          }
+        }
+
+        ++offset;
+      }
+      candidateSps = candidateSps.subrange(offset);
+    }
+
+    createDoubletsImpl(config, middleSp, middleSpInfo, candidateSps,
+                       compatibleDoublets);
+  }
+};
+
+std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
+    const DerivedConfig& config) {
+  using CandidateTypeOptions = boost::mp11::mp_list<
+      std::integral_constant<SpacePointCandidateType,
+                             SpacePointCandidateType::Bottom>,
+      std::integral_constant<SpacePointCandidateType,
+                             SpacePointCandidateType::Top>>;
+  using BooleanOptions =
+      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
+  using InteractionPointCutOptions = BooleanOptions;
+  using SortedInROptions = BooleanOptions;
+
+  using DoubletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, CandidateTypeOptions,
+                              InteractionPointCutOptions, SortedInROptions>;
+
+  std::shared_ptr<DoubletSeedFinder::ImplBase> result;
+  boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
+    using TupleType = decltype(option);
+    using CandidateType = boost::mp11::mp_first<TupleType>;
+    using InteractionPointCut = boost::mp11::mp_second<TupleType>;
+    using SortedInR = boost::mp11::mp_third<TupleType>;
+
+    const SpacePointCandidateType configCandidateType =
+        (config.candidateDirection == Direction::Forward())
+            ? SpacePointCandidateType::Top
+            : SpacePointCandidateType::Bottom;
+
+    if (configCandidateType == CandidateType::value &&
+        config.interactionPointCut == InteractionPointCut::value &&
+        config.sortedInR == SortedInR::value) {
+      result =
+          std::make_shared<DoubletSeedFinder::Impl<CandidateType::value,
+                                                   InteractionPointCut::value,
+                                                   SortedInR::value>>();
+    }
+  });
+  return result;
+}
 
 DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& cfg,
                                                 float bFieldInZ_)
@@ -313,68 +399,13 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
-DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg) : m_cfg(cfg) {}
-
-void DoubletSeedFinder::createDoublets(
-    const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    const SpacePointContainer2::ConstSubset& candidateSps,
-    DoubletsForMiddleSp& compatibleDoublets) const {
-  if (m_cfg.candidateDirection == Direction::Backward() &&
-      m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, false>(
-        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
+DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg)
+    : m_cfg(cfg), m_impl(makeImpl(m_cfg)) {
+  if (m_impl == nullptr) {
+    throw std::runtime_error(
+        "DoubletSeedFinder: No implementation found for the given "
+        "configuration");
   }
-
-  if (m_cfg.candidateDirection == Direction::Backward() &&
-      !m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, false>(
-        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
-  }
-
-  if (m_cfg.candidateDirection == Direction::Forward() &&
-      m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Top, true, false>(
-        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
-  }
-
-  if (m_cfg.candidateDirection == Direction::Forward() &&
-      !m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Top, false, false>(
-        config(), middleSp, middleSpInfo, candidateSps, compatibleDoublets);
-  }
-
-  throw std::logic_error("DoubletSeedFinder: unhandled configuration");
-}
-
-void DoubletSeedFinder::createDoubletsFromSortedInR(
-    const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-    SpacePointContainer2::ConstRange& candidateSpRange,
-    DoubletsForMiddleSp& compatibleDoublets) const {
-  if (m_cfg.candidateDirection == Direction::Backward() &&
-      m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, true, true>(
-        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
-  }
-
-  if (m_cfg.candidateDirection == Direction::Backward() &&
-      !m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Bottom, false, true>(
-        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
-  }
-
-  if (m_cfg.candidateDirection == Direction::Forward() &&
-      m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Top, true, true>(
-        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
-  }
-
-  if (m_cfg.candidateDirection == Direction::Forward() &&
-      !m_cfg.interactionPointCut) {
-    return createDoubletsImpl<SpacePointCandidateType::Top, false, true>(
-        config(), middleSp, middleSpInfo, candidateSpRange, compatibleDoublets);
-  }
-
-  throw std::logic_error("DoubletSeedFinder: unhandled configuration");
 }
 
 }  // namespace Acts::Experimental

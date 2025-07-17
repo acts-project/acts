@@ -105,9 +105,9 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::ConstSubset& bottomSps,
+    SpacePointContainer2::ConstSubset& bottomSps,
     const ConstSpacePointProxy2& middleSp,
-    const SpacePointContainer2::ConstSubset& topSps,
+    SpacePointContainer2::ConstSubset& topSps,
     SeedContainer2& outputSeeds) const {
   cache.candidatesCollector.setMaxElements(
       filter.config().maxSeedsPerSpMConf,
