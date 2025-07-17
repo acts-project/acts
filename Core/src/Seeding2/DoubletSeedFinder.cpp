@@ -27,6 +27,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
   static constexpr bool isBottomCandidate =
       candidateType == SpacePointCandidateType::Bottom;
 
+  explicit Impl(const DerivedConfig& config) : ImplBase(config) {}
   ~Impl() override = default;
 
   /// Iterates over dublets and tests the compatibility by applying a series of
@@ -41,13 +42,12 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
   /// @param compatibleDoublets Output container for compatible doublets
   template <typename CandidateSps>
   void createDoubletsImpl(
-      const DoubletSeedFinder::DerivedConfig& config,
       const ConstSpacePointProxy2& middleSp,
       const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
       const CandidateSps& candidateSps,
       DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
-        isBottomCandidate ? -config.impactMax : config.impactMax;
+        isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
     const float xM = middleSp.x();
     const float yM = middleSp.y();
@@ -90,7 +90,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
 
         if constexpr (sortedInR) {
           // if r-distance is too small we are done
-          if (deltaR < config.deltaRMin) {
+          if (deltaR < m_cfg.deltaRMin) {
             break;
           }
         }
@@ -99,14 +99,14 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
 
         if constexpr (sortedInR) {
           // if r-distance is too big we are done
-          if (deltaR > config.deltaRMax) {
+          if (deltaR > m_cfg.deltaRMax) {
             break;
           }
         }
       }
 
       if constexpr (!sortedInR) {
-        if (outsideRangeCheck(deltaR, config.deltaRMin, config.deltaRMax)) {
+        if (outsideRangeCheck(deltaR, m_cfg.deltaRMin, m_cfg.deltaRMax)) {
           continue;
         }
       }
@@ -117,7 +117,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, config.deltaZMin, config.deltaZMax)) {
+      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
         continue;
       }
 
@@ -128,8 +128,8 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
       if (outsideRangeCheck(zOriginTimesDeltaR,
-                            config.collisionRegionMin * deltaR,
-                            config.collisionRegionMax * deltaR)) {
+                            m_cfg.collisionRegionMin * deltaR,
+                            m_cfg.collisionRegionMax * deltaR)) {
         continue;
       }
 
@@ -141,8 +141,8 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                              config.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                              m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -191,18 +191,18 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       // We check the interaction point by evaluating the minimal distance
       // between the origin and the straight line connecting the two points in
       // the doublets. Using a geometric similarity, the Im is given by
-      // yNewFrame * rM / deltaR <= config.impactMax
+      // yNewFrame * rM / deltaR <= m_cfg.impactMax
       // However, we make here an approximation of the impact parameter
       // which is valid under the assumption yNewFrame / xNewFrame is small
       // The correct computation would be:
-      // yNewFrame * yNewFrame * rM * rM <= config.impactMax *
-      // config.impactMax * deltaR2
+      // yNewFrame * yNewFrame * rM * rM <= m_cfg.impactMax *
+      // m_cfg.impactMax * deltaR2
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                              config.cotThetaMax * deltaR)) {
+        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                              m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -212,8 +212,8 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
         // discard bottom-middle doublets in a certain (r, eta) region according
         // to detector specific cuts
         if constexpr (isBottomCandidate) {
-          if (config.experimentCuts.connected() &&
-              !config.experimentCuts(rO, cotTheta)) {
+          if (m_cfg.experimentCuts.connected() &&
+              !m_cfg.experimentCuts(rO, cotTheta)) {
             continue;
           }
         }
@@ -239,15 +239,15 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       // the distance of the straight line from the origin (radius of the
       // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
       // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-      if ((bCoef * bCoef) * config.minHelixDiameter2 > 1 + aCoef * aCoef) {
+      if ((bCoef * bCoef) * m_cfg.minHelixDiameter2 > 1 + aCoef * aCoef) {
         continue;
       }
 
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                            config.cotThetaMax * deltaR)) {
+      if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
+                            m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -257,8 +257,8 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       // discard bottom-middle doublets in a certain (r, eta) region according
       // to detector specific cuts
       if constexpr (isBottomCandidate) {
-        if (config.experimentCuts.connected() &&
-            !config.experimentCuts(rO, cotTheta)) {
+        if (m_cfg.experimentCuts.connected() &&
+            !m_cfg.experimentCuts(rO, cotTheta)) {
           continue;
         }
       }
@@ -272,8 +272,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
     }
   }
 
-  void createDoublets(const DerivedConfig& config,
-                      const ConstSpacePointProxy2& middleSp,
+  void createDoublets(const ConstSpacePointProxy2& middleSp,
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer2::ConstSubset& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
@@ -286,12 +285,12 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       for (ConstSpacePointProxy2 otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.r() <= config.deltaRMax) {
+          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
             break;
           }
         } else {
           // if r-distance is too small, try next SP in bin
-          if (otherSp.r() - rM >= config.deltaRMin) {
+          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
             break;
           }
         }
@@ -302,12 +301,11 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
           candidateSps.subset().subspan(offset));
     }
 
-    createDoubletsImpl(config, middleSp, middleSpInfo, candidateSps,
+    createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
 
-  void createDoublets(const DerivedConfig& config,
-                      const ConstSpacePointProxy2& middleSp,
+  void createDoublets(const ConstSpacePointProxy2& middleSp,
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer2::ConstRange& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
@@ -320,12 +318,12 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       for (ConstSpacePointProxy2 otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.r() <= config.deltaRMax) {
+          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
             break;
           }
         } else {
           // if r-distance is too small, try next SP in bin
-          if (otherSp.r() - rM >= config.deltaRMin) {
+          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
             break;
           }
         }
@@ -335,7 +333,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       candidateSps = candidateSps.subrange(offset);
     }
 
-    createDoubletsImpl(config, middleSp, middleSpInfo, candidateSps,
+    createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
 };
@@ -358,10 +356,10 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
 
   std::shared_ptr<DoubletSeedFinder::ImplBase> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
-    using TupleType = decltype(option);
-    using CandidateType = boost::mp11::mp_first<TupleType>;
-    using InteractionPointCut = boost::mp11::mp_second<TupleType>;
-    using SortedInR = boost::mp11::mp_third<TupleType>;
+    using OptionType = decltype(option);
+    using CandidateType = boost::mp11::mp_first<OptionType>;
+    using InteractionPointCut = boost::mp11::mp_second<OptionType>;
+    using SortedInR = boost::mp11::mp_third<OptionType>;
 
     const SpacePointCandidateType configCandidateType =
         (config.candidateDirection == Direction::Forward())
@@ -371,10 +369,15 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
     if (configCandidateType == CandidateType::value &&
         config.interactionPointCut == InteractionPointCut::value &&
         config.sortedInR == SortedInR::value) {
-      result =
-          std::make_shared<DoubletSeedFinder::Impl<CandidateType::value,
-                                                   InteractionPointCut::value,
-                                                   SortedInR::value>>();
+      if (result != nullptr) {
+        throw std::runtime_error(
+            "DoubletSeedFinder: Multiple implementations found for one "
+            "configuration");
+      }
+
+      result = std::make_shared<DoubletSeedFinder::Impl<
+          CandidateType::value, InteractionPointCut::value, SortedInR::value>>(
+          config);
     }
   });
   return result;
@@ -400,7 +403,7 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 }
 
 DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg)
-    : m_cfg(cfg), m_impl(makeImpl(m_cfg)) {
+    : m_impl(makeImpl(cfg)) {
   if (m_impl == nullptr) {
     throw std::runtime_error(
         "DoubletSeedFinder: No implementation found for the given "

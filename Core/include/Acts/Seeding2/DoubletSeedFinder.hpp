@@ -113,7 +113,7 @@ class DoubletSeedFinder {
 
   explicit DoubletSeedFinder(const DerivedConfig& cfg);
 
-  const DerivedConfig& config() const { return m_cfg; }
+  const DerivedConfig& config() const { return m_impl->config(); }
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
@@ -127,7 +127,7 @@ class DoubletSeedFinder {
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer2::ConstSubset& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(m_cfg, middleSp, middleSpInfo, candidateSps,
+    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
                            compatibleDoublets);
   }
 
@@ -144,26 +144,30 @@ class DoubletSeedFinder {
       const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
       SpacePointContainer2::ConstRange& candidateSps,
       DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(m_cfg, middleSp, middleSpInfo, candidateSps,
+    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
                            compatibleDoublets);
   }
 
  private:
   class ImplBase {
    public:
+    explicit ImplBase(DerivedConfig config) : m_cfg(config) {}
     virtual ~ImplBase() = default;
 
+    const DerivedConfig& config() const { return m_cfg; }
+
     virtual void createDoublets(
-        const DerivedConfig& config, const ConstSpacePointProxy2& middleSp,
-        const MiddleSpInfo& middleSpInfo,
+        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
         SpacePointContainer2::ConstSubset& candidateSps,
         DoubletsForMiddleSp& compatibleDoublets) const = 0;
 
     virtual void createDoublets(
-        const DerivedConfig& config, const ConstSpacePointProxy2& middleSp,
-        const MiddleSpInfo& middleSpInfo,
+        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
         SpacePointContainer2::ConstRange& candidateSpRange,
         DoubletsForMiddleSp& compatibleDoublets) const = 0;
+
+   protected:
+    DerivedConfig m_cfg;
   };
   enum class SpacePointCandidateType { Bottom, Top };
   template <SpacePointCandidateType candidateType, bool interactionPointCut,
@@ -172,7 +176,6 @@ class DoubletSeedFinder {
 
   static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
 
-  DerivedConfig m_cfg;
   std::shared_ptr<ImplBase> m_impl;
 };
 
