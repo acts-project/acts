@@ -23,7 +23,7 @@ variables:
    - key:
        files:
          - CI/dependencies/setup_spack.sh
-       prefix: spack_${SPACK_VERSION}
+       prefix: spack_${SPACK_VERSION}_r1
      paths:
       - spack
       - .spack
