@@ -277,11 +277,11 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
     const std::vector<PreprocessedMeasurement> &measurements) const {
   Acts::ScopedTimer st("splitInQuadrants", logger());
   const int nSplits = 8;
-  float wedgeWidth = static_cast<float>(2.0 * std::numbers::pi / nSplits);
+  const auto wedgeWidth = static_cast<float>(2.0 * std::numbers::pi / nSplits);
 
   for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
-    const float startPhi =
-        static_cast<float>(wedgeWidth * phiIndex - std::numbers::pi);
+    const auto startPhi = static_cast<float>(
+        wedgeWidth * static_cast<float>(phiIndex) - std::numbers::pi);
     stack.emplace_back(1.1f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
                        -config().qOverPtMin);
     stack.back().indices().resize(measurements.size());
