@@ -33,7 +33,7 @@ namespace py = pybind11;
 namespace ActsPython {
 
 void addGenerators(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto& mex = ctx.get("examples");
 
   {
     using Config = ActsExamples::EventGenerator::Config;

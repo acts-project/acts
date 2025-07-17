@@ -8,10 +8,10 @@
 
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 
 #include <pybind11/eval.h>
@@ -25,7 +25,7 @@ using namespace Acts;
 
 namespace ActsPython {
 
-/// A Ptyhon logger class that wraps the Acts logger
+/// A Python logger class that wraps the Acts logger
 class PythonLogger {
  public:
   PythonLogger(const std::string& name, Logging::Level level)
@@ -223,18 +223,16 @@ void addUtilities(Context& ctx) {
              "bType"_a, "e"_a)
         .def(py::init<AxisBoundaryType, double, double, std::size_t>(),
              "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
-        .def(py::init<AxisBoundaryType, std::size_t>(), "bType"_a,
-             "nbins"_a);
+        .def(py::init<AxisBoundaryType, std::size_t>(), "bType"_a, "nbins"_a);
 
     py::class_<DirectedProtoAxis>(m, "DirectedProtoAxis")
         .def(py::init<AxisDirection, AxisBoundaryType,
                       const std::vector<double>&>(),
              "bValue"_a, "bType"_a, "e"_a)
-        .def(py::init<AxisDirection, AxisBoundaryType, double,
-                      double, std::size_t>(),
-             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
-        .def(py::init<AxisDirection, AxisBoundaryType,
+        .def(py::init<AxisDirection, AxisBoundaryType, double, double,
                       std::size_t>(),
+             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
+        .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
   }
 }

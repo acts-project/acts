@@ -1,11 +1,17 @@
 target_sources(
     ActsPythonBindings
     PRIVATE
-    src/CoreModuleEntry.cpp
-    src/Definitions.cpp
-    src/MagneticField.cpp
-    src/Material.cpp
-    src/Surfaces.cpp
-    src/Geometry.cpp
-    src/Utilities.cpp
+        src/CoreModuleEntry.cpp
+        src/Definitions.cpp
+        src/MagneticField.cpp
+        src/Material.cpp
+        src/Surfaces.cpp
+        src/Geometry.cpp
+        src/GeometryGen1.cpp
+        src/GeometryGen2.cpp
+        src/GeometryGen3.cpp
+        src/Navigation.cpp
+        src/Seeding.cpp
+        src/TrackFinding.cpp
+        src/Utilities.cpp
 )

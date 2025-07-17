@@ -26,12 +26,11 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addVertexing(Context& ctx) {
+void addVertexingLegacy(Context& ctx) {
   using Seeder = ActsExamples::AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
-  auto mex = ctx.get("examples");
-  auto& m = ctx.get("main");
+  auto& mex = ctx.get("examples");
 
-  py::enum_<Seeder>(m, "VertexSeedFinder")
+  py::enum_<Seeder>(mex, "VertexSeedFinder")
       .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);

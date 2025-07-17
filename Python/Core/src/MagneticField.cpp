@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "ActsPython/Utilities/Context.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <stdexcept>
 
@@ -53,8 +53,7 @@ void addMagneticField(Context& ctx) {
   py::class_<MagneticFieldContext>(m, "MagneticFieldContext").def(py::init<>());
 
   // Add the MagneticFieldProvider and the fields
-  py::class_<MagneticFieldProvider,
-             std::shared_ptr<MagneticFieldProvider>>(
+  py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
       .def("getField", &getField)
       .def("makeCache", &MagneticFieldProvider::makeCache);
@@ -63,37 +62,34 @@ void addMagneticField(Context& ctx) {
              std::shared_ptr<InterpolatedMagneticField>>(
       m, "InterpolatedMagneticField");
 
-  m.def("solenoidFieldMap", &solenoidFieldMap, py::arg("rlim"),
-        py::arg("zlim"), py::arg("nbins"), py::arg("field"));
+  m.def("solenoidFieldMap", &solenoidFieldMap, py::arg("rlim"), py::arg("zlim"),
+        py::arg("nbins"), py::arg("field"));
 
   py::class_<ConstantBField, MagneticFieldProvider,
              std::shared_ptr<ConstantBField>>(m, "ConstantBField")
       .def(py::init<Vector3>());
 
-
-  py::class_<NullBField, MagneticFieldProvider,
-             std::shared_ptr<NullBField>>(m, "NullBField")
+  py::class_<NullBField, MagneticFieldProvider, std::shared_ptr<NullBField>>(
+      m, "NullBField")
       .def(py::init<>());
 
   py::class_<MultiRangeBField, MagneticFieldProvider,
              std::shared_ptr<MultiRangeBField>>(m, "MultiRangeBField")
-      .def(py::init<
-           std::vector<std::pair<RangeXD<3, double>, Vector3>>>());
+      .def(py::init<std::vector<std::pair<RangeXD<3, double>, Vector3>>>());
 
   {
     using Config = SolenoidBField::Config;
 
-    auto sol =
-        py::class_<SolenoidBField, MagneticFieldProvider,
-                   std::shared_ptr<SolenoidBField>>(m, "SolenoidBField")
-            .def(py::init<Config>())
-            .def(py::init([](double radius, double length, std::size_t nCoils,
-                             double bMagCenter) {
-                   return SolenoidBField{
-                       Config{radius, length, nCoils, bMagCenter}};
-                 }),
-                 py::arg("radius"), py::arg("length"), py::arg("nCoils"),
-                 py::arg("bMagCenter"));
+    auto sol = py::class_<SolenoidBField, MagneticFieldProvider,
+                          std::shared_ptr<SolenoidBField>>(m, "SolenoidBField")
+                   .def(py::init<Config>())
+                   .def(py::init([](double radius, double length,
+                                    std::size_t nCoils, double bMagCenter) {
+                          return SolenoidBField{
+                              Config{radius, length, nCoils, bMagCenter}};
+                        }),
+                        py::arg("radius"), py::arg("length"), py::arg("nCoils"),
+                        py::arg("bMagCenter"));
 
     py::class_<Config>(sol, "Config")
         .def(py::init<>())

@@ -32,7 +32,7 @@ using namespace Acts;
 namespace ActsPython {
 
 void addDigitization(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   mex.def("readDigiConfigFromJson", ActsExamples::readDigiConfigFromJson);
   mex.def("writeDigiConfigToJson", ActsExamples::writeDigiConfigToJson);

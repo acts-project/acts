@@ -24,15 +24,8 @@ namespace py = pybind11;
 
 namespace ActsPython {
 void addFramework(Context& ctx);
-void addEventData(Context& ctx);
 
 void addPropagation(Context& ctx);
-void addNavigation(Context& ctx);
-
-void addGeometryLegacy(Context& ctx);
-void addGeometryBuildingGen1(Context& ctx);
-void addExperimentalGeometry(Context& ctx);
-
 void addMagneticFieldLegacy(Context& ctx);
 
 void addMaterialLegacy(Context& ctx);
@@ -43,9 +36,9 @@ void addInput(Context& ctx);
 void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
-void addTrackFinding(Context& ctx);
+void addTrackFindingLegacy(Context& ctx);
 void addTruthJet(Context& ctx);
-void addVertexing(Context& ctx);
+void addVertexingLegacy(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilitiesLegacy(Context& ctx);
 
@@ -80,14 +73,9 @@ void ActsPython::addLegacyExamplesModule(Context& ctx) {
   ctx.modules["propagation"] = prop;
 
   addFramework(ctx);
-  addEventData(ctx);
   addOutput(ctx);
 
   addPropagation(ctx);
-  addNavigation(ctx);
-  addGeometryBuildingGen1(ctx);
-  addGeometryLegacy(ctx);
-  addExperimentalGeometry(ctx);
 
   addMagneticFieldLegacy(ctx);
   addMaterialLegacy(ctx);
@@ -97,9 +85,9 @@ void ActsPython::addLegacyExamplesModule(Context& ctx) {
   addGenerators(ctx);
   addTruthTracking(ctx);
   addTrackFitting(ctx);
-  addTrackFinding(ctx);
+  addTrackFindingLegacy(ctx);
   addTruthJet(ctx);
-  addVertexing(ctx);
+  addVertexingLegacy(ctx);
   addAmbiguityResolution(ctx);
   addUtilitiesLegacy(ctx);
 

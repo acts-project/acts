@@ -36,10 +36,8 @@ using namespace pybind11::literals;
 
 namespace ActsPython {
 
-
-
 void addMagneticFieldLegacy(Context& ctx) {
-  auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
+  auto [mex, prop] = ctx.get("examples", "propagation");
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,

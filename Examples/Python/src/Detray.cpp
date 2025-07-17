@@ -30,9 +30,9 @@ using namespace detray::io::detail;
 namespace ActsPython {
 
 void addDetray(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& main = ctx.get("main");
 
-  auto detray = m.def_submodule("detray");
+  auto detray = main.def_submodule("detray");
   {
     py::class_<DetrayHostDetector, std::shared_ptr<DetrayHostDetector>>(
         detray, "detray_detector");

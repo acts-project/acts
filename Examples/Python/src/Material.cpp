@@ -15,7 +15,6 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
@@ -55,9 +54,7 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 void addMaterialLegacy(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
-
+  auto& mex = ctx.get("examples");
 
   {
     using Alg = ActsExamples::MaterialMapping;
@@ -79,8 +76,18 @@ void addMaterialLegacy(Context& ctx) {
                        magFieldContext);
   }
 
-
-
+  {
+    py::class_<MappingMaterialDecorator, Acts::IMaterialDecorator,
+               std::shared_ptr<MappingMaterialDecorator>>(
+        mex, "MappingMaterialDecorator")
+        .def(py::init<const Acts::TrackingGeometry&, Acts::Logging::Level, bool,
+                      bool>(),
+             py::arg("tGeometry"), py::arg("level"),
+             py::arg("clearSurfaceMaterial") = true,
+             py::arg("clearVolumeMaterial") = true)
+        .def("binningMap", &MappingMaterialDecorator::binningMap)
+        .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
+  }
 
   {
     auto mmca = py::class_<CoreMaterialMapping, IAlgorithm,
@@ -95,25 +102,6 @@ void addMaterialLegacy(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
                        unmappedMaterialTracks, materialMapper,
                        materiaMaplWriters);
-  }
-
-  {
-    auto mvc =
-        py::class_<Acts::MaterialValidater,
-                   std::shared_ptr<Acts::MaterialValidater>>(
-            m, "MaterialValidater")
-            .def(py::init([](const Acts::MaterialValidater::Config& config,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<Acts::MaterialValidater>(
-                       config,
-                       Acts::getDefaultLogger("MaterialValidater", level));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def("recordMaterial", &Acts::MaterialValidater::recordMaterial);
-
-    auto c = py::class_<Acts::MaterialValidater::Config>(mvc, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, materialAssigner);
   }
 
   {

@@ -14,13 +14,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPython/Utilities/Context.hpp"
 
@@ -322,7 +322,7 @@ void addGeometry(Context& ctx) {
   py::class_<PortalShellBase>(m, "PortalShellBase");
 
   // Add the Proto Layer
-    py::class_<ProtoLayer>(m, "ProtoLayer")
+  py::class_<ProtoLayer>(m, "ProtoLayer")
       .def(py::init<const GeometryContext&,
                     const std::vector<std::shared_ptr<Surface>>&,
                     const Transform3&>(),
@@ -330,7 +330,6 @@ void addGeometry(Context& ctx) {
       .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
       .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
       .def_property_readonly("surfaces", &ProtoLayer::surfaces);
-
 }
 
 }  // namespace ActsPython

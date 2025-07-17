@@ -39,7 +39,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addDetector(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   {
     py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(

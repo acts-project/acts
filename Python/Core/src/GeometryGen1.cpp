@@ -27,8 +27,8 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace ActsPython {
-void addGeometryBuildingGen1(Context &ctx) {
-  auto m = ctx.get("main");
+void addGeometryGen1(Context &ctx) {
+  auto &m = ctx.get("main");
 
   using SurfacePtrVector = std::vector<std::shared_ptr<const Acts::Surface>>;
 

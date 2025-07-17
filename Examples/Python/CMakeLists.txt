@@ -9,15 +9,11 @@ target_sources(
         src/Detector.cpp
         src/Digitization.cpp
         src/Material.cpp
-        src/Geometry.cpp
-        src/GeometryBuildingGen1.cpp
-        src/Blueprint.cpp
         src/ExampleAlgorithms.cpp
         src/MagneticField.cpp
         src/Output.cpp
         src/Input.cpp
         src/Propagation.cpp
-        src/Navigation.cpp
         src/Generators.cpp
         src/Obj.cpp
         src/TruthTracking.cpp
@@ -25,7 +21,6 @@ target_sources(
         src/TrackFinding.cpp
         src/Vertexing.cpp
         src/AmbiguityResolution.cpp
-        src/EventData.cpp
         src/Utilities.cpp
 )
 

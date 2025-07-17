@@ -33,7 +33,7 @@ void declareCovfieField(py::module& m, const std::string& fieldName) {
 }  // namespace
 
 void addCovfie(Context& ctx) {
-  auto main = ctx.get("main");
+  auto& main = ctx.get("main");
   auto m = main.def_submodule("covfie", "Submodule for covfie conversion");
 
   py::class_<covfie::array::array<float, 3ul>,

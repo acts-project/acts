@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -71,18 +72,6 @@ void addMaterial(Context& ctx) {
         m, "IMaterialDecorator")
         .def("decorate", py::overload_cast<Surface&>(
                              &IMaterialDecorator::decorate, py::const_));
-  }
-
-  {
-    py::class_<MappingMaterialDecorator, IMaterialDecorator,
-               std::shared_ptr<MappingMaterialDecorator>>(
-        m, "MappingMaterialDecorator")
-        .def(py::init<const TrackingGeometry&, Logging::Level, bool, bool>(),
-             py::arg("tGeometry"), py::arg("level"),
-             py::arg("clearSurfaceMaterial") = true,
-             py::arg("clearVolumeMaterial") = true)
-        .def("binningMap", &MappingMaterialDecorator::binningMap)
-        .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
   }
 
   {
@@ -192,6 +181,23 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulater);
+  }
+
+  {
+    auto mvc =
+        py::class_<MaterialValidater, std::shared_ptr<MaterialValidater>>(
+            m, "MaterialValidater")
+            .def(py::init([](const MaterialValidater::Config& config,
+                             Logging::Level level) {
+                   return std::make_shared<MaterialValidater>(
+                       config, getDefaultLogger("MaterialValidater", level));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def("recordMaterial", &MaterialValidater::recordMaterial);
+
+    auto c =
+        py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, materialAssigner);
   }
 }
 }  // namespace ActsPython

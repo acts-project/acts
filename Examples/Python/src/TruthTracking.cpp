@@ -38,7 +38,7 @@ using namespace Acts;
 namespace ActsPython {
 
 void addTruthTracking(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto& mex = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,

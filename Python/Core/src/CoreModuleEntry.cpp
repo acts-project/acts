@@ -10,13 +10,19 @@
 #include "ActsPython/Utilities/Context.hpp"
 
 namespace ActsPython {
-    void addDefinitions(Context& ctx);
-    void addMagneticField(Context& ctx);
-    void addMaterial(Context& ctx);
-    void addSurfaces(Context& ctx);
-    void addGeometry(Context& ctx);
-    void addUtilities(Context& ctx);
-}
+void addDefinitions(Context& ctx);
+void addMagneticField(Context& ctx);
+void addMaterial(Context& ctx);
+void addSurfaces(Context& ctx);
+void addGeometry(Context& ctx);
+void addGeometryGen1(Context& ctx);
+void addGeometryGen2(Context& ctx);
+void addGeometryGen3(Context& ctx);
+void addNavigation(Context& ctx);
+void addUtilities(Context& ctx);
+void addSeeding(Context& ctxt);
+void addTrackFinding(Context& ctx);
+}  // namespace ActsPython
 
 void ActsPython::addCoreModule(Context& ctx) {
   addDefinitions(ctx);
@@ -24,5 +30,11 @@ void ActsPython::addCoreModule(Context& ctx) {
   addMaterial(ctx);
   addSurfaces(ctx);
   addGeometry(ctx);
+  addGeometryGen1(ctx);
+  addGeometryGen2(ctx);
+  addGeometryGen3(ctx);
+  addNavigation(ctx);
   addUtilities(ctx);
+  addSeeding(ctx);
+  addTrackFinding(ctx);
 }
