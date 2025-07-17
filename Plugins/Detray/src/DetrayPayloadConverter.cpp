@@ -30,6 +30,8 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <optional>
+
 #include <detray/geometry/shapes/annulus2D.hpp>
 #include <detray/geometry/shapes/concentric_cylinder2D.hpp>
 #include <detray/geometry/shapes/cylinder2D.hpp>
@@ -431,6 +433,7 @@ DetrayPayloadConverter::convertMaterial(
     // @FIXME: Joana says this should be surface-in-volume index
     // slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
     slabPayload.index_in_coll = surface.index_in_coll.value();
+    // slabPayload.index_in_coll = std::nullopt;
     slabPayload.surface.link = surface.index_in_coll.value();
   }
 
@@ -453,14 +456,13 @@ DetrayPayloadConverter::convertMaterial(
             targetSlab = slab;
             // Redundant index?
             targetSlab.index_in_coll = srfIdx;
+            // targetSlab.index_in_coll = std::nullopt;
             targetSlab.surface.link = srfIdx;
           } else {
             ACTS_VERBOSE("Updating slab in homogeneous material for surface "
                          << srfIdx);
             homogeneous.mat_slabs.emplace_back(slab);
             // @FIXME: Joana says this should be surface-in-volume index
-            // homogeneous.mat_slabs.back().index_in_coll =
-            //     homogeneous.mat_slabs.size() - 1;
             homogeneous.mat_slabs.back().index_in_coll = srfIdx;
             homogeneous.mat_slabs.back().surface.link = srfIdx;
           }
@@ -762,15 +764,34 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
-  // Adjust homogeneous material volume links after swapping
-  for (auto& mat : dthmPayload.volumes) {
-    if (mat.volume_link.link == beampipeIdx) {
-      ACTS_DEBUG("Reassigning beampipe homogoenous material to index 0");
-      mat.volume_link.link = 0;
-    } else if (mat.volume_link.link == 0) {
-      ACTS_DEBUG("Reassigning world homogoenous material to beampipe index "
-                 << beampipeIdx);
-      mat.volume_link.link = beampipeIdx;
+  {
+    // Possibly swap homogeneous material entries in vector if they both exist
+    auto find = [](std::size_t id) {
+      return [id](const auto& vol) { return vol.volume_link.link == id; };
+    };
+
+    auto beampipeIt =
+        std::ranges::find_if(dthmPayload.volumes, find(beampipeIdx));
+    auto worldIt = std::ranges::find_if(dthmPayload.volumes, find(0));
+
+    if (beampipeIt != dthmPayload.volumes.end() &&
+        worldIt != dthmPayload.volumes.end()) {
+      // BOTH world and beampipe have homogoenous material: swap them
+      ACTS_DEBUG("Swapping beampipe and world homogoenous material entries");
+      std::swap(*beampipeIt, *worldIt);
+    }
+
+    // Retarget the entries, regardless of whether there is an entry for only
+    // one of them
+    for (auto& mat : dthmPayload.volumes) {
+      if (mat.volume_link.link == beampipeIdx) {
+        ACTS_DEBUG("Reassigning beampipe homogoenous material to index 0");
+        mat.volume_link.link = 0;
+      } else if (mat.volume_link.link == 0) {
+        ACTS_DEBUG("Reassigning world homogoenous material to beampipe index "
+                   << beampipeIdx);
+        mat.volume_link.link = beampipeIdx;
+      }
     }
   }
 
