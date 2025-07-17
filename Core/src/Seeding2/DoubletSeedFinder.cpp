@@ -355,20 +355,24 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
 
-    if (configIsBottomCandidate == IsBottomCandidate::value &&
-        config.interactionPointCut == InteractionPointCut::value &&
-        config.sortedInR == SortedInR::value) {
-      if (result != nullptr) {
-        throw std::runtime_error(
-            "DoubletSeedFinder: Multiple implementations found for one "
-            "configuration");
-      }
-
-      result =
-          std::make_shared<DoubletSeedFinder::Impl<IsBottomCandidate::value,
-                                                   InteractionPointCut::value,
-                                                   SortedInR::value>>(config);
+    if (configIsBottomCandidate != IsBottomCandidate::value ||
+        config.interactionPointCut != InteractionPointCut::value ||
+        config.sortedInR != SortedInR::value) {
+      return;  // skip if the configuration does not match
     }
+
+    // check if we already have an implementation for this configuration
+    if (result != nullptr) {
+      throw std::runtime_error(
+          "DoubletSeedFinder: Multiple implementations found for one "
+          "configuration");
+    }
+
+    // create the implementation for the given configuration
+    result = std::make_shared<
+        DoubletSeedFinder::Impl<IsBottomCandidate::value,
+                                InteractionPointCut::value, SortedInR::value>>(
+        config);
   });
   return result;
 }
