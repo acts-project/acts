@@ -133,15 +133,22 @@ echo "Location:"
 # spack location --help
 # spack location --repo builtin
 # @TODO: Fix this with --repo builtin for newer spack version
-#
-if [ -n "${GITLAB_CI:-}" ]; then
-pushd /root/.spack/package_repos/*/repos/spack_repo/builtin
+
+if [ -d /Users/runner/.spack/package_repos/ ]; then
+  _spack_repo_dir=/Users/runner/.spack/package_repos/
+elif [ -d /root/.spack/package_repos/ ]; then
+  _spack_repo_dir=/root/.spack/package_repos/
+elif [ -d /github/home/.spack/package_repos/ ]; then
+  _spack_repo_dir=/github/home/.spack/package_repos/
 else
-pushd /github/home/.spack/package_repos/*/repos/spack_repo/builtin
+  echo "No spack package repository found"
+  exit 1
 fi
+
+pushd "$_spack_repo_dir/"*"/repos/spack_repo/builtin"
 git status
 git log -1
-git checkout ${_spack_repo_version}
+git checkout "${_spack_repo_version}"
 popd
 
 end_section
