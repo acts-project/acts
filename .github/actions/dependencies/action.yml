@@ -47,7 +47,6 @@ runs:
       shell: bash
       env:
         SPACK_VERSION: ${{ inputs.spack_version }}
-        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
         CI/dependencies/setup_spack.sh ${PWD}/spack
         spack/bin/spack list > /dev/null
@@ -68,6 +67,7 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then
           echo "With compiler"
