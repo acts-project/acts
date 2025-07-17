@@ -132,18 +132,17 @@ class DoubletSeedFinder {
   }
 
   /// Creates compatible dublets by applying a series of cuts that can be
-  /// tested with only two SPs. Input space points need to be sorted by radius.
+  /// tested with only two SPs.
   ///
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Range of space points to be used as candidates for
-  ///   middle SP in a seed. An offset will be applied based on the middle SP
-  ///   radius.
+  ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoubletsFromSortedInR(
-      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-      SpacePointContainer2::ConstRange& candidateSps,
-      DoubletsForMiddleSp& compatibleDoublets) const {
+  void createDoublets(const ConstSpacePointProxy2& middleSp,
+                      const MiddleSpInfo& middleSpInfo,
+                      SpacePointContainer2::ConstRange& candidateSps,
+                      DoubletsForMiddleSp& compatibleDoublets) const {
     m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
                            compatibleDoublets);
   }
