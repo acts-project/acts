@@ -23,7 +23,6 @@ template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR>
 class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
  public:
   explicit Impl(const DerivedConfig& config) : ImplBase(config) {}
-  ~Impl() override = default;
 
   /// Iterates over dublets and tests the compatibility by applying a series of
   /// cuts that can be tested with only two SPs.
