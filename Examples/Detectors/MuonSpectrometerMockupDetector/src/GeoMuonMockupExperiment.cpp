@@ -107,16 +107,16 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   }
   muonEnvelope->add(barrelEnvelope);
   /// Construct the endcaps
-  assembleBigWheel(muonEnvelope, MuonLayer::Middle,
-                   barrelZ + 0.5 * m_stationHeightEndcap);
-  assembleBigWheel(muonEnvelope, MuonLayer::Middle,
-                   -(barrelZ + 0.5 * m_stationHeightEndcap));
-  assembleBigWheel(muonEnvelope, MuonLayer::Outer,
-                   barrelZ + 1.5 * m_stationHeightEndcap + m_cfg.bigWheelDistZ);
-  assembleBigWheel(
-      muonEnvelope, MuonLayer::Outer,
-      -(barrelZ + 1.5 * m_stationHeightEndcap + m_cfg.bigWheelDistZ));
-
+  if (m_cfg.buildEndcaps) {
+    const double midWheelZ = barrelZ + 0.5 * m_stationHeightEndcap;
+    const double outWheelZ =
+        midWheelZ + m_stationHeightEndcap + m_cfg.bigWheelDistZ;
+    using enum ActsExamples::GeoMuonMockupExperiment::MuonLayer;
+    assembleBigWheel(muonEnvelope, Middle, midWheelZ);
+    assembleBigWheel(muonEnvelope, Middle, -midWheelZ);
+    assembleBigWheel(muonEnvelope, Outer, outWheelZ);
+    assembleBigWheel(muonEnvelope, Outer, -outWheelZ);
+  }
   const unsigned nChambers =
       2 * m_cfg.nSectors * m_cfg.nEtaStations *
       static_cast<unsigned>(MuonLayer::nLayers);  // barrel part
@@ -165,7 +165,9 @@ Acts::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     GMDBManager db{m_cfg.dbName};
     // check the DB connection
     if (!db.checkIsDBOpen()) {
-      THROW_EXCEPTION("It was not possible to open the DB correctly!");
+      throw std::runtime_error(
+          "GeoMuonMockupExperiment::constructMS() - It was not possible to "
+          "open the DB correctly!");
     }
     // init the GeoModel node action
     GeoModelIO::WriteGeoModel writeGeoDB{db};
@@ -261,18 +263,15 @@ void GeoMuonMockupExperiment::setupMaterials() {
   ACTS_DEBUG("Create the chemical elements.");
   /// Table taken from
   /// https://gitlab.cern.ch/atlas/geomodelatlas/GeoModelData/-/blob/master/Materials/elements.xml
-  matMan->addElement(make_intrusive<GeoElement>("Carbon", "C", 6, 12.0112));
-  matMan->addElement(
-      make_intrusive<GeoElement>("Aluminium", "Al", 13, 26.9815));
-  matMan->addElement(make_intrusive<GeoElement>("Iron", "Fe", 26, 55.847));
-  matMan->addElement(make_intrusive<GeoElement>("Copper", "Cu", 29, 63.54));
-  matMan->addElement(make_intrusive<GeoElement>("Nitrogen", "N", 7.0, 14.0031));
-  matMan->addElement(make_intrusive<GeoElement>("Oxygen", "O", 8.0, 15.9949));
-  matMan->addElement(make_intrusive<GeoElement>("Argon", "Ar", 18.0, 39.9624));
-  matMan->addElement(
-      make_intrusive<GeoElement>("Hydrogen", "H", 1.0, 1.00782503081372));
-  matMan->addElement(
-      make_intrusive<GeoElement>("Chlorine", "Cl", 18.0, 35.453));
+  matMan->addElement("Carbon", "C", 6, 12.0112);
+  matMan->addElement("Aluminium", "Al", 13, 26.9815);
+  matMan->addElement("Iron", "Fe", 26, 55.847);
+  matMan->addElement("Copper", "Cu", 29, 63.54);
+  matMan->addElement("Nitrogen", "N", 7.0, 14.0031);
+  matMan->addElement("Oxygen", "O", 8.0, 15.9949);
+  matMan->addElement("Argon", "Ar", 18.0, 39.9624);
+  matMan->addElement("Hydrogen", "H", 1.0, 1.00782503081372);
+  matMan->addElement("Chlorine", "Cl", 18.0, 35.453);
 
   using MatComposition_t = std::vector<std::pair<std::string, double>>;
 
