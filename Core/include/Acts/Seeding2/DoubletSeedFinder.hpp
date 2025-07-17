@@ -169,9 +169,7 @@ class DoubletSeedFinder {
    protected:
     DerivedConfig m_cfg;
   };
-  enum class SpacePointCandidateType { Bottom, Top };
-  template <SpacePointCandidateType candidateType, bool interactionPointCut,
-            bool sortedInR>
+  template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR>
   class Impl;
 
   static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
