@@ -212,56 +212,28 @@ void createDoubletsImpl(
     // We check the interaction point by evaluating the minimal distance
     // between the origin and the straight line connecting the two points in
     // the doublets. Using a geometric similarity, the Im is given by
-    // yNewFrame * rM / deltaR <= config.impactMax
+    // yNewFrame * rM / deltaR > config.impactMax
     // However, we make here an approximation of the impact parameter
     // which is valid under the assumption yNewFrame / xNewFrame is small
     // The correct computation would be:
-    // yNewFrame * yNewFrame * rM * rM <= config.impactMax *
+    // yNewFrame * yNewFrame * rM * rM > config.impactMax *
     // config.impactMax * deltaR2
-    if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-      // check if duplet cotTheta is within the region of interest
-      // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
-      // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -config.cotThetaMax * deltaR,
-                            config.cotThetaMax * deltaR)) {
+    if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) {
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
+
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
+      const float bCoef = vIP - aCoef * middleSpInfo.uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) * config.minHelixDiameter2 > 1 + aCoef * aCoef) {
         continue;
       }
-
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      const float cotTheta = deltaZ * iDeltaR;
-
-      // discard bottom-middle doublets in a certain (r, eta) region according
-      // to detector specific cuts
-      if constexpr (isBottomCandidate) {
-        if (config.experimentCuts.connected() &&
-            !config.experimentCuts(rO, cotTheta)) {
-          continue;
-        }
-      }
-
-      const float er = calculateError(otherSp, iDeltaR2, cotTheta);
-
-      // fill output vectors
-      compatibleDoublets.emplace_back(
-          otherSp.index(),
-          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
-      continue;
-    }
-
-    // in the rotated frame the interaction point is positioned at x = -rM
-    // and y ~= impactParam
-    const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
-
-    // we can obtain aCoef as the slope dv/du of the linear function,
-    // estimated using du and dv between the two SP bCoef is obtained by
-    // inserting aCoef into the linear equation
-    const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
-    const float bCoef = vIP - aCoef * middleSpInfo.uIP;
-    // the distance of the straight line from the origin (radius of the
-    // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-    // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-    if ((bCoef * bCoef) * config.minHelixDiameter2 > 1 + aCoef * aCoef) {
-      continue;
     }
 
     // check if duplet cotTheta is within the region of interest
