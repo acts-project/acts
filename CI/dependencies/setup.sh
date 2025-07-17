@@ -125,6 +125,14 @@ if ! command -v spack &> /dev/null; then
   "${SCRIPT_DIR}/setup_spack.sh" "${_spack_folder}"
   source "${_spack_folder}/share/spack/setup-env.sh"
 fi
+
+_spack_repo_version=${SPACK_REPO_VERSION:-develop}
+
+# Ensure repo is up to date
+pushd $(spack location --repo builtin)
+git checkout ${_spack_repo_version}
+popd
+
 end_section
 
 if [ -n "${GITLAB_CI:-}" ]; then
