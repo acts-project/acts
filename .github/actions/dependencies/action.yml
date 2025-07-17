@@ -33,7 +33,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: spack_cache
-        key: spack-r2-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r2-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
