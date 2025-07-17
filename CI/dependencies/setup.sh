@@ -128,8 +128,10 @@ fi
 
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 
-# Ensure repo is up to date
+echo "Ensure repo is synced with version ${_spack_repo_version}"
 pushd $(spack location --repo builtin)
+git status
+git log -1
 git checkout ${_spack_repo_version}
 popd
 
