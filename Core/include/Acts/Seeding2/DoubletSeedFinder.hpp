@@ -69,7 +69,7 @@ class DoubletSeedFinder {
   };
 
   struct DerivedConfig : public Config {
-    DerivedConfig(const Config& cfg, float bFieldInZ);
+    DerivedConfig(const Config& config, float bFieldInZ);
 
     float bFieldInZ = 0;
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
@@ -111,7 +111,7 @@ class DoubletSeedFinder {
 
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
-  explicit DoubletSeedFinder(const DerivedConfig& cfg);
+  explicit DoubletSeedFinder(const DerivedConfig& config);
 
   const DerivedConfig& config() const { return m_impl->config(); }
 
@@ -150,7 +150,7 @@ class DoubletSeedFinder {
  private:
   class ImplBase {
    public:
-    explicit ImplBase(DerivedConfig config) : m_cfg(config) {}
+    explicit ImplBase(const DerivedConfig& config) : m_cfg(config) {}
     virtual ~ImplBase() = default;
 
     const DerivedConfig& config() const { return m_cfg; }

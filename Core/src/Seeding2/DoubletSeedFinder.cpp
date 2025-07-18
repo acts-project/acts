@@ -345,9 +345,9 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
   return result;
 }
 
-DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& cfg,
+DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
-    : Config(cfg), bFieldInZ(bFieldInZ_) {
+    : Config(config), bFieldInZ(bFieldInZ_) {
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
@@ -364,8 +364,8 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
 
-DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& cfg)
-    : m_impl(makeImpl(cfg)) {
+DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& config)
+    : m_impl(makeImpl(config)) {
   if (m_impl == nullptr) {
     throw std::runtime_error(
         "DoubletSeedFinder: No implementation found for the given "
