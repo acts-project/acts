@@ -63,7 +63,7 @@ message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
 
-# bake where we found external dependencies, if they 
+# bake where we found external dependencies, if they
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # set relative library path for ACTS libraries
