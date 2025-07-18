@@ -484,6 +484,16 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
+    if(ACTS_SETUP_VECMEM)
+        if(ACTS_USE_SYSTEM_VECMEM)
+            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        else()
+            add_subdirectory(thirdparty/vecmem)
+            # Make the "VecMem language code" available for the whole project.
+            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+        endif()
+    endif()
+
     if(ACTS_SETUP_ALGEBRAPLUGINS)
         if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
             find_package(
@@ -501,16 +511,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
         else()
             add_subdirectory(thirdparty/detray)
-        endif()
-    endif()
-
-    if(ACTS_SETUP_VECMEM)
-        if(ACTS_USE_SYSTEM_VECMEM)
-            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-        else()
-            add_subdirectory(thirdparty/vecmem)
-            # Make the "VecMem language code" available for the whole project.
-            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
         endif()
     endif()
 
