@@ -15,12 +15,15 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -50,8 +53,7 @@ namespace ActsExamples {
 
 RootTrackSummaryWriter::RootTrackSummaryWriter(
     const RootTrackSummaryWriter::Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputTracks, "RootTrackSummaryWriter", level),
-      m_cfg(config) {
+    : m_cfg(config), m_logger(Acts::getDefaultLogger(name(), level)) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -63,6 +65,18 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+
+  for (const auto& name : m_cfg.inputTrackContainers) {
+    if (name.empty()) {
+      throw std::invalid_argument("Invalid track input collection");
+    }
+
+    auto& handle = m_inputTrackContainers.emplace_back(
+        std::make_unique<ReadDataHandle<ConstTrackContainer>>(
+            this, "InputTracksCollection#" +
+                      std::to_string(m_inputTrackContainers.size())));
+    handle->initialize(name);
+  }
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -214,28 +228,10 @@ ProcessCode RootTrackSummaryWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
-                                           const ConstTrackContainer& tracks) {
-  // In case we do not have truth info, we bind to a empty collection
-  const static SimParticleContainer emptyParticles;
-  const static TrackParticleMatching emptyTrackParticleMatching;
-
-  const auto& particles =
-      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
-  const auto& trackParticleMatching =
-      m_inputTrackParticleMatching.isInitialized()
-          ? m_inputTrackParticleMatching(ctx)
-          : emptyTrackParticleMatching;
-
-  // For each particle within a track, how many hits did it contribute
-  std::vector<ParticleHitCount> particleHitCounts;
-
-  // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
-
-  // Get the event number
-  m_eventNr = ctx.eventNumber;
-
+ProcessCode RootTrackSummaryWriter::write(
+    const AlgorithmContext& ctx,
+    const TrackParticleMatching& trackParticleMatching,
+    const SimParticleContainer& particles, const ConstTrackContainer& tracks) {
   for (const auto& track : tracks) {
     m_trackNr.push_back(track.index());
 
@@ -540,6 +536,38 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       } else {
         m_nUpdatesGx2f.push_back(-1);
       }
+    }
+  }
+
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode RootTrackSummaryWriter::write(const AlgorithmContext& ctx) {
+  // In case we do not have truth info, we bind to a empty collection
+  const static SimParticleContainer emptyParticles;
+  const static TrackParticleMatching emptyTrackParticleMatching;
+
+  const auto& particles =
+      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
+  const auto& trackParticleMatching =
+      m_inputTrackParticleMatching.isInitialized()
+          ? m_inputTrackParticleMatching(ctx)
+          : emptyTrackParticleMatching;
+
+  // For each particle within a track, how many hits did it contribute
+  std::vector<ParticleHitCount> particleHitCounts;
+
+  // Exclusive access to the tree while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
+
+  for (const auto& handle : m_inputTrackContainers) {
+    const auto& tracks = (*handle)(ctx);
+    if (auto pc = write(ctx, trackParticleMatching, particles, tracks);
+        pc != ProcessCode::SUCCESS) {
+      return pc;
     }
   }
 

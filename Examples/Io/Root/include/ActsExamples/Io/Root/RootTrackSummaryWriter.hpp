@@ -9,13 +9,12 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -44,11 +43,11 @@ namespace ActsExamples {
 /// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
+class RootTrackSummaryWriter final : public IWriter {
  public:
   struct Config {
     /// Input (fitted) tracks collection
-    std::string inputTracks;
+    std::vector<std::string> inputTrackContainers;
     /// Input particles collection (optional).
     std::string inputParticles;
     /// Input track-particle matching (optional).
@@ -80,20 +79,30 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
+  ProcessCode write(const AlgorithmContext& ctx) override;
+
+  std::string name() const override { return "RootTrackSummaryWriter"; };
+
  protected:
-  /// @brief Write method called by the base class
-  /// @param [in] ctx is the algorithm context for event information
-  /// @param [in] tracks are what to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ConstTrackContainer& tracks) override;
+  ProcessCode write(const AlgorithmContext& ctx,
+                    const TrackParticleMatching& trackParticleMatching,
+                    const SimParticleContainer& particles,
+                    const ConstTrackContainer& tracks);
 
  private:
   /// The config class
   Config m_cfg;
 
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
+
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+
+  std::vector<std::unique_ptr<ReadDataHandle<ConstTrackContainer>>>
+      m_inputTrackContainers{};
 
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;

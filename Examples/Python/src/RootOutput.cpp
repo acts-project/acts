@@ -199,10 +199,11 @@ void addRootOutput(Context& ctx) {
       inputTracks, inputParticles, inputTrackParticleMatching, inputSimHits,
       inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
-      inputTracks, inputParticles, inputTrackParticleMatching, filePath,
-      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrackSummaryWriter, mex,
+                             "RootTrackSummaryWriter", inputTrackContainers,
+                             inputParticles, inputTrackParticleMatching,
+                             filePath, treeName, fileMode, writeCovMat,
+                             writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
