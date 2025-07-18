@@ -9,7 +9,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -19,6 +18,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
 #include <array>
@@ -64,20 +65,20 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addPropagation(Context& ctx) {
   auto [m, prop, mex] = ctx.get("main", "propagation", "examples");
 
   {
     using Config = Acts::Navigator::Config;
-    auto nav =
-        py::class_<Acts::Navigator, std::shared_ptr<Acts::Navigator>>(
-            m, "Navigator")
-            .def(py::init<>([](Config cfg,
-                               Logging::Level level = Logging::INFO) {
-                   return Navigator{cfg, getDefaultLogger("Navigator", level)};
-                 }),
-                 py::arg("cfg"), py::arg("level") = Logging::INFO);
+    auto nav = py::class_<Acts::Navigator, std::shared_ptr<Acts::Navigator>>(
+                   m, "Navigator")
+                   .def(py::init<>([](Config cfg, Acts::Logging::Level level =
+                                                      Acts::Logging::INFO) {
+                          return Acts::Navigator{
+                              cfg, Acts::getDefaultLogger("Navigator", level)};
+                        }),
+                        py::arg("cfg"), py::arg("level") = Acts::Logging::INFO);
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
@@ -91,12 +92,12 @@ void addPropagation(Context& ctx) {
         py::class_<Acts::Experimental::DetectorNavigator,
                    std::shared_ptr<Acts::Experimental::DetectorNavigator>>(
             m, "DetectorNavigator")
-            .def(py::init<>(
-                     [](Config cfg, Logging::Level level = Logging::INFO) {
-                       return Acts::Experimental::DetectorNavigator{
-                           cfg, getDefaultLogger("DetectorNavigator", level)};
-                     }),
-                 py::arg("cfg"), py::arg("level") = Logging::INFO);
+            .def(py::init<>([](Config cfg, Acts::Logging::Level level =
+                                               Acts::Logging::INFO) {
+                   return Acts::Experimental::DetectorNavigator{
+                       cfg, Acts::getDefaultLogger("DetectorNavigator", level)};
+                 }),
+                 py::arg("cfg"), py::arg("level") = Acts::Logging::INFO);
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
@@ -171,4 +172,4 @@ void addPropagation(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

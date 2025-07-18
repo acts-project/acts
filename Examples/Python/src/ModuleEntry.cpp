@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/ActsVersion.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Module/Entries.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <tuple>
 #include <unordered_map>
@@ -21,9 +21,8 @@
 #include <pyerrors.h>
 
 namespace py = pybind11;
-using namespace Acts::Python;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addContext(Context& ctx);
 void addAny(Context& ctx);
 void addUnits(Context& ctx);
@@ -77,30 +76,15 @@ void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
 
-PYBIND11_MODULE(ActsPythonBindings, m) {
-  Acts::Python::Context ctx;
-  ctx.modules["main"] = m;
+void ActsPython::addLegacyExamplesModule(Context& ctx) {
+  auto& m = ctx.get("main");
+
   auto mex = m.def_submodule("_examples");
   ctx.modules["examples"] = mex;
   auto prop = m.def_submodule("_propagator");
   ctx.modules["propagation"] = prop;
-  m.doc() = "Acts";
-
-  m.attr("__version__") =
-      std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
-
-  {
-    auto mv = m.def_submodule("version");
-
-    mv.attr("major") = Acts::VersionMajor;
-    mv.attr("minor") = Acts::VersionMinor;
-    mv.attr("patch") = Acts::VersionPatch;
-
-    mv.attr("commit_hash") = Acts::CommitHash;
-    mv.attr("commit_hash_short") = Acts::CommitHashShort;
-  }
 
   addContext(ctx);
   addAny(ctx);

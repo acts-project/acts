@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -16,6 +15,8 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -29,7 +30,7 @@ using namespace ActsExamples;
 using namespace Acts;
 using namespace py::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addTrackFitting(Context& ctx) {
   auto mex = ctx.get("examples");
@@ -148,4 +149,4 @@ void addTrackFitting(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

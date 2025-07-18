@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -18,7 +19,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addOnnx(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -36,4 +37,4 @@ void addOnnx(Context& ctx) {
                                 outputTrackParameters, outputSimSeeds,
                                 epsilonDBScan, minPointsDBScan, minSeedScore);
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython
