@@ -181,6 +181,7 @@ class RootTrackSummaryWriter final : public IWriter {
   std::vector<float> m_t_z0;
   /// Production radius of majority particle
   std::vector<float> m_t_prodR;
+  std::vector<unsigned int> m_t_pdg;
 
   /// If the track has fitted parameter
   std::vector<bool> m_hasFittedParams;
@@ -236,6 +237,8 @@ class RootTrackSummaryWriter final : public IWriter {
   std::vector<float> m_pull_eQOP_fit;
   /// Fitted parameters eT pull of track
   std::vector<float> m_pull_eT_fit;
+
+  std::vector<unsigned int> m_hypo_pdg;
 
   // entries of the full covariance matrix. One block for every row of the
   // matrix
