@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesTruthTracking
+acts_add_library(
+    ExamplesTruthTracking
     SHARED
     ActsExamples/TruthTracking/ParticleSelector.cpp
     ActsExamples/TruthTracking/ParticleTrackParamExtractor.cpp
@@ -18,7 +18,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesTruthTracking
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::Core Acts::ExamplesFramework
 )
 
 install(

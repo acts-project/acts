@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDetectorTGeo
+acts_add_library(
+    ExamplesDetectorTGeo
     SHARED
     src/AlignedTGeoDetectorElement.cpp
     src/TGeoDetector.cpp
@@ -14,16 +14,16 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
-        ActsCore
-        ActsPluginRoot
-        ActsPluginJson
-        ActsExamplesFramework
-        ActsExamplesDetectorGeneric
-        ActsExamplesDetectorsCommon
-        ActsExamplesITkModuleSplitting
+        Acts::Core
+        Acts::PluginRoot
+        Acts::PluginJson
+        Acts::ExamplesFramework
+        Acts::ExamplesDetectorGeneric
+        Acts::ExamplesDetectorsCommon
+        Acts::ExamplesITkModuleSplitting
 )
 
-acts_compile_headers(ActsExamplesDetectorTGeo GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesDetectorTGeo GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesDetectorTGeo

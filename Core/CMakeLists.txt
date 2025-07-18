@@ -4,7 +4,7 @@ configure_file(
 )
 
 # source files will be added later
-add_library(ActsCore SHARED "")
+acts_add_library(Core SHARED "")
 
 target_sources(ActsCore PRIVATE src/ActsVersion.cpp)
 
@@ -113,6 +113,6 @@ add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
 add_subdirectory(src/AmbiguityResolution)
 
-acts_compile_headers(ActsCore GLOB
+acts_compile_headers(Core GLOB
     include/Acts/**/*.hpp
 )

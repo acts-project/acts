@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesMagneticField
+acts_add_library(
+    ExamplesMagneticField
     SHARED
     src/FieldMapRootIo.cpp
     src/FieldMapTextIo.cpp
@@ -13,11 +13,11 @@ target_link_libraries(
     ActsExamplesMagneticField
     # the ROOT libraries should be private, but if we do that then the linker
     # fails with some missing ROOT symbols.
-    PUBLIC ActsCore ActsExamplesFramework ROOT::Core ROOT::Tree
+    PUBLIC Acts::Core Acts::ExamplesFramework ROOT::Core ROOT::Tree
     PRIVATE std::filesystem
 )
 
-acts_compile_headers(ActsExamplesMagneticField GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesMagneticField GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesMagneticField

@@ -1,7 +1,7 @@
 include(FetchContent)
 
-add_library(
-    ActsPluginGeoModel
+acts_add_library(
+    PluginGeoModel
     SHARED
     src/GeoModelTree.cpp
     src/GeoModelBlueprintCreater.cpp
@@ -32,7 +32,7 @@ target_include_directories(
 target_link_libraries(
     ActsPluginGeoModel
     PUBLIC
-        ActsCore
+        Acts::Core
         GeoModelCore::GeoModelKernel
         GeoModelIO::GeoModelDBManager
         GeoModelIO::GeoModelRead

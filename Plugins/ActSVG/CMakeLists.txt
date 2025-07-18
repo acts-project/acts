@@ -1,5 +1,5 @@
-add_library(
-    ActsPluginActSVG
+acts_add_library(
+    PluginActSVG
     SHARED
     src/DetectorVolumeSvgConverter.cpp
     src/DetectorSvgConverter.cpp
@@ -19,7 +19,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginActSVG
-    PUBLIC ActsCore actsvg::core actsvg::meta
+    PUBLIC Acts::Core actsvg::core actsvg::meta
 )
 
 install(

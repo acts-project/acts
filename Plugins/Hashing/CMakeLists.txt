@@ -1,4 +1,4 @@
-add_library(ActsPluginHashing INTERFACE)
+acts_add_library(PluginHashing INTERFACE)
 target_include_directories(
     ActsPluginHashing
     INTERFACE

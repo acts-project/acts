@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesTrackFinding
+acts_add_library(
+    ExamplesTrackFinding
     SHARED
     src/SeedingAlgorithm.cpp
     src/SeedingOrthogonalAlgorithm.cpp
@@ -21,11 +21,11 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFinding
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesMagneticField
+    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesMagneticField
     PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
-acts_compile_headers(ActsExamplesTrackFinding GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesTrackFinding GLOB "include/**/*.hpp")
 
 # If Hashing examples are enabled, add them to the build
 if(ACTS_BUILD_EXAMPLES_HASHING)
@@ -34,7 +34,7 @@ if(ACTS_BUILD_EXAMPLES_HASHING)
         PRIVATE src/SeedingAlgorithmHashing.cpp
     )
 
-    target_link_libraries(ActsExamplesTrackFinding PUBLIC ActsPluginHashing)
+    target_link_libraries(ActsExamplesTrackFinding PUBLIC Acts::PluginHashing)
 endif()
 
 install(
