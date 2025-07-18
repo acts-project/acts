@@ -14,6 +14,7 @@
 // clang-format on
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
+#include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
@@ -68,11 +70,12 @@ void addGeoModel(Context& ctx) {
       });
 
   {
-    auto f =
-        py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
-                   std::shared_ptr<ActsExamples::GeoModelDetector>>(
-            gm, "GeoModelDetector")
-            .def(py::init<const ActsExamples::GeoModelDetector::Config&>());
+    auto f = py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
+                        std::shared_ptr<ActsExamples::GeoModelDetector>>(
+                 gm, "GeoModelDetector")
+                 .def(py::init<const ActsExamples::GeoModelDetector::Config&>())
+                 .def("buildTrackingGeometry",
+                      &ActsExamples::GeoModelDetector::buildTrackingGeometry);
 
     auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
                  .def(py::init<>());
@@ -80,6 +83,32 @@ void addGeoModel(Context& ctx) {
 
     // patch the constructor
     patchKwargsConstructor(c);
+  }
+  {
+    // GeomodelMuonMockupBuilder
+    py::class_<Acts::ITrackingGeometryBuilder,
+               std::shared_ptr<Acts::ITrackingGeometryBuilder>>(
+        gm, "ITrackingGeometryBuilder");
+    auto gmMuonBuilder =
+        py::class_<ActsExamples::GeoModelMuonMockupBuilder,
+                   Acts::ITrackingGeometryBuilder,
+                   std::shared_ptr<ActsExamples::GeoModelMuonMockupBuilder>>(
+            gm, "GeoModelMuonMockupBuilder")
+            .def(py::init([](const ActsExamples::GeoModelMuonMockupBuilder::
+                                 Config& config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<ActsExamples::GeoModelMuonMockupBuilder>(
+                  config, getDefaultLogger(name, level));
+            }))
+            .def("trackingGeometry",
+                 &ActsExamples::GeoModelMuonMockupBuilder::trackingGeometry);
+    auto gmMuonConfig =
+        py::class_<ActsExamples::GeoModelMuonMockupBuilder::Config>(
+            gmMuonBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(gmMuonConfig, volumeBoxFPVs, stationNames,
+                       volumeBoundFactory);
   }
 
   // Shape converters
@@ -159,7 +188,8 @@ void addGeoModel(Context& ctx) {
                        nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
                        /// Station properties
                        barrelRadii, nSectors, nEtaStations, stationDistInZ,
-                       stationDistInR, endCapWheelLowR, bigWheelDistZ);
+                       stationDistInR, endCapWheelLowR, bigWheelDistZ,
+                       buildEndcaps);
   }
   // Volume factory
   {
@@ -189,6 +219,12 @@ void addGeoModel(Context& ctx) {
             "materialList",
             &Acts::GeoModelDetectorObjectFactory::Config::materialList);
 
+    auto convVol =
+        py::class_<Acts::GeoModelDetectorObjectFactory::ConvertedGeoVol>(
+            a, "ConvertedGeoVol");
+
+    ACTS_PYTHON_STRUCT(convVol, volume, gen2Volume, fullPhysVol, name,
+                       surfaces);
     py::class_<Acts::GeoModelDetectorObjectFactory::Cache>(a, "Cache")
         .def(py::init<>())
         .def_readwrite(
