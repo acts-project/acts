@@ -37,6 +37,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
+void addAlignment(Context& ctx);
 void addGeometry(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
@@ -115,6 +116,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addPropagation(ctx);
   addNavigation(ctx);
+  addAlignment(ctx);
   addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
