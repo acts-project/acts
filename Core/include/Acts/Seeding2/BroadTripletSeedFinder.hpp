@@ -122,9 +122,6 @@ class BroadTripletSeedFinder {
   };
 
   struct Cache {
-    std::vector<std::size_t> bottomSpOffsets;
-    std::vector<std::size_t> topSpOffsets;
-
     DoubletSeedFinder::DoubletsForMiddleSp bottomDoublets;
     DoubletSeedFinder::DoubletsForMiddleSp topDoublets;
 
@@ -201,55 +198,6 @@ class BroadTripletSeedFinder {
   std::unique_ptr<const Logger> m_logger;
 
   const Logger& logger() const { return *m_logger; }
-
-  /// Create triplets from the bottom, middle, and top space points.
-  ///
-  /// @param cache Cache object to store intermediate results
-  /// @param cuts Triplet cuts that define the compatibility of space points
-  /// @param rMaxSeedConf Maximum radius of bottom space point to use seed confirmation
-  /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param filterState State object that holds the state of the filter
-  /// @param filterCache Cache object that holds memory used in SeedFilter
-  /// @param spacePoints Space point container
-  /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublets Bottom doublets to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @param candidatesCollector Collector for candidates for middle space points
-  static void createTriplets(
-      TripletCache& cache, const DerivedTripletCuts& cuts, float rMaxSeedConf,
-      const BroadTripletSeedFilter& filter,
-      BroadTripletSeedFilter::State& filterState,
-      BroadTripletSeedFilter::Cache& filterCache,
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-      const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
-      const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
-      TripletTopCandidates& tripletTopCandidates,
-      CandidatesForMiddleSp2& candidatesCollector);
-
-  /// Create triplets from the bottom, middle, and top space points.
-  ///
-  /// @param cuts Triplet cuts that define the compatibility of space points
-  /// @param rMaxSeedConf Maximum radius of bottom space point to use seed confirmation
-  /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param filterState State object that holds the state of the filter
-  /// @param filterCache Cache object that holds memory used in SeedFilter
-  /// @param spacePoints Space point container
-  /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublets Bottom doublets to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @param candidatesCollector Collector for candidates for middle space points
-  static void createStripTriplets(
-      const DerivedTripletCuts& cuts, float rMaxSeedConf,
-      const BroadTripletSeedFilter& filter,
-      BroadTripletSeedFilter::State& filterState,
-      BroadTripletSeedFilter::Cache& filterCache,
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-      const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
-      const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
-      TripletTopCandidates& tripletTopCandidates,
-      CandidatesForMiddleSp2& candidatesCollector);
 };
 
 }  // namespace Acts::Experimental
