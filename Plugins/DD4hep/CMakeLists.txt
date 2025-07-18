@@ -1,7 +1,7 @@
 include(FetchContent)
 
-add_library(
-    ActsPluginDD4hep
+acts_add_library(
+    PluginDD4hep
     SHARED
     src/ConvertDD4hepDetector.cpp
     src/DD4hepBlueprintFactory.cpp
@@ -22,7 +22,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginDD4hep PUBLIC ActsCore ActsPluginRoot)
+target_link_libraries(ActsPluginDD4hep PUBLIC Acts::Core Acts::PluginRoot)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
     target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})

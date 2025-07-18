@@ -1,4 +1,4 @@
-add_library(ActsPluginPodio SHARED src/PodioUtil.cpp)
+acts_add_library(PluginPodio SHARED src/PodioUtil.cpp)
 
 target_include_directories(
     ActsPluginPodio
@@ -6,7 +6,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginPodio PUBLIC ActsCore)
+target_link_libraries(ActsPluginPodio PUBLIC Acts::Core)
 
 # target_link_libraries(ActsPluginEDM4hep PUBLIC EDM4HEP::edm4hep)
 
@@ -21,10 +21,11 @@ podio_generate_datamodel(
 )
 
 podio_add_datamodel_core_lib(ActsPodioEdm "${headers}" "${sources}")
+add_library(Acts::PodioEdm ALIAS ActsPodioEdm)
 
 target_link_libraries(
     ActsPluginPodio
-    PUBLIC ActsPodioEdm ROOT::Core podio::podio podio::podioRootIO
+    PUBLIC Acts::PodioEdm ROOT::Core podio::podio podio::podioRootIO
 )
 
 target_compile_options(ActsPodioEdm PRIVATE "-Wno-old-style-cast")

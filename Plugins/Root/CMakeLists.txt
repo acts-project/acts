@@ -21,7 +21,7 @@ else()
     )
 endif()
 
-add_library(ActsPluginRoot SHARED ${library_sources})
+acts_add_library(PluginRoot SHARED ${library_sources})
 
 target_include_directories(
     ActsPluginRoot
@@ -31,7 +31,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginRoot
-    PUBLIC ActsCore ROOT::Core ROOT::Tree ROOT::Geom
+    PUBLIC Acts::Core ROOT::Core ROOT::Tree ROOT::Geom
 )
 
 install(

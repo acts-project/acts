@@ -1,7 +1,7 @@
 include(FetchContent)
 
-add_library(
-    ActsPluginGeant4
+acts_add_library(
+    PluginGeant4
     SHARED
     src/Geant4Converters.cpp
     src/Geant4DetectorElement.cpp
@@ -19,7 +19,7 @@ target_include_directories(
     SYSTEM
     PRIVATE ${Geant4_INCLUDE_DIRS}
 )
-target_link_libraries(ActsPluginGeant4 PUBLIC ActsCore ${Geant4_LIBRARIES})
+target_link_libraries(ActsPluginGeant4 PUBLIC Acts::Core ${Geant4_LIBRARIES})
 
 install(
     TARGETS ActsPluginGeant4

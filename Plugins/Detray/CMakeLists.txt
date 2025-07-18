@@ -1,5 +1,5 @@
-add_library(
-    ActsPluginDetray
+acts_add_library(
+    PluginDetray
     SHARED
     src/DetrayConversionUtils.cpp
     src/DetrayConverter.cpp
@@ -20,8 +20,8 @@ target_include_directories(
 target_link_libraries(
     ActsPluginDetray
     PUBLIC
-        ActsCore
-        ActsPluginJson
+        Acts::Core
+        Acts::PluginJson
         detray::core
         detray::core_array
         detray::io

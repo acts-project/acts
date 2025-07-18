@@ -1,7 +1,7 @@
 include(ActsTargetLinkLibrariesSystem)
 
-add_library(
-    ActsPluginJson
+acts_add_library(
+    PluginJson
     SHARED
     src/AlgebraJsonConverter.cpp
     src/DetectorJsonConverter.cpp
@@ -37,7 +37,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginJson
-    PUBLIC ActsCore nlohmann_json::nlohmann_json
+    PUBLIC Acts::Core nlohmann_json::nlohmann_json
 )
 target_compile_definitions(
     ActsPluginJson

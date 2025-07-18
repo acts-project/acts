@@ -1,5 +1,5 @@
-add_library(
-    ActsFatrasGeant4
+acts_add_library(
+    FatrasGeant4
     SHARED
     src/Geant4Decay.cpp
     src/PDGtoG4Converter.cpp
@@ -19,7 +19,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsFatrasGeant4
-    PUBLIC ActsCore ActsFatras ${Geant4_LIBRARIES}
+    PUBLIC Acts::Core Acts::Fatras ${Geant4_LIBRARIES}
 )
 
 install(

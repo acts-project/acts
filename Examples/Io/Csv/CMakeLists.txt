@@ -1,7 +1,7 @@
 include(ActsTargetLinkLibrariesSystem)
 
-add_library(
-    ActsExamplesIoCsv
+acts_add_library(
+    ExamplesIoCsv
     SHARED
     src/CsvMeasurementReader.cpp
     src/CsvMeasurementWriter.cpp
@@ -31,9 +31,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoCsv
     PRIVATE
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesDigitization
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesDigitization
         Threads::Threads
 )
 

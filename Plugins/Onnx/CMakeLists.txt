@@ -1,5 +1,5 @@
-add_library(
-    ActsPluginOnnx
+acts_add_library(
+    PluginOnnx
     SHARED
     # header files
     include/Acts/Plugins/Onnx/OnnxRuntimeBase.hpp
@@ -18,7 +18,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginOnnx PUBLIC ActsCore onnxruntime::onnxruntime)
+target_link_libraries(ActsPluginOnnx PUBLIC Acts::Core onnxruntime::onnxruntime)
 
 install(
     TARGETS ActsPluginOnnx

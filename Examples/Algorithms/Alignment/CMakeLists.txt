@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesAlignment
+acts_add_library(
+    ExamplesAlignment
     SHARED
     src/AlignmentAlgorithm.cpp
     src/AlignmentAlgorithmFunction.cpp
@@ -11,10 +11,10 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesAlignment
     PUBLIC
-        ActsCore
-        ActsAlignment
-        ActsExamplesFramework
-        ActsExamplesMagneticField
+        Acts::Core
+        Acts::Alignment
+        Acts::ExamplesFramework
+        Acts::ExamplesMagneticField
 )
 
 install(
