@@ -33,7 +33,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <memory>
@@ -276,10 +275,11 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
       CHECK_CLOSE_ABS(payload.transform.tr[2], 3., 1e-10);
 
       // Check mask
-      BOOST_CHECK(payload.mask.shape == detray::io::shape_id::rectangle2);
+      BOOST_CHECK(payload.masks.at(0).shape ==
+                  detray::io::shape_id::rectangle2);
       using enum detray::rectangle2D::boundaries;
-      CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_x], 5., 1e-10);
-      CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_y], 10., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
+      CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
     }
 
     // Test sensitive surface
@@ -360,10 +360,10 @@ BOOST_AUTO_TEST_CASE(DetrayPortalConversionTests) {
 
     // Check mask - should be same as surface since rectangle doesn't have
     // special portal handling
-    BOOST_CHECK(payload.mask.shape == detray::io::shape_id::rectangle2);
+    BOOST_CHECK(payload.masks.at(0).shape == detray::io::shape_id::rectangle2);
     using enum detray::rectangle2D::boundaries;
-    CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_x], 5., 1e-10);
-    CHECK_CLOSE_ABS(payload.mask.boundaries[e_half_y], 10., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_x], 5., 1e-10);
+    CHECK_CLOSE_ABS(payload.masks.at(0).boundaries[e_half_y], 10., 1e-10);
   }
 }
 
