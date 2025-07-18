@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
                              typename decltype(spContainer)::const_iterator>);
   static_assert(
       std::same_as<iterator_t, decltype(std::ranges::begin(spContainer))>);
-  static_assert(std::same_as<const_iterator_t,
-                             decltype(std::ranges::cbegin(spContainer))>);
+  static_assert(
+      std::same_as<const_iterator_t, decltype(std::cbegin(spContainer))>);
 
   std::size_t n = 0ul;
   for (const proxy_t& proxy : spContainer) {

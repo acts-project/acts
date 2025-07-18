@@ -25,6 +25,16 @@ namespace Acts {
 /// @brief material mapping procedure
 class MaterialMapper {
  public:
+  using SurfaceMaterialMap
+      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
+          SurfaceMaterialMaps;
+  using VolumeMaterialMap
+      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
+          VolumeMaterialMaps;
+  using DetectorMaterialMaps
+      [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
+          TrackingGeometryMaterial;
+
   /// @brief nested configuration struct
   struct Config {
     // The assignment finder

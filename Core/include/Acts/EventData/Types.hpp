@@ -12,13 +12,9 @@
 
 #include <cstdint>
 #include <limits>
+#include <span>
 
 namespace Acts {
-
-using SpacePointIndex2 = std::uint32_t;
-using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
-
-using SeedIndex2 = std::uint32_t;
 
 using TrackIndexType = std::uint32_t;
 static constexpr TrackIndexType kTrackIndexInvalid =
@@ -34,3 +30,13 @@ static constexpr BoundSubspaceIndices kBoundSubspaceIndicesInvalid = {
 using SerializedSubspaceIndices = std::uint64_t;
 
 }  // namespace Acts
+
+namespace Acts::Experimental {
+
+using SpacePointIndex2 = std::uint32_t;
+using SpacePointIndexRange2 = std::pair<SpacePointIndex2, SpacePointIndex2>;
+using SpacePointIndexSubset2 = std::span<const SpacePointIndex2>;
+
+using SeedIndex2 = std::uint32_t;
+
+}  // namespace Acts::Experimental

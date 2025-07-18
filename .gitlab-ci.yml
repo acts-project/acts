@@ -4,7 +4,8 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-06-08
+  SPACK_VERSION: develop-2025-07-06
+  SPACK_REPO_VERSION: develop-2025-07-13
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
   DEPENDENCY_TAG: v11.1.0
@@ -23,7 +24,7 @@ variables:
    - key:
        files:
          - CI/dependencies/setup_spack.sh
-       prefix: spack_${SPACK_VERSION}
+       prefix: spack_${SPACK_VERSION}_${SPACK_REPO_VERSION}
      paths:
       - spack
       - .spack
@@ -556,4 +557,31 @@ lcg_107:
         COMPILER:
           - gcc13
           - gcc14
+          - clang19
+
+lcg_107a:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107a"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+
+lcg_108:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "108"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc14
+          - gcc15
           - clang19

@@ -9,6 +9,7 @@ add_library(
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/DetectorVolumeFinderJsonConverter.cpp
+    src/GeometryIdentifierJsonConverter.cpp
     src/IndexedSurfacesJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp

@@ -60,6 +60,9 @@ endif()
 set(CMAKE_CXX_FLAGS "${cxx_flags} ${CMAKE_CXX_FLAGS}")
 message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 
+# do not scan for C++ modules
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
 
