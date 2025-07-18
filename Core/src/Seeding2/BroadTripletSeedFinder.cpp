@@ -109,6 +109,12 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
     const ConstSpacePointProxy2& middleSp,
     SpacePointContainer2::ConstSubset& topSps,
     SeedContainer2& outputSeeds) const {
+  assert((options.spacePointsSortedByRadius ==
+              bottomFinder.config().spacePointsSortedByRadius &&
+          options.spacePointsSortedByRadius ==
+              topFinder.config().spacePointsSortedByRadius) &&
+         "Inconsistent space point sorting");
+
   cache.candidatesCollector.setMaxElements(
       filter.config().maxSeedsPerSpMConf,
       filter.config().maxQualitySeedsPerSpMConf);
@@ -194,17 +200,23 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
                         numQualitySeeds, outputSeeds);
 }
 
-void BroadTripletSeedFinder::createSeedsFromSortedGroups(
+void BroadTripletSeedFinder::createSeedsFromGroups(
     const Options& options, State& state, Cache& cache,
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
-    const std::span<SpacePointContainer2::ConstRange>& bottomSpRanges,
-    const SpacePointContainer2::ConstRange& middleSpRange,
-    const std::span<SpacePointContainer2::ConstRange>& topSpRanges,
+    const std::span<SpacePointContainer2::ConstRange>& bottomSpGroups,
+    const SpacePointContainer2::ConstRange& middleSpGroup,
+    const std::span<SpacePointContainer2::ConstRange>& topSpGroups,
     const std::pair<float, float>& radiusRangeForMiddle,
     SeedContainer2& outputSeeds) const {
-  if (middleSpRange.empty()) {
+  assert((options.spacePointsSortedByRadius ==
+              bottomFinder.config().spacePointsSortedByRadius &&
+          options.spacePointsSortedByRadius ==
+              topFinder.config().spacePointsSortedByRadius) &&
+         "Inconsistent space point sorting");
+
+  if (middleSpGroup.empty()) {
     return;
   }
 
@@ -216,39 +228,43 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
   cache.bottomSpOffsets.clear();
   cache.topSpOffsets.clear();
 
-  // Initialize initial offsets for bottom and top space points with binary
-  // search. This requires at least one middle space point to be present which
-  // is already checked above.
-  const ConstSpacePointProxy2 firstMiddleSp = middleSpRange.front();
-  const float firstMiddleSpR = firstMiddleSp.r();
+  if (options.spacePointsSortedByRadius) {
+    // Initialize initial offsets for bottom and top space points with binary
+    // search. This requires at least one middle space point to be present which
+    // is already checked above.
+    const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
+    const float firstMiddleSpR = firstMiddleSp.r();
 
-  std::ranges::transform(
-      bottomSpRanges, std::back_inserter(cache.bottomSpOffsets),
-      [&](const SpacePointContainer2::ConstRange& bottomSps) {
-        auto low = std::ranges::lower_bound(
-            bottomSps, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
-            [&](const ConstSpacePointProxy2& sp) { return sp.r(); });
-        return low - bottomSps.begin();
-      });
-  std::ranges::transform(
-      topSpRanges, std::back_inserter(cache.topSpOffsets),
-      [&](const SpacePointContainer2::ConstRange& topSps) {
-        auto low = std::ranges::lower_bound(
-            topSps, firstMiddleSpR + topFinder.config().deltaRMin, {},
-            [&](const ConstSpacePointProxy2& sp) { return sp.r(); });
-        return low - topSps.begin();
-      });
+    std::ranges::transform(
+        bottomSpGroups, std::back_inserter(cache.bottomSpOffsets),
+        [&](const SpacePointContainer2::ConstRange& bottomSps) {
+          auto low = std::ranges::lower_bound(
+              bottomSps, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
+              [&](const ConstSpacePointProxy2& sp) { return sp.r(); });
+          return low - bottomSps.begin();
+        });
+    std::ranges::transform(
+        topSpGroups, std::back_inserter(cache.topSpOffsets),
+        [&](const SpacePointContainer2::ConstRange& topSps) {
+          auto low = std::ranges::lower_bound(
+              topSps, firstMiddleSpR + topFinder.config().deltaRMin, {},
+              [&](const ConstSpacePointProxy2& sp) { return sp.r(); });
+          return low - topSps.begin();
+        });
+  }
 
-  for (ConstSpacePointProxy2 spM : middleSpRange) {
+  for (ConstSpacePointProxy2 spM : middleSpGroup) {
     const float rM = spM.r();
 
-    // check if spM is outside our radial region of interest
-    if (rM < radiusRangeForMiddle.first) {
-      continue;
-    }
-    if (rM > radiusRangeForMiddle.second) {
-      // break because SPs are sorted in r
-      break;
+    if (options.spacePointsSortedByRadius) {
+      // check if spM is outside our radial region of interest
+      if (rM < radiusRangeForMiddle.first) {
+        continue;
+      }
+      if (rM > radiusRangeForMiddle.second) {
+        // break because SPs are sorted in r
+        break;
+      }
     }
 
     DoubletSeedFinder::MiddleSpInfo middleSpInfo =
@@ -256,8 +272,8 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
 
     // create middle-top doublets
     cache.topDoublets.clear();
-    for (SpacePointContainer2::ConstRange& topSpRange : topSpRanges) {
-      topFinder.createDoublets(spM, middleSpInfo, topSpRange,
+    for (SpacePointContainer2::ConstRange& topSpGroup : topSpGroups) {
+      topFinder.createDoublets(spM, middleSpInfo, topSpGroup,
                                cache.topDoublets);
     }
 
@@ -296,8 +312,8 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
 
     // create middle-bottom doublets
     cache.bottomDoublets.clear();
-    for (SpacePointContainer2::ConstRange& bottomSpRange : bottomSpRanges) {
-      bottomFinder.createDoublets(spM, middleSpInfo, bottomSpRange,
+    for (SpacePointContainer2::ConstRange& bottomSpGroup : bottomSpGroups) {
+      bottomFinder.createDoublets(spM, middleSpInfo, bottomSpGroup,
                                   cache.bottomDoublets);
     }
 
