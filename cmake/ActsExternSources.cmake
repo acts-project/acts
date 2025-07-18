@@ -27,7 +27,7 @@ set(ACTS_COVFIE_SOURCE
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_DETRAY_SOURCE
-    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=a34686403807db822dc71f2bc61b9d72e9837a525b22c0b86c6452bf9ec7b0e4"
+    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=f13db54da9b888258ab73a963d5a4bc08b655cc4aef47935e486b7cbe43e0965"
     CACHE STRING
     "Source to take DETRAY from"
 )
