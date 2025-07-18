@@ -1,4 +1,4 @@
-add_library(ActsAlignment SHARED src/Kernel/detail/AlignmentEngine.cpp)
+acts_add_library(Alignment SHARED src/Kernel/detail/AlignmentEngine.cpp)
 
 target_include_directories(
     ActsAlignment
@@ -7,7 +7,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsAlignment PUBLIC ActsCore)
+target_link_libraries(ActsAlignment PUBLIC Acts::Core)
 
 install(
     TARGETS ActsAlignment

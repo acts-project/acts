@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDetectorTelescope
+acts_add_library(
+    ExamplesDetectorTelescope
     SHARED
     src/TelescopeDetector.cpp
     src/TelescopeDetectorElement.cpp
@@ -13,13 +13,13 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorTelescope
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon
+    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
     target_link_libraries(
         ActsExamplesDetectorTelescope
-        PUBLIC ActsExamplesGeant4
+        PUBLIC Acts::ExamplesGeant4
     )
 
     target_sources(

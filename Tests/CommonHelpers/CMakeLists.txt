@@ -1,8 +1,8 @@
 # get the path of the test data directory
 file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../Data" acts_test_data_dir)
 
-add_library(
-    ActsTestsCommonHelpers
+acts_add_library(
+    TestsCommonHelpers
     SHARED
     src/DataDirectory.cpp
     src/CylindricalDetector.cpp
@@ -19,8 +19,8 @@ target_include_directories(
 )
 target_link_libraries(
     ActsTestsCommonHelpers
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::Core Acts::ExamplesFramework
     PRIVATE std::filesystem
 )
 
-acts_compile_headers(ActsTestsCommonHelpers GLOB "include/Acts/**/*.hpp")
+acts_compile_headers(TestsCommonHelpers GLOB "include/Acts/**/*.hpp")

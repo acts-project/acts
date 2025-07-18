@@ -1,4 +1,4 @@
-add_library(ActsPluginCovfie SHARED src/FieldConversion.cpp)
+acts_add_library(PluginCovfie SHARED src/FieldConversion.cpp)
 
 target_include_directories(
     ActsPluginCovfie
@@ -6,7 +6,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsPluginCovfie PUBLIC ActsCore covfie::core)
+target_link_libraries(ActsPluginCovfie PUBLIC Acts::Core covfie::core)
 
 install(
     TARGETS ActsPluginCovfie

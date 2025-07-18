@@ -2,8 +2,8 @@ include(ActsTargetLinkLibrariesSystem)
 
 set(ActsExamplesFramework_SOURCES)
 
-add_library(
-    ActsExamplesFramework
+acts_add_library(
+    ExamplesFramework
     SHARED
     src/EventData/MuonSpacePoint.cpp
     src/EventData/Measurement.cpp
@@ -38,9 +38,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesFramework
     PUBLIC
-        ActsCore
-        ActsFatras
-        ActsPluginFpeMonitoring
+        Acts::Core
+        Acts::Fatras
+        Acts::PluginFpeMonitoring
         Boost::boost
         ROOT::Core
         ROOT::Hist
@@ -64,7 +64,7 @@ endif()
 
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 
-acts_compile_headers(ActsExamplesFramework GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesFramework

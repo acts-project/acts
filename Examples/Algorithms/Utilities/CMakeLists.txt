@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesUtilities
+acts_add_library(
+    ExamplesUtilities
     SHARED
     src/PrototracksToSeeds.cpp
     src/SeedsToPrototracks.cpp
@@ -15,7 +15,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesUtilities
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::Core Acts::ExamplesFramework
 )
 
 install(

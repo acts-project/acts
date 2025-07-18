@@ -1,7 +1,7 @@
 add_executable(ActsAnalysisMaterialComposition MaterialComposition.cpp)
 target_link_libraries(
     ActsAnalysisMaterialComposition
-    ActsExamplesFramework
+    Acts::ExamplesFramework
     ROOT::Core
     ROOT::Hist
     ROOT::Tree

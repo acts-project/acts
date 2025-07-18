@@ -1,4 +1,4 @@
-add_library(ActsExamplesFrameworkML SHARED src/NeuralCalibrator.cpp)
+acts_add_library(ExamplesFrameworkML SHARED src/NeuralCalibrator.cpp)
 
 target_include_directories(
     ActsExamplesFrameworkML
@@ -7,7 +7,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesFrameworkML
-    PUBLIC ActsExamplesFramework ActsPluginOnnx
+    PUBLIC Acts::ExamplesFramework Acts::PluginOnnx
 )
 
 install(

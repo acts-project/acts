@@ -1,5 +1,5 @@
-add_library(
-    ActsPluginExaTrkX
+acts_add_library(
+    PluginExaTrkX
     SHARED
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
@@ -69,7 +69,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginExaTrkX PUBLIC ActsCore Boost::boost)
+target_link_libraries(ActsPluginExaTrkX PUBLIC Acts::Core Boost::boost)
 
 target_link_libraries(ActsPluginExaTrkX PRIVATE std::filesystem)
 
