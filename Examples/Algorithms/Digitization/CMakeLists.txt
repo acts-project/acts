@@ -7,6 +7,7 @@ add_library(
     src/MeasurementCreation.cpp
     src/DigitizationConfigurator.cpp
     src/ModuleClusters.cpp
+    src/MuonSpacePointDigitizer.cpp
 )
 target_include_directories(
     ActsExamplesDigitization
