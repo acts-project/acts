@@ -216,6 +216,9 @@ void pseudoNavigation(const Acts::TrackingGeometry& trackingGeometry,
 
 }  // namespace
 
+/// This adds the definitions for the Gen3 geometry construction to the python
+/// module
+/// @param ctx the context container for the python modules
 void addGeometryGen3(Context& ctx) {
   using Acts::Experimental::Blueprint;
   using Acts::Experimental::BlueprintNode;

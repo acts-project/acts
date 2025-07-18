@@ -168,6 +168,8 @@ class DetectorElementStub : public Acts::DetectorElementBase {
 
 }  // namespace Test
 
+/// This adds the definitions from Core/Navigation to the python module
+/// @param ctx the context container for the python modules
 void addNavigation(Context& ctx) {
   auto m = ctx.get("main");
 

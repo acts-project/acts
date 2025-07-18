@@ -46,7 +46,6 @@ class PythonLogger {
 
 /// @brief This adds the definitions from Core/Utilitis to the python module
 /// @param ctx the context container for the python modules
-
 void addUtilities(Context& ctx) {
   auto& m = ctx.get("main");
 

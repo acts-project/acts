@@ -91,27 +91,6 @@ void addOutput(Context& ctx) {
                              nInterpolatedPoints, keepOriginalHits);
 
   {
-    auto c = py::class_<Acts::ViewConfig>(m, "ViewConfig").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness,
-                       surfaceThickness, quarterSegments, triangulate,
-                       outputName);
-
-    patchKwargsConstructor(c);
-
-    py::class_<Acts::Color>(m, "Color")
-        .def(py::init<>())
-        .def(py::init<int, int, int>())
-        .def(py::init<double, double, double>())
-        .def(py::init<std::string_view>())
-        .def_readonly("rgb", &Acts::Color::rgb);
-  }
-
-  py::class_<Acts::IVisualization3D>(m, "IVisualization3D")
-      .def("write", py::overload_cast<const std::filesystem::path&>(
-                        &Acts::IVisualization3D::write, py::const_));
-
-  {
     using Writer = ActsExamples::ObjTrackingGeometryWriter;
     auto w = py::class_<Writer, std::shared_ptr<Writer>>(
                  mex, "ObjTrackingGeometryWriter")

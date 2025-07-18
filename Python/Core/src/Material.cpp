@@ -37,7 +37,7 @@ using namespace Acts;
 
 namespace ActsPython {
 
-/// @brief This adds the classes from Core/Definitions to the python module
+/// @brief This adds the classes from Core/Material to the python module
 /// @param ctx the context container for the python modules
 void addMaterial(Context& ctx) {
   auto& m = ctx.get("main");

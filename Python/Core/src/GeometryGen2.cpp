@@ -66,6 +66,10 @@ struct MaterialSurfaceSelector {
 }  // namespace
 
 namespace ActsPython {
+
+/// This adds the definitions for the Gen3 geometry construction to the python
+/// module
+/// @param ctx the context container for the python modules
 void addGeometryGen2(Context& ctx) {
   auto& m = ctx.get("main");
 

@@ -14,4 +14,5 @@ target_sources(
         src/Seeding.cpp
         src/TrackFinding.cpp
         src/Utilities.cpp
+        src/Visualization.cpp
 )

@@ -27,6 +27,10 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace ActsPython {
+
+/// This adds the definitions for the Gen1 geometry construction to the python
+/// module
+/// @param ctx the context container for the python modules
 void addGeometryGen1(Context &ctx) {
   auto &m = ctx.get("main");
 

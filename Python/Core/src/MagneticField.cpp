@@ -45,7 +45,7 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
 }
 
 /// This adds the definitions from Core/MagneticField to the python module
-/// @param ctx
+/// @param ctx the context container for the python modules
 void addMagneticField(Context& ctx) {
   auto& m = ctx.get("main");
 
