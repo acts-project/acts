@@ -29,7 +29,7 @@
 
 // Convenience shorthand
 
-namespace Acts {
+namespace ActsExamples {
 
 /// @brief Material decorator using a map as input
 ///
@@ -37,7 +37,7 @@ namespace Acts {
 /// proto-material for material mapping. This allows us to change the mapping
 /// parameters directly in the C++ code. Takes a tracking geometry in input, all
 /// the surface with `mapMaterial=true` will be added to a binning map.
-class MappingMaterialDecorator : public IMaterialDecorator {
+class MappingMaterialDecorator : public Acts::IMaterialDecorator {
  public:
   using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
 
@@ -47,14 +47,14 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                            bool clearVolumeMaterial = true)
       : m_clearSurfaceMaterial(clearSurfaceMaterial),
         m_clearVolumeMaterial(clearVolumeMaterial),
-        m_logger{getDefaultLogger("MappingMaterialDecorator", level)} {
+        m_logger{Acts::getDefaultLogger("MappingMaterialDecorator", level)} {
     volumeLoop(tGeometry.highestTrackingVolume());
   }
 
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  void decorate(Surface& surface) const final {
+  void decorate(Acts::Surface& surface) const final {
     ACTS_VERBOSE("Processing surface: " << surface.geometryId());
     // Clear the material if registered to do so
     if (m_clearSurfaceMaterial) {
@@ -73,7 +73,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  void decorate(TrackingVolume& volume) const final {
+  void decorate(Acts::TrackingVolume& volume) const final {
     ACTS_VERBOSE("Processing volume: " << volume.geometryId());
     // Clear the material if registered to do so
     if (m_clearVolumeMaterial) {
@@ -129,7 +129,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
       for (auto& lay : layers) {
         auto& layRep = lay->surfaceRepresentation();
         if (layRep.surfaceMaterial() != nullptr &&
-            layRep.geometryId() != GeometryIdentifier()) {
+            layRep.geometryId() != Acts::GeometryIdentifier()) {
           m_binningMap.insert(
               {layRep.geometryId().value(), std::make_pair(1, 1)});
         }
@@ -273,13 +273,13 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  private:
   BinningMap m_binningMap;
 
-  VolumeMaterialMaps m_volumeMaterialMap;
+  Acts::VolumeMaterialMaps m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};
 
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Logger& logger() const { return *m_logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 };
-}  // namespace Acts
+}  // namespace ActsExamples

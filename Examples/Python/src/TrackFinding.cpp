@@ -8,12 +8,6 @@
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
-#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
@@ -27,6 +21,9 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -42,27 +39,10 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
-void addTrackFinding(Context& ctx) {
+void addTrackFindingLegacy(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
-                                "SpacePointMaker", inputMeasurements,
-                                outputSpacePoints, trackingGeometry,
-                                geometrySelection, stripGeometrySelection);
-
-  {
-    using Config = Acts::SeedFilterConfig;
-    auto c = py::class_<Config>(m, "SeedFilterConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, deltaInvHelixDiameter, impactWeightFactor, zOriginWeightFactor,
-        compatSeedWeight, deltaRMin, maxSeedsPerSpM, compatSeedLimit,
-        seedConfirmation, centralSeedConfirmationRange,
-        forwardSeedConfirmationRange, useDeltaRorTopRadius, seedWeightIncrement,
-        numSeedIncrement, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf);
-    patchKwargsConstructor(c);
-  }
 
   {
     using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
@@ -83,12 +63,7 @@ void addTrackFinding(Context& ctx) {
         useDetailedDoubleMeasurementInfo);
     patchKwargsConstructor(c);
   }
-  {
-    using seedOptions = Acts::SeedFinderOptions;
-    auto c = py::class_<seedOptions>(m, "SeedFinderOptions").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
-    patchKwargsConstructor(c);
-  }
+
   {
     using Config =
         Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
@@ -119,32 +94,10 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
 
-  {
-    using seedConf = Acts::SeedConfirmationRangeConfig;
-    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, zMinSeedConf, zMaxSeedConf, rMaxSeedConf,
-                       nTopForLargeR, nTopForSmallR, seedConfMinBottomRadius,
-                       seedConfMaxZOrigin, minImpactSeedConf);
-    patchKwargsConstructor(c);
-  }
-
-  {
-    using Config = Acts::CylindricalSpacePointGridConfig;
-    auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, minPt, rMax, zMax, zMin, phiMin, phiMax, deltaRMax,
-                       cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
-                       impactMax, zBinEdges);
-    patchKwargsConstructor(c);
-  }
-  {
-    using Options = Acts::CylindricalSpacePointGridOptions;
-    auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, bFieldInZ);
-    patchKwargsConstructor(c);
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
+                                "SpacePointMaker", inputMeasurements,
+                                outputSpacePoints, trackingGeometry,
+                                geometrySelection, stripGeometrySelection);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
@@ -280,4 +233,4 @@ void addTrackFinding(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

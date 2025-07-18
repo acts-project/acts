@@ -13,7 +13,6 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
@@ -25,6 +24,8 @@
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -47,7 +48,7 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 using namespace Acts;
-using namespace Acts::Python;
+using namespace ActsPython;
 
 struct ExperimentalSensitiveCandidates
     : public Geant4::SensitiveCandidatesBase {
@@ -342,6 +343,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                        volumes);
   }
 
-  Acts::Python::Context ctx;
+  ActsPython::Context ctx;
   ctx.modules["geant4"] = mod;
 }

@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 
@@ -23,14 +24,13 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
-void addVertexing(Context& ctx) {
+void addVertexingLegacy(Context& ctx) {
   using Seeder = ActsExamples::AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
-  auto mex = ctx.get("examples");
-  auto& m = ctx.get("main");
+  auto& mex = ctx.get("examples");
 
-  py::enum_<Seeder>(m, "VertexSeedFinder")
+  py::enum_<Seeder>(mex, "VertexSeedFinder")
       .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
@@ -60,4 +60,4 @@ void addVertexing(Context& ctx) {
                                 minHits, defVtxPosition);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

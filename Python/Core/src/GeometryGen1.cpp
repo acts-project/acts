@@ -14,7 +14,8 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <vector>
@@ -25,11 +26,15 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
-void addGeometryBuildingGen1(Context &ctx) {
-  auto m = ctx.get("main");
+namespace ActsPython {
 
-  using SurfacePtrVector = std::vector<std::shared_ptr<const Surface>>;
+/// This adds the definitions for the Gen1 geometry construction to the python
+/// module
+/// @param ctx the context container for the python modules
+void addGeometryGen1(Context &ctx) {
+  auto &m = ctx.get("main");
+
+  using SurfacePtrVector = std::vector<std::shared_ptr<const Acts::Surface>>;
 
   py::class_<Acts::Layer, std::shared_ptr<Acts::Layer>>(m, "Layer");
 
@@ -43,25 +48,25 @@ void addGeometryBuildingGen1(Context &ctx) {
             }))
             .def(
                 "cylinderLayer",
-                [](const Acts::LayerCreator &self, const GeometryContext &gctx,
-                   SurfacePtrVector surfaces, std::size_t binsPhi,
-                   std::size_t binsZ) {
+                [](const Acts::LayerCreator &self,
+                   const Acts::GeometryContext &gctx, SurfacePtrVector surfaces,
+                   std::size_t binsPhi, std::size_t binsZ) {
                   return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
                                             binsZ);
                 },
                 "gctx"_a, "surfaces"_a, "binsPhi"_a, "binsZ"_a)
             .def(
                 "discLayer",
-                [](const Acts::LayerCreator &self, const GeometryContext &gctx,
-                   SurfacePtrVector surfaces, std::size_t binsR,
-                   std::size_t binsPhi) {
+                [](const Acts::LayerCreator &self,
+                   const Acts::GeometryContext &gctx, SurfacePtrVector surfaces,
+                   std::size_t binsR, std::size_t binsPhi) {
                   return self.discLayer(gctx, std::move(surfaces), binsR,
                                         binsPhi);
                 },
                 "gctx"_a, "surfaces"_a, "binsR"_a, "binsPhi"_a);
 
-    auto config =
-        py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
+    auto config = py::class_<Acts::LayerCreator::Config>(creator, "Config")
+                      .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(config, surfaceArrayCreator, cylinderZtolerance,
                        cylinderPhiTolerance, defaultEnvelopeR,
@@ -117,9 +122,9 @@ void addGeometryBuildingGen1(Context &ctx) {
             }))
             .def("createTrackingVolume",
                  [](const Acts::CylinderVolumeHelper &self,
-                    GeometryContext gctx, const LayerVector &layers,
-                    std::shared_ptr<VolumeBounds> volumeBounds,
-                    const Transform3 &trafo, const std::string &name) {
+                    Acts::GeometryContext gctx, const Acts::LayerVector &layers,
+                    std::shared_ptr<Acts::VolumeBounds> volumeBounds,
+                    const Acts::Transform3 &trafo, const std::string &name) {
                    return self.createTrackingVolume(gctx, layers, {},
                                                     std::move(volumeBounds), {},
                                                     trafo, name);
@@ -127,8 +132,9 @@ void addGeometryBuildingGen1(Context &ctx) {
             .def("createContainerTrackingVolume",
                  &Acts::CylinderVolumeHelper::createContainerTrackingVolume);
 
-    auto config = py::class_<CylinderVolumeHelper::Config>(helper, "Config")
-                      .def(py::init<>());
+    auto config =
+        py::class_<Acts::CylinderVolumeHelper::Config>(helper, "Config")
+            .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(config, layerArrayCreator, trackingVolumeArrayCreator,
                        passiveLayerThickness, passiveLayerPhiBins,
@@ -136,4 +142,4 @@ void addGeometryBuildingGen1(Context &ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
