@@ -15,9 +15,9 @@
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <array>
 #include <cstddef>
@@ -34,14 +34,15 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 /// @brief Get the value of a field, throwing an exception if the result is
 /// invalid.
 Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
                        const Acts::Vector3& position,
                        Acts::MagneticFieldProvider::Cache& cache) {
-  if (Result<Vector3> res = self.getField(position, cache); !res.ok()) {
+  if (Acts::Result<Acts::Vector3> res = self.getField(position, cache);
+      !res.ok()) {
     std::stringstream ss;
 
     ss << "Field lookup failure with error: \"" << res.error() << "\"";
@@ -180,4 +181,4 @@ void addMagneticField(Context& ctx) {
       py::arg("firstQuadrant") = false);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

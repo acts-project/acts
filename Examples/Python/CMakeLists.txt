@@ -1,6 +1,3 @@
-add_library(ActsPythonUtilities INTERFACE)
-target_include_directories(ActsPythonUtilities INTERFACE include)
-
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
@@ -174,9 +171,9 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     target_link_libraries(
         ActsPythonBindingsGeant4
         PUBLIC
+            ActsPythonUtilities
             ActsExamplesGeant4
             ActsExamplesDetectorGeant4
-            ActsPythonUtilities
             ActsExamplesMuonSpectrometerMockupDetector
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)

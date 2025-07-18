@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
-
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/PrototracksToTracks.hpp"
@@ -15,6 +13,8 @@
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -24,7 +24,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addUtilities(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -59,4 +59,4 @@ void addUtilities(Context& ctx) {
       inputMeasurements, inputProtoTracks, inputTrackParameters, outputTracks);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

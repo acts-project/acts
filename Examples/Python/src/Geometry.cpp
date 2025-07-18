@@ -41,7 +41,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -49,6 +48,8 @@
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <memory>
@@ -133,7 +134,7 @@ class PyTrackingGeometryVisitor : public Acts::TrackingGeometryMutableVisitor {
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addBlueprint(Context& ctx);
 
@@ -143,36 +144,36 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
         .def(py::init<Acts::GeometryIdentifier::Value>())
-        .def_property(
-            "layer", &Acts::GeometryIdentifier::layer,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withLayer(value);
-            })
-        .def_property(
-            "volume", &Acts::GeometryIdentifier::volume,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withVolume(value);
-            })
-        .def_property(
-            "boundary", &Acts::GeometryIdentifier::boundary,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withBoundary(value);
-            })
-        .def_property(
-            "approach", &Acts::GeometryIdentifier::approach,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withApproach(value);
-            })
-        .def_property(
-            "sensitive", &Acts::GeometryIdentifier::sensitive,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withSensitive(value);
-            })
-        .def_property(
-            "extra", &Acts::GeometryIdentifier::extra,
-            [](GeometryIdentifier& self, GeometryIdentifier::Value value) {
-              self = self.withExtra(value);
-            })
+        .def_property("layer", &Acts::GeometryIdentifier::layer,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withLayer(value);
+                      })
+        .def_property("volume", &Acts::GeometryIdentifier::volume,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withVolume(value);
+                      })
+        .def_property("boundary", &Acts::GeometryIdentifier::boundary,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withBoundary(value);
+                      })
+        .def_property("approach", &Acts::GeometryIdentifier::approach,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withApproach(value);
+                      })
+        .def_property("sensitive", &Acts::GeometryIdentifier::sensitive,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withSensitive(value);
+                      })
+        .def_property("extra", &Acts::GeometryIdentifier::extra,
+                      [](Acts::GeometryIdentifier& self,
+                         Acts::GeometryIdentifier::Value value) {
+                        self = self.withExtra(value);
+                      })
         .def_property_readonly("value", &Acts::GeometryIdentifier::value)
         .def("__str__", [](const Acts::GeometryIdentifier& self) {
           std::stringstream ss;
@@ -185,10 +186,11 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         // Can't bind directly because GeometryObject is virtual base of Surface
         .def_property_readonly(
-            "geometryId", [](const Surface& self) { return self.geometryId(); })
-        .def("center", &Surface::center)
-        .def_property_readonly("type", &Surface::type)
-        .def("visualize", &Surface::visualize)
+            "geometryId",
+            [](const Acts::Surface& self) { return self.geometryId(); })
+        .def("center", &Acts::Surface::center)
+        .def_property_readonly("type", &Acts::Surface::type)
+        .def("visualize", &Acts::Surface::visualize)
         .def_property_readonly("surfaceMaterial",
                                &Acts::Surface::surfaceMaterialSharedPtr);
   }
@@ -222,15 +224,17 @@ void addGeometry(Context& ctx) {
         py::class_<Acts::TrackingGeometry,
                    std::shared_ptr<Acts::TrackingGeometry>>(m,
                                                             "TrackingGeometry")
-            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                             std::shared_ptr<const IMaterialDecorator> matDec,
-                             const GeometryIdentifierHook& hook,
-                             Acts::Logging::Level level) {
-              auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
-              auto obj = std::make_shared<Acts::TrackingGeometry>(
-                  volPtr, matDec.get(), hook, *logger);
-              return obj;
-            }))
+            .def(py::init(
+                [](const Acts::MutableTrackingVolumePtr& volPtr,
+                   std::shared_ptr<const Acts::IMaterialDecorator> matDec,
+                   const Acts::GeometryIdentifierHook& hook,
+                   Acts::Logging::Level level) {
+                  auto logger =
+                      Acts::getDefaultLogger("TrackingGeometry", level);
+                  auto obj = std::make_shared<Acts::TrackingGeometry>(
+                      volPtr, matDec.get(), hook, *logger);
+                  return obj;
+                }))
             .def("visitSurfaces",
                  [](Acts::TrackingGeometry& self, py::function& func) {
                    self.visitSurfaces(func);
@@ -247,14 +251,15 @@ void addGeometry(Context& ctx) {
                 &Acts::TrackingGeometry::highestTrackingVolumePtr)
             .def("visualize", &Acts::TrackingGeometry::visualize,
                  py::arg("helper"), py::arg("gctx"),
-                 py::arg("viewConfig") = s_viewVolume,
-                 py::arg("portalViewConfig") = s_viewPortal,
-                 py::arg("sensitiveViewConfig") = s_viewSensitive);
+                 py::arg("viewConfig") = Acts::s_viewVolume,
+                 py::arg("portalViewConfig") = Acts::s_viewPortal,
+                 py::arg("sensitiveViewConfig") = Acts::s_viewSensitive);
 
     using apply_ptr_t =
-        void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);
+        void (Acts::TrackingGeometry::*)(Acts::TrackingGeometryMutableVisitor&);
 
-    trkGeo.def("apply", static_cast<apply_ptr_t>(&TrackingGeometry::apply));
+    trkGeo.def("apply",
+               static_cast<apply_ptr_t>(&Acts::TrackingGeometry::apply));
   }
 
   {
@@ -276,14 +281,15 @@ void addGeometry(Context& ctx) {
                  "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
                  "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
 
-    py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
-        .value("PositiveDisc", CylinderVolumeBounds::Face::PositiveDisc)
-        .value("NegativeDisc", CylinderVolumeBounds::Face::NegativeDisc)
-        .value("OuterCylinder", CylinderVolumeBounds::Face::OuterCylinder)
-        .value("InnerCylinder", CylinderVolumeBounds::Face::InnerCylinder)
-        .value("NegativePhiPlane", CylinderVolumeBounds::Face::NegativePhiPlane)
+    py::enum_<Acts::CylinderVolumeBounds::Face>(cvb, "Face")
+        .value("PositiveDisc", Acts::CylinderVolumeBounds::Face::PositiveDisc)
+        .value("NegativeDisc", Acts::CylinderVolumeBounds::Face::NegativeDisc)
+        .value("OuterCylinder", Acts::CylinderVolumeBounds::Face::OuterCylinder)
+        .value("InnerCylinder", Acts::CylinderVolumeBounds::Face::InnerCylinder)
+        .value("NegativePhiPlane",
+               Acts::CylinderVolumeBounds::Face::NegativePhiPlane)
         .value("PositivePhiPlane",
-               CylinderVolumeBounds::Face::PositivePhiPlane);
+               Acts::CylinderVolumeBounds::Face::PositivePhiPlane);
   }
 
   {
@@ -291,8 +297,8 @@ void addGeometry(Context& ctx) {
 
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
-        .def(py::init<const Transform3&, std::shared_ptr<Acts::VolumeBounds>,
-                      std::string>());
+        .def(py::init<const Acts::Transform3&,
+                      std::shared_ptr<Acts::VolumeBounds>, std::string>());
   }
 
   {
@@ -307,45 +313,51 @@ void addGeometry(Context& ctx) {
   }
 
   {
-    py::class_<TrackingGeometryMutableVisitor, PyTrackingGeometryVisitor,
-               std::shared_ptr<TrackingGeometryMutableVisitor>>(
+    py::class_<Acts::TrackingGeometryMutableVisitor, PyTrackingGeometryVisitor,
+               std::shared_ptr<Acts::TrackingGeometryMutableVisitor>>(
         m, "TrackingGeometryMutableVisitor")
         .def(py::init<>());
   }
 
-  py::class_<ExtentEnvelope>(m, "ExtentEnvelope")
+  py::class_<Acts::ExtentEnvelope>(m, "ExtentEnvelope")
       .def(py::init<>())
-      .def(py::init<const Envelope&>())
-      .def(py::init([](Envelope x, Envelope y, Envelope z, Envelope r,
-                       Envelope phi, Envelope rPhi, Envelope theta,
-                       Envelope eta, Envelope mag) {
-             return ExtentEnvelope({.x = x,
-                                    .y = y,
-                                    .z = z,
-                                    .r = r,
-                                    .phi = phi,
-                                    .rPhi = rPhi,
-                                    .theta = theta,
-                                    .eta = eta,
-                                    .mag = mag});
+      .def(py::init<const Acts::Envelope&>())
+      .def(py::init([](Acts::Envelope x, Acts::Envelope y, Acts::Envelope z,
+                       Acts::Envelope r, Acts::Envelope phi,
+                       Acts::Envelope rPhi, Acts::Envelope theta,
+                       Acts::Envelope eta, Acts::Envelope mag) {
+             return Acts::ExtentEnvelope({.x = x,
+                                          .y = y,
+                                          .z = z,
+                                          .r = r,
+                                          .phi = phi,
+                                          .rPhi = rPhi,
+                                          .theta = theta,
+                                          .eta = eta,
+                                          .mag = mag});
            }),
-           py::arg("x") = zeroEnvelope, py::arg("y") = zeroEnvelope,
-           py::arg("z") = zeroEnvelope, py::arg("r") = zeroEnvelope,
-           py::arg("phi") = zeroEnvelope, py::arg("rPhi") = zeroEnvelope,
-           py::arg("theta") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
-           py::arg("mag") = zeroEnvelope)
-      .def_static("Zero", &ExtentEnvelope::Zero)
-      .def("__getitem__", [](ExtentEnvelope& self,
-                             AxisDirection bValue) { return self[bValue]; })
-      .def("__setitem__", [](ExtentEnvelope& self, AxisDirection bValue,
-                             const Envelope& value) { self[bValue] = value; })
-      .def("__str__", [](const ExtentEnvelope& self) {
-        std::array<std::string, numAxisDirections()> values;
+           py::arg("x") = Acts::zeroEnvelope, py::arg("y") = Acts::zeroEnvelope,
+           py::arg("z") = Acts::zeroEnvelope, py::arg("r") = Acts::zeroEnvelope,
+           py::arg("phi") = Acts::zeroEnvelope,
+           py::arg("rPhi") = Acts::zeroEnvelope,
+           py::arg("theta") = Acts::zeroEnvelope,
+           py::arg("eta") = Acts::zeroEnvelope,
+           py::arg("mag") = Acts::zeroEnvelope)
+      .def_static("Zero", &Acts::ExtentEnvelope::Zero)
+      .def("__getitem__",
+           [](Acts::ExtentEnvelope& self, Acts::AxisDirection bValue) {
+             return self[bValue];
+           })
+      .def("__setitem__",
+           [](Acts::ExtentEnvelope& self, Acts::AxisDirection bValue,
+              const Acts::Envelope& value) { self[bValue] = value; })
+      .def("__str__", [](const Acts::ExtentEnvelope& self) {
+        std::array<std::string, Acts::numAxisDirections()> values;
 
         std::stringstream ss;
-        for (AxisDirection val : allAxisDirections()) {
+        for (Acts::AxisDirection val : Acts::allAxisDirections()) {
           ss << val << "=(" << self[val][0] << ", " << self[val][1] << ")";
-          values.at(toUnderlying(val)) = ss.str();
+          values.at(Acts::toUnderlying(val)) = ss.str();
           ss.str("");
         }
 
@@ -356,34 +368,34 @@ void addGeometry(Context& ctx) {
         return ss.str();
       });
 
-  py::class_<Extent>(m, "Extent")
-      .def(py::init<const ExtentEnvelope&>(),
-           py::arg("envelope") = ExtentEnvelope::Zero())
+  py::class_<Acts::Extent>(m, "Extent")
+      .def(py::init<const Acts::ExtentEnvelope&>(),
+           py::arg("envelope") = Acts::ExtentEnvelope::Zero())
       .def("range",
            [](const Acts::Extent& self,
               Acts::AxisDirection bval) -> std::array<double, 2> {
              return {self.min(bval), self.max(bval)};
            })
       .def("setRange",
-           [](Extent& self, Acts::AxisDirection bval,
+           [](Acts::Extent& self, Acts::AxisDirection bval,
               const std::array<double, 2>& range) {
              self.set(bval, range[0], range[1]);
            })
-      .def("__str__", &Extent::toString);
+      .def("__str__", &Acts::Extent::toString);
 
   {
-    py::enum_<VolumeAttachmentStrategy>(m, "VolumeAttachmentStrategy")
-        .value("Gap", VolumeAttachmentStrategy::Gap)
-        .value("First", VolumeAttachmentStrategy::First)
-        .value("Second", VolumeAttachmentStrategy::Second)
-        .value("Midpoint", VolumeAttachmentStrategy::Midpoint);
+    py::enum_<Acts::VolumeAttachmentStrategy>(m, "VolumeAttachmentStrategy")
+        .value("Gap", Acts::VolumeAttachmentStrategy::Gap)
+        .value("First", Acts::VolumeAttachmentStrategy::First)
+        .value("Second", Acts::VolumeAttachmentStrategy::Second)
+        .value("Midpoint", Acts::VolumeAttachmentStrategy::Midpoint);
 
-    py::enum_<VolumeResizeStrategy>(m, "VolumeResizeStrategy")
-        .value("Gap", VolumeResizeStrategy::Gap)
-        .value("Expand", VolumeResizeStrategy::Expand);
+    py::enum_<Acts::VolumeResizeStrategy>(m, "VolumeResizeStrategy")
+        .value("Gap", Acts::VolumeResizeStrategy::Gap)
+        .value("Expand", Acts::VolumeResizeStrategy::Expand);
   }
 
-  py::class_<PortalShellBase>(m, "PortalShellBase");
+  py::class_<Acts::PortalShellBase>(m, "PortalShellBase");
 
   addBlueprint(ctx);
 }
@@ -420,7 +432,7 @@ void addExperimentalGeometry(Context& ctx) {
       .def("cylindricalVolumeRepresentation",
            [](const Detector& self, const Acts::GeometryContext& gctx) {
              // Loop over the volumes and gather the extent
-             Extent extent;
+             Acts::Extent extent;
              for (const auto& volume : self.volumes()) {
                extent.extend(volume->extent(gctx));
              }
@@ -428,18 +440,18 @@ void addExperimentalGeometry(Context& ctx) {
                  0., extent.max(Acts::AxisDirection::AxisR),
                  extent.max(Acts::AxisDirection::AxisZ));
 
-             return std::make_shared<Acts::Volume>(Transform3::Identity(),
+             return std::make_shared<Acts::Volume>(Acts::Transform3::Identity(),
                                                    std::move(bounds));
            });
 
   // Portal definition
-  py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
-      m, "Portal");
+  py::class_<Acts::Experimental::Portal,
+             std::shared_ptr<Acts::Experimental::Portal>>(m, "Portal");
 
   {
     // The surface hierarchy map
     using SurfaceHierarchyMap =
-        Acts::GeometryHierarchyMap<std::shared_ptr<Surface>>;
+        Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>;
 
     py::class_<SurfaceHierarchyMap, std::shared_ptr<SurfaceHierarchyMap>>(
         m, "SurfaceHierarchyMap");
@@ -447,8 +459,9 @@ void addExperimentalGeometry(Context& ctx) {
     // Extract volume / layer surfaces
     mex.def("extractVolumeLayerSurfaces", [](const SurfaceHierarchyMap& smap,
                                              bool sensitiveOnly) {
-      std::map<unsigned int,
-               std::map<unsigned int, std::vector<std::shared_ptr<Surface>>>>
+      std::map<
+          unsigned int,
+          std::map<unsigned int, std::vector<std::shared_ptr<Acts::Surface>>>>
           surfaceVolumeLayerMap;
       for (const auto& surface : smap) {
         auto gid = surface->geometryId();
@@ -465,7 +478,7 @@ void addExperimentalGeometry(Context& ctx) {
 
   {
     // Be able to construct a proto binning
-    py::class_<ProtoAxis>(m, "ProtoAxis")
+    py::class_<Acts::ProtoAxis>(m, "ProtoAxis")
         .def(py::init<Acts::AxisBoundaryType, const std::vector<double>&>(),
              "bType"_a, "e"_a)
         .def(py::init<Acts::AxisBoundaryType, double, double, std::size_t>(),
@@ -473,7 +486,7 @@ void addExperimentalGeometry(Context& ctx) {
         .def(py::init<Acts::AxisBoundaryType, std::size_t>(), "bType"_a,
              "nbins"_a);
 
-    py::class_<DirectedProtoAxis>(m, "DirectedProtoAxis")
+    py::class_<Acts::DirectedProtoAxis>(m, "DirectedProtoAxis")
         .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
                       const std::vector<double>&>(),
              "bValue"_a, "bType"_a, "e"_a)
@@ -492,19 +505,22 @@ void addExperimentalGeometry(Context& ctx) {
         m, "IInternalStructureBuilder");
 
     auto lsBuilder =
-        py::class_<LayerStructureBuilder,
+        py::class_<Acts::Experimental::LayerStructureBuilder,
                    Acts::Experimental::IInternalStructureBuilder,
-                   std::shared_ptr<LayerStructureBuilder>>(
+                   std::shared_ptr<Acts::Experimental::LayerStructureBuilder>>(
             m, "LayerStructureBuilder")
-            .def(py::init([](const LayerStructureBuilder::Config& config,
-                             const std::string& name,
-                             Acts::Logging::Level level) {
-              return std::make_shared<LayerStructureBuilder>(
-                  config, getDefaultLogger(name, level));
-            }));
+            .def(py::init(
+                [](const Acts::Experimental::LayerStructureBuilder::Config&
+                       config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<
+                      Acts::Experimental::LayerStructureBuilder>(
+                      config, Acts::getDefaultLogger(name, level));
+                }));
 
     auto lsConfig =
-        py::class_<LayerStructureBuilder::Config>(lsBuilder, "Config")
+        py::class_<Acts::Experimental::LayerStructureBuilder::Config>(lsBuilder,
+                                                                      "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(lsConfig, surfacesProvider, supports, binnings,
                        quarterSegments, auxiliary);
@@ -514,11 +530,12 @@ void addExperimentalGeometry(Context& ctx) {
                std::shared_ptr<Acts::Experimental::ISurfacesProvider>>(
         m, "ISurfacesProvider");
 
-    py::class_<LayerStructureBuilder::SurfacesHolder,
+    py::class_<Acts::Experimental::LayerStructureBuilder::SurfacesHolder,
                Acts::Experimental::ISurfacesProvider,
-               std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
+               std::shared_ptr<
+                   Acts::Experimental::LayerStructureBuilder::SurfacesHolder>>(
         lsBuilder, "SurfacesHolder")
-        .def(py::init<std::vector<std::shared_ptr<Surface>>>());
+        .def(py::init<std::vector<std::shared_ptr<Acts::Surface>>>());
   }
 
   {
@@ -536,7 +553,7 @@ void addExperimentalGeometry(Context& ctx) {
 
     py::class_<KdtSurfacesDim1Bin100, std::shared_ptr<KdtSurfacesDim1Bin100>>(
         m, "KdtSurfacesDim1Bin100")
-        .def(py::init<const GeometryContext&,
+        .def(py::init<const Acts::GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
                       const std::array<Acts::AxisDirection, 1u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim1&>(
@@ -546,7 +563,8 @@ void addExperimentalGeometry(Context& ctx) {
                Acts::Experimental::ISurfacesProvider,
                std::shared_ptr<KdtSurfacesProviderDim1Bin100>>(
         m, "KdtSurfacesProviderDim1Bin100")
-        .def(py::init<std::shared_ptr<KdtSurfacesDim1Bin100>, const Extent&>());
+        .def(py::init<std::shared_ptr<KdtSurfacesDim1Bin100>,
+                      const Acts::Extent&>());
   }
 
   {
@@ -566,7 +584,7 @@ void addExperimentalGeometry(Context& ctx) {
 
     py::class_<KdtSurfacesDim2Bin100, std::shared_ptr<KdtSurfacesDim2Bin100>>(
         m, "KdtSurfacesDim2Bin100")
-        .def(py::init<const GeometryContext&,
+        .def(py::init<const Acts::GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
                       const std::array<Acts::AxisDirection, 2u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim2&>(
@@ -576,7 +594,8 @@ void addExperimentalGeometry(Context& ctx) {
                Acts::Experimental::ISurfacesProvider,
                std::shared_ptr<KdtSurfacesProviderDim2Bin100>>(
         m, "KdtSurfacesProviderDim2Bin100")
-        .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>, const Extent&>());
+        .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>,
+                      const Acts::Extent&>());
   }
 
   {
@@ -601,19 +620,21 @@ void addExperimentalGeometry(Context& ctx) {
         m, "IExternalStructureBuilder");
 
     auto vsBuilder =
-        py::class_<VolumeStructureBuilder,
+        py::class_<Acts::Experimental::VolumeStructureBuilder,
                    Acts::Experimental::IExternalStructureBuilder,
-                   std::shared_ptr<VolumeStructureBuilder>>(
+                   std::shared_ptr<Acts::Experimental::VolumeStructureBuilder>>(
             m, "VolumeStructureBuilder")
-            .def(py::init([](const VolumeStructureBuilder::Config& config,
-                             const std::string& name,
-                             Acts::Logging::Level level) {
-              return std::make_shared<VolumeStructureBuilder>(
-                  config, getDefaultLogger(name, level));
-            }));
+            .def(py::init(
+                [](const Acts::Experimental::VolumeStructureBuilder::Config&
+                       config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<VolumeStructureBuilder>(
+                      config, Acts::getDefaultLogger(name, level));
+                }));
 
     auto vsConfig =
-        py::class_<VolumeStructureBuilder::Config>(vsBuilder, "Config")
+        py::class_<Acts::Experimental::VolumeStructureBuilder::Config>(
+            vsBuilder, "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(vsConfig, boundsType, boundValues, transform, auxiliary);
   }
@@ -633,7 +654,7 @@ void addExperimentalGeometry(Context& ctx) {
                              const std::string& name,
                              Acts::Logging::Level level) {
               return std::make_shared<Acts::Experimental::GeometryIdGenerator>(
-                  config, getDefaultLogger(name, level));
+                  config, Acts::getDefaultLogger(name, level));
             }));
 
     auto geoIdGenConfig =
@@ -651,20 +672,24 @@ void addExperimentalGeometry(Context& ctx) {
         m, "IDetectorComponentBuilder");
 
     auto dvBuilder =
-        py::class_<DetectorVolumeBuilder,
+        py::class_<Acts::Experimental::DetectorVolumeBuilder,
                    Acts::Experimental::IDetectorComponentBuilder,
-                   std::shared_ptr<DetectorVolumeBuilder>>(
+                   std::shared_ptr<Acts::Experimental::DetectorVolumeBuilder>>(
             m, "DetectorVolumeBuilder")
-            .def(py::init([](const DetectorVolumeBuilder::Config& config,
-                             const std::string& name,
-                             Acts::Logging::Level level) {
-              return std::make_shared<DetectorVolumeBuilder>(
-                  config, getDefaultLogger(name, level));
-            }))
-            .def("construct", &DetectorVolumeBuilder::construct);
+            .def(py::init(
+                [](const Acts::Experimental::DetectorVolumeBuilder::Config&
+                       config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<
+                      Acts::Experimental::DetectorVolumeBuilder>(
+                      config, Acts::getDefaultLogger(name, level));
+                }))
+            .def("construct",
+                 &Acts::Experimental::DetectorVolumeBuilder::construct);
 
     auto dvConfig =
-        py::class_<DetectorVolumeBuilder::Config>(dvBuilder, "Config")
+        py::class_<Acts::Experimental::DetectorVolumeBuilder::Config>(dvBuilder,
+                                                                      "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(dvConfig, name, internalsBuilder, externalsBuilder,
                        geoIdGenerator, auxiliary);
@@ -688,15 +713,17 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Cylindrical container builder
     auto ccBuilder =
-        py::class_<CylindricalContainerBuilder,
-                   Acts::Experimental::IDetectorComponentBuilder,
-                   std::shared_ptr<CylindricalContainerBuilder>>(
+        py::class_<
+            Acts::Experimental::CylindricalContainerBuilder,
+            Acts::Experimental::IDetectorComponentBuilder,
+            std::shared_ptr<Acts::Experimental::CylindricalContainerBuilder>>(
             m, "CylindricalContainerBuilder")
-            .def(py::init([](const CylindricalContainerBuilder::Config& config,
+            .def(py::init([](const Acts::Experimental::
+                                 CylindricalContainerBuilder::Config& config,
                              const std::string& name,
                              Acts::Logging::Level level) {
               return std::make_shared<CylindricalContainerBuilder>(
-                  config, getDefaultLogger(name, level));
+                  config, Acts::getDefaultLogger(name, level));
             }))
             .def("construct", &CylindricalContainerBuilder::construct);
 
@@ -710,20 +737,24 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Cuboidal container builder
     auto ccBuilder =
-        py::class_<CuboidalContainerBuilder,
+        py::class_<Acts::Experimental::CuboidalContainerBuilder,
                    Acts::Experimental::IDetectorComponentBuilder,
                    std::shared_ptr<CuboidalContainerBuilder>>(
             m, "CuboidalContainerBuilder")
-            .def(py::init([](const CuboidalContainerBuilder::Config& config,
-                             const std::string& name,
-                             Acts::Logging::Level level) {
-              return std::make_shared<CuboidalContainerBuilder>(
-                  config, getDefaultLogger(name, level));
-            }))
-            .def("construct", &CuboidalContainerBuilder::construct);
+            .def(py::init(
+                [](const Acts::Experimental::CuboidalContainerBuilder::Config&
+                       config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<
+                      Acts::Experimental::CuboidalContainerBuilder>(
+                      config, Acts::getDefaultLogger(name, level));
+                }))
+            .def("construct",
+                 &Acts::Experimental::CuboidalContainerBuilder::construct);
 
     auto ccConfig =
-        py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
+        py::class_<Acts::Experimental::CuboidalContainerBuilder::Config>(
+            ccBuilder, "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder,
                        geoIdGenerator, geoIdReverseGen, auxiliary);
@@ -732,17 +763,18 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Detector builder
     auto dBuilder =
-        py::class_<DetectorBuilder, std::shared_ptr<DetectorBuilder>>(
-            m, "DetectorBuilder")
-            .def(py::init([](const DetectorBuilder::Config& config,
-                             const std::string& name,
-                             Acts::Logging::Level level) {
-              return std::make_shared<DetectorBuilder>(
-                  config, getDefaultLogger(name, level));
-            }))
-            .def("construct", &DetectorBuilder::construct);
+        py::class_<Acts::Experimental::DetectorBuilder,
+                   std::shared_ptr<DetectorBuilder>>(m, "DetectorBuilder")
+            .def(py::init(
+                [](const Acts::Experimental::DetectorBuilder::Config& config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<Acts::Experimental::DetectorBuilder>(
+                      config, Acts::getDefaultLogger(name, level));
+                }))
+            .def("construct", &Acts::Experimental::DetectorBuilder::construct);
 
-    auto dConfig = py::class_<DetectorBuilder::Config>(dBuilder, "Config")
+    auto dConfig = py::class_<Acts::Experimental::DetectorBuilder::Config>(
+                       dBuilder, "Config")
                        .def(py::init<>());
     ACTS_PYTHON_STRUCT(dConfig, name, builder, geoIdGenerator,
                        materialDecorator, auxiliary);
@@ -752,14 +784,14 @@ void addExperimentalGeometry(Context& ctx) {
                                 "VolumeAssociationTest", name, ntests,
                                 randomNumbers, randomRange, detector);
 
-  py::class_<ProtoLayer>(m, "ProtoLayer")
-      .def(py::init<const GeometryContext&,
-                    const std::vector<std::shared_ptr<Surface>>&,
-                    const Transform3&>(),
-           "gctx"_a, "surfaces"_a, "transform"_a = Transform3::Identity())
-      .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
-      .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
-      .def_property_readonly("surfaces", &ProtoLayer::surfaces);
+  py::class_<Acts::ProtoLayer>(m, "ProtoLayer")
+      .def(py::init<const Acts::GeometryContext&,
+                    const std::vector<std::shared_ptr<Acts::Surface>>&,
+                    const Acts::Transform3&>(),
+           "gctx"_a, "surfaces"_a, "transform"_a = Acts::Transform3::Identity())
+      .def("min", &Acts::ProtoLayer::min, "bval"_a, "addenv"_a = true)
+      .def("max", &Acts::ProtoLayer::max, "bval"_a, "addenv"_a = true)
+      .def_property_readonly("surfaces", &Acts::ProtoLayer::surfaces);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

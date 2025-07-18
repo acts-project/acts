@@ -8,10 +8,10 @@
 
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <detray/propagator/line_stepper.hpp>
 #include <pybind11/pybind11.h>
@@ -24,7 +24,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addTraccc(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -68,4 +68,4 @@ void addTraccc(Context& ctx) {
         });
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

@@ -8,7 +8,6 @@
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -27,6 +26,9 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/Patchers.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -42,7 +44,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -280,4 +282,4 @@ void addTrackFinding(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

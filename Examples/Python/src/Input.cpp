@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Framework/BufferedReader.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
@@ -18,6 +17,8 @@
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -27,7 +28,7 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addInput(Context& ctx) {
   auto mex = ctx.get("examples");
@@ -73,4 +74,4 @@ void addInput(Context& ctx) {
       mex, "ITrackParamsLookupReader");
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

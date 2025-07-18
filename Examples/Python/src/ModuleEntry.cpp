@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <tuple>
 #include <unordered_map>
@@ -21,9 +21,8 @@
 #include <pyerrors.h>
 
 namespace py = pybind11;
-using namespace Acts::Python;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addContext(Context& ctx);
 void addAny(Context& ctx);
 void addUnits(Context& ctx);
@@ -77,10 +76,12 @@ void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
+
+using namespace ActsPython;
 
 PYBIND11_MODULE(ActsPythonBindings, m) {
-  Acts::Python::Context ctx;
+  Context ctx;
   ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
   ctx.modules["examples"] = mex;

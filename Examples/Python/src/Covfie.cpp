@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Context.hpp"
 
 #include <string>
 
@@ -17,7 +17,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 namespace {
 template <typename field_t, typename scalar_type>
@@ -60,4 +60,4 @@ void addCovfie(Context& ctx) {
             &Acts::CovfiePlugin::covfieField));
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
