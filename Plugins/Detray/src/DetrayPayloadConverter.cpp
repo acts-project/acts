@@ -17,9 +17,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -231,7 +229,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
     payload.type = isSensitive ? detray::surface_id::e_sensitive
                                : detray::surface_id::e_passive;
   }
-  payload.mask = convertMask(surface.bounds(), portal);
+  payload.masks = {convertMask(surface.bounds(), portal)};
   return payload;
 }
 
@@ -346,7 +344,7 @@ void DetrayPayloadConverter::handlePortalLink(
                  << trivial->volume().volumeName() << ": "
                  << volumeLookup(&trivial->volume()));
     std::size_t targetVolumeIndex = volumeLookup(&trivial->volume());
-    srfPayload.mask.volume_link.link = targetVolumeIndex;
+    srfPayload.masks.at(0).volume_link.link = targetVolumeIndex;
     surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
   }
 }
@@ -361,7 +359,8 @@ void DetrayPayloadConverter::makeEndOfWorld(
   srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
 
   // Marker for end of world is MAX
-  srfPayload.mask.volume_link.link = std::numeric_limits<std::size_t>::max();
+  srfPayload.masks.at(0).volume_link.link =
+      std::numeric_limits<std::size_t>::max();
 
   surfaceIndices[&surface] = srfPayload.index_in_coll.value();
 }
@@ -646,7 +645,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
       auto& srfPayload =
           volPayload.surfaces.emplace_back(convertSurface(gctx, surface));
       srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-      srfPayload.mask.volume_link.link = volPayload.index.link;
+      srfPayload.masks.at(0).volume_link.link = volPayload.index.link;
       surfaceIndices[&surface] = srfPayload.index_in_coll.value();
     }
   });
@@ -756,10 +755,11 @@ DetrayPayloadConverter::convertTrackingGeometry(
   // Adjust volume indices in surfaces after swapping
   for (auto& vol : detPayload.volumes) {
     for (auto& srf : vol.surfaces) {
-      if (srf.mask.volume_link.link == beampipeIdx) {
-        srf.mask.volume_link.link = 0;
-      } else if (srf.mask.volume_link.link == 0) {
-        srf.mask.volume_link.link = beampipeIdx;
+      auto& mask = srf.masks.at(0);
+      if (mask.volume_link.link == beampipeIdx) {
+        mask.volume_link.link = 0;
+      } else if (mask.volume_link.link == 0) {
+        mask.volume_link.link = beampipeIdx;
       }
     }
   }
