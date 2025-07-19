@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
 #include <optional>
@@ -246,6 +247,33 @@ constexpr T safeExp(T val) noexcept {
   }
 
   return std::exp(val);
+}
+
+template <unsigned n>
+constexpr unsigned vecIdxFromSymMat(unsigned i, unsigned k)
+  requires(n > 0)
+{
+  assert(i < n);
+  assert(k < n);
+  if (k > i) {
+    return vecIdxFromSymMat<n>(k, i);
+  }
+  return sumUpToN(i) + k;
+}
+template <unsigned n>
+constexpr std::array<unsigned, 2> symMatIndices(unsigned k)
+  requires(n > 0)
+{
+  assert(k < sumUpToN(n));
+  ///
+  constexpr unsigned bound = sumUpToN(n - 1);
+  if (k >= bound) {
+    return std::array<unsigned, 2>{n - 1, k - bound};
+  }
+  if constexpr (n > 1) {
+    return symMatIndices<n - 1>(k);
+  }
+  return std::array<unsigned, 2>{};
 }
 
 }  // namespace Acts

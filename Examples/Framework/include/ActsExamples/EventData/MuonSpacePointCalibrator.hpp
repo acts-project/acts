@@ -27,15 +27,13 @@ class MuonSpacePointCalibrator {
     /// @brief Coefficients of the drift radius uncertainty parameterized as an othogonal polynomial
     ///        as a function of the drift time
     std::vector<double> rtUncertCoefficients{};
-    
+
     /// @brief Type of the calibration polynomial
     CalibPolyType rtPolyType{CalibPolyType::Chebychev};
     /// @brief Type of the calibration polynomial
     CalibPolyType trPolyType{CalibPolyType::Chebychev};
     /// @brief Type of the calibration polynomial
     CalibPolyType rtUncertPolyType{CalibPolyType::Chebychev};
-    
-
 
     /// @brief Minimum drift time covered by the r-t relation
     double minDriftT{0.};
@@ -85,17 +83,25 @@ class MuonSpacePointCalibrator {
   /// @brief Calculates the drift radius from the drift time
   /// @param ctx: Calibration context
   /// @param driftTime: Drift time in nanoseconds
-  double driftRadius(const Acts::CalibrationContext& ctx,
-                     const double driftTime) const;
+  double driftRadius(const double driftTime) const;
+  /// @brief Calculates the drift radius from the drift time
+  /// @param ctx: Calibration context
+  /// @param driftTime: Drift time in nanoseconds
+  double driftVelocity(const double driftTime) const;
+  /// @brief Calculates the drift radius from the drift time
+  /// @param ctx: Calibration context
+  /// @param driftTime: Drift time in nanoseconds
+  double driftAcceleration(const double driftTime) const;
+
+  double driftTime(const double driftRadius) const;
+
  private:
-  /// @brief Maps the drift time to the interval [-1; 1.]
-  ///        w.r.t configured min & max drift time interval
-  /// @param t: Drift time in nano seconds
-  double reducedTime(const double t) const;
-  /// @brief Maps the drift radius to the interval [-1;1.]
-  ///        w.r.t configured min & max drift radius interval
-  /// @param r: Drift radius of the measurement
-  double reducedRadius(const double r) const;
+  /// @brief Evaluates the rt relation
+  std::optional<double> expandPolySeries(
+      const double xValue, unsigned derivative, const CalibPolyType polyType,
+      const double upperBound, const double lowerBound,
+      const std::vector<double>& coeffs) const;
+
   const Config m_cfg{};
   std::unique_ptr<const Acts::Logger> m_logger{};
 

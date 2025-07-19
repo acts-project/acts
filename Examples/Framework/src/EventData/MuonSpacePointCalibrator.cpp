@@ -9,38 +9,13 @@
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 
 #include "Acts/Surfaces/detail/LineHelper.hpp"
-
-namespace {
-
-constexpr double unitIntervalPrime(const double lowerEdge,
-                                   const double upperEdge) {
-  return 2. / (upperEdge - lowerEdge);
-}
-
-constexpr double unitInterval(const double x, const double lowerEdge,
-                              const double upperEdge) {
-  return unitIntervalPrime(lowerEdge, upperEdge) *
-         (x - 0.5 * (upperEdge + lowerEdge));
-}
-
-}  // namespace
-
+#include "Acts/Utilities/detail/Polynomials.hpp"
 namespace ActsExamples {
-
-
-
 using TechField = MuonSpacePoint::MuonId::TechField;
 
 MuonSpacePointCalibrator::MuonSpacePointCalibrator(
     Config&& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(logger)} {}
-
-double MuonSpacePointCalibrator::reducedTime(const double t) const {
-  return unitInterval(t, m_cfg.minDriftT, m_cfg.maxDriftT);
-}
-double MuonSpacePointCalibrator::reducedRadius(const double r) const {
-  return unitInterval(r, m_cfg.minTubeR, m_cfg.maxTubeR);
-}
 
 MuonSpacePointCalibrator::CalibSpCont_t MuonSpacePointCalibrator::calibrate(
     const Acts::CalibrationContext& ctx, const Acts::Vector3& trackPos,
@@ -100,49 +75,68 @@ void MuonSpacePointCalibrator::calibrate(
   outContainer.push_back(std::move(calibSp));
 }
 
-
-
-double MuonSpacePointCalibrator::driftRadius(const Acts::CalibrationContext& ctx,
-                                             const double driftTime) const {
-  if (driftTime < m_cfg.minDriftT || driftTime > m_cfg.maxDriftT) {
-     ACTS_VERBOSE("Drift time " << driftTime
-                   << " is outside of the configured range ["
-                   << m_cfg.minDriftT << ", " << m_cfg.maxDriftT << "]");
-    return 0.;
+std::optional<double> MuonSpacePointCalibrator::expandPolySeries(
+    const double x, unsigned derivative, const CalibPolyType polyType,
+    const double upperBound, const double lowerBound,
+    const std::vector<double>& coeffs) const {
+  if (x < lowerBound || x > upperBound) {
+    ACTS_VERBOSE("Parsed x:" << x << " is outside of the configured range ["
+                             << lowerBound << ", " << upperBound << "]");
+    return std::nullopt;
   }
-  const double reducedT = reducedTime(driftTime);
+  const double intervalNorm = 2. / (upperBound - lowerBound);
+  const double xNorm = intervalNorm * (x - 0.5 * (upperBound + lowerBound));
+  const double chainFactor = Acts::pow(intervalNorm, derivative);
   double result{0.};
-  switch (m_cfg.rtPolyType) {
-    using enum CalibPolyType;
-    case Chebychev: {
-      break;
-    } case Legendre: {
-      break;
-  }}
-    return result;
+  for (std::size_t k = 0; k < coeffs.size(); ++k) {
+    switch (polyType) {
+      case CalibPolyType::Chebychev:
+        result +=
+            Acts::detail::chebychevPolyTn(xNorm, k, derivative) * coeffs[k];
+        break;
+      case CalibPolyType::Legendre:
+        result += Acts::detail::legendrePoly(xNorm, k, derivative) * coeffs[k];
+        break;
+    }
   }
+  return result * chainFactor;
+}
+
+double MuonSpacePointCalibrator::driftRadius(const double driftTime) const {
+  return expandPolySeries(driftTime, 0u, m_cfg.rtPolyType, m_cfg.maxDriftT,
+                          m_cfg.minDriftT, m_cfg.rtCoefficients)
+      .value_or(0.);
+}
+
+double MuonSpacePointCalibrator::driftVelocity(const double driftTime) const {
+  return expandPolySeries(driftTime, 1u, m_cfg.rtPolyType, m_cfg.maxDriftT,
+                          m_cfg.minDriftT, m_cfg.rtCoefficients)
+      .value_or(0.);
+}
+double MuonSpacePointCalibrator::driftAcceleration(
+    const double driftTime) const {
+  return expandPolySeries(driftTime, 2u, m_cfg.rtPolyType, m_cfg.maxDriftT,
+                          m_cfg.minDriftT, m_cfg.rtCoefficients)
+      .value_or(m_cfg.minTubeR);
+}
+double MuonSpacePointCalibrator::driftTime(const double driftRadius) const {
+  return expandPolySeries(driftRadius, 0, m_cfg.trPolyType, m_cfg.maxTubeR,
+                          m_cfg.minTubeR, m_cfg.trCoefficients)
+      .value_or(m_cfg.minDriftT);
+}
+
 double MuonSpacePointCalibrator::driftVelocity(
-    const Acts::CalibrationContext& /*ctx*/,
-    const MuonSpacePoint& /*sp*/) const {
-  return 0.;
+    const Acts::CalibrationContext& /*ctx*/, const MuonSpacePoint& sp) const {
+  return sp.id().technology() == MuonSpacePoint::MuonId::TechField::Mdt
+             ? driftVelocity(driftTime(sp.driftRadius()))
+             : 0.;
 }
 
 double MuonSpacePointCalibrator::driftAcceleration(
-    const Acts::CalibrationContext& /*ctx*/,
-    const MuonSpacePoint& /*sp*/) const {
-  return 0.;
+    const Acts::CalibrationContext& /*ctx*/, const MuonSpacePoint& sp) const {
+  return sp.id().technology() == MuonSpacePoint::MuonId::TechField::Mdt
+             ? driftAcceleration(driftTime(sp.driftRadius()))
+             : 0.;
 }
-
-//
-//    double getReducedTime(const double  t) const {
-//              return mapToUnitInterval(t, tLower(), tUpper());
-//           }
-//           /* @brief Returns the derivative term of the reduced time w.r.t. the time*/
-//           double dReducedTimeDt() const {
-//               return unitIntervalPrime(tLower(), tUpper());
-//           }
-//
-//         private:
-//
 
 }  // namespace ActsExamples
