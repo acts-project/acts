@@ -65,7 +65,7 @@ class DoubletSeedFinder {
     Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts;
 
     /// Whether the input space points are sorted by radius
-    bool sortedInR = false;
+    bool spacePointsSortedByRadius = false;
   };
 
   struct DerivedConfig : public Config {
