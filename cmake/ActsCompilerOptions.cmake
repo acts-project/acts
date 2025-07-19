@@ -66,7 +66,26 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
 
-# bake where we found external dependencies, if they were not in the default library directories
+# bake where we found external dependencies, if they
+# were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # set relative library path for ACTS libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+
+message(CHECK_START "Checking C++20 std::format support")
+try_compile(
+    HAVE_STDFORMAT
+    SOURCES ${CMAKE_SOURCE_DIR}/cmake/src/format.cpp
+    CXX_STANDARD 20
+)
+
+if(NOT HAVE_STDFORMAT)
+    message(CHECK_FAIL "missing")
+    message(
+        SEND_ERROR
+        "C++20 std::format support is required, "
+        "but not available in this compiler"
+    )
+else()
+    message(CHECK_PASS "ok")
+endif()
