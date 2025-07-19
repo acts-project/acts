@@ -12,36 +12,49 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 
-
 namespace Acts::detail {
-    template <std::floating_point T>
-    class LineWithPartials {
-        public:
-        LineWithPartials() = default;
+/// @brief Helper that to describe a line in 3D space. The line is described
+///        by a point on the line and a corresponding direction vector with unit
+///        length Additionally, the `LineWithPartials` holds the first and second
+///        derivative of the line with respect to the parameters `x0`, `y0`,
+///        `theta`, and `phi` (the parameters are defined in the enum
+///        `ParIndices`).
+template <std::floating_point T>
+class LineWithPartials {
+ public:
+  /// @brief Default empty constructor
+  LineWithPartials() = default;
+  /// @brief Abrivation of the Vector
+  using Vector = Eigen::Matrix<T, 3, 1>;
 
-        enum ParIndices : unsigned{
-            x0= 0,
-            y0 =1,
-            theta= 2,
-            phi =3,
-            nPars =4
-        };
-        using Vector = Eigen::Matrix<T, 3, 1>;
-        using ParamVector = Eigen::Matrix<T, nPars, 1>;
-        
-        void updateParameters(const ParamVector& newPars);
-        
-        const Vector& position() const; 
-        const Vector& direction() const;
-        const Vector& gradient(const unsigned param) const;
-        const Vector& hessian(const unsigned param1, const unsigned param2) const;
-        private:
-        Vector m_pos{Vector::Zero()};
-        Vector m_dir{Vector::Zero()};
-        static constexpr std::size_t s_nPars = ParIndices::nPars;
-        std::array<Vector, s_nPars> m_gradient{filledArray<Vector, s_nPars>(Vector::Zero())};
-        
-        std::array<Vector, sumUpToN(s_nPars)> m_hessian{filledArray<Vector, sumUpToN(s_nPars)>(Vector::Zero())};   
-    };
-}
+  /// @brief Enum to map the indices of the parameter vector
+  enum ParIndices : unsigned { x0 = 0, y0 = 1, theta = 2, phi = 3, nPars = 4 };
+  /// @brief Abrivation of the parameter vector type
+  using ParamVector = Eigen::Matrix<T, nPars, 1>;
+  /// @brief Update the line & derivatives with the new parameters
+  /// @param newPars The new parameters to update the line with
+  void updateParameters(const ParamVector& newPars);
+  /// @brief Returns a point on the line
+  const Vector& position() const;
+  /// @brief Returns the direction of the line
+  const Vector& direction() const;
+  /// @brief Returns the first derivative of the line with respect to the passed
+  /// @param param: Index of the parameter to get the derivative for
+  const Vector& gradient(const unsigned param) const;
+  /// @brief Returns the second derivative of the line with respect to the passed
+  /// @param param1: Index of the first parameter to get the derivative for
+  /// @param param2: Index of the second parameter to get the derivative for
+  const Vector& hessian(const unsigned param1, const unsigned param2) const;
+
+ private:
+  Vector m_pos{Vector::Zero()};
+  Vector m_dir{Vector::Zero()};
+  static constexpr std::size_t s_nPars = ParIndices::nPars;
+  std::array<Vector, s_nPars> m_gradient{
+      filledArray<Vector, s_nPars>(Vector::Zero())};
+
+  std::array<Vector, sumUpToN(s_nPars)> m_hessian{
+      filledArray<Vector, sumUpToN(s_nPars)>(Vector::Zero())};
+};
+}  // namespace Acts::detail
 #include "Acts/Utilities/detail/LineWithPartials.ipp"

@@ -193,8 +193,9 @@ bool testUnrolling()
         return false;
       }
       if (idx != Acts::vecIdxFromSymMat<N>(j, i)) {
-        std::cout << "Index mismatch: expected " << Acts::vecIdxFromSymMat<N>(i, j)
-                  << ", got " << idx << std::endl;
+        std::cout << "Index mismatch: expected "
+                  << Acts::vecIdxFromSymMat<N>(i, j) << ", got " << idx
+                  << std::endl;
         return false;
       }
       if (vec[idx] != testMatrix(i, j)) {
