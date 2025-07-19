@@ -118,7 +118,7 @@ void RootSpacePointIo::write(
 }
 
 void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
-                            SpacePointIndex2 index) {
+                            Experimental::SpacePointIndex2 index) {
   using enum Experimental::SpacePointColumns;
 
   if (spacePoint.container().hasColumns(SourceLinks)) {
@@ -160,7 +160,7 @@ void RootSpacePointIo::read(TChain& tchain,
     tchain.GetEntry(i);
 
     auto spacePoint = spacePoints.createSpacePoint();
-    read(spacePoint, static_cast<SpacePointIndex2>(i));
+    read(spacePoint, static_cast<Experimental::SpacePointIndex2>(i));
   }
 }
 

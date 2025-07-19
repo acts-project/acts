@@ -119,10 +119,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
-    std::ranges::sort(grid.at(i), [&](const Acts::SpacePointIndex2& a,
-                                      const Acts::SpacePointIndex2& b) {
-      return spacePoints[a].r() < spacePoints[b].r();
-    });
+    std::ranges::sort(grid.at(i),
+                      [&](const Acts::Experimental::SpacePointIndex2& a,
+                          const Acts::Experimental::SpacePointIndex2& b) {
+                        return spacePoints[a].r() < spacePoints[b].r();
+                      });
   }
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints(
@@ -131,15 +132,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       Acts::Experimental::SpacePointColumns::Y |
       Acts::Experimental::SpacePointColumns::Z |
       Acts::Experimental::SpacePointColumns::R |
-      Acts::Experimental::SpacePointColumns::Phi |
       Acts::Experimental::SpacePointColumns::VarianceR |
       Acts::Experimental::SpacePointColumns::VarianceZ);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
-  std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
+  std::vector<Acts::Experimental::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
-    for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
+    for (Acts::Experimental::SpacePointIndex2 spIndex : grid.at(i)) {
       const SimSpacePoint& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
@@ -149,7 +149,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       newSp.y() = sp.y();
       newSp.z() = sp.z();
       newSp.r() = sp.r();
-      newSp.phi() = std::atan2(sp.y(), sp.x());
       newSp.varianceR() = sp.varianceR();
       newSp.varianceZ() = sp.varianceZ();
     }
@@ -162,7 +161,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
     float minRange = std::numeric_limits<float>::max();
     float maxRange = std::numeric_limits<float>::lowest();
-    for (const Acts::SpacePointIndexRange2& range : gridSpacePointRanges) {
+    for (const Acts::Experimental::SpacePointIndexRange2& range :
+         gridSpacePointRanges) {
       if (range.first == range.second) {
         continue;
       }
@@ -197,6 +197,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
+  bottomDoubletFinderConfig.sortedInR = true;
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
