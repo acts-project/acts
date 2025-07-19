@@ -73,6 +73,8 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
     } else if (isPositionParam(param)) {
       const double partialDist =
           -m_projDir.cross(hitDir).dot(line.gradient(param));
+      ACTS_VERBOSE("Parameter: " << param
+                                 << ", partial residual: " << partialDist);
       m_gradient[param] = partialDist * Vector3::Unit(bending);
 #ifdef STONJEK
 
@@ -89,40 +91,24 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
   if (!m_cfg.useHessian) {
     return;
   }
-#ifdef STONJEK
   /** Loop to include the second order derivatvies */
-  for (int param = toInt(ParamDefs::phi); param >= 0; --param) {
-    if (!resObj.evalPhiPars &&
-        (param == toInt(ParamDefs::x0) || param == toInt(ParamDefs::phi))) {
+  for (auto param : m_cfg.parsToUse) {
+    if (param == FitParIndices::t0) {
       continue;
     }
-    for (int param1 = param; param1 >= 0; --param1) {
-      if (!resObj.evalPhiPars &&
-          (param1 == toInt(ParamDefs::x0) || param1 == toInt(ParamDefs::phi))) {
+    for (auto param1 : m_cfg.parsToUse) {
+      if (param1 == FitParIndices::t0) {
         continue;
+      } else if (param1 > param) {
+        break;
       }
-      const int lineIdx = vecIdxFromSymMat<nLinePars>(param, param1);
-      const int resIdx =
-          vecIdxFromSymMat<toInt(ParamDefs::nPars)>(param, param1);
+      const int resIdx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       /// Pure angular derivatives of the residual
-      if ((param == toInt(ParamDefs::theta) ||
-           param == toInt(ParamDefs::phi)) &&
-          (param1 == toInt(ParamDefs::theta) ||
-           param1 == toInt(ParamDefs::phi))) {
-        const double partSqLineProject = line.hessian[lineIdx].dot(hitDir);
-        const Vector3 projDirPartSq =
-            (line.hessian[lineIdx] - partSqLineProject * hitDir) *
-                m_invProjLen +
-            (m_gradProjDir[param1] * m_wireProject) * m_invProjLenSq *
-                m_gradProjDir[param] +
-            (m_gradProjDir[param] * m_wireProject) * m_invProjLenSq *
-                m_gradProjDir[param1] +
-            (partSqLineProject * m_wireProject) * m_invProjLenSq * m_projDir +
-            (m_gradProjDir[param1] * m_gradProjDir[param]) *
-                std::pow(m_invProjLenSq, 2) * m_projDir;
-
-        const double partialSqDist = projDirPartSq.cross(hitDir).dot(hitMinSeg);
-        resObj.hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
+      if (isDirectionParam(param) && isDirectionParam(param1)) {
+        const double partialSqDist =
+            m_hessianProjDir[resIdx].cross(hitDir).dot(hitMinSeg);
+        m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
+#ifdef STONJEK
         if (hit.dimension() == 2) {
           const double partialSqAlongWire =
               2. * resObj.residual[nonBending] * m_wireProject *
@@ -142,13 +128,14 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                   m_invProjLenSq;
           resObj.hessian[resIdx][nonBending] = partialSqAlongWire;
         }
+#endif
       }
       /// Angular & Spatial mixed terms
-      else if (param == toInt(ParamDefs::theta) ||
-               param == toInt(ParamDefs::phi)) {
+      else if (isDirectionParam(param)) {
         const double partialSqDist =
-            -m_gradProjDir[param].cross(hitDir).dot(line.gradient[param1]);
-        resObj.hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
+            -m_gradProjDir[param].cross(hitDir).dot(line.gradient(param1));
+        m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
+#ifdef STONJEK
         if (hit.dimension() == 2) {
           const double partialSqAlongWire =
               -(line.gradient[param1].dot(line.gradient[param]) *
@@ -159,10 +146,10 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                   (m_wireProject * m_gradProjDir[param]) * m_invProjLenSq;
           resObj.hessian[resIdx][nonBending] = partialSqAlongWire;
         }
+#endif
       }
     }
   }
-#endif
 }
 
 }  // namespace Acts::detail

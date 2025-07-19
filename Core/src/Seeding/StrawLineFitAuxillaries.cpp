@@ -12,7 +12,9 @@ namespace Acts::detail {
 
 StrawLineFitAuxiliaries::StrawLineFitAuxiliaries(
     const Config& cfg, std::unique_ptr<const Logger> logger)
-    : m_cfg{cfg}, m_logger{std::move(logger)} {}
+    : m_cfg{cfg}, m_logger{std::move(logger)} {
+  std::ranges::sort(m_cfg.parsToUse);
+}
 
 using Vector = StrawLineFitAuxiliaries::Vector;
 const Vector& StrawLineFitAuxiliaries::residual() const {
@@ -81,8 +83,10 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     }
     for (auto param1 : m_cfg.parsToUse) {
       /// Skip the parameters that are not directional or avoid double counting
-      if (!isDirectionParam(param1) || param1 > param) {
+      if (!isDirectionParam(param1)) {
         continue;
+      } else if (param1 > param) {
+        break;
       }
       const unsigned idx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       const Vector& lHessian = line.hessian(param, param1);

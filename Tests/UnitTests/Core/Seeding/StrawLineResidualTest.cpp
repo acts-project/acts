@@ -81,6 +81,7 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
             << ", r: " << firstTestPoint.driftRadius() << std::endl;
 
   Config_t resCfg{};
+  resCfg.useHessian = true;
 
   StrawLineFitAuxiliaries resCalc{resCfg};
   resCalc.updateStrawResidual(line, firstTestPoint);
@@ -94,9 +95,9 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   ///
   BOOST_CHECK_CLOSE(resCalc.residual().norm(), lineDist - driftRadius,
                     StrawLineFitAuxiliaries::s_tolerance);
-  constexpr double h = 1.e-8;
-  constexpr double tolerance = 1.e-7;
-  for (auto par : {/*ParIdx::x0, ParIdx::y0,*/ ParIdx::theta, ParIdx::phi}) {
+  constexpr double h = 5.e-8;
+  constexpr double tolerance = 1.e-5;
+  for (auto par : {ParIdx::x0, ParIdx::y0, ParIdx::theta, ParIdx::phi}) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
     lineParsUp[par] += h;
     lineParsDn[par] -= h;
@@ -122,6 +123,25 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
     /// Next attempt to calculate the second derivative
+    for (unsigned par1 = 0; par1 <= par; ++par1) {
+      Pars_t lineParsUp1{linePars}, lineParsDn1{linePars};
+      lineParsUp1[par1] += h;
+      lineParsDn1[par1] -= h;
+
+      lineUp.updateParameters(lineParsUp1);
+      lineDn.updateParameters(lineParsDn1);
+
+      resCalcUp.updateStrawResidual(lineUp, firstTestPoint);
+      resCalcDn.updateStrawResidual(lineDn, firstTestPoint);
+
+      const Vector numDeriv1{
+          (resCalcUp.gradient(par) - resCalcDn.gradient(par)) / (2. * h)};
+      const Vector& analyticDeriv = resCalc.hessian(par, par1);
+      std::cout << "Second deriv (" << par << ", " << par1
+                << ") -- numerical: " << toString(numDeriv1)
+                << ", analytic: " << toString(analyticDeriv) << std::endl;
+      BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
+    }
   }
 }
 
