@@ -10,6 +10,7 @@
 #include "Acts/Seeding/StrawChamberLineSeeder.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/LineWithPartials.hpp"
 
 #include <array>
 
@@ -20,6 +21,15 @@ template <StationSpacePointContainer CalibCont_t,
 
 class StrawChamberSegmentLineFitter {
  public:
+  using LineWithPartials = detail::LineWithPartials<double>;
+  enum ParIndices : unsigned {
+    x0 = LineWithPartials::ParIndices::x0,
+    y0 = LineWithPartials::ParIndices::y0,
+    theta = LineWithPartials::ParIndices::theta,
+    phi = LineWithPartials::ParIndices::phi,
+    t0 = 4,  // time offset
+    nPars = 5
+  };
   /** @brief Configuration piece of the line segment fitter */
   struct Config {
     /** @brief How many calls shall be executed */
@@ -47,24 +57,6 @@ class StrawChamberSegmentLineFitter {
     // RangeArray ranges{defaultRanges()};
   };
 
-  /** @brief Store the partial derivative of the line w.r.t. the fit parameters
-   *         at the slots x0,y0 the derivatives of the position are saved
-   *         while at the slot theta & phi, the deriviatives of the direction
-   * vector are saved */
-  struct LineWithPartials {
-    /** @brief Free parameters of the line (x0,y0,theta,phi) */
-    static constexpr unsigned nPars{4};
-    /** @brief segment position */
-    Vector3 pos{Vector3::Zero()};
-    /** @brief Segment direction  */
-    Vector3 dir{Vector3::Zero()};
-    /** @brief First order derivatives */
-    std::array<Vector3, nPars> gradient{
-        filledArray<Vector3, nPars>(Vector3::Zero())};
-    /** @brief Second order derivatives */
-    std::array<Vector3, sumUpToN(nPars)> hessian{
-        filledArray<Vector3, sumUpToN(nPars)>(Vector3::Zero())};
-  };
   /** @brief Helper struct carrying the space for all auxiliary variables
    *         needed to calculate the residual from wire measurements */
   struct ResidualAuxillaries {
