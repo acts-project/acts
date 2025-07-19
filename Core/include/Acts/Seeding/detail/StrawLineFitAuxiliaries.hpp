@@ -23,13 +23,13 @@ namespace Acts::detail {
 class StrawLineFitAuxiliaries {
   /* data */
  public:
-  using LineWithPartials = detail::LineWithPartials<double>;
-  using Vector = LineWithPartials::Vector;
+  using Line_t = LineWithPartials<double>;
+  using Vector = Line_t::Vector;
   enum FitParIndices : unsigned {
-    x0 = LineWithPartials::ParIndices::x0,
-    y0 = LineWithPartials::ParIndices::y0,
-    theta = LineWithPartials::ParIndices::theta,
-    phi = LineWithPartials::ParIndices::phi,
+    x0 = Line_t::ParIndices::x0,
+    y0 = Line_t::ParIndices::y0,
+    theta = Line_t::ParIndices::theta,
+    phi = Line_t::ParIndices::phi,
     t0 = 4,  // time offset
     nPars = 5
   };
@@ -47,7 +47,11 @@ class StrawLineFitAuxiliaries {
   StrawLineFitAuxiliaries() = default;
 
   template <StationSpacePoint sp_t>
-  void updateStrawResidual(const LineWithPartials& line, const sp_t& strawMeas);
+  void updateStrawResidual(const Line_t& line, const sp_t& strawMeas);
+
+  const Vector& residual() const;
+  const Vector& gradient(const unsigned par) const;
+  const Vector& hessian(const unsigned param1, const unsigned param2) const;
 
  private:
   constexpr bool isDirectionParam(const unsigned param) const {
@@ -59,7 +63,7 @@ class StrawLineFitAuxiliaries {
             param == FitParIndices::y0;
   }
   
-  bool updateStrawAuxillaries(const LineWithPartials& line,
+  bool updateStrawAuxillaries(const Line_t& line,
                               const Vector& wireDir);
 
 
@@ -74,7 +78,7 @@ class StrawLineFitAuxiliaries {
   std::array<Vector3, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector3, sumUpToN(s_nPars)>(Vector3::Zero())};
   /// @brief Number of spatial line parameters
-  static constexpr unsigned s_nLinePars = LineWithPartials::ParIndices::nPars;
+  static constexpr unsigned s_nLinePars = Line_t::ParIndices::nPars;
   /// @brief projection of the segment direction onto the wire planes
   Vector m_projDir{Vector::Zero()};
   /// @brief Partial derivatives of the dir projection w.r.t. line parameters
@@ -83,7 +87,8 @@ class StrawLineFitAuxiliaries {
   /// @brief Length of the projected direction
   double m_wireProject{0.};
   /// @brief Length squared of the projected direction
-  double m_projDirLenSq{0.};
+  double m_invProjDirLenSq{0.};
+
   /// @brief Inverse of the projected direction length
   double m_invProjDirLen{0.};
   /// @brief Partial derivatives of the dir projection lengths w.r.t line parameters

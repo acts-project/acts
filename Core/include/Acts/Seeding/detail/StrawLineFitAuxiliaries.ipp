@@ -21,7 +21,7 @@ namespace Acts::detail {
 
 
 template <StationSpacePoint sp_t>
-void StrawLineFitAuxiliaries::updateStrawResidual(const LineWithPartials& line,
+void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                                                   const sp_t& strawMeas) {
   /** Fetch the hit position & direction */
   const auto& hitDir{strawMeas.sensorDirection()};
