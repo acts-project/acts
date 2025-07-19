@@ -197,6 +197,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
+  bottomDoubletFinderConfig.sortedInR = true;
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
