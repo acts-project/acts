@@ -17,6 +17,7 @@
 
 #include "Acts/EventData/StationSpacePoint.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/LineWithPartials.hpp"
 
 namespace Acts::detail {
@@ -35,7 +36,6 @@ class StrawLineFitAuxiliaries {
   };
 
   static constexpr double s_tolerance = 1.e-10;
-  
 
   struct Config {
     bool useHessian{false};
@@ -44,7 +44,11 @@ class StrawLineFitAuxiliaries {
   };
 
   enum ResidualIdx { nonBending = 0, bending = 1, time = 2 };
-  StrawLineFitAuxiliaries() = default;
+
+  StrawLineFitAuxiliaries(const Config& cfg,
+                          std::unique_ptr<const Logger> logger =
+                              getDefaultLogger("StrawLineFitAuxiliaries",
+                                               Logging::Level::VERBOSE));
 
   template <StationSpacePoint sp_t>
   void updateStrawResidual(const Line_t& line, const sp_t& strawMeas);
@@ -55,19 +59,19 @@ class StrawLineFitAuxiliaries {
 
  private:
   constexpr bool isDirectionParam(const unsigned param) const {
-    return param == FitParIndices::theta ||
-            param == FitParIndices::phi;
+    return param == FitParIndices::theta || param == FitParIndices::phi;
   }
   constexpr bool isPositionParam(const unsigned param) const {
-    return param == FitParIndices::x0 ||
-            param == FitParIndices::y0;
+    return param == FitParIndices::x0 || param == FitParIndices::y0;
   }
-  
-  bool updateStrawAuxillaries(const Line_t& line,
-                              const Vector& wireDir);
 
+  const Logger& logger() const { return *m_logger; }
+
+  bool updateStrawAuxiliaries(const Line_t& line, const Vector& wireDir);
 
   Config m_cfg{};
+  std::unique_ptr<const Logger> m_logger{};
+
   /// @brief Cached residual vector calculated from the measurement & the parametrized line
   Vector m_residual{Vector::Zero()};
   /// @brief Partial derivatives of the residual w.r.t. the fit parameters parameters
@@ -85,7 +89,7 @@ class StrawLineFitAuxiliaries {
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
   /// @brief Length of the projected direction
-  double m_wireProject{0.};
+  double m_wireProject{1.};
   /// @brief Length squared of the projected direction
   double m_invProjDirLenSq{0.};
 
@@ -94,10 +98,9 @@ class StrawLineFitAuxiliaries {
   /// @brief Partial derivatives of the dir projection lengths w.r.t line parameters
   std::array<double, s_nLinePars> m_projDirLenPartial{
       filledArray<double, s_nLinePars>(0.)};
-  
+
   std::array<Vector, sumUpToN(s_nLinePars)> m_hessianProjDir{
-filledArray<Vector, sumUpToN(s_nLinePars)>(Vector::Zero())
-  };
+      filledArray<Vector, sumUpToN(s_nLinePars)>(Vector::Zero())};
 };
 
 }  // namespace Acts::detail

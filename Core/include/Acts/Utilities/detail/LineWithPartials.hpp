@@ -46,6 +46,10 @@ class LineWithPartials {
   /// @param param2: Index of the second parameter to get the derivative for
   const Vector& hessian(const unsigned param1, const unsigned param2) const;
 
+  Vector point(const double lambda) const {
+    return position() + lambda * direction();
+  }
+
  private:
   Vector m_pos{Vector::Zero()};
   Vector m_dir{Vector::Zero()};

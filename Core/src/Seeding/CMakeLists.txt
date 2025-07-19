@@ -1,3 +1,4 @@
-target_sources(ActsCore PRIVATE 
-                EstimateTrackParamsFromSeed.cpp
-        StrawLineFitAuxillaries.cpp        )
+target_sources(
+    ActsCore
+    PRIVATE EstimateTrackParamsFromSeed.cpp StrawLineFitAuxillaries.cpp
+)
