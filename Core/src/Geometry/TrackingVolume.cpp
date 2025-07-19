@@ -639,6 +639,14 @@ void TrackingVolume::visualize(IVisualization3D& helper,
   }
 }
 
+const INavigationPolicy* TrackingVolume::navigationPolicy() const {
+  return m_navigationPolicy.get();
+}
+
+INavigationPolicy* TrackingVolume::navigationPolicy() {
+  return m_navigationPolicy.get();
+}
+
 void TrackingVolume::setNavigationPolicy(
     std::unique_ptr<INavigationPolicy> policy) {
   if (policy == nullptr) {
