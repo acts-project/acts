@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
@@ -175,6 +176,12 @@ void convertPortalLink(const GeometryContext& gctx,
         link._end = link._start + normal * 10. * direction.sign();
         links.push_back(link);
       }
+    } else if (const auto* composite =
+                   dynamic_cast<const CompositePortalLink*>(&portalLink);
+               composite != nullptr) {
+      for (const auto& link : composite->links()) {
+        convertPortalLink(gctx, link, direction, links);
+      }
     } else {
       double rMin = discBounds->rMin();
       double rMax = discBounds->rMax();
@@ -199,6 +206,12 @@ void convertPortalLink(const GeometryContext& gctx,
         Vector3 normal = portalLink.surface().normal(gctx, link._start);
         link._end = link._start + normal * 10. * direction.sign();
         links.push_back(link);
+      }
+    } else if (const auto* composite =
+                   dynamic_cast<const CompositePortalLink*>(&portalLink);
+               composite != nullptr) {
+      for (const auto& link : composite->links()) {
+        convertPortalLink(gctx, link, direction, links);
       }
     } else {
       double r = cylBounds->get(CylinderBounds::eR);

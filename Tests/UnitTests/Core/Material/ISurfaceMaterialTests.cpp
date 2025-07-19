@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Geometry/DetrayExceptions.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
@@ -37,6 +38,10 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   };
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
+
+  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override {
+    throw DetrayNotAvailableException();
+  }
 };
 
 /// Test the constructors
