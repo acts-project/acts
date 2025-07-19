@@ -82,7 +82,7 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
 /// @param topDoublets Top doublets to be used for triplet creation
 /// @param tripletTopCandidates Cache for triplet top candidates
 /// @param candidatesCollector Collector for candidates for middle space points
-static void createTriplets(
+void createTriplets(
     BroadTripletSeedFinder::TripletCache& cache,
     const BroadTripletSeedFinder::DerivedTripletCuts& cuts, float rMaxSeedConf,
     const BroadTripletSeedFilter& filter,
@@ -290,7 +290,7 @@ static void createTriplets(
 /// @param topDoublets Top doublets to be used for triplet creation
 /// @param tripletTopCandidates Cache for triplet top candidates
 /// @param candidatesCollector Collector for candidates for middle space points
-static void createStripTriplets(
+void createStripTriplets(
     const BroadTripletSeedFinder::DerivedTripletCuts& cuts, float rMaxSeedConf,
     const BroadTripletSeedFilter& filter,
     BroadTripletSeedFilter::State& filterState,
