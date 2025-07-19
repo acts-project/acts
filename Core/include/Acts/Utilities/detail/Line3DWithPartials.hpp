@@ -45,6 +45,10 @@ class Line3DWithPartials {
   /// @param param1: Index of the first parameter to get the derivative for
   /// @param param2: Index of the second parameter to get the derivative for
   const Vector& hessian(const unsigned param1, const unsigned param2) const;
+  /// @brief Returns a point along the line which is by lambda apart from
+  ///        the line reference
+  /// @param lambda: Separation from the reference
+  Vector point(const double lambda) const;
 
  private:
   Vector m_pos{Vector::Zero()};

@@ -88,4 +88,10 @@ const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::hessian(
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
+
+template <std::floating_point T>
+Line3DWithPartials<T>::Vector Line3DWithPartials<T>::point(
+    const double lambda) const {
+  return position() + lambda * direction();
+}
 }  // namespace Acts::detail
