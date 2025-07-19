@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(lineParameterTest) {
 }
 BOOST_AUTO_TEST_CASE(lineGradientTest) {
   Line_t newLine{};
-  constexpr unsigned trials = 10;
+  constexpr unsigned trials = 1000;
   RandomEngine rndEngine{26934};
   constexpr double h = 1.e-8;
   constexpr double tolerance = 1.e-7;
