@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <numeric>
 
 using namespace Acts;
@@ -234,6 +235,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   accNMeasuements(t) = 89;
   BOOST_CHECK_EQUAL(t2.nMeasurements(), 89);
   BOOST_CHECK_EQUAL(caccNMeasuements(t), 89);
+
+  // Test hasColumn functionality
+  BOOST_CHECK(accNMeasuements.hasColumn(t));
+  BOOST_CHECK(caccNMeasuements.hasColumn(t));
+
+  ProxyAccessor<std::string> accNonExistent("nonExistentColumn");
+  ConstProxyAccessor<std::string> caccNonExistent("nonExistentColumn");
+  BOOST_CHECK(!accNonExistent.hasColumn(t));
+  BOOST_CHECK(!caccNonExistent.hasColumn(t));
 
   // does not compile
   // caccNMeasuements(t) = 66;
@@ -463,6 +473,98 @@ BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {
   tsCopy.copyFrom(ts, TrackStatePropMask::Calibrated, false);
 
   BOOST_CHECK_EQUAL(ts.calibratedSize(), tsCopy.calibratedSize());
+}
+
+BOOST_AUTO_TEST_CASE(ProxyAccessorHasColumn) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  // Add a custom column to the track state container
+  mtj.addColumn<float>("customFloat");
+  // Add a custom column to the track container
+  tc.addColumn<std::string>("customString");
+
+  auto track = tc.makeTrack();
+  auto ts = track.appendTrackState(TrackStatePropMask::Predicted);
+  ts.predicted() = BoundVector::Zero();
+
+  // Set values in the custom columns
+  ts.component<float>("customFloat") = 42.5f;
+  track.component<std::string>("customString") = "test";
+
+  // Test ALL known track container columns
+  // From VectorTrackContainer.hpp hasColumn_impl
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("tipIndex").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("stemIndex").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<BoundVector>("params").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<BoundMatrix>("cov").hasColumn(track));
+  BOOST_CHECK(
+      ConstProxyAccessor<unsigned int>("nMeasurements").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<unsigned int>("nHoles").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<float>("chi2").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<unsigned int>("ndf").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<unsigned int>("nOutliers").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<unsigned int>("nSharedHits").hasColumn(track));
+
+  // Test custom track container column
+  BOOST_CHECK(ConstProxyAccessor<std::string>("customString").hasColumn(track));
+
+  // Test ALL known track state columns
+  // From VectorMultiTrajectory.hpp hasColumn_impl
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("previous").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("next").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("predicted").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("filtered").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("smoothed").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("calibrated").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("calibratedCov").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("jacobian").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<IndexType>("projector").hasColumn(ts));
+  BOOST_CHECK(
+      ConstProxyAccessor<std::optional<SourceLink>>("uncalibratedSourceLink")
+          .hasColumn(ts));
+  BOOST_CHECK(
+      ConstProxyAccessor<std::shared_ptr<const Surface>>("referenceSurface")
+          .hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<std::uint8_t>("measdim").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<float>("chi2").hasColumn(ts));
+  BOOST_CHECK(ConstProxyAccessor<double>("pathLength").hasColumn(ts));
+  BOOST_CHECK(
+      ConstProxyAccessor<TrackStateType::raw_type>("typeFlags").hasColumn(ts));
+
+  // Test custom track state column
+  BOOST_CHECK(ConstProxyAccessor<float>("customFloat").hasColumn(ts));
+
+  // Test with non-existent columns
+  BOOST_CHECK(!ConstProxyAccessor<int>("nonExistentColumn").hasColumn(ts));
+  BOOST_CHECK(!ConstProxyAccessor<std::string>("nonExistentTrackColumn")
+                   .hasColumn(track));
+
+  // Test that we can actually access the custom columns
+  ProxyAccessor<float> accCustomFloat("customFloat");
+  ConstProxyAccessor<float> caccCustomFloat("customFloat");
+  BOOST_CHECK_EQUAL(accCustomFloat(ts), 42.5f);
+  BOOST_CHECK_EQUAL(caccCustomFloat(ts), 42.5f);
+
+  ProxyAccessor<std::string> accCustomString("customString");
+  ConstProxyAccessor<std::string> caccCustomString("customString");
+  BOOST_CHECK_EQUAL(accCustomString(track), "test");
+  BOOST_CHECK_EQUAL(caccCustomString(track), "test");
+}
+
+consteval ProxyAccessor<int> makeProxyAccessor() {
+  return ProxyAccessor<int>("test_consteval");
+}
+
+BOOST_AUTO_TEST_CASE(ProxyAccessorConstexprConstruction) {
+  static_assert(ProxyAccessor<int>("test").key == "test"_hash,
+                "ProxyAccessor should be constructible with a string key");
+
+  constexpr auto acc = makeProxyAccessor();
+
+  static_assert(acc.key == "test_consteval"_hash,
+                "ProxyAccessor should be constructible at compile time");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
