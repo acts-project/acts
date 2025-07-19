@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/detail/LineWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartials.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -16,7 +16,7 @@
 namespace Acts::detail {
 template <std::floating_point T>
 
-void LineWithPartials<T>::updateParameters(const ParamVector& newPars) {
+void Line3DWithPartials<T>::updateParameters(const ParamVector& newPars) {
   m_pos[Acts::eX] = newPars[ParIndices::x0];
   m_pos[Acts::eY] = newPars[ParIndices::y0];
 
@@ -68,21 +68,21 @@ void LineWithPartials<T>::updateParameters(const ParamVector& newPars) {
 }
 
 template <std::floating_point T>
-const LineWithPartials<T>::Vector& LineWithPartials<T>::position() const {
+const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::position() const {
   return m_pos;
 }
 template <std::floating_point T>
-const LineWithPartials<T>::Vector& LineWithPartials<T>::direction() const {
+const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::direction() const {
   return m_dir;
 }
 template <std::floating_point T>
-const LineWithPartials<T>::Vector& LineWithPartials<T>::gradient(
+const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::gradient(
     const unsigned param) const {
   assert(param < m_gradient.size());
   return m_gradient[param];
 }
 template <std::floating_point T>
-const LineWithPartials<T>::Vector& LineWithPartials<T>::hessian(
+const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::hessian(
     const unsigned param1, const unsigned param2) const {
   const unsigned idx{vecIdxFromSymMat<s_nPars>(param1, param2)};
   assert(idx < m_hessian.size());

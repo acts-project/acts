@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/detail/LineWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartials.hpp"
 
 #include <random>
 
 using namespace Acts;
 using namespace Acts::detail;
-using Line_t = LineWithPartials<double>;
+using Line_t = Line3DWithPartials<double>;
 using ParamVector = Line_t::ParamVector;
 using ParIndices = Line_t::ParIndices;
 /// The random number generator used in the framework.

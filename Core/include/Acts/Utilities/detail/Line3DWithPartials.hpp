@@ -15,15 +15,15 @@
 namespace Acts::detail {
 /// @brief Helper that to describe a line in 3D space. The line is described
 ///        by a point on the line and a corresponding direction vector with unit
-///        length Additionally, the `LineWithPartials` holds the first and
+///        length Additionally, the `Line3DWithPartials` holds the first and
 ///        second derivative of the line with respect to the parameters `x0`,
 ///        `y0`, `theta`, and `phi` (the parameters are defined in the enum
 ///        `ParIndices`).
 template <std::floating_point T>
-class LineWithPartials {
+class Line3DWithPartials {
  public:
   /// @brief Default empty constructor
-  LineWithPartials() = default;
+  Line3DWithPartials() = default;
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
 
@@ -57,4 +57,4 @@ class LineWithPartials {
       filledArray<Vector, sumUpToN(s_nPars)>(Vector::Zero())};
 };
 }  // namespace Acts::detail
-#include "Acts/Utilities/detail/LineWithPartials.ipp"
+#include "Acts/Utilities/detail/Line3DWithPartials.ipp"
