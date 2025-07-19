@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -34,7 +33,6 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
-#include <ostream>
 #include <string>
 
 using namespace Acts::UnitLiterals;
@@ -216,7 +214,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
                   1e-9);
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
                   1e-9);
-  BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
+  BOOST_CHECK_EQUAL(&sfIntersection.surface(), discSurfaceObject.get());
 
   /// Test name
   boost::test_tools::output_test_stream nameOuput;
