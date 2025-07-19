@@ -249,29 +249,39 @@ constexpr T safeExp(T val) noexcept {
   return std::exp(val);
 }
 
-template <unsigned n>
+/// @brief Map the indices of the lower triangular part of a symmetric N x N matrix
+///        to an unrolled vector index.
+/// @param i The row index of the symmetric matrix
+/// @param k The column index of the symmetric matrix
+template <unsigned N>
 constexpr unsigned vecIdxFromSymMat(unsigned i, unsigned k)
-  requires(n > 0)
+  requires(N > 0)
 {
-  assert(i < n);
-  assert(k < n);
+  assert(i < N);
+  assert(k < N);
   if (k > i) {
-    return vecIdxFromSymMat<n>(k, i);
+    return vecIdxFromSymMat<N>(k, i);
   }
   return sumUpToN(i) + k;
 }
-template <unsigned n>
+/// @brief Map an unrolled vector index to the indices of the lower triangular
+///        part of a symmetric N x N matrix.
+/// @param k The unrolled vector index
+/// @return A pair of indices (i, j) such that the element at (i, j) in the
+///         symmetric matrix corresponds to the k-th element in the unrolled
+///         vector.
+template <unsigned N>
 constexpr std::array<unsigned, 2> symMatIndices(unsigned k)
-  requires(n > 0)
+  requires(N > 1)
 {
-  assert(k < sumUpToN(n));
+  assert(k < sumUpToN(N));
   ///
-  constexpr unsigned bound = sumUpToN(n - 1);
+  constexpr unsigned bound = sumUpToN(N - 1);
   if (k >= bound) {
-    return std::array<unsigned, 2>{n - 1, k - bound};
+    return std::array<unsigned, 2>{N - 1, k - bound};
   }
-  if constexpr (n > 1) {
-    return symMatIndices<n - 1>(k);
+  if constexpr (N > 2) {
+    return symMatIndices<N - 1>(k);
   }
   return std::array<unsigned, 2>{};
 }
