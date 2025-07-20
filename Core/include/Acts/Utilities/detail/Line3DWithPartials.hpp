@@ -30,7 +30,7 @@ class Line3DWithPartials {
   /// @brief Enum to map the indices of the parameter vector
   enum ParIndices : unsigned { x0 = 0, y0 = 1, theta = 2, phi = 3, nPars = 4 };
   /// @brief Abrivation of the parameter vector type
-  using ParamVector = Eigen::Matrix<T, nPars, 1>;
+  using ParamVector = std::array<T, nPars>;
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
   void updateParameters(const ParamVector& newPars);
