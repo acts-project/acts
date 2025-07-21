@@ -456,87 +456,89 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
   }
 }
 
-namespace {
-
-namespace detail {
-
-/// A functor that retrieves an acceleration struct and prints it
-struct accelerator_printer {
-  /// Print an acceleration structure
-  ///
-  /// @param accel_coll collection of acceleration structs
-  /// @param idx the specific grid to be checked
-  /// @param id type id of the material grid collection
-  template <typename accel_coll_t, typename index_t>
-  DETRAY_HOST void operator()(const accel_coll_t& accel_coll, const index_t idx,
-                              std::stringstream& os) const {
-    // os << accel_coll[idx];
-  }
-};
-
-/// A functor that retrieves material and prints it
-struct material_printer {
-  /// Print material
-  ///
-  /// @param material_coll collection of material
-  /// @param idx the specific grid to be checked
-  /// @param id type id of the material grid collection
-  template <typename material_coll_t, typename index_t>
-  DETRAY_HOST void operator()(const material_coll_t& material_coll,
-                              const index_t idx, std::stringstream& os) const {
-    if constexpr (!detray::concepts::grid<
-                      typename material_coll_t::value_type>) {
-      os << material_coll[idx];
-    }
-  }
-};
-
-}  // namespace detail
-
-template <typename detector_t>
-inline std::string print_detector(
-    const detector_t& det, const typename detector_t::name_map& names = {}) {
-  // Gathers navigation information across navigator update calls
-  std::stringstream debug_stream{};
-
-  debug_stream << std::left << "[>] Detector " << det.name(names) << " has "
-               << det.volumes().size() << " volumes." << std::endl;
-
-  for (const auto [i, v_desc] : detray::views::enumerate(det.volumes())) {
-    detray::tracking_volume v{det, v_desc};
-
-    debug_stream << "[>>] Volume " << v.name(names) << std::endl;
-    debug_stream << v << std::endl;
-
-    debug_stream << "[>>>] Acceleration Structures:" << std::endl;
-    const auto acc_link = v_desc.accel_link();
-    for (std::size_t j = 0u; j < acc_link.size(); ++j) {
-      // An acceleration data structure link was set, but is invalid
-      if (!acc_link[j].is_invalid_id() && !acc_link[j].is_invalid_index()) {
-        debug_stream << j << ":" << std::endl;
-        det.accelerator_store().template visit<detail::accelerator_printer>(
-            acc_link[j], debug_stream);
-      }
-    }
-
-    debug_stream << "[>>>] Surfaces:" << std::endl;
-    for (const auto sf_desc : v.template surfaces<>()) {
-      detray::geometry::surface sf{det, sf_desc};
-      debug_stream << sf << std::endl;
-
-      // Check the surface material, if present
-      if (sf.has_material()) {
-        debug_stream << "[>>>>] Surface material:" << std::endl;
-        sf.template visit_material<detail::material_printer>(debug_stream);
-      }
-    }
-
-    debug_stream << std::endl;
-  }
-
-  return debug_stream.str();
-}
-}  // namespace
+// namespace {
+//
+// namespace detail {
+//
+// /// A functor that retrieves an acceleration struct and prints it
+// struct accelerator_printer {
+//   /// Print an acceleration structure
+//   ///
+//   /// @param accel_coll collection of acceleration structs
+//   /// @param idx the specific grid to be checked
+//   /// @param id type id of the material grid collection
+//   template <typename accel_coll_t, typename index_t>
+//   DETRAY_HOST void operator()(const accel_coll_t& accel_coll, const index_t
+//   idx,
+//                               std::stringstream& os) const {
+//     // os << accel_coll[idx];
+//   }
+// };
+//
+// /// A functor that retrieves material and prints it
+// struct material_printer {
+//   /// Print material
+//   ///
+//   /// @param material_coll collection of material
+//   /// @param idx the specific grid to be checked
+//   /// @param id type id of the material grid collection
+//   template <typename material_coll_t, typename index_t>
+//   DETRAY_HOST void operator()(const material_coll_t& material_coll,
+//                               const index_t idx, std::stringstream& os) const
+//                               {
+//     if constexpr (!detray::concepts::grid<
+//                       typename material_coll_t::value_type>) {
+//       os << material_coll[idx];
+//     }
+//   }
+// };
+//
+// }  // namespace detail
+//
+// template <typename detector_t>
+// inline std::string print_detector(
+//     const detector_t& det, const typename detector_t::name_map& names = {}) {
+//   // Gathers navigation information across navigator update calls
+//   std::stringstream debug_stream{};
+//
+//   debug_stream << std::left << "[>] Detector " << det.name(names) << " has "
+//                << det.volumes().size() << " volumes." << std::endl;
+//
+//   for (const auto [i, v_desc] : detray::views::enumerate(det.volumes())) {
+//     detray::tracking_volume v{det, v_desc};
+//
+//     debug_stream << "[>>] Volume " << v.name(names) << std::endl;
+//     debug_stream << v << std::endl;
+//
+//     debug_stream << "[>>>] Acceleration Structures:" << std::endl;
+//     const auto acc_link = v_desc.accel_link();
+//     for (std::size_t j = 0u; j < acc_link.size(); ++j) {
+//       // An acceleration data structure link was set, but is invalid
+//       if (!acc_link[j].is_invalid_id() && !acc_link[j].is_invalid_index()) {
+//         debug_stream << j << ":" << std::endl;
+//         det.accelerator_store().template visit<detail::accelerator_printer>(
+//             acc_link[j], debug_stream);
+//       }
+//     }
+//
+//     debug_stream << "[>>>] Surfaces:" << std::endl;
+//     for (const auto sf_desc : v.template surfaces<>()) {
+//       detray::geometry::surface sf{det, sf_desc};
+//       debug_stream << sf << std::endl;
+//
+//       // Check the surface material, if present
+//       if (sf.has_material()) {
+//         debug_stream << "[>>>>] Surface material:" << std::endl;
+//         sf.template visit_material<detail::material_printer>(debug_stream);
+//       }
+//     }
+//
+//     debug_stream << std::endl;
+//   }
+//
+//   return debug_stream.str();
+// }
+// }  // namespace
 
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   GeometryContext gctx;
@@ -729,7 +731,8 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
                         .format(detray::io::format::json)
                         .replace_files(true);
 
-  std::cout << print_detector(detrayDetector, payloads.names) << std::endl;
+  // std::cout << detray::utils::print_detector(detrayDetector, payloads.names)
+  //           << std::endl;
 
   detray::io::write_detector(detrayDetector, payloads.names, writer_cfg);
 }
