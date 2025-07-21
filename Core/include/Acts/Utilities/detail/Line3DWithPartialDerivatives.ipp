@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/detail/Line3DWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -16,7 +16,8 @@
 namespace Acts::detail {
 
 template <std::floating_point T>
-void Line3DWithPartials<T>::updateParameters(const ParamVector& newPars) {
+void Line3DWithPartialDerivatives<T>::updateParameters(
+    const ParamVector& newPars) {
   m_pos[Acts::eX] = newPars[ParIndices::x0];
   m_pos[Acts::eY] = newPars[ParIndices::y0];
 
@@ -56,11 +57,11 @@ void Line3DWithPartials<T>::updateParameters(const ParamVector& newPars) {
    *   -------------     = cos(theta)   cos phi
    *    d theta dPhi                       0
    ************************************************************************************/
-  constexpr int idxThetaSq =
+  constexpr std::size_t idxThetaSq =
       vecIdxFromSymMat<ParIndices::nPars>(ParIndices::theta, ParIndices::theta);
-  constexpr int idxPhiSq =
+  constexpr std::size_t idxPhiSq =
       vecIdxFromSymMat<ParIndices::nPars>(ParIndices::phi, ParIndices::phi);
-  constexpr int idxPhiTheta =
+  constexpr std::size_t idxPhiTheta =
       vecIdxFromSymMat<ParIndices::nPars>(ParIndices::theta, ParIndices::phi);
   m_hessian[idxThetaSq] = -m_dir;
   m_hessian[idxPhiSq] = -sinTheta * Vector{cosPhi, sinPhi, 0.};
@@ -68,29 +69,32 @@ void Line3DWithPartials<T>::updateParameters(const ParamVector& newPars) {
 }
 
 template <std::floating_point T>
-const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::position() const {
+const Line3DWithPartialDerivatives<T>::Vector&
+Line3DWithPartialDerivatives<T>::position() const {
   return m_pos;
 }
 template <std::floating_point T>
-const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::direction() const {
+const Line3DWithPartialDerivatives<T>::Vector&
+Line3DWithPartialDerivatives<T>::direction() const {
   return m_dir;
 }
 template <std::floating_point T>
-const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::gradient(
-    const unsigned param) const {
+const Line3DWithPartialDerivatives<T>::Vector&
+Line3DWithPartialDerivatives<T>::gradient(const std::size_t param) const {
   assert(param < m_gradient.size());
   return m_gradient[param];
 }
 template <std::floating_point T>
-const Line3DWithPartials<T>::Vector& Line3DWithPartials<T>::hessian(
-    const unsigned param1, const unsigned param2) const {
-  const unsigned idx{vecIdxFromSymMat<s_nPars>(param1, param2)};
+const Line3DWithPartialDerivatives<T>::Vector&
+Line3DWithPartialDerivatives<T>::hessian(const std::size_t param1,
+                                         const std::size_t param2) const {
+  const std::size_t idx{vecIdxFromSymMat<s_nPars>(param1, param2)};
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
 
 template <std::floating_point T>
-Line3DWithPartials<T>::Vector Line3DWithPartials<T>::point(
+Line3DWithPartialDerivatives<T>::Vector Line3DWithPartialDerivatives<T>::point(
     const double lambda) const {
   return position() + lambda * direction();
 }

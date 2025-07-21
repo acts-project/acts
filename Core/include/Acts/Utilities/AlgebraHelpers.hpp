@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
@@ -253,8 +254,8 @@ constexpr T safeExp(T val) noexcept {
 ///        to an unrolled vector index.
 /// @param i The row index of the symmetric matrix
 /// @param k The column index of the symmetric matrix
-template <unsigned N>
-constexpr unsigned vecIdxFromSymMat(unsigned i, unsigned k)
+template <std::size_t N>
+constexpr std::size_t vecIdxFromSymMat(const std::size_t i, const std::size_t k)
   requires(N > 0)
 {
   assert(i < N);
@@ -270,19 +271,19 @@ constexpr unsigned vecIdxFromSymMat(unsigned i, unsigned k)
 /// @return A pair of indices (i, j) such that the element at (i, j) in the
 ///         symmetric matrix corresponds to the k-th element in the unrolled
 ///         vector.
-template <unsigned N>
-constexpr std::array<unsigned, 2> symMatIndices(unsigned k)
+template <std::size_t N>
+constexpr std::array<std::size_t, 2> symMatIndices(const std::size_t k)
   requires(N > 1)
 {
   assert(k < sumUpToN(N));
-  constexpr unsigned bound = sumUpToN(N - 1);
+  constexpr std::size_t bound = sumUpToN(N - 1);
   if (k >= bound) {
-    return std::array<unsigned, 2>{N - 1, k - bound};
+    return std::array<std::size_t, 2>{N - 1, k - bound};
   }
   if constexpr (N > 2) {
     return symMatIndices<N - 1>(k);
   }
-  return std::array<unsigned, 2>{};
+  return filledArray<std::size_t, 2>(0);
 }
 
 }  // namespace Acts

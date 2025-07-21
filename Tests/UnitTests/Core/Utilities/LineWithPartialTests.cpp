@@ -11,13 +11,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/detail/Line3DWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
 #include <random>
 
 using namespace Acts;
 using namespace Acts::detail;
-using Line_t = Line3DWithPartials<double>;
+using Line_t = Line3DWithPartialDerivatives<double>;
 using ParamVector = Line_t::ParamVector;
 using ParIndices = Line_t::ParIndices;
 using namespace Acts::UnitLiterals;
@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_SUITE(LineWithPartialTests)
 
 BOOST_AUTO_TEST_CASE(lineParameterTest) {
   Line_t newLine{};
-  constexpr unsigned trials = 1000;
+  constexpr std::size_t trials = 1000;
   constexpr double tolerance = 1.e-12;
   RandomEngine rndEngine{3585};
-  for (unsigned i = 0; i < trials; ++i) {
+  for (std::size_t i = 0; i < trials; ++i) {
     auto pars = makeTrack(rndEngine);
     newLine.updateParameters(pars);
     BOOST_CHECK_CLOSE(newLine.position()[Acts::eX], pars[ParIndices::x0],
@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE(lineParameterTest) {
   }
 }
 BOOST_AUTO_TEST_CASE(lineGradientTest) {
-  constexpr unsigned trials = 1000;
+  constexpr std::size_t trials = 1000;
   RandomEngine rndEngine{26934};
   constexpr double h = 1.e-8;
   constexpr double tolerance = 1.e-7;
-  for (unsigned trial = 0; trial < trials; ++trial) {
+  for (std::size_t trial = 0; trial < trials; ++trial) {
     const ParamVector pars{makeTrack(rndEngine)};
     std::cout << "lineGradientTest -- Generated parameters  x: "
               << pars[ParIndices::x0] << ", y: " << pars[ParIndices::y0]
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
     BOOST_CHECK_LE((segLine.gradient(ParIndices::y0) - Vector3::UnitY()).norm(),
                    tolerance);
 
-    for (const int param : {ParIndices::theta, ParIndices::phi}) {
+    for (const std::size_t param : {ParIndices::theta, ParIndices::phi}) {
       break;
       ParamVector parsUp{pars}, parsDn{pars};
       parsUp[param] += h;
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
                              (2. * h)};
       BOOST_CHECK_LE((numDeriv - segLine.gradient(param)).norm(), tolerance);
       /** Calculate the second order derivatives of the line partials */
-      for (const int param1 : {ParIndices::theta, ParIndices::phi,
-                               ParIndices::x0, ParIndices::y0}) {
+      for (const std::size_t param1 : {ParIndices::theta, ParIndices::phi,
+                                       ParIndices::x0, ParIndices::y0}) {
         ParamVector parsUp1{pars}, parsDn1{pars};
         parsUp1[param1] += h;
         parsDn1[param1] -= h;

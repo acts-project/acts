@@ -157,23 +157,23 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(MatrixIdxUnrolling)
 
-template <unsigned N>
+template <std::size_t N>
 bool testUnrolling()
   requires(N > 1)
 {
   /// Fill a test matrix with unique values
   Acts::ActsSquareMatrix<N> testMatrix{Acts::ActsSquareMatrix<N>::Zero()};
-  unsigned counter{N};
-  for (unsigned i = 0; i < N; ++i) {
-    for (unsigned j = 0; j <= i; ++j) {
+  std::size_t counter{N};
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
       testMatrix(j, i) = testMatrix(i, j) = counter;
       ++counter;
     }
   }
   /// Then unroll the matrix into a vector
   std::vector<double> vec{};
-  for (unsigned i = 0; i < N; ++i) {
-    for (unsigned j = 0; j <= i; ++j) {
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
       vec.push_back(testMatrix(i, j));
     }
   }
@@ -184,8 +184,8 @@ bool testUnrolling()
     return false;
   }
   /// Next test whether the indices are correct
-  for (unsigned i = 0; i < N; ++i) {
-    for (unsigned j = 0; j <= i; ++j) {
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
       const auto idx = Acts::vecIdxFromSymMat<N>(i, j);
       if (idx >= vec.size()) {
         std::cout << "Index out of bounds: " << idx << " for size "
