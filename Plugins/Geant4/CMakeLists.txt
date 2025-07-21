@@ -1,5 +1,3 @@
-include(FetchContent)
-
 acts_add_library(
     PluginGeant4
     SHARED
@@ -7,6 +5,7 @@ acts_add_library(
     src/Geant4DetectorElement.cpp
     src/Geant4DetectorSurfaceFactory.cpp
     src/Geant4PhysicalVolumeSelectors.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 target_include_directories(
     ActsPluginGeant4
@@ -20,5 +19,3 @@ target_include_directories(
     PRIVATE ${Geant4_INCLUDE_DIRS}
 )
 target_link_libraries(ActsPluginGeant4 PUBLIC Acts::Core ${Geant4_LIBRARIES})
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -4,6 +4,7 @@ acts_add_library(
     src/Geant4Decay.cpp
     src/PDGtoG4Converter.cpp
     src/DummyDetectorConstruction.cpp
+    ACTS_INCLUDE_FOLDER include/ActsFatras
 )
 target_compile_definitions(ActsFatrasGeant4 PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
@@ -21,5 +22,3 @@ target_link_libraries(
     ActsFatrasGeant4
     PUBLIC Acts::Core Acts::Fatras ${Geant4_LIBRARIES}
 )
-
-install(DIRECTORY include/ActsFatras DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

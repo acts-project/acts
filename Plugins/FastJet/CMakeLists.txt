@@ -1,4 +1,9 @@
-acts_add_library(PluginFastJet SHARED src/TrackJets.cpp)
+acts_add_library(
+    PluginFastJet
+    SHARED
+    src/TrackJets.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
+)
 
 target_include_directories(
     ActsPluginFastJet
@@ -8,5 +13,3 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginFastJet PUBLIC Acts::Core FastJet::FastJet)
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -1,4 +1,4 @@
-acts_add_library(PluginHashing INTERFACE)
+acts_add_library(PluginHashing INTERFACE ACTS_INCLUDE_FOLDER include/Acts)
 target_include_directories(
     ActsPluginHashing
     INTERFACE
@@ -6,5 +6,3 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsPluginHashing INTERFACE Annoy)
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

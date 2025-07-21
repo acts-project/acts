@@ -14,6 +14,7 @@ acts_add_library(
     src/DD4hepLayerStructure.cpp
     src/DD4hepVolumeBuilder.cpp
     src/DD4hepFieldAdapter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 target_include_directories(
@@ -30,5 +31,3 @@ if(${DD4hep_VERSION} VERSION_LESS 1.11)
 else()
     target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore DD4hep::DDRec)
 endif()
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

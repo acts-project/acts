@@ -3,10 +3,22 @@
 # 1. A direct CMake target named "Acts${library_name}"
 # 2. An ALIAS target named "Acts::${library_name}"
 function(acts_add_library library_name)
+    set(options "")
+    set(oneValueArgs ACTS_INCLUDE_FOLDER)
+    set(multiValueArgs "")
+    cmake_parse_arguments(
+        PARSE_ARGV
+        1
+        lib_args
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+    )
+
     set(full_target_name "Acts${library_name}")
 
     # Forward all arguments except the first (library_name) to add_library
-    add_library(${full_target_name} ${ARGN})
+    add_library(${full_target_name} ${lib_args_UNPARSED_ARGUMENTS})
 
     # Create alias target with Acts:: namespace
     add_library(Acts::${library_name} ALIAS ${full_target_name})
@@ -22,6 +34,13 @@ function(acts_add_library library_name)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
+
+    if(lib_args_ACTS_INCLUDE_FOLDER)
+        install(
+            DIRECTORY ${lib_args_ACTS_INCLUDE_FOLDER}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+    endif()
 endfunction()
 
 # This function adds a helper target called ${target}_HEADERS which has

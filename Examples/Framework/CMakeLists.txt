@@ -29,6 +29,7 @@ acts_add_library(
     src/Validation/TrackClassification.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
+    ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
@@ -65,7 +66,5 @@ endif()
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 
 acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
-
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)

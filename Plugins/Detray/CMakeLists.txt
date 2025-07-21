@@ -6,6 +6,7 @@ acts_add_library(
     src/DetrayGeometryConverter.cpp
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)
@@ -29,5 +30,3 @@ target_link_libraries(
         detray::test_utils
         vecmem::core
 )
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

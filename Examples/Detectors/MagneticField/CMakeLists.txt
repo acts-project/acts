@@ -18,8 +18,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesMagneticField GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesMagneticField
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

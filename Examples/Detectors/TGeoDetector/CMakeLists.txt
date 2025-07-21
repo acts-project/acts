@@ -4,6 +4,7 @@ acts_add_library(
     src/AlignedTGeoDetectorElement.cpp
     src/TGeoDetector.cpp
     src/TGeoITkModuleSplitter.cpp
+    ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
@@ -24,5 +25,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesDetectorTGeo GLOB "include/**/*.hpp")
-
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

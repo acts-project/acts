@@ -1,4 +1,9 @@
-acts_add_library(PluginFpeMonitoring SHARED src/FpeMonitor.cpp)
+acts_add_library(
+    PluginFpeMonitoring
+    SHARED
+    src/FpeMonitor.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
+)
 target_include_directories(
     ActsPluginFpeMonitoring
     PUBLIC
@@ -177,5 +182,3 @@ else()
 endif()
 
 target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

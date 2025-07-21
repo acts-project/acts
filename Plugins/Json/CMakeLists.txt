@@ -1,5 +1,3 @@
-include(ActsTargetLinkLibrariesSystem)
-
 acts_add_library(
     PluginJson
     SHARED
@@ -28,20 +26,22 @@ acts_add_library(
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
+
 target_include_directories(
     ActsPluginJson
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 target_link_libraries(
     ActsPluginJson
     PUBLIC Acts::Core nlohmann_json::nlohmann_json
 )
+
 target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

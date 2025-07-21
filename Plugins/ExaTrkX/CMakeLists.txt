@@ -6,6 +6,7 @@ acts_add_library(
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
     src/GraphStoreHook.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -118,5 +119,3 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         target_link_options(ActsPluginExaTrkX PUBLIC "-Wl,-no-as-needed")
     endif()
 endif()
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

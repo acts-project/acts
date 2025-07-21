@@ -1,4 +1,9 @@
-acts_add_library(Alignment SHARED src/Kernel/detail/AlignmentEngine.cpp)
+acts_add_library(
+    Alignment
+    SHARED
+    src/Kernel/detail/AlignmentEngine.cpp
+    ACTS_INCLUDE_FOLDER include/ActsAlignment
+)
 
 target_include_directories(
     ActsAlignment

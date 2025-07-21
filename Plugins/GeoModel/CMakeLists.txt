@@ -1,5 +1,3 @@
-include(FetchContent)
-
 acts_add_library(
     PluginGeoModel
     SHARED
@@ -22,6 +20,7 @@ acts_add_library(
     src/detail/GeoModelExtentHelper.cpp
     src/detail/GeoUnionDoubleTrdConverter.cpp
     src/GeoModelDetectorElementITk.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 target_include_directories(
     ActsPluginGeoModel
@@ -37,5 +36,3 @@ target_link_libraries(
         GeoModelIO::GeoModelDBManager
         GeoModelIO::GeoModelRead
 )
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

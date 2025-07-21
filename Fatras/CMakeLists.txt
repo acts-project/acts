@@ -13,6 +13,7 @@ acts_add_library(
     src/Physics/PhotonConversion.cpp
     src/Physics/StandardInteractions.cpp
     src/Utilities/LandauDistribution.cpp
+    ACTS_INCLUDE_FOLDER include/ActsFatras
 )
 target_include_directories(
     ActsFatras
@@ -21,7 +22,5 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsFatras PUBLIC Acts::Core)
-
-install(DIRECTORY include/ActsFatras DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)
