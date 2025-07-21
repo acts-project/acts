@@ -43,14 +43,9 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
   /// If the tube is a twin-tube, the hit position is no longer arbitrary along
   /// the wire. Calculate the distance along the wire towards the point of
   /// closest approach.
-#ifdef STONJEK
-  if (hit.dimension() == 2) {
-    m_residual[nonBending] =
-        (hitMinSeg.dot(line.direction() ection()) * m_wireProject -
-         hitMinSeg.dot(hitDir)) *
-        m_invProjLenSq;
+  if (strawMeas.nonBendingDir()) {
+    m_residual[nonBending] = (hitMinSeg.dot(line.direction()) * m_wireProject - hitMinSeg.dot(hitDir)) * m_invProjDirLenSq;
   }
-#endif
   /** Calculate the first derivative of the residual */
   for (const auto param : m_cfg.parsToUse) {
     if (isDirectionParam(param)) {
@@ -60,16 +55,16 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                    << param << "): " << toString(m_gradProjDir[param])
                    << ", residual grad: " << partialDist);
       m_gradient[param] = partialDist * Vector::Unit(bending);
-#ifdef STONJEK
-      if (hit.dimension() == 2) {
-        m_gradient[param][nonBending] =
-            (hitMinSeg.dot(line.gradient[param]) * m_wireProject +
-             hitMinSeg.dot(line.direction()) * m_gradProjDir[param]) *
-                m_invProjLenSq +
-            2. * resObj.residual[nonBending] *
-                (m_wireProject * m_gradProjDir[param]) * m_invProjLenSq;
-      }
-#endif
+
+      // if (strawMeas.nonBendingDir()) {
+      //   m_gradient[param][nonBending] =
+      //       (hitMinSeg.dot(line.gradient(param)) * m_projDir +
+      //        hitMinSeg.dot(line.direction()) * m_gradProjDir[param]) *
+      //           m_invProjDirLenSq +
+      //       2. * m_residual[nonBending] *
+      //           (m_wireProject * m_gradProjDir[param]) * m_invProjDirLenSq;
+      // }
+
 
     } else if (isPositionParam(param)) {
       const double partialDist =
@@ -77,15 +72,14 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       ACTS_VERBOSE("Parameter: " << param
                                  << ", partial residual: " << partialDist);
       m_gradient[param] = partialDist * Vector3::Unit(bending);
-#ifdef STONJEK
 
-      if (hit.dimension() == 2) {
+      if (strawMeas.nonBendingDir()) {
         m_gradient[param][nonBending] =
-            -(line.gradient[param].dot(line.direction()) * m_wireProject -
-              line.gradient[param].dot(hitDir)) *
-            m_invProjLenSq;
+            -(line.gradient(param).dot(line.direction()) * m_wireProject -
+              line.gradient(param).dot(hitDir)) *
+            m_invProjDirLenSq;
       }
-#endif
+
     }
   }
 
@@ -113,28 +107,7 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
         const double partialSqDist =
             m_hessianProjDir[resIdx].cross(hitDir).dot(hitMinSeg);
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
-#ifdef STONJEK
-        if (hit.dimension() == 2) {
-          const double partialSqAlongWire =
-              2. * resObj.residual[nonBending] * m_wireProject *
-                  partSqLineProject * m_invProjLenSq +
-              2. * resObj.residual[nonBending] * m_gradProjDir[param] *
-                  m_gradProjDir[param1] * m_invProjLenSq +
-              2. * m_gradient[param1][nonBending] * m_wireProject *
-                  m_gradProjDir[param] * m_invProjLenSq +
-              2. * m_gradient[param][nonBending] * m_wireProject *
-                  m_gradProjDir[param1] * m_invProjLenSq +
-              hitMinSeg.dot(line.hessian(param, param1)) * m_wireProject *
-                  m_invProjLenSq +
-              hitMinSeg.dot(line.direction()) * partSqLineProject *
-                  m_invProjLenSq +
-              hitMinSeg.dot(line.gradient[param]) * m_gradProjDir[param1] *
-                  m_invProjLenSq +
-              hitMinSeg.dot(line.gradient(param1)) * m_gradProjDir[param] *
-                  m_invProjLenSq;
-          resObj.hessian[resIdx][nonBending] = partialSqAlongWire;
-        }
-#endif
+
         continue;
       }
       /// Angular & Spatial mixed terms
@@ -144,18 +117,7 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       const double partialSqDist =
           -m_gradProjDir[angParam].cross(hitDir).dot(line.gradient(posParam));
       m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
-#ifdef STONJEK
-      if (hit.dimension() == 2) {
-        const double partialSqAlongWire =
-            -(line.gradient(param1).dot(line.gradient[param]) * m_wireProject +
-              line.gradient(param1).dot(line.direction()) *
-                  m_gradProjDir[param]) *
-                m_invProjLenSq +
-            2. * m_gradient[param1][nonBending] *
-                (m_wireProject * m_gradProjDir[param]) * m_invProjLenSq;
-        resObj.hessian[resIdx][nonBending] = partialSqAlongWire;
-      }
-#endif
+
     }
   }
 }

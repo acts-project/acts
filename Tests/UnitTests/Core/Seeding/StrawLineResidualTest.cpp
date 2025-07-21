@@ -66,6 +66,11 @@ class TestSpacePoint {
   const Vector3& planeNormal() const { return m_planeNorm; }
 
   bool isStraw() const { return m_isStraw; }
+  bool hasTime() const { return false; }
+  bool inBendingDir() const { return true; }
+  bool inNonBendingDir() const { return true; }
+  
+  
 
   double driftRadius() const { return m_radius; }
   double time() const { return m_time; }
