@@ -10,6 +10,11 @@ function(acts_add_library library_name)
 
     # Create alias target with Acts:: namespace
     add_library(Acts::${library_name} ALIAS ${full_target_name})
+
+    set_target_properties(
+        ${full_target_name}
+        PROPERTIES EXPORT_NAME Acts::${library_name}
+    )
 endfunction()
 
 # This function adds a helper target called ${target}_HEADERS which has
