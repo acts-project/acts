@@ -28,8 +28,11 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   ///        Distortions along the sensor direction do not alter the track
   ///        residual
   { sp.sensorDirection() } -> std::same_as<const Vector3&>;
+  /// @brief Unit vector pointing to the next strip/straw in the plane or
+  ///        in case of a combined measurement, the complementary strip direction
+  { sp.sensorNormal() } -> std::same_as<const Vector3&>;
   /// @brief Normal vector on the strip-plane.
-  { sp.stripPlaneNormal() } -> std::same_as<const Vector3&>;
+  { sp.planeNormal() } -> std::same_as<const Vector3&>;
   /// @brief Radius of the straw-tube measurement. The returned value is zero for strip measurements
   { sp.driftRadius() } -> std::same_as<double>;
   /// @brief Recorded time of the measurement, if provided by the technology

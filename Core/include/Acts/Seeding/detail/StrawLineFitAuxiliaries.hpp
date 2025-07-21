@@ -34,9 +34,6 @@ class StrawLineFitAuxiliaries {
     t0 = 4,  // time offset
     nPars = 5
   };
-
-  static constexpr double s_tolerance = 1.e-10;
-
   struct Config {
     bool useHessian{false};
     std::vector<unsigned> parsToUse{FitParIndices::x0, FitParIndices::y0,
@@ -50,25 +47,45 @@ class StrawLineFitAuxiliaries {
                               getDefaultLogger("StrawLineFitAuxiliaries",
                                                Logging::Level::VERBOSE));
 
-  template <StationSpacePoint sp_t>
-  void updateStrawResidual(const Line_t& line, const sp_t& strawMeas);
+  /// @brief Updates the
+  template <StationSpacePoint Point_t>
+  void updateStrawResidual(const Line_t& line, const Point_t& strawMeas);
 
+  template <StationSpacePoint Point_t>
+  void updateStripResidual(const Line_t& line, const Point_t& strawMeas);
+
+  /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
+  /// @brief Returns the gradient of the previously calculated residual
+  /// @param par: Index of the partiald derivative
   const Vector& gradient(const unsigned par) const;
+  /// @brief Returns the gradient of the previously calculated residual
+  /// @param param1: First index of the second partial derivative
+  /// @param param2: Second index of the second partial derivative
   const Vector& hessian(const unsigned param1, const unsigned param2) const;
 
- private:
-  constexpr bool isDirectionParam(const unsigned param) const {
+  /// @brief Returns whether the passed parameter describes a direction angle
+  static constexpr bool isDirectionParam(const unsigned param) {
     return param == FitParIndices::theta || param == FitParIndices::phi;
   }
-  constexpr bool isPositionParam(const unsigned param) const {
+  /// @brief Returns whether the passed parameter describes the displacement
+  ///        in the reference plane
+  static constexpr bool isPositionParam(const unsigned param) {
     return param == FitParIndices::x0 || param == FitParIndices::y0;
   }
 
+ private:
   const Logger& logger() const { return *m_logger; }
 
+  /// @brief  Update the direction vector projected into the wire plane
+  ///         && it's partial derivatives
+  /// @param line
+  /// @param wireDir
   bool updateStrawAuxiliaries(const Line_t& line, const Vector& wireDir);
 
+  ///
+
+  void reset();
   Config m_cfg{};
   std::unique_ptr<const Logger> m_logger{};
 
@@ -81,10 +98,16 @@ class StrawLineFitAuxiliaries {
   static constexpr unsigned s_nPars = FitParIndices::nPars;
   std::array<Vector3, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector3, sumUpToN(s_nPars)>(Vector3::Zero())};
+
+  ///
+  ///  Auxiliary parameters needed to calculate the residual of the
+  ///  point of closest approach and its derivatives
+
   /// @brief Number of spatial line parameters
   static constexpr unsigned s_nLinePars = Line_t::ParIndices::nPars;
   /// @brief projection of the segment direction onto the wire planes
   Vector m_projDir{Vector::Zero()};
+
   /// @brief Partial derivatives of the dir projection w.r.t. line parameters
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};

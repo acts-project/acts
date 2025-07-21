@@ -125,7 +125,9 @@ class MuonSpacePoint {
   /// @brief Returns the local sensor direction
   const Acts::Vector3& sensorDirection() const { return m_dir; }
   /// @brief Returns the normal vector to the plane
-  const Acts::Vector3& stripPlaneNormal() const { return m_norm; }
+  const Acts::Vector3& planeNormal() const { return m_norm; }
+  /// @brief Returns the vector pointing to the next wire / strip
+  const Acts::Vector3& sensorNormal() const { return m_norm; }
   /// @brief Returns the space point covariance
   const Acts::ActsSquareMatrix<3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius

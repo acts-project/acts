@@ -53,9 +53,8 @@ inline double calcStrawResidual(const Vector3& linePos, const Vector3& lineDir,
 template <StationSpacePoint UncalibSp_t>
 inline double calcStripResidual(const Vector3& linePos, const Vector3& lineDir,
                                 const UncalibSp_t& stripMeas) {
-  const Intersection3D isect =
-      PlanarHelper::intersectPlane(linePos, lineDir, stripMeas.localPosition(),
-                                   stripMeas.stripPlaneNormal());
+  const Intersection3D isect = PlanarHelper::intersectPlane(
+      linePos, lineDir, stripMeas.localPosition(), stripMeas.planeNormal());
 
   const Vector2 res{isect.position().template block<2, 1>(0, 0) -
                     stripMeas.localPosition().template block<2, 1>(0, 0)};

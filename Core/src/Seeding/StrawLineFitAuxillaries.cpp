@@ -30,12 +30,26 @@ const Vector& StrawLineFitAuxiliaries::hessian(const unsigned param,
   assert(idx < m_hesian.size());
   return m_hessian[idx];
 }
+
+void StrawLineFitAuxiliaries::reset() {
+  m_residual.setZero();
+  for (Vector3& grad : m_gradient) {
+    grad.setZero();
+  }
+  if (m_cfg.useHessian) {
+    for (Vector3& hess : m_hessian) {
+      hess.setZero();
+    }
+  }
+}
 bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
                                                      const Vector& wireDir) {
   const Vector& lineDir = line.direction();
-  const double wireProject = lineDir.dot(wireDir);
   /// Between two calls the wire projection has not changed
-  if (std::abs(wireProject - m_wireProject) < s_tolerance) {
+  const double wireProject = lineDir.dot(wireDir);
+  constexpr double s_tolerance = 1.e-12;
+
+  if (false && std::abs(wireProject - m_wireProject) < s_tolerance) {
     ACTS_VERBOSE(
         "Projection of the line matches the previous one. Don't update the "
         "auxiliaries");
@@ -48,15 +62,7 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     ACTS_VERBOSE("Line & wire are parallel: " << toString(wireDir) << " vs. "
                                               << toString(lineDir));
     m_invProjDirLenSq = 0.;
-    m_residual.setZero();
-    for (Vector3& grad : m_gradient) {
-      grad.setZero();
-    }
-    if (m_cfg.useHessian) {
-      for (Vector3& hess : m_hessian) {
-        hess.setZero();
-      }
-    }
+    reset();
     return false;
   }
   m_invProjDirLenSq = 1. / projDirLenSq;
@@ -108,7 +114,7 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
               square(m_invProjDirLenSq) * m_projDir;
     }
   }
-
   return true;
 }
+
 }  // namespace Acts::detail
