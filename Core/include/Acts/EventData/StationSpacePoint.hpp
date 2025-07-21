@@ -42,6 +42,17 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   ///        The remaining block the correlation between the time <-> spatial
   ///        measurement or the pure time covariance */
   { sp.covariance() } -> std::same_as<const ActsSquareMatrix<3>&>;
+
+  /// @brief Return whether the space point represents a straw measurement
+  { sp.isStraw() } -> std::same_as<bool>;
+  /// @brief Return whether the space point provides a direct time constraint
+  { sp.hasTime() } -> std::same_as<bool>;
+  /// @brief Return whether the space point constrains the bending direction
+  ///        of the segment
+  { sp.inBendingDir() } -> std::same_as<bool>;
+  /// @brief Return whether the space point constrains the non-bending direction
+  ///        of the segment
+  { sp.inNonBendingDir() } -> std::same_as<bool>;
 };
 
 /** @brief Define the Space Point pointer concept as an ordinary / smart pointer
