@@ -146,15 +146,8 @@ else
 fi
 
 pushd "$_spack_repo_dir/"*"/repos/spack_repo/builtin"
-set -x
-git status
-git remote -v
-git log -10
 git fetch --all
 git fetch --tags
-git checkout develop
-git pull
-git tag
 git checkout "${_spack_repo_version}"
 popd
 
