@@ -163,9 +163,9 @@ class BroadTripletSeedFinder {
                             const DerivedTripletCuts& tripletCuts,
                             const BroadTripletSeedFilter& filter,
                             const SpacePointContainer2& spacePoints,
-                            const SpacePointContainer2::ConstSubset& bottomSps,
+                            SpacePointContainer2::ConstSubset& bottomSps,
                             const ConstSpacePointProxy2& middleSp,
-                            const SpacePointContainer2::ConstSubset& topSps,
+                            SpacePointContainer2::ConstSubset& topSps,
                             SeedContainer2& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points. This
