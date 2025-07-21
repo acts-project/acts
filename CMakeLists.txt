@@ -258,7 +258,7 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.98.0)
+set(_acts_detray_version 0.101.0)
 set(_acts_traccc_version 0.22.0)
 set(_acts_covfie_version 0.13.0)
 set(_acts_vecmem_version 1.17.0)
