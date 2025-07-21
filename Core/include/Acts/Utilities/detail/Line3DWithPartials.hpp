@@ -15,7 +15,7 @@
 namespace Acts::detail {
 /// @brief Helper that to describe a line in 3D space. The line is described
 ///        by a point on the line and a corresponding direction vector with unit
-///        length Additionally, the `Line3DWithPartials` holds the first and
+///        length. Additionally, the `Line3DWithPartials` holds the first and
 ///        second derivative of the line with respect to the parameters `x0`,
 ///        `y0`, `theta`, and `phi` (the parameters are defined in the enum
 ///        `ParIndices`).
