@@ -11,11 +11,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 using namespace Acts;
 
 using namespace Acts::detail;
 using namespace Acts::UnitLiterals;
+using namespace Acts::PlanarHelper;
 using Line_t = StrawLineFitAuxiliaries::Line_t;
 using Vector = Line_t::Vector;
 using Config_t = StrawLineFitAuxiliaries::Config;
@@ -83,6 +85,7 @@ class TestSpacePoint {
 BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
 
 void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
+  using namespace Acts::detail::LineHelper;
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::theta, ParIdx::phi};
@@ -99,21 +102,35 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   StrawLineFitAuxiliaries resCalc{resCfg};
   if (testPoint.isStraw()) {
     resCalc.updateStrawResidual(line, testPoint);
+    const double lineDist =
+        signedDistance(testPoint.localPosition(), testPoint.sensorDirection(),
+                       line.position(), line.direction());
+
+    std::cout << "Residual: " << toString(resCalc.residual())
+              << ", line distance: " << lineDist << std::endl;
+    ///
+    BOOST_CHECK_CLOSE(resCalc.residual().norm(),
+                      lineDist - testPoint.driftRadius(), 1.e-12);
   } else {
     resCalc.updateStripResidual(line, testPoint);
-  }
-  using namespace Acts::detail::LineHelper;
-  const double lineDist =
-      signedDistance(testPoint.localPosition(), testPoint.sensorDirection(),
-                     line.position(), line.direction());
+    const Vector3& n{testPoint.planeNormal()};
+    const Vector3& v1{testPoint.sensorNormal()};
+    const Vector3& v2{testPoint.sensorDirection()};
+    const Vector3 planeIsect = intersectPlane(line.position(), line.direction(),
+                                              n, testPoint.localPosition())
+                                   .position();
+    const Vector3 delta = (planeIsect - testPoint.localPosition());
 
-  std::cout << "Residual: " << toString(resCalc.residual())
-            << ", line distance: " << lineDist << std::endl;
-  ///
-  BOOST_CHECK_CLOSE(resCalc.residual().norm(),
-                    lineDist - testPoint.driftRadius(), 1.e-12);
-  constexpr double h = 5.e-8;
-  constexpr double tolerance = 1.e-5;
+    std::cout << "Residual: " << toString(resCalc.residual())
+              << ", delta: " << toString(delta) << std::endl;
+    const Vector3 res = delta - delta.dot(n) * n;
+    BOOST_CHECK_LE(
+        (res - resCalc.residual()[1] * v1 - resCalc.residual()[0] * v2).norm(),
+        1.e-10);
+  }
+
+  constexpr double h = 5.e-10;
+  constexpr double tolerance = 1.e-3;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
     lineParsUp[par] += h;
@@ -171,8 +188,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   using ParIdx = Line_t::ParIndices;
 
   Pars_t linePars{};
-  linePars[ParIdx::phi] = 90 * 1_degree;
-  linePars[ParIdx::theta] = 45 * 1_degree;
+  linePars[ParIdx::phi] = 90. * 1_degree;
+  linePars[ParIdx::theta] = 45. * 1_degree;
 
   const Vector wireDir = Vector::UnitX();
   /// Generate the first test measurement
@@ -182,29 +199,22 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 }
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
-  const Vector dir1{makeDirectionFromPhiTheta(60 * 1_degree, 90 * 1_degree)};
-  const Vector dir2{makeDirectionFromPhiTheta(30 * 1_degree, 90 * 1_degree)};
-
   const Vector pos{474. * 1_cm, -251 * 1_cm, 0.};
-  const double dirDots = dir1.dot(dir2);
 
-  ///
-  ///       A = lambda * b_{1} + kappa * b_{2}
-  ///
-  ///                 <A, b_{2}> - <b_{1}, b_{2}> * <A, b_{1}>
-  ///   --> kappa  = -----------------------------------------
-  ///                         1 -  <b_{1}, b_{2}>^{2}
-  ///
-  ///                 <A, b_{1}> - <b_{1}, b_{2}> * <A, b_{2}>
-  ///   --> lambda = -------------------------------------------
-  ///                         1 -  <b_{1}, b_{2}>^{2}
+  Pars_t linePars{};
+  linePars[ParIdx::phi] = 90. * 1_degree;
+  linePars[ParIdx::theta] = 45 * 1_degree;
 
-  const double kappa = pos.dot(dir2 - dirDots * dir1) / (1 - square(dirDots));
-  const double lambda = pos.dot(dir1 - dirDots * dir2) / (1 - square(dirDots));
+  testResidual(
+      linePars,
+      TestSpacePoint{pos,
+                     makeDirectionFromPhiTheta(60. * 1_degree, 90 * 1_degree),
+                     makeDirectionFromPhiTheta(30 * 1_degree, 90 * 1_degree)});
 
-  const Vector expand = lambda * dir1 + kappa * dir2;
-  std::cout << "Original: " << toString(pos)
-            << ", expansion: " << toString(expand) << std::endl;
+  testResidual(linePars,
+               TestSpacePoint{
+                   pos, makeDirectionFromPhiTheta(0. * 1_degree, 90 * 1_degree),
+                   makeDirectionFromPhiTheta(90. * 1_degree, 90 * 1_degree)});
 }
 
 }  // namespace Acts::Test

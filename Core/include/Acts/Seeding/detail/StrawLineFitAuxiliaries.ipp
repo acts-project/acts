@@ -184,11 +184,11 @@ void StrawLineFitAuxiliaries::updateStripResidual(const Line_t& line,
   const double rePlaneAngle =
       stripMeas.sensorDirection().dot(stripMeas.sensorNormal());
   /// Linear independent vectors
-      assert( Acts::abs(rePlaneAngle -1. ) > tolerance );
+  assert(Acts::abs(rePlaneAngle - 1.) > tolerance);
   /// Normal vector is indeed normal onto the plane spaned by these two vectors
-  assert( Acts::abs(stripMeas.sensorDirection().dot(normal)) < tolerance);
-  assert( Acts::abs(stripMeas.sensorNormal().dot(normal)) < tolerance);
-  
+  assert(Acts::abs(stripMeas.sensorDirection().dot(normal)) < tolerance);
+  assert(Acts::abs(stripMeas.sensorNormal().dot(normal)) < tolerance);
+
   auto orthoStripPlane = [&](const Vector& v1, const Vector& v2) {
     return Acts::abs(rePlaneAngle) < tolerance
                ? v1

@@ -29,7 +29,8 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   ///        residual
   { sp.sensorDirection() } -> std::same_as<const Vector3&>;
   /// @brief Unit vector pointing to the next strip/straw in the plane or
-  ///        in case of a combined measurement, the complementary strip direction
+  ///        in case of a combined measurement, the complementary strip
+  ///        direction
   { sp.sensorNormal() } -> std::same_as<const Vector3&>;
   /// @brief Normal vector on the strip-plane.
   { sp.planeNormal() } -> std::same_as<const Vector3&>;
