@@ -17,8 +17,3 @@ target_link_libraries(
     ActsExamplesUtilities
     PUBLIC Acts::Core Acts::ExamplesFramework
 )
-
-install(
-    TARGETS ActsExamplesUtilities
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

@@ -44,9 +44,4 @@ target_compile_definitions(
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
 
-install(
-    TARGETS ActsPluginJson
-    EXPORT ActsPluginJsonTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

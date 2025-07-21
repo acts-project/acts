@@ -27,8 +27,3 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
         PUBLIC src/GeoMuonMockupExperiment.cpp
     )
 endif()
-
-install(
-    TARGETS ActsExamplesMuonSpectrometerMockupDetector
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

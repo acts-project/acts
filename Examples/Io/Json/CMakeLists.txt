@@ -22,5 +22,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesIoJson GLOB "include/**/*.hpp")
-
-install(TARGETS ActsExamplesIoJson LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

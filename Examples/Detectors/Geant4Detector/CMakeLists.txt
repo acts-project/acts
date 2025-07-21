@@ -20,8 +20,3 @@ target_link_libraries(
         Acts::PluginGeant4
         Acts::ExamplesDetectorsCommon
 )
-
-install(
-    TARGETS ActsExamplesDetectorGeant4
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

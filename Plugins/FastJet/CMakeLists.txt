@@ -9,10 +9,4 @@ target_include_directories(
 
 target_link_libraries(ActsPluginFastJet PUBLIC Acts::Core FastJet::FastJet)
 
-install(
-    TARGETS ActsPluginFastJet
-    EXPORT ActsPluginFastJetTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

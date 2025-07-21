@@ -8,9 +8,4 @@ target_include_directories(
 )
 target_link_libraries(ActsPluginCovfie PUBLIC Acts::Core covfie::core)
 
-install(
-    TARGETS ActsPluginCovfie
-    EXPORT ActsPluginCovfieTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

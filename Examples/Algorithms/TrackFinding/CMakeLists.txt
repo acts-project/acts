@@ -36,8 +36,3 @@ if(ACTS_BUILD_EXAMPLES_HASHING)
 
     target_link_libraries(ActsExamplesTrackFinding PUBLIC Acts::PluginHashing)
 endif()
-
-install(
-    TARGETS ActsExamplesTrackFinding
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

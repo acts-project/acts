@@ -14,8 +14,3 @@ target_link_libraries(
     ActsExamplesAmbiguityResolution
     PUBLIC Acts::Core Acts::ExamplesFramework Acts::PluginJson
 )
-
-install(
-    TARGETS ActsExamplesAmbiguityResolution
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

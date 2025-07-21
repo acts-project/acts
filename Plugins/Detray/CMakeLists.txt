@@ -30,10 +30,4 @@ target_link_libraries(
         vecmem::core
 )
 
-install(
-    TARGETS ActsPluginDetray
-    EXPORT ActsPluginDetrayTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

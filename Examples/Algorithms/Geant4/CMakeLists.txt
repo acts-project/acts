@@ -35,5 +35,3 @@ target_link_libraries(
         Boost::headers
         ${Geant4_LIBRARIES}
 )
-
-install(TARGETS ActsExamplesGeant4 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

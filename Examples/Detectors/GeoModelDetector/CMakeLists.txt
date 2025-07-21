@@ -40,8 +40,3 @@ else()
         PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()
-
-install(
-    TARGETS ActsExamplesDetectorGeoModel
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

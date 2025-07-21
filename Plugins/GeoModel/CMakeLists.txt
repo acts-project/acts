@@ -38,9 +38,4 @@ target_link_libraries(
         GeoModelIO::GeoModelRead
 )
 
-install(
-    TARGETS ActsPluginGeoModel
-    EXPORT ActsPluginGeoModelTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

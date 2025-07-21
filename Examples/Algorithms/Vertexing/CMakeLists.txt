@@ -16,8 +16,3 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::ExamplesFramework
     PRIVATE Acts::ExamplesTruthTracking
 )
-
-install(
-    TARGETS ActsExamplesVertexing
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

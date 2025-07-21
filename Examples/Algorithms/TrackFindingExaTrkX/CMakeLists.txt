@@ -20,8 +20,3 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ExamplesTrackFinding
 )
-
-install(
-    TARGETS ActsExamplesTrackFindingExaTrkX
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

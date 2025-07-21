@@ -12,8 +12,3 @@ target_link_libraries(
     ActsExamplesPrinters
     PUBLIC Acts::Core Acts::Fatras Acts::ExamplesFramework
 )
-
-install(
-    TARGETS ActsExamplesPrinters
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

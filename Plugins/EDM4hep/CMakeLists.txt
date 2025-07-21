@@ -11,9 +11,4 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::PluginPodio EDM4HEP::edm4hep
 )
 
-install(
-    TARGETS ActsPluginEDM4hep
-    EXPORT ActsPluginEDM4hepTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

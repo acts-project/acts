@@ -15,8 +15,3 @@ target_link_libraries(
         Acts::ExamplesIoHepMC3
         HepMC3::HepMC3
 )
-
-install(
-    TARGETS ActsExamplesGenerators
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

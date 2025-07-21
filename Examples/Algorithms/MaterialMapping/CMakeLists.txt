@@ -16,8 +16,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesMaterialMapping GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesMaterialMapping
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

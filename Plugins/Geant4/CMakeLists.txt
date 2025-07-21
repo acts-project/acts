@@ -21,9 +21,4 @@ target_include_directories(
 )
 target_link_libraries(ActsPluginGeant4 PUBLIC Acts::Core ${Geant4_LIBRARIES})
 
-install(
-    TARGETS ActsPluginGeant4
-    EXPORT ActsPluginGeant4Targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

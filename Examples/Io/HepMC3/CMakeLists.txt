@@ -97,8 +97,3 @@ if(TARGET HepMC3::rootIO)
 else()
     message(CHECK_PASS "not found")
 endif()
-
-install(
-    TARGETS ActsExamplesIoHepMC3
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

@@ -178,9 +178,4 @@ endif()
 
 target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
 
-install(
-    TARGETS ActsPluginFpeMonitoring
-    EXPORT ActsPluginFpeMonitoringTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

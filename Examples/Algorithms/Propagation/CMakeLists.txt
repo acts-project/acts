@@ -11,8 +11,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesPropagation GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesPropagation
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

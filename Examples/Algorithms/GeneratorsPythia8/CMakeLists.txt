@@ -12,8 +12,3 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesGenerators
     PRIVATE Pythia8::Pythia8
 )
-
-install(
-    TARGETS ActsExamplesGeneratorsPythia8
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

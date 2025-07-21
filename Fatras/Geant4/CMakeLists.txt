@@ -22,10 +22,4 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::Fatras ${Geant4_LIBRARIES}
 )
 
-install(
-    TARGETS ActsFatrasGeant4
-    EXPORT ActsFatrasGeant4Targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 install(DIRECTORY include/ActsFatras DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

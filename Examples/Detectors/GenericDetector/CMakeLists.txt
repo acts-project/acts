@@ -20,8 +20,3 @@ target_link_libraries(
     ActsExamplesDetectorGeneric
     PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
 )
-
-install(
-    TARGETS ActsExamplesDetectorGeneric
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

@@ -36,5 +36,3 @@ target_link_libraries(
         Acts::ExamplesDigitization
         Threads::Threads
 )
-
-install(TARGETS ActsExamplesIoCsv LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

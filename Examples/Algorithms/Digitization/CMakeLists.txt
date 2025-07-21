@@ -18,8 +18,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesDigitization GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesDigitization
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

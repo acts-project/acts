@@ -34,8 +34,3 @@ else()
         PUBLIC src/TelescopeDetectorGeant4Stub.cpp
     )
 endif()
-
-install(
-    TARGETS ActsExamplesDetectorTelescope
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

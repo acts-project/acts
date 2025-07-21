@@ -14,5 +14,3 @@ target_link_libraries(
     ActsExamplesIoPodio
     PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio Acts::Core
 )
-
-install(TARGETS ActsExamplesIoPodio LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -20,10 +20,4 @@ target_include_directories(
 
 target_link_libraries(ActsPluginOnnx PUBLIC Acts::Core onnxruntime::onnxruntime)
 
-install(
-    TARGETS ActsPluginOnnx
-    EXPORT ActsPluginOnnxTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

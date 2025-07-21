@@ -63,8 +63,3 @@ set_target_properties(
 )
 dd4hep_set_version(ActsExamplesDetectorDD4hep MAJOR 1 MINOR 0 PATCH 0)
 dd4hep_generate_rootmap(ActsExamplesDetectorDD4hep)
-
-install(
-    TARGETS ActsExamplesDetectorDD4hep
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

@@ -29,8 +29,3 @@ target_link_libraries(
         Acts::ExamplesDetectorDD4hep
         Acts::ExamplesIoPodio
 )
-
-install(
-    TARGETS ActsExamplesIoEDM4hep
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

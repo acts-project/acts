@@ -11,5 +11,3 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ExamplesMagneticField
 )
-
-install(TARGETS ActsExamplesFatras LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

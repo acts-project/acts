@@ -20,8 +20,3 @@ target_link_libraries(
     ActsExamplesTruthTracking
     PUBLIC Acts::Core Acts::ExamplesFramework
 )
-
-install(
-    TARGETS ActsExamplesTruthTracking
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

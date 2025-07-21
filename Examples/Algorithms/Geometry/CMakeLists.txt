@@ -9,8 +9,3 @@ target_link_libraries(
     ActsExamplesGeometry
     PUBLIC Acts::Core Acts::ExamplesFramework
 )
-
-install(
-    TARGETS ActsExamplesGeometry
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

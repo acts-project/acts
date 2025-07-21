@@ -8,11 +8,4 @@ target_include_directories(
 )
 
 target_link_libraries(ActsAlignment PUBLIC Acts::Core)
-
-install(
-    TARGETS ActsAlignment
-    EXPORT ActsAlignmentTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 install(DIRECTORY include/ActsAlignment DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

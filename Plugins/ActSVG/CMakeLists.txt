@@ -22,9 +22,4 @@ target_link_libraries(
     PUBLIC Acts::Core actsvg::core actsvg::meta
 )
 
-install(
-    TARGETS ActsPluginActSVG
-    EXPORT ActsPluginActSVGTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

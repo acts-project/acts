@@ -16,5 +16,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesIoObj GLOB "include/**/*.hpp")
-
-install(TARGETS ActsExamplesIoObj LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

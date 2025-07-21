@@ -31,9 +31,4 @@ else()
     target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore DD4hep::DDRec)
 endif()
 
-install(
-    TARGETS ActsPluginDD4hep
-    EXPORT ActsPluginDD4hepTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

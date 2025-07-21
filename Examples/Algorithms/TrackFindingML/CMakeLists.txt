@@ -16,8 +16,3 @@ target_link_libraries(
 )
 
 acts_compile_headers(ExamplesTrackFindingML GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesTrackFindingML
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

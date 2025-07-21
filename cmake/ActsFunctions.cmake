@@ -15,6 +15,13 @@ function(acts_add_library library_name)
         ${full_target_name}
         PROPERTIES EXPORT_NAME Acts::${library_name}
     )
+
+    install(
+        TARGETS ${full_target_name}
+        EXPORT ${full_target_name}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endfunction()
 
 # This function adds a helper target called ${target}_HEADERS which has

@@ -11,5 +11,3 @@ target_link_libraries(
         Acts::PluginActSVG
         Threads::Threads
 )
-
-install(TARGETS ActsExamplesIoSvg LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

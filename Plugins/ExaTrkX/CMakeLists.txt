@@ -119,9 +119,4 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     endif()
 endif()
 
-install(
-    TARGETS ActsPluginExaTrkX
-    EXPORT ActsPluginExaTrkXTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -7,9 +7,4 @@ target_include_directories(
 )
 target_link_libraries(ActsPluginHashing INTERFACE Annoy)
 
-install(
-    TARGETS ActsPluginHashing
-    EXPORT ActsPluginHashingTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

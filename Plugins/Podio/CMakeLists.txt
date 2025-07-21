@@ -50,11 +50,6 @@ install(
 set(install_package_config_dir "${CMAKE_INSTALL_LIBDIR}/cmake/Acts")
 install(EXPORT ActsPodioEdmTargets DESTINATION ${install_package_config_dir})
 
-install(
-    TARGETS ActsPluginPodio
-    EXPORT ActsPluginPodioTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
