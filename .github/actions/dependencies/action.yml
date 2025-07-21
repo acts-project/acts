@@ -17,7 +17,7 @@ inputs:
   spack_repo_version:
     description: 'Version of Spack builtin repo to use'
     required: false
-    default: 'develop-2025-07-13'
+    default: '6c6f144'
 
 runs:
   using: 'composite'
