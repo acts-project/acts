@@ -22,15 +22,13 @@ namespace Acts::detail {
 template <std::floating_point T>
 class Line3DWithPartials {
  public:
-  /// @brief Default empty constructor
-  Line3DWithPartials() = default;
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
-
   /// @brief Enum to map the indices of the parameter vector
   enum ParIndices : unsigned { x0 = 0, y0 = 1, theta = 2, phi = 3, nPars = 4 };
   /// @brief Abrivation of the parameter vector type
   using ParamVector = std::array<T, nPars>;
+
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
   void updateParameters(const ParamVector& newPars);
