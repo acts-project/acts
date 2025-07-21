@@ -14,8 +14,8 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 namespace Acts::detail {
-template <std::floating_point T>
 
+template <std::floating_point T>
 void Line3DWithPartials<T>::updateParameters(const ParamVector& newPars) {
   m_pos[Acts::eX] = newPars[ParIndices::x0];
   m_pos[Acts::eY] = newPars[ParIndices::y0];
