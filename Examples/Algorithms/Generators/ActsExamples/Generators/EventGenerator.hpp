@@ -16,6 +16,9 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/MultiplicityGenerators.hpp"
+#include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
+#include "ActsExamples/Utilities/VertexGenerators.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -49,41 +52,6 @@ class EventGenerator final : public ActsExamples::IReader {
   /// The process generator is responsible for defining all components of the
   /// particle barcode except the primary vertex. The primary vertex will be
   /// set/overwritten by the event generator.
-
-  /// @brief Generator interface for event multiplicity of vertices
-  struct MultiplicityGenerator {
-    /// @brief Virtual destructor required
-    virtual ~MultiplicityGenerator() = default;
-    /// @brief Generate the multiplicity of vertices
-    ///
-    /// @param rng Shared random number generator instance
-    /// @return std::size_t The multiplicity for the event
-    virtual std::size_t operator()(RandomEngine& rng) const = 0;
-  };
-
-  /// @brief Generator interface for a vertex position
-  struct PrimaryVertexPositionGenerator {
-    /// @brief Virtual destructor required
-    virtual ~PrimaryVertexPositionGenerator() = default;
-    /// @brief Generate a vertex position
-    ///
-    /// @param rng Shared random number generator instance
-    /// @return Acts::Vector4 The vertex position
-    virtual Acts::Vector4 operator()(RandomEngine& rng) const = 0;
-  };
-
-  /// @brief Generator interface for vertices and particles
-  struct ParticlesGenerator {
-    /// @brief Virtual destructor required
-    virtual ~ParticlesGenerator() = default;
-    /// @brief Generate vertices and particles for one interaction
-    /// @note This method cannot be `const` because the Pythia8 generator
-    ///       uses the Pythia8 interfaces, which is non-const
-    ///
-    /// @param rng Shared random number generator instance
-    /// @return The vertex and particle containers
-    virtual std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) = 0;
-  };
 
   /// @brief Combined struct which contains all generator components
   struct Generator {

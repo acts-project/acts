@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   factory.convertFpv("Trd", physTrd, gmCache, gContext);
 
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
-  const auto& volumeTrd = std::get<1>(gmCache.volumeBoxFPVs[0]);
+  const auto& volumeTrd = gmCache.volumeBoxFPVs[0].volume;
   const auto* bounds = dynamic_cast<const Acts::TrapezoidVolumeBounds*>(
       &volumeTrd->volumeBounds());
   std::vector<double> convHls = bounds->values();

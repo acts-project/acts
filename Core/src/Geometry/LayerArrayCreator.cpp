@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -28,7 +27,9 @@
 #include <utility>
 #include <vector>
 
-std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
+namespace Acts {
+
+std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
     const GeometryContext& gctx, const LayerVector& layersInput, double min,
     double max, BinningType bType, AxisDirection aDir) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
@@ -169,7 +170,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
                                                          std::move(binUtility));
 }
 
-std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
+std::shared_ptr<Surface> LayerArrayCreator::createNavigationSurface(
     const GeometryContext& gctx, const Layer& layer, AxisDirection aDir,
     double offset) const {
   // surface reference
@@ -233,3 +234,5 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   }
   return navigationSurface;
 }
+
+}  // namespace Acts

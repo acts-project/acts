@@ -173,35 +173,37 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
       for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++) {
-        if (passThreshold(m_houghHist, x, y)) {
-          /* now we need to unpack the hits; there should be multiple track
-             candidates if we have multiple hits in a given layer So the first
-             thing is to unpack the indices (which is what we need) by layer */
+        if (!passThreshold(m_houghHist, x, y)) {
+          continue;
+        }
 
-          std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
-              m_cfg.nLayers);  // [layer,vector<Index]
-          std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
-          for (auto measurementIndex : m_houghHist.atLocalBins({y, x}).second) {
-            HoughMeasurementStruct* meas =
-                houghMeasurementStructs[measurementIndex].get();
-            hitIndicesAll[meas->layer].push_back(meas->indices);
-            nHitsPerLayer[meas->layer]++;
-          }
-          std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
+        // Now we need to unpack the hits; there should be multiple track
+        // candidates if we have multiple hits in a given layer. So the first
+        // thing is to unpack the indices (which is what we need) by layer
 
-          for (auto [icomb, hit_indices] :
-               Acts::enumerate(combs)) {  // loop over all the combination
+        std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
+            m_cfg.nLayers);
+        std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
+        for (auto measurementIndex : m_houghHist.atLocalBins({y, x}).second) {
+          HoughMeasurementStruct* meas =
+              houghMeasurementStructs[measurementIndex].get();
+          hitIndicesAll[meas->layer].push_back(meas->indices);
+          nHitsPerLayer[meas->layer]++;
+        }
 
-            ProtoTrack protoTrack;
-            for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
-              if (hit_indices[layer] >= 0) {
-                for (auto index : hitIndicesAll[layer][hit_indices[layer]]) {
-                  protoTrack.push_back(index);
-                }
+        std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
+
+        // Loop over all combinations.
+        for (auto [icomb, hit_indices] : Acts::enumerate(combs)) {
+          ProtoTrack protoTrack;
+          for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
+            if (hit_indices[layer] >= 0) {
+              for (auto index : hitIndicesAll[layer][hit_indices[layer]]) {
+                protoTrack.push_back(index);
               }
             }
-            protoTracks.push_back(protoTrack);
           }
+          protoTracks.push_back(protoTrack);
         }
       }
     }
