@@ -265,7 +265,7 @@ constexpr unsigned vecIdxFromSymMat(unsigned i, unsigned k)
   return sumUpToN(i) + k;
 }
 /// @brief Map an unrolled vector index to the indices of the lower triangular
-///        part of a symmetric N x N matrix.
+///        part of a symmetric N x N matrix. Inverse of `vecIdxFromSymMat`.
 /// @param k The unrolled vector index
 /// @return A pair of indices (i, j) such that the element at (i, j) in the
 ///         symmetric matrix corresponds to the k-th element in the unrolled
