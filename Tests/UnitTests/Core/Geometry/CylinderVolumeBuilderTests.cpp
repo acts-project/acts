@@ -6,7 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma GCC diagnostic push
+#if __GNUC__ == 15
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include <boost/test/data/test_case.hpp>
+#pragma GCC diagnostic pop
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -16,6 +21,7 @@
 namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
+//
 
 /// Unit test for testing the wraps() function of the CylinderVolumeBuilder
 BOOST_DATA_TEST_CASE(

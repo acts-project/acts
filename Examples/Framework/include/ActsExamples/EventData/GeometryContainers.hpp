@@ -41,7 +41,7 @@ struct GeometryIdGetter {
       const std::pair<Acts::GeometryIdentifier, T>& mapItem) const {
     return mapItem.first;
   }
-  // Support pointer
+  // Support pointer to object that implement `.geometryId()`.
   template <typename T>
   constexpr Acts::GeometryIdentifier operator()(const T* thing) const {
     return thing->geometryId();
@@ -51,6 +51,12 @@ struct GeometryIdGetter {
   inline auto operator()(const T& thing) const
       -> decltype(thing.geometryId(), Acts::GeometryIdentifier()) {
     return thing.geometryId();
+  }
+  // support pointer type elements that implements `geometryId()`.
+  template <typename T>
+  inline auto operator()(const T& thing) const
+      -> decltype(thing->geometryId(), Acts::GeometryIdentifier()) {
+    return thing->geometryId();
   }
   // support reference_wrappers around such types as well
   template <typename T>
