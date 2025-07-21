@@ -14,6 +14,7 @@ import pytest
 
 from helpers import (
     geant4Enabled,
+    geomodelEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
@@ -92,7 +93,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     events = seq.config.events
 
-    runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
+    vtxGen = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 0),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
+
+    runPythia8(
+        str(tmp_path), outputRoot=True, outputCsv=True, vtxGen=vtxGen, s=seq
+    ).run()
 
     fp = tmp_path / "particles.root"
     assert fp.exists()
@@ -1220,6 +1228,11 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
+    if backend == "torch":
+        pytest.skip(
+            "Disabled torch support until replacement for torch-scatter is found"
+        )
+
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
@@ -1296,3 +1309,31 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     rfp = tmp_path / root_file
 
     assert_root_hash(root_file, rfp)
+
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+def test_geomodel_G4(tmp_path):
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geomodel_G4.py"
+    )
+    assert script.exists()
+    # Prepare arguments for the script
+    mockup_det = "Muon"
+    out_dir = tmp_path / "geomodel_g4_out"
+    out_dir.mkdir()
+    args = [
+        "python3",
+        str(script),
+        "--mockupDetector",
+        str(mockup_det),
+        "--outDir",
+        str(out_dir),
+    ]
+    subprocess.check_call(args)
+
+    assert (out_dir / "obj").exists()

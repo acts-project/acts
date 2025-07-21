@@ -12,6 +12,7 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
@@ -102,35 +103,76 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::Experimental::SpacePointContainer2 coreSpacePoints;
-  coreSpacePoints.createExtraColumns(
-      Acts::Experimental::SpacePointKnownExtraColumn::R |
-      Acts::Experimental::SpacePointKnownExtraColumn::Phi |
-      Acts::Experimental::SpacePointKnownExtraColumn::VarianceR |
-      Acts::Experimental::SpacePointKnownExtraColumn::VarianceZ);
-  coreSpacePoints.reserve(spacePoints.size());
-  for (const auto& sp : spacePoints) {
-    // check if the space point passes the selection
-    if (m_spacePointSelector(sp)) {
-      auto newSp = coreSpacePoints.createSpacePoint(
-          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)}, sp.x(),
-          sp.y(), sp.z());
-      newSp.r() = sp.r();
-      newSp.phi() = std::atan2(sp.y(), sp.x());
-      newSp.varianceR() = sp.varianceR();
-      newSp.varianceZ() = sp.varianceZ();
-    }
-  }
-
   Acts::Experimental::CylindricalSpacePointGrid2 grid(
       m_gridConfig, logger().cloneWithSuffix("Grid"));
 
-  grid.fill(coreSpacePoints);
+  for (std::size_t i = 0; i < spacePoints.size(); ++i) {
+    const auto& sp = spacePoints[i];
 
-  // Compute radius Range
-  // we rely on the fact the grid is storing the proxies
+    // check if the space point passes the selection
+    if (!m_spacePointSelector(sp)) {
+      continue;
+    }
+
+    float phi = std::atan2(sp.y(), sp.x());
+    grid.insert(i, phi, sp.z(), sp.r());
+  }
+
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    std::ranges::sort(grid.at(i),
+                      [&](const Acts::Experimental::SpacePointIndex2& a,
+                          const Acts::Experimental::SpacePointIndex2& b) {
+                        return spacePoints[a].r() < spacePoints[b].r();
+                      });
+  }
+
+  Acts::Experimental::SpacePointContainer2 coreSpacePoints(
+      Acts::Experimental::SpacePointColumns::SourceLinks |
+      Acts::Experimental::SpacePointColumns::X |
+      Acts::Experimental::SpacePointColumns::Y |
+      Acts::Experimental::SpacePointColumns::Z |
+      Acts::Experimental::SpacePointColumns::R |
+      Acts::Experimental::SpacePointColumns::VarianceR |
+      Acts::Experimental::SpacePointColumns::VarianceZ);
+  coreSpacePoints.reserve(grid.numberOfSpacePoints());
+  std::vector<Acts::Experimental::SpacePointIndexRange2> gridSpacePointRanges;
+  gridSpacePointRanges.reserve(grid.numberOfBins());
+  for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
+    std::uint32_t begin = coreSpacePoints.size();
+    for (Acts::Experimental::SpacePointIndex2 spIndex : grid.at(i)) {
+      const SimSpacePoint& sp = spacePoints[spIndex];
+
+      auto newSp = coreSpacePoints.createSpacePoint();
+      newSp.assignSourceLinks(
+          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
+      newSp.x() = sp.x();
+      newSp.y() = sp.y();
+      newSp.z() = sp.z();
+      newSp.r() = sp.r();
+      newSp.varianceR() = sp.varianceR();
+      newSp.varianceZ() = sp.varianceZ();
+    }
+    std::uint32_t end = coreSpacePoints.size();
+    gridSpacePointRanges.emplace_back(begin, end);
+  }
+
+  // Compute radius range. We rely on the fact the grid is storing the proxies
   // with a sorting in the radius
-  const Acts::Range1D<float> rRange = grid.computeRadiusRange(coreSpacePoints);
+  const Acts::Range1D<float> rRange = [&]() -> Acts::Range1D<float> {
+    float minRange = std::numeric_limits<float>::max();
+    float maxRange = std::numeric_limits<float>::lowest();
+    for (const Acts::Experimental::SpacePointIndexRange2& range :
+         gridSpacePointRanges) {
+      if (range.first == range.second) {
+        continue;
+      }
+      auto first = coreSpacePoints[range.first];
+      auto last = coreSpacePoints[range.second - 1];
+      minRange = std::min(first.r(), minRange);
+      maxRange = std::max(last.r(), maxRange);
+    }
+    return {minRange, maxRange};
+  }();
 
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
@@ -155,8 +197,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
+  bottomDoubletFinderConfig.sortedInR = true;
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
-      bottomDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          bottomDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
       bottomDoubletFinderConfig;
@@ -166,7 +210,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
   Acts::Experimental::DoubletSeedFinder topDoubletFinder(
-      topDoubletFinderConfig.derive(m_cfg.bFieldInZ));
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
   tripletCuts.minPt = m_cfg.minPt;
@@ -176,7 +221,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletCuts.impactMax = m_cfg.impactMax;
   tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  auto derivedTripletCuts = tripletCuts.derive(m_cfg.bFieldInZ);
+  Acts::Experimental::BroadTripletSeedFinder::DerivedTripletCuts
+      derivedTripletCuts(tripletCuts, m_cfg.bFieldInZ);
 
   // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {
@@ -188,63 +234,47 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFinder::State state;
   static thread_local Acts::Experimental::BroadTripletSeedFinder::Cache cache;
 
-  std::vector<Acts::SpacePointIndex2> bottomSps;
-  std::vector<Acts::SpacePointIndex2> middleSps;
-  std::vector<Acts::SpacePointIndex2> topSps;
+  std::vector<Acts::Experimental::SpacePointContainer2::ConstRange>
+      bottomSpRanges;
+  std::optional<Acts::Experimental::SpacePointContainer2::ConstRange>
+      middleSpRange;
+  std::vector<Acts::Experimental::SpacePointContainer2::ConstRange> topSpRanges;
 
   for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
 
-    bottomSps.clear();
+    bottomSpRanges.clear();
     for (const auto b : bottom) {
-      bottomSps.insert(bottomSps.end(), grid.at(b).begin(), grid.at(b).end());
+      bottomSpRanges.push_back(
+          coreSpacePoints.range(gridSpacePointRanges.at(b)).asConst());
     }
-    middleSps.clear();
-    middleSps = grid.at(middle);
-    topSps.clear();
+    middleSpRange =
+        coreSpacePoints.range(gridSpacePointRanges.at(middle)).asConst();
+    topSpRanges.clear();
     for (const auto t : top) {
-      topSps.insert(topSps.end(), grid.at(t).begin(), grid.at(t).end());
+      topSpRanges.push_back(
+          coreSpacePoints.range(gridSpacePointRanges.at(t)).asConst());
     }
 
-    std::ranges::sort(bottomSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
-    std::ranges::sort(middleSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
-    std::ranges::sort(topSps, {}, [&](Acts::SpacePointIndex2 spIndex) {
-      return coreSpacePoints.at(spIndex).r();
-    });
+    if (middleSpRange->empty()) {
+      ACTS_DEBUG("No middle space points in this group, skipping");
+      continue;
+    }
 
     // we compute this here since all middle space point candidates belong to
     // the same z-bin
-    auto firstMiddleSp = coreSpacePoints.at(middleSps.front());
-    auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
-        retrieveRadiusRangeForMiddle(
-            Acts::Experimental::ConstSpacePointProxy2(firstMiddleSp),
-            rMiddleSpRange);
+    Acts::Experimental::ConstSpacePointProxy2 firstMiddleSp =
+        middleSpRange->front();
+    std::pair<float, float> radiusRangeForMiddle =
+        retrieveRadiusRangeForMiddle(firstMiddleSp, rMiddleSpRange);
     ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
-                 << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
-                 << "]");
+                 << radiusRangeForMiddle.first << ", "
+                 << radiusRangeForMiddle.second << "]");
 
-    for (Acts::SpacePointIndex2 middleSp : middleSps) {
-      auto spM = coreSpacePoints.at(middleSp);
-      const float rM = spM.r();
-
-      // check if spM is outside our radial region of interest
-      if (rM < minRadiusRangeForMiddle) {
-        continue;
-      }
-      if (rM > maxRadiusRangeForMiddle) {
-        // break because SPs are sorted in r
-        break;
-      }
-
-      m_seedFinder->createSeedsFromGroup(
-          finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
-          derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSps,
-          middleSp, topSps, seeds);
-    }  // loop on middle space points
+    m_seedFinder->createSeedsFromSortedGroups(
+        finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
+        derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSpRanges,
+        *middleSpRange, topSpRanges, radiusRangeForMiddle, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

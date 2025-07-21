@@ -95,7 +95,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face,
-      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
@@ -119,7 +119,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
       CuboidVolumeBounds::Face face,
-      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz

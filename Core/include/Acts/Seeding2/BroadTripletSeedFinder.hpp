@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
@@ -46,8 +47,6 @@ class BroadTripletSeedFinder {
     bool useStripMeasurementInfo = false;
   };
 
-  struct DerivedTripletCuts;
-
   struct TripletCuts {
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
@@ -61,7 +60,6 @@ class BroadTripletSeedFinder {
     /// Term that accounts for the thickness of scattering medium in radiation
     /// lengths in the Lynch & Dahl correction to the Highland equation default
     /// is 5%
-    /// TODO: necessary to make amount of material dependent on detector region?
     float radLengthPerSeed = 0.05;
     /// Maximum transverse momentum for scattering calculation
     float maxPtScattering = 10 * UnitConstants::GeV;
@@ -75,16 +73,12 @@ class BroadTripletSeedFinder {
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
-
-    /// Default z variance if not specified for the space point
-    float defaultVarianceZ = 0;
-    /// Default r variance if not specified for the space point
-    float defaultVarianceR = 0;
-
-    DerivedTripletCuts derive(float bFieldInZ) const;
   };
 
   struct DerivedTripletCuts : public TripletCuts {
+    DerivedTripletCuts(const TripletCuts& cuts, float bFieldInZ);
+
+    float bFieldInZ = 0;
     float highland = 0;
     float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
@@ -159,9 +153,9 @@ class BroadTripletSeedFinder {
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param spacePoints Space point container
-  /// @param bottomSps Group of space points to be used as innermost SP in a seed
+  /// @param bottomSps Subset of space points to be used as innermost SP in a seed
   /// @param middleSp Space point candidate to be used as middle SP in a seed
-  /// @param topSps Group of space points to be used as outermost SP in a seed
+  /// @param topSps Subset of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(const Options& options, State& state, Cache& cache,
                             const DoubletSeedFinder& bottomFinder,
@@ -169,9 +163,9 @@ class BroadTripletSeedFinder {
                             const DerivedTripletCuts& tripletCuts,
                             const BroadTripletSeedFilter& filter,
                             const SpacePointContainer2& spacePoints,
-                            std::span<const SpacePointIndex2> bottomSps,
-                            SpacePointIndex2 middleSp,
-                            std::span<const SpacePointIndex2> topSps,
+                            SpacePointContainer2::ConstSubset& bottomSps,
+                            const ConstSpacePointProxy2& middleSp,
+                            SpacePointContainer2::ConstSubset& topSps,
                             SeedContainer2& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points. This
@@ -185,9 +179,9 @@ class BroadTripletSeedFinder {
   /// @param tripletCuts Derived cuts for the triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
   /// @param spacePoints Space point container
-  /// @param bottomSpGroups Groups of space points to be used as innermost SP in a seed
-  /// @param middleSps Group of space points to be used as middle SP in a seed
-  /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
+  /// @param bottomSpRanges Ranges of space points to be used as innermost SP in a seed
+  /// @param middleSpRange Range of space points to be used as middle SP in a seed
+  /// @param topSpRanges Ranges of space points to be used as outermost SP in a seed
   /// @param radiusRangeForMiddle Range of radii for the middle space points
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromSortedGroups(
@@ -196,9 +190,9 @@ class BroadTripletSeedFinder {
       const DerivedTripletCuts& tripletCuts,
       const BroadTripletSeedFilter& filter,
       const SpacePointContainer2& spacePoints,
-      const std::vector<std::span<const SpacePointIndex2>>& bottomSpGroups,
-      std::span<const SpacePointIndex2> middleSps,
-      const std::vector<std::span<const SpacePointIndex2>>& topSpGroups,
+      const std::span<SpacePointContainer2::ConstRange>& bottomSpRanges,
+      const SpacePointContainer2::ConstRange& middleSpRange,
+      const std::span<SpacePointContainer2::ConstRange>& topSpRanges,
       const std::pair<float, float>& radiusRangeForMiddle,
       SeedContainer2& outputSeeds) const;
 

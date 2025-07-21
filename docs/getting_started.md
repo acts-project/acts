@@ -43,6 +43,7 @@ components:
 - [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 - [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
+- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -113,15 +114,17 @@ After sourcing the setup script, you can build ACTS as described above.
 ### In a container
 
 A set of container images is available through the [ACTS container
-registry][acts_containers]. The following containers are used as part of the
-continuous integration setup and come with all dependencies pre-installed.
+registry][acts_containers]. These images are built using the configuration that is used in CI,
+and they contain all the dependencies required to build ACTS.
 
-- `ubuntu2204`
-- `ubuntu2404`
+.. note::
+   Most containers are only build for the `x86_64` platform. If you are on an
+   `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
+   container, which is built for `aarch64` and `x86_64`!
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
-- `alma9` (HEP-specific software from LCG 104 or 105 and gcc13 or clang16)
+- `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
 - `macOS-10.15`
 
 :::{attention}
@@ -171,7 +174,7 @@ container $ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
 container $ cmake --build build
 ```
 
-[acts_containers]: https://github.com/orgs/acts-project/packages?ecosystem=container
+[acts_containers]: https://github.com/acts-project/ci-dependencies/pkgs/container/spack-container
 
 ### On your local machine
 
