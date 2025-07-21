@@ -105,9 +105,9 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const DerivedTripletCuts& tripletCuts, const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
-    const SpacePointContainer2::ConstSubset& bottomSps,
+    SpacePointContainer2::ConstSubset& bottomSps,
     const ConstSpacePointProxy2& middleSp,
-    const SpacePointContainer2::ConstSubset& topSps,
+    SpacePointContainer2::ConstSubset& topSps,
     SeedContainer2& outputSeeds) const {
   cache.candidatesCollector.setMaxElements(
       filter.config().maxSeedsPerSpMConf,
@@ -257,8 +257,8 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-top doublets
     cache.topDoublets.clear();
     for (SpacePointContainer2::ConstRange& topSpRange : topSpRanges) {
-      topFinder.createDoubletsFromSortedInR(spM, middleSpInfo, topSpRange,
-                                            cache.topDoublets);
+      topFinder.createDoublets(spM, middleSpInfo, topSpRange,
+                               cache.topDoublets);
     }
 
     // no top SP found -> try next spM
@@ -297,8 +297,8 @@ void BroadTripletSeedFinder::createSeedsFromSortedGroups(
     // create middle-bottom doublets
     cache.bottomDoublets.clear();
     for (SpacePointContainer2::ConstRange& bottomSpRange : bottomSpRanges) {
-      bottomFinder.createDoubletsFromSortedInR(spM, middleSpInfo, bottomSpRange,
-                                               cache.bottomDoublets);
+      bottomFinder.createDoublets(spM, middleSpInfo, bottomSpRange,
+                                  cache.bottomDoublets);
     }
 
     // no bottom SP found -> try next spM
