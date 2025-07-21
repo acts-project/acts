@@ -9,12 +9,12 @@ acts_add_library(
 )
 
 target_include_directories(
-    ExamplesTrackFindingExaTrkX
+    ActsExamplesTrackFindingExaTrkX
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-    ExamplesTrackFindingExaTrkX
+    ActsExamplesTrackFindingExaTrkX
     PUBLIC
         Acts::PluginExaTrkX
         Acts::ExamplesFramework
