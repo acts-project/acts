@@ -45,9 +45,11 @@ AxisDirection axisDirectionFromName(const std::string& name) {
     // Legacy binning check - this should be removed once BinUtility is gone
     it = std::ranges::find(s_legacyBinningValueNames, name);
     if (it == s_legacyBinningValueNames.end()) {
+      // both legacy and current failed
       throw std::invalid_argument("Unknown AxisDirection value name: " + name);
     }
-    // both legacy and current failed
+    return static_cast<AxisDirection>(
+        std::distance(s_legacyBinningValueNames.begin(), it));
   }
   return static_cast<AxisDirection>(
       std::distance(s_axisDirectionNames.begin(), it));
