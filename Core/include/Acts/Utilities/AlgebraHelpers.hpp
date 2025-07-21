@@ -275,7 +275,6 @@ constexpr std::array<unsigned, 2> symMatIndices(unsigned k)
   requires(N > 1)
 {
   assert(k < sumUpToN(N));
-  ///
   constexpr unsigned bound = sumUpToN(N - 1);
   if (k >= bound) {
     return std::array<unsigned, 2>{N - 1, k - bound};
