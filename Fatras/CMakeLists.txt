@@ -1,5 +1,5 @@
-add_library(
-    ActsFatras
+acts_add_library(
+    Fatras
     SHARED
     src/Digitization/Segmentizer.cpp
     src/Digitization/DigitizationError.cpp
@@ -13,6 +13,7 @@ add_library(
     src/Physics/PhotonConversion.cpp
     src/Physics/StandardInteractions.cpp
     src/Utilities/LandauDistribution.cpp
+    ACTS_INCLUDE_FOLDER include/ActsFatras
 )
 target_include_directories(
     ActsFatras
@@ -20,14 +21,6 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(ActsFatras PUBLIC ActsCore)
-
-install(
-    TARGETS ActsFatras
-    EXPORT ActsFatrasTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-install(DIRECTORY include/ActsFatras DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+target_link_libraries(ActsFatras PUBLIC Acts::Core)
 
 add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)
