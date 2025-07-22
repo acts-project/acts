@@ -152,11 +152,13 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
   Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
       m_hashingTraining;
 
-  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 50.;
+  static inline bool itkFastTrackingCuts(const SpacePointProxy_t& /*middle*/,
+                const SpacePointProxy_t& other, float cotTheta,
+                bool isBottomCandidate) {
+    static float rMin = 45.;
     static float cotThetaMax = 1.5;
 
-    if (bottomRadius < rMin &&
+    if (isBottomCandidate && other.radius() < rMin &&
         (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
       return false;
     }
