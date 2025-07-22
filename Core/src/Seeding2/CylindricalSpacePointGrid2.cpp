@@ -105,7 +105,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     phiBins = std::min(phiBins, m_cfg.maxPhiBins);
   }
 
-  Axis phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
+  PhiAxisType phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<double> zValues{};
@@ -142,8 +142,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
                    m_cfg.rBinEdges.end());
   }
 
-  Axis zAxis(AxisOpen, std::move(zValues));
-  Axis rAxis(AxisOpen, std::move(rValues));
+  ZAxisType zAxis(AxisOpen, std::move(zValues));
+  RAxisType rAxis(AxisOpen, std::move(rValues));
 
   ACTS_VERBOSE("Defining Grid:");
   ACTS_VERBOSE("- Phi Axis: " << phiAxis);
@@ -157,16 +157,23 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   m_grid = &m_binnedGroup->grid();
 }
 
-void CylindricalSpacePointGrid2::insert(const ConstSpacePointProxy2& sp) {
-  Vector3 position(sp.phi(), sp.z(), sp.r());
-  if (!grid().isInside(position)) {
-    return;
+void CylindricalSpacePointGrid2::clear() {
+  for (std::size_t i = 0; i < grid().size(); ++i) {
+    BinType& bin = grid().at(i);
+    bin.clear();
   }
+  m_counter = 0;
+}
 
-  std::size_t globIndex = grid().globalBinFromPosition(position);
-  auto& bin = grid().at(globIndex);
-  bin.push_back(sp.index());
-  ++m_counter;
+std::optional<std::size_t> CylindricalSpacePointGrid2::insert(
+    SpacePointIndex index, float phi, float r, float z) {
+  const std::optional<std::size_t> gridIndex = binIndex(phi, r, z);
+  if (gridIndex.has_value()) {
+    BinType& bin = grid().at(*gridIndex);
+    bin.push_back(index);
+    ++m_counter;
+  }
+  return gridIndex;
 }
 
 void CylindricalSpacePointGrid2::extend(
@@ -174,21 +181,17 @@ void CylindricalSpacePointGrid2::extend(
   ACTS_VERBOSE("Inserting " << spacePoints.size()
                             << " space points to the grid");
 
-  for (const auto& sp : spacePoints) {
+  for (const ConstSpacePointProxy2& sp : spacePoints) {
     insert(sp);
   }
 }
 
-void CylindricalSpacePointGrid2::fill(const SpacePointContainer2& spacePoints) {
-  extend(spacePoints.range({0, spacePoints.size()}));
-  sort(spacePoints);
-}
-
-void CylindricalSpacePointGrid2::sort(const SpacePointContainer2& spacePoints) {
+void CylindricalSpacePointGrid2::sortBinsByR(
+    const SpacePointContainer2& spacePoints) {
   ACTS_VERBOSE("Sorting the grid");
 
   for (std::size_t i = 0; i < grid().size(); ++i) {
-    auto& bin = grid().at(i);
+    BinType& bin = grid().at(i);
     std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
       return spacePoints[spIndex].r();
     });
@@ -202,12 +205,12 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
     const SpacePointContainer2& spacePoints) const {
   float minRange = std::numeric_limits<float>::max();
   float maxRange = std::numeric_limits<float>::lowest();
-  for (const auto& coll : grid()) {
-    if (coll.empty()) {
+  for (const BinType& bin : grid()) {
+    if (bin.empty()) {
       continue;
     }
-    auto first = spacePoints[coll.front()];
-    auto last = spacePoints[coll.back()];
+    auto first = spacePoints[bin.front()];
+    auto last = spacePoints[bin.back()];
     minRange = std::min(first.r(), minRange);
     maxRange = std::max(last.r(), maxRange);
   }

@@ -52,7 +52,7 @@ class RootSpacePointIo {
   /// @param spacePoint the space point to read into
   /// @param index the original index of the space point in the ROOT file
   void read(Experimental::MutableSpacePointProxy2& spacePoint,
-            SpacePointIndex2 index);
+            Experimental::SpacePointIndex2 index);
 
   /// @brief Read the space points from the tree
   ///

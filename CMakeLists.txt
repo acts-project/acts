@@ -143,81 +143,55 @@ include(ActsOptionHelpers)
 
 # any examples component activates the general examples option
 set_option_if(
-  ACTS_BUILD_EXAMPLES
-  ACTS_BUILD_EXAMPLES_DD4HEP
-  OR ACTS_BUILD_EXAMPLES_EDM4HEP
-  OR ACTS_BUILD_EXAMPLES_GEANT4
-  OR ACTS_BUILD_EXAMPLES_HASHING
-  OR ACTS_BUILD_EXAMPLES_PYTHIA8
-  OR ACTS_BUILD_EXAMPLES_EXATRKX
-  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+    ACTS_BUILD_EXAMPLES
+    ACTS_BUILD_EXAMPLES_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_EDM4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_GEANT4
+    OR
+    ACTS_BUILD_EXAMPLES_HASHING
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHIA8
+    OR
+    ACTS_BUILD_EXAMPLES_EXATRKX
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
 
 set_option_if(
-  ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR
-  ACTS_BUILD_EXAMPLES_EDM4HEP
+    ACTS_BUILD_PLUGIN_DD4HEP
+    ACTS_BUILD_EXAMPLES_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_EDM4HEP
+)
+set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_PLUGIN_PODIO ACTS_BUILD_EXAMPLES_PODIO)
+set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
+set_option_if(
+    ACTS_BUILD_PLUGIN_ROOT
+    ACTS_BUILD_PLUGIN_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES
 )
 set_option_if(
-  ACTS_BUILD_PLUGIN_EDM4HEP
-  ACTS_BUILD_EXAMPLES_EDM4HEP
+    ACTS_BUILD_PLUGIN_IDENTIFICATION
+    ACTS_BUILD_PLUGIN_ROOT
+    OR
+    ACTS_BUILD_PLUGIN_PODIO
+    OR
+    ACTS_BUILD_EXAMPLES
 )
-set_option_if(
-  ACTS_BUILD_EXAMPLES_PODIO
-  ACTS_BUILD_EXAMPLES_EDM4HEP
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EXAMPLES_PODIO
-)
-set_option_if(
-    ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_ROOT
-  ACTS_BUILD_PLUGIN_DD4HEP OR
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_ROOT OR
-  ACTS_BUILD_PLUGIN_PODIO OR
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_FATRAS
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_EXATRKX
-  ACTS_BUILD_EXAMPLES_EXATRKX
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_FPEMON
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_PLUGIN_TRACCC
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_ACTSVG
-  ACTS_BUILD_PLUGIN_TRACCC
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_HASHING
-  ACTS_BUILD_EXAMPLES_HASHING
-)
-set_option_if(
-  ACTS_EXATRKX_ENABLE_CUDA
-  ACTS_EXATRKX_ENABLE_MODULEMAP
-)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
+set_option_if(ACTS_EXATRKX_ENABLE_CUDA ACTS_EXATRKX_ENABLE_MODULEMAP)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -284,7 +258,7 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.98.0)
+set(_acts_detray_version 0.101.0)
 set(_acts_traccc_version 0.22.0)
 set(_acts_covfie_version 0.13.0)
 set(_acts_vecmem_version 1.17.0)
@@ -484,6 +458,16 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
+    if(ACTS_SETUP_VECMEM)
+        if(ACTS_USE_SYSTEM_VECMEM)
+            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        else()
+            add_subdirectory(thirdparty/vecmem)
+            # Make the "VecMem language code" available for the whole project.
+            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+        endif()
+    endif()
+
     if(ACTS_SETUP_ALGEBRAPLUGINS)
         if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
             find_package(
@@ -501,16 +485,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
         else()
             add_subdirectory(thirdparty/detray)
-        endif()
-    endif()
-
-    if(ACTS_SETUP_VECMEM)
-        if(ACTS_USE_SYSTEM_VECMEM)
-            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-        else()
-            add_subdirectory(thirdparty/vecmem)
-            # Make the "VecMem language code" available for the whole project.
-            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
         endif()
     endif()
 
