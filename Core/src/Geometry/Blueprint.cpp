@@ -260,6 +260,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   auto &shell = child.connect(options, gctx, logger);
 
+  // Composite of trivial will not be converted to grid like this
+  // Performance impact should be negligible since it's a rare case, but might
+  // want to change
   shell.fill(*world);
 
   child.finalize(options, gctx, *world, logger);
