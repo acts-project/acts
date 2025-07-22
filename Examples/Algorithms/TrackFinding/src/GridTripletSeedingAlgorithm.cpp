@@ -176,6 +176,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
+  finderOptions.spacePointsSortedByRadius = true;
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
@@ -197,7 +198,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  bottomDoubletFinderConfig.sortedInR = true;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
@@ -271,7 +272,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.first << ", "
                  << radiusRangeForMiddle.second << "]");
 
-    m_seedFinder->createSeedsFromSortedGroups(
+    m_seedFinder->createSeedsFromGroups(
         finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
         derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSpRanges,
         *middleSpRange, topSpRanges, radiusRangeForMiddle, seeds);
