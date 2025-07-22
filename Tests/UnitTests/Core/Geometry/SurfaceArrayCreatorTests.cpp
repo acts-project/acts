@@ -17,16 +17,13 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
@@ -319,7 +316,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), 0.5 * step, 1e-3);
     // case 3: two modules sit asymmetrically around pi / -pi shifted up
     angleShift = step / -4.;
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
@@ -334,7 +331,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
 
     // case 4: two modules sit asymmetrically around pi / -pi shifted down
     angleShift = step / 4.;
@@ -352,7 +349,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -step / 4., 1e-3);
   }
 
   for (int i = -1; i <= 2; i += 2) {
@@ -388,7 +385,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), 0.5 * step, 1e-3);
 
     // case 3: two modules sit asymmetrically around pi / -pi shifted up
     angleShift = step / -4.;
@@ -405,7 +402,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
 
     // case 4: two modules sit asymmetrically around pi / -pi shifted down
     angleShift = step / 4.;
@@ -422,7 +419,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
-    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
+    CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -step / 4., 1e-3);
   }
 
   SrfVec surfaces;
@@ -439,8 +436,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                     AxisDirection::AxisPhi, pl, tr);
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
 
-  CHECK_CLOSE_ABS(axis.max, phi(Vector3(8, 1, 0)), 1e-3);
-  CHECK_CLOSE_ABS(axis.min, phi(Vector3(8, -1, 0)), 1e-3);
+  CHECK_CLOSE_ABS(axis.max, std::numbers::pi, 1e-3);
+  CHECK_CLOSE_ABS(axis.min, -std::numbers::pi, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
 }
 
