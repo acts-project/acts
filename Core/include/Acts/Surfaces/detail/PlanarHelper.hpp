@@ -14,6 +14,38 @@
 /// @brief Helpers for planar surfaces that share the same maths
 namespace Acts::PlanarHelper {
 
+/// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
+/// @param linePos: Arbitrary point on the line to intersect
+/// @param lineDir: Direction of the line to intersect
+/// @param planeNorm: Normal vector of the plane
+/// @param offSet: Offset to move the plane along the normal vector
+inline Intersection3D intersectPlane(const Vector3& linePos,
+                                     const Vector3& lineDir,
+                                     const Vector3& planeNorm,
+                                     const double offset) {
+  /// Use the formula: <P, N> - C = 0
+  ///  --> insert line equation: <A + lambda * B, N> - C = 0
+  ///  --> lambda = (C - <A,N>)/ <N, B> */
+  const double normDot = planeNorm.dot(lineDir);
+  if (std::abs(normDot) < std::numeric_limits<double>::epsilon()) {
+    return Intersection3D::invalid();
+  }
+  const double path = (offset - linePos.dot(planeNorm)) / normDot;
+  return Intersection3D{linePos + path * lineDir, path,
+                        IntersectionStatus::onSurface};
+}
+/// @brief Intersect a line in 3D space with a plane represented by the Hesse-Normal form
+/// @param linePos: Arbitrary point on the line to intersect
+/// @param lineDir: Direction of the line to intersect
+/// @param planeNorm: Normal vector of the plane
+/// @param planePoint: Point on the plane
+inline Intersection3D intersectPlane(const Vector3& linePos,
+                                     const Vector3& lineDir,
+                                     const Vector3& planeNorm,
+                                     const Vector3& planePoint) {
+  return intersectPlane(linePos, lineDir, planeNorm, planePoint.dot(planeNorm));
+}
+
 /// Intersection with a planar surface
 ///
 /// @param transform The 3D affine transform that places the surface
