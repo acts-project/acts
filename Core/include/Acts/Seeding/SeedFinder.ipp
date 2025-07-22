@@ -408,10 +408,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
         // discard bottom-middle dublets in a certain (r, eta) region according
         // to detector specific cuts
-        if constexpr (isBottomCandidate) {
-          if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
+        if (!m_config.experimentCuts(*spM, *otherSP, cotTheta, isBottomCandidate)) {
             continue;
-          }
         }
 
         const float Er =
@@ -457,10 +455,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
       // discard bottom-middle dublets in a certain (r, eta) region according
       // to detector specific cuts
-      if constexpr (isBottomCandidate) {
-        if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
+      if (!m_config.experimentCuts(*spM, *otherSP, cotTheta, isBottomCandidate)) {
           continue;
-        }
       }
 
       const float Er =
