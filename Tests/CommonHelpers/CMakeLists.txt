@@ -1,12 +1,15 @@
 # get the path of the test data directory
 file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../Data" acts_test_data_dir)
 
-acts_add_library(
-    TestsCommonHelpers
+add_library(
+    ActsTestsCommonHelpers
     SHARED
     src/DataDirectory.cpp
     src/CylindricalDetector.cpp
 )
+
+add_library(Acts::TestsCommonHelpers ALIAS ActsTestsCommonHelpers)
+
 target_compile_definitions(
     ActsTestsCommonHelpers
     PRIVATE

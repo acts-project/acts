@@ -1,4 +1,4 @@
-acts_add_library(PluginPodio SHARED src/PodioUtil.cpp)
+acts_add_library(PluginPodio SHARED src/PodioUtil.cpp ACTS_INCLUDE_FOLDER include/Acts)
 
 target_include_directories(
     ActsPluginPodio
@@ -49,8 +49,6 @@ install(
 
 set(install_package_config_dir "${CMAKE_INSTALL_LIBDIR}/cmake/Acts")
 install(EXPORT ActsPodioEdmTargets DESTINATION ${install_package_config_dir})
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     TARGETS ActsPodioEdmDict

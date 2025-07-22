@@ -1,10 +1,12 @@
-acts_add_library(
-    TestsDD4hepFactories
+add_library(
+    ActsTestsDD4hepFactories
     SHARED
     DD4hepTestsHelper.cpp
     LayerFactory.cpp
     PrimitivesFactory.cpp
 )
+
+add_library(Acts::TestsDD4hepFactories ALIAS ActsTestsDD4hepFactories)
 
 target_include_directories(
     ActsTestsDD4hepFactories
