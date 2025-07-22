@@ -17,9 +17,22 @@
 
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 
+#include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::detail {
+
+template <StationSpacePoint Point_t>
+int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
+                                       const Point_t& strawSp) {
+  if (!strawSp.isStraw()) {
+    return 0;
+  }
+  const double dist = LineHelper::signedDistance(
+      line.position(), line.direction(), strawSp.localPosition(),
+      strawSp.sensorDirection());
+  return dist > 0. ? 1 : -1;
+}
 
 template <StationSpacePoint Point_t>
 void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
@@ -40,12 +53,6 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
   const double resVal = (lineDist - strawMeas.driftRadius());
   m_residual = resVal * Vector::Unit(bending);
 
-  /// If the tube is a twin-tube, the hit position is no longer arbitrary along
-  /// the wire. Calculate the distance along the wire towards the point of
-  /// closest approach.
-  if (strawMeas.nonBendingDir()) {
-    m_residual[nonBending] = (hitMinSeg.dot(line.direction()) * m_wireProject - hitMinSeg.dot(hitDir)) * m_invProjDirLenSq;
-  }
   /** Calculate the first derivative of the residual */
   for (const auto param : m_cfg.parsToUse) {
     if (isDirectionParam(param)) {
@@ -56,30 +63,12 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                    << ", residual grad: " << partialDist);
       m_gradient[param] = partialDist * Vector::Unit(bending);
 
-      // if (strawMeas.nonBendingDir()) {
-      //   m_gradient[param][nonBending] =
-      //       (hitMinSeg.dot(line.gradient(param)) * m_projDir +
-      //        hitMinSeg.dot(line.direction()) * m_gradProjDir[param]) *
-      //           m_invProjDirLenSq +
-      //       2. * m_residual[nonBending] *
-      //           (m_wireProject * m_gradProjDir[param]) * m_invProjDirLenSq;
-      // }
-
-
     } else if (isPositionParam(param)) {
       const double partialDist =
           -m_projDir.cross(hitDir).dot(line.gradient(param));
       ACTS_VERBOSE("Parameter: " << param
                                  << ", partial residual: " << partialDist);
       m_gradient[param] = partialDist * Vector3::Unit(bending);
-
-      if (strawMeas.nonBendingDir()) {
-        m_gradient[param][nonBending] =
-            -(line.gradient(param).dot(line.direction()) * m_wireProject -
-              line.gradient(param).dot(hitDir)) *
-            m_invProjDirLenSq;
-      }
-
     }
   }
 
@@ -108,17 +97,47 @@ void StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
             m_hessianProjDir[resIdx].cross(hitDir).dot(hitMinSeg);
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
 
+        if (strawMeas.measNonPrecCoord()) {
+          const double partSqLineProject =
+              line.hessian(param1, param).dot(hitDir);
+
+          const auto mixTerm = [this, &hitMinSeg, &line](
+                                   std::size_t p1, std::size_t p2) -> double {
+            const double part1 =
+                hitMinSeg.dot(line.gradient(p1)) * m_projDirLenPartial[p2];
+            const double part2 = m_residual[nonBending] *
+                                 m_projDirLenPartial[p1] *
+                                 m_projDirLenPartial[p2];
+            const double part3 = 2 * m_wireProject * m_projDirLenPartial[p1] *
+                                 m_gradient[p2][nonBending];
+            return (part1 + part2 + part3) * m_invProjDirLenSq;
+          };
+          const double partialSqAlongWire =
+              mixTerm(param1, param) + mixTerm(param, param1) +
+              hitMinSeg.dot(line.hessian(param1, param)) * m_invProjDirLenSq +
+              2. * m_wireProject * partSqLineProject * m_residual[nonBending] *
+                  m_invProjDirLenSq;
+
+          m_hessian[resIdx][nonBending] = partialSqAlongWire;
+        }
+
         continue;
       }
       /// Angular & Spatial mixed terms
       const auto angParam = isDirectionParam(param) ? param : param1;
       const auto posParam = isDirectionParam(param) ? param1 : param;
-
-      const double partialSqDist =
-          -m_gradProjDir[angParam].cross(hitDir).dot(line.gradient(posParam));
-      m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
-
+      m_hessian[resIdx] =
+          -m_gradProjDir[angParam].cross(hitDir).dot(line.gradient(posParam)) *
+          Vector3::Unit(bending);
     }
+  }
+
+  if (strawMeas.measNonPrecCoord()) {
+    /// If the tube is a twin-tube, the hit position is no longer arbitrary
+    /// along the wire. Calculate the distance along the wire towards the point
+    /// of
+    /// closest approach.
+    updateAlongTheStraw(line, hitMinSeg, hitDir);
   }
 }
 

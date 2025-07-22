@@ -21,12 +21,12 @@
 #include "Acts/Utilities/detail/LineWithPartials.hpp"
 
 namespace Acts::detail {
+
 class StrawLineFitAuxiliaries {
-  /* data */
  public:
   using Line_t = LineWithPartials<double>;
   using Vector = Line_t::Vector;
-  enum FitParIndices : unsigned {
+  enum FitParIndices : std::size_t {
     x0 = Line_t::ParIndices::x0,
     y0 = Line_t::ParIndices::y0,
     theta = Line_t::ParIndices::theta,
@@ -36,8 +36,9 @@ class StrawLineFitAuxiliaries {
   };
   struct Config {
     bool useHessian{false};
-    std::vector<unsigned> parsToUse{FitParIndices::x0, FitParIndices::y0,
-                                    FitParIndices::theta, FitParIndices::phi};
+    std::vector<std::size_t> parsToUse{FitParIndices::x0, FitParIndices::y0,
+                                       FitParIndices::theta,
+                                       FitParIndices::phi};
   };
 
   enum ResidualIdx { nonBending = 0, bending = 1, time = 2 };
@@ -58,32 +59,39 @@ class StrawLineFitAuxiliaries {
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param par: Index of the partiald derivative
-  const Vector& gradient(const unsigned par) const;
+  const Vector& gradient(const std::size_t par) const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param param1: First index of the second partial derivative
   /// @param param2: Second index of the second partial derivative
-  const Vector& hessian(const unsigned param1, const unsigned param2) const;
+  const Vector& hessian(const std::size_t param1,
+                        const std::size_t param2) const;
 
   /// @brief Returns whether the passed parameter describes a direction angle
-  static constexpr bool isDirectionParam(const unsigned param) {
+  static constexpr bool isDirectionParam(const std::size_t param) {
     return param == FitParIndices::theta || param == FitParIndices::phi;
   }
   /// @brief Returns whether the passed parameter describes the displacement
   ///        in the reference plane
-  static constexpr bool isPositionParam(const unsigned param) {
+  static constexpr bool isPositionParam(const std::size_t param) {
     return param == FitParIndices::x0 || param == FitParIndices::y0;
   }
+  template <StationSpacePoint Point_t>
+  static int strawSign(const Line_t& line, const Point_t& strawSp);
 
  private:
+  /// @brief Reference to the logging object
   const Logger& logger() const { return *m_logger; }
-
-  /// @brief  Update the direction vector projected into the wire plane
-  ///         && it's partial derivatives
-  /// @param line
-  /// @param wireDir
+  /// @brief  Update the auxiliary variables needed to calculate the residuals
+  ///         of a straw measurement to the current line. They are the
+  ///         projection of the line direction vector into the straw's wire
+  ///         plane and its derivatives
+  /// @param line: Reference to the line to project
+  /// @param wireDir: Reference to the straw wire direction vector
   bool updateStrawAuxiliaries(const Line_t& line, const Vector& wireDir);
-
-  ///
+  /// @brief Update the non-bending component of the straw residual with the
+  ///        distance along the straw wire between line and straw measurement
+  void updateAlongTheStraw(const Line_t& line, const Vector& hitMinSeg,
+                           const Vector& wireDir);
 
   void reset();
   Config m_cfg{};
@@ -95,7 +103,7 @@ class StrawLineFitAuxiliaries {
   std::array<Vector3, FitParIndices::nPars> m_gradient{
       filledArray<Vector3, FitParIndices::nPars>(Vector3::Zero())};
   /// @brief  Second partial derivatives of the residual w.r.t. the fit parameters parameters
-  static constexpr unsigned s_nPars = FitParIndices::nPars;
+  static constexpr std::size_t s_nPars = FitParIndices::nPars;
   std::array<Vector3, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector3, sumUpToN(s_nPars)>(Vector3::Zero())};
 
@@ -104,18 +112,17 @@ class StrawLineFitAuxiliaries {
   ///  point of closest approach and its derivatives
 
   /// @brief Number of spatial line parameters
-  static constexpr unsigned s_nLinePars = Line_t::ParIndices::nPars;
+  static constexpr std::size_t s_nLinePars = Line_t::ParIndices::nPars;
   /// @brief projection of the segment direction onto the wire planes
   Vector m_projDir{Vector::Zero()};
 
   /// @brief Partial derivatives of the dir projection w.r.t. line parameters
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
-  /// @brief Length of the projected direction
+  /// @brief Component of the direction vector parallel to the wire
   double m_wireProject{1.};
   /// @brief Length squared of the projected direction
   double m_invProjDirLenSq{0.};
-
   /// @brief Inverse of the projected direction length
   double m_invProjDirLen{0.};
   /// @brief Partial derivatives of the dir projection lengths w.r.t line parameters

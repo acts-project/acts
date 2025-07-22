@@ -48,8 +48,13 @@ class TestSpacePoint {
  public:
   TestSpacePoint(
       const Vector3& pos, const Vector3& wireDir, const double radius,
+      bool measNonPrec = false,
       const ActsSquareMatrix<3>& cov = ActsSquareMatrix<3>::Identity())
-      : m_pos{pos}, m_dir{wireDir}, m_radius{radius}, m_cov{cov} {}
+      : m_pos{pos},
+        m_dir{wireDir},
+        m_radius{radius},
+        m_measNonBend{measNonPrec},
+        m_cov{cov} {}
 
   TestSpacePoint(
       const Vector3& pos, const Vector3& stripDir, const Vector3& stripNorm,
@@ -67,10 +72,8 @@ class TestSpacePoint {
 
   bool isStraw() const { return m_isStraw; }
   bool hasTime() const { return false; }
-  bool inBendingDir() const { return true; }
-  bool inNonBendingDir() const { return true; }
-  
-  
+  bool measPrecCoord() const { return m_measBend; }
+  bool measNonPrecCoord() const { return m_measNonBend; }
 
   double driftRadius() const { return m_radius; }
   double time() const { return m_time; }
@@ -85,12 +88,15 @@ class TestSpacePoint {
   double m_time{0.};
   ActsSquareMatrix<3> m_cov{ActsSquareMatrix<3>::Zero()};
   bool m_isStraw{true};
+  bool m_measBend{true};
+  bool m_measNonBend{false};
 };
 
 BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
 
 void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   using namespace Acts::detail::LineHelper;
+  using ResidualIdx = StrawLineFitAuxiliaries::ResidualIdx;
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::theta, ParIdx::phi};
@@ -114,7 +120,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     std::cout << "Residual: " << toString(resCalc.residual())
               << ", line distance: " << lineDist << std::endl;
     ///
-    BOOST_CHECK_CLOSE(resCalc.residual().norm(),
+    BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::bending],
                       lineDist - testPoint.driftRadius(), 1.e-12);
   } else {
     resCalc.updateStripResidual(line, testPoint);
@@ -197,10 +203,40 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   linePars[ParIdx::theta] = 45. * 1_degree;
 
   const Vector wireDir = Vector::UnitX();
-  /// Generate the first test measurement
-  const TestSpacePoint firstTestPoint{Vector{100. * 1_cm, 50. * 1_cm, 0.},
-                                      wireDir, 10. * 1_cm};
-  testResidual(linePars, firstTestPoint);
+  // /// Generate the first test measurement
+  testResidual(linePars,
+               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                              wireDir, 10. * 1_cm});
+  testResidual(
+      linePars,
+      TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                     makeDirectionFromPhiTheta(10. * 1_degree, 30. * 1_degree),
+                     10. * 1_cm});
+
+   testResidual(linePars,
+                TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                               wireDir, 10. * 1_cm, true});
+
+  linePars[ParIdx::phi] = 30. * 1_degree;
+  linePars[ParIdx::theta] = 60. * 1_degree;
+
+    testResidual(linePars,
+  TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+  wireDir, 10. * 1_cm});
+
+   testResidual(linePars,
+               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                              wireDir, 10. * 1_cm, true});
+
+  linePars[ParIdx::phi] = 60. * 1_degree;
+  linePars[ParIdx::theta] = 30. * 1_degree;
+
+  testResidual(linePars,
+               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                              wireDir, 10. * 1_cm});
+  testResidual(linePars,
+               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
+                              wireDir, 10. * 1_cm, true});
 }
 
 BOOST_AUTO_TEST_CASE(StripResidual) {

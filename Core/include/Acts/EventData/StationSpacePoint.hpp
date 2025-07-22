@@ -49,10 +49,10 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   { sp.hasTime() } -> std::same_as<bool>;
   /// @brief Return whether the space point constrains the bending direction
   ///        of the segment
-  { sp.inBendingDir() } -> std::same_as<bool>;
+  { sp.measPrecCoord() } -> std::same_as<bool>;
   /// @brief Return whether the space point constrains the non-bending direction
   ///        of the segment
-  { sp.inNonBendingDir() } -> std::same_as<bool>;
+  { sp.measNonPrecCoord() } -> std::same_as<bool>;
 };
 
 /** @brief Define the Space Point pointer concept as an ordinary / smart pointer
