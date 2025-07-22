@@ -150,7 +150,7 @@ struct SeedFinderOrthogonalConfig {
 
   /// defaults experimental cuts to no operation in both seeding algorithms
   static bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
-      return true;
+    return true;
   }
 
   bool isInInternalUnits = true;

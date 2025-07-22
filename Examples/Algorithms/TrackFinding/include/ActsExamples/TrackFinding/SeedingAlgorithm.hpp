@@ -108,8 +108,9 @@ class SeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   static inline bool itkFastTrackingCuts(const SpacePointProxy_t& /*middle*/,
-                const SpacePointProxy_t& other, float cotTheta,
-                bool isBottomCandidate) {
+                                         const SpacePointProxy_t& other,
+                                         float cotTheta,
+                                         bool isBottomCandidate) {
     static float rMin = 45.;
     static float cotThetaMax = 1.5;
 
