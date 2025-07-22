@@ -27,8 +27,9 @@ install(
 )
 
 # install third party FindXXX.cmake files
+file(GLOB_RECURSE _pckg_find_files "${CMAKE_CURRENT_LIST_DIR}/Find*.cmake")
 install(
-    FILES ${CMAKE_CURRENT_LIST_DIR}/FindOnnxRuntime.cmake
+    FILES ${_pckg_find_files}
     DESTINATION ${install_package_config_dir}/Modules
 )
 

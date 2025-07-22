@@ -9,11 +9,15 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
+#include <algorithm>
+#include <array>
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {
@@ -26,6 +30,21 @@ CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
 
 CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
     : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
+CuboidVolumeBounds::CuboidVolumeBounds(
+    std::initializer_list<std::pair<BoundValues, double>> keyValues)
+    : m_values({-1, -1, -1}) {
+  for (const auto& [key, value] : keyValues) {
+    m_values[key] = value;
+  }
+  // Throw error here instead of consistency check for clarity
+  if (std::any_of(m_values.begin(), m_values.end(),
+                  [](const auto& val) { return val == -1; })) {
+    throw std::logic_error("Missing bound values");
+  }
   checkConsistency();
   buildSurfaceBounds();
 }
@@ -150,4 +169,63 @@ void CuboidVolumeBounds::set(
   }
 }
 
+CuboidVolumeBounds::BoundValues CuboidVolumeBounds::boundsFromAxisDirection(
+    AxisDirection direction) {
+  using enum AxisDirection;
+  switch (direction) {
+    case AxisX:
+      return BoundValues::eHalfLengthX;
+    case AxisY:
+      return BoundValues::eHalfLengthY;
+    case AxisZ:
+      return BoundValues::eHalfLengthZ;
+    default:
+      throw std::invalid_argument("Invalid axis direction");
+  }
+}
+
+std::tuple<CuboidVolumeBounds::Face, CuboidVolumeBounds::Face,
+           std::array<CuboidVolumeBounds::Face, 4>>
+CuboidVolumeBounds::facesFromAxisDirection(AxisDirection direction) {
+  using enum AxisDirection;
+  using enum CuboidVolumeBounds::Face;
+  if (direction == AxisX) {
+    return {NegativeXFace,
+            PositiveXFace,
+            {NegativeZFace, PositiveZFace, NegativeYFace, PositiveYFace}};
+  } else if (direction == AxisY) {
+    return {NegativeYFace,
+            PositiveYFace,
+            {NegativeZFace, PositiveZFace, NegativeXFace, PositiveXFace}};
+  } else if (direction == AxisZ) {
+    return {NegativeZFace,
+            PositiveZFace,
+            {NegativeXFace, PositiveXFace, NegativeYFace, PositiveYFace}};
+  } else {
+    throw std::invalid_argument("Invalid axis direction");
+  }
+}
+
 }  // namespace Acts
+
+// Define operator<< for CuboidVolumeBounds::Face outside the class
+std::ostream& operator<<(std::ostream& os,
+                         Acts::CuboidVolumeBounds::Face face) {
+  using enum Acts::CuboidVolumeBounds::Face;
+  switch (face) {
+    case NegativeXFace:
+      return os << "NegativeXFace";
+    case PositiveXFace:
+      return os << "PositiveXFace";
+    case NegativeYFace:
+      return os << "NegativeYFace";
+    case PositiveYFace:
+      return os << "PositiveYFace";
+    case NegativeZFace:
+      return os << "NegativeZFace";
+    case PositiveZFace:
+      return os << "PositiveZFace";
+    default:
+      return os << "UnknownFace";
+  }
+}

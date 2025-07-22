@@ -142,7 +142,7 @@ struct adl_serializer<parameters_t> {
       auto referenceSurface =
           Acts::SurfaceJsonConverter::fromJson(j.at("referenceSurface"));
 
-      auto res = parameters_t::create(referenceSurface, gctx, position,
+      auto res = parameters_t::create(gctx, referenceSurface, position,
                                       direction, qOverP, cov, particle);
 
       if (!res.ok()) {

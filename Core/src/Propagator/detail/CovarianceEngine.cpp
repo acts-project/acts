@@ -9,15 +9,12 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -29,16 +26,15 @@ namespace Acts {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-using CurvilinearState =
-    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 Result<BoundState> detail::boundState(
     const GeometryContext& geoContext, const Surface& surface,
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
+    bool covTransport, double accumulatedPath,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Create the bound parameters
   Result<BoundVector> bv =
@@ -53,10 +49,10 @@ Result<BoundState> detail::boundState(
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
-    transportCovarianceToBound(geoContext, surface, boundCovariance,
-                               fullTransportJacobian, freeTransportJacobian,
-                               freeToPathDerivatives, boundToFreeJacobian,
-                               freeParameters, freeToBoundCorrection);
+    transportCovarianceToBound(
+        geoContext, surface, boundCovariance, fullTransportJacobian,
+        freeTransportJacobian, freeToPathDerivatives, boundToFreeJacobian,
+        additionalFreeCovariance, freeParameters, freeToBoundCorrection);
     cov = boundCovariance;
   }
 
@@ -67,10 +63,12 @@ Result<BoundState> detail::boundState(
       fullTransportJacobian, accumulatedPath);
 }
 
-CurvilinearState detail::curvilinearState(
+BoundState detail::curvilinearState(
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
     double accumulatedPath) {
   const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
@@ -81,9 +79,10 @@ CurvilinearState detail::curvilinearState(
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
-    transportCovarianceToCurvilinear(
-        boundCovariance, fullTransportJacobian, freeTransportJacobian,
-        freeToPathDerivatives, boundToFreeJacobian, direction);
+    transportCovarianceToCurvilinear(boundCovariance, fullTransportJacobian,
+                                     freeTransportJacobian,
+                                     freeToPathDerivatives, boundToFreeJacobian,
+                                     additionalFreeCovariance, direction);
     cov = boundCovariance;
   }
 
@@ -93,9 +92,10 @@ CurvilinearState detail::curvilinearState(
   pos4[ePos1] = freeParameters[eFreePos1];
   pos4[ePos2] = freeParameters[eFreePos2];
   pos4[eTime] = freeParameters[eFreeTime];
-  CurvilinearTrackParameters curvilinearParams(
-      pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
-      particleHypothesis);
+  BoundTrackParameters curvilinearParams =
+      BoundTrackParameters::createCurvilinear(
+          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
+          particleHypothesis);
   // Create the curvilinear state
   return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
@@ -104,13 +104,18 @@ void detail::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection) {
+  FreeToBoundMatrix freeToBoundJacobian;
+
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   boundToBoundTransportJacobian(geoContext, surface, freeParameters,
                                 boundToFreeJacobian, freeTransportJacobian,
-                                freeToPathDerivatives, fullTransportJacobian);
+                                freeToBoundJacobian, freeToPathDerivatives,
+                                fullTransportJacobian);
 
   bool correction = false;
   if (freeToBoundCorrection) {
@@ -146,6 +151,11 @@ void detail::transportCovarianceToBound(
                       fullTransportJacobian.transpose();
   }
 
+  if (additionalFreeCovariance) {
+    boundCovariance += freeToBoundJacobian * (*additionalFreeCovariance) *
+                       freeToBoundJacobian.transpose();
+  }
+
   // Reinitialize jacobian components:
   // ->The transportJacobian is reinitialized to Identity
   // ->The derivatives is reinitialized to Zero
@@ -158,17 +168,26 @@ void detail::transportCovarianceToBound(
 void detail::transportCovarianceToCurvilinear(
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const Vector3& direction) {
+    BoundToFreeMatrix& boundToFreeJacobian,
+    const std::optional<FreeMatrix>& additionalFreeCovariance,
+    const Vector3& direction) {
+  FreeToBoundMatrix freeToBoundJacobian;
+
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
   boundToCurvilinearTransportJacobian(
       direction, boundToFreeJacobian, freeTransportJacobian,
-      freeToPathDerivatives, fullTransportJacobian);
+      freeToBoundJacobian, freeToPathDerivatives, fullTransportJacobian);
 
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
   boundCovariance = fullTransportJacobian * boundCovariance *
                     fullTransportJacobian.transpose();
+
+  if (additionalFreeCovariance) {
+    boundCovariance += freeToBoundJacobian * (*additionalFreeCovariance) *
+                       freeToBoundJacobian.transpose();
+  }
 
   // Reinitialize jacobian components:
   // ->The free transportJacobian is reinitialized to Identity
@@ -179,30 +198,28 @@ void detail::transportCovarianceToCurvilinear(
                         boundToFreeJacobian, direction);
 }
 
-Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
+Result<BoundTrackParameters> detail::boundToBoundConversion(
     const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
     const Surface& targetSurface, const Vector3& bField) {
   const auto& sourceSurface = boundParameters.referenceSurface();
 
-  Acts::FreeVector freePars = Acts::transformBoundToFreeParameters(
+  FreeVector freePars = transformBoundToFreeParameters(
       sourceSurface, gctx, boundParameters.parameters());
 
-  auto res =
-      Acts::transformFreeToBoundParameters(freePars, targetSurface, gctx);
+  auto res = transformFreeToBoundParameters(freePars, targetSurface, gctx);
 
   if (!res.ok()) {
     return res.error();
   }
-  Acts::BoundVector parOut = *res;
+  BoundVector parOut = *res;
 
-  std::optional<Acts::BoundMatrix> covOut = std::nullopt;
+  std::optional<BoundMatrix> covOut = std::nullopt;
 
   if (boundParameters.covariance().has_value()) {
-    Acts::BoundToFreeMatrix boundToFreeJacobian =
-        sourceSurface.boundToFreeJacobian(gctx, freePars.segment<3>(eFreePos0),
-                                          freePars.segment<3>(eFreeDir0));
+    BoundToFreeMatrix boundToFreeJacobian = sourceSurface.boundToFreeJacobian(
+        gctx, freePars.segment<3>(eFreePos0), freePars.segment<3>(eFreeDir0));
 
-    Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+    FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
 
     FreeVector freeToPathDerivatives = FreeVector::Zero();
     freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
@@ -211,17 +228,18 @@ Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
         bField.cross(freePars.segment<3>(eFreeDir0));
 
     BoundMatrix boundToBoundJac;
+    FreeToBoundMatrix freeToBoundJacobian;
     detail::boundToBoundTransportJacobian(
         gctx, targetSurface, freePars, boundToFreeJacobian,
-        freeTransportJacobian, freeToPathDerivatives, boundToBoundJac);
+        freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
+        boundToBoundJac);
 
     covOut = boundToBoundJac * (*boundParameters.covariance()) *
              boundToBoundJac.transpose();
   }
 
-  return Acts::BoundTrackParameters{targetSurface.getSharedPtr(), parOut,
-                                    covOut,
-                                    boundParameters.particleHypothesis()};
+  return BoundTrackParameters{targetSurface.getSharedPtr(), parOut, covOut,
+                              boundParameters.particleHypothesis()};
 }
 
 }  // namespace Acts

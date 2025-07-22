@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -85,7 +86,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     if (!particles.contains(majorityParticleId)) {
-      ACTS_DEBUG(
+      ACTS_VERBOSE(
           "The majority particle is not in the input particle collection, "
           "majorityParticleId = "
           << majorityParticleId);

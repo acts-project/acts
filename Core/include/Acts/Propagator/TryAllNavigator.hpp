@@ -154,12 +154,15 @@ class TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  void initialize(State& state, const Vector3& position,
-                  const Vector3& direction,
-                  Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)propagationDirection;
 
     ACTS_VERBOSE("initialize");
+
+    state.startSurface = state.options.startSurface;
+    state.targetSurface = state.options.targetSurface;
 
     const TrackingVolume* startVolume = nullptr;
 
@@ -195,6 +198,8 @@ class TryAllNavigatorBase {
         ACTS_VERBOSE(volInfo(state) << "No start surface set.");
       }
     }
+
+    return Result<void>::success();
   }
 
  protected:
@@ -254,16 +259,13 @@ class TryAllNavigator : public TryAllNavigatorBase {
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  TryAllNavigator(Config cfg,
-                  std::unique_ptr<const Logger> logger =
-                      getDefaultLogger("TryAllNavigator", Logging::INFO))
+  explicit TryAllNavigator(Config cfg, std::unique_ptr<const Logger> logger =
+                                           getDefaultLogger("TryAllNavigator",
+                                                            Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
   State makeState(const Options& options) const {
     State state(options);
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-
     return state;
   }
 
@@ -284,14 +286,19 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  void initialize(State& state, const Vector3& position,
-                  const Vector3& direction,
-                  Direction propagationDirection) const {
-    TryAllNavigatorBase::initialize(state, position, direction,
-                                    propagationDirection);
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
+    auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
+                                                   propagationDirection);
+    if (!baseRes.ok()) {
+      return baseRes.error();
+    }
 
     // Initialize navigation candidates for the start volume
     reinitializeCandidates(state);
+
+    return Result<void>::success();
   }
 
   /// @brief Get the next target surface
@@ -307,15 +314,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    // Navigator preStep always resets the current surface
-    state.currentSurface = nullptr;
 
     double nearLimit = state.options.nearLimit;
     double farLimit = state.options.farLimit;
@@ -576,17 +583,13 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  TryAllOverstepNavigator(Config cfg,
-                          std::unique_ptr<const Logger> logger =
-                              getDefaultLogger("TryAllOverstepNavigator",
-                                               Logging::INFO))
+  explicit TryAllOverstepNavigator(
+      Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
+                      "TryAllOverstepNavigator", Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
   State makeState(const Options& options) const {
     State state(options);
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-
     return state;
   }
 
@@ -607,16 +610,21 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  void initialize(State& state, const Vector3& position,
-                  const Vector3& direction,
-                  Direction propagationDirection) const {
-    TryAllNavigatorBase::initialize(state, position, direction,
-                                    propagationDirection);
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
+    auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
+                                                   propagationDirection);
+    if (!baseRes.ok()) {
+      return baseRes.error();
+    }
 
     // Initialize navigation candidates for the start volume
     reinitializeCandidates(state);
 
     state.lastPosition.reset();
+
+    return Result<void>::success();
   }
 
   /// @brief Get the next target surface
@@ -634,13 +642,15 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                               const Vector3& direction) const {
     (void)direction;
 
+    // Navigator preStep always resets the current surface
+    state.currentSurface = nullptr;
+
+    // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    state.currentSurface = nullptr;
 
     // We cannot do anything without a last position
     if (!state.lastPosition.has_value() && state.endOfCandidates()) {

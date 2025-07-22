@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
   auto cylinderSurface = Acts::Surface::makeShared<CylinderSurface>(
       Transform3::Identity(), std::make_shared<CylinderBounds>(20., 100.));
 
-  auto sgID = Acts::GeometryIdentifier().setSensitive(1);
+  auto sgID = Acts::GeometryIdentifier().withSensitive(1);
   cylinderSurface->assignGeometryId(sgID);
 
   detray::io::surface_payload payload = DetrayGeometryConverter::convertSurface(
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
 
   // Check the payload
   BOOST_CHECK(!payload.index_in_coll.has_value());
-  BOOST_CHECK(payload.mask.shape == detray::io::shape_id::cylinder2);
+  BOOST_CHECK(payload.masks.at(0).shape == detray::io::shape_id::cylinder2);
   BOOST_CHECK_EQUAL(payload.source, sgID.value());
   BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);
 }

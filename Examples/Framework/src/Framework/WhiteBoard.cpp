@@ -112,8 +112,9 @@ void ActsExamples::WhiteBoard::addHolder(
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  ACTS_VERBOSE("Added object '" << name << "' of type "
-                                << storeIt->second->type().name());
+  ACTS_VERBOSE("Added object '"
+               << name << "' of type '"
+               << boost::core::demangle(storeIt->second->type().name()) << "'");
 
   if (success) {
     // deal with aliases
@@ -123,4 +124,12 @@ void ActsExamples::WhiteBoard::addHolder(
       ACTS_VERBOSE("Added alias object '" << it->second << "'");
     }
   }
+}
+
+std::vector<std::string> ActsExamples::WhiteBoard::getKeys() const {
+  std::vector<std::string> keys;
+  for (const auto &[key, val] : m_store) {
+    keys.push_back(key);
+  }
+  return keys;
 }

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/KDTree.hpp"
 
 #include <array>
+#include <ranges>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -90,8 +91,8 @@ class KdtSurfaces {
     // Strip the surfaces
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
-    std::for_each(surfaceQuery.begin(), surfaceQuery.end(),
-                  [&](auto& surf) { surfacePtrs.push_back(surf.second); });
+    std::ranges::for_each(
+        surfaceQuery, [&](auto& surf) { surfacePtrs.push_back(surf.second); });
     return surfacePtrs;
   }
 
@@ -150,7 +151,7 @@ class KdtSurfaces {
       std::transform(c.begin(), c.end(), q.begin(), c.begin(),
                      std::plus<double>());
     }
-    std::for_each(c.begin(), c.end(), [&](auto& v) { v *= weight; });
+    std::ranges::for_each(c, [&](auto& v) { v *= weight; });
     return c;
   }
 };

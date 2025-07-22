@@ -62,6 +62,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const FreeVector& freeParameters,
                                    const BoundToFreeMatrix& boundToFreeJacobian,
                                    const FreeMatrix& freeTransportJacobian,
+                                   FreeToBoundMatrix& freeToBoundJacobian,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
 
@@ -113,6 +114,7 @@ BoundMatrix boundToBoundTransportJacobian(
 void boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian);
 

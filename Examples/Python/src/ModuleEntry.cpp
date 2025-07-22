@@ -37,6 +37,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
+void addAlignment(Context& ctx);
 void addGeometry(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
@@ -52,9 +53,13 @@ void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
+void addTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilities(Context& ctx);
+
+void addRootInput(Context& ctx);
+void addRootOutput(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
@@ -111,6 +116,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addPropagation(ctx);
   addNavigation(ctx);
+  addAlignment(ctx);
   addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
@@ -124,6 +130,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTruthTracking(ctx);
   addTrackFitting(ctx);
   addTrackFinding(ctx);
+  addTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addUtilities(ctx);
@@ -143,4 +150,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addCovfie(ctx);
   addTraccc(ctx);
   addHashing(ctx);
+
+  addRootInput(ctx);
+  addRootOutput(ctx);
 }

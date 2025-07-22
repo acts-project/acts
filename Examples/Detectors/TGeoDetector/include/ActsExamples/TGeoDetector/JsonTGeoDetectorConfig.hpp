@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"

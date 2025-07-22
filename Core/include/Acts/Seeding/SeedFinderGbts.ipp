@@ -6,30 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// SeedFinderGbts.ipp
-// TODO: update to C++17 style
+#pragma once
 
-#include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderGbts.hpp"
+
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <list>
 #include <numbers>
-#include <numeric>
-#include <type_traits>
 #include <vector>
 
-// core so in ACTS namespace
-
-namespace Acts {
+namespace Acts::Experimental {
 
 template <typename external_spacepoint_t>
 SeedFinderGbts<external_spacepoint_t>::SeedFinderGbts(
@@ -47,10 +35,6 @@ void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
     const std::vector<GbtsSP<external_spacepoint_t>>& gbtsSPvect) {
   ACTS_VERBOSE("Loading space points");
   for (const auto& gbtssp : gbtsSPvect) {
-    bool is_Pixel = gbtssp.isPixel();
-    if (!is_Pixel) {
-      continue;
-    }
     m_storage->addSpacePoint(gbtssp, (m_config.m_useClusterWidth > 0));
   }
 
@@ -64,8 +48,8 @@ void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
 template <typename external_spacepoint_t>
 void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
     std::vector<GbtsTrigTracklet<external_spacepoint_t>>& vTracks,
-    const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsGeo) {
+    const RoiDescriptor& roi,
+    const GbtsGeometry<external_spacepoint_t>& gbtsGeo) {
   ACTS_VERBOSE("Running GBTS Track Finder");
   const float min_z0 = roi.zedMinus();
   const float max_z0 = roi.zedPlus();
@@ -81,9 +65,9 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   int currentStage = 0;
 
-  const Acts::GbtsConnector& connector = *(gbtsGeo.connector());
+  const GbtsConnector& connector = *(gbtsGeo.connector());
 
-  std::vector<Acts::GbtsEdge<external_spacepoint_t>> edgeStorage;
+  std::vector<GbtsEdge<external_spacepoint_t>> edgeStorage;
 
   edgeStorage.reserve(m_config.MaxEdges);
 
@@ -166,11 +150,11 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                 continue;
               }
 
-              float r1 = n1->m_spGbts.SP->r();
+              float r1 = n1->m_spGbts.r();
               float x1 = n1->m_spGbts.SP->x();
               float y1 = n1->m_spGbts.SP->y();
               float z1 = n1->m_spGbts.SP->z();
-              float phi1 = std::atan(x1 / y1);
+              float phi1 = n1->m_spGbts.phi();
 
               float minPhi = phi1 - deltaPhi;
               float maxPhi = phi1 + deltaPhi;
@@ -199,7 +183,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   continue;
                 }
 
-                float r2 = n2->m_spGbts.SP->r();
+                float r2 = n2->m_spGbts.r();
 
                 float dr = r2 - r1;
 
@@ -335,13 +319,13 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
     for (int inIdx = 0; inIdx < static_cast<int>(pN.m_in.size()); inIdx++) {
       int inEdgeIdx = pN.m_in.at(inIdx);
-      Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
+      GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
       in_sort[inIdx].second = inEdgeIdx;
       in_sort[inIdx].first = pS->m_p[0];
     }
     for (int outIdx = 0; outIdx < static_cast<int>(pN.m_out.size()); outIdx++) {
       int outEdgeIdx = pN.m_out.at(outIdx);
-      Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(outEdgeIdx));
+      GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(outEdgeIdx));
       out_sort[outIdx].second = outEdgeIdx;
       out_sort[outIdx].first = pS->m_p[0];
     }
@@ -356,7 +340,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
       int inEdgeIdx = in_sort[in_idx].second;
 
-      Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
+      GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
 
       pS->m_nNei = 0;
       float tau1 = pS->m_p[0];
@@ -368,8 +352,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
            out_idx++) {
         int outEdgeIdx = out_sort[out_idx].second;
 
-        Acts::GbtsEdge<external_spacepoint_t>* pNS =
-            &(edgeStorage.at(outEdgeIdx));
+        GbtsEdge<external_spacepoint_t>* pNS = &(edgeStorage.at(outEdgeIdx));
 
         float tau2 = pNS->m_p[0];
         float tau_ratio = tau2 * uat_1 - 1.0f;
@@ -415,10 +398,10 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   int iter = 0;
 
-  std::vector<Acts::GbtsEdge<external_spacepoint_t>*> v_old;
+  std::vector<GbtsEdge<external_spacepoint_t>*> v_old;
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
-    Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
+    GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
     if (pS->m_nNei == 0) {
       continue;
     }
@@ -428,7 +411,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   for (; iter < maxIter; iter++) {
     // generate proposals
-    std::vector<Acts::GbtsEdge<external_spacepoint_t>*> v_new;
+    std::vector<GbtsEdge<external_spacepoint_t>*> v_new;
     v_new.clear();
 
     for (auto pS : v_old) {
@@ -437,8 +420,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
       for (int nIdx = 0; nIdx < pS->m_nNei; nIdx++) {
         unsigned int nextEdgeIdx = pS->m_vNei[nIdx];
 
-        Acts::GbtsEdge<external_spacepoint_t>* pN =
-            &(edgeStorage.at(nextEdgeIdx));
+        GbtsEdge<external_spacepoint_t>* pN = &(edgeStorage.at(nextEdgeIdx));
 
         if (pS->m_level == pN->m_level) {
           next_level = pS->m_level + 1;
@@ -473,12 +455,12 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   int minLevel = 3;  // a triplet + 2 confirmation
 
-  std::vector<Acts::GbtsEdge<external_spacepoint_t>*> vSeeds;
+  std::vector<GbtsEdge<external_spacepoint_t>*> vSeeds;
 
   vSeeds.reserve(m_config.MaxEdges / 2);
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
-    Acts::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
+    GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
 
     if (pS->m_level < minLevel) {
       continue;
@@ -489,8 +471,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   m_triplets.clear();
 
-  std::ranges::sort(
-      vSeeds, typename Acts::GbtsEdge<external_spacepoint_t>::CompareLevel());
+  std::ranges::sort(vSeeds,
+                    typename GbtsEdge<external_spacepoint_t>::CompareLevel());
 
   if (vSeeds.empty()) {
     return;
@@ -522,7 +504,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
     std::vector<const GbtsSP<external_spacepoint_t>*> vSP;
 
     for (typename std::vector<
-             Acts::GbtsEdge<external_spacepoint_t>*>::reverse_iterator sIt =
+             GbtsEdge<external_spacepoint_t>*>::reverse_iterator sIt =
              rs.m_vs.rbegin();
          sIt != rs.m_vs.rend(); ++sIt) {
       (*sIt)->m_level = -1;  // mark as collected
@@ -545,7 +527,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
     for (unsigned int idx_m = 1; idx_m < vSP.size() - 1; idx_m++) {
       const GbtsSP<external_spacepoint_t>& spM = *vSP.at(idx_m);
-      const double pS_r = spM.SP->r();
+      const double pS_r = spM.r();
       const double pS_x = spM.SP->x();
       const double pS_y = spM.SP->y();
       const double cosA = pS_x / pS_r;
@@ -641,8 +623,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderGbts<external_spacepoint_t>::createSeeds(
-    const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsGeo,
+    const RoiDescriptor& roi,
+    const GbtsGeometry<external_spacepoint_t>& gbtsGeo,
     output_container_t& out_cont) {
   ACTS_VERBOSE("Creating seeds");
   std::vector<GbtsTrigTracklet<external_spacepoint_t>>
@@ -656,31 +638,32 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     return;
   }
 
-  m_triplets.clear();  // member of class , saying not declared, maybe public?
+  m_triplets.clear();
 
   for (auto& track : vTracks) {
     for (auto& seed : track.m_seeds) {  // access member of GbtsTrigTracklet
-
-      float newQ = seed.Q();  // function of TrigInDetTriplet
-      if (m_config.m_LRTmode) {
-        // In LRT mode penalize pixels in Triplets
-        if (seed.s1().isPixel()) {
-          newQ += 1000;  // functions of TrigSiSpacePointBase
-        }
-        if (seed.s2().isPixel()) {
-          newQ += 1000;
-        }
-        if (seed.s3().isPixel()) {
-          newQ += 1000;
-        }
-      } else {
-        // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and
-        // PPS by 10000
-        if (seed.s3().isSCT()) {
-          newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
-        }
-      }
-      seed.Q(newQ);
+      // Currently not used, but leaving in to use concept in future development
+      //  float newQ = seed.Q();  // function of TrigInDetTriplet
+      //  if (m_config.m_LRTmode) {
+      //    // In LRT mode penalize pixels in Triplets
+      //    if (seed.s1().isPixel()) {
+      //      newQ += 1000;  // functions of TrigSiSpacePointBase
+      //    }
+      //    if (seed.s2().isPixel()) {
+      //      newQ += 1000;
+      //    }
+      //    if (seed.s3().isPixel()) {
+      //      newQ += 1000;
+      //    }
+      //  } else {
+      //    // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled)
+      //    and
+      //    // PPS by 10000
+      //    if (seed.s3().isSCT()) {
+      //      newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
+      //    }
+      //  }
+      //  seed.Q(newQ);
       m_triplets.emplace_back(seed);
     }
   }
@@ -706,11 +689,11 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
 template <typename external_spacepoint_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderGbts<external_spacepoint_t>::createSeeds(
-    const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsGeo) {
+    const RoiDescriptor& roi,
+    const GbtsGeometry<external_spacepoint_t>& gbtsGeo) {
   std::vector<seed_t> r;
   createSeeds(roi, gbtsGeo, r);
   return r;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

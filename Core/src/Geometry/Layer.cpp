@@ -8,8 +8,6 @@
 
 #include "Acts/Geometry/Layer.hpp"
 
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -18,12 +16,12 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
-#include <functional>
-#include <iterator>
 #include <vector>
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
-                   std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
+namespace Acts {
+
+Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+             std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
     : m_nextLayers(NextLayers(nullptr, nullptr)),
       m_surfaceArray(surfaceArray.release()),
       m_layerThickness(thickness),
@@ -42,18 +40,18 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
   }
 }
 
-const Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() const {
+const ApproachDescriptor* Layer::approachDescriptor() const {
   return m_approachDescriptor.get();
 }
 
-Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() {
+ApproachDescriptor* Layer::approachDescriptor() {
   return const_cast<ApproachDescriptor*>(m_approachDescriptor.get());
 }
 
-void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
-                                const GeometryIdentifier& layerID,
-                                const GeometryIdentifierHook& hook,
-                                const Logger& logger) {
+void Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
+                          const GeometryIdentifier& layerID,
+                          const GeometryIdentifierHook& hook,
+                          const Logger& logger) {
   // set the volumeID of this
   assignGeometryId(layerID);
   // assign to the representing surface
@@ -76,7 +74,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     // loop through the approachSurfaces and assign unique GeomeryID
     GeometryIdentifier::Value iasurface = 0;
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
-      auto asurfaceID = GeometryIdentifier(layerID).setApproach(++iasurface);
+      auto asurfaceID = GeometryIdentifier(layerID).withApproach(++iasurface);
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeometryId(asurfaceID);
       if (materialDecorator != nullptr) {
@@ -95,7 +93,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     // loop sensitive surfaces and assign unique GeometryIdentifier
     GeometryIdentifier::Value issurface = 0;
     for (auto& sSurface : m_surfaceArray->surfaces()) {
-      auto ssurfaceID = GeometryIdentifier(layerID).setSensitive(++issurface);
+      auto ssurfaceID = GeometryIdentifier(layerID).withSensitive(++issurface);
       ssurfaceID = hook.decorateIdentifier(ssurfaceID, *sSurface);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeometryId(ssurfaceID);
@@ -110,10 +108,10 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
 }
 
-boost::container::small_vector<Acts::SurfaceIntersection, 10>
-Acts::Layer::compatibleSurfaces(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Surface>& options) const {
+boost::container::small_vector<SurfaceIntersection, 10>
+Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction,
+                          const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
   boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
@@ -214,7 +212,7 @@ Acts::Layer::compatibleSurfaces(
   return sIntersections;
 }
 
-Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
+SurfaceIntersection Layer::surfaceOnApproach(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // resolve directive based by options
@@ -259,3 +257,5 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
       rSurface.intersect(gctx, position, direction, options.boundaryTolerance);
   return findValidIntersection(sIntersection);
 }
+
+}  // namespace Acts

@@ -8,10 +8,57 @@
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
+
+StraightLineStepper::State StraightLineStepper::makeState(
+    const Options& options) const {
+  State state{options};
+  return state;
+}
+
+void StraightLineStepper::initialize(State& state,
+                                     const BoundTrackParameters& par) const {
+  initialize(state, par.parameters(), par.covariance(),
+             par.particleHypothesis(), par.referenceSurface());
+}
+
+void StraightLineStepper::initialize(State& state,
+                                     const BoundVector& boundParams,
+                                     const std::optional<BoundMatrix>& cov,
+                                     ParticleHypothesis particleHypothesis,
+                                     const Surface& surface) const {
+  FreeVector freeParams = transformBoundToFreeParameters(
+      surface, state.options.geoContext, boundParams);
+
+  state.particleHypothesis = particleHypothesis;
+
+  state.pathAccumulated = 0;
+  state.nSteps = 0;
+  state.nStepTrials = 0;
+  state.stepSize = ConstrainedStep();
+  state.stepSize.setAccuracy(state.options.initialStepSize);
+  state.stepSize.setUser(state.options.maxStepSize);
+  state.previousStepSize = 0;
+  state.statistics = StepperStatistics();
+
+  state.pars = freeParams;
+
+  // Init the jacobian matrix if needed
+  state.covTransport = cov.has_value();
+  if (state.covTransport) {
+    state.cov = *cov;
+    state.jacToGlobal = surface.boundToFreeJacobian(
+        state.options.geoContext, freeParams.segment<3>(eFreePos0),
+        freeParams.segment<3>(eFreeDir0));
+    state.jacobian = BoundMatrix::Identity();
+    state.jacTransport = FreeMatrix::Identity();
+    state.derivative = FreeVector::Zero();
+  }
+}
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
 StraightLineStepper::boundState(
@@ -19,17 +66,19 @@ StraightLineStepper::boundState(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      state.particleHypothesis, state.covTransport && transportCov,
-      state.pathAccumulated, freeToBoundCorrection);
+      state.jacTransport, state.derivative, state.jacToGlobal,
+      state.additionalFreeCovariance, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated,
+      freeToBoundCorrection);
 }
 
-std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated);
+      state.jacToGlobal, state.additionalFreeCovariance, state.pars,
+      state.particleHypothesis, state.covTransport && transportCov,
+      state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& freeParams,
@@ -55,7 +104,8 @@ void StraightLineStepper::update(State& state, const Vector3& uposition,
 void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
   detail::transportCovarianceToCurvilinear(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars.template segment<3>(eFreeDir0));
+      state.jacToGlobal, state.additionalFreeCovariance,
+      state.pars.template segment<3>(eFreeDir0));
 }
 
 void StraightLineStepper::transportCovarianceToBound(
@@ -63,31 +113,8 @@ void StraightLineStepper::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
-      freeToBoundCorrection);
-}
-
-void StraightLineStepper::resetState(State& state,
-                                     const BoundVector& boundParams,
-                                     const BoundSquareMatrix& cov,
-                                     const Surface& surface,
-                                     const double stepSize) const {
-  FreeVector freeParams = transformBoundToFreeParameters(
-      surface, state.options.geoContext, boundParams);
-
-  // Update the stepping state
-  state.pars = freeParams;
-  state.cov = cov;
-  state.stepSize = ConstrainedStep(stepSize);
-  state.pathAccumulated = 0.;
-
-  // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(
-      state.options.geoContext, freeParams.template segment<3>(eFreePos0),
-      freeParams.template segment<3>(eFreeDir0));
-  state.jacobian = BoundMatrix::Identity();
-  state.jacTransport = FreeMatrix::Identity();
-  state.derivative = FreeVector::Zero();
+      state.jacTransport, state.derivative, state.jacToGlobal,
+      state.additionalFreeCovariance, state.pars, freeToBoundCorrection);
 }
 
 }  // namespace Acts

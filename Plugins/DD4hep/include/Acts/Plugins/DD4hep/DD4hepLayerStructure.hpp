@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <memory>
 #include <optional>
@@ -44,7 +44,7 @@ class DD4hepLayerStructure {
   /// @param logger is the screen output logger
   ///
   /// @note this needs to be provided
-  DD4hepLayerStructure(
+  explicit DD4hepLayerStructure(
       std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("DD4hepLayerStructure", Acts::Logging::INFO));

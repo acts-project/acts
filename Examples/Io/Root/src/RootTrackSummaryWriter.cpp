@@ -112,6 +112,7 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("t_pT", &m_t_pT);
   m_outputTree->Branch("t_d0", &m_t_d0);
   m_outputTree->Branch("t_z0", &m_t_z0);
+  m_outputTree->Branch("t_prodR", &m_t_prodR);
 
   m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
   m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -299,6 +300,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     float t_d0 = NaNfloat;
     float t_z0 = NaNfloat;
     float t_qop = NaNfloat;
+    float t_prodR = NaNfloat;
 
     // Get the perigee surface
     const Acts::Surface* pSurface =
@@ -339,6 +341,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_eta = eta(particle.direction());
         t_pT = t_p * perp(particle.direction());
         t_qop = particle.qOverP();
+        t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
           auto intersection =
@@ -390,6 +393,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_t_pT.push_back(t_pT);
     m_t_d0.push_back(t_d0);
     m_t_z0.push_back(t_z0);
+    m_t_prodR.push_back(t_prodR);
 
     // Initialize the fitted track parameters info
     std::array<float, Acts::eBoundSize> param = {NaNfloat, NaNfloat, NaNfloat,
@@ -407,9 +411,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         param[i] = parameter[i];
       }
 
-      const auto& covariance = track.covariance();
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        error[i] = std::sqrt(covariance(i, i));
+        double variance = getCov(i, i);
+        error[i] = variance >= 0 ? std::sqrt(variance) : NaNfloat;
       }
     }
 
@@ -575,6 +579,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_t_eta.clear();
   m_t_d0.clear();
   m_t_z0.clear();
+  m_t_prodR.clear();
 
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();

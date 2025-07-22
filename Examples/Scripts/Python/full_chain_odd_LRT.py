@@ -153,6 +153,7 @@ ambi_scoring = args.ambi_solver == "scoring"
 ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
+actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = (
@@ -164,13 +165,13 @@ oddMaterialMap = (
 oddDigiConfig = (
     args.digi_config
     if args.digi_config
-    else geoDir / "config/odd-digi-smearing-config.json"
+    else actsDir / "Examples/Configs/odd-digi-smearing-config.json"
 )
 
-oddSeedingSel = geoDir / "config/odd-seeding-config.json"
+oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
@@ -234,8 +235,8 @@ else:
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
-                rMean=2,
-                rStdDev=0.0125 * u.mm,
+                rMean=50.0,
+                rStdDev=50.0 * u.mm,
                 zMean=2,
                 zStdDev=55.5 * u.mm,
                 tMean=0,
@@ -331,9 +332,10 @@ if args.reco:
             1 * u.mm,
             1 * u.degree,
             1 * u.degree,
-            0.1 * u.e / u.GeV,
+            0 * u.e / u.GeV,
             1 * u.ns,
         ],
+        initialSigmaQoverPt=0.1 * u.e / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
@@ -417,14 +419,9 @@ if args.reco:
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                pTMax=1400,
-                pTMin=0.5,
-                phiMax=math.pi,
-                phiMin=-math.pi,
-                etaMax=4,
-                etaMin=-4,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,

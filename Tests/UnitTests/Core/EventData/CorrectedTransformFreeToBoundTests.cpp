@@ -56,8 +56,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   double distance = 10_mm;
-  auto eSurface = CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
-                      .planeSurface();
+  std::shared_ptr<PlaneSurface> eSurface =
+      CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
+          .planeSurface();
 
   // the bound parameters at the starting plane
   BoundVector sBoundParams = BoundVector::Zero();
@@ -138,5 +139,6 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   // loc0 at end position = distance * tan(theta) * sin(phi),
   // dloc0/dphi = distance * tan(theta) * cos(phi) = distance,
   // resolution of loc0 at end position = dloc0/dphi * resLoc0 = 2.5
-  CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), pow(2.5, 2), eps);
+  CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), std::pow(2.5, 2),
+                  eps);
 }

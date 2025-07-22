@@ -76,6 +76,7 @@ def run() -> None:
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
         "Acts::OrientedSurface",
+        "Acts::TrackStateCreator",
     }
 
     role_instances["class"] |= {
@@ -96,6 +97,8 @@ def run() -> None:
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
         "Acts::CylinderVolumeStack",
+        "Acts::CuboidVolumeStack",
+        "Acts::VolumeStack",
         "Acts::GeometryObject",
         "Acts::TrackContainer",
         "Acts::ConeLayer",

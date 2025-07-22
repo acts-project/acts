@@ -15,6 +15,7 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
+import acts.examples.hepmc3
 from acts.examples.odd import getOpenDataDetector
 
 try:
@@ -63,18 +64,25 @@ def runMaterialRecording(
                 ),
             )
         ],
-        outputParticles="particles_initial",
-        outputVertices="vertices_initial",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
+    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+        level=acts.logging.INFO,
+        inputEvent=evGen.config.outputEvent,
+        outputParticles="particles_initial",
+        outputVertices="vertices_initial",
+        mergePrimaries=False,
+    )
+    s.addAlgorithm(hepmc3Converter)
+
     g4Alg = acts.examples.geant4.Geant4MaterialRecording(
         level=acts.logging.INFO,
         detector=detector,
         randomNumbers=rnd,
-        inputParticles=evGen.config.outputParticles,
+        inputParticles=hepmc3Converter.config.outputParticles,
         outputMaterialTracks="material-tracks",
     )
 
@@ -113,7 +121,8 @@ def main():
     elif args.input.endswith(".gdml"):
         detector = acts.examples.geant4.GdmlDetector(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
-        detector = acts.examples.GeoModelDetector(path=args.input)
+        gmdConfig = acts.geomodel.GeoModelDetector.Config(path=args.input)
+        detector = acts.geomodel.GeoModelDetector(gmdConfig)
 
     runMaterialRecording(
         detector=detector,

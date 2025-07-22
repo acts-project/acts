@@ -14,18 +14,16 @@
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Plugins/Root/TGeoMaterialConverter.hpp"
+#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
 
 using namespace Acts::detail;
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
-    std::unique_ptr<const Logger> mlogger)
-    : m_logger(std::move(mlogger)) {
-  ACTS_DEBUG("UnitLength conversion factor (DD4hep -> Acts): " << unitLength);
-}
+    const Config& config, std::unique_ptr<const Logger> mlogger)
+    : m_config(config), m_logger(std::move(mlogger)) {}
 
 void Acts::DD4hepDetectorSurfaceFactory::construct(
     Cache& cache, const GeometryContext& gctx,
@@ -101,7 +99,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial = nullptr;
 
   // Create the corresponding detector element
-  auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
+  auto dd4hepDetElement = m_config.detectorElementFactory(
       dd4hepElement, detAxis, unitLength, false, nullptr);
   auto sSurface = dd4hepDetElement->surface().getSharedPtr();
   // Measure if configured to do so
@@ -113,7 +111,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   }
 
   // Attach surface material if present
-  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface,
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -155,10 +153,13 @@ void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
   if (protoMaterial) {
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
-    Experimental::BinningDescription pmBinning{
-        DD4hepBinningHelpers::convertBinning(
-            dd4hepElement, prefix + "_proto_material_binning")};
-    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    auto materialBinning = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, prefix + "_proto_material_binning");
+    std::vector<DirectedProtoAxis> pmBinning = {};
+    for (const auto& [dpAxis, bins] : materialBinning) {
+      pmBinning.emplace_back(dpAxis);
+    }
+    ACTS_VERBOSE(" - converted binning is " << pmBinning);
     Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
         gctx, surface, pmBinning);
 

@@ -49,7 +49,7 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
 
 ProcessCode MaterialMapping::finalize() {
   ACTS_INFO("Finalizing material mappig output");
-  Acts::DetectorMaterialMaps detectorMaterial;
+  Acts::TrackingGeometryMaterial detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
     // Finalize all the maps using the cached state
@@ -106,6 +106,9 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
+    // Set the geometry and magnetic field context
+    (*mappingState).geoContext = context.geoContext;
+    (*mappingState).magFieldContext = context.magFieldContext;
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
       m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
@@ -115,6 +118,9 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
+    // Set the geometry and magnetic field context
+    (*mappingState).geoContext = context.geoContext;
+    (*mappingState).magFieldContext = context.magFieldContext;
 
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry

@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
@@ -66,8 +65,8 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @param transform transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3& transform,
-               std::shared_ptr<const PlanarBounds> pbounds = nullptr);
+  explicit PlaneSurface(const Transform3& transform,
+                        std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
   /// Assignment operator

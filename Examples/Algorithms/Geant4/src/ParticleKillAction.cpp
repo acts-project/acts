@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ParticleOutcome.hpp"
 
@@ -30,24 +31,24 @@ ParticleKillAction::ParticleKillAction(
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
 void ParticleKillAction::UserSteppingAction(const G4Step* step) {
-  constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
   G4Track* track = step->GetTrack();
 
-  const auto pos = convertLength * track->GetPosition();
   const auto time = convertTime * track->GetGlobalTime();
   const bool isSecondary =
       track->GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
-  const bool outOfVolume = m_cfg.volume && !m_cfg.volume->inside(Acts::Vector3{
-                                               pos.x(), pos.y(), pos.z()});
+  const bool outOfVolume =
+      m_cfg.volume &&
+      !m_cfg.volume->inside(convertPosition(track->GetPosition()));
   const bool outOfTime = time > m_cfg.maxTime;
   const bool invalidSecondary = m_cfg.secondaries && isSecondary;
 
   if (outOfVolume || outOfTime || invalidSecondary) {
     ACTS_DEBUG("Kill track with internal track ID "
-               << track->GetTrackID() << " at " << pos << " and global time "
+               << track->GetTrackID() << " at "
+               << convertPosition(track->GetPosition()) << " and global time "
                << time / Acts::UnitConstants::ns << "ns and isSecondary "
                << isSecondary);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);

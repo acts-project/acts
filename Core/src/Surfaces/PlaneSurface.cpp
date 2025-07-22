@@ -87,7 +87,7 @@ std::string PlaneSurface::name() const {
 
 const SurfaceBounds& PlaneSurface::bounds() const {
   if (m_bounds) {
-    return (*m_bounds.get());
+    return *m_bounds;
   }
   return s_noBounds;
 }
@@ -185,7 +185,8 @@ SurfaceMultiIntersection PlaneSurface::intersect(
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
                           status),
            Intersection3D::invalid()},
-          this};
+          this,
+          boundaryTolerance};
 }
 
 ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(

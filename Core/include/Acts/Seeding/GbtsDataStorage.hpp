@@ -18,7 +18,7 @@
 #include <numbers>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 constexpr std::size_t MAX_SEG_PER_NODE = 1000;  // was 30
 constexpr std::size_t N_SEG_CONNS = 6;          // was 6
@@ -29,27 +29,27 @@ struct GbtsSP {
   const space_point_t *SP;  // want inside to have pointer
   int gbtsID;
   int combined_ID;
-  GbtsSP(const space_point_t *sp, int id, int combined_id)
-      : SP(sp), gbtsID(id), combined_ID{combined_id} {
-    if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
-      m_isPixel = true;
-    } else {
-      m_isPixel = false;
-    }
-    m_phi = std::atan(SP->x() / SP->y());
-  };
-  bool isPixel() const { return m_isPixel; }
-  bool isSCT() const { return !m_isPixel; }
-  float phi() const { return m_phi; }
-  bool m_isPixel;
   float m_phi;
+  float m_r;
+  float m_ClusterWidth;
+  GbtsSP(const space_point_t *sp, int id, int combined_id, float ClusterWidth)
+      : SP(sp),
+        gbtsID(id),
+        combined_ID{combined_id},
+        m_ClusterWidth(ClusterWidth) {
+    m_phi = std::atan2(SP->y(), SP->x());
+    m_r = std::sqrt((SP->x() * SP->x()) + (SP->y() * SP->y()));
+  };
+  float phi() const { return m_phi; }
+  float r() const { return m_r; }
+  float ClusterWidth() const { return m_ClusterWidth; }
 };
 
 template <typename space_point_t>
 class GbtsNode {
  public:
-  GbtsNode(const GbtsSP<space_point_t> &spGbts, float minT = -100.0,
-           float maxT = 100.0)
+  explicit GbtsNode(const GbtsSP<space_point_t> &spGbts, float minT = -100.0,
+                    float maxT = 100.0)
       : m_spGbts(spGbts), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
   inline void addIn(int i) {
@@ -137,7 +137,7 @@ class GbtsEtaBin {
 template <typename space_point_t>
 class GbtsDataStorage {
  public:
-  GbtsDataStorage(const GbtsGeometry<space_point_t> &g) : m_geo(g) {
+  explicit GbtsDataStorage(const GbtsGeometry<space_point_t> &g) : m_geo(g) {
     m_etaBins.reserve(g.num_bins());
     for (int k = 0; k < g.num_bins(); k++) {
       m_etaBins.emplace_back(GbtsEtaBin<space_point_t>());
@@ -152,7 +152,7 @@ class GbtsDataStorage {
       return -1;
     }
 
-    int binIndex = pL->getEtaBin(sp.SP->z(), sp.SP->r());
+    int binIndex = pL->getEtaBin(sp.SP->z(), sp.r());
 
     if (binIndex == -1) {
       return -2;
@@ -165,7 +165,7 @@ class GbtsDataStorage {
       float max_tau = 100.0;
       // can't do this bit yet as dont have cluster width
       if (useClusterWidth) {
-        float cluster_width = 1;  // temporary while cluster width not available
+        float cluster_width = sp.ClusterWidth();
         min_tau = 6.7 * (cluster_width - 0.2);
         max_tau =
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
@@ -176,7 +176,7 @@ class GbtsDataStorage {
               sp, min_tau, max_tau));  // adding ftf member to nodes
     } else {
       if (useClusterWidth) {
-        float cluster_width = 1;  // temporary while cluster width not available
+        float cluster_width = sp.ClusterWidth();
         if (cluster_width > 0.2) {
           return -3;
         }
@@ -286,4 +286,4 @@ class GbtsEdge {
   unsigned int m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

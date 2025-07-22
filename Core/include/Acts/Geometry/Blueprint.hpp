@@ -17,6 +17,8 @@ namespace Acts {
 
 class GeometryContext;
 
+namespace Experimental {
+
 /// This class is the top-level entry point to build a tracking geometry using
 /// the blueprint building mechanism. It forms the root of a tree of nodes where
 /// each node performs a portion of the construction. This top-level class has
@@ -56,11 +58,6 @@ class Blueprint : public BlueprintNode {
     /// Determine how much envelope space to produce from the highest volume
     /// in the geometry hierarchy and the world volume.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
-
-    /// The geometry identifier hook, passed through the `TrackingGeometry`
-    /// constructor. This will be superseded by a more integrated approach to
-    /// the identification scheme
-    GeometryIdentifierHook geometryIdentifierHook = {};
   };
 
   /// Constructor from a config object
@@ -102,4 +99,5 @@ class Blueprint : public BlueprintNode {
   Config m_cfg;
 };
 
+}  // namespace Experimental
 }  // namespace Acts

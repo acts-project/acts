@@ -22,41 +22,41 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
-#include <array>
 #include <iterator>
 #include <ostream>
 #include <set>
 #include <utility>
 
 namespace Acts {
-class PlanarBounds;
-}  // namespace Acts
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+using VectorHelpers::perp;
+using VectorHelpers::phi;
 
-Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
-                                 std::unique_ptr<const Logger> logger)
+LayerCreator::LayerCreator(const LayerCreator::Config& lcConfig,
+                           std::unique_ptr<const Logger> logger)
     : m_cfg(lcConfig), m_logger(std::move(logger)) {}
 
-void Acts::LayerCreator::setConfiguration(
-    const Acts::LayerCreator::Config& lcConfig) {
+void LayerCreator::setConfiguration(const LayerCreator::Config& lcConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = lcConfig;
 }
 
-void Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
+void LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
+MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  if (!_protoLayer) {
+    protoLayer.envelope[AxisDirection::AxisR] = m_cfg.defaultEnvelopeR;
+    protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
+  }
 
   // Remaining layer parameters - they include the envelopes
   double layerR = protoLayer.medium(AxisDirection::AxisR);
@@ -123,13 +123,17 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   return cLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
+MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  if (!_protoLayer) {
+    protoLayer.envelope[AxisDirection::AxisR] = m_cfg.defaultEnvelopeR;
+    protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
+  }
 
   // remaining layer parameters
   double layerR = protoLayer.medium(AxisDirection::AxisR);
@@ -197,13 +201,17 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   return cLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
+MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  if (!_protoLayer) {
+    protoLayer.envelope[AxisDirection::AxisR] = m_cfg.defaultEnvelopeR;
+    protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
+  }
 
   double layerZ = protoLayer.medium(AxisDirection::AxisZ);
   double layerThickness = protoLayer.range(AxisDirection::AxisZ);
@@ -263,13 +271,17 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   return dLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
+MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  if (!_protoLayer) {
+    protoLayer.envelope[AxisDirection::AxisR] = m_cfg.defaultEnvelopeR;
+    protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
+  }
 
   double layerZ = protoLayer.medium(AxisDirection::AxisZ);
   double layerThickness = protoLayer.range(AxisDirection::AxisZ);
@@ -326,7 +338,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   return dLayer;
 }
 
-Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
+MutableLayerPtr LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
@@ -334,6 +346,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
+  if (!_protoLayer) {
+    protoLayer.envelope[AxisDirection::AxisR] = m_cfg.defaultEnvelopeR;
+    protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
+  }
 
   // remaining layer parameters
   double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
@@ -425,7 +441,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   return pLayer;
 }
 
-void Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const {
+void LayerCreator::associateSurfacesToLayer(Layer& layer) const {
   if (layer.surfaceArray() != nullptr) {
     auto surfaces = layer.surfaceArray()->surfaces();
 
@@ -436,8 +452,8 @@ void Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const {
   }
 }
 
-bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
-                                      const SurfaceArray& sArray) const {
+bool LayerCreator::checkBinning(const GeometryContext& gctx,
+                                const SurfaceArray& sArray) const {
   // do consistency check: can we access all sensitive surfaces
   // through the binning? If not, surfaces get lost and the binning does not
   // work
@@ -467,7 +483,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
     nBinsChecked++;
   }
 
-  std::vector<const Acts::Surface*> diff;
+  std::vector<const Surface*> diff;
   std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
                       accessibleSurfaces.begin(), accessibleSurfaces.end(),
                       std::inserter(diff, diff.begin()));
@@ -503,3 +519,5 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
 
   return nEmptyBins == 0 && diff.empty();
 }
+
+}  // namespace Acts

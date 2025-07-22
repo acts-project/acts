@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -39,9 +40,6 @@ namespace Acts {
 class MappingMaterialDecorator : public IMaterialDecorator {
  public:
   using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
-
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   MappingMaterialDecorator(const Acts::TrackingGeometry& tGeometry,
                            Acts::Logging::Level level,
@@ -275,7 +273,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
  private:
   BinningMap m_binningMap;
 
-  VolumeMaterialMap m_volumeMaterialMap;
+  VolumeMaterialMaps m_volumeMaterialMap;
 
   bool m_clearSurfaceMaterial{true};
   bool m_clearVolumeMaterial{true};

@@ -22,7 +22,6 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -145,7 +144,7 @@ std::string DiscSurface::name() const {
 
 const SurfaceBounds& DiscSurface::bounds() const {
   if (m_bounds) {
-    return (*(m_bounds.get()));
+    return *m_bounds;
   }
   return s_noBounds;
 }
@@ -176,8 +175,8 @@ Polyhedron DiscSurface::polyhedronRepresentation(
       if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
       }
-      auto [faces, triangularMesh] =
-          detail::FacesHelper::convexFaceMesh(vertices, true);
+      auto [faces, triangularMesh] = detail::FacesHelper::convexFaceMesh(
+          vertices, addCentreFromConvexFace);
       return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
@@ -300,7 +299,8 @@ SurfaceMultiIntersection DiscSurface::intersect(
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
                           status),
            Intersection3D::invalid()},
-          this};
+          this,
+          boundaryTolerance};
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(

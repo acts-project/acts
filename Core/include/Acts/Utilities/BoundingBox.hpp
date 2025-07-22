@@ -8,14 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <array>
 #include <memory>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -95,7 +92,7 @@ class AxisAlignedBoundingBox {
   /// contained in @p boxes, and additional envelope can be given.
   /// @param boxes Vector of child boxes to store in this bounding box.
   /// @param envelope Envelope that will be added/subtracted to the dimension.
-  AxisAlignedBoundingBox(
+  explicit AxisAlignedBoundingBox(
       const std::vector<self_t*>& boxes,
       vertex_array_type envelope = vertex_array_type::Zero());
 

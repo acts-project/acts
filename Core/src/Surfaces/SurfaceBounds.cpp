@@ -34,7 +34,7 @@ bool SurfaceBounds::inside(const Vector2& lposition,
   if (boundaryTolerance.hasChi2Bound()) {
     SquareMatrix2 j = boundToCartesianJacobian(lposition);
     jacobian = j;
-    metric = j.transpose() * boundaryTolerance.asChi2Bound().weight * j;
+    metric = j.transpose() * boundaryTolerance.asChi2Bound().weightMatrix() * j;
   } else if (!boundaryTolerance.hasAbsoluteBound(isCartesian())) {
     jacobian = boundToCartesianJacobian(lposition);
     metric = boundToCartesianMetric(lposition);

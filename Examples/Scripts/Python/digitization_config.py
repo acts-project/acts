@@ -38,7 +38,6 @@ if "__main__" == __name__:
 
     runDigitizationConfig(
         trackingGeometry=trackingGeometry,
-        input=Path(__file__).parent
-        / "../../Algorithms/Digitization/share/default-smearing-config-generic.json",
+        input=Path(__file__).parent / "../../Configs/generic-digi-smearing-config.json",
         output=Path.cwd() / "digi-config-out.json",
     )

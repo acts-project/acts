@@ -46,7 +46,7 @@ def runMaterialMapping(
 
     wb = WhiteBoard(acts.logging.INFO)
 
-    context = AlgorithmContext(0, 0, wb)
+    context = AlgorithmContext(0, 0, wb, 0)
 
     for decorator in decorators:
         assert decorator.decorate(context) == ProcessCode.SUCCESS

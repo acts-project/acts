@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 
 #include <functional>
+#include <limits>
 
 namespace Acts {
 
@@ -35,8 +36,11 @@ struct StepperPlainOptions {
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
 
+  /// Initial step size
+  double initialStepSize = 10 * Acts::UnitConstants::m;
+
   /// Absolute maximum step size
-  double maxStepSize = 10 * Acts::UnitConstants::m;
+  double maxStepSize = std::numeric_limits<double>::max();
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
@@ -48,7 +52,7 @@ struct StepperPlainOptions {
     /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
     bool includeGradient = true;
 
-    /// Cut-off value for the momentum in SI units
+    /// Cut-off value for the momentum
     double momentumCutOff = 0.;
   } dense;
 };

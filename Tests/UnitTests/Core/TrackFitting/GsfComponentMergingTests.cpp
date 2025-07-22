@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
   const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
-  const auto surface =
+  const std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};

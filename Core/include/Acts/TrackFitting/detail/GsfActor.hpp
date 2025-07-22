@@ -40,7 +40,11 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
+  std::vector<std::tuple<double, BoundVector, BoundMatrix>>
+      lastMeasurementComponents;
+
+  /// The last measurement surface. Used to initialize the backward pass.
+  const Acts::Surface* lastMeasurementSurface = nullptr;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -128,6 +132,8 @@ struct GsfActor {
     std::vector<MultiTrajectoryTraits::IndexType> tips;
     std::map<MultiTrajectoryTraits::IndexType, double> weights;
   };
+
+  using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
   /// @brief GSF actor operation
   ///
@@ -235,9 +241,8 @@ struct GsfActor {
     }
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      cmp.singleStepper(stepper).transportCovarianceToBound(
-          singleState.stepping, surface);
+      cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
+                                                            surface);
     }
 
     if (haveMaterial) {
@@ -597,28 +602,23 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    addCombinedState(result, tmpStates, surface);
+    updateMultiTrajectory(result, tmpStates, surface);
+
     result.lastMeasurementTip = result.currentTip;
+    result.lastMeasurementSurface = &surface;
 
-    using FiltProjector =
-        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
+    // Note, that we do not normalize the components here.
+    // This must be done before initializing the backward pass.
+    result.lastMeasurementComponents.clear();
+
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
-
-    std::vector<std::tuple<double, BoundVector, BoundMatrix>> v;
-
-    // TODO Check why can zero weights can occur
     for (const auto& idx : tmpStates.tips) {
-      const auto [w, p, c] = proj(idx);
+      const auto& [w, p, c] = proj(idx);
+      // TODO check why zero weight can occur
       if (w > 0.0) {
-        v.push_back({w, p, c});
+        result.lastMeasurementComponents.push_back({w, p, c});
       }
     }
-
-    normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
-
-    result.lastMeasurementState = MultiComponentBoundTrackParameters(
-        surface.getSharedPtr(), std::move(v),
-        stepper.particleHypothesis(state.stepping));
 
     // Return success
     return Result<void>::success();
@@ -640,9 +640,8 @@ struct GsfActor {
     // components should behave the same
     bool isHole = true;
 
-    auto cmps = stepper.componentIterable(state.stepping);
-    for (auto cmp : cmps) {
-      auto singleState = cmp.singleState(state);
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // There is some redundant checking inside this function, but do this for
@@ -673,7 +672,7 @@ struct GsfActor {
 
     ++result.processedStates;
 
-    addCombinedState(result, tmpStates, surface);
+    updateMultiTrajectory(result, tmpStates, surface);
 
     return Result<void>::success();
   }
@@ -719,8 +718,9 @@ struct GsfActor {
     }
   }
 
-  void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
-                        const Surface& surface) const {
+  void updateMultiTrajectory(result_type& result,
+                             const TemporaryStates& tmpStates,
+                             const Surface& surface) const {
     using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FltProjector =

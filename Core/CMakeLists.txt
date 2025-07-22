@@ -104,6 +104,7 @@ add_subdirectory(src/Material)
 add_subdirectory(src/Navigation)
 add_subdirectory(src/Propagator)
 add_subdirectory(src/Seeding)
+add_subdirectory(src/Seeding2)
 add_subdirectory(src/Surfaces)
 add_subdirectory(src/TrackFinding)
 add_subdirectory(src/TrackFitting)
@@ -111,3 +112,7 @@ add_subdirectory(src/Utilities)
 add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
 add_subdirectory(src/AmbiguityResolution)
+
+acts_compile_headers(ActsCore GLOB
+    include/Acts/**/*.hpp
+)

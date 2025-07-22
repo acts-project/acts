@@ -11,19 +11,20 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <iosfwd>
 
 namespace Acts {
 
 class IGrid;
+class TrivialPortalLink;
 
 template <typename... Axes>
   requires(sizeof...(Axes) <= 2)
@@ -43,10 +44,13 @@ class GridPortalLink : public PortalLinkBase {
   /// @param surface The surface
   /// @param direction The binning direction
   GridPortalLink(std::shared_ptr<RegularSurface> surface,
-                 AxisDirection direction)
-      : PortalLinkBase(std::move(surface)), m_direction(direction) {}
+                 AxisDirection direction);
 
  public:
+  /// Override the destructor so we can get away with forward declaration of
+  /// `TrivialPortalLink`
+  ~GridPortalLink() override;
+
   /// Factory function for a one-dimensional grid portal link, which allows
   /// using template deduction to figure out the right type
   /// @tparam axis_t The axis type
@@ -66,6 +70,9 @@ class GridPortalLink : public PortalLinkBase {
       }
     } else if (dynamic_cast<const DiscSurface*>(surface.get()) != nullptr &&
                direction != AxisR && direction != AxisPhi) {
+      throw std::invalid_argument{"Invalid binning direction"};
+    } else if (dynamic_cast<const PlaneSurface*>(surface.get()) != nullptr &&
+               direction != AxisX && direction != AxisY) {
       throw std::invalid_argument{"Invalid binning direction"};
     }
 
@@ -90,6 +97,8 @@ class GridPortalLink : public PortalLinkBase {
       direction = AxisDirection::AxisRPhi;
     } else if (dynamic_cast<const DiscSurface*>(surface.get()) != nullptr) {
       direction = AxisDirection::AxisR;
+    } else if (dynamic_cast<const PlaneSurface*>(surface.get()) != nullptr) {
+      direction = AxisDirection::AxisX;
     }
 
     return std::make_unique<GridPortalLinkT<axis_1_t, axis_2_t>>(
@@ -106,7 +115,7 @@ class GridPortalLink : public PortalLinkBase {
       AxisDirection direction);
 
   /// Merge two grid portal links into a single one. The routine can merge
-  /// one-dimenaional, tow-dimensional and mixed links. The merge will try to
+  /// one-dimensional, two-dimensional and mixed links. The merge will try to
   /// preserve equidistant binning in case bin widths match. Otherwise, the
   /// merge falls back to variable binning.
   ///
@@ -305,6 +314,10 @@ class GridPortalLink : public PortalLinkBase {
   /// @return The grid
   virtual const IGrid& grid() const = 0;
 
+  /// Return the associated grid in a type-erased form
+  /// @return The grid
+  virtual IGrid& grid() = 0;
+
   /// Set the volume on all grid bins
   /// @param volume The volume to set
   virtual void setVolume(TrackingVolume* volume) = 0;
@@ -344,6 +357,9 @@ class GridPortalLink : public PortalLinkBase {
   /// @param os The output stream
   void printContents(std::ostream& os) const;
 
+  std::span<const TrivialPortalLink> artifactPortalLinks() const;
+  void setArtifactPortalLinks(std::vector<TrivialPortalLink> links);
+
  protected:
   /// Helper function to check consistency for grid on a cylinder surface
   /// @param cyl The cylinder surface
@@ -352,6 +368,10 @@ class GridPortalLink : public PortalLinkBase {
   /// Helper function to check consistency for grid on a disc surface
   /// @param disc The disc surface
   void checkConsistency(const DiscSurface& disc) const;
+
+  /// Helper function to check consistency for grid on a plane surface
+  /// @param plane The plane surface
+  void checkConsistency(const PlaneSurface& plane) const;
 
   /// Expand a 1D grid to a 2D one for a cylinder surface
   /// @param surface The cylinder surface
@@ -370,6 +390,14 @@ class GridPortalLink : public PortalLinkBase {
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
       const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
+  /// Expand a 1D grid to a 2D one for a plane surface
+  /// @param surface The plane surface
+  /// @param other The axis to use for the missing direction,
+  ///              can be null for auto determination
+  /// @return A unique pointer to the 2D grid portal link
+  std::unique_ptr<GridPortalLink> extendTo2dImpl(
+      const std::shared_ptr<PlaneSurface>& surface, const IAxis* other) const;
+
   /// Helper enum to declare which local direction to fill
   enum class FillDirection {
     loc0,
@@ -384,25 +412,12 @@ class GridPortalLink : public PortalLinkBase {
   static void fillGrid1dTo2d(FillDirection dir, const GridPortalLink& grid1d,
                              GridPortalLink& grid2d);
 
-  /// Index type for type earsed (**slow**) bin access
-  using IndexType = boost::container::static_vector<std::size_t, 2>;
-
-  /// Helper function to get grid bin count in type-eraased way.
-  /// @return The number of bins in each direction
-  virtual IndexType numLocalBins() const = 0;
-
-  /// Helper function to get grid bin content in type-eraased way.
-  /// @param indices The bin indices
-  /// @return The tracking volume at the bin
-  virtual const TrackingVolume*& atLocalBins(IndexType indices) = 0;
-
-  /// Helper function to get grid bin content in type-eraased way.
-  /// @param indices The bin indices
-  /// @return The tracking volume at the bin
-  virtual const TrackingVolume* atLocalBins(IndexType indices) const = 0;
-
  private:
   AxisDirection m_direction;
+
+  /// Stores the trivial portal links that were used to build this grid portal
+  /// link, if any
+  std::vector<TrivialPortalLink> m_artifactPortalLinks;
 };
 
 /// Concrete class deriving from @c GridPortalLink that boxes a concrete grid for lookup.
@@ -451,6 +466,17 @@ class GridPortalLinkT : public GridPortalLink {
       } else {
         throw std::invalid_argument{"Invalid binning direction"};
       }
+    } else if (const auto* plane =
+                   dynamic_cast<const PlaneSurface*>(m_surface.get())) {
+      checkConsistency(*plane);
+
+      if (direction == AxisX) {
+        m_projection = &projection<PlaneSurface, AxisX>;
+      } else if (direction == AxisDirection::AxisY) {
+        m_projection = &projection<PlaneSurface, AxisY>;
+      } else {
+        throw std::invalid_argument{"Invalid binning direction"};
+      }
 
     } else {
       throw std::logic_error{"Surface type is not supported"};
@@ -463,7 +489,7 @@ class GridPortalLinkT : public GridPortalLink {
 
   /// Get the grid
   /// @return The grid
-  GridType& grid() { return m_grid; }
+  GridType& grid() override { return m_grid; }
 
   /// Get the number of dimensions of the grid
   /// @return The number of dimensions
@@ -490,6 +516,9 @@ class GridPortalLinkT : public GridPortalLink {
       } else if (auto disc =
                      std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
         return extendTo2dImpl(disc, other);
+      } else if (auto plane =
+                     std::dynamic_pointer_cast<PlaneSurface>(m_surface)) {
+        return extendTo2dImpl(plane, other);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};
@@ -539,43 +568,9 @@ class GridPortalLinkT : public GridPortalLink {
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
       double /*tolerance*/ = s_onSurfaceTolerance) const override {
-    assert(surface().insideBounds(position, BoundaryTolerance::None()));
+    throw_assert(surface().insideBounds(position, BoundaryTolerance::None()),
+                 "Checking volume outside of bounds");
     return m_grid.atPosition(m_projection(position));
-  }
-
-  /// Type erased access to the number of bins
-  /// @return The number of bins in each direction
-  IndexType numLocalBins() const override {
-    typename GridType::index_t idx = m_grid.numLocalBins();
-    IndexType result;
-    for (std::size_t i = 0; i < DIM; i++) {
-      result.push_back(idx[i]);
-    }
-    return result;
-  }
-
-  /// Type erased local bin access
-  /// @param indices The bin indices
-  /// @return The tracking volume at the bin
-  const TrackingVolume*& atLocalBins(IndexType indices) override {
-    throw_assert(indices.size() == DIM, "Invalid number of indices");
-    typename GridType::index_t idx;
-    for (std::size_t i = 0; i < DIM; i++) {
-      idx[i] = indices[i];
-    }
-    return m_grid.atLocalBins(idx);
-  }
-
-  /// Type erased local bin access
-  /// @param indices The bin indices
-  /// @return The tracking volume at the bin
-  const TrackingVolume* atLocalBins(IndexType indices) const override {
-    throw_assert(indices.size() == DIM, "Invalid number of indices");
-    typename GridType::index_t idx;
-    for (std::size_t i = 0; i < DIM; i++) {
-      idx[i] = indices[i];
-    }
-    return m_grid.atLocalBins(idx);
   }
 
  private:

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
@@ -45,6 +46,40 @@ class TrapezoidBounds;
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
+/// ```
+/// PositiveZFaceXY--------+          PositiveYFaceZX
+///                        |                   |
+/// TrapezoidFaceAlpha     |                   v
+///          |             | +----------------------------------+
+///          |             v |                                  |
+///          |    +       +--+------------------------------++  |
+///          |   /|      /   |                            +-+   |
+///          |  / |     /    |                          +-+     |           +
+///      +---+ /  |    /     |                        +-+       |          ++
+///      |    /   |   /      +----------------------+-+---------+        +-+|
+///      |   /    |  /                            +-+                  +-+  |
+///      |  /     + /                           +-+                  +-+    |
+///      | /     / /                          +-+                  +-+      |
+///      v/     / /                         +-+                  +-+        +
+///      /     / /                        +-+                  +-+         +-
+///     /     / /    +------------------+-+------------++    +-+         +-+
+///    /     / /    /                 +-+            +-+   +-+         +-+
+///   /     / /    /                +-+            +-+   +-+         +-+
+///  /     / +----X-----------------+            +-+   +-+         +-+
+/// +     /      /                             +-+   +-+         +-+
+/// | +--X------X------------+               +-+    -+         +-+
+/// | | /      /             |             +-+     +         +-+
+/// | |/      /              |           +-+       |       +-+  ^
+/// | X      /               |         +-+         |     +-+    |
+/// |/|     /                |       +-+           |   +-+      |
+/// + |    /                 |     +-+             | +-+        |  z ^   ^ y
+///   +---X------------------+   +-+  ^            |-+    +-----+    |  /
+///      /        ^            +-+    |            +      |          | /
+///     +---------++-----------+      |                   |          |/
+///                |                  |                   |          X------> x
+///       NegativeYFaceZX      NegativeZFaceXY            |
+///                                              TrapezoidFaceBeta
+/// ```
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
@@ -56,6 +91,25 @@ class TrapezoidVolumeBounds : public VolumeBounds {
     eAlpha = 4,            //!< opening angle alpha (in point A)
     eBeta = 5,             //!< opening angle beta  (in point B)
     eSize                  //!< length of the bounds vector
+  };
+
+  /// Enum describing the possible faces of a trapezoidal volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+
+    NegativeZFaceXY = BoundarySurfaceFace::negativeFaceXY,
+    PositiveZFaceXY = BoundarySurfaceFace::positiveFaceXY,
+    TrapezoidFaceAlpha =
+        BoundarySurfaceFace::trapezoidFaceAlpha,  // Acts::PlaneSurface attached
+                                                  // to [0] and [1] at negative
+                                                  // x
+    TrapezoidFaceBeta =
+        BoundarySurfaceFace::trapezoidFaceBeta,  // Acts::PlaneSurface attached
+                                                 // to [0] and [1] at positive x
+    NegativeYFaceZX = BoundarySurfaceFace::negativeFaceZX,
+    PositiveYFaceZX = BoundarySurfaceFace::positiveFaceZX
+
   };
 
   TrapezoidVolumeBounds() = delete;
@@ -82,7 +136,8 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  TrapezoidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+  explicit TrapezoidVolumeBounds(
+      const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
