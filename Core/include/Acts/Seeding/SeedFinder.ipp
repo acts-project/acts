@@ -408,7 +408,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
         // discard bottom-middle dublets in a certain (r, eta) region according
         // to detector specific cuts
-        if (!m_config.experimentCuts(*spM, *otherSP, cotTheta, isBottomCandidate)) {
+        if (!m_config.experimentCuts(mediumSP, *otherSP, cotTheta,
+                                     isBottomCandidate)) {
             continue;
         }
 
@@ -455,7 +456,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
       // discard bottom-middle dublets in a certain (r, eta) region according
       // to detector specific cuts
-      if (!m_config.experimentCuts(*spM, *otherSP, cotTheta, isBottomCandidate)) {
+      if (!m_config.experimentCuts(mediumSP, *otherSP, cotTheta,
+                                   isBottomCandidate)) {
           continue;
       }
 

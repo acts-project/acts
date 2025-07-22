@@ -148,6 +148,11 @@ struct SeedFinderOrthogonalConfig {
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
+  /// defaults experimental cuts to no operation in both seeding algorithms
+  static bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
+      return true;
+  }
+
   bool isInInternalUnits = true;
   //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
   SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
