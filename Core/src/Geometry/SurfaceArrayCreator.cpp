@@ -52,12 +52,12 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3 itransform = ftransform.inverse();
   // Transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
+  auto globalToLocal = [itransform](const Vector3& pos) {
+    Vector3 loc = itransform * pos;
     return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [itransform, R](const Vector2& loc) {
-    return itransform *
+  auto localToGlobal = [ftransform, R](const Vector2& loc) {
+    return ftransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
@@ -107,12 +107,12 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   }
 
   Transform3 itransform = ftransform.inverse();
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
+  auto globalToLocal = [itransform](const Vector3& pos) {
+    Vector3 loc = itransform * pos;
     return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [itransform, R](const Vector2& loc) {
-    return itransform *
+  auto localToGlobal = [ftransform, R](const Vector2& loc) {
+    return ftransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
@@ -158,17 +158,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
                             protoLayer, ftransform, binsPhi);
 
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  ACTS_VERBOSE("- z-position of disk estimated as " << Z);
+  ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  Transform3 itransform = transform.inverse();
+  Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
+  auto globalToLocal = [itransform](const Vector3& pos) {
+    Vector3 loc = itransform * pos;
     return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [itransform, Z](const Vector2& loc) {
-    return itransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
+  auto localToGlobal = [ftransform](const Vector2& loc) {
+    return ftransform *
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), 0);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -264,17 +264,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   }
 
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  ACTS_VERBOSE("- z-position of disk estimated as " << Z);
+  ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
   Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
+  auto globalToLocal = [itransform](const Vector3& pos) {
+    Vector3 loc = itransform * pos;
     return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [itransform, Z](const Vector2& loc) {
-    return itransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
+  auto localToGlobal = [ftransform](const Vector2& loc) {
+    return ftransform *
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), 0);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -315,14 +315,14 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
   Transform3 ftransform = transform;
-  Transform3 itransform = transform.inverse();
+  Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
+  auto globalToLocal = [itransform](const Vector3& pos) {
+    Vector3 loc = itransform * pos;
     return Vector2(loc.x(), loc.y());
   };
-  auto localToGlobal = [itransform](const Vector2& loc) {
-    return itransform * Vector3(loc.x(), loc.y(), 0.);
+  auto localToGlobal = [ftransform](const Vector2& loc) {
+    return ftransform * Vector3(loc.x(), loc.y(), 0);
   };
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
@@ -565,15 +565,8 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
   }
   // check the binning type first
 
-  double minimum = 0.;
-  double maximum = 0.;
-
-  // binning option is open for z and r, in case of phi binning reset later
-  // BinningOption bOption = open;
-
-  // the key surfaces - placed in different bins in the given binning
-  // direction
-  std::vector<const Surface*> keys;
+  double minimum = protoLayer.min(aDir, false);
+  double maximum = protoLayer.max(aDir, false);
 
   std::size_t binNumber = 0;
   if (nBins == 0) {
@@ -589,7 +582,13 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
 
   // now check the binning value
   if (aDir == AxisDirection::AxisPhi) {
+    minimum = protoLayer.min(AxisDirection::AxisPhi, true);
+    maximum = protoLayer.max(AxisDirection::AxisPhi, true);
+
     if (m_cfg.doPhiBinningOptimization) {
+      minimum = -std::numbers::pi;
+      maximum = std::numbers::pi;
+
       // Phi binning
       // set the binning option for phi
       // sort first in phi
@@ -600,44 +599,18 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
                    phi(b->referencePosition(gctx, AxisDirection::AxisR));
           });
 
-      // get the key surfaces at the different phi positions
-      auto equal = [&gctx, &aDir, &matcher](const Surface* a,
-                                            const Surface* b) {
-        return matcher(gctx, aDir, a, b);
-      };
-      keys = findKeySurfaces(surfaces, equal);
+      // rotate to max phi module plus one half step
+      // this should make sure that phi wrapping at +- pi
+      // never falls on a module center
+      double surfaceMax =
+          phi(maxElem->referencePosition(gctx, AxisDirection::AxisR));
+      double gridStep = 2 * std::numbers::pi / binNumber;
+      double gridMax = std::numbers::pi - 0.5 * gridStep;
+      double angle = surfaceMax - gridMax;
 
-      // multiple surfaces, we bin from -pi to pi closed
-      if (keys.size() > 1) {
-        // bOption = closed;
-
-        minimum = -std::numbers::pi;
-        maximum = std::numbers::pi;
-
-        // double step = 2 * std::numbers::pi / keys.size();
-        double step = 2 * std::numbers::pi / binNumber;
-        // rotate to max phi module plus one half step
-        // this should make sure that phi wrapping at +- pi
-        // never falls on a module center
-        double max =
-            phi(maxElem->referencePosition(gctx, AxisDirection::AxisR));
-        double angle = std::numbers::pi - (max + 0.5 * step);
-
-        // replace given transform ref
-        transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
-
-      } else {
-        minimum = protoLayer.min(AxisDirection::AxisPhi, true);
-        maximum = protoLayer.max(AxisDirection::AxisPhi, true);
-        // we do not need a transform in this case
-      }
-    } else {
-      minimum = -std::numbers::pi;
-      maximum = std::numbers::pi;
+      // replace given transform ref
+      transform = AngleAxis3(angle, Vector3::UnitZ()) * transform;
     }
-  } else {
-    maximum = protoLayer.max(aDir, false);
-    minimum = protoLayer.min(aDir, false);
   }
 
   // assign the bin size
