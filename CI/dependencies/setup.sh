@@ -129,7 +129,7 @@ fi
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
-spack repo update --tag "${_spack_repo_version}"
+spack repo update builtin --tag "${_spack_repo_version}"
 
 end_section
 
