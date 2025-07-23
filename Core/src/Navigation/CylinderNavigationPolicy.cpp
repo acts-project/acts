@@ -170,6 +170,7 @@ void CylinderNavigationPolicy::initializeCandidates(
 
   bool hitDisk = false;
   Vector3 diskIntersection;
+  double diskDistance3D = std::numeric_limits<double>::max();
   double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
   if (std::abs(dir[2]) > s_onSurfaceTolerance) {
     ACTS_VERBOSE(
@@ -181,9 +182,10 @@ void CylinderNavigationPolicy::initializeCandidates(
     diskIntersection = pos + t * dir;
     double r2 = diskIntersection[0] * diskIntersection[0] +
                 diskIntersection[1] * diskIntersection[1];
-    if (r2 < m_rMax2 && r2 > m_rMin2) {
-      add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
+    if (r2 < m_rMax2 && r2 > m_rMin2 &&
+        t > 0) {  // Only consider forward intersections
       hitDisk = true;
+      diskDistance3D = t;  // Parameter t is the distance along the ray
     }
   } else {
     ACTS_VERBOSE("-> Parallel to the disc, see if we're inside the disc radii");
@@ -202,23 +204,38 @@ void CylinderNavigationPolicy::initializeCandidates(
 
     if (d > 0) {  // Point of closest approach is in the direction of the ray
 
+      double clippedD = d;
       if (hitDisk) {
         // Clip to distance of disk intersection
         double diskIntersectionDistanceXy =
             (diskIntersection.head<2>() - pos.head<2>()).norm();
-        d = std::min(d, diskIntersectionDistanceXy);
+        clippedD = std::min(d, diskIntersectionDistanceXy);
       }
 
-      Vector2 poc = pos.head<2>() + d * dir2;
+      Vector2 poc = pos.head<2>() + clippedD * dir2;
       double r2 = poc.dot(poc);
       hitInner = r2 < m_rMin2;
       if (hitInner) {
         add(InnerCylinder);
+        // If we hit the inner cylinder before reaching the disk intersection,
+        // we can discard the disk as we'll never reach it
+        if (hitDisk) {
+          // Calculate 3D distance to inner cylinder intersection
+          double innerDistance3D =
+              d / dir.head<2>().norm();  // Convert 2D distance to 3D parameter
+          if (innerDistance3D < diskDistance3D) {
+            hitDisk = false;
+          }
+        }
       }
     }
   }
 
-  // @TODO: If we hit the inner cylinder on our way to the disk, we can discard the disk as a target
+  // Add disk candidate if we determined it's reachable (not blocked by inner
+  // cylinder)
+  if (hitDisk) {
+    add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
+  }
 
   if (!hitInner && !hitDisk) {
     add(OuterCylinder);

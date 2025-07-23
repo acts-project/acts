@@ -28,14 +28,17 @@ class Logger;
 /// Algorithm overview:
 /// 1. Transform position/direction to volume-local coordinates
 /// 2. Check disc intersection: If not parallel to z-axis, calculate
-/// intersection
-///    with appropriate disc (positive/negative based on direction) and verify
-///    if intersection point lies within the annular disc bounds
+///    intersection with appropriate disc (positive/negative based on
+///    direction) and verify if intersection point lies within the annular disc
+///    bounds
 /// 3. Check inner cylinder intersection: Find point of closest approach to
 ///    the z-axis in the xy-plane. If this point is closer than inner radius
 ///    and lies within the forward ray direction, add inner cylinder as
 ///    candidate
-/// 4. Default fallback: If neither disc nor inner cylinder are hit, add outer
+/// 4. Optimization: If both inner cylinder and disc are hit, compare their 3D
+///    distances along the ray. If the inner cylinder is closer, discard the
+///    disc candidate as it will be blocked and never reached
+/// 5. Default fallback: If neither disc nor inner cylinder are hit, add outer
 ///    cylinder as the target (particle will exit through outer boundary)
 ///
 /// Constraints:
