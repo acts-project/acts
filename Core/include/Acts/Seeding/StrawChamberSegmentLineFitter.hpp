@@ -10,7 +10,7 @@
 #include "Acts/Seeding/StrawChamberLineSeeder.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/detail/LineWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
 #include <array>
 
@@ -21,7 +21,7 @@ template <StationSpacePointContainer CalibCont_t,
 
 class StrawChamberSegmentLineFitter {
  public:
-  using LineWithPartials = detail::LineWithPartials<double>;
+  using LineWithPartials = detail::Line3DWithPartialDerivatives<double>;
   enum ParIndices : unsigned {
     x0 = LineWithPartials::ParIndices::x0,
     y0 = LineWithPartials::ParIndices::y0,
