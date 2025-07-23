@@ -50,11 +50,7 @@ class StrawLineFitAuxiliaries {
 
   /// @brief Updates the
   template <StationSpacePoint Point_t>
-  void updateStrawResidual(const Line_t& line, const Point_t& strawMeas);
-
-  template <StationSpacePoint Point_t>
-  void updateStripResidual(const Line_t& line, const Point_t& strawMeas);
-
+  void updateSpatialResidual(const Line_t& line, const Point_t& strawMeas);
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
@@ -84,15 +80,43 @@ class StrawLineFitAuxiliaries {
   /// @brief  Update the auxiliary variables needed to calculate the residuals
   ///         of a straw measurement to the current line. They are the
   ///         projection of the line direction vector into the straw's wire
-  ///         plane and its derivatives
+  ///         plane and its derivatives. Returns fals if line and wire are
+  ///         parallel to each other
   /// @param line: Reference to the line to project
   /// @param wireDir: Reference to the straw wire direction vector
   bool updateStrawAuxiliaries(const Line_t& line, const Vector& wireDir);
-  /// @brief Update the non-bending component of the straw residual with the
-  ///        distance along the straw wire between line and straw measurement
+  /// @brief Updates the residuals of a straw measurement to a line ignoring
+  ///        the distance along the straw wire. Returns false if the residual
+  ///        cannot be updated due to parallelism between straw wire and line
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param hitMinSeg: Difference of the line reference point & the straw
+  ///                   position
+  /// @param wireDir: Direction vector of the straw wire
+  /// @param driftRadius: Measured radius of the straw measurement
+  bool updateStrawResidual(const Line_t& line, const Vector& hitMinSeg,
+                           const Vector& wireDir, const double driftRadius);
+  /// @brief Calculates the along-the wire component of the straw
+  ///        measurement's residual to the line
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param hitMinSeg: Difference of the line reference point & the straw
+  ///                   position
+  /// @param wireDir: Direction vector of the straw wire
   void updateAlongTheStraw(const Line_t& line, const Vector& hitMinSeg,
                            const Vector& wireDir);
-
+  /// @brief Calculates the residual of a strip measurement w.r.t. the line
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param normal: Reference to the vector normal on the strip measurement plane
+  /// @param b1: Reference to the first basis vector inside the strip measruement plane.
+  ///            If the strawMeasurement measures the precision direction, it's
+  ///            the `sensorNormal()` otherwise the `sensorDirection()`
+  /// @param b2: Reference to the second basis vector inside the strip measruement plane.
+  ///            If the strawMeasurement measures the precision direction, it's
+  ///            the `sensorDirection()` otherwise the `sensorNormal()`
+  /// @param stripPos: Position of the strip measurement
+  void updateStripResidual(const Line_t& line, const Vector& normal,
+                           const Vector& b1, const Vector& b2,
+                           const Vector& stripPos);
+  /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
   Config m_cfg{};
   std::unique_ptr<const Logger> m_logger{};
