@@ -278,7 +278,7 @@ class SurfaceMultiIntersection {
     return m_boundaryTolerance;
   }
 
-  constexpr SplitIntersections split() const {
+  SplitIntersections split() const {
     SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
       result.push_back(operator[](i));
