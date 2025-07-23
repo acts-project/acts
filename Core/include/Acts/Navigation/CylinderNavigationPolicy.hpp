@@ -22,16 +22,13 @@ class Logger;
 /// This policy does not handle contained volumes at all.
 class CylinderNavigationPolicy final : public INavigationPolicy {
  public:
-  struct Config {};
-
   /// Constructor from a volume
   /// @param gctx is the geometry context
   /// @param volume is the volume to navigate
   /// @param logger is the logger
   /// @param config The configuration for the policy
   CylinderNavigationPolicy(const GeometryContext& gctx,
-                           const TrackingVolume& volume, const Logger& logger,
-                           const Config& config);
+                           const TrackingVolume& volume, const Logger& logger);
 
   /// Add all candidates to the stream
   /// @param args are the navigation arguments
@@ -46,7 +43,6 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   void connect(NavigationDelegate& delegate) const override;
 
  private:
-  Config m_cfg;
   const TrackingVolume* m_volume;
   std::optional<Transform3> m_itransform;
 
@@ -54,7 +50,7 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   double m_rMin2;
   double m_rMax2;
 
-  std::array<const Portal*, 4> m_portals;
+  std::array<const Portal*, 4> m_portals{};
 };
 
 static_assert(NavigationPolicyConcept<CylinderNavigationPolicy>);

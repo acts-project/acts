@@ -37,9 +37,8 @@ std::string_view faceName(CylinderVolumeBounds::Face face) {
 
 CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const TrackingVolume& volume,
-                                                   const Logger& logger,
-                                                   const Config& config)
-    : m_cfg(config), m_volume(&volume), m_portals{} {
+                                                   const Logger& logger)
+    : m_volume(&volume) {
   ACTS_VERBOSE("CylinderNavigationPolicy constructor for volume "
                << volume.volumeName());
   using enum CylinderVolumeBounds::Face;

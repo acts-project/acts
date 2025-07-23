@@ -382,7 +382,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -397,7 +397,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -412,7 +412,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -427,7 +427,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -443,7 +443,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
     BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -459,7 +459,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
     BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -474,7 +474,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -489,7 +489,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -504,7 +504,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -522,7 +522,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -540,7 +540,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -558,7 +558,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK(exp.size() == 1);
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -577,7 +577,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK_EQUAL(exp.at(0), shell.portal(InnerCylinder));
     BOOST_CHECK_EQUAL(exp.at(1), shell.portal(PositiveDisc));
 
-    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
@@ -635,7 +635,7 @@ BOOST_DATA_TEST_CASE(
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
-  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
   auto act = getSmart(position, direction, transform, policy);
   checkEqual(exp, act, shell);
 }
@@ -670,7 +670,7 @@ BOOST_DATA_TEST_CASE(
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
-  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
   auto act = getSmart(position, direction, transform, policy);
   checkEqual(exp, act, shell);
 }
@@ -707,7 +707,7 @@ BOOST_DATA_TEST_CASE(
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
-  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
   auto act = getSmart(position, direction, transform, policy);
   checkEqual(exp, act, shell);
 }
