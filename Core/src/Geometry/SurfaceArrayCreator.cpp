@@ -52,12 +52,12 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3 itransform = ftransform.inverse();
   // Transform lambda captures the transform matrix
-  auto globalToLocal = [itransform](const Vector3& pos) {
-    Vector3 loc = itransform * pos;
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
     return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [ftransform, R](const Vector2& loc) {
-    return ftransform *
+  auto localToGlobal = [itransform, R](const Vector2& loc) {
+    return itransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
@@ -107,12 +107,12 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   }
 
   Transform3 itransform = ftransform.inverse();
-  auto globalToLocal = [itransform](const Vector3& pos) {
-    Vector3 loc = itransform * pos;
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
     return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [ftransform, R](const Vector2& loc) {
-    return ftransform *
+  auto localToGlobal = [itransform, R](const Vector2& loc) {
+    return itransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
@@ -162,13 +162,13 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [itransform](const Vector3& pos) {
-    Vector3 loc = itransform * pos;
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
     return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [ftransform](const Vector2& loc) {
-    return ftransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), 0);
+  auto localToGlobal = [itransform, Z](const Vector2& loc) {
+    return itransform *
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -268,13 +268,13 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [itransform](const Vector3& pos) {
-    Vector3 loc = itransform * pos;
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
     return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [ftransform](const Vector2& loc) {
-    return ftransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), 0);
+  auto localToGlobal = [itransform, Z](const Vector2& loc) {
+    return itransform *
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -317,12 +317,12 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   Transform3 ftransform = transform;
   Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [itransform](const Vector3& pos) {
-    Vector3 loc = itransform * pos;
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
     return Vector2(loc.x(), loc.y());
   };
-  auto localToGlobal = [ftransform](const Vector2& loc) {
-    return ftransform * Vector3(loc.x(), loc.y(), 0);
+  auto localToGlobal = [itransform](const Vector2& loc) {
+    return itransform * Vector3(loc.x(), loc.y(), 0);
   };
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
@@ -606,10 +606,10 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
           phi(maxElem->referencePosition(gctx, AxisDirection::AxisR));
       double gridStep = 2 * std::numbers::pi / binNumber;
       double gridMax = std::numbers::pi - 0.5 * gridStep;
-      double angle = surfaceMax - gridMax;
+      double angle = gridMax - surfaceMax;
 
       // replace given transform ref
-      transform = AngleAxis3(angle, Vector3::UnitZ()) * transform;
+      transform = transform * AngleAxis3(angle, Vector3::UnitZ());
     }
   }
 
