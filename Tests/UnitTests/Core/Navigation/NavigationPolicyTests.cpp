@@ -752,4 +752,19 @@ BOOST_DATA_TEST_CASE(
   checkEqual(exp, act, shell);
 }
 
+BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
+  // Test that CylinderNavigationPolicy rejects volumes with zero inner radius
+  Transform3 transform = Transform3::Identity();
+
+  // Create cylinder volume bounds with zero inner radius (rMin = 0)
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(0_mm, 400_mm, 300_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(transform, cylBounds,
+                                                    "ZeroInnerRadiusVolume");
+
+  // CylinderNavigationPolicy constructor should throw std::invalid_argument
+  // for volumes with zero inner radius
+  BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
+                    std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
