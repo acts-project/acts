@@ -7,6 +7,7 @@ add_unittest(BinAdjustmentVolume BinAdjustmentVolumeTests.cpp)
 add_unittest(BinningData BinningDataTests.cpp)
 add_unittest(BinUtility BinUtilityTests.cpp)
 add_unittest(PointerConcept PointerConceptTest.cpp)
+add_unittest(LineWithPartialTest LineWithPartialTests.cpp)
 
 add_unittest(BoundingBox BoundingBoxTest.cpp)
 target_link_libraries(ActsUnitTestBoundingBox PRIVATE std::filesystem)
