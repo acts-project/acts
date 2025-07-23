@@ -45,9 +45,20 @@ class GeoModelDetectorObjectFactory {
   using FpvConstLink = GeoModelTree::FpvConstLink;
   ///  @brief Tuple describing the shared ptr to a Volume which will be turned into a TrackingVolume,
   ///          a Gen-2 volume and the pointer to the full physical volume
-  using GeoModelVolumeFPVTuple =
-      std::tuple<std::shared_ptr<Volume>,
-                 std::shared_ptr<Experimental::DetectorVolume>, FpvConstLink>;
+  struct ConvertedGeoVol {
+    /// @brief Pointer to the envelope volume
+    std::shared_ptr<Volume> volume{};
+    /// @brief Pointer to the converted Gen-2 volume
+    std::shared_ptr<Experimental::DetectorVolume> gen2Volume{};
+    /// @brief Pointer to the full physical volume from which the
+    ///        Volumes have been built
+    FpvConstLink fullPhysVol{};
+    /// @brief Name of the converted volume
+    std::string name{};
+    /// @brief List of surfaces belonging to this volume
+    std::vector<std::shared_ptr<Surface>> surfaces{};
+  };
+  using ConvertedVolList_t = std::vector<ConvertedGeoVol>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -80,7 +91,7 @@ class GeoModelDetectorObjectFactory {
 
     // The created representation of bounding boxes  and the corresponding Full
     // Physical Volumes
-    std::vector<GeoModelVolumeFPVTuple> volumeBoxFPVs{};
+    ConvertedVolList_t volumeBoxFPVs{};
   };
 
   explicit GeoModelDetectorObjectFactory(
