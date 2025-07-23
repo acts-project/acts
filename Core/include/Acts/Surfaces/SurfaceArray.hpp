@@ -491,7 +491,7 @@ class SurfaceArray {
   /// @brief Get the center of the bin identified by global bin index @p bin
   /// @param bin the global bin index
   /// @return Center position of the bin in global coordinates
-  Vector3 getBinCenter(std::size_t bin) {
+  Vector3 getBinCenter(std::size_t bin) const {
     return p_gridLookup->getBinCenter(bin);
   }
 

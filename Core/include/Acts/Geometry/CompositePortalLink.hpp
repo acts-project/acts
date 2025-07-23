@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 #include <iosfwd>
 
@@ -105,6 +106,14 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @return The grid portal link
   std::unique_ptr<GridPortalLink> makeGrid(const GeometryContext& gctx,
                                            const Logger& logger) const;
+
+  using PortalLinkRange = detail::TransformRange<
+      detail::ConstDereference,
+      const boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>>;
+
+  /// Get the range of children
+  /// @return The range of children
+  PortalLinkRange links() const;
 
  private:
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>
