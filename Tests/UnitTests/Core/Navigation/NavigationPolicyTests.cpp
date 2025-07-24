@@ -22,6 +22,7 @@
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -763,8 +764,11 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
 
   // CylinderNavigationPolicy constructor should throw std::invalid_argument
   // for volumes with zero inner radius
-  BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
-                    std::invalid_argument);
+  {
+    Acts::Logging::ScopedFailureThreshold log{Logging::FATAL};
+    BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
