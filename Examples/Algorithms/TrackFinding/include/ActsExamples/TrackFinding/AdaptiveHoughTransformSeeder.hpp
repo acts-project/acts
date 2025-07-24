@@ -33,6 +33,7 @@
 #include <memory>
 #include <numbers>
 #include <string>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -106,7 +107,9 @@ class AccumulatorSection {
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
   template <typename F>
-  inline bool isLineInside(F function) const {
+  inline bool isLineInside(F function) const &
+    requires std::invocable<F, float>
+  {
     const float yB = function(m_xBegin);
     const float yE = function(m_xBegin + m_xSize);
     return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
@@ -121,7 +124,9 @@ class AccumulatorSection {
   /// sections
   /// @return true if the lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(F line1, F line2) const {
+  inline bool isCrossingInside(F line1, F line2) const &
+    requires std::invocable<F, float>
+  {
     // this microalgorithm idea is illustrated below
     // section left section right
     // example with crossing
@@ -150,12 +155,6 @@ class AccumulatorSection {
     float right_mid = 0.5f * (line1_right_y + line2_right_y);
     return (line1_left_y - left_mid) * (line1_right_y - right_mid) < 0;
   }
-
-  // counter clock wise distance from upper left corner
-  // a and b are line parameters y = ax + b
-  float distCounterClockwise(float a, float b) const;
-  // anti-counter clock wise distance from upper left corner
-  float distACC(float a, float b) const;
 
   // sizes
   float xSize() const { return m_xSize; }
@@ -256,7 +255,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   };
 
   template <typename measurement_t = PreprocessedMeasurement>
-  struct AHTExplorationOptions {
+  struct ExplorationOptions {
     float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
                                // value the sections are not split
     float yMinBinSize = 1.0f;  // minimum bin size in y direction, beyond that
@@ -265,7 +264,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                            // Decision is made
     float expandY = 1.1f;  // expand in y direaction (default by 10%) if Expand
                            // Decision is made
-    using LineParamFunctor = std::function<float(const M &, float arg)>;
+    using LineParamFunctor =
+        std::function<float(const measurement_t &, float arg)>;
     LineParamFunctor lineParamFunctor;  // pair of functions needed to obtain
                                         // linear function ax+b parameters,
                                         // first for a, second for b
@@ -290,14 +290,15 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   };
 
   /// @brief  remove indices pointing to measurements that do not cross this section
-  /// @tparam M - measurements type
+  /// @tparam measurement_t - measurements type
   /// @param section - section to update
   /// @param measurements - measurements vector
   /// @param lineFunctor - line definition
-  template <typename M>
-  void updateSection(
-      AccumulatorSection &section, const std::vector<M> &measurements,
-      const AHTExplorationOptions<M>::LineParamFunctor &lineFunctor) const {
+  template <typename measurement_t>
+  void updateSection(AccumulatorSection &section,
+                     const std::vector<measurement_t> &measurements,
+                     const ExplorationOptions<measurement_t>::LineParamFunctor
+                         &lineFunctor) const {
     std::erase_if(section.indices(), [lineFunctor, &measurements,
                                       &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
@@ -308,9 +309,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   template <typename M>
   void exploreParametersSpace(std::deque<AccumulatorSection> &sectionsStack,
                               const std::vector<M> &measurements,
-                              const AHTExplorationOptions<M> &opt,
+                              const ExplorationOptions<M> &opt,
                               std::deque<AccumulatorSection> &results) const {
-    using Decision = AHTExplorationOptions<M>::Decision;
+    using Decision = ExplorationOptions<M>::Decision;
     while (!sectionsStack.empty()) {
       ACTS_VERBOSE("Stack size " << sectionsStack.size());
       AccumulatorSection &thisSection = sectionsStack.back();
@@ -448,7 +449,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =
-      AHTExplorationOptions<PreprocessedMeasurement>::LineParamFunctor;
+      ExplorationOptions<PreprocessedMeasurement>::LineParamFunctor;
 
   LineParamFunctor m_qOverPtPhiLineParams =
       [this](const PreprocessedMeasurement &m, float arg) {

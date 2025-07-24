@@ -103,17 +103,6 @@ AccumulatorSection AccumulatorSection::right(float xFraction) const {
   return bottomRight(xFraction, 1.0);
 }
 
-float AccumulatorSection::distCC(float a, float b) const {
-  const float y = std::fmaf(a, (m_xBegin + m_xSize), b);
-  const float yEnd = m_yBegin + m_ySize;
-  return y <= yEnd ? (m_xSize + (yEnd - y)) : ((yEnd - b) / a - m_xBegin);
-}
-float AccumulatorSection::distACC(float a, float b) const {
-  const float y = std::fmaf(a, m_xBegin, b);
-  return y <= m_yBegin ? (m_ySize + (m_yBegin - b) / a - m_xBegin)
-                       : (m_yBegin + m_ySize - y);
-}
-
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
     ActsExamples::AdaptiveHoughTransformSeeder::Config cfg,
     Acts::Logging::Level lvl)
@@ -282,7 +271,7 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
   for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
     const auto startPhi = static_cast<float>(
         wedgeWidth * static_cast<float>(phiIndex) - std::numbers::pi);
-    stack.emplace_back(1.1f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
+    stack.emplace_back(1.2f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
                        -config().qOverPtMin);
     stack.back().indices().resize(measurements.size());
     std::iota(std::begin(stack.back().indices()),
@@ -314,14 +303,14 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
     int discardedByCrossingCut{};
   };
   std::map<int, Stats> sStat;
-  AHTExplorationOptions opt;
+  ExplorationOptions opt;
   opt.xMinBinSize = config().phiMinBinSize;
   opt.yMinBinSize = config().qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
   opt.decisionFunctor = [&sStat, &cfg = m_cfg, &opt, this](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &mes) {
-    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
+    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
     if (section.divisionLevel() <= 8) {
       return Drill;
     }
@@ -372,14 +361,14 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
     std::deque<AccumulatorSection> &input,
     std::deque<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
-  AHTExplorationOptions opt;
+  ExplorationOptions opt;
   opt.xMinBinSize = config().zMinBinSize;
   opt.yMinBinSize = config().cotThetaMinBinSize;
   opt.lineParamFunctor = m_zCotThetaLineParams;
   opt.decisionFunctor = [&cfg = m_cfg](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
+    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
 
     if (section.count() < cfg.threshold) {
       return Discard;
@@ -406,14 +395,14 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
     std::deque<AccumulatorSection> &input,
     std::deque<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
-  AHTExplorationOptions opt;
+  ExplorationOptions opt;
   opt.xMinBinSize = 101.0f * Acts::UnitConstants::mm;
   opt.yMinBinSize = 10.1f;
   opt.lineParamFunctor = m_zCotThetaLineParams;
   opt.decisionFunctor = [&cfg = m_cfg, &opt](
                             const AccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    using enum AHTExplorationOptions<PreprocessedMeasurement>::Decision;
+    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
     if (section.count() < cfg.threshold) {
       return Discard;
     }
