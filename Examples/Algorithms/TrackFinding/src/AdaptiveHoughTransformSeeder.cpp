@@ -140,12 +140,12 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
 // plain vector of floats. These numbers need to be accessed consistently, thus
 // this indices.
 namespace {
-const unsigned phiSplitMinIndex = 0;
-const unsigned phiSplitWidthIndex = 1;
-const unsigned zSplitMinIndex = 2;
-const unsigned zSplitWidthIndex = 3;
-const unsigned cotThetaSplitMinIndex = 4;
-const unsigned cotThetaSplitWidthIndex = 5;
+constexpr unsigned int phiSplitMinIndex = 0;
+constexpr unsigned int phiSplitWidthIndex = 1;
+constexpr unsigned int zSplitMinIndex = 2;
+constexpr unsigned int zSplitWidthIndex = 3;
+constexpr unsigned int cotThetaSplitMinIndex = 4;
+constexpr unsigned int cotThetaSplitWidthIndex = 5;
 }  // namespace
 
 ProcessCode AdaptiveHoughTransformSeeder::execute(
