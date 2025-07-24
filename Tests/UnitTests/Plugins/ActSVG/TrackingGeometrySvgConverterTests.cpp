@@ -15,6 +15,7 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <fstream>
 #include <memory>
@@ -60,16 +61,27 @@ BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvg) {
 
 BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvgGen3) {
   Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext, true);
+  Acts::Test::TemporaryDirectory tmp{};
+
   auto tGeometry = cGeometry();
 
   auto objects = Acts::Svg::drawTrackingGeometry(tgContext, *tGeometry,
                                                  actsvg::views::x_y{});
 
-  Acts::Svg::toFile({objects}, "utest_geometry_gen3_xy.svg");
+  Acts::Svg::toFile(objects, tmp.path() / "utest_geometry_gen3_xy.svg");
 
   objects = Acts::Svg::drawTrackingGeometry(tgContext, *tGeometry,
                                             actsvg::views::z_r{}, true, true);
-  Acts::Svg::toFile({objects}, "utest_geometry_gen3_zr.svg");
+  Acts::Svg::toFile(objects, tmp.path() / "utest_geometry_gen3_zr.svg");
+
+  objects = Acts::Svg::drawSurfaceArrays(tgContext, *tGeometry);
+
+  for (const auto& obj : objects) {
+    Acts::Svg::toFile(
+        {obj},
+        tmp.path() /
+            std::format("utest_geometry_gen3_surface_arrays_{}.svg", obj._id));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
