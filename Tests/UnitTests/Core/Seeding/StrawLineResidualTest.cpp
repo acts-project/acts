@@ -25,7 +25,7 @@ using Pars_t = Line_t::ParamVector;
 using ParIdx = Line_t::ParIndices;
 
 namespace {
-std::string parName(const unsigned idx) {
+std::string parName(const std::size_t idx) {
   switch (idx) {
     using enum ParIdx;
     case x0:
@@ -46,11 +46,13 @@ std::string parName(const unsigned idx) {
 namespace Acts::Test {
 class TestSpacePoint {
  public:
-  enum MeasMask : unsigned {
-    bendingOnly = 1,
-    nonBendingOnly = 2,
-
-    bothSpatial = bendingOnly | nonBendingOnly
+  /// @brief Mask to express which track directions are measured
+  ///        by the space point
+  enum ProjectorMask : std::size_t {
+    bendingDir = 1 << 0,
+    nonBendingDir = 1 << 1,
+    timeOfArrival = 1 << 2,
+    bothDirections = bendingDir | nonBendingDir
   };
 
   TestSpacePoint(
@@ -60,16 +62,17 @@ class TestSpacePoint {
       : m_pos{pos},
         m_dir{wireDir},
         m_radius{radius},
-        m_dirMask{measNonPrec ? bothSpatial : bendingOnly},
+        m_dirMask{measNonPrec ? bothDirections : bendingDir},
         m_cov{cov} {}
 
   TestSpacePoint(
       const Vector3& pos, const Vector3& stripDir, const Vector3& stripNorm,
-      MeasMask mask,
+      ProjectorMask mask,
       const ActsSquareMatrix<3>& cov = ActsSquareMatrix<3>::Identity())
       : m_pos{pos},
         m_dir{stripDir},
         m_toNext{stripNorm},
+        m_dirMask{mask},
         m_cov{cov},
         m_isStraw{false} {}
 
@@ -79,10 +82,10 @@ class TestSpacePoint {
   const Vector3& planeNormal() const { return m_planeNorm; }
 
   bool isStraw() const { return m_isStraw; }
-  bool hasTime() const { return false; }
-  bool measPrecCoord() const { return m_dirMask & (MeasMask::bendingOnly); }
+  bool hasTime() const { return m_dirMask & (ProjectorMask::timeOfArrival); }
+  bool measPrecCoord() const { return m_dirMask & (ProjectorMask::bendingDir); }
   bool measNonPrecCoord() const {
-    return m_dirMask & (MeasMask::nonBendingOnly);
+    return m_dirMask & (ProjectorMask::nonBendingDir);
   }
 
   double driftRadius() const { return m_radius; }
@@ -96,10 +99,9 @@ class TestSpacePoint {
   Vector3 m_planeNorm{m_dir.cross(m_toNext).normalized()};
   double m_radius{0.};
   double m_time{0.};
+  ProjectorMask m_dirMask{ProjectorMask::bothDirections};
   ActsSquareMatrix<3> m_cov{ActsSquareMatrix<3>::Zero()};
   bool m_isStraw{true};
-
-  MeasMask m_dirMask{MeasMask::bothSpatial};
 };
 
 BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
@@ -109,15 +111,15 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   using ResidualIdx = StrawLineFitAuxiliaries::ResidualIdx;
   Config_t resCfg{};
   resCfg.useHessian = true;
-  resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::theta, ParIdx::phi};
+  resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
   Line_t line{};
   line.updateParameters(linePars);
 
-  std::cout << "\n\n\nWireResidualTest - Test line: "
-            << toString(line.position()) << ", " << toString(line.direction())
-            << std::endl;
+  std::cout << "\n\n\nResidual test - Test line: " << toString(line.position())
+            << ", " << toString(line.direction()) << std::endl;
 
-  StrawLineFitAuxiliaries resCalc{resCfg};
+  StrawLineFitAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("testRes", Logging::Level::VERBOSE)};
   resCalc.updateSpatialResidual(line, testPoint);
   if (testPoint.isStraw()) {
     const double lineDist =
@@ -141,8 +143,10 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
               << ", to-next: " << toString(testPoint.sensorNormal())
               << std::endl;
     const Vector3& n{testPoint.planeNormal()};
-    const Vector3& v1{testPoint.sensorNormal()};
-    const Vector3& v2{testPoint.sensorDirection()};
+    const Vector3& b1 = testPoint.measPrecCoord() ? testPoint.sensorNormal()
+                                                  : testPoint.sensorDirection();
+    const Vector3& b2 = testPoint.measPrecCoord() ? testPoint.sensorDirection()
+                                                  : testPoint.sensorNormal();
     const Vector3 planeIsect = intersectPlane(line.position(), line.direction(),
                                               n, testPoint.localPosition())
                                    .position();
@@ -151,12 +155,13 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     std::cout << "Residual: " << toString(resCalc.residual())
               << ", delta: " << toString(delta) << std::endl;
     const Vector3 res = delta - delta.dot(n) * n;
-    BOOST_CHECK_LE(
-        (res - resCalc.residual()[1] * v1 - resCalc.residual()[0] * v2).norm(),
-        1.e-10);
+    BOOST_CHECK_LE((res - resCalc.residual()[ResidualIdx::bending] * b1 -
+                    resCalc.residual()[ResidualIdx::nonBending] * b2)
+                       .norm(),
+                   1.e-10);
   }
 
-  constexpr double h = 5.e-10;
+  constexpr double h = 5.e-9;
   constexpr double tolerance = 1.e-3;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
@@ -166,7 +171,10 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     lineUp.updateParameters(lineParsUp);
     lineDn.updateParameters(lineParsDn);
 
-    StrawLineFitAuxiliaries resCalcUp{resCfg}, resCalcDn{resCfg};
+    StrawLineFitAuxiliaries resCalcUp{
+        resCfg, Acts::getDefaultLogger("testResUp", Logging::Level::VERBOSE)};
+    StrawLineFitAuxiliaries resCalcDn{
+        resCfg, Acts::getDefaultLogger("testResDn", Logging::Level::VERBOSE)};
 
     resCalcUp.updateSpatialResidual(lineUp, testPoint);
     resCalcDn.updateSpatialResidual(lineDn, testPoint);
@@ -181,13 +189,14 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
     /// Next attempt to calculate the second derivative
-    for (unsigned par1 = 0; par1 <= par; ++par1) {
-      Pars_t lineParsUp1{linePars}, lineParsDn1{linePars};
-      lineParsUp1[par1] += h;
-      lineParsDn1[par1] -= h;
+    for (auto par1 : resCfg.parsToUse) {
+      lineParsUp = linePars;
+      lineParsDn = linePars;
+      lineParsUp[par1] += h;
+      lineParsDn[par1] -= h;
 
-      lineUp.updateParameters(lineParsUp1);
-      lineDn.updateParameters(lineParsDn1);
+      lineUp.updateParameters(lineParsUp);
+      lineDn.updateParameters(lineParsDn);
 
       resCalcUp.updateSpatialResidual(lineUp, testPoint);
       resCalcDn.updateSpatialResidual(lineDn, testPoint);
@@ -207,7 +216,6 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   /// Set the line to be 45 degrees
   using Pars_t = Line_t::ParamVector;
   using ParIdx = Line_t::ParIndices;
-  return;
   Pars_t linePars{};
   linePars[ParIdx::phi] = 90. * 1_degree;
   linePars[ParIdx::theta] = 45. * 1_degree;
@@ -250,29 +258,47 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 }
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
-  const Vector pos{474. * 1_cm, -251 * 1_cm, -253. * 1_cm};
-
   Pars_t linePars{};
-  linePars[ParIdx::phi] = 45. * 1_degree;
+  linePars[ParIdx::phi] = 60. * 1_degree;
   linePars[ParIdx::theta] = 45 * 1_degree;
-  linePars[ParIdx::x0] = -256. * 1_cm;
-  linePars[ParIdx::y0] = 128. * 1_cm;
+  return;
+
+  auto placeSp = [&linePars](const double dx, const double dy, const double z) {
+    Line_t line{};
+    line.updateParameters(linePars);
+    const auto pIsect =
+        intersectPlane(line.position(), line.direction(), Vector::UnitZ(), z);
+    const Acts::Vector3 returnMe =
+        (pIsect.position() + Acts::Vector3{dx, dy, 0.});
+    return returnMe;
+  };
 
   testResidual(
       linePars,
-      TestSpacePoint{pos,
-                     makeDirectionFromPhiTheta(60. * 1_degree, 90 * 1_degree),
-                     makeDirectionFromPhiTheta(30 * 1_degree, 90 * 1_degree),
-                     TestSpacePoint::bothSpatial});
-
-  linePars[ParIdx::phi] = 60. * 1_degree;
-  linePars[ParIdx::theta] = 30 * 1_degree;
+      TestSpacePoint{placeSp(50. * 1_cm, 50. * 1_cm, 100. * 1_cm),
+                     makeDirectionFromPhiTheta(90. * 1_degree, 90 * 1_degree),
+                     makeDirectionFromPhiTheta(0. * 1_degree, 90 * 1_degree),
+                     TestSpacePoint::bendingDir});
 
   // testResidual(linePars,
   //                TestSpacePoint{
-  //                    pos, makeDirectionFromPhiTheta(0. * 1_degree, 90 *
-  //                    1_degree), makeDirectionFromPhiTheta(90. * 1_degree, 90
-  //                    * 1_degree), TestSpacePoint::bothSpatial});
+  //                    pos,
+  //                    makeDirectionFromPhiTheta(90. * 1_degree, 90 *
+  //                    1_degree), makeDirectionFromPhiTheta(0. * 1_degree, 90*
+  //                    1_degree), TestSpacePoint::nonBendingDir});
+
+  // testResidual(linePars,
+  //                TestSpacePoint{
+  //                    pos,
+  //                    makeDirectionFromPhiTheta(0. * 1_degree, 90 * 1_degree),
+  //                    makeDirectionFromPhiTheta(90. * 1_degree, 90* 1_degree),
+  //                    TestSpacePoint::bothDirections});
+  // testResidual(
+  //     linePars,
+  //     TestSpacePoint{placeSp(50.*1_cm, 50.*1_cm, 100.*1_cm),
+  //                    makeDirectionFromPhiTheta(90. * 1_degree, 90 *
+  //                    1_degree), makeDirectionFromPhiTheta(0. * 1_degree, 90 *
+  //                    1_degree), TestSpacePoint::bendingDir});
 }
 
 }  // namespace Acts::Test

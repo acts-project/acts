@@ -118,7 +118,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       } else if (param1 > param) {
         break;
       }
-      ACTS_VERBOSE("Calculate Hessian for parameters "
+      ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
                    << parName(param) << ", " << parName(param1) << ".");
       /// Second derivative w.r.t to the position parameters is zero
       if (!(isDirectionParam(param) || isDirectionParam(param1))) {
@@ -130,14 +130,16 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
         const double partialSqDist =
             m_hessianProjDir[resIdx].cross(wireDir).dot(hitMinSeg);
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
-        continue;
+      } else {
+        /// Angular & Spatial mixed terms
+        const auto angParam = isDirectionParam(param) ? param : param1;
+        const auto posParam = isDirectionParam(param) ? param1 : param;
+        m_hessian[resIdx] = -m_gradProjDir[angParam].cross(wireDir).dot(
+                                line.gradient(posParam)) *
+                            Vector3::Unit(bending);
       }
-      /// Angular & Spatial mixed terms
-      const auto angParam = isDirectionParam(param) ? param : param1;
-      const auto posParam = isDirectionParam(param) ? param1 : param;
-      m_hessian[resIdx] =
-          -m_gradProjDir[angParam].cross(wireDir).dot(line.gradient(posParam)) *
-          Vector3::Unit(bending);
+      ACTS_VERBOSE("updateStrawResidual() - Hessian of the residual is "
+                   << m_hessian[resIdx][bending]);
     }
   }
   return true;
@@ -196,22 +198,27 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
       }
       const std::size_t idx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       const Vector& lHessian = line.hessian(param, param1);
-
       const double partSqLineProject = lHessian.dot(wireDir);
 
+      auto calcMixedTerms = [this](const std::size_t p1, const std::size_t p2) {
+        return m_projDirLenPartial[p1] * m_wireProject * m_gradProjDir[p2] +
+               0.5 * m_projDirLenPartial[p1] * m_projDirLenPartial[p2] *
+                   m_invProjDirLenSq * m_projDir;
+      };
+      auto calcMixedHessian = [&]() -> Vector {
+        if (param1 != param) {
+          return calcMixedTerms(param1, param) + calcMixedTerms(param, param1);
+        }
+        return 2. * calcMixedTerms(param, param1);
+      };
       m_hessianProjDir[idx] =
           (lHessian - partSqLineProject * wireDir) * m_invProjDirLen +
           ///
-          (m_projDirLenPartial[param1] * m_wireProject) * m_invProjDirLenSq *
-              m_gradProjDir[param] +
-          ///
-          (m_projDirLenPartial[param] * m_wireProject) * m_invProjDirLenSq *
-              m_gradProjDir[param1] +
-          ///
-          (partSqLineProject * m_wireProject) * m_invProjDirLenSq * m_projDir +
-          ///
-          (m_projDirLenPartial[param1] * m_projDirLenPartial[param]) *
-              square(m_invProjDirLenSq) * m_projDir;
+          m_invProjDirLenSq * (calcMixedHessian() +
+                               (partSqLineProject * m_wireProject) * m_projDir);
+      ACTS_VERBOSE("updateStrawAuxiliaries() - Hessian w.r.t. "
+                   << parName(param1) << ", " << parName(param) << " is "
+                   << toString(m_hessianProjDir[idx]));
     }
   }
   return true;
@@ -223,7 +230,8 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
   m_residual[nonBending] =
       m_invProjDirLenSq * (hitMinSeg.dot(line.direction()) * m_wireProject -
                            hitMinSeg.dot(wireDir));
-  ACTS_VERBOSE("Residual along the straw is " << m_residual[nonBending]);
+  ACTS_VERBOSE("updateAlongTheStraw() - Residual is "
+               << m_residual[nonBending]);
 
   for (const auto param : m_cfg.parsToUse) {
     if (isDirectionParam(param)) {
@@ -240,8 +248,8 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
             line.gradient(param).dot(wireDir)) *
           m_invProjDirLenSq;
     }
-    ACTS_VERBOSE("First derivative w.r.t " << parName(param) << "is "
-                                           << m_gradient[param][nonBending]);
+    ACTS_VERBOSE("updateAlongTheStraw() - First derivative w.r.t "
+                 << parName(param) << " is " << m_gradient[param][nonBending]);
   }
   if (!m_cfg.useHessian) {
     return;
@@ -278,26 +286,31 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
 
         const double projHess = line.hessian(param1, param).dot(wireDir);
         m_hessian[hessIdx][nonBending] =
-            calcMixedHessian(param, param1) + calcMixedHessian(param1, param) +
+            (param != param1 ? calcMixedHessian(param, param1) +
+                                   calcMixedHessian(param1, param)
+                             : 2. * calcMixedHessian(param1, param)) +
             (hitMinSeg.dot(line.hessian(param, param1)) * m_wireProject +
              hitMinSeg.dot(line.direction()) * projHess +
              2. * m_residual[nonBending] * m_wireProject * projHess) *
                 m_invProjDirLenSq;
-        continue;
+      } else {
+        /// Mixed positional and angular derivative
+        const auto angParam = isDirectionParam(param) ? param : param1;
+        const auto posParam = isDirectionParam(param) ? param1 : param;
+        m_hessian[hessIdx][nonBending] =
+            (-line.gradient(posParam).dot(line.gradient(angParam)) *
+                 m_wireProject -
+             ///
+             line.gradient(posParam).dot(line.direction()) *
+                 m_projDirLenPartial[angParam] +
+             ///
+             2. * m_gradient[posParam][nonBending] * m_wireProject *
+                 m_projDirLenPartial[angParam]) *
+            m_invProjDirLenSq;
       }
-      /// Mixed positional and angular derivative
-      const auto angParam = isDirectionParam(param) ? param : param1;
-      const auto posParam = isDirectionParam(param) ? param1 : param;
-      m_hessian[hessIdx][nonBending] =
-          (-line.gradient(posParam).dot(line.gradient(angParam)) *
-               m_wireProject -
-           ///
-           line.gradient(posParam).dot(line.direction()) *
-               m_projDirLenPartial[angParam] +
-           ///
-           2. * m_gradient[posParam][nonBending] * m_wireProject *
-               m_projDirLenPartial[angParam]) *
-          m_invProjDirLenSq;
+      ACTS_VERBOSE("updateAlongTheStraw() - Second derivative w.r.t. "
+                   << parName(param) << ", " << parName(param1) << " is. "
+                   << m_hessian[hessIdx][nonBending]);
     }
   }
 }
@@ -337,19 +350,26 @@ void StrawLineFitAuxiliaries::updateStripResidual(const Line_t& line,
     reset();
     return;
   }
-  const double invDist = 1. / (1. - square(b1DotB2));
   /// Linear independent vectors
   /// Normal vector is indeed normal onto the plane spaned by these two vectors
   assert(Acts::abs(b1.dot(normal)) < tolerance);
   assert(Acts::abs(b2.dot(normal)) < tolerance);
+
+  if (Acts::abs(b1DotB2) > tolerance) {
+    const double invDist = 1. / (1. - square(b1DotB2));
+    m_stereoTrf(bending, bending) = m_stereoTrf(nonBending, nonBending) =
+        invDist;
+    m_stereoTrf(bending, nonBending) = m_stereoTrf(nonBending, bending) =
+        b1DotB2 * invDist;
+  }
 
   ACTS_VERBOSE("strip orientation " << toString(b1) << " |" << b1.norm() << "|"
                                     << ", to next: " << toString(b2) << " |"
                                     << b2.norm() << "|"
                                     << ", stereo angle: " << angle(b1, b2));
 
-  auto assignResidual = [this, &b1, &b2, &b1DotB2, &invDist](
-                            const Vector& calcDistance, Vector& residual) {
+  auto assignResidual = [this, &b1, &b2, &b1DotB2](const Vector& calcDistance,
+                                                   Vector& residual) {
     /// A = lambda B1 + kappa B2
     ///                <A, B2> - <A,B1><B1,B2>
     ///   --> kappa = --------------------------
@@ -357,93 +377,91 @@ void StrawLineFitAuxiliaries::updateStripResidual(const Line_t& line,
     ///                <A, B1> - <A,B2><B1,B2>
     ///   --> lambda = --------------------------
     ///                    1 - <B1,B2>^{2}
-    const double Ab1 = b1.dot(calcDistance);
-    const double Ab2 = b2.dot(calcDistance);
-
+    residual[bending] = b1.dot(calcDistance);
+    residual[nonBending] = b2.dot(calcDistance);
     if (std::abs(b1DotB2) > tolerance) {
-      residual[bending] = (Ab1 - Ab2 * b1DotB2) * invDist;
-      residual[nonBending] = (Ab2 - Ab1 * b1DotB2) * invDist;
-    } else {
-      residual[bending] = Ab1;
-      residual[nonBending] = Ab2;
+      residual.block<2, 1>(0, 0) = m_stereoTrf * residual.block<2, 1>(0, 0);
     }
-    const Vector duPenner = residual[bending] * b1 + residual[nonBending] * b2;
-    ACTS_VERBOSE("Distance: " << toString(calcDistance)
-                              << ", resAlong: " << residual[nonBending]
-                              << ", resToNext: " << residual[bending] << " --> "
-                              << toString(duPenner));
+    ACTS_VERBOSE("Distance: " << toString(calcDistance) << " -> residual: "
+                              << toString(residual) << " --> closure test:"
+                              << toString(residual[bending] * b1 +
+                                          residual[nonBending] * b2));
   };
   /// Update the residual accordingly
   assignResidual(line.position() + travelledDist * line.direction() - stripPos,
                  m_residual);
   for (const std::size_t fitPar : m_cfg.parsToUse) {
     ACTS_VERBOSE("stripResidual() - Calculate partial derivative w.r.t "
-                 << fitPar);
+                 << parName(fitPar));
     switch (fitPar) {
       case FitParIndices::phi:
       case FitParIndices::theta: {
         const double partialDist =
             -travelledDist / normDot * normal.dot(line.gradient(fitPar));
-        assignResidual(travelledDist * line.gradient(fitPar) +
-                           partialDist * line.direction(),
-                       m_gradient[fitPar]);
+        const Vector gradCmp = travelledDist * line.gradient(fitPar) +
+                               partialDist * line.direction();
+        assignResidual(gradCmp, m_gradient[fitPar]);
         break;
       }
       case FitParIndices::y0:
       case FitParIndices::x0: {
-        assignResidual(
+        const Vector gradCmp =
             line.gradient(fitPar) -
-                line.gradient(fitPar).dot(normal) / normDot * line.direction(),
-            m_gradient[fitPar]);
+            line.gradient(fitPar).dot(normal) / normDot * line.direction();
+        assignResidual(gradCmp, m_gradient[fitPar]);
         break;
       }
-      default: {
+      default:
+        /// Don't calculate anything for time
         break;
-      }
     }
   }
 
   if (!m_cfg.useHessian) {
     return;
   }
-
   for (const auto param : m_cfg.parsToUse) {
     for (const auto param1 : m_cfg.parsToUse) {
+      /// Avoid double counting
       if (param1 > param) {
         break;
       }
+      /// At least one parameter needs to be a directional one
       if (!isDirectionParam(param) || !isDirectionParam(param1)) {
         continue;
       }
       ACTS_VERBOSE(
           "stripResidual() - Calculate second partial derivative w.r.t "
           << parName(param) << ", " << parName(param1));
+
       const int resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
-        assignResidual(
-            travelledDist * line.hessian(param, param1) -
-                ///
-                travelledDist * (normal.dot(line.hessian(param, param1))) /
-                    normDot * line.direction() -
-                ///
-                normal.dot(line.gradient(param1)) / normDot *
-                    m_gradient[param] -
-                ///
-                normal.dot(line.gradient(param)) / normDot * m_gradient[param1],
+        auto calcMixedTerms = [&line, &normal, &normDot, this](
+                                  const std::size_t p1, const std::size_t p2) {
+          return -normal.dot(line.gradient(p1)) / normDot * m_gradient[p2];
+        };
+        const Vector hessianCmp =
+            travelledDist *
+                (line.hessian(param, param1) -
+                 ///
+                 (normal.dot(line.hessian(param, param1)) / normDot) *
+                     line.direction()) +
             ///
-            ///
-            m_hessian[resIdx]);
-        continue;
-      }
-      const auto angParam = isDirectionParam(param) ? param : param1;
-      const auto posParam = isDirectionParam(param) ? param1 : param;
+            calcMixedTerms(param1, param) + calcMixedTerms(param, param1);
+        assignResidual(hessianCmp, m_hessian[resIdx]);
+      } else {
+        const auto angParam = isDirectionParam(param) ? param : param1;
+        const auto posParam = isDirectionParam(param) ? param1 : param;
 
-      const double gradientDisplace = normal.dot(line.gradient(param1));
-      assignResidual(
-          gradientDisplace * (normal.dot(line.gradient(angParam)) /
-                                  square(normDot) * line.direction() -
-                              line.gradient(posParam) / normDot),
-          m_hessian[resIdx]);
+        const double gradientDisplace = normal.dot(line.gradient(param1));
+        const Vector hessianCmp =
+            gradientDisplace * (normal.dot(line.gradient(angParam)) /
+                                    square(normDot) * line.direction() -
+                                line.gradient(posParam) / normDot);
+        assignResidual(hessianCmp, m_hessian[resIdx]);
+      }
+      m_hessian[resIdx].block<2, 1>(0, 0) =
+          m_stereoTrf * m_hessian[resIdx].block<2, 1>(0, 0);
     }
   }
 }

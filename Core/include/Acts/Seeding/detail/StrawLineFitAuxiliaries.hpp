@@ -18,13 +18,30 @@
 #include "Acts/EventData/StationSpacePoint.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/LineWithPartials.hpp"
+#include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
 namespace Acts::detail {
-
+/// @brief Helper class to calculate the residual between a straight line and
+///        a StationSpacePoint measurement as well as the partial derivatives.
+///        The residual is expressed as a 3D vector, where first two components
+///        describe the spatial residual w.r.t. the precision & non-precision
+///        direction, and the last one expresses the residual between the
+///        parametrized time of arrival of the track and the measurement's
+///        recorded time.
+///
+///        For straw type measurements, the precision residual is calculated as
+///        the difference between the signed line distance between straw wire &
+///        line, and the signed drift radius where the sign simply encodes the
+///        left/right amibiguity. If the measurement additionally carries
+///        information about the passage along the wire, the non-precision
+///        residual is then defined to be the distance along the wire.
+///
+///        For strip type measurements, the residual is the distance in the
+///        strip-readout plane between the point along the line that intersects
+///        the plane and the measurement.
 class StrawLineFitAuxiliaries {
  public:
-  using Line_t = LineWithPartials<double>;
+  using Line_t = Line3DWithPartialDerivatives<double>;
   using Vector = Line_t::Vector;
   enum FitParIndices : std::size_t {
     x0 = Line_t::ParIndices::x0,
@@ -34,23 +51,35 @@ class StrawLineFitAuxiliaries {
     t0 = 4,  // time offset
     nPars = 5
   };
+
+  enum ResidualIdx { nonBending = 0, bending = 1, time = 2 };
+
   struct Config {
+    /// @brief Flag toggling whether the hessian of the residual shall be calculated
     bool useHessian{false};
+    /// @brief Flag toggling whether the along the wire component of straws shall be calculated
+    ///        if provided by the straw measurement.
+    bool calcAlongStraw{true};
     std::vector<std::size_t> parsToUse{FitParIndices::x0, FitParIndices::y0,
                                        FitParIndices::theta,
                                        FitParIndices::phi};
   };
 
-  enum ResidualIdx { nonBending = 0, bending = 1, time = 2 };
-
   StrawLineFitAuxiliaries(const Config& cfg,
                           std::unique_ptr<const Logger> logger =
                               getDefaultLogger("StrawLineFitAuxiliaries",
-                                               Logging::Level::VERBOSE));
+                                               Logging::Level::INFO));
 
-  /// @brief Updates the
+  /// @brief Updates the spatial residual components between the line and the passed
+  ///        measurement. The result is cached internally and can be later
+  ///        fetched by the residual(), gradient() and hessian() methods. If the
+  ///        residual calculation fails due to parallel line & measurement, all
+  ///        components are set to zero.
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
   template <StationSpacePoint Point_t>
-  void updateSpatialResidual(const Line_t& line, const Point_t& strawMeas);
+  void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
+
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
@@ -71,6 +100,10 @@ class StrawLineFitAuxiliaries {
   static constexpr bool isPositionParam(const std::size_t param) {
     return param == FitParIndices::x0 || param == FitParIndices::y0;
   }
+  /// @brief Calculate whether the track passed on the left (-1) or the right (1) side
+  ///        of the straw wire. Returns 0 for strips
+  /// @param line: Reference to the
+  /// @param strawSp: Straw measurement of interest
   template <StationSpacePoint Point_t>
   static int strawSign(const Line_t& line, const Point_t& strawSp);
 
@@ -155,6 +188,8 @@ class StrawLineFitAuxiliaries {
 
   std::array<Vector, sumUpToN(s_nLinePars)> m_hessianProjDir{
       filledArray<Vector, sumUpToN(s_nLinePars)>(Vector::Zero())};
+  /// Transform matrix to treat stereo angles amongst the strips
+  ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
 };
 
 }  // namespace Acts::detail
