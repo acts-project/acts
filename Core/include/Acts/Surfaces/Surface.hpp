@@ -255,7 +255,7 @@ class Surface : public virtual GeometryObject,
   /// @param lposition The local position to check
   /// @param metric The metric to use for the calculation
   /// @return The closest point on the boundary of the surface
-  virtual Vector2 closestPointOnBounds(
+  virtual Vector2 closestPointOnBoundary(
       const Vector2& lposition,
       const std::optional<SquareMatrix2>& metric) const;
 
@@ -263,7 +263,7 @@ class Surface : public virtual GeometryObject,
   /// in local coordinates.
   /// @param lposition The local position to check
   /// @return The distance to the boundary of the surface
-  virtual double distanceToBounds(const Vector2& lposition) const;
+  virtual double distanceToBoundary(const Vector2& lposition) const;
 
   /// The insideBounds method for local positions
   ///

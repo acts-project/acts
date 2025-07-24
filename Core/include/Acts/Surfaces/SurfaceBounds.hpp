@@ -82,7 +82,7 @@ class SurfaceBounds {
 
   /// Calculates the closest point on the bounds to a given local position
   /// @param lposition is the local position
-  /// @param metric is the metric to be used for the distance calculation
+  /// @param metric to be used for the distance calculation
   /// @return the closest point on the bounds
   virtual Vector2 closestPoint(
       const Vector2& lposition,
