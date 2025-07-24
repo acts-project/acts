@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/DetrayFwd.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
@@ -296,6 +297,12 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
 std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
     const SurfaceLookupFunction& /*surfaceLookup*/,
     const Logger& /*logger*/) const {
+
+std::unique_ptr<DetraySurfaceGrid> CylinderNavigationPolicy::toDetrayPayload(
+    const SurfaceLookupFunction& /*surfaceLookup*/,
+    const Logger& logger) const {
+  ACTS_DEBUG(
+      "CylinderNavigationPolicy does not implement explicit detray conversion");
   return nullptr;
 }
 

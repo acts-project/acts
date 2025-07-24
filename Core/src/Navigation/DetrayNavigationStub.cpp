@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/DetrayExceptions.hpp"
 #include "Acts/Geometry/DetrayFwd.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
@@ -30,6 +31,7 @@ STUB_METHOD(MultiNavigationPolicy)
 STUB_METHOD(SurfaceArrayNavigationPolicy)
 STUB_METHOD(Experimental::MultiLayerNavigationPolicy)
 STUB_METHOD(TryAllNavigationPolicy)
+STUB_METHOD(CylinderNavigationPolicy)
 
 // clang-format on
 
