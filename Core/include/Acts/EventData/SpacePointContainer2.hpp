@@ -13,9 +13,9 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
 #include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/ContainerRange.hpp"
 #include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
@@ -678,68 +678,18 @@ class SpacePointContainer2 {
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
   template <bool read_only>
-  class Range {
+  class Range : public ContainerRange<Range<read_only>, Range<true>,
+                                      SpacePointContainer2, Index, read_only> {
    public:
-    static constexpr bool ReadOnly = read_only;
-    using Container = const_if_t<ReadOnly, SpacePointContainer2>;
-    using RangeIterator = Iterator<read_only>;
+    using Base = ContainerRange<Range<read_only>, Range<true>,
+                                SpacePointContainer2, Index, read_only>;
 
-    constexpr Range(Container &container, const IndexRange &range) noexcept
-        : m_container(&container), m_range(range) {}
-    template <bool other_read_only>
-    explicit constexpr Range(const Range<other_read_only> &other) noexcept
-      requires(ReadOnly && !other_read_only)
-        : m_container(&other.container()), m_range(other.range()) {}
-
-    constexpr Range<true> asConst() const noexcept
-      requires(!ReadOnly)
-    {
-      return {container(), range()};
-    }
-
-    constexpr Container &container() const noexcept { return *m_container; }
-    constexpr const IndexRange &range() const noexcept { return m_range; }
-
-    constexpr std::size_t size() const noexcept {
-      return m_range.second - m_range.first;
-    }
-    constexpr bool empty() const noexcept { return size() == 0; }
-
-    constexpr Range subrange(std::uint32_t offset) const noexcept {
-      assert(offset <= m_range.second - m_range.first &&
-             "Subrange offset out of bounds");
-      return Range(container(), {m_range.first + offset, m_range.second});
-    }
-    constexpr Range subrange(std::uint32_t offset,
-                             std::uint32_t count) const noexcept {
-      assert(offset <= m_range.second - m_range.first &&
-             "Subrange offset out of bounds");
-      assert(count <= m_range.second - m_range.first - offset &&
-             "Subrange count out of bounds");
-      return Range(container(),
-                   {m_range.first + offset, m_range.first + offset + count});
-    }
-
-    constexpr auto front() const noexcept { return container()[m_range.first]; }
-    constexpr auto back() const noexcept {
-      return container()[m_range.second - 1];
-    }
-
-    constexpr RangeIterator begin() const noexcept {
-      return RangeIterator(container(), m_range.first);
-    }
-    constexpr RangeIterator end() const noexcept {
-      return RangeIterator(container(), m_range.second);
-    }
+    using Base::Base;
 
     template <typename... Ts>
     auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-      return m_container->zip(m_range, columns...);
+      return Base::container().zip(Base::range(), columns...);
     }
-
-   private:
-    Container *m_container{};
-    IndexRange m_range{};
   };
   using MutableRange = Range<false>;
   using ConstRange = Range<true>;
