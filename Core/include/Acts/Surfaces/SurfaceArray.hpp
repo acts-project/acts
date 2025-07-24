@@ -139,6 +139,8 @@ class SurfaceArray {
     ///
     /// @param type The surface type, this determines the local to global calculation
     /// @param transform The transform to apply to the surface`
+    /// @param R the radius (interpretation depends on @p type)
+    /// @param Z the z position (interpretation depends on @p type)
     /// @param axes The axes to build the grid data structure.
     /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
