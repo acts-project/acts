@@ -65,7 +65,7 @@ class AccumulatorSection {
   /// The box is recentred
   void expand(float xs, float ys);
 
-  inline unsigned count() const {
+  inline unsigned int count() const {
     return static_cast<unsigned>(m_indices.size());
   }
   inline const std::vector<unsigned> &indices() const { return m_indices; }
