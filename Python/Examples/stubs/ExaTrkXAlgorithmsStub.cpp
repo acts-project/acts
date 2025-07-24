@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-namespace ActsPython {
-struct Context;
-}  // namespace ActsPython
+namespace py {
+class module_;
+}
 
 namespace ActsPython {
-void addExaTrkXTrackFinding(Context& /*ctx*/) {
+void addExaTrkXTrackFinding(py::module_& /*m*/) {
   // dummy function
 }
 }  // namespace ActsPython

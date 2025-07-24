@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-namespace ActsPython {
-struct Context;
+namespace py {
+class module_;
+}
 
-void addFatrasAlgorithms(Context& /*ctx*/) {
+namespace ActsPython {
+void addFatrasAlgorithms(py::module_& /*m*/) {
   // dummy function
 }
 

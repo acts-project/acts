@@ -30,17 +30,17 @@ void addUtilityAlgorithms(py::module_& mex);
 void addInput(py::module_& mex);
 void addOutput(py::module_& mex);
 // Plugin dependent components
-// void addGeoModelDetector(py::module_& mex);
-// void addTGeoDetector(py::module_& mex);
-// void addRootInput(py::module_& mex);
-// void addRootOutput(py::module_& mex);
-// void addJsonInputOutput(py::module_& mex);
-// void addSvgOutput(py::module_& mex);
-// void addFatrasAlgorithms(py::module_& mex);
-// void addTracccAlgorithms(py::module_& mex);
-// void addPythia8Generator(py::module_& mex);
-// void addTruthJetAlgorithms(py::module_& mex);
-// void addOnnxAlgorithms(py::module_& mex);
+void addFatrasAlgorithms(py::module_& mex);
+void addGeoModelDetector(py::module_& mex);
+void addTGeoDetector(py::module_& mex);
+void addRootInput(py::module_& mex);
+void addRootOutput(py::module_& mex);
+void addJsonInputOutput(py::module_& mex);
+void addSvgOutput(py::module_& mex);
+void addTracccAlgorithms(py::module_& mex);
+void addPythia8Generator(py::module_& mex);
+void addTruthJetAlgorithms(py::module_& mex);
+void addOnnxAlgorithms(py::module_& mex);
 
 }  // namespace ActsPython
 
@@ -64,15 +64,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   addInput(mex);
   addOutput(mex);
   // Plugin dependent components
-  // addGeoModelDetector(mex);
-  // addTGeoDetector(mex);
-  // addRootInput(mex);
-  // addRootOutput(mex);
-  // addJsonInputOutput(mex);
-  // addSvgOutput(mex);
-  // addFatrasAlgorithms(mex);
-  // addTracccAlgorithms(mex);
-  // addPythia8Generator(mex);
-  // addTruthJetAlgorithms(mex);
-  // addOnnxAlgorithms(mex);
+  addFatrasAlgorithms(mex);
+  addGeoModelDetector(mex);
+  addTGeoDetector(mex);
+  addRootInput(mex);
+  addRootOutput(mex);
+  addJsonInputOutput(mex);
+  addSvgOutput(mex);
+  addTracccAlgorithms(mex);
+  addPythia8Generator(mex);
+  addTruthJetAlgorithms(mex);
+  addOnnxAlgorithms(mex);
 }

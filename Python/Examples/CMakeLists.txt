@@ -79,68 +79,113 @@ if(ACTS_BUILD_EXAMPLES)
     # Plugin dependent components, attached to the ActsPythonBindings target
 
     # Fatras
-    # if(ACTS_BUILD_PLUGIN_FATRAS)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFatras)
-    # target_sources(ActsPythonBindings PRIVATE src/FatrasAlgorithms.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/FatrasAlgorithmsStub.cpp)
-    # endif()
+    if(ACTS_BUILD_PLUGIN_FATRAS)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFatras)
+        target_sources(ActsPythonBindings PRIVATE src/FatrasAlgorithms.cpp)
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/FatrasAlgorithmsStub.cpp
+        )
+    endif()
 
     # GeoModel
-    # if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    # target_link_libraries(
-    # ActsPythonBindings PUBLIC
-    # ActsExamplesDetectorGeoModel
-    # ActsExamplesMuonSpectrometerMockupDetector
-    # ActsExamplesITkModuleSplitting
-    # )
-    # target_sources(
-    # ActsPythonBindings PRIVATE src/GeoModelDetector.cpp
-    # )
-    # else()
-    # target_sources(
-    # ActsPythonBindings PRIVATE stubs/GeoModelDetectorStub.cpp
-    # )
-    # endif()
+    if(ACTS_BUILD_PLUGIN_GEOMODEL)
+        target_link_libraries(
+            ActsPythonBindings
+            PUBLIC
+                ActsExamplesDetectorGeoModel
+                ActsExamplesMuonSpectrometerMockupDetector
+                ActsExamplesITkModuleSplitting
+        )
+        target_sources(ActsPythonBindings PRIVATE src/GeoModelDetector.cpp)
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/GeoModelDetectorStub.cpp
+        )
+    endif()
 
     # ROOT
-    # if(ACTS_BUILD_PLUGIN_ROOT)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsPluginRoot ActsExamplesDetectorTGeo ActsExamplesIoRoot)
-    # target_sources(ActsPythonBindings PRIVATE src/TGeoDetector.cpp src/RootInput.cpp src/RootOutput.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/TGeoDetectorStub.cpp stubs/RootStub.cpp)
-    # endif()
+    if(ACTS_BUILD_PLUGIN_ROOT)
+        target_link_libraries(
+            ActsPythonBindings
+            PUBLIC ActsPluginRoot ActsExamplesDetectorTGeo ActsExamplesIoRoot
+        )
+        target_sources(
+            ActsPythonBindings
+            PRIVATE src/TGeoDetector.cpp src/RootInput.cpp src/RootOutput.cpp
+        )
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/TGeoDetectorStub.cpp stubs/RootStub.cpp
+        )
+    endif()
 
     # JSON
-    # if(ACTS_BUILD_PLUGIN_JSON)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoJson)
-    # target_sources(ActsPythonBindings PRIVATE src/JsonInputOutput.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/JsonInputOutputStub.cpp)
-    # endif()
+    if(ACTS_BUILD_PLUGIN_JSON)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoJson)
+        target_sources(ActsPythonBindings PRIVATE src/JsonInputOutput.cpp)
+    else()
+        target_sources(ActsPythonBindings PRIVATE stubs/JsonInputOutputStub.cpp)
+    endif()
 
     # SVG
-    # if(ACTS_BUILD_PLUGIN_ACTSVG)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
-    # target_sources(ActsPythonBindings PRIVATE src/SvgOutput.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/SvgOutputStub.cpp)
-    # endif()
+    if(ACTS_BUILD_PLUGIN_ACTSVG)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
+        target_sources(ActsPythonBindings PRIVATE src/SvgOutput.cpp)
+    else()
+        target_sources(ActsPythonBindings PRIVATE stubs/SvgOutputStub.cpp)
+    endif()
 
     # traccc
-    # if(ACTS_BUILD_PLUGIN_TRACCC)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTraccc)
-    # target_sources(ActsPythonBindings PRIVATE src/TracccAlgorithms.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/TracccAlgorithmsStub.cpp)
-    # endif()
+    if(ACTS_BUILD_PLUGIN_TRACCC)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTraccc)
+        target_sources(ActsPythonBindings PRIVATE src/TracccAlgorithms.cpp)
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/TracccAlgorithmsStub.cpp
+        )
+    endif()
 
     # Pythia8
-    # if(ACTS_BUILD_PLUGIN_PYTHIA8)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesPythia8)
-    # target_sources(ActsPythonBindings PRIVATE src/Pythia8Generator.cpp)
+    if(ACTS_BUILD_PLUGIN_PYTHIA8)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesPythia8)
+        target_sources(ActsPythonBindings PRIVATE src/Pythia8Generator.cpp)
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/Pythia8GeneratorStub.cpp
+        )
+    endif()
+
+    # Onnx
+    if(ACTS_BUILD_PLUGIN_ONNX)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesOnnx)
+        target_sources(ActsPythonBindings PRIVATE src/OnnxAlgorithms.cpp)
+    else()
+        target_sources(ActsPythonBindings PRIVATE stubs/OnnxAlgorithmsStub.cpp)
+    endif()
+
+    # TruthJet
+    if(ACTS_BUILD_PLUGIN_FASTJET)
+        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
+        target_sources(ActsPythonBindings PRIVATE src/TruthJetAlgorithms.cpp)
+    else()
+        target_sources(
+            ActsPythonBindings
+            PRIVATE stubs/TruthJetAlgorithmsStub.cpp
+        )
+    endif()
+
+    # if(ACTS_BUILD_EXAMPLES_HASHING)
+    # target_link_libraries(ActsPythonBindings PUBLIC ActsPluginHashing)
+    # target_sources(ActsPythonBindings PRIVATE src/HashingAlgorithms.cpp)
+    # list(APPEND py_files examples/hashing.py)
     # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/Pythia8GeneratorStub.cpp)
+    # target_sources(ActsPythonBindings PRIVATE stubs/HashingAlgorithmsStub.cpp)
     # endif()
 
     # ExaTrk.X
@@ -149,30 +194,6 @@ if(ACTS_BUILD_EXAMPLES)
     # target_sources(ActsPythonBindings PRIVATE src/ExaTrkXAlgorithms.cpp)
     # else()
     # target_sources(ActsPythonBindings PRIVATE stubs/ExaTrkXAlgorithmsStub.cpp)
-    # endif()
-
-    # Onnx
-    # if(ACTS_BUILD_PLUGIN_ONNX)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesOnnx)
-    # target_sources(ActsPythonBindings PRIVATE src/OnnxAlgorithms.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/OnnxAlgorithmsStub.cpp)
-    # endif()
-
-    # TruthJet
-    # if(ACTS_BUILD_PLUGIN_FASTJET)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesJets)
-    # target_sources(ActsPythonBindings PRIVATE src/TruthJetAlgorithms.cpp)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/TruthJetAlgorithmsStub.cpp)
-    # endif()
-
-    # if(ACTS_BUILD_EXAMPLES_HASHING)
-    # target_link_libraries(ActsPythonBindings PUBLIC ActsPluginHashing)
-    # target_sources(ActsPythonBindings PRIVATE src/HashingAlgorithms.cpp)
-    # list(APPEND py_files examples/hashing.py)
-    # else()
-    # target_sources(ActsPythonBindings PRIVATE stubs/HashingAlgorithmsStub.cpp)
     # endif()
 
     # Additional components built as separate libraries
