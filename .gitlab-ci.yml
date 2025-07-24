@@ -4,11 +4,12 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-07-06
-  SPACK_REPO_VERSION: develop-2025-07-13
+  SPACK_VERSION: v1.0.0
+  SPACK_REPO_VERSION: v2025.07.0
+
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v11.1.0
+  DEPENDENCY_TAG: v13.0.0
 
 .ccache_base:
   cache:
@@ -541,8 +542,6 @@ lcg_106a:
     matrix:
       - OS: [alma9]
         COMPILER:
-          - gcc13
-          - gcc14
           - clang16
 
 lcg_107:
@@ -556,8 +555,6 @@ lcg_107:
       - OS: [alma9]
         COMPILER:
           - gcc13
-          - gcc14
-          - clang19
 
 lcg_107a:
   extends: .lcg_base_job
@@ -569,7 +566,6 @@ lcg_107a:
     matrix:
       - OS: [alma9]
         COMPILER:
-          - gcc13
           - gcc14
 
 lcg_108:
@@ -582,6 +578,5 @@ lcg_108:
     matrix:
       - OS: [alma9]
         COMPILER:
-          - gcc14
           - gcc15
           - clang19
