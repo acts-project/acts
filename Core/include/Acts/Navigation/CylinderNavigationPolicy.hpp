@@ -55,7 +55,6 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// @param gctx is the geometry context
   /// @param volume is the volume to navigate
   /// @param logger is the logger
-  /// @param config The configuration for the policy
   CylinderNavigationPolicy(const GeometryContext& gctx,
                            const TrackingVolume& volume, const Logger& logger);
 
