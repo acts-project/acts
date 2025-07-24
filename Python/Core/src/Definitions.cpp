@@ -29,7 +29,7 @@ void addDefinitions(Context& ctx) {
 
   auto& m = ctx.get("main");
 
-  // Add the algebra classes
+  // Add algebra classes here
   py::class_<Vector2>(m, "Vector2")
       .def(py::init<double, double>())
       .def(py::init([](std::array<double, 2> a) {
@@ -39,7 +39,7 @@ void addDefinitions(Context& ctx) {
       }))
       .def("__getitem__",
            [](const Vector2& self, Eigen::Index i) { return self[i]; })
-      .def("__str__", [](const Vector3& self) {
+      .def("__str__", [](const Vector2& self) {
         std::stringstream ss;
         ss << self.transpose();
         return ss.str();
@@ -74,6 +74,19 @@ void addDefinitions(Context& ctx) {
       .def("__getitem__",
            [](const Vector4& self, Eigen::Index i) { return self[i]; });
 
+  py::class_<Translation3>(m, "Translation3")
+      .def(py::init([](const Vector3& a) { return Translation3(a); }))
+      .def(py::init([](std::array<double, 3> a) {
+        return Translation3(Vector3(a[0], a[1], a[2]));
+      }))
+      .def("__getitem__",
+           [](const Translation3& self, Eigen::Index i) { return self.translation()[i]; })
+      .def("__str__", [](const Translation3& self) {
+        std::stringstream ss;
+        ss << self.translation().transpose();
+        return ss.str();
+      });
+
   py::class_<Transform3>(m, "Transform3")
       .def(py::init<>())
       .def(py::init([](const Vector3& translation) -> Transform3 {
@@ -95,24 +108,13 @@ void addDefinitions(Context& ctx) {
         return ss.str();
       });
 
-  py::class_<Translation3>(m, "Translation3")
-      .def(py::init([](const Vector3& a) { return Translation3(a); }))
-      .def(py::init([](std::array<double, 3> a) {
-        return Translation3(Vector3(a[0], a[1], a[2]));
-      }))
-      .def("__str__", [](const Translation3& self) {
-        std::stringstream ss;
-        ss << self.translation().transpose();
-        return ss.str();
-      });
-
   py::class_<AngleAxis3>(m, "AngleAxis3")
       .def(py::init([](double angle, const Vector3& axis) {
         return AngleAxis3(angle, axis);
       }))
-      .def("__str__", [](const Transform3& self) {
+      .def("__str__", [](const AngleAxis3& self) {
         std::stringstream ss;
-        ss << self.matrix();
+        ss << "Angle: " << self.angle() << ", Axis: " << self.axis().transpose();
         return ss.str();
       });
 

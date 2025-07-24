@@ -5,7 +5,7 @@ Python bindings for the Examples
 
 The examples part of ACTS ships with python bindings using the ``pybind11``
 library. Building these bindings can be enabled via
-``-DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON``, and requires a python installation
+``-DACTS_BUILD_PYTHON_BINDINGS=ON``, and requires a python installation
 including the development files to be installed. You can then build the special
 target `ActsPythonBindings` to build everything that can be accessed in python.
 

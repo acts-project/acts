@@ -12,7 +12,7 @@ cmake -B <build> -S <source> \
   -D ACTS_EXATRKX_ENABLE_TORCH=ON/OFF \
   -D ACTS_EXATRKX_ENABLE_ONNX=ON/OFF \
   -D ACTS_BUILD_EXAMPLES_EXATRKX=ON \
-  -D ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON \
+  -D ACTS_BUILD_PYTHON_BINDINGS=ON \
   -D CMAKE_PREFIX_PATH=<path-to-installed-dependencies-if-not-in-default-paths>
 ```
 

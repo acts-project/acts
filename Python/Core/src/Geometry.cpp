@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -203,6 +204,12 @@ void addGeometry(Context& ctx) {
              self.set(bval, range[0], range[1]);
            })
       .def("__str__", &Extent::toString);
+
+  // Add the Detector element base
+  {
+    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
+        m, "DetectorElementBase");
+  }
 
   // Add VolumeBounds and Volume definitions
   {

@@ -212,8 +212,9 @@ void addUtilities(Context& ctx) {
                       .value("equidistant", AxisType::Equidistant)
                       .value("variable", AxisType::Variable);
 
-  // Add the calibration context
-  py::class_<CalibrationContext>(m, "CalibrationContext").def(py::init<>());
+  py::enum_<BinningType>(m, "BinningType")
+      .value("equidistant", BinningType::equidistant)
+      .value("arbitrary", BinningType::arbitrary);
 
   {
     // Be able to construct a proto binning
@@ -234,6 +235,9 @@ void addUtilities(Context& ctx) {
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
   }
+
+  // Add the calibration context
+  py::class_<CalibrationContext>(m, "CalibrationContext").def(py::init<>());
 }
 
 }  // namespace ActsPython

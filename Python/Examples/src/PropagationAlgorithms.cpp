@@ -1,0 +1,126 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
+#include "ActsPython/Utilities/Context.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+
+#include <algorithm>
+#include <array>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
+
+namespace py = pybind11;
+
+namespace {
+
+template <typename stepper_t, typename navigator_t>
+void addPropagator(py::module_& m, const std::string& prefix) {
+  using propagator_t = Acts::Propagator<stepper_t, navigator_t>;
+  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
+      .def(py::init<>(
+               [=](stepper_t stepper, navigator_t navigator,
+                   Acts::Logging::Level level = Acts::Logging::Level::INFO) {
+                 return propagator_t{
+                     std::move(stepper), std::move(navigator),
+                     Acts::getDefaultLogger(prefix + "Propagator", level)};
+               }),
+           py::arg("stepper"), py::arg("navigator"),
+           py::arg("level") = Acts::Logging::INFO);
+
+  using prop_if_t = ActsExamples::ConcretePropagator<propagator_t>;
+  py::class_<prop_if_t, ActsExamples::PropagatorInterface,
+             std::shared_ptr<prop_if_t>>(
+      m, (prefix + "ConcretePropagator").c_str())
+      .def(py::init<propagator_t>());
+}
+
+}  // namespace
+
+namespace ActsPython {
+void addPropagationAlgorithms(Context& ctx) {
+  auto [prop, mex] = ctx.get("propagation", "examples");
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
+      propagatorImpl, sterileLogger, debugOutput, energyLoss,
+      multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
+      covarianceTransport, inputTrackParameters, outputSummaryCollection,
+      outputMaterialCollection);
+
+  py::class_<ActsExamples::PropagatorInterface,
+             std::shared_ptr<ActsExamples::PropagatorInterface>>(
+      mex, "PropagatorInterface");
+
+  // Eigen based stepper
+  {
+    addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
+  }
+
+  {
+    addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
+        prop, "EigenDetector");
+  }
+
+  // ATLAS based stepper
+  {
+    addPropagator<Acts::AtlasStepper, Acts::Navigator>(prop, "Atlas");
+  }
+
+  {
+    addPropagator<Acts::AtlasStepper, Acts::Experimental::DetectorNavigator>(
+        prop, "AtlasDetector");
+  }
+
+  // Sympy based stepper
+  {
+    addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy");
+  }
+
+  {
+    addPropagator<Acts::SympyStepper, Acts::Experimental::DetectorNavigator>(
+        prop, "SympyDetector");
+  }
+
+  // Straight line stepper
+  {
+    addPropagator<Acts::StraightLineStepper, Acts::Navigator>(prop,
+                                                              "StraightLine");
+  }
+
+  {
+    addPropagator<Acts::StraightLineStepper,
+                  Acts::Experimental::DetectorNavigator>(
+        prop, "StraightLineDetector");
+  }
+}
+
+}  // namespace ActsPython

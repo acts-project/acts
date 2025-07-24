@@ -15,11 +15,10 @@ target_sources(
         src/Input.cpp
         src/Propagation.cpp
         src/Generators.cpp
-        src/Obj.cpp
         src/TruthTracking.cpp
         src/TrackFitting.cpp
         src/TrackFinding.cpp
-        src/Vertexing.cpp
+        src/VertexingAlgorithms.cpp
         src/AmbiguityResolution.cpp
         src/Utilities.cpp
 )
@@ -28,7 +27,7 @@ target_link_libraries(
     ActsPythonBindings
     PUBLIC
         ActsExamplesFramework
-        ActsExamplesGeometry
+        ActsExamplesDetectorsCommon
         ActsExamplesDetectorGeneric
         ActsExamplesDetectorTGeo
         ActsExamplesMagneticField
@@ -72,70 +71,59 @@ endif()
 
 if(ACTS_BUILD_PLUGIN_JSON)
     target_link_libraries(ActsPythonBindings PUBLIC ActsPluginJson)
-    target_sources(ActsPythonBindings PRIVATE src/Json.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/JsonInputOutput.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/JsonInputOutputStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(
-        ActsPythonBindings
-        PUBLIC
-            ActsPluginGeoModel
-            ActsExamplesDetectorGeoModel
-            ActsExamplesMuonSpectrometerMockupDetector
-    )
-    target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
-endif()
+#if(ACTS_BUILD_PLUGIN_GEOMODEL)
+#    target_link_libraries(
+#        ActsPythonBindings
+#        PUBLIC
+#            ActsPluginGeoModel
+#            ActsExamplesDetectorGeoModel
+#            ActsExamplesMuonSpectrometerMockupDetector
+#    )
+#    target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
+#else()
+#    target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
+#endif()
 
-if(ACTS_BUILD_PLUGIN_ROOT)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginRoot)
-    target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
-endif()
+
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
-    target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginCovfie)
-    target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
     target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTraccc)
     target_sources(ActsPythonBindings PRIVATE src/Traccc.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
-    target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
     target_sources(ActsPythonBindings PRIVATE src/TracccStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
-    target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/SvgOutput.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/SvgOutputStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-    pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
-    target_link_libraries(
-        ActsPythonBindingsDD4hep
-        PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep
-    )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
+#if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
+#    pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
+#    target_link_libraries(
+#        ActsPythonBindingsDD4hep
+#        PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep
+#    )
+#    add_dependencies(ActsPythonBindings ActsPythonBindingsDD4hep)
 
-    install(TARGETS ActsPythonBindingsDD4hep DESTINATION ${_python_install_dir})
-    set_target_properties(
-        ActsPythonBindingsDD4hep
-        PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-    )
-    set_target_properties(
-        ActsPythonBindingsDD4hep
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-    )
-    list(APPEND py_files examples/dd4hep.py)
-endif()
+#    install(TARGETS ActsPythonBindingsDD4hep DESTINATION ${_python_install_dir})
+#    set_target_properties(
+#        ActsPythonBindingsDD4hep
+#        PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+#    )
+#    set_target_properties(
+#        ActsPythonBindingsDD4hep
+#        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
+#    )
+#    list(APPEND py_files examples/dd4hep.py)
+#endif()
 
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
     target_link_libraries(
@@ -147,29 +135,29 @@ else()
     target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
 endif()
 
-if(ACTS_BUILD_EXAMPLES_GEANT4)
-    pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
-    target_link_libraries(
-        ActsPythonBindingsGeant4
-        PUBLIC
-            ActsPythonUtilities
-            ActsExamplesGeant4
-            ActsExamplesDetectorGeant4
-            ActsExamplesMuonSpectrometerMockupDetector
-    )
-    add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
-
-    install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
-    set_target_properties(
-        ActsPythonBindingsGeant4
-        PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-    )
-    set_target_properties(
-        ActsPythonBindingsGeant4
-        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-    )
-    list(APPEND py_files examples/geant4/__init__.py)
-endif()
+#if(ACTS_BUILD_EXAMPLES_GEANT4)
+#    pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
+#    target_link_libraries(
+#        ActsPythonBindingsGeant4
+#        PUBLIC
+#            ActsPythonUtilities
+#            ActsExamplesGeant4
+#            ActsExamplesDetectorGeant4
+#            ActsExamplesMuonSpectrometerMockupDetector
+#    )
+#    add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
+#
+#    install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
+#    set_target_properties(
+#        ActsPythonBindingsGeant4
+#        PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+#    )
+#    set_target_properties(
+#        ActsPythonBindingsGeant4
+#        PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
+#   )
+#   list(APPEND py_files examples/geant4/__init__.py)
+#endif()
 
 target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)

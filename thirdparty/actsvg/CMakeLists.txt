@@ -17,7 +17,7 @@ message(STATUS "Building actsvg as part of the ACTS project")
 FetchContent_Declare(actsvg SYSTEM ${ACTS_ACTSVG_SOURCE})
 
 set(ACTSVG_BUILD_PYTHON_BINDINGS
-    ${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}
+    ${ACTS_BUILD_PYTHON_BINDINGS}
     CACHE BOOL
     "Build python bindings for actsvg if ACTS python bindings are enabled"
 )

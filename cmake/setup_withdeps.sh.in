@@ -22,7 +22,7 @@ fi
 # source the python and ODD environment
 # first check if python bindings are enabled
 # then check if the setup.sh file exists
-if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
+if [ "@ACTS_BUILD_PYTHON_BINDINGS@" = "ON" ]; then
     if [[ -f "$script_dir/python/setup.sh" ]]; then
       . "$script_dir/python/setup.sh"
     else
