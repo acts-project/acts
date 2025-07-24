@@ -172,7 +172,7 @@ class Surface : public virtual GeometryObject,
   /// @return the contextual transform
   virtual const Transform3& transform(const GeometryContext& gctx) const;
 
-  /// Return method for the surface center by reference
+  /// Return method for the surface center
   /// @note the center is always recalculated in order to not keep a cache
   ///
   /// @param gctx The current geometry context object, e.g. alignment

@@ -13,11 +13,16 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'develop-2025-06-08'
+    default: 'v1.0.0'
   spack_repo_version:
     description: 'Version of Spack builtin repo to use'
     required: false
-    default: 'develop-2025-07-13'
+    default: 'v2025.07.0'
+  DEPENDENCY_TAG:
+    description: 'Dependency tag to pull from'
+    required: false
+    default: 'v13.0.0'
+
 
 runs:
   using: 'composite'
@@ -68,6 +73,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
+        DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then
           echo "With compiler"
