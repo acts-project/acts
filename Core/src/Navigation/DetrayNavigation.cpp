@@ -296,7 +296,11 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
 
 std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
     const SurfaceLookupFunction& /*surfaceLookup*/,
-    const Logger& /*logger*/) const {
+    const Logger& logger) const {
+  ACTS_DEBUG(
+      "TryAllNavigationPolicy does not implement explicit detray conversion");
+  return nullptr;
+}
 
 std::unique_ptr<DetraySurfaceGrid> CylinderNavigationPolicy::toDetrayPayload(
     const SurfaceLookupFunction& /*surfaceLookup*/,
