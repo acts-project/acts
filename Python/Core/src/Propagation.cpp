@@ -6,18 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/Propagator.hpp"
-
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -33,9 +31,9 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addPropagation(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// This adds the definitions from Core/Propagation to the python module
+/// @param m is the pybind11 core module
+void addPropagation(py::module_& m) {
   {
     using Config = Navigator::Config;
     auto nav =
@@ -87,7 +85,7 @@ void addPropagation(Context& ctx) {
   }
 
   {
-     auto stepper =
+    auto stepper =
         py::class_<Acts::StraightLineStepper>(m, "StraightLineStepper");
     stepper.def(py::init<>());
   }

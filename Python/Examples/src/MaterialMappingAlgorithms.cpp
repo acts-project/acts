@@ -27,7 +27,6 @@
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
@@ -54,9 +53,10 @@ using namespace Acts;
 using namespace ActsExamples;
 
 namespace ActsPython {
-void addMaterialMapping(Context& ctx) {
-  auto& mex = ctx.get("examples");
 
+/// This adds the material mapping algorithms to the examples module
+/// @param mex the examples module
+void addMaterialMappingAlgorithms(py::module_& mex) {
   {
     using Alg = MaterialMapping;
 
@@ -81,8 +81,7 @@ void addMaterialMapping(Context& ctx) {
     py::class_<MappingMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<MappingMaterialDecorator>>(
         mex, "MappingMaterialDecorator")
-        .def(py::init<const TrackingGeometry&, Logging::Level, bool,
-                      bool>(),
+        .def(py::init<const TrackingGeometry&, Logging::Level, bool, bool>(),
              py::arg("tGeometry"), py::arg("level"),
              py::arg("clearSurfaceMaterial") = true,
              py::arg("clearVolumeMaterial") = true)
@@ -91,12 +90,12 @@ void addMaterialMapping(Context& ctx) {
   }
 
   {
-    auto mmca = py::class_<CoreMaterialMapping, IAlgorithm,
-                           std::shared_ptr<CoreMaterialMapping>>(
-                    mex, "CoreMaterialMapping")
-                    .def(py::init<const CoreMaterialMapping::Config&,
-                                  Logging::Level>(),
-                         py::arg("config"), py::arg("level"));
+    auto mmca =
+        py::class_<CoreMaterialMapping, IAlgorithm,
+                   std::shared_ptr<CoreMaterialMapping>>(mex,
+                                                         "CoreMaterialMapping")
+            .def(py::init<const CoreMaterialMapping::Config&, Logging::Level>(),
+                 py::arg("config"), py::arg("level"));
 
     auto c = py::class_<CoreMaterialMapping::Config>(mmca, "Config")
                  .def(py::init<>());
@@ -106,14 +105,14 @@ void addMaterialMapping(Context& ctx) {
   }
 
   {
-    auto mv = py::class_<MaterialValidation, IAlgorithm,
-                         std::shared_ptr<MaterialValidation>>(
-                  mex, "MaterialValidation")
-                  .def(py::init<const MaterialValidation::Config&,
-                                Logging::Level>(),
-                       py::arg("config"), py::arg("level"))
-                  .def("execute", &MaterialValidation::execute)
-                  .def_property_readonly("config", &MaterialValidation::config);
+    auto mv =
+        py::class_<MaterialValidation, IAlgorithm,
+                   std::shared_ptr<MaterialValidation>>(mex,
+                                                        "MaterialValidation")
+            .def(py::init<const MaterialValidation::Config&, Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def("execute", &MaterialValidation::execute)
+            .def_property_readonly("config", &MaterialValidation::config);
 
     auto c =
         py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());

@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -55,12 +54,10 @@ using namespace ActsExamples;
 
 namespace {
 template <CsvBFieldWriter::CoordinateType CType, bool Grid>
-void register_csv_bfield_writer_binding(
-    pybind11::class_<CsvBFieldWriter>& w) {
+void register_csv_bfield_writer_binding(pybind11::class_<CsvBFieldWriter>& w) {
   std::string name =
-      std::string(CType == CsvBFieldWriter::CoordinateType::XYZ
-                      ? "Xyz"
-                      : "Rz") +
+      std::string(CType == CsvBFieldWriter::CoordinateType::XYZ ? "Xyz"
+                                                                : "Rz") +
       std::string(Grid ? "Grid" : "Gridless");
 
   using Config = CsvBFieldWriter::Config<CType, Grid>;
@@ -77,18 +74,17 @@ void register_csv_bfield_writer_binding(
 
 namespace ActsPython {
 
-void addOutput(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the output related components to the examples module
+/// @param mex the examples module
+void addOutput(py::module_& mex) {
   ACTS_PYTHON_DECLARE_WRITER(ObjPropagationStepsWriter, mex,
                              "ObjPropagationStepsWriter", collection, outputDir,
                              outputScalor, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(ObjSimHitWriter, mex,
-                             "ObjSimHitWriter", inputSimHits, outputDir,
-                             outputStem, outputPrecision, drawConnections,
-                             momentumThreshold, momentumThresholdTraj,
-                             nInterpolatedPoints, keepOriginalHits);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ObjSimHitWriter, mex, "ObjSimHitWriter", inputSimHits, outputDir,
+      outputStem, outputPrecision, drawConnections, momentumThreshold,
+      momentumThresholdTraj, nInterpolatedPoints, keepOriginalHits);
 
   {
     using Writer = ObjTrackingGeometryWriter;
@@ -107,31 +103,29 @@ void addOutput(Context& ctx) {
                        gridView);
   }
 
-  ACTS_PYTHON_DECLARE_WRITER(CsvParticleWriter, mex,
-                             "CsvParticleWriter", inputParticles, outputDir,
-                             outputStem, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(CsvMeasurementWriter, mex,
-                             "CsvMeasurementWriter", inputMeasurements,
-                             inputClusters, inputMeasurementSimHitsMap,
-                             outputDir, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(CsvSimHitWriter, mex,
-                             "CsvSimHitWriter", inputSimHits, outputDir,
-                             outputStem, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex,
-                             "CsvSpacePointWriter", inputSpacepoints, outputDir,
+  ACTS_PYTHON_DECLARE_WRITER(CsvParticleWriter, mex, "CsvParticleWriter",
+                             inputParticles, outputDir, outputStem,
                              outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(
+      CsvMeasurementWriter, mex, "CsvMeasurementWriter", inputMeasurements,
+      inputClusters, inputMeasurementSimHitsMap, outputDir, outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(CsvSimHitWriter, mex, "CsvSimHitWriter",
+                             inputSimHits, outputDir, outputStem,
+                             outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex, "CsvSpacePointWriter",
+                             inputSpacepoints, outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointsBucketWriter, mex,
                              "CsvSpacePointsBucketWriter", inputBuckets,
                              outputDir, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(CsvTrackWriter, mex,
-                             "CsvTrackWriter", inputTracks, outputDir, fileName,
-                             inputMeasurementParticlesMap, outputPrecision,
-                             nMeasurementsMin, truthMatchProbMin, ptMin);
+  ACTS_PYTHON_DECLARE_WRITER(CsvTrackWriter, mex, "CsvTrackWriter", inputTracks,
+                             outputDir, fileName, inputMeasurementParticlesMap,
+                             outputPrecision, nMeasurementsMin,
+                             truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSeedWriter, mex, "CsvSeedWriter",
                              inputTrackParameters, inputSimSeeds, inputSimHits,
@@ -148,9 +142,8 @@ void addOutput(Context& ctx) {
                              inputTracks, outputDir, outputStem,
                              outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex,
-                             "CsvProtoTrackWriter", inputSpacepoints,
-                             inputPrototracks, outputDir);
+  ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex, "CsvProtoTrackWriter",
+                             inputSpacepoints, inputPrototracks, outputDir);
 
   {
     using Writer = CsvBFieldWriter;

@@ -6,70 +6,73 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPython/Module/Entries.hpp"
-#include "ActsPython/Utilities/Context.hpp"
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
 
 /// This adds the python module entries for the Examples
 namespace ActsPython {
-    // These will be added to `acts.examples` module
-    void addFramework(Context& ctx);
-    void addDetector(Context& ctx);
-    void addGenerators(Context& ctx);
-    void addAmbiguityResolution(Context& ctx);
-    void addMagneticFieldMaps(Context& ctx);
-    void addDigitizationAlgorithms(Context& ctx);
-    void addMaterialMappingAlgorithms(Context& ctx);
-    void addPropagationAlgorithms(Context& ctx);
-    void addTrackFindingAlgorithms(Context& ctx);
-    void addTrackFittingAlgorithms(Context& ctx);
-    void addTruthTrackingAlgorithms(Context& ctx);
-    void addVertexingAlgorithms(Context& ctx);
-    void addPrinterAlgorithms(Context& ctx);
-    void addUtilityAlgorithms(Context& ctx);
-    void addInput(Context& ctx);
-    void addOutput(Context& ctx);
-    // Plugin dependent components
-    void addGeoModelDetector(Context& ctx);
-    void addTGeoDetector(Context& ctx);
-    void addRootInput(Context& ctx);
-    void addRootOutput(Context& ctx);
-    void addJsonInputOutput(Context& ctx);
-    void addSvgOutput(Context& ctx);
-    void addFatrasAlgorithms(Context& ctx);
-    void addTracccAlgorithms(Context& ctx);
-    void addPythia8Generator(Context& ctx);
-    void addTruthJetAlgorithms(Context& ctx);
-    void addOnnxAlgorithms(Context& ctx);
+// These will be added to `acts.examples` module
+void addFramework(py::module_& mex);
+void addDetector(py::module_& mex);
+void addGenerators(py::module_& mex);
+void addAmbiguityResolution(py::module_& mex);
+void addMagneticFieldMaps(py::module_& mex);
+void addDigitizationAlgorithms(py::module_& mex);
+void addMaterialMappingAlgorithms(py::module_& mex);
+void addPropagationAlgorithms(py::module_& mex);
+void addTrackFindingAlgorithms(py::module_& mex);
+void addTrackFittingAlgorithms(py::module_& mex);
+void addTruthTrackingAlgorithms(py::module_& mex);
+void addVertexingAlgorithms(py::module_& mex);
+void addPrinterAlgorithms(py::module_& mex);
+void addUtilityAlgorithms(py::module_& mex);
+void addInput(py::module_& mex);
+void addOutput(py::module_& mex);
+// Plugin dependent components
+// void addGeoModelDetector(py::module_& mex);
+// void addTGeoDetector(py::module_& mex);
+// void addRootInput(py::module_& mex);
+// void addRootOutput(py::module_& mex);
+// void addJsonInputOutput(py::module_& mex);
+// void addSvgOutput(py::module_& mex);
+// void addFatrasAlgorithms(py::module_& mex);
+// void addTracccAlgorithms(py::module_& mex);
+// void addPythia8Generator(py::module_& mex);
+// void addTruthJetAlgorithms(py::module_& mex);
+// void addOnnxAlgorithms(py::module_& mex);
 
 }  // namespace ActsPython
 
-void ActsPython::addExamplesModule(Context& ctx) {
-    addFramework(ctx);
-    addDetector(ctx);
-    addGenerators(ctx);
-    addAmbiguityResolution(ctx);
-    addDigitizationAlgorithms(ctx);
-    addPropagationAlgorithms(ctx);
-    addMagneticFieldMaps(ctx);
-    addMaterialMappingAlgorithms(ctx);
-    addTrackFindingAlgorithms(ctx);
-    addTrackFittingAlgorithms(ctx);
-    addTruthTrackingAlgorithms(ctx);
-    addVertexingAlgorithms(ctx);
-    addPrinterAlgorithms(ctx);
-    addUtilityAlgorithms(ctx);
-    addInput(ctx);
-    addOutput(ctx);
-    // Plugin dependent components
-    addGeoModelDetector(ctx);
-    addTGeoDetector(ctx);
-    addRootInput(ctx);
-    addRootOutput(ctx);
-    addJsonInputOutput(ctx);
-    addSvgOutput(ctx);
-    addFatrasAlgorithms(ctx);
-    addTracccAlgorithms(ctx);
-    addPythia8Generator(ctx);
-    addTruthJetAlgorithms(ctx);
-    addOnnxAlgorithms(ctx);
+PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
+  using namespace ActsPython;
+
+  addFramework(mex);
+  addDetector(mex);
+  addGenerators(mex);
+  addAmbiguityResolution(mex);
+  addMagneticFieldMaps(mex);
+  addDigitizationAlgorithms(mex);
+  addMaterialMappingAlgorithms(mex);
+  addPropagationAlgorithms(mex);
+  addTrackFindingAlgorithms(mex);
+  addTrackFittingAlgorithms(mex);
+  addTruthTrackingAlgorithms(mex);
+  addVertexingAlgorithms(mex);
+  addPrinterAlgorithms(mex);
+  addUtilityAlgorithms(mex);
+  addInput(mex);
+  addOutput(mex);
+  // Plugin dependent components
+  // addGeoModelDetector(mex);
+  // addTGeoDetector(mex);
+  // addRootInput(mex);
+  // addRootOutput(mex);
+  // addJsonInputOutput(mex);
+  // addSvgOutput(mex);
+  // addFatrasAlgorithms(mex);
+  // addTracccAlgorithms(mex);
+  // addPythia8Generator(mex);
+  // addTruthJetAlgorithms(mex);
+  // addOnnxAlgorithms(mex);
 }

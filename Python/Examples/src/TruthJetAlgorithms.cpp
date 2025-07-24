@@ -8,7 +8,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -24,11 +23,10 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addTruthJetAlgorithms(Context& ctx) {
-  auto mex = ctx.get("examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex,
-                                "TruthJetAlgorithm", inputTruthParticles,
-                                outputJets, jetPtMin);
+/// This adds the truth jet algorithms to the examples module
+/// @param mex the examples module
+void addTruthJetAlgorithms(py::module_& mex) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex, "TruthJetAlgorithm",
+                                inputTruthParticles, outputJets, jetPtMin);
 }  // addTruthJet
 }  // namespace ActsPython

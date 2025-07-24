@@ -15,7 +15,6 @@
 #include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -34,9 +33,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addDetector(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the detector related components to the examples module
+/// @param mex the examples module
+void addDetector(py::module_& mex) {
   {
     py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
         mex, "IContextDecorator")

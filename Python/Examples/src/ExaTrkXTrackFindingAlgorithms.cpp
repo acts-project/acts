@@ -19,7 +19,6 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -57,9 +56,9 @@ using namespace py::literals;
 
 namespace ActsPython {
 
-void addExaTrkXTrackFindingAlgorithms(Context &ctx) {
-  auto &mex = ctx.get("examples");
-
+/// This adds the ExaTrkX track finding algorithms to the examples module
+/// @param mex the examples module
+void addExaTrkXTrackFindingAlgorithms(py::module_ &mex) {
   {
     using C = Acts::GraphConstructionBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "GraphConstructionBase");

@@ -8,7 +8,6 @@
 
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -19,10 +18,8 @@ using namespace Acts;
 
 namespace ActsPython {
 /// This adds the definitions from Core/Visualization to the python module
-/// @param ctx the context container for the python modules
-void addVisualization(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addVisualization(py::module_& m) {
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
 

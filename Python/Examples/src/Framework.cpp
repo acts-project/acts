@@ -15,7 +15,6 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -76,19 +75,16 @@ class PyIAlgorithm : public IAlgorithm {
   std::string_view typeName() const override { return "Algorithm"; }
 };
 
-
-
 }  // namespace
 
 namespace ActsPython {
-void addFramework(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
 
-  py::class_<IWriter, std::shared_ptr<IWriter>>(
-      mex, "IWriter");
+/// This adds the framework related components to the examples module
+/// @param mex the examples module
+void addFramework(py::module_& mex) {
+  py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
-  py::class_<IReader, std::shared_ptr<IReader>>(
-      mex, "IReader");
+  py::class_<IReader, std::shared_ptr<IReader>>(mex, "IReader");
 
   py::enum_<ProcessCode>(mex, "ProcessCode")
       .value("SUCCESS", ProcessCode::SUCCESS)
@@ -121,14 +117,12 @@ void addFramework(Context& ctx) {
 
   auto pySequenceElement =
       py::class_<SequenceElement, PySequenceElement,
-                 std::shared_ptr<SequenceElement>>(
-          mex, "SequenceElement")
+                 std::shared_ptr<SequenceElement>>(mex, "SequenceElement")
           .def("internalExecute", &SequenceElement::internalExecute)
           .def("name", &SequenceElement::name);
 
   auto bareAlgorithm =
-      py::class_<IAlgorithm,
-                 std::shared_ptr<IAlgorithm>, SequenceElement,
+      py::class_<IAlgorithm, std::shared_ptr<IAlgorithm>, SequenceElement,
                  PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
                py::arg("name"), py::arg("level"))
@@ -195,9 +189,7 @@ void addFramework(Context& ctx) {
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
 
-  py::register_exception<FpeFailure>(mex, "FpeFailure",
-                                                   PyExc_RuntimeError);
-
+  py::register_exception<FpeFailure>(mex, "FpeFailure", PyExc_RuntimeError);
 }
 
 }  // namespace ActsPython

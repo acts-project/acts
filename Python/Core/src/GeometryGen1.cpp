@@ -14,7 +14,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -30,10 +29,8 @@ namespace ActsPython {
 
 /// This adds the definitions for the Gen1 geometry construction to the python
 /// module
-/// @param ctx the context container for the python modules
-void addGeometryGen1(Context &ctx) {
-  auto &m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addGeometryGen1(py::module_ &m) {
   using SurfacePtrVector = std::vector<std::shared_ptr<const Acts::Surface>>;
 
   py::class_<Acts::Layer, std::shared_ptr<Acts::Layer>>(m, "Layer");

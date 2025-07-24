@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -20,16 +19,14 @@ namespace py = pybind11;
 
 namespace ActsPython {
 
-void addFatrasAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-
+/// This adds the Fatras algorithms to the examples module
+/// @param mex the examples module
+void addFatrasAlgorithms(py::module_& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
       outputParticles, outputSimHits, randomNumbers, trackingGeometry,
       magneticField, pMin, emScattering, emEnergyLossIonisation,
       emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
       generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
-
-  }
 }
+}  // namespace ActsPython

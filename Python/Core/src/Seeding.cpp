@@ -12,7 +12,6 @@
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -28,10 +27,8 @@ using namespace Acts;
 namespace ActsPython {
 
 /// @brief This adds the classes from Core/Seeding to the python module
-/// @param ctx the context container for the python modules
-void addSeeding(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addSeeding(py::module_& m) {
   {
     using Config = SeedFilterConfig;
     auto c = py::class_<Config>(m, "SeedFilterConfig").def(py::init<>());

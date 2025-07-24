@@ -21,7 +21,6 @@
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -38,10 +37,8 @@ using namespace Acts;
 namespace ActsPython {
 
 /// @brief This adds the classes from Core/Material to the python module
-/// @param ctx the context container for the python modules
-void addMaterial(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addMaterial(py::module_& m) {
   {
     py::class_<ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
         m, "ISurfaceMaterial")

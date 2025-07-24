@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -22,9 +21,9 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsPythonBindingsPodio, m) {
-  ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader",
-                             inputPath, outputFrame, category);
+  ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader", inputPath,
+                             outputFrame, category);
 
-  ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter",
-                             inputFrame, outputPath, category, collections);
+  ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter", inputFrame,
+                             outputPath, category, collections);
 }

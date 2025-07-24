@@ -14,7 +14,6 @@
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -27,9 +26,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addRootInput(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+/// This adds the ROOT input/output components to the examples module
+/// @param mex the examples module
+void addRootInput(py::module_& mex) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
                              "RootParticleReader", outputParticles, treeName,
                              filePath);

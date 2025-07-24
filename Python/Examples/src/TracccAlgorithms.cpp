@@ -11,7 +11,6 @@
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Traccc/DetrayPropagator.hpp"
 #include "ActsExamples/Traccc/DetrayStore.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <detray/propagator/line_stepper.hpp>
 #include <pybind11/pybind11.h>
@@ -26,9 +25,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addTracccAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the Traccc algorithms to the examples module
+/// @param mex the examples module
+void addTracccAlgorithms(py::module_& mex) {
   auto traccc = mex.def_submodule("traccc");
 
   /// Define host detray store

@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <stdexcept>
 
@@ -45,10 +44,8 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
 }
 
 /// This adds the definitions from Core/MagneticField to the python module
-/// @param ctx the context container for the python modules
-void addMagneticField(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addMagneticField(py::module_& m) {
   // Add the MagneticFieldContext class to the module
   py::class_<MagneticFieldContext>(m, "MagneticFieldContext").def(py::init<>());
 

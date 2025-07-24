@@ -17,7 +17,6 @@
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -30,36 +29,32 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addInput(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+/// This adds the input related components to the examples module
+/// @param mex the examples module
+void addInput(py::module_& mex) {
   // Buffered reader
-  ACTS_PYTHON_DECLARE_READER(BufferedReader, mex,
-                             "BufferedReader", upstreamReader, selectionSeed,
-                             bufferSize);
+  ACTS_PYTHON_DECLARE_READER(BufferedReader, mex, "BufferedReader",
+                             upstreamReader, selectionSeed, bufferSize);
 
-  ACTS_PYTHON_DECLARE_READER(CsvParticleReader, mex,
-                             "CsvParticleReader", inputDir, inputStem,
-                             outputParticles);
+  ACTS_PYTHON_DECLARE_READER(CsvParticleReader, mex, "CsvParticleReader",
+                             inputDir, inputStem, outputParticles);
 
-  ACTS_PYTHON_DECLARE_READER(
-      CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
-      outputMeasurements, outputMeasurementSimHitsMap, outputClusters,
-      outputMeasurementParticlesMap, inputSimHits);
+  ACTS_PYTHON_DECLARE_READER(CsvMeasurementReader, mex, "CsvMeasurementReader",
+                             inputDir, outputMeasurements,
+                             outputMeasurementSimHitsMap, outputClusters,
+                             outputMeasurementParticlesMap, inputSimHits);
 
-  ACTS_PYTHON_DECLARE_READER(CsvSimHitReader, mex,
-                             "CsvSimHitReader", inputDir, inputStem,
-                             outputSimHits);
-  ACTS_PYTHON_DECLARE_READER(CsvMuonSegmentReader, mex,
-                             "CsvMuonSegmentReader", inputDir, inputStem,
-                             outputSegments);
+  ACTS_PYTHON_DECLARE_READER(CsvSimHitReader, mex, "CsvSimHitReader", inputDir,
+                             inputStem, outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(CsvMuonSegmentReader, mex, "CsvMuonSegmentReader",
+                             inputDir, inputStem, outputSegments);
   ACTS_PYTHON_DECLARE_READER(CsvMuonSpacePointReader, mex,
                              "CsvMuonSpacePointReader", inputDir, inputStem,
                              outputSpacePoints);
 
-  ACTS_PYTHON_DECLARE_READER(
-      CsvSpacePointReader, mex, "CsvSpacePointReader", inputDir,
-      inputStem, inputCollection, outputSpacePoints, extendCollection);
+  ACTS_PYTHON_DECLARE_READER(CsvSpacePointReader, mex, "CsvSpacePointReader",
+                             inputDir, inputStem, inputCollection,
+                             outputSpacePoints, extendCollection);
 
   ACTS_PYTHON_DECLARE_READER(CsvTrackParameterReader, mex,
                              "CsvTrackParameterReader", inputDir, inputStem,

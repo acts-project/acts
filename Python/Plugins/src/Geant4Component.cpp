@@ -15,7 +15,6 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
@@ -40,9 +39,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsPython;
 
-
 PYBIND11_MODULE(ActsPluginsPythonBindingsGeant4, mod) {
-
   {
     using ISelector = IGeant4PhysicalVolumeSelector;
     auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
@@ -60,7 +57,4 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeant4, mod) {
                        convertedMaterialThickness, sensitiveSurfaceSelector,
                        passiveSurfaceSelector);
   }
-
-  ActsPython::Context ctx;
-  ctx.modules["geant4"] = mod;
 }

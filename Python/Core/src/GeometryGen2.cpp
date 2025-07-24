@@ -27,7 +27,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -69,10 +68,8 @@ namespace ActsPython {
 
 /// This adds the definitions for the Gen3 geometry construction to the python
 /// module
-/// @param ctx the context container for the python modules
-void addGeometryGen2(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addGeometryGen2(py::module_& m) {
   // Detector volume definition
   py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
                                                               "DetectorVolume")

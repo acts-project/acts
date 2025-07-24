@@ -23,7 +23,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <sstream>
 
@@ -97,10 +96,8 @@ class PyTrackingGeometryVisitor : public TrackingGeometryMutableVisitor {
 
 namespace ActsPython {
 /// @brief This adds the definitions from Core/Geometry to the python module
-/// @param ctx the context container for the python modules
-void addGeometry(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addGeometry(py::module_& m) {
   // Add GeometryContext
   py::class_<GeometryContext>(m, "GeometryContext").def(py::init<>());
 

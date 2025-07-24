@@ -13,7 +13,6 @@
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -34,37 +33,33 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addGenerators(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the event generators to the examples module
+/// @param mex the examples module
+void addGenerators(py::module_& mex) {
   {
     using Config = EventGenerator::Config;
-    auto gen = py::class_<EventGenerator, IReader,
-                          std::shared_ptr<EventGenerator>>(
-                   mex, "EventGenerator")
-                   .def(py::init<const Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly(
-                       "config", &EventGenerator::config);
+    auto gen =
+        py::class_<EventGenerator, IReader, std::shared_ptr<EventGenerator>>(
+            mex, "EventGenerator")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &EventGenerator::config);
 
     py::class_<PrimaryVertexPositionGenerator,
                std::shared_ptr<PrimaryVertexPositionGenerator>>(
         gen, "VertexGenerator");
-    py::class_<ParticlesGenerator,
-               std::shared_ptr<ParticlesGenerator>>(
+    py::class_<ParticlesGenerator, std::shared_ptr<ParticlesGenerator>>(
         gen, "ParticlesGenerator");
-    py::class_<MultiplicityGenerator,
-               std::shared_ptr<MultiplicityGenerator>>(
+    py::class_<MultiplicityGenerator, std::shared_ptr<MultiplicityGenerator>>(
         gen, "MultiplicityGenerator");
 
     using EventGenerator = EventGenerator;
     using Generator = EventGenerator::Generator;
     py::class_<Generator>(gen, "Generator")
         .def(py::init<>())
-        .def(py::init<
-                 std::shared_ptr<MultiplicityGenerator>,
-                 std::shared_ptr<PrimaryVertexPositionGenerator>,
-                 std::shared_ptr<ParticlesGenerator>>(),
+        .def(py::init<std::shared_ptr<MultiplicityGenerator>,
+                      std::shared_ptr<PrimaryVertexPositionGenerator>,
+                      std::shared_ptr<ParticlesGenerator>>(),
              py::arg("multiplicity"), py::arg("vertex"), py::arg("particles"))
         .def_readwrite("multiplicity", &Generator::multiplicity)
         .def_readwrite("vertex", &Generator::vertex)
@@ -76,10 +71,9 @@ void addGenerators(Context& ctx) {
                        printListing);
   }
 
-  py::class_<
-      GaussianPrimaryVertexPositionGenerator,
-      PrimaryVertexPositionGenerator,
-      std::shared_ptr<GaussianPrimaryVertexPositionGenerator>>(
+  py::class_<GaussianPrimaryVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<GaussianPrimaryVertexPositionGenerator>>(
       mex, "GaussianVertexGenerator")
       .def(py::init<>())
       .def(py::init([](const Acts::Vector4& stddev, const Acts::Vector4& mean) {
@@ -89,15 +83,11 @@ void addGenerators(Context& ctx) {
              return g;
            }),
            py::arg("stddev"), py::arg("mean"))
-      .def_readwrite(
-          "stddev",
-          &GaussianPrimaryVertexPositionGenerator::stddev)
-      .def_readwrite(
-          "mean", &GaussianPrimaryVertexPositionGenerator::mean);
-  py::class_<
-      GaussianDisplacedVertexPositionGenerator,
-      PrimaryVertexPositionGenerator,
-      std::shared_ptr<GaussianDisplacedVertexPositionGenerator>>(
+      .def_readwrite("stddev", &GaussianPrimaryVertexPositionGenerator::stddev)
+      .def_readwrite("mean", &GaussianPrimaryVertexPositionGenerator::mean);
+  py::class_<GaussianDisplacedVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<GaussianDisplacedVertexPositionGenerator>>(
       mex, "GaussianDisplacedVertexPositionGenerator")
       .def(py::init<>())
       .def(py::init([](double rMean, double rStdDev, double zMean,
@@ -113,29 +103,19 @@ void addGenerators(Context& ctx) {
            }),
            py::arg("rMean"), py::arg("rStdDev"), py::arg("zMean"),
            py::arg("zStdDev"), py::arg("tMean"), py::arg("tStdDev"))
-      .def_readwrite(
-          "rMean",
-          &GaussianDisplacedVertexPositionGenerator::rMean)
-      .def_readwrite(
-          "rStdDev",
-          &GaussianDisplacedVertexPositionGenerator::rStdDev)
-      .def_readwrite(
-          "zMean",
-          &GaussianDisplacedVertexPositionGenerator::zMean)
-      .def_readwrite(
-          "zStdDev",
-          &GaussianDisplacedVertexPositionGenerator::zStdDev)
-      .def_readwrite(
-          "tMean",
-          &GaussianDisplacedVertexPositionGenerator::tMean)
-      .def_readwrite(
-          "tStdDev",
-          &GaussianDisplacedVertexPositionGenerator::tStdDev);
+      .def_readwrite("rMean", &GaussianDisplacedVertexPositionGenerator::rMean)
+      .def_readwrite("rStdDev",
+                     &GaussianDisplacedVertexPositionGenerator::rStdDev)
+      .def_readwrite("zMean", &GaussianDisplacedVertexPositionGenerator::zMean)
+      .def_readwrite("zStdDev",
+                     &GaussianDisplacedVertexPositionGenerator::zStdDev)
+      .def_readwrite("tMean", &GaussianDisplacedVertexPositionGenerator::tMean)
+      .def_readwrite("tStdDev",
+                     &GaussianDisplacedVertexPositionGenerator::tStdDev);
 
-  py::class_<
-      FixedPrimaryVertexPositionGenerator,
-      PrimaryVertexPositionGenerator,
-      std::shared_ptr<FixedPrimaryVertexPositionGenerator>>(
+  py::class_<FixedPrimaryVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<FixedPrimaryVertexPositionGenerator>>(
       mex, "FixedVertexGenerator")
       .def(py::init<>())
       .def(py::init([](const Acts::Vector4& v) {
@@ -144,20 +124,17 @@ void addGenerators(Context& ctx) {
              return g;
            }),
            py::arg("fixed"))
-      .def_readwrite("fixed",
-                     &FixedPrimaryVertexPositionGenerator::fixed);
+      .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
   py::class_<SimParticle>(mex, "SimParticle");
   py::class_<SimParticleContainer>(mex, "SimParticleContainer");
 
   {
     using Config = ParametricParticleGenerator::Config;
-    auto gen =
-        py::class_<ParametricParticleGenerator,
-                   ParticlesGenerator,
-                   std::shared_ptr<ParametricParticleGenerator>>(
-            mex, "ParametricParticleGenerator")
-            .def(py::init<const Config&>());
+    auto gen = py::class_<ParametricParticleGenerator, ParticlesGenerator,
+                          std::shared_ptr<ParametricParticleGenerator>>(
+                   mex, "ParametricParticleGenerator")
+                   .def(py::init<const Config&>());
 
     py::class_<Config>(gen, "Config")
         .def(py::init<>())
@@ -207,8 +184,7 @@ void addGenerators(Context& ctx) {
             });
   }
 
-  py::class_<FixedMultiplicityGenerator,
-             MultiplicityGenerator,
+  py::class_<FixedMultiplicityGenerator, MultiplicityGenerator,
              std::shared_ptr<FixedMultiplicityGenerator>>(
       mex, "FixedMultiplicityGenerator")
       .def(py::init<>())
@@ -220,8 +196,7 @@ void addGenerators(Context& ctx) {
            py::arg("n"))
       .def_readwrite("n", &FixedMultiplicityGenerator::n);
 
-  py::class_<PoissonMultiplicityGenerator,
-             MultiplicityGenerator,
+  py::class_<PoissonMultiplicityGenerator, MultiplicityGenerator,
              std::shared_ptr<PoissonMultiplicityGenerator>>(
       mex, "PoissonMultiplicityGenerator")
       .def(py::init<>())

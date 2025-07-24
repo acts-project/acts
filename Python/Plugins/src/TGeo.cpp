@@ -9,7 +9,6 @@
 #include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Plugins/Root/TGeoParser.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <vector>
 
@@ -23,9 +22,11 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace ActsPython {
-void addTGeo(Context& ctx) {
+
+/// This adds the TGeo related components to the plugins module
+/// @param p the plugins module
+void addTGeo(py::module_& p) {
   // Register the TGeo module
-  auto& p = ctx.get("plugins");
   auto tgeo = p.def_submodule("tgeo");
 
   {

@@ -15,7 +15,6 @@
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
@@ -48,9 +47,11 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addJson(Context& ctx) {
+
+/// This adds the json related components to the plugins module
+/// @param p the plugins module
+void addJson(py::module_& p) {
   // Register the json module
-  auto& p = ctx.get("plugins");
   auto json = p.def_submodule("json");
   {
     py::class_<JsonMaterialDecorator, IMaterialDecorator,
@@ -162,6 +163,5 @@ void addJson(Context& ctx) {
           return DetectorJsonConverter::fromJson(gctx, jDetectorIn);
         });
   }
-
 }
 }  // namespace ActsPython

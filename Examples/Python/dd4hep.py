@@ -8,7 +8,9 @@ try:
         [sys.executable, "-c", "from .ActsPluginsPythonBindingsDD4hep import *"]
     )
 except subprocess.CalledProcessError as e:
-    print("Error encountered importing DD4hep as a plugin. Likely you need to set LD_LIBRARY_PATH.")
+    print(
+        "Error encountered importing DD4hep as a plugin. Likely you need to set LD_LIBRARY_PATH."
+    )
     sys.exit(1)
 
 from acts._adapter import _patch_config

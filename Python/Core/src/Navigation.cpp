@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -116,14 +115,12 @@ class MyNavigationPolicyFactory : public NavigationPolicyFactory {
   NavigationPolicyFactory& addSurfaceArray(
       const py::object& /*cls*/,
       const SurfaceArrayNavigationPolicy::Config& config) {
-    m_impl =
-        m_impl->add(Type<SurfaceArrayNavigationPolicy>, config);
+    m_impl = m_impl->add(Type<SurfaceArrayNavigationPolicy>, config);
     return *this;
   }
 
   NavigationPolicyFactory& addTryAll(
-      const py::object& /*cls*/,
-      const TryAllNavigationPolicy::Config& config) {
+      const py::object& /*cls*/, const TryAllNavigationPolicy::Config& config) {
     m_impl = m_impl->add(Type<TryAllNavigationPolicy>, config);
     return *this;
   }
@@ -144,8 +141,7 @@ class DetectorElementStub : public DetectorElementBase {
  public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  const Transform3& transform(
-      const GeometryContext&) const override {
+  const Transform3& transform(const GeometryContext&) const override {
     return m_transform;
   }
 
@@ -155,9 +151,7 @@ class DetectorElementStub : public DetectorElementBase {
   }
 
   /// Non-const return pattern
-  Surface& surface() override {
-    throw std::runtime_error("Not implemented");
-  }
+  Surface& surface() override { throw std::runtime_error("Not implemented"); }
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
@@ -170,12 +164,9 @@ class DetectorElementStub : public DetectorElementBase {
 }  // namespace Test
 
 /// This adds the definitions from Core/Navigation to the python module
-/// @param ctx the context container for the python modules
-void addNavigation(Context& ctx) {
-  auto m = ctx.get("main");
-
-  py::class_<NavigationPolicyFactory,
-             std::shared_ptr<NavigationPolicyFactory>>(
+/// @param m is the pybind11 core module
+void addNavigation(py::module_& m) {
+  py::class_<NavigationPolicyFactory, std::shared_ptr<NavigationPolicyFactory>>(
       m, "_MyNavigationPolicyFactory");
 
   {
@@ -203,8 +194,7 @@ void addNavigation(Context& ctx) {
         auto detElem = std::make_unique<Test::DetectorElementStub>();
 
         auto surface = Surface::makeShared<CylinderSurface>(
-            Transform3::Identity(),
-            std::make_shared<CylinderBounds>(30, 40));
+            Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
         surface->assignDetectorElement(*detElem);
 
         vol1->addSurface(std::move(surface));

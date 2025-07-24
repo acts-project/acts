@@ -7,12 +7,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <memory>
 #include <string>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -42,9 +42,8 @@ void trigger_invalid() {
 
 namespace ActsPython {
 /// @ Bind the FpeMonitor class to the Python module
-/// @param m The Python module to bind to
-void addFpeMonitoring(Context& ctx) {
-  auto& p = ctx.get("plugins");
+/// @param p The Python module to bind to
+void addFpeMonitoring(py::module_& p) {
   auto fpe = p.def_submodule("fpe");
 
   struct FpeMonitorContext {
@@ -102,7 +101,5 @@ void addFpeMonitoring(Context& ctx) {
                 FpeType::FLTINV, FpeType::FLTSUB};
             return values;
           });
-
-
 }
 }  // namespace ActsPython

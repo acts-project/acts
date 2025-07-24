@@ -18,18 +18,13 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
-#include <array>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -66,8 +61,10 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 }  // namespace
 
 namespace ActsPython {
-void addPropagationAlgorithms(Context& ctx) {
-  auto [prop, mex] = ctx.get("propagation", "examples");
+/// This adds the propagation algorithms to the examples module
+/// @param mex the examples module
+void addPropagationAlgorithms(py::module_& mex) {
+  auto prop = mex.def_submodule("propagation");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
@@ -81,9 +78,7 @@ void addPropagationAlgorithms(Context& ctx) {
       mex, "PropagatorInterface");
 
   // Eigen based stepper
-  {
-    addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
-  }
+  { addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen"); }
 
   {
     addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
@@ -91,9 +86,7 @@ void addPropagationAlgorithms(Context& ctx) {
   }
 
   // ATLAS based stepper
-  {
-    addPropagator<Acts::AtlasStepper, Acts::Navigator>(prop, "Atlas");
-  }
+  { addPropagator<Acts::AtlasStepper, Acts::Navigator>(prop, "Atlas"); }
 
   {
     addPropagator<Acts::AtlasStepper, Acts::Experimental::DetectorNavigator>(
@@ -101,9 +94,7 @@ void addPropagationAlgorithms(Context& ctx) {
   }
 
   // Sympy based stepper
-  {
-    addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy");
-  }
+  { addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy"); }
 
   {
     addPropagator<Acts::SympyStepper, Acts::Experimental::DetectorNavigator>(

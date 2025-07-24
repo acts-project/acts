@@ -10,7 +10,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
@@ -23,10 +22,8 @@ using namespace Acts;
 
 namespace ActsPython {
 // This adds the definitions from Core/Surfaces to the python module
-/// @param ctx the context container for the python modules
-void addSurfaces(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addSurfaces(py::module_& m) {
   {
     py::class_<Surface, std::shared_ptr<Surface>>(m, "Surface")
         // Can't bind directly because GeometryObject is virtual base of Surface

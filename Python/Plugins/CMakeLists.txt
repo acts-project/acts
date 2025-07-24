@@ -1,10 +1,11 @@
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
 set(_python_install_dir "python/acts")
 
-
 pybind11_add_module(ActsPluginsPythonBindings src/PluginsModuleEntry.cpp src/Obj.cpp)
 
-install(TARGETS ActsPluginsPythonBindings DESTINATION ${_python_install_dir}/plugins)
+install(
+    TARGETS ActsPluginsPythonBindings DESTINATION ${_python_install_dir}/plugins
+)
 
 set_target_properties(
     ActsPluginsPythonBindings
@@ -15,13 +16,14 @@ set_target_properties(
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
 )
 
-target_link_libraries(ActsPluginsPythonBindings PUBLIC ActsCore ActsPythonUtilities)
+target_link_libraries(
+    ActsPluginsPythonBindings
+    PUBLIC ActsCore ActsPythonUtilities
+)
 
 add_dependencies(ActsPythonBindings ActsPluginsPythonBindings)
 
-set(py_plugin_files
-    __init__.py
-)
+set(py_plugin_files __init__.py)
 
 if(ACTS_BUILD_PLUGIN_ROOT)
     target_link_libraries(ActsPluginsPythonBindings PUBLIC ActsPluginRoot)
@@ -45,16 +47,20 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_FPEMON)
-    target_link_libraries(ActsPluginsPythonBindings PUBLIC ActsPluginFpeMonitoring)
+    target_link_libraries(
+        ActsPluginsPythonBindings
+        PUBLIC ActsPluginFpeMonitoring
+    )
     target_sources(ActsPluginsPythonBindings PRIVATE src/FpeMonitoring.cpp)
 else()
-    target_sources(ActsPluginsPythonBindings PRIVATE stubs/FpeMonitoringStub.cpp)
+    target_sources(
+        ActsPluginsPythonBindings
+        PRIVATE stubs/FpeMonitoringStub.cpp
+    )
 endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(
-        ActsPluginsPythonBindings PUBLIC ActsPluginGeoModel
-    )
+    target_link_libraries(ActsPluginsPythonBindings PUBLIC ActsPluginGeoModel)
     target_sources(ActsPluginsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
     target_sources(ActsPluginsPythonBindings PRIVATE stubs/GeoModelStub.cpp)
@@ -71,6 +77,13 @@ else()
     target_sources(ActsPluginsPythonBindings PRIVATE stubs/TracccStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGING_HASHING)
+    target_link_libraries(ActsPluginsPythonBindings PUBLIC ActsPluginHashing)
+    target_sources(ActsPluginsPythonBindings PRIVATE src/Hashing.cpp)
+else()
+    target_sources(ActsPluginsPythonBindings PRIVATE stubs/HashingStub.cpp)
+endif()
+
 # Dedicated libraries
 #
 # DD4hep - needs special treatment to avoid impport error
@@ -82,7 +95,12 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
     )
     add_dependencies(ActsPluginsPythonBindings ActsPluginsPythonBindingsDD4hep)
 
-    install(TARGETS ActsPluginsPythonBindingsDD4hep DESTINATION ${_python_install_dir}/plugins)
+    install(
+        TARGETS
+            ActsPluginsPythonBindingsDD4hep
+            DESTINATION
+            ${_python_install_dir}/plugins
+    )
     set_target_properties(
         ActsPluginsPythonBindingsDD4hep
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
@@ -102,7 +120,12 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
     )
     add_dependencies(ActsPluginsPythonBindings ActsPluginsPythonBindingsGeant4)
 
-    install(TARGETS ActsPluginsPythonBindingsGeant4 DESTINATION ${_python_install_dir}/plugins)
+    install(
+        TARGETS
+            ActsPluginsPythonBindingsGeant4
+            DESTINATION
+            ${_python_install_dir}/plugins
+    )
     set_target_properties(
         ActsPluginsPythonBindingsGeant4
         PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
@@ -112,7 +135,6 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
 endif()
-
 
 foreach(f ${py_plugin_files})
     set(_target ${_python_dir}/acts/plugins/${f})
@@ -132,4 +154,3 @@ foreach(f ${py_plugin_files})
         DESTINATION ${_python_install_dir}/plugins/${_rel}
     )
 endforeach()
-

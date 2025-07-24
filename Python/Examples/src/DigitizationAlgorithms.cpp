@@ -11,13 +11,10 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
-#include <array>
 #include <memory>
-#include <tuple>
 #include <utility>
 
 #include <pybind11/pybind11.h>
@@ -30,22 +27,19 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addDigitizationAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-
-
+/// This adds the digitization algorithms to the examples module
+/// @param mex the examples module
+void addDigitizationAlgorithms(py::module_& mex) {
   {
     using Config = DigitizationAlgorithm::Config;
 
-    auto a = py::class_<DigitizationAlgorithm,
-                        IAlgorithm,
-                        std::shared_ptr<DigitizationAlgorithm>>(
-                 mex, "DigitizationAlgorithm")
-                 .def(py::init<Config&, Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly(
-                     "config", &DigitizationAlgorithm::config);
+    auto a =
+        py::class_<DigitizationAlgorithm, IAlgorithm,
+                   std::shared_ptr<DigitizationAlgorithm>>(
+            mex, "DigitizationAlgorithm")
+            .def(py::init<Config&, Logging::Level>(), py::arg("config"),
+                 py::arg("level"))
+            .def_property_readonly("config", &DigitizationAlgorithm::config);
 
     auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
@@ -85,14 +79,11 @@ void addDigitizationAlgorithms(Context& ctx) {
     py::class_<DigitizationCoordinatesConverter,
                std::shared_ptr<DigitizationCoordinatesConverter>>(
         mex, "DigitizationCoordinatesConverter")
-        .def(py::init<DigitizationAlgorithm::Config&>(),
-             py::arg("config"))
-        .def_property_readonly(
-            "config", &DigitizationCoordinatesConverter::config)
-        .def("globalToLocal",
-             &DigitizationCoordinatesConverter::globalToLocal)
-        .def("localToGlobal",
-             &DigitizationCoordinatesConverter::localToGlobal);
+        .def(py::init<DigitizationAlgorithm::Config&>(), py::arg("config"))
+        .def_property_readonly("config",
+                               &DigitizationCoordinatesConverter::config)
+        .def("globalToLocal", &DigitizationCoordinatesConverter::globalToLocal)
+        .def("localToGlobal", &DigitizationCoordinatesConverter::localToGlobal);
   }
 }
 

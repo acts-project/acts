@@ -27,7 +27,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -44,9 +43,8 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addGeoModel(Context& ctx) {
-    // Register the GeoModel module
-  auto p = ctx.get("plugins");
+void addGeoModel(py::module_& p) {
+  // Register the GeoModel module
   auto gm = p.def_submodule("geomodel");
 
   py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")

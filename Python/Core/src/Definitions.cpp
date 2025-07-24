@@ -10,7 +10,6 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <type_traits>
 
@@ -23,12 +22,9 @@ using namespace pybind11::literals;
 namespace ActsPython {
 
 /// @brief This adds the classes from Core/Definitions to the python module
-/// @param ctx the context container for the python modules
-void addDefinitions(Context& ctx) {
+/// @param m the pybind11 core module
+void addDefinitions(py::module_& m) {
   using namespace Acts;
-
-  auto& m = ctx.get("main");
-
   // Add algebra classes here
   py::class_<Vector2>(m, "Vector2")
       .def(py::init<double, double>())
@@ -79,8 +75,8 @@ void addDefinitions(Context& ctx) {
       .def(py::init([](std::array<double, 3> a) {
         return Translation3(Vector3(a[0], a[1], a[2]));
       }))
-      .def("__getitem__",
-           [](const Translation3& self, Eigen::Index i) { return self.translation()[i]; })
+      .def("__getitem__", [](const Translation3& self,
+                             Eigen::Index i) { return self.translation()[i]; })
       .def("__str__", [](const Translation3& self) {
         std::stringstream ss;
         ss << self.translation().transpose();
@@ -114,7 +110,8 @@ void addDefinitions(Context& ctx) {
       }))
       .def("__str__", [](const AngleAxis3& self) {
         std::stringstream ss;
-        ss << "Angle: " << self.angle() << ", Axis: " << self.axis().transpose();
+        ss << "Angle: " << self.angle()
+           << ", Axis: " << self.axis().transpose();
         return ss.str();
       });
 

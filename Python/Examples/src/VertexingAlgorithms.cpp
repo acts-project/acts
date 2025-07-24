@@ -11,7 +11,6 @@
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -26,9 +25,10 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addVertexingAlgorithms(Context& ctx) {
+/// This adds the vertexing algorithms to the examples module
+/// @param mex the examples module
+void addVertexingAlgorithms(py::module_& mex) {
   using Seeder = AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
-  auto& mex = ctx.get("examples");
 
   py::enum_<Seeder>(mex, "VertexSeedFinder")
       .value("TruthSeeder", Seeder::TruthSeeder)
@@ -44,8 +44,8 @@ void addVertexingAlgorithms(Context& ctx) {
       tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
       temporalBinExtent);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(IterativeVertexFinderAlgorithm,
-                                mex, "IterativeVertexFinderAlgorithm",
+  ACTS_PYTHON_DECLARE_ALGORITHM(IterativeVertexFinderAlgorithm, mex,
+                                "IterativeVertexFinderAlgorithm",
                                 inputTrackParameters, outputProtoVertices,
                                 outputVertices, bField, maxIterations);
 

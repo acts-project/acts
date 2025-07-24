@@ -14,7 +14,6 @@
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -27,9 +26,9 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addUtilityAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds algorithms from the utility directory to the examples module
+/// @param mex the examples module
+void addUtilityAlgorithms(py::module_& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(TrajectoriesToPrototracks, mex,
                                 "TrajectoriesToPrototracks", inputTrajectories,
                                 outputProtoTracks);

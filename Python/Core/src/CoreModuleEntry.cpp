@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -18,21 +17,21 @@ namespace py = pybind11;
 /// need to be registered before they can be used in other modules.
 namespace ActsPython {
 
-void addDefinitions(Context& ctx);
-void addMagneticField(Context& ctx);
-void addUtilities(Context& ctx);
-void addVisualization(Context& ctx);
+void addDefinitions(py::module_& m);
+void addMagneticField(py::module_& m);
+void addUtilities(py::module_& m);
+void addVisualization(py::module_& m);
 
-void addMaterial(Context& ctx);
-void addSurfaces(Context& ctx);
-void addGeometry(Context& ctx);
-void addGeometryGen1(Context& ctx);
-void addGeometryGen2(Context& ctx);
-void addGeometryGen3(Context& ctx);
-void addNavigation(Context& ctx);
-void addPropagation(Context& ctx);
-void addSeeding(Context& ctxt);
-void addTrackFinding(Context& ctx);
+void addMaterial(py::module_& m);
+void addSurfaces(py::module_& m);
+void addGeometry(py::module_& m);
+void addGeometryGen1(py::module_& m);
+void addGeometryGen2(py::module_& m);
+void addGeometryGen3(py::module_& m);
+void addNavigation(py::module_& m);
+void addPropagation(py::module_& m);
+void addSeeding(py::module_& mt);
+void addTrackFinding(py::module_& m);
 }  // namespace ActsPython
 
 namespace py = pybind11;
@@ -40,10 +39,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(ActsPythonBindings, m) {
   using namespace ActsPython;
 
-  Context ctx;
-  ctx.modules["main"] = m;
   m.doc() = "Acts";
-
   m.attr("__version__") =
       std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
 
@@ -58,19 +54,19 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
     mv.attr("commit_hash_short") = Acts::CommitHashShort;
   }
 
-  addDefinitions(ctx);
-  addMagneticField(ctx);
-  addMaterial(ctx);
-  addUtilities(ctx);
-  addVisualization(ctx);
+  addDefinitions(m);
+  addMagneticField(m);
+  addMaterial(m);
+  addUtilities(m);
+  addVisualization(m);
 
-  addSurfaces(ctx);
-  addGeometry(ctx);
-  addGeometryGen1(ctx);
-  addGeometryGen2(ctx);
-  addGeometryGen3(ctx);
-  addNavigation(ctx);
-  addPropagation(ctx);
-  addSeeding(ctx);
-  addTrackFinding(ctx);
+  addSurfaces(m);
+  addGeometry(m);
+  addGeometryGen1(m);
+  addGeometryGen2(m);
+  addGeometryGen3(m);
+  addNavigation(m);
+  addPropagation(m);
+  addSeeding(m);
+  addTrackFinding(m);
 }

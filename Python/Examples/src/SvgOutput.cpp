@@ -32,7 +32,6 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include <actsvg/core/draw.hpp>
 
@@ -203,9 +202,9 @@ std::vector<actsvg::svg::object> drawDetector(
 }  // namespace
 
 namespace ActsPython {
-void addSvgOutput(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the SVG output related components to the examples module
+/// @param mex the examples module
+void addSvgOutput(py::module_& mex) {
   // Components from the ActsExamples - part of acts.examples
   {
     using Writer = SvgTrackingGeometryWriter;
@@ -236,12 +235,10 @@ void addSvgOutput(Context& ctx) {
   }
 
   {
-    using Writer =
-        SvgPointWriter<SimHit,
-                                     AccessorPositionXYZ>;
+    using Writer = SvgPointWriter<SimHit, AccessorPositionXYZ>;
     auto w =
-        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-            mex, "SvgSimHitWriter")
+        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(mex,
+                                                             "SvgSimHitWriter")
             .def(py::init<const Writer::Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("write",

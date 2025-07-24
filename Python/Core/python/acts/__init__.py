@@ -43,4 +43,3 @@ def Propagator(stepper, navigator, loglevel=ActsPythonBindings.logging.INFO):
 
 
 _patch_config(ActsPythonBindings)
-

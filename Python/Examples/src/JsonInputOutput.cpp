@@ -17,12 +17,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
-#include "ActsExamples/Io/Json/JsonGeometryList.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
@@ -56,9 +55,10 @@ using namespace Acts;
 using namespace ActsExamples;
 
 namespace ActsPython {
-void addJsonInputOutput(Context& ctx) {
-  auto& mex = ctx.get("examples");
 
+/// This adds the JSON input/output components to the examples module
+/// @param mex the examples module
+void addJsonInputOutput(py::module_& mex) {
   {
     py::enum_<JsonFormat>(mex, "JsonFormat")
         .value("NoOutput", JsonFormat::NoOutput)
@@ -144,6 +144,5 @@ void addJsonInputOutput(Context& ctx) {
   mex.def("writeDigiConfigToJson", ActsExamples::writeDigiConfigToJson);
 
   mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
-
 }
 }  // namespace ActsPython

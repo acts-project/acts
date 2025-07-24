@@ -13,6 +13,8 @@
 #include <GeoModelRead/ReadGeoModel.h>
 // clang-format on
 
+#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
+
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
@@ -27,11 +29,9 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -47,9 +47,9 @@ using namespace pybind11::literals;
 
 namespace ActsPython {
 
-void addGeoModelDetector(Context& ctx) {
-  auto& mex = ctx.get("mex");
-
+/// This adds the GeoModelDetector to the examples module
+/// @param mex the examples module
+void addGeoModelDetector(py::module_& mex) {
   auto gm = mex.def_submodule("geomodel");
 
   {

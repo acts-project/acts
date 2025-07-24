@@ -12,7 +12,6 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
@@ -45,10 +44,8 @@ class PythonLogger {
 };
 
 /// @brief This adds the definitions from Core/Utilitis to the python module
-/// @param ctx the context container for the python modules
-void addUtilities(Context& ctx) {
-  auto& m = ctx.get("main");
-
+/// @param m is the pybind11 core module
+void addUtilities(py::module_& m) {
   // Add any
   py::class_<AnyBase<512>>(m, "AnyBase512").def(py::init<>());
 

@@ -6,26 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/MagneticField/MagneticField.hpp"
-
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/BFieldMapUtils.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/MultiRangeBField.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
-#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
-#include "ActsPython/Utilities/Context.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <array>
-#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <utility>
 
 #include <pybind11/pybind11.h>
@@ -38,9 +29,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addMagneticFieldMaps(Context& ctx) {
-  auto [mex, prop] = ctx.get("examples", "propagation");
-
+/// This adds the magnetic field map loading in the examples module
+/// @param mex the examples module
+void addMagneticFieldMaps(py::module_& mex) {
   py::class_<detail::InterpolatedMagneticField2,
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
              std::shared_ptr<detail::InterpolatedMagneticField2>>(
@@ -67,14 +58,14 @@ void addMagneticFieldMaps(Context& ctx) {
           auto map = makeMagneticFieldMapXyzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstOctant);
-          return std::make_shared<
-              detail::InterpolatedMagneticField3>(std::move(map));
+          return std::make_shared<detail::InterpolatedMagneticField3>(
+              std::move(map));
         } else if (file.extension() == ".txt") {
-          auto map = makeMagneticFieldMapXyzFromText(
-              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
-              firstOctant);
-          return std::make_shared<
-              detail::InterpolatedMagneticField3>(std::move(map));
+          auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
+                                                     file.native(), lengthUnit,
+                                                     BFieldUnit, firstOctant);
+          return std::make_shared<detail::InterpolatedMagneticField3>(
+              std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
@@ -99,14 +90,14 @@ void addMagneticFieldMaps(Context& ctx) {
           auto map = makeMagneticFieldMapRzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstQuadrant);
-          return std::make_shared<
-              detail::InterpolatedMagneticField2>(std::move(map));
+          return std::make_shared<detail::InterpolatedMagneticField2>(
+              std::move(map));
         } else if (file.extension() == ".txt") {
-          auto map = makeMagneticFieldMapRzFromText(
-              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
-              firstQuadrant);
-          return std::make_shared<
-              detail::InterpolatedMagneticField2>(std::move(map));
+          auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
+                                                    file.native(), lengthUnit,
+                                                    BFieldUnit, firstQuadrant);
+          return std::make_shared<detail::InterpolatedMagneticField2>(
+              std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }

@@ -11,7 +11,6 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -24,9 +23,9 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addHepMC3(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-
+/// This adds the HepMC3 input/output components to the examples module
+/// @param mex the examples module
+void addHepMC3(py::module_& mex) {
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3Writer, hepmc3, "HepMC3Writer",

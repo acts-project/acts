@@ -1,3 +1,7 @@
+import pytest
+import acts
+from acts import examples
+
 def test_empty_sequencer(conf_const):
     s = acts.examples.Sequencer()
     with pytest.raises(RuntimeError):

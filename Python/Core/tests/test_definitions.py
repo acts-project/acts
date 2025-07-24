@@ -1,8 +1,10 @@
 import acts
 import pytest
 
+
 def test_pgd_particle():
     assert len(acts.PdgParticle.__members__) == 19
+
 
 def test_algebra():
     # Vector2 testing
@@ -69,5 +71,6 @@ def test_algebra():
     # Transform3 testing
     t3 = acts.Transform3(acts.Vector3(1, 2, 3))
 
-def test_units() :
+
+def test_units():
     assert len(dir(acts.UnitConstants)) == 44

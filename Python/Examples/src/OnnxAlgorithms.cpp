@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -21,10 +20,10 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addOnnxAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
+/// This adds the ONNX algorithms to the examples module
+/// @param mex the context containing the module
+void addOnnxAlgorithms(py::module_& mex) {
   auto onnx = mex.def_submodule("_onnx");
-  ctx.modules["onnx"] = onnx;
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
                                 onnx, "AmbiguityResolutionMLAlgorithm",

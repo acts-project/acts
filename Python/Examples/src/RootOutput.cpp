@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -51,9 +50,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addRootOutput(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the ROOT output related components to the examples module
+/// @param mex the examples module
+void addRootOutput(py::module_& mex) {
   // Bindings for the binning in e.g., TrackFinderPerformanceWriter
   {
     py::class_<PlotHelpers::Binning>(mex, "Binning")

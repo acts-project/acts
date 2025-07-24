@@ -1,147 +1,14 @@
-import sys, inspect
-from pathlib import Path
 from typing import Optional, Protocol, Union, List, Dict, Tuple
-import os
-import re
+from pathlib import Path
 
-from acts.ActsPythonBindings._examples import *
-from acts import ActsPythonBindings
 import acts
-from acts._adapter import _patch_config, _patchKwargsConstructor
+from acts import plugins
+from acts import _patch_config
 
-_propagators = []
-_concrete_propagators = []
-for stepper in ("Eigen", "Atlas", "StraightLine"):
-    for navigator in ("", "Detector"):
-        _propagators.append(
-            getattr(ActsPythonBindings._propagator, f"{stepper}{navigator}Propagator")
-        )
-        _concrete_propagators.append(
-            getattr(
-                ActsPythonBindings._propagator,
-                f"{stepper}{navigator}ConcretePropagator",
-            )
-        )
+from . import ActsExamplesPythonBindings
+from acts.examples.ActsExamplesPythonBindings import *
 
-
-def ConcretePropagator(propagator):
-    for prop, prop_if in zip(_propagators, _concrete_propagators):
-        if isinstance(propagator, prop):
-            return prop_if(propagator)
-
-    raise TypeError(f"Unknown propagator {type(propagator).__name__}")
-
-
-_patch_config(ActsPythonBindings._examples)
-
-# Manually patch ExaTrkX constructors
-# Need to do it this way, since they are not always present
-for module in [
-    "TorchMetricLearning",
-    "OnnxMetricLearning",
-    "TorchEdgeClassifier",
-    "OnnxEdgeClassifier",
-]:
-    if hasattr(ActsPythonBindings._examples, module):
-        _patchKwargsConstructor(getattr(ActsPythonBindings._examples, module))
-
-
-def _makeLayerTriplet(*args, **kwargs):
-    if len(args) == 1:
-        _type = type(args[0])
-        negative = central = positive = args[0]
-    else:
-        negative = kwargs.get("negative")
-        central = kwargs.get("central")
-        positive = kwargs.get("positive")
-        types = []
-        if negative is not None:
-            types.append(type(negative))
-        if central is not None:
-            types.append(type(central))
-        if positive is not None:
-            types.append(type(positive))
-
-        assert all(types[0] == t for t in types), "Inconsistent types"
-
-        _type = types[0]
-
-    def fill(obj):
-        if negative is not None:
-            obj.negative = negative
-        if central is not None:
-            obj.central = central
-        if positive is not None:
-            obj.positive = positive
-        return obj
-
-    if _type == bool:
-        return fill(TGeoDetector.Config.LayerTripletBool())
-    elif _type == list:
-        if all(
-            all(isinstance(v, str) for v in vv)
-            for vv in (negative, central, positive)
-            if vv is not None
-        ):
-            return fill(TGeoDetector.Config.LayerTripletVectorString())
-        elif all(
-            all(
-                (isinstance(v, tuple) or isinstance(v, list))
-                and isinstance(v[0], int)
-                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
-                for v in vv
-            )
-            for vv in (negative, central, positive)
-            if vv is not None
-        ):
-            return fill(TGeoDetector.Config.LayerTripletVectorBinning())
-        else:
-            raise TypeError("Invalid types for list input")
-    elif _type == tuple:
-        if all(
-            all(isinstance(v, float) for v in vv)
-            for vv in (negative, central, positive)
-            if vv is not None
-        ):
-            negative = Interval(*negative) if negative is not None else None
-            central = Interval(*central) if central is not None else None
-            positive = Interval(*positive) if positive is not None else None
-            return fill(TGeoDetector.Config.LayerTripletInterval())
-        else:
-            raise TypeError("Invalid types for tuple input")
-    elif _type == Interval:
-        return fill(TGeoDetector.Config.LayerTripletInterval())
-    elif _type == str:
-        return fill(TGeoDetector.Config.LayerTripletString())
-    elif _type == float:
-        return fill(TGeoDetector.Config.LayerTripletDouble())
-    else:
-        raise TypeError("Unknown type given")
-
-
-TGeoDetector.Config.LayerTriplet = _makeLayerTriplet
-
-
-def _process_volume_intervals(kwargs):
-    if len(kwargs) == 0:
-        return kwargs  # prevent infinite recursion
-    _kwargs = kwargs.copy()
-
-    v = TGeoDetector.Config.Volume()
-    for name, value in inspect.getmembers(inspect.unwrap(TGeoDetector.Config.Volume)):
-        if not isinstance(getattr(v, name), inspect.unwrap(Interval)):
-            continue
-        if not name in _kwargs:
-            continue
-        if not isinstance(_kwargs[name], tuple):
-            continue
-        _kwargs[name] = Interval(*_kwargs[name])
-
-    return _kwargs
-
-
-_patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_intervals)
-
+_patch_config(ActsExamplesPythonBindings)
 
 def NamedTypeArgs(**namedTypeArgs):
     """Decorator to move args of a named type (e.g. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
@@ -383,7 +250,7 @@ def defaultLogging(
     return customLogLevel
 
 
-class Sequencer(ActsPythonBindings._examples._Sequencer):
+class Sequencer(ActsExamplesPythonBindings._Sequencer):
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
     def __init__(self, *args, **kwargs):
@@ -421,7 +288,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             dump_func_args(Sequencer, cfg)
         super().__init__(cfg)
 
-    class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
+    class FpeMask(ActsExamplesPythonBindings._Sequencer._FpeMask):
         @classmethod
         def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
             if isinstance(file, str):

@@ -4,10 +4,7 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 set(_python_install_dir "python/acts")
 
-set(py_files
-    __init__.py
-    _adapter.py
-)
+set(py_files __init__.py _adapter.py)
 
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 

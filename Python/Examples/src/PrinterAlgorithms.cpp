@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -25,15 +24,13 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addPrinterAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the printer algorithms to the examples module
+/// @param mex the examples module
+void addPrinterAlgorithms(py::module_& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
-
-
 }
 }  // namespace ActsPython

@@ -8,7 +8,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
 #include <memory>
@@ -23,11 +22,10 @@ namespace py = pybind11;
 using namespace ActsExamples;
 
 namespace ActsPython {
-void addPythia8Generator(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+/// This adds the Pythia8 generator to the examples module
+/// @param mex the examples module
+void addPythia8Generator(py::module_& mex) {
   auto p8 = mex.def_submodule("pythia8");
-  ctx.modules["pythia8"] = p8;
 
   using Gen = ActsExamples::Pythia8Generator;
   auto gen =

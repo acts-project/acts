@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 namespace ActsPython {
 
 /// This method calls the acts adapter to patch the classes with a config object

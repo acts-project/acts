@@ -9,7 +9,6 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -29,9 +28,10 @@ using namespace detray::io::detail;
 
 namespace ActsPython {
 
-void addDetray(Context& ctx) {
+/// This adds the detray related components to the plugins module
+/// @param p the plugins module
+void addDetray(py::module_& p) {
   // Register the detray module
-  auto& p = ctx.get("plugins");
   auto detray = p.def_submodule("detray");
   {
     py::class_<DetrayHostDetector, std::shared_ptr<DetrayHostDetector>>(

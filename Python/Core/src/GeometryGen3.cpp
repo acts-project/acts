@@ -20,7 +20,6 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
@@ -218,8 +217,8 @@ void pseudoNavigation(const Acts::TrackingGeometry& trackingGeometry,
 
 /// This adds the definitions for the Gen3 geometry construction to the python
 /// module
-/// @param ctx the context container for the python modules
-void addGeometryGen3(Context& ctx) {
+/// @param m is the pybind11 core module
+void addGeometryGen3(py::module_& m) {
   using Acts::Experimental::Blueprint;
   using Acts::Experimental::BlueprintNode;
   using Acts::Experimental::BlueprintOptions;
@@ -229,8 +228,6 @@ void addGeometryGen3(Context& ctx) {
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
-
-  auto m = ctx.get("main");
 
   auto blueprintNode =
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(

@@ -21,16 +21,16 @@ pytestmark = [
 
 
 _names = {
-    acts.FpeType.FLTDIV: "DivByZero",
-    acts.FpeType.FLTOVF: "Overflow",
-    acts.FpeType.FLTINV: "Invalid",
+    acts.plugins.fpe.FpeType.FLTDIV: "DivByZero",
+    acts.plugins.fpe.FpeType.FLTOVF: "Overflow",
+    acts.plugins.fpe.FpeType.FLTINV: "Invalid",
 }
 
 
 _types = [
-    pytest.param(acts.FpeType.FLTDIV, id="FLTDIV"),
-    pytest.param(acts.FpeType.FLTOVF, id="FLTOVF"),
-    pytest.param(acts.FpeType.FLTINV, id="FLTINV"),
+    pytest.param(acts.plugins.fpe.FpeType.FLTDIV, id="FLTDIV"),
+    pytest.param(acts.plugins.fpe.FpeType.FLTOVF, id="FLTOVF"),
+    pytest.param(acts.plugins.fpe.FpeType.FLTINV, id="FLTINV"),
 ]
 
 _src = (Path(__file__).parent / "../src/Framework.cpp").resolve()
@@ -91,7 +91,7 @@ def test_notrackfpe():
 
     res = s.fpeResult
 
-    for x in acts.FpeType.values:
+    for x in acts.plugins.fpe.FpeType.values:
         assert res.count(x) == 0
 
 
@@ -118,7 +118,7 @@ def test_fpe_single_fail_at_end(fpe_type):
         s.run()
     # fails, but will have run all 10 events
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.plugins.fpe.FpeType.values:
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
@@ -142,7 +142,7 @@ def test_fpe_single_fail_immediately(fpe_type):
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.plugins.fpe.FpeType.values:
         assert res.count(x) == (1 if x == fpe_type else 0)
 
 
@@ -188,7 +188,7 @@ def test_fpe_rearm(fpe_type):
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.plugins.fpe.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
@@ -233,7 +233,7 @@ def test_fpe_masking_single(fpe_type):
     s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
+    for x in acts.plugins.fpe.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
@@ -283,5 +283,7 @@ def test_buffer_sufficient():
         s.run()
 
     res = s.fpeResult
-    for x in acts.FpeType.values:
-        assert res.count(x) == (s.config.events if x == acts.FpeType.FLTINV else 0)
+    for x in acts.plugins.fpe.FpeType.values:
+        assert res.count(x) == (
+            s.config.events if x == acts.plugins.fpe.FpeType.FLTINV else 0
+        )

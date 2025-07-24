@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <string>
 
@@ -34,9 +33,10 @@ void declareCovfieField(py::module& m, const std::string& fieldName) {
 }
 }  // namespace
 
-void addCovfie(Context& ctx) {
+/// This adds the covfie related components to the plugins module
+/// @param p the plugins module
+void addCovfie(py::module_& p) {
   // Register the covvie module
-  auto& p = ctx.get("plugins");
   auto m = p.def_submodule("covfie", "Submodule for covfie conversion");
 
   py::class_<covfie::array::array<float, 3ul>,
@@ -45,21 +45,19 @@ void addCovfie(Context& ctx) {
       .def("at", [](const covfie::array::array<float, 3ul>& self,
                     std::size_t i) { return self[i]; });
 
-  declareCovfieField<CovfiePlugin::ConstantField, float>(
-      m, "CovfieConstantField");
+  declareCovfieField<CovfiePlugin::ConstantField, float>(m,
+                                                         "CovfieConstantField");
   declareCovfieField<CovfiePlugin::InterpolatedField, float>(
       m, "CovfieAffineLinearStridedField");
 
-  m.def("makeCovfieField",
-        py::overload_cast<const InterpolatedMagneticField&>(
-            &CovfiePlugin::covfieField));
-  m.def("makeCovfieField", py::overload_cast<const ConstantBField&>(
+  m.def("makeCovfieField", py::overload_cast<const InterpolatedMagneticField&>(
                                &CovfiePlugin::covfieField));
   m.def("makeCovfieField",
-        py::overload_cast<const MagneticFieldProvider&,
-                          MagneticFieldProvider::Cache&,
-                          const std::array<std::size_t, 3>&,
-                          const Vector3&, const Vector3&>(
+        py::overload_cast<const ConstantBField&>(&CovfiePlugin::covfieField));
+  m.def("makeCovfieField",
+        py::overload_cast<
+            const MagneticFieldProvider&, MagneticFieldProvider::Cache&,
+            const std::array<std::size_t, 3>&, const Vector3&, const Vector3&>(
             &CovfiePlugin::covfieField));
 }
 

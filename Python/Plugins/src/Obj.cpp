@@ -14,7 +14,6 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 
 #include <memory>
 
@@ -27,9 +26,11 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-void addObj(Context& ctx) {
+
+/// This adds the obj related components to the plugins module
+/// @param p the plugins module
+void addObj(py::module_& p) {
   // Register the obj module
-  auto& p = ctx.get("plugins");
   auto obj = p.def_submodule("obj");
 
   {

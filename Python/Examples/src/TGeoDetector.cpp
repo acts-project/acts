@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/Detector.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
-#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -31,9 +30,9 @@ using namespace ActsExamples;
 
 namespace ActsPython {
 
-void addTGeoDetector(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
+/// This adds the TGeoDetector to the examples module
+/// @param mex the examples module
+void addTGeoDetector(py::module_& mex) {
   auto tgeo = mex.def_submodule("TGeoDetector");
 
   {
@@ -58,8 +57,6 @@ void addTGeoDetector(Context& ctx) {
         .value("Negative", TGeoDetector::Config::SubVolume::Negative)
         .value("Central", TGeoDetector::Config::SubVolume::Central)
         .value("Positive", TGeoDetector::Config::SubVolume::Positive);
-
-
 
     auto volume =
         py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
@@ -102,7 +99,6 @@ void addTGeoDetector(Context& ctx) {
 
     patchKwargsConstructor(c);
   }
-
 }
 
 }  // namespace ActsPython

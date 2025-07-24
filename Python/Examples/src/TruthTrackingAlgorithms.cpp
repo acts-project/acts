@@ -17,7 +17,6 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -37,12 +36,12 @@ using namespace Acts;
 
 namespace ActsPython {
 
-void addTruthTrackingAlgorithms(Context& ctx) {
-  auto& mex = ctx.get("examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
-      inputParticleMeasurementsMap, outputProtoTracks);
+/// This add the truth tracking related algorithms to the examples module
+/// @param mex the examples module
+void addTruthTrackingAlgorithms(py::module_& mex) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthTrackFinder, mex, "TruthTrackFinder",
+                                inputParticles, inputParticleMeasurementsMap,
+                                outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,
@@ -123,29 +122,29 @@ void addTruthTrackingAlgorithms(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(TruthVertexFinder, mex,
-                                "TruthVertexFinder", inputTracks,
-                                inputTrackParticleMatching, outputProtoVertices,
-                                excludeSecondaries, separateSecondaries);
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthVertexFinder, mex, "TruthVertexFinder",
+                                inputTracks, inputTrackParticleMatching,
+                                outputProtoVertices, excludeSecondaries,
+                                separateSecondaries);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(TrackModifier, mex,
-                                "TrackModifier", inputTracks, outputTracks,
-                                dropCovariance, covScale, killTime);
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrackModifier, mex, "TrackModifier",
+                                inputTracks, outputTracks, dropCovariance,
+                                covScale, killTime);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
-      inputParticles, inputParticleMeasurementsMap, inputSpacePoints,
-      outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
+      TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
+      inputParticleMeasurementsMap, inputSpacePoints, outputParticles,
+      outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector",
-                                inputHits, inputParticlesSelected, outputHits,
-                                minX, maxX, minY, maxY, minZ, maxZ, minR, maxR,
-                                minTime, maxTime, minEnergyLoss, maxEnergyLoss,
+  ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
+                                inputParticlesSelected, outputHits, minX, maxX,
+                                minY, maxY, minZ, maxZ, minR, maxR, minTime,
+                                maxTime, minEnergyLoss, maxEnergyLoss,
                                 minPrimaryVertexId, maxPrimaryVertexId);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
-      inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
+      TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks, inputParticles,
+      inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
 }
 

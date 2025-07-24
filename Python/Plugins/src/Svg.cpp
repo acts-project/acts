@@ -27,7 +27,6 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include <actsvg/core/draw.hpp>
 
@@ -198,9 +197,11 @@ std::vector<actsvg::svg::object> drawDetector(
 }  // namespace
 
 namespace ActsPython {
-void addSvg(Context& ctx) {
+
+/// This adds the svg related components to the plugins module
+/// @param p the plugins module
+void addSvg(py::module_& p) {
   // Register the svg module
-  auto& p = ctx.get("plugins");
   auto svg = p.def_submodule("svg");
 
   svg.def("toFile", &Svg::toFile);
@@ -378,7 +379,6 @@ void addSvg(Context& ctx) {
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, prefix, layerOptions);
   }
-
 
   svg.def(
       "drawTrackingGeometry",

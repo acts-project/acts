@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/Patchers.hpp"
 
@@ -23,11 +24,9 @@ using namespace Acts;
 namespace ActsPython {
 
 /// @brief This adds the classes from Core/TrackFinding to the python module
-/// @param ctx the context container for the python modules
-void addTrackFinding(Context& ctx) {
+/// @param m is the pybind11 core module
+void addTrackFinding(py::module_& m) {
   {
-    auto& m = ctx.get("main");
-
     using EtaBinnedConfig = Acts::TrackSelector::EtaBinnedConfig;
     using Config = Acts::TrackSelector::Config;
 
@@ -73,6 +72,45 @@ void addTrackFinding(Context& ctx) {
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
       ACTS_PYTHON_STRUCT(c, cutSets, absEtaEdges);
+    }
+
+    {
+      auto constructor =
+          [](const std::vector<std::pair<
+                 GeometryIdentifier,
+                 std::tuple<std::vector<double>, std::vector<double>,
+                            std::vector<double>, std::vector<std::size_t>>>>&
+                 input) {
+            std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+                converted;
+            converted.reserve(input.size());
+            for (const auto& [id, cuts] : input) {
+              const auto& [bins, chi2Measurement, chi2Outlier, num] = cuts;
+              converted.emplace_back(
+                  id, MeasurementSelectorCuts{bins, chi2Measurement, num,
+                                              chi2Outlier});
+            }
+            return std::make_unique<MeasurementSelector::Config>(converted);
+          };
+
+      py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
+          .def(py::init<>())
+          .def(py::init<std::vector<double>, std::vector<double>,
+                        std::vector<std::size_t>, std::vector<double>>())
+          .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
+          .def_readwrite("chi2CutOffMeasurement",
+                         &MeasurementSelectorCuts::chi2CutOff)
+          .def_readwrite("chi2CutOffOutlier",
+                         &MeasurementSelectorCuts::chi2CutOffOutlier)
+          .def_readwrite("numMeasurementsCutOff",
+                         &MeasurementSelectorCuts::numMeasurementsCutOff);
+
+      auto ms = py::class_<MeasurementSelector>(m, "MeasurementSelector");
+      auto c =
+          py::class_<MeasurementSelector::Config>(ms, "Config")
+              .def(py::init<std::vector<std::pair<GeometryIdentifier,
+                                                  MeasurementSelectorCuts>>>())
+              .def(py::init(constructor));
     }
   }
 }

@@ -15,7 +15,6 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -32,9 +31,9 @@ using namespace py::literals;
 
 namespace ActsPython {
 
-void addTrackFittingAlgorithms(Context& ctx) {
-  auto mex = ctx.get("examples");
-
+/// This adds the track fitting algorithms to the examples module
+/// @param mex the examples module
+void addTrackFittingAlgorithms(py::module_& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
       inputMeasurements, inputProtoTracks, inputInitialTrackParameters,

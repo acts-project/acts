@@ -1,6 +1,7 @@
 import pytest
 import acts
 
+
 def test_version():
     assert hasattr(acts, "__version__")
     assert hasattr(acts, "version")

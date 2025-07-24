@@ -24,7 +24,6 @@
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
-#include "ActsPython/Utilities/Context.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
@@ -342,7 +341,4 @@ PYBIND11_MODULE(ActsPythonBindingsExamplesGeant4, mod) {
     ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
                        volumes);
   }
-
-  ActsPython::Context ctx;
-  ctx.modules["geant4"] = mod;
 }
