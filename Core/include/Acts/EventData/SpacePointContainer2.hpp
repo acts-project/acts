@@ -16,6 +16,7 @@
 #include "Acts/Utilities/ContainerRange.hpp"
 #include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
+#include "Acts/Utilities/IndexRange.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
@@ -743,108 +744,19 @@ class SpacePointContainer2 {
     return ConstSubset(*this, subset);
   }
 
-  class IndexIteratorRange {
-   public:
-    class Iterator {
-     public:
-      using value_type = Index;
-      using difference_type = std::ptrdiff_t;
-
-      using iterator_category = std::random_access_iterator_tag;
-      using iterator_concept = std::random_access_iterator_tag;
-
-      constexpr Iterator() noexcept = default;
-      explicit constexpr Iterator(SpacePointIndex2 index) noexcept
-          : m_index{index} {}
-
-      constexpr value_type operator*() const noexcept { return m_index; }
-      constexpr value_type operator[](difference_type n) const noexcept {
-        return m_index + n;
-      }
-
-      constexpr Iterator &operator++() noexcept {
-        ++m_index;
-        return *this;
-      }
-      constexpr Iterator operator++(int) noexcept {
-        auto tmp = *this;
-        ++(*this);
-        return tmp;
-      }
-      constexpr Iterator &operator--() noexcept {
-        --m_index;
-        return *this;
-      }
-      constexpr Iterator operator--(int) noexcept {
-        auto tmp = *this;
-        --(*this);
-        return tmp;
-      }
-
-      constexpr Iterator &operator+=(difference_type n) noexcept {
-        m_index += n;
-        return *this;
-      }
-      constexpr Iterator &operator-=(difference_type n) noexcept {
-        m_index -= n;
-        return *this;
-      }
-
-     private:
-      SpacePointIndex2 m_index{0};
-
-      friend constexpr Iterator operator+(Iterator it,
-                                          difference_type n) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator+(difference_type n,
-                                          Iterator it) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator-(Iterator it,
-                                          difference_type n) noexcept {
-        return it -= n;
-      }
-
-      friend constexpr difference_type operator-(const Iterator &lhs,
-                                                 const Iterator &rhs) noexcept {
-        return lhs.m_index - rhs.m_index;
-      }
-
-      friend constexpr auto operator<=>(const Iterator &a,
-                                        const Iterator &b) noexcept = default;
-      friend constexpr bool operator==(const Iterator &a,
-                                       const Iterator &b) noexcept = default;
-    };
-    using iterator = Iterator;
-
-    explicit IndexIteratorRange(IndexRange range) noexcept : m_range(range) {}
-
-    std::size_t size() const noexcept { return m_range.second - m_range.first; }
-    bool empty() const noexcept { return size() == 0; }
-
-    iterator begin() const noexcept { return iterator(m_range.first); }
-    iterator end() const noexcept { return iterator(m_range.second); }
-
-   private:
-    IndexRange m_range{};
-  };
-
   /// Creates a zipped mutable range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
-    return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-    return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.
@@ -855,7 +767,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(
-        IndexIteratorRange(range),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
@@ -866,7 +778,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(
-        IndexIteratorRange(range),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
 
