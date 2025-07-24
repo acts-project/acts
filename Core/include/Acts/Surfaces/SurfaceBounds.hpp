@@ -12,7 +12,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <cmath>
-#include <optional>
 #include <ostream>
 
 namespace Acts {
@@ -84,9 +83,8 @@ class SurfaceBounds {
   /// @param lposition is the local position
   /// @param metric to be used for the distance calculation
   /// @return the closest point on the bounds
-  virtual Vector2 closestPoint(
-      const Vector2& lposition,
-      const std::optional<SquareMatrix2>& metric) const = 0;
+  virtual Vector2 closestPoint(const Vector2& lposition,
+                               const SquareMatrix2& metric) const = 0;
 
   /// Calculates the distance to the bounds from a given local position
   /// @param lposition is the local position

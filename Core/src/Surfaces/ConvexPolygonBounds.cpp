@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <optional>
 #include <ostream>
 
 namespace Acts {
@@ -50,11 +49,10 @@ bool ConvexPolygonBounds<PolygonDynamic>::inside(
 }
 
 Vector2 ConvexPolygonBounds<PolygonDynamic>::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+    const Vector2& lposition, const SquareMatrix2& metric) const {
   return detail::VerticesHelper::computeClosestPointOnPolygon(
       lposition, std::span<const Vector2>(m_vertices.data(), m_vertices.size()),
-      metric.value_or(SquareMatrix2::Identity()));
+      metric);
 }
 
 std::vector<Vector2> ConvexPolygonBounds<PolygonDynamic>::vertices(

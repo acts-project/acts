@@ -18,35 +18,41 @@ bool SurfaceBounds::inside(const Vector2& lposition,
     return true;
   }
 
-  BoundaryTolerance::Mode toleranceMode = boundaryTolerance.mode();
+  BoundaryTolerance::Mode mode = boundaryTolerance.mode();
   bool strictlyInside = inside(lposition);
 
-  if (toleranceMode == None) {
+  if (mode == None) {
     return strictlyInside;
   }
 
-  if (toleranceMode == Extend && strictlyInside) {
+  if (mode == Extend && strictlyInside) {
     return true;
   }
 
-  std::optional<SquareMatrix2> jacobian;
-  std::optional<SquareMatrix2> metric;
-  if (boundaryTolerance.hasChi2Bound()) {
-    SquareMatrix2 j = boundToCartesianJacobian(lposition);
-    jacobian = j;
-    metric = j.transpose() * boundaryTolerance.asChi2Bound().weightMatrix() * j;
-  } else if (!boundaryTolerance.hasAbsoluteBound(isCartesian())) {
-    jacobian = boundToCartesianJacobian(lposition);
-    metric = boundToCartesianMetric(lposition);
+  SquareMatrix2 boundToCartesian = boundToCartesianJacobian(lposition);
+  SquareMatrix2 metric = SquareMatrix2::Identity();
+  if (boundaryTolerance.hasAbsoluteEuclidean()) {
+    metric = boundToCartesian.transpose() * boundToCartesian;
+  } else if (boundaryTolerance.hasChi2Bound()) {
+    metric = boundToCartesian.transpose() *
+             boundaryTolerance.asChi2Bound().weightMatrix() * boundToCartesian;
+  } else if (boundaryTolerance.hasChi2Cartesian()) {
+    metric = boundToCartesian.transpose() *
+             boundaryTolerance.asChi2Cartesian().weightMatrix() *
+             boundToCartesian;
+  } else {
+    throw std::runtime_error(
+        "SurfaceBounds::inside: Unsupported boundary tolerance type.");
   }
 
   Vector2 closest = closestPoint(lposition, metric);
   Vector2 distance = closest - lposition;
 
-  if (toleranceMode == Shrink) {
-    return boundaryTolerance.isTolerated(distance, jacobian) && strictlyInside;
+  if (mode == Shrink) {
+    return boundaryTolerance.isTolerated(distance, boundToCartesian) &&
+           strictlyInside;
   }
-  return boundaryTolerance.isTolerated(distance, jacobian);
+  return boundaryTolerance.isTolerated(distance, boundToCartesian);
 }
 
 }  // namespace Acts

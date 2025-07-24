@@ -18,7 +18,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <optional>
 
 namespace Acts {
 
@@ -297,9 +296,8 @@ SquareMatrix2 AnnulusBounds::stripPCToModulePCJacobian(
   return j;
 }
 
-Vector2 AnnulusBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
+                                    const SquareMatrix2& metric) const {
   // lposition is PC in STRIP SYSTEM
   // we need to rotate the local position
   Vector2 lpositionRotated = m_rotationStripPC * lposition;
@@ -308,7 +306,7 @@ Vector2 AnnulusBounds::closestPoint(
       stripPCToModulePCJacobian(lpositionRotated);
 
   // calculate the metrics for STRIP PC and MODULE PC
-  SquareMatrix2 metricStripPC = metric.value_or(SquareMatrix2::Identity());
+  SquareMatrix2 metricStripPC = metric;
   SquareMatrix2 metricModulePC = jacobianStripPCToModulePC.transpose() *
                                  metricStripPC * jacobianStripPCToModulePC;
 

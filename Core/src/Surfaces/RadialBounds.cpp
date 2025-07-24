@@ -66,9 +66,8 @@ bool RadialBounds::inside(const Vector2& lposition) const {
       Vector2(get(eMaxR), get(eHalfPhiSector)));
 }
 
-Vector2 RadialBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 RadialBounds::closestPoint(const Vector2& lposition,
+                                   const SquareMatrix2& metric) const {
   return detail::VerticesHelper::computeClosestPointOnAlignedBox(
       Vector2(get(eMinR), -get(eHalfPhiSector)),
       Vector2(get(eMaxR), get(eHalfPhiSector)), shifted(lposition), metric);

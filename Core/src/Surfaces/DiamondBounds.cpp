@@ -13,7 +13,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <optional>
 #include <stdexcept>
 
 namespace Acts {
@@ -46,9 +45,8 @@ bool DiamondBounds::inside(const Vector2& lposition) const {
   return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }
 
-Vector2 DiamondBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 DiamondBounds::closestPoint(const Vector2& lposition,
+                                    const SquareMatrix2& metric) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);
@@ -59,8 +57,8 @@ Vector2 DiamondBounds::closestPoint(
   double y3 = get(DiamondBounds::eHalfLengthYpos);
   Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
                         {x3, y3},   {-x3, y3}, {-x2, y2}};
-  return detail::VerticesHelper::computeClosestPointOnPolygon(
-      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 std::vector<Vector2> DiamondBounds::vertices(

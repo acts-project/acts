@@ -246,9 +246,8 @@ const Transform3& Surface::transform(const GeometryContext& gctx) const {
   return *m_transform;
 }
 
-Vector2 Surface::closestPointOnBoundary(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 Surface::closestPointOnBoundary(const Vector2& lposition,
+                                        const SquareMatrix2& metric) const {
   return bounds().closestPoint(lposition, metric);
 }
 

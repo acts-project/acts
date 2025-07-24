@@ -105,10 +105,9 @@ bool ConvexPolygonBounds<N>::inside(const Vector2& lposition) const {
 
 template <int N>
 Vector2 ConvexPolygonBounds<N>::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+    const Vector2& lposition, const SquareMatrix2& metric) const {
   return detail::VerticesHelper::computeClosestPointOnPolygon(
-      lposition, m_vertices, metric.value_or(SquareMatrix2::Identity()));
+      lposition, m_vertices, metric);
 }
 
 template <int N>

@@ -35,9 +35,8 @@ bool LineBounds::inside(const Vector2& lposition) const {
       lposition, Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ));
 }
 
-Vector2 LineBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 LineBounds::closestPoint(const Vector2& lposition,
+                                 const SquareMatrix2& metric) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::VerticesHelper::computeClosestPointOnAlignedBox(

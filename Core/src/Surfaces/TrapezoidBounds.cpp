@@ -69,9 +69,8 @@ bool TrapezoidBounds::inside(const Vector2& lposition) const {
   return detail::VerticesHelper::isInsidePolygon(extPosition, vertices);
 }
 
-Vector2 TrapezoidBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 TrapezoidBounds::closestPoint(const Vector2& lposition,
+                                      const SquareMatrix2& metric) const {
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
   const double hlY = get(TrapezoidBounds::eHalfLengthY);
@@ -83,7 +82,7 @@ Vector2 TrapezoidBounds::closestPoint(
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
 
   Vector2 extClosest = detail::VerticesHelper::computeClosestPointOnPolygon(
-      extPosition, vertices, metric.value_or(SquareMatrix2::Identity()));
+      extPosition, vertices, metric);
 
   return Eigen::Rotation2Dd(-rotAngle) * extClosest;
 }

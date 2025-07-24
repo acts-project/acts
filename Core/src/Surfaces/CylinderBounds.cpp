@@ -79,9 +79,8 @@ bool CylinderBounds::inside(const Vector2& lposition) const {
   return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }
 
-Vector2 CylinderBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 CylinderBounds::closestPoint(const Vector2& lposition,
+                                     const SquareMatrix2& metric) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
   double halfLengthZ = get(eHalfLengthZ);
@@ -96,8 +95,8 @@ Vector2 CylinderBounds::closestPoint(
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
 
-  return detail::VerticesHelper::computeClosestPointOnPolygon(
-      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 std::ostream& CylinderBounds::toStream(std::ostream& sl) const {

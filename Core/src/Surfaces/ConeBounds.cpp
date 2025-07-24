@@ -79,9 +79,8 @@ bool ConeBounds::inside(const Vector2& lposition) const {
       Vector2(rphiHalf, get(eMaxZ)));
 }
 
-Vector2 ConeBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 ConeBounds::closestPoint(const Vector2& lposition,
+                                 const SquareMatrix2& metric) const {
   auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
   return detail::VerticesHelper::computeClosestPointOnAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),

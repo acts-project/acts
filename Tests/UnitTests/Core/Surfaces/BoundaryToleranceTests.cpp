@@ -14,8 +14,6 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 
-#include <limits>
-
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
@@ -26,22 +24,6 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     // Test None constructor
     BoundaryTolerance tolerance = BoundaryTolerance::None();
     BOOST_CHECK(tolerance.mode() == None);
-  }
-
-  // Test AbsoluteBound constructor
-  {
-    // Valid positive tolerances
-    auto tolerance = BoundaryTolerance::AbsoluteBound(1.0, 2.0);
-    BOOST_CHECK_EQUAL(tolerance.asAbsoluteBound().tolerance0, 1.0);
-    BOOST_CHECK_EQUAL(tolerance.asAbsoluteBound().tolerance1, 2.0);
-    BOOST_CHECK(tolerance.mode() == Extend);
-    BOOST_CHECK(BoundaryTolerance::AbsoluteBound(0.0, 0.0).mode() == None);
-
-    // Negative tolerances should throw
-    BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteBound(-1.0, 2.0),
-                      std::invalid_argument);
-    BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteBound(1.0, -2.0),
-                      std::invalid_argument);
   }
 
   // Test AbsoluteEuclidean constructor
@@ -56,22 +38,6 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     tolerance = BoundaryTolerance::AbsoluteEuclidean(-1.0);
     BOOST_CHECK_EQUAL(tolerance.asAbsoluteEuclidean().tolerance, -1.0);
     BOOST_CHECK(tolerance.mode() == Shrink);
-  }
-
-  // Test AbsoluteCartesian constructor
-  {
-    // Valid positive tolerance
-    auto tolerance = BoundaryTolerance::AbsoluteCartesian(1.0, 2.0);
-    BOOST_CHECK_EQUAL(tolerance.asAbsoluteCartesian().tolerance0, 1.0);
-    BOOST_CHECK_EQUAL(tolerance.asAbsoluteCartesian().tolerance1, 2.0);
-    BOOST_CHECK(tolerance.mode() == Extend);
-    BOOST_CHECK(BoundaryTolerance::AbsoluteCartesian(0.0, 0.0).mode() == None);
-
-    // Negative tolerances should throw
-    BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteCartesian(-1.0, 2.0),
-                      std::invalid_argument);
-    BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteCartesian(1.0, -2.0),
-                      std::invalid_argument);
   }
 
   // Test Chi2Bound constructor
@@ -107,27 +73,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
   BOOST_CHECK(!bounds.inside({2, 2}, tolerance));
   BOOST_CHECK(!bounds.inside({0, 2}, tolerance));
   BOOST_CHECK(!bounds.inside({2, 0}, tolerance));
-}
-
-// Aligned box w/ tolerance check along first axis
-BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
-  boost::execution_monitor em;
-  em.p_detect_fp_exceptions.set(boost::fpe::BOOST_FPE_ALL);
-
-  em.execute([]() {
-    Vector2 ll(-1, -1);
-    Vector2 ur(1, 1);
-    RectangleBounds bounds(ll, ur);
-    auto tolerance = BoundaryTolerance::AbsoluteBound(
-        1.5, std::numeric_limits<double>::infinity());
-    BOOST_CHECK(bounds.inside({0, 0}, tolerance));
-    BOOST_CHECK(bounds.inside({2, 2}, tolerance));
-    BOOST_CHECK(!bounds.inside({4, 4}, tolerance));
-    BOOST_CHECK(bounds.inside({0, 2}, tolerance));
-    BOOST_CHECK(bounds.inside({2, 0}, tolerance));
-
-    return 0;
-  });
 }
 
 // Aligned box w/ covariance check
@@ -187,28 +132,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
     BOOST_CHECK(bounds.inside({2, 2}, tolerance));
     BOOST_CHECK(bounds.inside({0, 2}, tolerance));
     BOOST_CHECK(bounds.inside({2, 0}, tolerance));
-  }
-
-  {
-    auto tolerance = BoundaryTolerance::AbsoluteBound(0.5, 0.5);
-    BOOST_CHECK(bounds.inside({0, 0}, tolerance));
-    BOOST_CHECK(bounds.inside({1.1, 1.1}, tolerance));
-    BOOST_CHECK(bounds.inside({0, 1.1}, tolerance));
-    BOOST_CHECK(bounds.inside({1.1, 0}, tolerance));
-    BOOST_CHECK(!bounds.inside({2, 2}, tolerance));
-    BOOST_CHECK(!bounds.inside({0, 2}, tolerance));
-    BOOST_CHECK(!bounds.inside({2, 0}, tolerance));
-  }
-
-  {
-    auto tolerance = BoundaryTolerance::AbsoluteCartesian(0.5, 0.5);
-    BOOST_CHECK(bounds.inside({0, 0}, tolerance));
-    BOOST_CHECK(bounds.inside({1.1, 1.1}, tolerance));
-    BOOST_CHECK(bounds.inside({0, 1.1}, tolerance));
-    BOOST_CHECK(bounds.inside({1.1, 0}, tolerance));
-    BOOST_CHECK(!bounds.inside({2, 2}, tolerance));
-    BOOST_CHECK(!bounds.inside({0, 2}, tolerance));
-    BOOST_CHECK(!bounds.inside({2, 0}, tolerance));
   }
 
   {

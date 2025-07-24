@@ -124,7 +124,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // Benchmark scenarios
   run_all_benches(BoundaryTolerance::Infinite(), "No check", Mode::None);
   run_all_benches(BoundaryTolerance::None(), "No tolerance", Mode::FastOutside);
-  run_all_benches(BoundaryTolerance::AbsoluteBound(0.6, 0.45), "Abs. tolerance",
+  run_all_benches(BoundaryTolerance::AbsoluteEuclidean(0.6), "Abs. tolerance",
                   Mode::SlowOutside);
   run_all_benches(BoundaryTolerance::Chi2Bound(cov, 3.0), "Cov. tolerance",
                   Mode::SlowOutside);

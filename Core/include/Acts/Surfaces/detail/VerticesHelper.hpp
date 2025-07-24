@@ -185,8 +185,9 @@ Vector2 computeEuclideanClosestPointOnRectangle(const Vector2& point,
                                                 const Vector2& upperRight);
 
 /// Calculate the closest point on the aligned box
-Vector2 computeClosestPointOnAlignedBox(
-    const Vector2& lowerLeft, const Vector2& upperRight, const Vector2& point,
-    const std::optional<SquareMatrix2>& metricOpt);
+Vector2 computeClosestPointOnAlignedBox(const Vector2& lowerLeft,
+                                        const Vector2& upperRight,
+                                        const Vector2& point,
+                                        const SquareMatrix2& metric);
 
 }  // namespace Acts::detail::VerticesHelper

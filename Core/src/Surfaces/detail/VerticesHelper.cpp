@@ -260,10 +260,10 @@ Vector2 detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
 
 Vector2 detail::VerticesHelper::computeClosestPointOnAlignedBox(
     const Vector2& lowerLeft, const Vector2& upperRight, const Vector2& point,
-    const std::optional<SquareMatrix2>& metricOpt) {
+    const SquareMatrix2& metric) {
   Vector2 closestPoint;
 
-  if (!metricOpt.has_value()) {
+  if (metric.isIdentity()) {
     closestPoint =
         detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
             point, lowerLeft, upperRight);
@@ -277,7 +277,7 @@ Vector2 detail::VerticesHelper::computeClosestPointOnAlignedBox(
                                         {lowerLeft[0], upperRight[1]}}};
 
     closestPoint = detail::VerticesHelper::computeClosestPointOnPolygon(
-        point, vertices, *metricOpt);
+        point, vertices, metric);
   }
 
   return closestPoint;

@@ -50,11 +50,10 @@ bool RectangleBounds::inside(const Vector2& lposition) const {
   return detail::VerticesHelper::isInsideRectangle(lposition, m_min, m_max);
 }
 
-Vector2 RectangleBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
+Vector2 RectangleBounds::closestPoint(const Vector2& lposition,
+                                      const SquareMatrix2& metric) const {
   // If no metric is provided we can use a shortcut for the rectangle
-  if (!metric.has_value()) {
+  if (metric.isIdentity()) {
     return detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
         lposition, m_min, m_max);
   }
@@ -62,8 +61,8 @@ Vector2 RectangleBounds::closestPoint(
   // Otherwise we need to compute the closest point on the polygon
   std::array<Vector2, 4> vertices = {
       {m_min, {m_max[0], m_min[1]}, m_max, {m_min[0], m_max[1]}}};
-  return detail::VerticesHelper::computeClosestPointOnPolygon(
-      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 std::vector<Vector2> RectangleBounds::vertices(unsigned int /*lseg*/) const {

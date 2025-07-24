@@ -53,9 +53,8 @@ bool EllipseBounds::inside(const Vector2& lposition) const {
           square(lposition[eBoundLoc1] / get(eOuterRy))) < 1;
 }
 
-Vector2 EllipseBounds::closestPoint(
-    const Vector2& /*lposition*/,
-    const std::optional<SquareMatrix2>& /*metric*/) const {
+Vector2 EllipseBounds::closestPoint(const Vector2& /*lposition*/,
+                                    const SquareMatrix2& /*metric*/) const {
   throw std::logic_error("Not implemented");
 }
 

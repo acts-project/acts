@@ -82,7 +82,7 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
-                       const std::optional<SquareMatrix2>& metric) const final;
+                       const SquareMatrix2& metric) const final;
 
   using SurfaceBounds::inside;
 
