@@ -60,10 +60,6 @@ class DetectorElementStub : public DetectorElementBase {
 void addNavigation(Context& ctx) {
   auto m = ctx.get("main");
 
-  py::class_<Acts::NavigationPolicyFactory,
-             std::shared_ptr<Acts::NavigationPolicyFactory>>(
-      m, "_NavigationPolicyFactory");
-
   {
     auto tryAll =
         py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
