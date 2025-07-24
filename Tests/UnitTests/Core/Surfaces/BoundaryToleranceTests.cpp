@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
   RectangleBounds bounds(ll, ur);
-  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 3.);
+  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 4);
   BOOST_CHECK(bounds.inside({0, 0}, tolerance));
   BOOST_CHECK(bounds.inside({2, 2}, tolerance));
   BOOST_CHECK(!bounds.inside({4, 4}, tolerance));
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   ConvexPolygonBounds<PolygonDynamic> poly({{-2, 0}, {2, 0}, {0, 2}});
   SquareMatrix2 cov;
   cov << 0.5, 0, 0, 0.5;
-  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 4.1);
+  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 8);
   BOOST_CHECK(poly.inside({0, 0}, tolerance));
   BOOST_CHECK(poly.inside({0, 1}, tolerance));
   BOOST_CHECK(poly.inside({0, 2}, tolerance));
@@ -143,8 +143,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance =
-        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.);
+    auto tolerance = BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 2);
     BOOST_CHECK(bounds.inside({0, 0}, tolerance));
     BOOST_CHECK(bounds.inside({2, 2}, tolerance));
     BOOST_CHECK(bounds.inside({0, 2}, tolerance));
@@ -184,7 +183,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckNegativeToleranceRect) {
 
   {
     auto tolerance =
-        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), -0.1);
+        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), -0.2);
 
     BOOST_CHECK(!check(tolerance, {2.8, 2}));
     BOOST_CHECK(!check(tolerance, {3.1, 2}));
