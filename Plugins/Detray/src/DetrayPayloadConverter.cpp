@@ -436,8 +436,11 @@ DetrayPayloadConverter::convertMaterial(
     slabPayload.surface.link = surface.index_in_coll.value();
   }
 
-  auto assignMaterial = [&](DetraySurfaceMaterial& detrayMaterial,
-                            std::size_t srfIdx) {
+  std::map<std::size_t, const ISurfaceMaterial*> srfIdxToMaterial;
+
+  auto assignMaterial = [&](const ISurfaceMaterial* material,
+                            DetraySurfaceMaterial& detrayMaterial,
+                            std::size_t srfIdx, const Surface& surface) {
     auto handleHomogeneous =
         [&](const detray::io::material_slab_payload& slab) {
           // Given the pseudo slabs from before, we need to either update an
@@ -465,17 +468,41 @@ DetrayPayloadConverter::convertMaterial(
             homogeneous.mat_slabs.back().index_in_coll = srfIdx;
             homogeneous.mat_slabs.back().surface.link = srfIdx;
           }
+
+          auto sit = srfIdxToMaterial.find(srfIdx);
+          if (sit != srfIdxToMaterial.end() && sit->second != material) {
+            ACTS_ERROR("Surface "
+                       << srfIdx
+                       << " already has a different material assigned");
+            throw std::runtime_error("Material mismatch for surface");
+          }
         };
 
     auto handleGrid =
         [&](const detray::io::grid_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>& grid) {
           ACTS_DEBUG("Assigning grid material to surface " << srfIdx);
+          auto it = srfIdxToMaterial.find(srfIdx);
+
+          if (it != srfIdxToMaterial.end()) {
+            // Surface already has some material assigned
+            if (it->second != material) {
+              ACTS_ERROR("Surface "
+                         << srfIdx
+                         << " already has a different material assigned");
+              throw std::runtime_error("Material mismatch for surface");
+            }
+
+            // It's the same material again, we just skip adding a duplicate
+            return;
+          }
           grids.emplace_back(grid);
           grids.back().owner_link.link = srfIdx;
         };
 
     std::visit(overloaded{handleHomogeneous, handleGrid}, detrayMaterial);
+
+    srfIdxToMaterial[srfIdx] = material;
   };
 
   auto printSurfaceInfo = [&](DetraySurfaceMaterial& detrayMaterial,
@@ -494,6 +521,8 @@ DetrayPayloadConverter::convertMaterial(
     std::visit(overloaded{handleHomogeneous, handleGrid}, detrayMaterial);
   };
 
+  ACTS_VERBOSE("Looping over " << volume.surfaces().size()
+                               << " surfaces in volume " << volPayload.name);
   for (const auto& surface : volume.surfaces()) {
     auto srfIt = surfaceIndices.find(&surface);
 
@@ -518,8 +547,10 @@ DetrayPayloadConverter::convertMaterial(
 
     printSurfaceInfo(*detrayMaterial, surface);
 
-    assignMaterial(*detrayMaterial, srfIdx);
+    assignMaterial(surface.surfaceMaterial(), *detrayMaterial, srfIdx);
   }
+  ACTS_VERBOSE("Looping over " << volume.portals().size()
+                               << " portals in volume " << volPayload.name);
 
   // Portals need special treatment: we have decomposed them to their trivial
   // portal links, and only registered a subset to them as well. We again need
@@ -528,11 +559,12 @@ DetrayPayloadConverter::convertMaterial(
   for (const auto& portal : volume.portals()) {
     // First check, if the combined portal surface has material assigned at all,
     // if not there's nothing to do
-    if (portal.surface().surfaceMaterial() == nullptr) {
+    const auto* surfaceMaterial = portal.surface().surfaceMaterial();
+    if (surfaceMaterial == nullptr) {
       continue;
     }
 
-    auto detrayMaterial = portal.surface().surfaceMaterial()->toDetrayPayload();
+    auto detrayMaterial = surfaceMaterial->toDetrayPayload();
 
     // Portal surface material reports it does not apply to detray, skip
     if (detrayMaterial == nullptr) {
@@ -550,13 +582,15 @@ DetrayPayloadConverter::convertMaterial(
       if (link == nullptr) {
         continue;
       }
+      ACTS_VERBOSE("Processing dir=" << dir << " for portal on surface "
+                                     << portal.surface().geometryId());
 
       std::vector<const TrivialPortalLink*> trivials =
           decomposeToTrivials(*link, logger());
 
-      // ACTS_DEBUG("Portal link in volume " << volPayload.name << " has
-      // produced "
-      //                                     << trivials.size() << " trivials");
+      ACTS_VERBOSE("Portal link in volume "
+                   << volPayload.name << " has produced " << trivials.size()
+                   << " trivials");
       for (const auto* trivial : trivials) {
         auto srfIt = surfaceIndices.find(&trivial->surface());
 
@@ -567,14 +601,14 @@ DetrayPayloadConverter::convertMaterial(
 
         std::size_t srfIdx = srfIt->second;
 
-        // ACTS_DEBUG("Trivial portal link in volume "
-        //            << volPayload.name << " has surface "
-        //            << trivial->surface().geometryId() << " detray idx "
-        //            << srfIdx);
+        ACTS_VERBOSE("Trivial portal link in volume "
+                     << volPayload.name << " has surface "
+                     << trivial->surface().geometryId() << " detray idx "
+                     << srfIdx);
 
         // Assign (a copy of) the detray material to the surface payload
         // associated with this trivial
-        assignMaterial(*detrayMaterial, srfIdx);
+        assignMaterial(surfaceMaterial, *detrayMaterial, srfIdx);
       }
     }
   }
@@ -678,6 +712,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
 
     for (const auto& [surface, idx] : surfaceIndices) {
       ACTS_VERBOSE("Surface " << surface->geometryId() << " (&: " << surface
+                              << ", type: " << surface->type()
                               << ") has detray index " << idx);
     }
 
