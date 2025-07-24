@@ -153,7 +153,7 @@ class AccumulatorSection {
 
   // counter clock wise distance from upper left corner
   // a and b are line parameters y = ax + b
-  float distCC(float a, float b) const;
+  float distCounterClockwise(float a, float b) const;
   // anti-counter clock wise distance from upper left corner
   float distACC(float a, float b) const;
 
