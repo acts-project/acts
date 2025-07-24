@@ -285,14 +285,14 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
 
   const MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
-  // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
-  std::vector<float> binEdges = {
-      0., 5.,
-      179.48552,  // empirical maximum radius
-  };
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open, AxisR);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed, AxisPhi);
+  // Create a binned material in 2 bins - irregularly in z, 2 bins in phi
+  std::vector<float> binEdges = {// empirical bin edges. these are not checked!
+                                 -476.5, 0, 476.5};
+
+  Acts::BinUtility binUtility(2u, -std::numbers::pi, std::numbers::pi,
+                              Acts::BinningOption::closed, AxisPhi);
+
+  binUtility += Acts::BinUtility(binEdges, Acts::BinningOption::open, AxisZ);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {lProperties, lProperties};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {lProperties, lProperties};
@@ -309,8 +309,8 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
   Blueprint root{cfg};
 
   auto& barrelMat = root.addMaterial("BarrelMaterial");
-  barrelMat.configureFace(PositiveDisc, binnedMaterial);
-  barrelMat.configureFace(NegativeDisc, binnedMaterial);
+  // barrelMat.configureFace(PositiveDisc, binnedMaterial);
+  // barrelMat.configureFace(NegativeDisc, binnedMaterial);
 
   barrelMat.addCylinderContainer("Detector", AxisR, [&](auto& detector) {
     auto beampipeBounds = std::make_unique<Acts::CylinderVolumeBounds>(
@@ -320,9 +320,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
 
     detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
       MaterialSlab beamPipeMaterial(makeBeryllium(), kBeamPipeThickness);
-      bpMat.configureFace(
-          OuterCylinder,
-          std::make_shared<HomogeneousSurfaceMaterial>(beamPipeMaterial));
+      bpMat.configureFace(OuterCylinder, binnedMaterial);
       bpMat.addStaticVolume(std::move(beampipe));
     });
 
