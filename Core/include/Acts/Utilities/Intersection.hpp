@@ -196,6 +196,13 @@ class SurfaceIntersection {
   }
 
   /// Returns the surface that has been intersected
+  [[deprecated(
+      "Use surface() instead. This will be removed in a future release.")]]
+  constexpr const Surface* object() const {
+    return m_surface;
+  }
+
+  /// Returns the surface that has been intersected
   constexpr const Surface& surface() const { return *m_surface; }
 
   constexpr std::uint8_t index() const { return m_index; }
@@ -272,6 +279,14 @@ class SurfaceMultiIntersection {
 
   std::size_t size() const { return m_intersections.size(); }
 
+  /// Returns the surface that has been intersected
+  [[deprecated(
+      "Use surface() instead. This will be removed in a future release.")]]
+  constexpr const Surface* object() const {
+    return m_surface;
+  }
+
+  /// Returns the surface that has been intersected
   constexpr const Surface& surface() const { return *m_surface; }
 
   constexpr BoundaryTolerance boundaryTolerance() const {
