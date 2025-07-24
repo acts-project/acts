@@ -208,7 +208,21 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
     class MockDiscBounds final : public Acts::SurfaceBounds {
      public:
       BoundsType type() const final { return BoundsType::eDisc; }
+      bool isCartesian() const final { return true; }
+      SquareMatrix2 boundToCartesianJacobian(
+          const Vector2& /*lposition*/) const final {
+        return SquareMatrix2::Identity();
+      }
+      SquareMatrix2 boundToCartesianMetric(
+          const Vector2& /*lposition*/) const final {
+        return SquareMatrix2::Identity();
+      }
       std::vector<double> values() const final { return {}; }
+      bool inside(const Vector2& /*lposition*/) const final { return false; }
+      Vector2 closestPoint(const Vector2& lposition,
+                           const SquareMatrix2& /*metric*/) const final {
+        return lposition;
+      }
       bool inside(const Acts::Vector2& /*loc*/,
                   const Acts::BoundaryTolerance& /*bcheck*/) const final {
         return false;
@@ -227,7 +241,21 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
       BoundsType type() const final {
         return static_cast<BoundsType>(999);
       }  // Invalid type
+      bool isCartesian() const final { return true; }
+      SquareMatrix2 boundToCartesianJacobian(
+          const Vector2& /*lposition*/) const final {
+        return SquareMatrix2::Identity();
+      }
+      SquareMatrix2 boundToCartesianMetric(
+          const Vector2& /*lposition*/) const final {
+        return SquareMatrix2::Identity();
+      }
       std::vector<double> values() const final { return {}; }
+      bool inside(const Vector2& /*lposition*/) const final { return false; }
+      Vector2 closestPoint(const Vector2& lposition,
+                           const SquareMatrix2& /*metric*/) const final {
+        return lposition;
+      }
       bool inside(const Acts::Vector2& /*loc*/,
                   const Acts::BoundaryTolerance& /*bcheck*/) const final {
         return false;
