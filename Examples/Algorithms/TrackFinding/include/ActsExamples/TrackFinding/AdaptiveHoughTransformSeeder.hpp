@@ -169,7 +169,7 @@ class AccumulatorSection {
   /// @param value - value to store
   void setHistory(unsigned index, float value) {
     m_history.resize(index + 1);
-    m_history[index] = value;
+    m_history.at(index) = value;
   }
   /// @brief retrieve history info
   /// @param index - item index
