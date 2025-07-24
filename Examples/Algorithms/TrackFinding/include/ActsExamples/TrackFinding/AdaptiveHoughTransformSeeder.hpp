@@ -255,7 +255,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     Acts::SourceLink link;
   };
 
-  template <typename M = PreprocessedMeasurement>
+  template <typename measurement_t = PreprocessedMeasurement>
   struct AHTExplorationOptions {
     float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
                                // value the sections are not split
