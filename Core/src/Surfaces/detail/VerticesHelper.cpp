@@ -202,9 +202,12 @@ Vector2 detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
    *
    */
 
-  double l0 = point[0], l1 = point[1];
-  double loc0Min = lowerLeft[0], loc0Max = upperRight[0];
-  double loc1Min = lowerLeft[1], loc1Max = upperRight[1];
+  double l0 = point[0];
+  double l1 = point[1];
+  double loc0Min = lowerLeft[0];
+  double loc0Max = upperRight[0];
+  double loc1Min = lowerLeft[1];
+  double loc1Max = upperRight[1];
 
   // check if inside
   if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {

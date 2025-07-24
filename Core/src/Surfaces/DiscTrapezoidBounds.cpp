@@ -82,10 +82,10 @@ bool DiscTrapezoidBounds::inside(const Vector2& lposition) const {
 
 Vector2 DiscTrapezoidBounds::closestPoint(const Vector2& lposition,
                                           const SquareMatrix2& metric) const {
-  Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                        {get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXminR), get(eMinR)}};
+  std::array<Vector2, 4> vertices{{{get(eHalfLengthXminR), get(eMinR)},
+                                   {get(eHalfLengthXmaxR), m_ymax},
+                                   {-get(eHalfLengthXmaxR), m_ymax},
+                                   {-get(eHalfLengthXminR), get(eMinR)}}};
   return detail::VerticesHelper::computeClosestPointOnPolygon(
       toLocalCartesian(lposition), vertices, metric);
 }

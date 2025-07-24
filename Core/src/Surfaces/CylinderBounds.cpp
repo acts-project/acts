@@ -73,8 +73,8 @@ bool CylinderBounds::inside(const Vector2& lposition) const {
   Vector2 upperRight = {radius, halfLengthZ};
   Vector2 middleRight = {0., (halfLengthZ + radius * std::tan(bevelMaxZ))};
   Vector2 lowerRight = {-radius, halfLengthZ};
-  Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
-                        upperRight, middleRight, lowerRight};
+  std::array<Vector2, 6> vertices{lowerLeft,  middleLeft,  upperLeft,
+                                  upperRight, middleRight, lowerRight};
 
   return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }

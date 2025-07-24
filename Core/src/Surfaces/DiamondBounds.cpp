@@ -40,8 +40,8 @@ bool DiamondBounds::inside(const Vector2& lposition) const {
   double y2 = 0.;
   double x3 = get(DiamondBounds::eHalfLengthXposY);
   double y3 = get(DiamondBounds::eHalfLengthYpos);
-  Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
-                        {x3, y3},   {-x3, y3}, {-x2, y2}};
+  std::array<Vector2, 6> vertices{
+      {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}}};
   return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }
 

@@ -64,8 +64,8 @@ bool TrapezoidBounds::inside(const Vector2& lposition) const {
 
   // at this stage, the point can only be in the triangles
   // run slow-ish polygon check
-  Vector2 vertices[] = {
-      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  std::array<Vector2, 4> vertices{
+      {{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}}};
   return detail::VerticesHelper::isInsidePolygon(extPosition, vertices);
 }
 
@@ -78,8 +78,8 @@ Vector2 TrapezoidBounds::closestPoint(const Vector2& lposition,
 
   const Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
 
-  Vector2 vertices[] = {
-      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  std::array<Vector2, 4> vertices{
+      {{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}}};
 
   Vector2 extClosest = detail::VerticesHelper::computeClosestPointOnPolygon(
       extPosition, vertices, metric);
