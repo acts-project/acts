@@ -80,11 +80,17 @@ if(ACTS_BUILD_EXAMPLES)
 
     # Fatras
     if(ACTS_BUILD_PLUGIN_FATRAS)
-        target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFatras)
-        target_sources(ActsPythonBindings PRIVATE src/FatrasAlgorithms.cpp)
+        target_link_libraries(
+            ActsExamplesPythonBindings
+            PUBLIC ActsExamplesFatras
+        )
+        target_sources(
+            ActsExamplesPythonBindings
+            PRIVATE src/FatrasAlgorithms.cpp
+        )
     else()
         target_sources(
-            ActsPythonBindings
+            ActsExamplesPythonBindings
             PRIVATE stubs/FatrasAlgorithmsStub.cpp
         )
     endif()
@@ -92,18 +98,35 @@ if(ACTS_BUILD_EXAMPLES)
     # GeoModel
     if(ACTS_BUILD_PLUGIN_GEOMODEL)
         target_link_libraries(
-            ActsPythonBindings
+            ActsExamplesPythonBindings
             PUBLIC
                 ActsExamplesDetectorGeoModel
                 ActsExamplesMuonSpectrometerMockupDetector
                 ActsExamplesITkModuleSplitting
         )
-        target_sources(ActsPythonBindings PRIVATE src/GeoModelDetector.cpp)
+        target_sources(
+            ActsExamplesPythonBindings
+            PRIVATE src/GeoModelDetector.cpp
+        )
     else()
         target_sources(
-            ActsPythonBindings
+            ActsExamplesPythonBindings
             PRIVATE stubs/GeoModelDetectorStub.cpp
         )
+    endif()
+
+    # DD4hep
+    if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
+        target_link_libraries(
+            ActsExamplesPythonBindings
+            PUBLIC ActsExamplesDetectorDD4hep
+        )
+        target_sources(
+            ActsExamplesPythonBindings
+            PRIVATE src/DD4hepDetector.cpp
+        )
+    else()
+        target_sources(ActsPythonBindings PRIVATE stubs/DD4hepDetectorStub.cpp)
     endif()
 
     # ROOT
@@ -264,15 +287,6 @@ if(ACTS_BUILD_EXAMPLES)
     # )
     # list(APPEND py_files examples/geant4/__init__.py)
     # endif()
-
-    # DD4hep
-    # if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-    # pybind11_add_module(ActsPythonBindingsExamplesDD4hep src/DD4hepComponent.cpp)
-    # target_link_libraries(
-    # ActsPythonBindingsExamplesDD4hep
-    # PUBLIC ActsPythonUtilities ActsExamplesDetectorDD4hep
-    # )
-    # add_dependencies(ActsPythonBindings ActsPythonBindingsExamplesDD4hep)
 
     # install(TARGETS ActsPythonBindingsExamplesDD4hep DESTINATION ${_python_install_dir})
     # set_target_properties(

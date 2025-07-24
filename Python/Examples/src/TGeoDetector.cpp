@@ -33,7 +33,7 @@ namespace ActsPython {
 /// This adds the TGeoDetector to the examples module
 /// @param mex the examples module
 void addTGeoDetector(py::module_& mex) {
-  auto tgeo = mex.def_submodule("TGeoDetector");
+  auto tgeo = mex.def_submodule("tgeo");
 
   {
     auto d = py::class_<TGeoDetector, Detector, std::shared_ptr<TGeoDetector>>(

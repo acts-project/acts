@@ -33,6 +33,7 @@ void addOutput(py::module_& mex);
 void addFatrasAlgorithms(py::module_& mex);
 void addGeoModelDetector(py::module_& mex);
 void addTGeoDetector(py::module_& mex);
+void addDD4hepDetector(py::module_& mex);
 void addRootInput(py::module_& mex);
 void addRootOutput(py::module_& mex);
 void addJsonInputOutput(py::module_& mex);
@@ -67,6 +68,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   addFatrasAlgorithms(mex);
   addGeoModelDetector(mex);
   addTGeoDetector(mex);
+  addDD4hepDetector(mex);
   addRootInput(mex);
   addRootOutput(mex);
   addJsonInputOutput(mex);
