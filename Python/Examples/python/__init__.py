@@ -10,6 +10,7 @@ from acts.examples.ActsExamplesPythonBindings import *
 
 _patch_config(ActsExamplesPythonBindings)
 
+
 def NamedTypeArgs(**namedTypeArgs):
     """Decorator to move args of a named type (e.g. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
     Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`).
