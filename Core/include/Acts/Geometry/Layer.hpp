@@ -37,9 +37,6 @@ class IMaterialDecorator;
 template <typename object_t>
 struct NavigationOptions;
 
-// Simple surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
-
 // master typedef
 class Layer;
 
