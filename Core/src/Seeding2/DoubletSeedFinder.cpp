@@ -16,10 +16,12 @@
 #include <type_traits>
 
 #include <boost/mp11.hpp>
+#include <boost/mp11/algorithm.hpp>
 
 namespace Acts::Experimental {
 
-template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR>
+template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
+          bool experimentCuts>
 class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
  public:
   explicit Impl(const DerivedConfig& config) : ImplBase(config) {}
@@ -217,11 +219,10 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
 
-      // discard bottom-middle doublets in a certain (r, eta) region according
-      // to detector specific cuts
-      if constexpr (isBottomCandidate) {
-        if (m_cfg.experimentCuts.connected() &&
-            !m_cfg.experimentCuts(rO, cotTheta)) {
+      // discard doublets based on experiment specific cuts
+      if constexpr (experimentCuts) {
+        if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
+                                  isBottomCandidate)) {
           continue;
         }
       }
@@ -308,24 +309,28 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
   using IsBottomCandidateOptions = BooleanOptions;
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
+  using ExperimentCutsOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
-                              InteractionPointCutOptions, SortedByROptions>;
+                              InteractionPointCutOptions, SortedByROptions,
+                              ExperimentCutsOptions>;
 
   std::shared_ptr<DoubletSeedFinder::ImplBase> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
     using OptionType = decltype(option);
-    using IsBottomCandidate = boost::mp11::mp_first<OptionType>;
-    using InteractionPointCut = boost::mp11::mp_second<OptionType>;
-    using SortedByR = boost::mp11::mp_third<OptionType>;
+    using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
+    using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
+    using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
+    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
 
     if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
-        config.spacePointsSortedByRadius != SortedByR::value) {
+        config.spacePointsSortedByRadius != SortedByR::value ||
+        config.experimentCuts.connected() != ExperimentCuts::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -337,10 +342,9 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
     }
 
     // create the implementation for the given configuration
-    result = std::make_shared<
-        DoubletSeedFinder::Impl<IsBottomCandidate::value,
-                                InteractionPointCut::value, SortedByR::value>>(
-        config);
+    result = std::make_shared<DoubletSeedFinder::Impl<
+        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
+        ExperimentCuts::value>>(config);
   });
   return result;
 }
