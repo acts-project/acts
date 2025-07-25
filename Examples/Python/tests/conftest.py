@@ -10,10 +10,10 @@ import pytest_check as check
 from collections import namedtuple
 
 
-sys.path += [
+sys.path = [
     str(Path(__file__).parent.parent.parent.parent / "Examples/Scripts/Python/"),
     str(Path(__file__).parent),
-]
+] + sys.path
 
 
 import helpers
