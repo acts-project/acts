@@ -439,8 +439,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                     AxisDirection::AxisPhi, pl, tr);
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
 
-  CHECK_CLOSE_ABS(axis.max, phi(Vector3(8, 1, 0)), 1e-3);
-  CHECK_CLOSE_ABS(axis.min, phi(Vector3(8, -1, 0)), 1e-3);
+  CHECK_CLOSE_ABS(axis.max, std::numbers::pi, 1e-3);
+  CHECK_CLOSE_ABS(axis.min, -std::numbers::pi, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
 }
 
