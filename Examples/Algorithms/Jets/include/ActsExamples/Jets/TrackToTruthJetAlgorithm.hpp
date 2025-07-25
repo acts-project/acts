@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TrackJet.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -17,25 +19,29 @@
 
 #include <string>
 
-namespace fastjet {
-class PseudoJet;
-}
+#include <fastjet/ClusterSequence.hh>
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/PseudoJet.hh>
+
 
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class TruthJetAlgorithm final : public IAlgorithm {
+/// Print all particles.
+class TrackToTruthJetAlgorithm : public IAlgorithm {
  public:
   struct Config {
-    /// Input particles collection.
-    std::string inputTruthParticles;
-    /// Output jets collection.
-    std::string outputJets;
-    /// Minimum jet pT.
-    double jetPtMin;
+    /// Input tracks collection.
+    std::string inputTracks;
+    /// Input jets collection.
+    std::string inputJets;
+    /// Output track jets collection.
+    std::string outputTrackJets;
+    /// Maximum delta R for track to jet matching.
+    double maxDeltaR = 0.4;
   };
 
-  TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  TrackToTruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;
@@ -44,9 +50,11 @@ class TruthJetAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
-      this, "inputTruthParticles"};
-  WriteDataHandle<TrackJetContainer> m_outputJets{this, "outputJets"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
+  ReadDataHandle<TrackJetContainer> m_inputJets{this,
+                                                              "inputJets"};
+  WriteDataHandle<TrackJetContainer> m_outputTrackJets{this, "outputTrackJets"};
+
 };
 
 }  // namespace ActsExamples
