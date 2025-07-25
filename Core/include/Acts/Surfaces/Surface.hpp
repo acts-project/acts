@@ -38,11 +38,6 @@ class TrackingVolume;
 class IVisualization3D;
 class Surface;
 
-/// Typedef of the surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
-/// Typedef of the surface multi-intersection
-using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
-
 /// @class Surface
 ///
 /// @brief Abstract Base Class for tracking surfaces
