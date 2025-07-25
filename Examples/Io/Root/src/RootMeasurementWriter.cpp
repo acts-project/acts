@@ -43,6 +43,10 @@ struct RootMeasurementWriter::DigitizationTree {
   float recBound[Acts::eBoundSize] = {};
   float varBound[Acts::eBoundSize] = {};
 
+  float recGx = 0.;
+  float recGy = 0.;
+  float recGz = 0.;
+
   // Truth parameters
   float trueBound[Acts::eBoundSize] = {};
   float trueGx = 0.;
@@ -50,6 +54,7 @@ struct RootMeasurementWriter::DigitizationTree {
   float trueGz = 0.;
   float incidentPhi = 0.;
   float incidentTheta = 0.;
+  std::vector<std::uint64_t> particles;
 
   // Residuals and pulls
   float residual[Acts::eBoundSize] = {};
@@ -84,6 +89,10 @@ struct RootMeasurementWriter::DigitizationTree {
       tree->Branch(("var_" + bNames[ib]).c_str(), &varBound[ib]);
     }
 
+    tree->Branch("rec_gx", &recGx);
+    tree->Branch("rec_gy", &recGy);
+    tree->Branch("rec_gz", &recGz);
+
     tree->Branch("clus_size", &nch);
     tree->Branch("channel_value", &chValue);
     // Both are allocated, but only relevant ones are set
@@ -102,6 +111,7 @@ struct RootMeasurementWriter::DigitizationTree {
     tree->Branch("true_z", &trueGz);
     tree->Branch("true_incident_phi", &incidentPhi);
     tree->Branch("true_incident_theta", &incidentTheta);
+    tree->Branch("particles", &particles);
 
     for (auto ib : recoIndices) {
       tree->Branch(("residual_" + bNames[ib]).c_str(), &residual[ib]);
@@ -176,6 +186,9 @@ struct RootMeasurementWriter::DigitizationTree {
       chId[1].push_back(static_cast<int>(ch.bin[1]));
       chValue.push_back(static_cast<float>(ch.activation));
     }
+    recGx = c.globalPosition.x();
+    recGy = c.globalPosition.y();
+    recGz = c.globalPosition.z();
   }
 
   /// Fill the tree
@@ -190,11 +203,15 @@ struct RootMeasurementWriter::DigitizationTree {
       residual[ib] = std::numeric_limits<float>::quiet_NaN();
       pull[ib] = std::numeric_limits<float>::quiet_NaN();
     }
+    recGx = std::numeric_limits<float>::quiet_NaN();
+    recGy = std::numeric_limits<float>::quiet_NaN();
+    recGz = std::numeric_limits<float>::quiet_NaN();
     trueGx = std::numeric_limits<float>::quiet_NaN();
     trueGy = std::numeric_limits<float>::quiet_NaN();
     trueGz = std::numeric_limits<float>::quiet_NaN();
     incidentPhi = std::numeric_limits<float>::quiet_NaN();
     incidentTheta = std::numeric_limits<float>::quiet_NaN();
+    particles.clear();
     nch = 0;
     cSize[0] = 0;
     cSize[1] = 0;
@@ -291,6 +308,9 @@ ProcessCode RootMeasurementWriter::writeT(
             .inverse();
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
+    for (auto [_, i] : indices) {
+      m_outputTree->particles.push_back(simHits.nth(i)->particleId().value());
+    }
 
     m_outputTree->fillTruthParameters(local, pos4, dir, angles);
     m_outputTree->fillBoundMeasurement(meas);
