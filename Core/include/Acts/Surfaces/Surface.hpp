@@ -245,6 +245,20 @@ class Surface : public virtual GeometryObject,
       const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
       double tolerance = s_onSurfaceTolerance) const;
 
+  /// Calculates the closest point on the boundary of the surface to a given
+  /// point in local coordinates.
+  /// @param lposition The local position to check
+  /// @param metric The metric to use for the calculation
+  /// @return The closest point on the boundary of the surface
+  virtual Vector2 closestPointOnBoundary(const Vector2& lposition,
+                                         const SquareMatrix2& metric) const;
+
+  /// Calculates the distance to the boundary of the surface from a given point
+  /// in local coordinates.
+  /// @param lposition The local position to check
+  /// @return The distance to the boundary of the surface
+  virtual double distanceToBoundary(const Vector2& lposition) const;
+
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check

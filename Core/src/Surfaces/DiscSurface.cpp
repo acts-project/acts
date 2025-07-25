@@ -284,15 +284,7 @@ SurfaceMultiIntersection DiscSurface::intersect(
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-        absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
-      if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
-                                        modifiedTolerance)) {
-        status = IntersectionStatus::unreachable;
-      }
-    } else if (!insideBounds(localCartesianToPolar(lcartesian),
-                             boundaryTolerance)) {
+    if (!insideBounds(localCartesianToPolar(lcartesian), boundaryTolerance)) {
       status = IntersectionStatus::unreachable;
     }
   }
