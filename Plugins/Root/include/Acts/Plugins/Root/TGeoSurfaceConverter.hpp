@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <memory>
@@ -93,10 +95,7 @@ struct TGeoSurfaceConverter {
   /// @param degree The input in degree
   /// @return angle in radians
   static double toRadian(double degree) {
-    if (degree > 180. && degree < 360.) {
-      degree -= 360.;
-    }
-    return degree / 180. * std::numbers::pi;
+    return detail::radian_sym(degree * UnitConstants::degree);
   }
 };
 
