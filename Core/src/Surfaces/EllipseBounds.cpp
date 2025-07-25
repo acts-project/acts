@@ -56,7 +56,8 @@ bool EllipseBounds::inside(const Vector2& lposition) const {
 Vector2 EllipseBounds::closestPoint(const Vector2& /*lposition*/,
                                     const SquareMatrix2& /*metric*/) const {
   throw std::runtime_error(
-      "EllipseBounds::closestPoint: This method is not implemented.");
+      "EllipseBounds::closestPoint: This method is not implemented. See "
+      "https://github.com/acts-project/acts/issues/4478 for details.");
 }
 
 std::vector<Vector2> EllipseBounds::vertices(
