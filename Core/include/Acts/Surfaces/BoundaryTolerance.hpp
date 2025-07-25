@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <optional>
 #include <type_traits>
 #include <variant>
 
@@ -132,7 +131,7 @@ class BoundaryTolerance {
   BoundaryTolerance(BoundaryTolerance&& other) noexcept = default;
   BoundaryTolerance& operator=(BoundaryTolerance&& other) noexcept = default;
 
-  enum class Mode {
+  enum class ToleranceMode {
     Extend,  //< Extend the boundary
     None,    //< No tolerance
     Shrink   //< Shrink the boundary
@@ -156,7 +155,7 @@ class BoundaryTolerance {
   }
 
   /// Get the tolerance mode.
-  Mode mode() const;
+  ToleranceMode toleranceMode() const;
 
   /// Get the tolerance as absolute Euclidean.
   constexpr const AbsoluteEuclideanParams& asAbsoluteEuclidean() const {

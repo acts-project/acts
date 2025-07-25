@@ -54,10 +54,10 @@ Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
 SquareMatrix2 DiscTrapezoidBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
   SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[1]);
-  j(0, 1) = -lposition[0] * std::sin(lposition[1]);
-  j(1, 0) = std::sin(lposition[1]);
-  j(1, 1) = lposition[0] * std::cos(lposition[1]);
+  j(0, 0) = std::cos(lposition[1] - get(eAveragePhi));
+  j(0, 1) = -lposition[0] * std::sin(lposition[1] - get(eAveragePhi));
+  j(1, 0) = std::sin(lposition[1] - get(eAveragePhi));
+  j(1, 1) = lposition[0] * std::cos(lposition[1] - get(eAveragePhi));
   return j;
 }
 

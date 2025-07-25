@@ -12,20 +12,21 @@ namespace Acts {
 
 bool SurfaceBounds::inside(const Vector2& lposition,
                            const BoundaryTolerance& boundaryTolerance) const {
-  using enum BoundaryTolerance::Mode;
+  using enum BoundaryTolerance::ToleranceMode;
 
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
 
-  BoundaryTolerance::Mode mode = boundaryTolerance.mode();
+  BoundaryTolerance::ToleranceMode toleranceMode =
+      boundaryTolerance.toleranceMode();
   bool strictlyInside = inside(lposition);
 
-  if (mode == None) {
+  if (toleranceMode == None) {
     return strictlyInside;
   }
 
-  if (mode == Extend && strictlyInside) {
+  if (toleranceMode == Extend && strictlyInside) {
     return true;
   }
 
@@ -48,7 +49,7 @@ bool SurfaceBounds::inside(const Vector2& lposition,
   Vector2 closest = closestPoint(lposition, metric);
   Vector2 distance = closest - lposition;
 
-  if (mode == Shrink) {
+  if (toleranceMode == Shrink) {
     return boundaryTolerance.isTolerated(distance, boundToCartesian) &&
            strictlyInside;
   }

@@ -14,8 +14,8 @@
 
 namespace Acts {
 
-BoundaryTolerance::Mode BoundaryTolerance::mode() const {
-  using enum Mode;
+BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
+  using enum ToleranceMode;
 
   if (isInfinite()) {
     return Extend;
@@ -58,8 +58,7 @@ BoundaryTolerance::Mode BoundaryTolerance::mode() const {
     }
   }
 
-  assert(false && "Unsupported tolerance type");
-  return None;
+  throw std::logic_error("Unsupported tolerance type");
 }
 
 bool BoundaryTolerance::isTolerated(

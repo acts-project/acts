@@ -19,11 +19,11 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
-  using enum BoundaryTolerance::Mode;
+  using enum BoundaryTolerance::ToleranceMode;
   {
     // Test None constructor
     BoundaryTolerance tolerance = BoundaryTolerance::None();
-    BOOST_CHECK(tolerance.mode() == None);
+    BOOST_CHECK(tolerance.toleranceMode() == None);
   }
 
   // Test AbsoluteEuclidean constructor
@@ -31,13 +31,14 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     // Valid positive tolerance
     auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1.0);
     BOOST_CHECK_EQUAL(tolerance.asAbsoluteEuclidean().tolerance, 1.0);
-    BOOST_CHECK(tolerance.mode() == Extend);
-    BOOST_CHECK(BoundaryTolerance::AbsoluteEuclidean(0.0).mode() == None);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance::AbsoluteEuclidean(0.0).toleranceMode() ==
+                None);
 
     // Valid negative tolerance
     tolerance = BoundaryTolerance::AbsoluteEuclidean(-1.0);
     BOOST_CHECK_EQUAL(tolerance.asAbsoluteEuclidean().tolerance, -1.0);
-    BOOST_CHECK(tolerance.mode() == Shrink);
+    BOOST_CHECK(tolerance.toleranceMode() == Shrink);
   }
 
   // Test Chi2Bound constructor
@@ -48,13 +49,13 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     // Valid positive chi2 bound
     auto tolerance = BoundaryTolerance::Chi2Bound(cov, 3.0);
     BOOST_CHECK_EQUAL(tolerance.asChi2Bound().maxChi2, 3.0);
-    BOOST_CHECK(tolerance.mode() == Extend);
-    BOOST_CHECK(BoundaryTolerance::Chi2Bound(cov, 0.0).mode() == None);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance::Chi2Bound(cov, 0.0).toleranceMode() == None);
 
     // Valid negative chi2 bound
     tolerance = BoundaryTolerance::Chi2Bound(cov, -3.0);
     BOOST_CHECK_EQUAL(tolerance.asChi2Bound().maxChi2, -3.0);
-    BOOST_CHECK(tolerance.mode() == Shrink);
+    BOOST_CHECK(tolerance.toleranceMode() == Shrink);
   }
 
   // Test None constructor
