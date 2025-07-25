@@ -332,7 +332,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       const detail::IntersectedNavigationObject& previousCandidate =
           state.currentCandidates.front();
 
-      const Surface& surface = *previousCandidate.intersection.object();
+      const Surface& surface = previousCandidate.intersection.surface();
       std::uint8_t index = previousCandidate.intersection.index();
       BoundaryTolerance boundaryTolerance = previousCandidate.boundaryTolerance;
 
@@ -382,7 +382,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.object();
+      const Surface& surface = intersection.surface();
       BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       if (intersection.status() == IntersectionStatus::onSurface) {
@@ -464,7 +464,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     std::vector<detail::IntersectedNavigationObject> hitCandidates;
 
     for (const auto& candidate : state.currentCandidates) {
-      const Surface& surface = *candidate.intersection.object();
+      const Surface& surface = candidate.intersection.surface();
       std::uint8_t index = candidate.intersection.index();
       BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
@@ -496,7 +496,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     // we can only handle a single surface hit so we pick the first one
     const auto candidate = hitCandidates.front();
     const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    const Surface& surface = intersection.surface();
 
     ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
                                 << " successfully hit, storing it.");
@@ -706,7 +706,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
       for (const auto& candidate : state.activeCandidates) {
         ACTS_VERBOSE("found candidate "
-                     << candidate.intersection.object()->geometryId());
+                     << candidate.intersection.surface().geometryId());
       }
     }
 
@@ -728,7 +728,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     const auto& candidate = state.activeCandidate();
     const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    const Surface& surface = intersection.surface();
     BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
     ACTS_VERBOSE(volInfo(state)
@@ -785,7 +785,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     while (!state.endOfCandidates()) {
       const auto& candidate = state.activeCandidate();
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.object();
+      const Surface& surface = intersection.surface();
       BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       // first with boundary tolerance
@@ -838,7 +838,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     // we can only handle a single surface hit so we pick the first one
     const auto& candidate = hitCandidates.front();
     const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.object();
+    const Surface& surface = intersection.surface();
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     state.currentSurface = &surface;
