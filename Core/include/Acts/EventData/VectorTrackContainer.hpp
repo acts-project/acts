@@ -137,6 +137,8 @@ class VectorTrackContainerBase {
     result = result && m_nSharedHits.size() == size;
     assert(result);
     result = result && m_nChangedMeasurements.size() == size;
+    assert(result);
+    result = result && m_maxMeasurements.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
       (void)key;
@@ -189,6 +191,7 @@ class VectorTrackContainerBase {
   std::vector<unsigned int> m_nOutliers;
   std::vector<unsigned int> m_nSharedHits;
   std::vector<signed int> m_nChangedMeasurements;
+  std::vector<unsigned int> m_maxMeasurements;
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;

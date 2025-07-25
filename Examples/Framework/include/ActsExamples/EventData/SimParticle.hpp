@@ -102,6 +102,11 @@ class SimParticle final {
     final().setParticleId(barcode);
     return *this;
   }
+  SimParticle& setNumberOfHits(std::uint32_t nHits) {
+    initial().setNumberOfHits(nHits);
+    final().setNumberOfHits(nHits);
+    return *this;
+  }
 
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initial().particleId(); }

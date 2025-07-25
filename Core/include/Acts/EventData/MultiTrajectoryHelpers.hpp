@@ -30,6 +30,7 @@ struct TrajectoryState {
   std::size_t nHoles = 0;
   std::size_t nSharedHits = 0;
   std::ptrdiff_t nChangedMeasurements = 0;
+  std::size_t maxMeasurements = std::numeric_limits<std::size_t>::max();
   double chi2Sum = 0;
   std::vector<double> measurementChi2 = {};
   std::vector<double> outlierChi2 = {};

@@ -102,6 +102,60 @@ void TrackSummaryPlotTool::book(Cache& cache, const std::string& prefix) const {
       addPrefix("nChangedMeasurements_vs_pT_2D").c_str(),
       "Number of Changed Measurements vs. pT;pT;Number of Changed Measurements",
       bPt, bpmNum);
+  // number of max measurements versus eta
+  cache.maxMeasurements_vs_eta =
+      PlotHelpers::bookProf(addPrefix("nProtoTrackMeasurements_vs_eta").c_str(),
+                              "Number of ProtoTrack measurements vs. #eta", bEta, bNum);
+  // number of max measurements versus pt
+  cache.maxMeasurements_vs_pt =
+      PlotHelpers::bookProf(addPrefix("nProtoTrackMeasurements_vs_pT").c_str(),
+                              "Number of ProtoTrack measurements vs. pT", bPt, bNum);
+  // 2D histograms for max measurements vs eta
+  cache.maxMeasurements_vs_eta_2D = PlotHelpers::bookHisto(
+      addPrefix("nProtoTrackMeasurements_vs_eta_2D").c_str(),
+      "Number of ProtoTrack measurements vs. #eta;#eta;Number of ProtoTrack measurements",
+      bEta, bNum);
+  // 2D histograms for max measurements vs pt
+  cache.maxMeasurements_vs_pt_2D = PlotHelpers::bookHisto(
+      addPrefix("nProtoTrackMeasurements_vs_pT_2D").c_str(),
+      "Number of ProtoTrack measurements vs. pT;pT;Number of ProtoTrack measurements",
+      bPt, bNum);
+  cache.nChangedMeasurements_vs_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nChangedMeasurements_vs_matchingprob").c_str(),
+      "Number of Changed Measurements vs. Matching Probability;Matching Probability;Number of Changed Measurements",
+      bpmNum);
+  cache.nHoles_vs_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nHoles_vs_matchingprob").c_str(),
+      "Number of Holes vs. Matching Probability;Matching Probability;Number of Holes",
+      bNum);
+  cache.nMeasurements_vs_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nMeasurements_vs_matchingprob").c_str(),
+      "Number of Measurements vs. Matching Probability;Matching Probability;Number of Measurements",
+      bNum);
+  cache.nOutliers_vs_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nOutliers_vs_matchingprob").c_str(),
+      "Number of Outliers vs. Matching Probability;Matching Probability;Number of Outliers",
+      bNum);
+  cache.maxMeasurements_vs_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nProtoTrackMeasurements_vs_matchingprob").c_str(),
+      "Number of ProtoTrack measurements vs. Matching Probability;Matching Probability;Number of ProtoTrack measurements",
+      bNum);
+  cache.nChangedMeasurements_vs_eta_2D_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nChangedMeasurements_vs_eta_2D_matchingprob").c_str(),
+      "Number of Changed Measurements vs. #eta with Matching Probability;#eta;Number of Changed Measurements",
+      bEta, bpmNum);
+  cache.nChangedMeasurements_vs_pt_2D_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nChangedMeasurements_vs_pT_2D_matchingprob").c_str(),
+      "Number of Changed Measurements vs. pT with Matching Probability;pT;Number of Changed Measurements",
+      bPt, bpmNum);
+  cache.maxMeasurements_vs_eta_2D_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nProtoTrackMeasurements_vs_eta_2D_matchingprob").c_str(),
+      "Number of ProtoTrack measurements vs. #eta with Matching Probability;#eta;Number of ProtoTrack measurements",
+      bEta, bNum);
+  cache.maxMeasurements_vs_pt_2D_matchingprob = PlotHelpers::bookEff(
+      addPrefix("nProtoTrackMeasurements_vs_pT_2D_matchingprob").c_str(),
+      "Number of ProtoTrack measurements vs. pT with Matching Probability;pT;Number of ProtoTrack measurements",
+      bPt, bNum);
 
 }
 
@@ -124,6 +178,19 @@ void TrackSummaryPlotTool::clear(Cache& cache) const {
   delete cache.nMeasurements_vs_pt_2D;
   delete cache.nOutliers_vs_pt_2D;
   delete cache.nChangedMeasurements_vs_pt_2D;
+  delete cache.maxMeasurements_vs_eta;
+  delete cache.maxMeasurements_vs_pt;
+  delete cache.maxMeasurements_vs_eta_2D;
+  delete cache.maxMeasurements_vs_pt_2D;
+  delete cache.nChangedMeasurements_vs_matchingprob;
+  delete cache.nHoles_vs_matchingprob;
+  delete cache.nMeasurements_vs_matchingprob;
+  delete cache.nOutliers_vs_matchingprob;
+  delete cache.maxMeasurements_vs_matchingprob;
+  delete cache.nChangedMeasurements_vs_eta_2D_matchingprob;
+  delete cache.nChangedMeasurements_vs_pt_2D_matchingprob;
+  delete cache.maxMeasurements_vs_eta_2D_matchingprob;
+  delete cache.maxMeasurements_vs_pt_2D_matchingprob;
 }
 
 void TrackSummaryPlotTool::write(const Cache& cache) const {
@@ -146,12 +213,25 @@ void TrackSummaryPlotTool::write(const Cache& cache) const {
   cache.nMeasurements_vs_pt_2D->Write();
   cache.nOutliers_vs_pt_2D->Write();
   cache.nChangedMeasurements_vs_pt_2D->Write();
+  cache.maxMeasurements_vs_eta->Write();
+  cache.maxMeasurements_vs_pt->Write();
+  cache.maxMeasurements_vs_eta_2D->Write();
+  cache.maxMeasurements_vs_pt_2D->Write();
+  cache.nChangedMeasurements_vs_matchingprob->Write();
+  cache.nHoles_vs_matchingprob->Write();
+  cache.nMeasurements_vs_matchingprob->Write();
+  cache.nOutliers_vs_matchingprob->Write();
+  cache.maxMeasurements_vs_matchingprob->Write();
+  cache.nChangedMeasurements_vs_eta_2D_matchingprob->Write();
+  cache.nChangedMeasurements_vs_pt_2D_matchingprob->Write();
+  cache.maxMeasurements_vs_eta_2D_matchingprob->Write();
+  cache.maxMeasurements_vs_pt_2D_matchingprob->Write();
 }
 
 void TrackSummaryPlotTool::fill(
     Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
     std::size_t nStates, std::size_t nMeasurements, std::size_t nOutliers,
-    std::size_t nHoles, std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements) const {
+    std::size_t nHoles, std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements, std::size_t maxMeasurements, bool matched) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto momentum = fittedParameters.momentum();
@@ -185,6 +265,30 @@ void TrackSummaryPlotTool::fill(
                          nOutliers);
   PlotHelpers::fillHisto(cache.nChangedMeasurements_vs_pt_2D,
                          fit_pT, nChangedMeasurements);
+  PlotHelpers::fillProf(cache.maxMeasurements_vs_eta, fit_eta, maxMeasurements);
+  PlotHelpers::fillProf(cache.maxMeasurements_vs_pt, fit_pT, maxMeasurements);
+  PlotHelpers::fillHisto(cache.maxMeasurements_vs_eta_2D, fit_eta,
+                            maxMeasurements);
+  PlotHelpers::fillHisto(cache.maxMeasurements_vs_pt_2D, fit_pT,
+                            maxMeasurements);
+  PlotHelpers::fillEff(cache.nChangedMeasurements_vs_matchingprob,
+                        nChangedMeasurements, matched);
+  PlotHelpers::fillEff(cache.nHoles_vs_matchingprob,
+                       nHoles, matched);
+  PlotHelpers::fillEff(cache.nMeasurements_vs_matchingprob,
+                       nMeasurements, matched);
+  PlotHelpers::fillEff(cache.nOutliers_vs_matchingprob,
+                       nOutliers, matched);
+  PlotHelpers::fillEff(cache.maxMeasurements_vs_matchingprob,
+                       maxMeasurements, matched);
+  PlotHelpers::fillEff(cache.nChangedMeasurements_vs_eta_2D_matchingprob,
+                         fit_eta, nChangedMeasurements, matched);
+  PlotHelpers::fillEff(cache.nChangedMeasurements_vs_pt_2D_matchingprob,
+                       fit_pT, nChangedMeasurements, matched);
+  PlotHelpers::fillEff(cache.maxMeasurements_vs_eta_2D_matchingprob,
+                       fit_eta, maxMeasurements, matched);
+  PlotHelpers::fillEff(cache.maxMeasurements_vs_pt_2D_matchingprob,
+                       fit_pT, maxMeasurements, matched);
 
 }
 

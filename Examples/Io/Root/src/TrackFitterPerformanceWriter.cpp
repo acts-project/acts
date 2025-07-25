@@ -144,7 +144,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     auto ip = particles.find(majorityParticleId);
     if (ip == particles.end()) {
       ACTS_DEBUG("Majority particle not found in the particles collection.");
+      // Fill the trajectory summary info
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                  track.nTrackStates(), track.nMeasurements(),
+                                  track.nOutliers(), track.nHoles(),
+                                  track.nSharedHits(), track.nChangedMeasurements(), track.maxMeasurements(), false);
       continue;
+    } else {
+      m_trackSummaryPlotTool.fill(
+          m_trackSummaryPlotCache, fittedParameters, track.nTrackStates(),
+          track.nMeasurements(), track.nOutliers(), track.nHoles(),
+          track.nSharedHits(), track.nChangedMeasurements(), track.maxMeasurements(), true);
     }
 
     // Record this majority particle ID of this trajectory
@@ -152,11 +162,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Fill the residual plots
     m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initial(),
                        fittedParameters);
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits(), track.nChangedMeasurements());
   }
 
   if (missingParameters > 0) {
@@ -167,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   // Fill the efficiency, defined as the ratio between number of tracks with
   // fitted parameter and total truth tracks (assumes one truth partilce has
   // one truth track)
-  for (const auto& particle : particles) {
+  for (auto particle : particles) {
     bool isReconstructed = false;
     // Check if the particle has been reconstructed
     if (rangeContainsValue(reconParticleIds, particle.particleId())) {
@@ -190,6 +195,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
       }
     }
     double dummyMatchingProbability = 1.0;
+    particle.setNumberOfHits(particle.numberOfHits());
     m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
                        dummyMatchingProbability, isReconstructed);
   }

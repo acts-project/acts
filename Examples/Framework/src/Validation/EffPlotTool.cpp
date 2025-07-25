@@ -30,6 +30,8 @@ void EffPlotTool::book(Cache& cache) const {
   PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
   PlotHelpers::Binning bZ0 = m_cfg.varBinning.at("Z0");
   PlotHelpers::Binning bProdR = m_cfg.varBinning.at("prodR");
+  PlotHelpers::Binning bHits = m_cfg.varBinning.at("numberOfHits");
+    // Book the histograms for efficiency plots
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
   // efficiency vs pT
   cache.trackEff_vs_pT = PlotHelpers::bookEff(
@@ -50,6 +52,9 @@ void EffPlotTool::book(Cache& cache) const {
   cache.trackEff_vs_prodR = PlotHelpers::bookEff(
       "trackeff_vs_prodR",
       "Tracking efficiency;Production radius [mm];Efficiency", bProdR);
+  cache.trackEff_vs_numberOfHits = PlotHelpers::bookEff(
+      "trackeff_vs_numberOfHits",
+      "Tracking efficiency;numberOfHits;Efficiency", bHits);
 
   PlotHelpers::Binning bProb("Probability", 50, 0.5, 1.0);
   cache.matchProb_vs_eta = PlotHelpers::bookHisto(
@@ -64,6 +69,7 @@ void EffPlotTool::clear(Cache& cache) const {
   delete cache.trackEff_vs_z0;
   delete cache.trackEff_vs_DeltaR;
   delete cache.trackEff_vs_prodR;
+  delete cache.trackEff_vs_numberOfHits;
   delete cache.matchProb_vs_eta;
 }
 
@@ -75,6 +81,7 @@ void EffPlotTool::write(const Cache& cache) const {
   cache.trackEff_vs_z0->Write();
   cache.trackEff_vs_DeltaR->Write();
   cache.trackEff_vs_prodR->Write();
+  cache.trackEff_vs_numberOfHits->Write();
   cache.matchProb_vs_eta->Write();
 }
 void ActsExamples::EffPlotTool::fill(Cache& cache,
@@ -85,6 +92,7 @@ void ActsExamples::EffPlotTool::fill(Cache& cache,
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
   const auto t_z0 = truthParticle.position().z();
+  const auto t_hits = truthParticle.numberOfHits();
   const auto t_deltaR = deltaR;
   const auto t_prodR =
       std::sqrt(truthParticle.position().x() * truthParticle.position().x() +
@@ -96,6 +104,7 @@ void ActsExamples::EffPlotTool::fill(Cache& cache,
   PlotHelpers::fillEff(cache.trackEff_vs_z0, t_z0, matched);
   PlotHelpers::fillEff(cache.trackEff_vs_DeltaR, t_deltaR, matched);
   PlotHelpers::fillEff(cache.trackEff_vs_prodR, t_prodR, matched);
+  PlotHelpers::fillEff(cache.trackEff_vs_numberOfHits, t_hits, matched);
   if (matched) {
     PlotHelpers::fillHisto(cache.matchProb_vs_eta, t_eta, matchingProbability);
   }

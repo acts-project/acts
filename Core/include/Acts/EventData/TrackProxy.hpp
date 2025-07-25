@@ -432,6 +432,22 @@ class TrackProxy {
     return component<signed int, hashString("nChangedMeasurements")>();
   }
 
+  /// Return the maximum number of measurements for the track.
+  /// @return The maximum number of measurements
+  unsigned int maxMeasurements() const {
+    return component<unsigned int, hashString("maxMeasurements")>();
+  }
+
+  /// Return a mutable reference to the maximum number of measurements for the
+  /// track. Mutable version
+  /// @note Only available if the track proxy is not read-only
+  /// @return The maximum number of measurements
+  unsigned int& maxMeasurements()
+    requires(!ReadOnly)
+  {
+    return component<unsigned int, hashString("maxMeasurements")>();
+  }
+
   /// Return a mutable reference to the chi squared
   /// Mutable version
   /// @note Only available if the track proxy is not read-only

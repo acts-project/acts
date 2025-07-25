@@ -158,7 +158,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   tracks.addColumn<unsigned int>("trackGroup");
+  tracks.addColumn<unsigned int>("maxMeasurements"); 
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> maxMeasurements("maxMeasurements");
 
   std::size_t nSeed = 0;
   std::size_t nFailedFit = 0, nFailedSmoothing = 0, nFailedExtrapolation = 0;
@@ -190,6 +192,13 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     }
 
     auto rootBranch = tracks.makeTrack();
+    rootBranch.maxMeasurements() = std::max(
+        7u, static_cast<unsigned int>(2 * protoTracks.at(i).size() - 5));
+    ACTS_DEBUG("Max measurements for root branch: "
+               << rootBranch.maxMeasurements());
+    ACTS_DEBUG("Prototrack " << i << " has " << protoTracks.at(i).size()
+                            << " measurements.");
+    ACTS_DEBUG("Tracks at the start: " << tracks.size());
     auto result = (*m_cfg.findTracks)(initialParameters.at(i), options, tracks,
                                       rootBranch);
     nSeed++;
@@ -244,20 +253,36 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       }
       track.nChangedMeasurements() = track.nMeasurements() -
                                      protoTracks.at(i).size();
+      track.maxMeasurements() = protoTracks.at(i).size();
       if (track.nMeasurements() < protoTracks.at(i).size()) {
         for (auto mid : protoTracks.at(i)) {
           auto geoId = measurements.getMeasurement(mid).geometryId();
-          auto found = std::find_if(
-              track.trackStatesReversed().cbegin(),
-              track.trackStatesReversed().cend(), [&](auto ts) {
-                return ts.hasReferenceSurface()
-                           ? ts.referenceSurface().geometryId() == geoId
-                           : false;
-              });
-          if (found == track.trackStatesReversed().cend()) {
-            ACTS_VERBOSE(" - " << geoId);
-          } else {
-            ACTS_VERBOSE(" + " << geoId);
+          for (const auto& state : track.trackStatesReversed()) {
+            // Check if the state has a reference surface and if it matches
+            // the geometry ID of the measurement
+            if (state.hasReferenceSurface() &&
+                state.referenceSurface().geometryId() == geoId) {
+              if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
+                  state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+                ACTS_VERBOSE(" +m&o " << geoId);
+              }
+              else if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+                ACTS_VERBOSE(" +m   " << geoId);
+              }
+              else if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+                ACTS_VERBOSE(" +o   " << geoId);
+              }
+              continue;
+            }
+          }
+          if (std::none_of(track.trackStatesReversed().begin(),
+                                     track.trackStatesReversed().end(),
+                                     [&geoId](const auto& state) {
+                                       return state.hasReferenceSurface() &&
+                                              state.referenceSurface()
+                                                  .geometryId() == geoId;
+                                     })) {
+            ACTS_VERBOSE(" -    " << geoId);
           }
         }
       }

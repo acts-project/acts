@@ -311,6 +311,7 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("nSharedHits", &nSharedHits);
     tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
     tree->SetBranchAddress("nChangedMeasurements", &nChangedMeasurements);
+    tree->SetBranchAddress("maxMeasurements", &maxMeasurements);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
 
@@ -358,6 +359,8 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<unsigned int>* nSharedHits = new std::vector<unsigned int>;
   std::vector<signed int>* nChangedMeasurements =
         new std::vector<signed int>;
+  std::vector<unsigned int>* maxMeasurements =
+      new std::vector<unsigned int>;
   std::vector<float>* chi2Sum = new std::vector<float>;
   std::vector<unsigned int>* NDF = new std::vector<unsigned int>;
   std::vector<std::vector<double>>* measurementChi2 =

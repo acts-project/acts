@@ -72,6 +72,32 @@ class TrackSummaryPlotTool {
     TH2F* nOutliers_vs_pt_2D;
     /// Number of Changed Measurements vs pt
     TH2F* nChangedMeasurements_vs_pt_2D;
+    /// Number of max measurements vs eta
+    TProfile* maxMeasurements_vs_eta;
+    /// Number of max measurements vs pt
+    TProfile* maxMeasurements_vs_pt;
+    /// Number of max measurements vs eta 2D
+    TH2F* maxMeasurements_vs_eta_2D;
+    /// Number of max measurements vs pt 2D
+    TH2F* maxMeasurements_vs_pt_2D;
+    /// Number of Changed Measurements vs matching probability
+    TEfficiency* nChangedMeasurements_vs_matchingprob;
+    /// Number of holes vs matching probability
+    TEfficiency* nHoles_vs_matchingprob;
+    /// Number of measurements vs matching probability
+    TEfficiency* nMeasurements_vs_matchingprob;
+    /// Number of outliers vs matching probability
+    TEfficiency* nOutliers_vs_matchingprob;
+    /// Number of max measurements vs matching probability
+    TEfficiency* maxMeasurements_vs_matchingprob;
+    /// Number of Changed Measurements vs eta 2D with matching probability
+    TEfficiency* nChangedMeasurements_vs_eta_2D_matchingprob;
+    /// Number of Changed Measurements vs pt 2D with matching probability
+    TEfficiency* nChangedMeasurements_vs_pt_2D_matchingprob;
+    /// Number of max measurements vs eta 2D with matching probability
+    TEfficiency* maxMeasurements_vs_eta_2D_matchingprob;
+    /// Number of max measurements vs pt 2D with matching probability
+    TEfficiency* maxMeasurements_vs_pt_2D_matchingprob;
   };
 
   /// Constructor
@@ -96,10 +122,12 @@ class TrackSummaryPlotTool {
   /// @param nHoles number of holes
   /// @param nSharedHits number of shared hits
   /// @param nChangedMeasurements number of changed measurements
+  /// @param maxMeasurements number of max measurements
+  /// @param matched whether the track is matched to a truth particle
   void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             std::size_t nStates, std::size_t nMeasurements,
             std::size_t nOutliers, std::size_t nHoles,
-            std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements) const;
+            std::size_t nSharedHits, std::ptrdiff_t nChangedMeasurements, std::size_t maxMeasurements, bool matched) const;
 
   /// @brief write the track info plots to file
   ///

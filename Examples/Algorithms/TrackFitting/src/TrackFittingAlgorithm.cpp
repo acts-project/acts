@@ -98,7 +98,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
-
+  tracks.addColumn<unsigned int>("maxMeasurements");
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
@@ -145,12 +145,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& track = result.value();
+      auto& track = result.value();
       if (track.hasReferenceSurface()) {
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
         ACTS_VERBOSE("Measurements: (prototrack->track): "
                      << protoTrack.size() << " -> " << track.nMeasurements());
+        track.nChangedMeasurements() =
+            track.nMeasurements() - protoTrack.size();
+        track.maxMeasurements() = protoTrack.size();
         if (track.nMeasurements() < protoTrack.size()) {
           for (auto mid : protoTrack) {
             auto geoId = measurements.getMeasurement(mid).geometryId();

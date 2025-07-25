@@ -390,6 +390,7 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nSharedHits() = 0;
   track.nOutliers() = 0;
   track.nChangedMeasurements() = 0;
+  track.maxMeasurements() = std::numeric_limits<unsigned int>::max();
 
   for (const auto &trackState : track.trackStatesReversed()) {
     ConstTrackStateType typeFlags = trackState.typeFlags();

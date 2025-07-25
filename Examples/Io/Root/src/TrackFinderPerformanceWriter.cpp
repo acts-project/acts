@@ -201,17 +201,13 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     Acts::BoundTrackParameters fittedParameters =
         track.createParametersAtReference();
 
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits(), track.nChangedMeasurements());
+
 
     // Potentially fill other track summary caches for the given volumes
     for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
       ACTS_VERBOSE("Fill track summary stats for subset " << key);
       std::size_t nTrackStates{}, nMeasurements{}, nOutliers{}, nHoles{},
-          nSharedHits{}, nChangedMeasurements{};
+          nSharedHits{}, nChangedMeasurements{}, maxMeasurements{};
       for (auto state : track.trackStatesReversed()) {
         if (!state.hasReferenceSurface() ||
             !volumes.contains(state.referenceSurface().geometryId().volume())) {
@@ -232,7 +228,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       }
       m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
                                   fittedParameters, nTrackStates, nMeasurements,
-                                  nOutliers, nHoles, nSharedHits, nChangedMeasurements);
+                                  nOutliers, nHoles, nSharedHits, nChangedMeasurements, maxMeasurements, false);
     }
 
     // Get the truth matching information
@@ -241,6 +237,11 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       ACTS_VERBOSE("No truth matching information for this track, index = "
                    << track.index() << " tip index = " << track.tipIndex());
       unmatched++;
+          // Fill the trajectory summary info
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+              track.nTrackStates(), track.nMeasurements(),
+              track.nOutliers(), track.nHoles(),
+              track.nSharedHits(), track.nChangedMeasurements(), track.maxMeasurements(), false);
       continue;
     }
 
@@ -252,6 +253,23 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
 
     if (particleMatch.classification == TrackMatchClassification::Duplicate) {
       m_nTotalDuplicateTracks++;
+    }
+
+    if (particleMatch.classification == TrackMatchClassification::Fake ||
+        particleMatch.classification == TrackMatchClassification::Duplicate) {
+      // Fill the trajectory summary info
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                  track.nTrackStates(), track.nMeasurements(),
+                                  track.nOutliers(), track.nHoles(),
+                                  track.nSharedHits(), track.nChangedMeasurements(), track.maxMeasurements(), false);
+    }
+    else if (particleMatch.classification ==
+        TrackMatchClassification::Matched) {
+      // Fill the trajectory summary info
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                  track.nTrackStates(), track.nMeasurements(),
+                                  track.nOutliers(), track.nHoles(),
+                                  track.nSharedHits(), track.nChangedMeasurements(), track.maxMeasurements(), true);
     }
 
     // Fill fake ratio plots
@@ -294,7 +312,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
   }
 
   // Loop over all truth particles for efficiency plots and reco details.
-  for (const auto& particle : particles) {
+  for (auto particle : particles) {
     auto particleId = particle.particleId();
 
     // Investigate the truth-matched tracks
@@ -345,7 +363,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-
+    particle.setNumberOfHits(particle.numberOfHits());
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
                        matchingProbability, isReconstructed);

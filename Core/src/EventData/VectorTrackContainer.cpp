@@ -31,7 +31,8 @@ VectorTrackContainerBase::VectorTrackContainerBase(
       m_ndf{other.m_ndf},
       m_nOutliers{other.m_nOutliers},
       m_nSharedHits{other.m_nSharedHits},
-      m_nChangedMeasurements{other.m_nChangedMeasurements} {
+      m_nChangedMeasurements{other.m_nChangedMeasurements},
+      m_maxMeasurements{other.m_maxMeasurements} {  
   for (const auto& [key, value] : other.m_dynamic) {
     m_dynamic.insert({key, value->clone()});
   }
@@ -61,6 +62,7 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
   m_nSharedHits.emplace_back();
 
   m_nChangedMeasurements.emplace_back();
+  m_maxMeasurements.emplace_back();
 
   // dynamic columns
   for (auto& [key, vec] : m_dynamic) {
@@ -99,6 +101,7 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   erase(m_nSharedHits);
 
   erase(m_nChangedMeasurements);
+  erase(m_maxMeasurements);
 
   for (auto& [key, vec] : m_dynamic) {
     vec->erase(itrack);
@@ -145,6 +148,7 @@ void VectorTrackContainer::reserve(IndexType size) {
   m_nSharedHits.reserve(size);
 
   m_nChangedMeasurements.reserve(size);
+  m_maxMeasurements.reserve(size);
 
   for (auto& [key, vec] : m_dynamic) {
     vec->reserve(size);
@@ -170,6 +174,7 @@ void VectorTrackContainer::clear() {
   m_nSharedHits.clear();
 
   m_nChangedMeasurements.clear();
+  m_maxMeasurements.clear();
 
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
