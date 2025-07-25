@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& ostr,
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp) {
   ostr << "Id: " << sp.id() << ", pos: " << Acts::toString(sp.localPosition())
-       << ", dir: " << Acts::toString(sp.sensorDirection())
+       << ", sensor: " << Acts::toString(sp.sensorDirection())
        << ", covariance: " << Acts::toString(sp.covariance());
   return ostr;
 }

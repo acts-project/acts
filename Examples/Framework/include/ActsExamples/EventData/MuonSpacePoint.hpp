@@ -9,10 +9,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/StationSpacePoint.hpp"
 
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace ActsExamples {
@@ -125,13 +127,23 @@ class MuonSpacePoint {
   /// @brief Returns the local sensor direction
   const Acts::Vector3& sensorDirection() const { return m_dir; }
   /// @brief Returns the normal vector to the plane
-  const Acts::Vector3& stripPlaneNormal() const { return m_norm; }
+  const Acts::Vector3& planeNormal() const { return m_norm; }
+  /// @brief Returns the vector pointing to the next wire / strip
+  const Acts::Vector3& sensorNormal() const { return m_toNext; }
   /// @brief Returns the space point covariance
   const Acts::ActsSquareMatrix<3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
   /// @brief Returns the measurement time *
-  double time() const { return m_time; }
+  double time() const { return m_time.value_or(0.); }
+  /// @brief Returns whether the measurement is a straw measurement
+  bool isStraw() const { return id().technology() == MuonId::TechField::Mdt; }
+  /// @brief Returns whether the measurement provides time information
+  bool hasTime() const { return m_time.has_value(); }
+  /// @brief Returns whether the measurement constrains the bending plane
+  bool measPrecCoord() const { return id().measuresEta(); }
+  /// @brief Returns whether the measurement constrains the non-bending plane
+  bool measNonPrecCoord() const { return id().measuresPhi(); }
   /// @brief Define the space point's identifier
   void setId(const MuonId& id);
   /// @brief Define the space point coordinates.
@@ -153,10 +165,14 @@ class MuonSpacePoint {
   Acts::Vector3 m_pos{Acts::Vector3::Zero()};
   Acts::Vector3 m_dir{Acts::Vector3::Zero()};
   Acts::Vector3 m_norm{Acts::Vector3::Zero()};
+  Acts::Vector3 m_toNext{Acts::Vector3::Zero()};
+
   Acts::ActsSquareMatrix<3> m_cov{Acts::ActsSquareMatrix<3>::Identity()};
   double m_radius{0.};
-  double m_time{0.};
+  std::optional<double> m_time{std::nullopt};
 };
+
+static_assert(Acts::StationSpacePoint<MuonSpacePoint>);
 /// @brief Abbrivation of the MuonSpace point container as a jagged vector of
 ///        space point objects. The inner vector represents a collection of
 ///        spacepoints that are close-by together in space, a so-called bucket
