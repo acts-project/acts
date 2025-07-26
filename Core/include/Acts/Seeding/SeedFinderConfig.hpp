@@ -189,8 +189,17 @@ struct SeedFinderConfig {
   float toleranceParam = 1.1 * UnitConstants::mm;
 
   // Delegate to apply experiment specific cuts during doublet finding
-  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
-      DelegateFuncTag<&noopExperimentCuts>{}};
+  Delegate<bool(const SpacePoint& /*middle*/, const SpacePoint& /*other*/,
+                float /*cotTheta*/, bool /*isBottomCandidate*/)>
+      experimentCuts{DelegateFuncTag<&noopExperimentCuts>{}};
+
+  /// defaults experimental cuts to no operation in both seeding algorithms
+  static bool noopExperimentCuts(const SpacePoint& /*middle*/,
+                                 const SpacePoint& /*other*/,
+                                 float /*cotTheta*/,
+                                 bool /*isBottomCandidate*/) {
+    return true;
+  }
 
   bool isInInternalUnits = true;
   //[[deprecated("SeedFinderConfig uses internal units")]]
