@@ -13,8 +13,8 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
+#include "Acts/Utilities/ContainerIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Iterator.hpp"
 
 #include <vector>
 
@@ -50,11 +50,11 @@ class SpacePointContainer {
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
 
   using iterator =
-      ContainerIndexIterator<Acts::SpacePointContainer<container_t, holder_t>,
-                             SpacePointProxyType&, false>;
+      ContainerIterator<Acts::SpacePointContainer<container_t, holder_t>,
+                        SpacePointProxyType&, std::size_t, false>;
   using const_iterator =
-      ContainerIndexIterator<Acts::SpacePointContainer<container_t, holder_t>,
-                             const SpacePointProxyType&, true>;
+      ContainerIterator<Acts::SpacePointContainer<container_t, holder_t>,
+                        const SpacePointProxyType&, std::size_t, true>;
 
   using ValueType = typename container_t::ValueType;
   using ProxyType = SpacePointProxyType;
