@@ -63,7 +63,7 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
   candidates.first.reserve(sIntersections.size());
   for (auto& sIntersection : sIntersections) {
     candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
-        sIntersection.object(), sIntersection.position(), direction});
+        &sIntersection.surface(), sIntersection.position(), direction});
   }
 
   // Now deal with the volume intersections : tracking volume first

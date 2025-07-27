@@ -434,9 +434,9 @@ class Navigator {
         }
         if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-          return NavigationTarget(*state.navSurface().object(),
+          return NavigationTarget(state.navSurface().surface(),
                                   state.navSurface().index(),
-                                  BoundaryTolerance::None());
+                                  state.navSurface().boundaryTolerance());
         } else {
           // This was the last surface, switch to layers
           ACTS_VERBOSE(volInfo(state) << "Target layers.");
@@ -458,9 +458,9 @@ class Navigator {
         }
         if (state.navLayerIndex.value() < state.navLayers.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
-          return NavigationTarget(*state.navLayer().first.object(),
+          return NavigationTarget(state.navLayer().first.surface(),
                                   state.navLayer().first.index(),
-                                  BoundaryTolerance::None());
+                                  state.navLayer().first.boundaryTolerance());
         } else {
           // This was the last layer, switch to boundaries
           ACTS_VERBOSE(volInfo(state) << "Target boundaries.");
@@ -478,9 +478,10 @@ class Navigator {
         }
         if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-          return NavigationTarget(*state.navBoundary().intersection.object(),
-                                  state.navBoundary().intersection.index(),
-                                  BoundaryTolerance::None());
+          return NavigationTarget(
+              state.navBoundary().intersection.surface(),
+              state.navBoundary().intersection.index(),
+              state.navBoundary().intersection.boundaryTolerance());
         } else {
           // This was the last boundary, we have to leave the volume somehow,
           // renavigate
@@ -571,14 +572,14 @@ class Navigator {
                  << "Current surface: " << state.currentSurface->geometryId());
 
     if (state.navigationStage == Stage::surfaceTarget &&
-        state.navSurface().object() == &surface) {
+        &state.navSurface().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling surface status.");
 
       return;
     }
 
     if (state.navigationStage == Stage::layerTarget &&
-        state.navLayer().first.object() == &surface) {
+        &state.navLayer().first.surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling layer status.");
 
       // Switch to the next layer
@@ -592,7 +593,7 @@ class Navigator {
     }
 
     if (state.navigationStage == Stage::boundaryTarget &&
-        state.navBoundary().intersection.object() == &surface) {
+        &state.navBoundary().intersection.surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling boundary status.");
 
       if (m_geometryVersion == GeometryVersion::Gen1) {
@@ -684,8 +685,46 @@ class Navigator {
       // Request the compatible surfaces
       state.navSurfaces = currentLayer->compatibleSurfaces(
           state.options.geoContext, position, direction, navOpts);
-      std::ranges::sort(state.navSurfaces,
-                        SurfaceIntersection::pathLengthOrder);
+      // Sort the surfaces by path length.
+      // Special care is taken for the external surfaces which should always
+      // come first, so they are preferred to be targeted and hit first.
+      std::ranges::sort(
+          state.navSurfaces,
+          [&state](const SurfaceIntersection& a, const SurfaceIntersection& b) {
+            // Prefer to sort by path length. We assume surfaces are at the same
+            // distance if the difference is smaller than the tolerance.
+            if (std::abs(a.pathLength() - b.pathLength()) >
+                state.options.surfaceTolerance) {
+              return SurfaceIntersection::pathLengthOrder(a, b);
+            }
+            // If the path length is practically the same, sort by geometry.
+            // First we check if one of the surfaces is external.
+            bool aIsExternal = a.boundaryTolerance().isInfinite();
+            bool bIsExternal = b.boundaryTolerance().isInfinite();
+            if (aIsExternal == bIsExternal) {
+              // If both are external or both are not external, sort by geometry
+              // identifier
+              return a.surface().geometryId() < b.surface().geometryId();
+            }
+            // If only one is external, it should come first
+            return aIsExternal;
+          });
+      // For now we implicitly remove overlapping surfaces.
+      // For track finding it might be useful to discover overlapping surfaces
+      // and check for compatible measurements. This is under investigation
+      // and might be implemented in the future.
+      auto toBeRemoved = std::ranges::unique(
+          state.navSurfaces, [&](const auto& a, const auto& b) {
+            return std::abs(a.pathLength() - b.pathLength()) <
+                   state.options.surfaceTolerance;
+          });
+      if (toBeRemoved.begin() != toBeRemoved.end()) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Removing "
+                     << std::distance(toBeRemoved.begin(), toBeRemoved.end())
+                     << " overlapping surfaces.");
+      }
+      state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
     } else {
       // @TODO: What to do with external surfaces?
       // Gen 3 !

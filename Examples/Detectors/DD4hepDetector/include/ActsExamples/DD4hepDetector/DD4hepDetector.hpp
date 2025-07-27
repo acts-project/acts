@@ -78,8 +78,6 @@ class DD4hepDetector : public Detector {
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator = nullptr;
-    /// Alignment decorator
-    std::shared_ptr<IContextDecorator> alignmentDecorator = nullptr;
 
     /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
