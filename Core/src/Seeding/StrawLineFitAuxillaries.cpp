@@ -265,7 +265,7 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
       } else if (param1 > param) {
         break;
       }
-      /// second derivative w.r.t intercepts is always 0
+      // second derivative w.r.t intercepts is always 0
       if (!(isDirectionParam(param) || isDirectionParam(param1))) {
         continue;
       }
