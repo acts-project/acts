@@ -54,7 +54,7 @@ const Vector& StrawLineFitAuxiliaries::gradient(const std::size_t par) const {
 const Vector& StrawLineFitAuxiliaries::hessian(const std::size_t param,
                                                const std::size_t param1) const {
   const std::size_t idx = vecIdxFromSymMat<s_nPars>(param, param1);
-  assert(idx < m_hesian.size());
+  assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
 
@@ -358,7 +358,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   /// Normal vector is indeed normal onto the plane spaned by these two vectors
   assert(Acts::abs(b1.dot(normal)) < tolerance);
   assert(Acts::abs(b2.dot(normal)) < tolerance);
-  assert(measuresBending || measuresNonBending);
+  assert(isBending || isNonBending);
   const bool decompStereo =
       (m_cfg.calcAlongStrip || (isBending && isNonBending)) &&
       Acts::abs(b1DotB2) > tolerance;
