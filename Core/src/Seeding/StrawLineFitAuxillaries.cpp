@@ -120,7 +120,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       }
       ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
                    << parName(param) << ", " << parName(param1) << ".");
-      /// Second derivative w.r.t to the position parameters is zero
+      // Second derivative w.r.t to the position parameters is zero
       if (!(isDirectionParam(param) || isDirectionParam(param1))) {
         continue;
       }
