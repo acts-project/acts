@@ -72,11 +72,11 @@ class StrawLineFitAuxiliaries {
   };
   /// @brief Constructor to instantiate a new instance
   /// @param cfg: Configuration object to toggle the calculation of the complementary residual components & the full evaluation of the second derivative
-  /// @param logger: New logging object for debugging 
-  explicit StrawLineFitAuxiliaries(const Config& cfg,
-                          std::unique_ptr<const Logger> logger =
-                              getDefaultLogger("StrawLineFitAuxiliaries",
-                                               Logging::Level::INFO));
+  /// @param logger: New logging object for debugging
+  explicit StrawLineFitAuxiliaries(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("StrawLineFitAuxiliaries", Logging::Level::INFO));
 
   /// @brief Updates the spatial residual components between the line and the passed
   ///        measurement. The result is cached internally and can be later
