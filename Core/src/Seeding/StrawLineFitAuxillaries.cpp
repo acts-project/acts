@@ -49,9 +49,9 @@ const Vector& StrawLineFitAuxiliaries::gradient(const std::size_t par) const {
   assert(par < m_gradient.size());
   return m_gradient[par];
 }
-const Vector& StrawLineFitAuxiliaries::hessian(const std::size_t param,
-                                               const std::size_t param1) const {
-  const std::size_t idx = vecIdxFromSymMat<s_nPars>(param, param1);
+const Vector& StrawLineFitAuxiliaries::hessian(const std::size_t param1,
+                                               const std::size_t param2) const {
+  const std::size_t idx = vecIdxFromSymMat<s_nPars>(param1, param2);
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }

@@ -83,10 +83,10 @@ class TestSpacePoint {
   const Vector3& planeNormal() const { return m_planeNorm; }
 
   bool isStraw() const { return m_isStraw; }
-  bool hasTime() const { return m_dirMask & (ProjectorMask::timeOfArrival); }
-  bool measPrecCoord() const { return m_dirMask & (ProjectorMask::bendingDir); }
+  bool hasTime() const { return (m_dirMask & (ProjectorMask::timeOfArrival)) != 0u; }
+  bool measPrecCoord() const { return (m_dirMask & (ProjectorMask::bendingDir)) !=0u; }
   bool measNonPrecCoord() const {
-    return m_dirMask & (ProjectorMask::nonBendingDir);
+    return (m_dirMask & (ProjectorMask::nonBendingDir)) != 0u;
   }
 
   double driftRadius() const { return m_radius; }

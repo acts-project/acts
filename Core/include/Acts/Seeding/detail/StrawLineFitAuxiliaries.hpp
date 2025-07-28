@@ -70,8 +70,10 @@ class StrawLineFitAuxiliaries {
                                        FitParIndices::theta,
                                        FitParIndices::phi};
   };
-
-  StrawLineFitAuxiliaries(const Config& cfg,
+  /// @brief Constructor to instantiate a new instance
+  /// @param cfg: Configuration object to toggle the calculation of the complementary residual components & the full evaluation of the second derivative
+  /// @param logger: New logging object for debugging 
+  explicit StrawLineFitAuxiliaries(const Config& cfg,
                           std::unique_ptr<const Logger> logger =
                               getDefaultLogger("StrawLineFitAuxiliaries",
                                                Logging::Level::INFO));
