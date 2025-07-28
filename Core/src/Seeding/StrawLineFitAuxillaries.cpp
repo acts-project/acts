@@ -42,8 +42,6 @@ StrawLineFitAuxiliaries::StrawLineFitAuxiliaries(
     : m_cfg{cfg}, m_logger{std::move(logger)} {
   std::ranges::sort(m_cfg.parsToUse);
 }
-
-using Vector = StrawLineFitAuxiliaries::Vector;
 const Vector& StrawLineFitAuxiliaries::residual() const {
   return m_residual;
 }
