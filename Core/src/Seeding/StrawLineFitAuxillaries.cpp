@@ -51,7 +51,7 @@ const Vector& StrawLineFitAuxiliaries::gradient(const FitParIndices par) const {
 }
 const Vector& StrawLineFitAuxiliaries::hessian(
     const FitParIndices param1, const FitParIndices param2) const {
-  const std::size_t idx = vecIdxFromSymMat<s_nPars>(param1, param2);
+  const std::uint8_t idx = vecIdxFromSymMat<s_nPars>(param1, param2);
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
@@ -194,11 +194,11 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
       } else if (param1 > param) {
         break;
       }
-      const std::size_t idx = vecIdxFromSymMat<s_nLinePars>(param, param1);
+      const std::uint8_t idx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       const Vector& lHessian = line.hessian(param, param1);
       const double partSqLineProject = lHessian.dot(wireDir);
 
-      auto calcMixedTerms = [this](const std::size_t p1, const std::size_t p2) {
+      auto calcMixedTerms = [this](const std::uint8_t p1, const std::uint8_t p2) {
         return m_projDirLenPartial[p1] * m_wireProject * m_gradProjDir[p2] +
                0.5 * m_projDirLenPartial[p1] * m_projDirLenPartial[p2] *
                    m_invProjDirLenSq * m_projDir;
@@ -266,7 +266,7 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
       if (!(isDirectionParam(param) || isDirectionParam(param1))) {
         continue;
       }
-      const std::size_t hessIdx = vecIdxFromSymMat<s_nPars>(param, param1);
+      const std::uint8_t hessIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
         // clang-format off
         auto calcMixedHessian = [this, &hitMinSeg, &line](const std::uint8_t p1,
@@ -374,7 +374,8 @@ void StrawLineFitAuxiliaries::updateStripResidual(
     residual[nonBending] =
         isNonBending || m_cfg.calcAlongStrip ? b2.dot(calcDistance) : 0.;
     if (decompStereo) {
-      residual.block<2, 1>(0, 0) = m_stereoTrf * residual.block<2, 1>(0, 0);
+      auto spatial = residual.block<2, 1>(0, 0);
+      spatial = m_stereoTrf * spatial;
     }
     residual[time] = 0.;
     ACTS_VERBOSE("Distance: " << toString(calcDistance)
@@ -434,7 +435,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
       const int resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
         auto calcMixedTerms = [&line, &normal, &normDot, &b1, &b2, this](
-                                  const std::size_t p1, const std::size_t p2) {
+                                  const std::uint8_t p1, const std::uint8_t p2) {
           return -normal.dot(line.gradient(p1)) / normDot *
                  (m_gradient[p2][bending] * b1 +
                   m_gradient[p2][nonBending] * b2);
