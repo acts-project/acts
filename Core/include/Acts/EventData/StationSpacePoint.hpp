@@ -12,7 +12,7 @@
 
 #include <type_traits>
 
-namespace Acts {
+namespace Acts::Experimental {
 /// @brief Concept definition of the station space points. They're primarily used in composite detectors,
 ///        like the Muon stations in side the ATLAS experiment. The stations
 ///        usually consist of few layers of straw tubes which maybe sandwiched
@@ -76,4 +76,4 @@ concept StationSpacePointContainer =
       requires StationSpacePointPtr<typename ContType_t::value_type>;
     };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

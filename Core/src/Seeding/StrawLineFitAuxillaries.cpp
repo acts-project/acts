@@ -8,10 +8,13 @@
 
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
-
+namespace Acts::Experimental::detail {
 namespace {
+
+using Vector = StrawLineFitAuxiliaries::Vector;
+
 std::string parName(const std::size_t idx) {
-  using ParIdx = Acts::detail::StrawLineFitAuxiliaries::FitParIndices;
+  using ParIdx = StrawLineFitAuxiliaries::FitParIndices;
   switch (idx) {
     using enum ParIdx;
     case x0:
@@ -27,13 +30,12 @@ std::string parName(const std::size_t idx) {
   }
   return "unknown";
 }
-using Vector = Acts::detail::StrawLineFitAuxiliaries::Vector;
+
 double angle(const Vector& v1, const Vector& v2) {
   using namespace Acts::UnitLiterals;
   return std::acos(std::clamp(v1.dot(v2), -1., 1.)) / 1_degree;
 }
 }  // namespace
-namespace Acts::detail {
 
 StrawLineFitAuxiliaries::StrawLineFitAuxiliaries(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -475,4 +477,4 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   }
 }
 
-}  // namespace Acts::detail
+}  // namespace Acts::Experimental::detail

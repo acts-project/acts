@@ -20,7 +20,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
-namespace Acts::detail {
+namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a StationSpacePoint measurement as well as the partial derivatives.
 ///        The residual is expressed as a 3D vector, where first two components
@@ -41,7 +41,7 @@ namespace Acts::detail {
 ///        the plane and the measurement.
 class StrawLineFitAuxiliaries {
  public:
-  using Line_t = Line3DWithPartialDerivatives<double>;
+  using Line_t = Acts::detail::Line3DWithPartialDerivatives<double>;
   using Vector = Line_t::Vector;
   enum FitParIndices : std::size_t {
     x0 = Line_t::ParIndices::x0,
@@ -199,5 +199,5 @@ class StrawLineFitAuxiliaries {
   ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts::Experimental::detail
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.ipp"

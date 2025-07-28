@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-namespace Acts::detail {
+namespace Acts::Experimental::detail {
 
 template <StationSpacePoint Point_t>
 int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
@@ -29,7 +29,7 @@ int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
   if (!strawSp.isStraw()) {
     return 0;
   }
-  const double dist = LineHelper::signedDistance(
+  const double dist = Acts::detail::LineHelper::signedDistance(
       line.position(), line.direction(), strawSp.localPosition(),
       strawSp.sensorDirection());
   return dist > 0. ? 1 : -1;
@@ -63,4 +63,4 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
   }
 }
 
-}  // namespace Acts::detail
+}  // namespace Acts::Experimental::detail

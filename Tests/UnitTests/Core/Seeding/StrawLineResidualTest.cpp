@@ -14,10 +14,11 @@
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 using namespace Acts;
-
 using namespace Acts::detail;
+using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
+
 using Line_t = StrawLineFitAuxiliaries::Line_t;
 using Vector = Line_t::Vector;
 using Config_t = StrawLineFitAuxiliaries::Config;
