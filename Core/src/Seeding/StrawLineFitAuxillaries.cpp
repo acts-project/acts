@@ -198,7 +198,8 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
       const Vector& lHessian = line.hessian(param, param1);
       const double partSqLineProject = lHessian.dot(wireDir);
 
-      auto calcMixedTerms = [this](const std::uint8_t p1, const std::uint8_t p2) {
+      auto calcMixedTerms = [this](const std::uint8_t p1,
+                                   const std::uint8_t p2) {
         return m_projDirLenPartial[p1] * m_wireProject * m_gradProjDir[p2] +
                0.5 * m_projDirLenPartial[p1] * m_projDirLenPartial[p2] *
                    m_invProjDirLenSq * m_projDir;
@@ -434,28 +435,26 @@ void StrawLineFitAuxiliaries::updateStripResidual(
 
       const int resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
-        auto calcMixedTerms = [&line, &normal, &normDot, &b1, &b2, this](
-                                  const std::uint8_t p1, const std::uint8_t p2) {
-          return -normal.dot(line.gradient(p1)) / normDot *
-                 (m_gradient[p2][bending] * b1 +
-                  m_gradient[p2][nonBending] * b2);
+        // clang-format off
+        auto calcMixedTerms = [&line, &normal, &normDot, &b1, &b2, this](const std::uint8_t p1,
+                                                                         const std::uint8_t p2) {
+          return -normal.dot(line.gradient(p1)) / normDot *(m_gradient[p2][bending] * b1 +
+                                                            m_gradient[p2][nonBending] * b2);
         };
-        const Vector hessianCmp =
-            travelledDist * (line.hessian(param, param1) -
-                             ///
-                             normal.dot(line.hessian(param, param1)) / normDot *
-                                 line.direction()) +
-            ///
-            calcMixedTerms(param1, param) + calcMixedTerms(param, param1);
+        const Vector hessianCmp = travelledDist * (line.hessian(param, param1) -
+                                                   normal.dot(line.hessian(param, param1)) / normDot * line.direction()) +
+                                  calcMixedTerms(param1, param) + calcMixedTerms(param, param1);
         assignResidual(hessianCmp, m_hessian[resIdx]);
+        // clang-format on
+
       } else {
         const auto angParam = isDirectionParam(param) ? param : param1;
         const auto posParam = isDirectionParam(param) ? param1 : param;
         const double lH = (normal.dot(line.gradient(posParam)) / normDot);
-        const Vector hessianCmp =
-            lH * ((normal.dot(line.gradient(angParam)) / normDot) *
-                      line.direction() -
-                  line.gradient(angParam));
+        // clang-format off
+        const Vector hessianCmp = lH * ((normal.dot(line.gradient(angParam)) / normDot) * line.direction() -
+                                        line.gradient(angParam));
+        // clang-format on
         assignResidual(hessianCmp, m_hessian[resIdx]);
       }
     }
