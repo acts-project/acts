@@ -259,12 +259,10 @@ class DirectNavigator {
     // TODO we do not know the intersection index - passing the closer one
     const Surface& surface = state.navSurface();
     const double farLimit = std::numeric_limits<double>::max();
-    const auto intersection = chooseIntersection(
-        state.options.geoContext, surface, position, direction,
-        BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
-        state.options.surfaceTolerance);
-    return NavigationTarget(surface, intersection.index(),
-                            BoundaryTolerance::Infinite());
+    return chooseIntersection(state.options.geoContext, surface, position,
+                              direction, BoundaryTolerance::Infinite(),
+                              state.options.nearLimit, farLimit,
+                              state.options.surfaceTolerance);
   }
 
   /// @brief Check if the current target is still valid
@@ -315,7 +313,7 @@ class DirectNavigator {
   }
 
  private:
-  SurfaceIntersection chooseIntersection(
+  NavigationTarget chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance, double nearLimit,
@@ -326,11 +324,12 @@ class DirectNavigator {
     for (auto [intersection, index] : intersections) {
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger())) {
-        return SurfaceIntersection(intersection, &surface, index);
+        return NavigationTarget(intersection, index, surface,
+                                boundaryTolerance);
       }
     }
 
-    return SurfaceIntersection::invalid();
+    return NavigationTarget::None();
   }
 
   const Logger& logger() const { return *m_logger; }

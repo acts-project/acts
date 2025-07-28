@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
@@ -17,6 +18,18 @@
 namespace Acts {
 
 namespace {
+
+struct SurfaceIntersection {
+  Intersection3D intersection;
+  const Surface* surface;
+
+  constexpr static bool pathLengthOrder(
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) noexcept {
+    return Intersection3D::pathLengthOrder(aIntersection.intersection,
+                                           bIntersection.intersection);
+  }
+};
 
 std::vector<SurfaceIntersection> forwardOrderedIntersections(
     const GeometryContext& gctx, const Vector3& position,
@@ -33,13 +46,12 @@ std::vector<SurfaceIntersection> forwardOrderedIntersections(
     auto [intersection, index] = multiIntersection.closestForward();
     if (intersection.status() >= IntersectionStatus::reachable &&
         intersection.pathLength() > 0) {
-      surfaceIntersections.emplace_back(intersection, surface, index);
+      surfaceIntersections.emplace_back(intersection, surface);
       continue;
     }
   }
   // Sort the intersection along the pathlength
-  std::ranges::sort(surfaceIntersections,
-                    &SurfaceIntersection::pathLengthOrder);
+  std::ranges::sort(surfaceIntersections, SurfaceIntersection::pathLengthOrder);
   return surfaceIntersections;
 }
 
@@ -64,7 +76,8 @@ IntersectionMaterialAssigner::assignmentCandidates(
   candidates.first.reserve(sIntersections.size());
   for (auto& sIntersection : sIntersections) {
     candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
-        sIntersection.object(), sIntersection.position(), direction});
+        sIntersection.surface, sIntersection.intersection.position(),
+        direction});
   }
 
   // Now deal with the volume intersections : tracking volume first
@@ -82,8 +95,9 @@ IntersectionMaterialAssigner::assignmentCandidates(
       // Entry/exit exists in forward direction
       if (tIntersections.size() == 2u) {
         candidates.second.push_back(IAssignmentFinder::VolumeAssignment{
-            InteractionVolume(trackingVolume), tIntersections[0u].position(),
-            tIntersections[1u].position()});
+            InteractionVolume(trackingVolume),
+            tIntersections[0u].intersection.position(),
+            tIntersections[1u].intersection.position()});
       }
     }
   }
@@ -103,8 +117,9 @@ IntersectionMaterialAssigner::assignmentCandidates(
       // Entry/exit exists in forward direction
       if (dIntersections.size() == 2u) {
         candidates.second.push_back(IAssignmentFinder::VolumeAssignment{
-            InteractionVolume(detectorVolume), dIntersections[0u].position(),
-            dIntersections[1u].position()});
+            InteractionVolume(detectorVolume),
+            dIntersections[0u].intersection.position(),
+            dIntersections[1u].intersection.position()});
       }
     }
   }

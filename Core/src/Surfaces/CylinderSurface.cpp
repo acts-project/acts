@@ -229,8 +229,8 @@ MultiIntersection3D CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return MultiIntersection3D(Intersection3D::invalid(),
-                               Intersection3D::invalid());
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -245,20 +245,6 @@ MultiIntersection3D CylinderSurface::intersect(
     // No check to be done, return current status
     if (boundaryTolerance.isInfinite()) {
       return status;
-    }
-    const auto& cBounds = bounds();
-    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-        absoluteBound.has_value() && cBounds.coversFullAzimuth()) {
-      // Project out the current Z value via local z axis
-      // Built-in local to global for speed reasons
-      const auto& tMatrix = gctxTransform.matrix();
-      // Create the reference vector in local
-      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
-      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double modifiedTolerance = tolerance + absoluteBound->tolerance1;
-      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
-      return std::abs(cZ) < std::abs(hZ) ? status
-                                         : IntersectionStatus::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status

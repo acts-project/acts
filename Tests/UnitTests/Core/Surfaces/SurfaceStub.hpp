@@ -90,7 +90,7 @@ class SurfaceStub : public RegularSurface {
                                 const double /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     IntersectionStatus::reachable);
-    return MultiIntersection3D(stubIntersection, Intersection3D::invalid());
+    return MultiIntersection3D(stubIntersection, Intersection3D::Invalid());
   }
 
   /// Return properly formatted class name

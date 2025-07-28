@@ -20,12 +20,11 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v11.1.0
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -125,7 +124,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -164,7 +163,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:74
+    container: ghcr.io/acts-project/ubuntu2404:80
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -253,13 +252,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2204
-            std: 20
-            cxx: g++
           - image: ubuntu2404_clang19
             std: 20
             cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:74
+    container: ghcr.io/acts-project/${{ matrix.image }}:80
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -414,3 +410,95 @@ jobs:
         run: >
           PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && ./build-downstream/bin/ShowActsVersion
+
+  external_eic-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          path: acts
+
+      - uses: actions/checkout@v4
+        with:
+          repository: eic/EICrecon
+          path: EICrecon
+
+      - name: Setup CMVFS
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Build
+        id: build
+        uses: eic/run-cvmfs-osg-eic-shell@main
+        continue-on-error: true
+        with:
+          platform-release: "eic_xl:nightly"
+          run: |
+            pushd acts
+            ccache -z && \
+            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            echo "::group::Acts configure phase"
+            cmake -B build -S . \
+              -GNinja \
+              -DACTS_BUILD_EXAMPLES=ON \
+              -DACTS_BUILD_FATRAS=ON \
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+            echo "::endgroup::"
+            echo "::group::Acts build phase"
+            cmake --build build
+            echo "::endgroup::"
+            echo "::group::Acts install phase"
+            cmake --install build
+            echo "::endgroup::"
+            popd
+
+            pushd EICrecon
+            export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
+            echo "::group::EICrecon configure phase"
+            ccache -z && \
+            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include -L$CMAKE_INSTALL_PREFIX/lib" \
+                LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
+            cmake -B build -S . \
+              -GNinja \
+              -DActs_ROOT=$CMAKE_INSTALL_PREFIX
+            echo "::endgroup::"
+            echo "::group::EICrecon build phase"
+            cmake --build build
+            echo "::endgroup::"
+            popd
+
+            ccache -s
+
+      - name: Create comment body
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        run: |
+          cat >comment-50-external-failure.md <<EOF
+          # ❗️: Downstream build failure
+
+           - eic-shell (cc @acts-project/epic-contacts)
+          EOF
+
+      - name: Upload Artifact
+        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-50-external-failure.md
+          path: comment-50-external-failure.md
+          retention-days: 5
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}

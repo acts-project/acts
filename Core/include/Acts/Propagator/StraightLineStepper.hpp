@@ -18,6 +18,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
@@ -93,6 +94,7 @@ class StraightLineStepper {
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accummulated path length state
     double pathAccumulated = 0.;
@@ -211,13 +213,13 @@ class StraightLineStepper {
   /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param intersection [in] The SurfaceIntersection
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  void updateStepSize(State& state, const SurfaceIntersection& intersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
-    double stepSize = intersection.pathLength();
+    double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 

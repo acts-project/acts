@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <span>
@@ -46,37 +47,6 @@ class NavigationStream {
     Vector3 direction = Vector3::Zero();
   };
 
-  /// This is a candidate object of the navigation stream, it holds:
-  ///
-  /// - a Surface intersection
-  /// - a Portal : set if the surface represents a portal
-  /// - a BoundaryTolerance : the boundary tolerance used for the intersection
-  struct Candidate {
-    /// The intersection
-    SurfaceIntersection intersection = SurfaceIntersection::invalid();
-    /// The portal
-    const Acts::Experimental::Portal* gen2Portal = nullptr;
-    const Portal* portal = nullptr;
-    /// The boundary tolerance
-    BoundaryTolerance bTolerance = BoundaryTolerance::None();
-    /// Convenience access to surface
-    const Surface& surface() const { return intersection.surface(); }
-    /// Cinvencience access to the path length
-    double pathLength() const { return intersection.pathLength(); }
-
-    /// Order along the path length
-    ///
-    /// @param aCandidate is the first candidate
-    /// @param bCandidate is the second candidate
-    ///
-    /// @return true if aCandidate is closer to the origin
-    constexpr static bool pathLengthOrder(const Candidate& aCandidate,
-                                          const Candidate& bCandidate) {
-      return SurfaceIntersection::pathLengthOrder(aCandidate.intersection,
-                                                  bCandidate.intersection);
-    }
-  };
-
   /// Switch to next next candidate
   ///
   /// @return true if a next candidate is available
@@ -89,7 +59,7 @@ class NavigationStream {
   }
 
   /// Const access the current candidate
-  const Candidate& currentCandidate() const {
+  const NavigationTarget& currentCandidate() const {
     return m_candidates.at(m_currentIndex);
   }
 
@@ -97,16 +67,20 @@ class NavigationStream {
   std::size_t currentIndex() const { return m_currentIndex; }
 
   /// Non-cost access the candidate vector
-  std::vector<Candidate>& candidates() { return m_candidates; }
+  std::vector<NavigationTarget>& candidates() { return m_candidates; }
 
   /// Const access the candidate vector
-  const std::vector<Candidate>& candidates() const { return m_candidates; }
+  const std::vector<NavigationTarget>& candidates() const {
+    return m_candidates;
+  }
 
-  /// Non-cost access the current candidate
+  /// Non-cost access the current target
   ///
   /// This will throw and out of bounds exception if the stream is not
   /// valid anymore.
-  Candidate& currentCandidate() { return m_candidates.at(m_currentIndex); }
+  NavigationTarget& currentCandidate() {
+    return m_candidates.at(m_currentIndex);
+  }
 
   /// The number of active candidates
   std::size_t remainingCandidates() const {
@@ -174,13 +148,14 @@ class NavigationStream {
 
  private:
   /// The candidates of this navigation stream
-  std::vector<Candidate> m_candidates;
+  std::vector<NavigationTarget> m_candidates;
 
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
 };
 
-struct AppendOnlyNavigationStream {
+class AppendOnlyNavigationStream {
+ public:
   explicit AppendOnlyNavigationStream(NavigationStream& stream);
   void addSurfaceCandidate(const Surface& surface,
                            const BoundaryTolerance& bTolerance);

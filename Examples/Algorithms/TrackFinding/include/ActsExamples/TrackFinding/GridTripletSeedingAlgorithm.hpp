@@ -268,34 +268,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const Acts::Experimental::ConstSpacePointProxy2& spM,
       const Acts::Range1D<float>& rMiddleSPRange) const;
-
-  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 45;
-    static float cotThetaMax = 1.5;
-
-    if (bottomRadius < rMin &&
-        (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
-      return false;
-    }
-    return true;
-  }
-
-  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
-    // At small r we remove points beyond |z| > 200.
-    float r = sp.r();
-    float zabs = std::abs(sp.z());
-    if (zabs > 200. && r < 45.) {
-      return false;
-    }
-
-    // Remove space points beyond eta=4 if their z is larger than the max seed
-    // z0 (150.)
-    float cotTheta = 27.2899;  // corresponds to eta=4
-    if ((zabs - 150.) > cotTheta * r) {
-      return false;
-    }
-    return true;
-  }
 };
 
 }  // namespace ActsExamples

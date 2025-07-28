@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -151,14 +150,13 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       while (main.remainingCandidates() > 0) {
         const auto& candidate = main.currentCandidate();
 
-        ACTS_VERBOSE(candidate.portal);
-        ACTS_VERBOSE(candidate.intersection.position().transpose());
+        ACTS_VERBOSE(candidate.position().transpose());
 
         ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
                                             << VectorHelpers::perp(position)
                                             << ")");
 
-        Vector3 delta = candidate.intersection.position() - position;
+        Vector3 delta = candidate.position() - position;
 
         std::size_t substeps =
             std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
@@ -172,19 +170,18 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
           csv << std::endl;
         }
 
-        position = candidate.intersection.position();
+        position = candidate.position();
         ACTS_VERBOSE("                 -> "
                      << position.transpose()
                      << " (r=" << VectorHelpers::perp(position) << ")");
 
         writeIntersection(position, candidate.surface());
 
-        if (candidate.portal != nullptr) {
-          ACTS_VERBOSE(
-              "On portal: " << candidate.portal->surface().toStream(gctx));
-          currentVolume =
-              candidate.portal->resolveVolume(gctx, position, direction)
-                  .value();
+        if (candidate.isPortalTarget()) {
+          ACTS_VERBOSE("On portal: " << candidate.surface().toStream(gctx));
+          currentVolume = candidate.portal()
+                              .resolveVolume(gctx, position, direction)
+                              .value();
 
           if (currentVolume == nullptr) {
             ACTS_VERBOSE("switched to nullptr -> we're done");

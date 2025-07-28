@@ -23,8 +23,8 @@ float getBestSeedQuality(
     const SpacePointContainer2& spacePoints,
     const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 sp) {
-  if (spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::CopyFromIndex)) {
-    sp = spacePoints.at(sp).extra(spacePoints.copyFromIndexColumn());
+  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
+    sp = spacePoints[sp].extra(spacePoints.copyFromIndexColumn());
   }
   auto it = bestSeedQualityMap.find(sp);
   if (it != bestSeedQualityMap.end()) {
@@ -38,10 +38,10 @@ void setBestSeedQuality(
     std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 top, SpacePointIndex2 middle, SpacePointIndex2 bottom,
     float quality) {
-  if (spacePoints.hasExtraColumns(SpacePointKnownExtraColumn::CopyFromIndex)) {
-    top = spacePoints.at(top).copyFromIndex();
-    middle = spacePoints.at(middle).copyFromIndex();
-    bottom = spacePoints.at(bottom).copyFromIndex();
+  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
+    top = spacePoints[top].copyFromIndex();
+    middle = spacePoints[middle].copyFromIndex();
+    bottom = spacePoints[bottom].copyFromIndex();
   }
 
   const auto set = [&](SpacePointIndex2 sp) {
@@ -71,8 +71,8 @@ void BroadTripletSeedFilter::filter2SpFixed(
     std::span<const float> invHelixDiameterVec,
     std::span<const float> impactParametersVec, float zOrigin,
     CandidatesForMiddleSp2& candidatesCollector) const {
-  auto spB = spacePoints.at(bottomSp);
-  auto spM = spacePoints.at(middleSp);
+  auto spB = spacePoints[bottomSp];
+  auto spM = spacePoints[middleSp];
 
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -117,7 +117,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache.topSpIndexVec) {
     auto topSp = topSpVec[topSpIndex];
-    auto spT = spacePoints.at(topSp);
+    auto spT = spacePoints[topSp];
 
     cache.compatibleSeedR.clear();
 
@@ -138,7 +138,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
       if (compatibletopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints.at(topSpVec[compatibletopSpIndex]);
+      auto otherSpT = spacePoints[topSpVec[compatibletopSpIndex]];
 
       float otherTopR = getTopR(otherSpT);
 

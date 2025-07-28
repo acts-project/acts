@@ -12,8 +12,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <algorithm>
-
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
@@ -26,13 +24,13 @@ void GenericApproachDescriptor::registerLayer(const Layer& lay) {
   }
 }
 
-SurfaceIntersection GenericApproachDescriptor::approachSurface(
+NavigationTarget GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double nearLimit, double farLimit) const {
   // almost always 2
-  boost::container::small_vector<SurfaceIntersection, 4> surfaceIntersections;
-  surfaceIntersections.reserve(m_surfaceCache.size());
+  boost::container::small_vector<NavigationTarget, 4> targets;
+  targets.reserve(m_surfaceCache.size());
   for (const Surface* surface : m_surfaceCache) {
     auto multiIntersection =
         surface->intersect(gctx, position, direction, boundaryTolerance);
@@ -40,16 +38,15 @@ SurfaceIntersection GenericApproachDescriptor::approachSurface(
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        surfaceIntersections.emplace_back(intersection, surface, index);
+        targets.emplace_back(intersection, index, *surface, boundaryTolerance);
       }
     }
   }
-  if (surfaceIntersections.empty()) {
-    return SurfaceIntersection::invalid();
+  if (targets.empty()) {
+    return NavigationTarget::None();
   }
-  return *std::min_element(surfaceIntersections.begin(),
-                           surfaceIntersections.end(),
-                           SurfaceIntersection::pathLengthOrder);
+  return *std::min_element(targets.begin(), targets.end(),
+                           NavigationTarget::pathLengthOrder);
 }
 
 const std::vector<const Surface*>&

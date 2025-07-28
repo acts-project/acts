@@ -9,6 +9,7 @@
 #include "Acts/Geometry/Layer.hpp"
 
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -108,12 +109,11 @@ void Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
 }
 
-boost::container::small_vector<SurfaceIntersection, 10>
-Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& direction,
-                          const NavigationOptions<Surface>& options) const {
+boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
-  boost::container::small_vector<SurfaceIntersection, 10> surfaceIntersections;
+  boost::container::small_vector<NavigationTarget, 10> surfaceIntersections;
 
   // fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor) {
@@ -123,10 +123,12 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
-  auto isUnique = [&](const SurfaceIntersection& b) {
-    return std::ranges::none_of(surfaceIntersections, [&b](const auto& a) {
-      return &a.surface() == &b.surface() && a.index() == b.index();
-    });
+  auto isUnique = [&](const NavigationTarget& b) {
+    return std::ranges::none_of(
+        surfaceIntersections, [&b](const NavigationTarget& a) {
+          return &a.surface() == &b.surface() &&
+                 a.intersectionIndex() == b.intersectionIndex();
+        });
   };
 
   // lemma 0 : accept the surface
@@ -159,10 +161,11 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
-    IndexedIntersection3D intersection =
+    auto [intersection, index] =
         surface.intersect(gctx, position, direction, boundaryTolerance)
             .closest();
-    SurfaceIntersection surfaceIntersection(intersection, surface);
+    NavigationTarget surfaceIntersection(intersection, index, surface,
+                                         boundaryTolerance);
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit) &&
@@ -214,7 +217,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
   return surfaceIntersections;
 }
 
-SurfaceIntersection Layer::surfaceOnApproach(
+NavigationTarget Layer::surfaceOnApproach(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // resolve directive based by options
@@ -234,7 +237,7 @@ SurfaceIntersection Layer::surfaceOnApproach(
 
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
-    SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
+    NavigationTarget aSurface = m_approachDescriptor->approachSurface(
         gctx, position, direction, options.boundaryTolerance, nearLimit,
         farLimit);
     return aSurface;
@@ -244,14 +247,15 @@ SurfaceIntersection Layer::surfaceOnApproach(
   const Surface& layerSurface = surfaceRepresentation();
   const MultiIntersection3D multiIntersection = layerSurface.intersect(
       gctx, position, direction, options.boundaryTolerance);
-  for (auto intersection : multiIntersection) {
+  for (auto [intersection, index] : multiIntersection) {
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit)) {
-      return SurfaceIntersection(intersection, layerSurface);
+      return NavigationTarget(intersection, index, layerSurface,
+                              options.boundaryTolerance);
     }
   }
-  return SurfaceIntersection::invalid(layerSurface);
+  return NavigationTarget::None();
 }
 
 }  // namespace Acts

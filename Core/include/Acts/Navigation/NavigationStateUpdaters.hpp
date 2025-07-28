@@ -12,7 +12,6 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
@@ -42,28 +41,34 @@ inline void intitializeCandidates(const GeometryContext& gctx,
 
   for (auto& sc : nState.surfaceCandidates) {
     // Get the surface representation: either native surface of portal
-    const Surface& surface =
-        sc.surface != nullptr ? *sc.surface : sc.portal->surface();
+    const Surface& surface = sc.surface();
     // Only allow overstepping if it's not a portal
     double overstepTolerance =
-        sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
+        sc.isPortalTarget() ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
-    BoundaryTolerance boundaryTolerance =
-        sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
+    BoundaryTolerance boundaryTolerance = sc.isPortalTarget()
+                                              ? BoundaryTolerance::None()
+                                              : sc.boundaryTolerance();
     // Check the surface intersection
     auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto intersection : multiIntersection) {
+    for (auto [intersection, intersectionIndex] : multiIntersection) {
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
-        confirmedCandidates.emplace_back(NavigationState::SurfaceCandidate{
-            intersection, sc.surface, sc.portal, boundaryTolerance});
+        if (sc.isPortalTarget()) {
+          confirmedCandidates.emplace_back(intersection, intersectionIndex,
+                                           sc.portal(), boundaryTolerance);
+        } else {
+          confirmedCandidates.emplace_back(intersection, intersectionIndex,
+                                           surface, boundaryTolerance);
+        }
       }
     }
   }
 
-  std::ranges::sort(confirmedCandidates, {},
-                    [](const auto& c) { return c.intersection.pathLength(); });
+  std::ranges::sort(confirmedCandidates, {}, [](const auto& c) {
+    return c.intersection().pathLength();
+  });
 
   nState.surfaceCandidates = std::move(confirmedCandidates);
   nState.surfaceCandidateIndex = 0;

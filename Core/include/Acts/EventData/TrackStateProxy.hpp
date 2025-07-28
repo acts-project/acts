@@ -41,6 +41,7 @@ using ConstIf = std::conditional_t<select, const T, T>;
 template <typename T>
 class TransitiveConstPointer {
  public:
+  using element_type = T;
   TransitiveConstPointer() = default;
   explicit TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
 
@@ -70,10 +71,12 @@ class TransitiveConstPointer {
 
   T& operator*() { return *m_ptr; }
 
+  explicit operator bool() const { return m_ptr != nullptr; }
+
  private:
   T* ptr() const { return m_ptr; }
 
-  T* m_ptr;
+  T* m_ptr{nullptr};
 };
 
 /// Type construction helper for fixed size coefficients and associated

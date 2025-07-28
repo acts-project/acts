@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
@@ -48,11 +47,8 @@ struct SurfacesFiller {
   inline static void fill(NavigationState& nState,
                           const std::vector<const Surface*>& surfaces) {
     std::ranges::for_each(surfaces, [&](const auto& s) {
-      nState.surfaceCandidates.push_back(
-          NavigationState::SurfaceCandidate{{Intersection3D::invalid(), 0},
-                                            s,
-                                            nullptr,
-                                            nState.surfaceBoundaryTolerance});
+      nState.surfaceCandidates.emplace_back(Intersection3D::Invalid(), 0, *s,
+                                            nState.surfaceBoundaryTolerance);
     });
   }
 };
@@ -66,12 +62,9 @@ struct PortalsFiller {
   /// @param portals the portals that are filled in
   inline static void fill(NavigationState& nState,
                           const std::vector<const Portal*>& portals) {
-    std::ranges::for_each(portals, [&](const auto& p) {
-      nState.surfaceCandidates.push_back(
-          NavigationState::SurfaceCandidate{{Intersection3D::invalid(), 0},
-                                            nullptr,
-                                            p,
-                                            BoundaryTolerance::None()});
+    std::ranges::for_each(portals, [&](const Portal* p) {
+      nState.surfaceCandidates.emplace_back(Intersection3D::Invalid(), 0, *p,
+                                            BoundaryTolerance::None());
     });
   }
 };

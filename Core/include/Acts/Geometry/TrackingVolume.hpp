@@ -21,6 +21,7 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -69,22 +70,6 @@ using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
-
-/// Intersection with @c Layer
-using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
-
-/// BoundarySurface of a volume
-using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
-
-/// Intersection with a @c BoundarySurface
-/// @note This struct is currently split between a gen1 boundary surface
-///       and a gen3 portal but only one of them will be set. This will go away
-///       once the gen 1 geometry is removed.
-struct BoundaryIntersection {
-  SurfaceIntersection intersection;
-  const BoundarySurface* boundarySurface;
-  const Portal* portal;
-};
 
 /// @}
 
@@ -178,12 +163,23 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    apply([&visitor, restrictToSensitives](const Surface& surface) {
-      if (restrictToSensitives && surface.geometryId().sensitive() == 0) {
+    auto sensitive = [&visitor](const Surface& surface) {
+      if (surface.geometryId().sensitive() == 0) {
         return;
       }
       visitor(&surface);
-    });
+    };
+
+    if (restrictToSensitives) {
+      apply(sensitive);
+    } else {
+      apply(overloaded{
+          sensitive,
+          [&visitor](const Portal& portal) { visitor(&portal.surface()); },
+          [&visitor](const BoundarySurface& bs) {
+            visitor(&bs.surfaceRepresentation());
+          }});
+    }
   }
 
   /// @brief Visit all sensitive surfaces
@@ -376,7 +372,7 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
+  boost::container::small_vector<NavigationTarget, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -392,7 +388,7 @@ class TrackingVolume : public Volume {
   /// @param logger A @c Logger instance
   ///
   /// @return is the templated boundary intersection
-  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
+  boost::container::small_vector<NavigationTarget, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
       const Logger& logger = getDummyLogger()) const;
@@ -489,6 +485,14 @@ class TrackingVolume : public Volume {
                  const ViewConfig& viewConfig,
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
+
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  const INavigationPolicy* navigationPolicy() const;
+
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  INavigationPolicy* navigationPolicy();
 
   /// Register a navigation policy with this volume. The argument can not be
   /// nullptr.

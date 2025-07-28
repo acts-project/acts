@@ -107,7 +107,7 @@ struct SurfaceObserver {
                         stepper.direction(state.stepping),
                         BoundaryTolerance::None())
             .closest()
-            .pathLength();
+            .first.pathLength();
 
     // Adjust the step size so that we cannot cross the target surface
     state.stepping.stepSize.release(ConstrainedStep::Type::Actor);

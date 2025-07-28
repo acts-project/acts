@@ -20,6 +20,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
@@ -562,13 +563,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param intersection [in] The SurfaceIntersection
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const SurfaceIntersection& intersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    const Surface& surface = *intersection.object();
+    const Surface& surface = target.surface();
 
     for (auto& component : state.components) {
       auto componentIntersection =
@@ -577,7 +577,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
                          SingleStepper::position(component.state),
                          direction * SingleStepper::direction(component.state),
                          BoundaryTolerance::None())
-              .at(intersection.index());
+              .at(target.intersectionIndex());
 
       SingleStepper::updateStepSize(component.state, componentIntersection,
                                     direction, stype);

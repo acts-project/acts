@@ -11,6 +11,7 @@ pybind11_add_module(ActsPythonBindings
   src/ModuleEntry.cpp
   src/Framework.cpp
   src/Base.cpp
+  src/Alignment.cpp
   src/Detector.cpp
   src/Digitization.cpp
   src/Material.cpp
@@ -102,7 +103,10 @@ endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+        PUBLIC
+            ActsPluginGeoModel
+            ActsExamplesDetectorGeoModel
+            ActsExamplesMuonSpectrometerMockupDetector
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()

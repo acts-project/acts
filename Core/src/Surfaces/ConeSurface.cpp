@@ -287,8 +287,8 @@ MultiIntersection3D ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return MultiIntersection3D(Intersection3D::invalid(),
-                               Intersection3D::invalid());
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
