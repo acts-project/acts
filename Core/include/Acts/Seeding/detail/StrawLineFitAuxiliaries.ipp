@@ -42,17 +42,17 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
       return;
     }
 
-    if (m_cfg.calcAlongStraw && spacePoint.measNonPrecCoord()) {
+    if (m_cfg.calcAlongStraw && spacePoint.measuresLoc0()) {
       /// If the tube is a twin-tube, the hit position is no longer arbitrary
       /// along the wire. Calculate the distance along the wire towards the
       /// point of closest approach.
       updateAlongTheStraw(line, hitMinSeg, wireDir);
     }
   } else {
-    updateStripResidual(line, spacePoint.planeNormal(),
-                        spacePoint.sensorNormal(), spacePoint.sensorDirection(),
-                        spacePoint.localPosition(), spacePoint.measPrecCoord(),
-                        spacePoint.measNonPrecCoord());
+    updateStripResidual(
+        line, spacePoint.planeNormal(), spacePoint.sensorVertical(),
+        spacePoint.sensorDirection(), spacePoint.localPosition(),
+        spacePoint.measuresLoc1(), spacePoint.measuresLoc0());
   }
 }
 

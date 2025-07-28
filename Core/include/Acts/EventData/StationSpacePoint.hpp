@@ -18,8 +18,12 @@ namespace Acts::Experimental {
 ///        like the Muon stations in side the ATLAS experiment. The stations
 ///        usually consist of few layers of straw tubes which maybe sandwiched
 ///        by strip detector layers. The straws are used to measure the passage
-///        of the particle in the bending plane, while the strip may supplement
-///        the track measurement by providing the measurements along the straw.
+///        of the particle in the bending plane, while the strips may supplement
+///        the track measurement by providing coordinates along the straw. The
+///        StationSpacePoint assumes an orthogonal coordinate system, where
+///           x-axis: Is parallel to the straw wires
+///           y-axis: Points to the next straw in a layer
+///           z-axis: Points outwards from the experiment
 template <typename SpacePointType>
 concept StationSpacePoint = requires(const SpacePointType sp) {
   ///  @brief Local position of the space point measurement. It's either the position of the wire
@@ -32,8 +36,8 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   /// @brief Unit vector pointing to the next strip/straw in the plane or
   ///        in case of a combined measurement, the complementary strip
   ///        direction
-  { sp.sensorNormal() } -> std::same_as<const Vector3&>;
-  /// @brief Normal vector on the strip-plane.
+  { sp.sensorVertical() } -> std::same_as<const Vector3&>;
+  /// @brief Normal vector on the strip-plane spanned by `sensorDirection()` & `sensorNormal()`.
   { sp.planeNormal() } -> std::same_as<const Vector3&>;
   /// @brief Radius of the straw-tube measurement. The returned value is zero for strip measurements
   { sp.driftRadius() } -> std::same_as<double>;
@@ -49,12 +53,13 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   { sp.isStraw() } -> std::same_as<bool>;
   /// @brief Return whether the space point provides a direct time constraint
   { sp.hasTime() } -> std::same_as<bool>;
-  /// @brief Return whether the space point constrains the bending direction
-  ///        of the segment
-  { sp.measPrecCoord() } -> std::same_as<bool>;
-  /// @brief Return whether the space point constrains the non-bending direction
-  ///        of the segment
-  { sp.measNonPrecCoord() } -> std::same_as<bool>;
+  /// @brief Returns whether the station space point measures the 0-th coordinate
+  ///        and hence constrains the track parameters in the non-bending
+  ///        direction
+  { sp.measuresLoc0() } -> std::same_as<bool>;
+  /// @brief Returns whether the station space point measures the 1-st coordinate
+  ///        and hence constrains the track parameters in the bending direction
+  { sp.measuresLoc1() } -> std::same_as<bool>;
 };
 
 /// @brief Define the Space Point pointer concept as an ordinary / smart pointer

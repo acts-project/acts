@@ -62,17 +62,17 @@ class TestSpacePoint {
 
   const Vector3& localPosition() const { return m_pos; }
   const Vector3& sensorDirection() const { return m_dir; }
-  const Vector3& sensorNormal() const { return m_toNext; }
+  const Vector3& sensorVertical() const { return m_toNext; }
   const Vector3& planeNormal() const { return m_planeNorm; }
 
   bool isStraw() const { return m_isStraw; }
   bool hasTime() const {
     return (m_dirMask & (ProjectorMask::timeOfArrival)) != 0u;
   }
-  bool measPrecCoord() const {
+  bool measuresLoc1() const {
     return (m_dirMask & (ProjectorMask::bendingDir)) != 0u;
   }
-  bool measNonPrecCoord() const {
+  bool measuresLoc0() const {
     return (m_dirMask & (ProjectorMask::nonBendingDir)) != 0u;
   }
 
@@ -130,7 +130,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
               << toString(testPoint.localPosition())
               << ", normal: " << toString(testPoint.planeNormal())
               << ", strip: " << toString(testPoint.sensorDirection())
-              << ", to-next: " << toString(testPoint.sensorNormal())
+              << ", to-next: " << toString(testPoint.sensorVertical())
               << std::endl;
     const Vector3& n{testPoint.planeNormal()};
     const Vector3 planeIsect = intersectPlane(line.position(), line.direction(),
@@ -143,19 +143,19 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
               << ", <delta, n> =" << delta.dot(n) << std::endl;
 
     Acts::ActsSquareMatrix<3> coordTrf{Acts::ActsSquareMatrix<3>::Zero()};
-    coordTrf.col(ResidualIdx::bending) = testPoint.measPrecCoord()
-                                             ? testPoint.sensorNormal()
+    coordTrf.col(ResidualIdx::bending) = testPoint.measuresLoc1()
+                                             ? testPoint.sensorVertical()
                                              : testPoint.sensorDirection();
-    coordTrf.col(ResidualIdx::nonBending) = testPoint.measPrecCoord()
+    coordTrf.col(ResidualIdx::nonBending) = testPoint.measuresLoc1()
                                                 ? testPoint.sensorDirection()
-                                                : testPoint.sensorNormal();
+                                                : testPoint.sensorVertical();
     coordTrf.col(2) = n;
     std::cout << "Coordinate trf: \n" << coordTrf << std::endl;
 
     const Vector3 trfDelta = coordTrf.inverse() * delta;
     std::cout << "Transformed delta: " << toString(trfDelta) << std::endl;
 
-    if (testPoint.measPrecCoord()) {
+    if (testPoint.measuresLoc1()) {
       BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::bending],
                         resCalc.residual()[ResidualIdx::bending], 1.e-10);
     } else {
@@ -164,7 +164,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                         resCalc.residual()[ResidualIdx::bending], 1.e-10);
     }
 
-    if (testPoint.measNonPrecCoord()) {
+    if (testPoint.measuresLoc0()) {
       BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::nonBending],
                         resCalc.residual()[ResidualIdx::nonBending], 1.e-10);
     } else {

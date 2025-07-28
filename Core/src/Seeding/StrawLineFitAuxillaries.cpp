@@ -127,16 +127,17 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       const int resIdx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       /// Pure angular derivatives of the residual
       if (isDirectionParam(param) && isDirectionParam(param1)) {
-        const double partialSqDist =
-            m_hessianProjDir[resIdx].cross(wireDir).dot(hitMinSeg);
+        // clang-format off
+        const double partialSqDist = m_hessianProjDir[resIdx].cross(wireDir).dot(hitMinSeg);
+        // clang-format on
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
       } else {
         /// Angular & Spatial mixed terms
         const auto angParam = isDirectionParam(param) ? param : param1;
         const auto posParam = isDirectionParam(param) ? param1 : param;
-        m_hessian[resIdx] = -m_gradProjDir[angParam].cross(wireDir).dot(
-                                line.gradient(posParam)) *
-                            Vector3::Unit(bending);
+        // clang-format off
+        m_hessian[resIdx] = -m_gradProjDir[angParam].cross(wireDir).dot(line.gradient(posParam)) * Vector3::Unit(bending);
+        // clang-format on
       }
       ACTS_VERBOSE("updateStrawResidual() - Hessian of the residual is "
                    << m_hessian[resIdx][bending]);
@@ -179,13 +180,10 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
       continue;  // skip these parameters
     }
     m_projDirLenPartial[param] = line.gradient(param).dot(wireDir);
-    m_gradProjDir[param] =
-        m_invProjDirLen *
-            (line.gradient(param) - m_projDirLenPartial[param] * wireDir) +
-        ///
-        m_projDirLenPartial[param] * m_wireProject * m_projDir *
-            m_invProjDirLenSq;
-
+    // clang-format off
+    m_gradProjDir[param] = m_invProjDirLen * (line.gradient(param) - m_projDirLenPartial[param] * wireDir) +
+                           m_projDirLenPartial[param] * m_wireProject * m_projDir * m_invProjDirLenSq;
+    // clang-format on
     if (!m_cfg.useHessian) {
       continue;  // skip the Hessian calculation
     }
@@ -211,11 +209,10 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
         }
         return 2. * calcMixedTerms(param, param1);
       };
-      m_hessianProjDir[idx] =
-          (lHessian - partSqLineProject * wireDir) * m_invProjDirLen +
-          ///
-          m_invProjDirLenSq * (calcMixedHessian() +
-                               (partSqLineProject * m_wireProject) * m_projDir);
+      // clang-format off
+      m_hessianProjDir[idx] = (lHessian - partSqLineProject * wireDir) * m_invProjDirLen +
+                               m_invProjDirLenSq * (calcMixedHessian() + (partSqLineProject * m_wireProject) * m_projDir);
+      // clang-format on
       ACTS_VERBOSE("updateStrawAuxiliaries() - Hessian w.r.t. "
                    << parName(param1) << ", " << parName(param) << " is "
                    << toString(m_hessianProjDir[idx]));
@@ -235,18 +232,18 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
 
   for (const auto param : m_cfg.parsToUse) {
     if (isDirectionParam(param)) {
-      m_gradient[param][nonBending] =
-          (hitMinSeg.dot(line.gradient(param)) * m_wireProject +
-           hitMinSeg.dot(line.direction()) * m_projDirLenPartial[param] +
-           2. * m_residual[nonBending] * m_wireProject *
-               m_projDirLenPartial[param]) *
-          m_invProjDirLenSq;
+      // clang-format off
+      m_gradient[param][nonBending] = m_invProjDirLenSq * (
+                                       hitMinSeg.dot(line.gradient(param)) * m_wireProject +
+                                       hitMinSeg.dot(line.direction()) * m_projDirLenPartial[param] +
+                                       2. * m_residual[nonBending] * m_wireProject * m_projDirLenPartial[param]);
+      // clang-format on
 
     } else if (isPositionParam(param)) {
-      m_gradient[param][nonBending] =
-          -(line.gradient(param).dot(line.direction()) * m_wireProject -
-            line.gradient(param).dot(wireDir)) *
-          m_invProjDirLenSq;
+      // clang-format off
+      m_gradient[param][nonBending] = -m_invProjDirLenSq * (line.gradient(param).dot(line.direction()) * m_wireProject -
+                                                            line.gradient(param).dot(wireDir));
+      // clang-format on
     }
     ACTS_VERBOSE("updateAlongTheStraw() - First derivative w.r.t "
                  << parName(param) << " is " << m_gradient[param][nonBending]);
@@ -271,42 +268,31 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
       }
       const std::size_t hessIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
-        auto calcMixedHessian = [this, &hitMinSeg, &line](
-                                    const std::size_t p1,
-                                    const std::size_t p2) -> double {
-          const double term1 =
-              hitMinSeg.dot(line.gradient(p1)) * m_projDirLenPartial[p2];
-          const double term2 = m_residual[nonBending] *
-                               m_projDirLenPartial[p1] *
-                               m_projDirLenPartial[p2];
-          const double term3 = 2. * m_wireProject * m_projDirLenPartial[p1] *
-                               m_gradient[p2][nonBending];
+        // clang-format off
+        auto calcMixedHessian = [this, &hitMinSeg, &line](const std::uint8_t p1,
+                                                          const std::uint8_t p2) -> double {
+          const double term1 = hitMinSeg.dot(line.gradient(p1)) * m_projDirLenPartial[p2];
+          const double term2 = m_residual[nonBending] * m_projDirLenPartial[p1] * m_projDirLenPartial[p2];
+          const double term3 = 2. * m_wireProject * m_projDirLenPartial[p1] * m_gradient[p2][nonBending];
           return (term1 + term2 + term3) * m_invProjDirLenSq;
         };
-
         const double projHess = line.hessian(param1, param).dot(wireDir);
-        m_hessian[hessIdx][nonBending] =
-            (param != param1 ? calcMixedHessian(param, param1) +
-                                   calcMixedHessian(param1, param)
-                             : 2. * calcMixedHessian(param1, param)) +
-            (hitMinSeg.dot(line.hessian(param, param1)) * m_wireProject +
-             hitMinSeg.dot(line.direction()) * projHess +
-             2. * m_residual[nonBending] * m_wireProject * projHess) *
-                m_invProjDirLenSq;
+        m_hessian[hessIdx][nonBending] = (param != param1 ? calcMixedHessian(param, param1) + calcMixedHessian(param1, param)
+                                                          : 2. * calcMixedHessian(param1, param)) +
+                                        m_invProjDirLenSq * (hitMinSeg.dot(line.hessian(param, param1)) * m_wireProject +
+                                                             hitMinSeg.dot(line.direction()) * projHess +
+                                                             2. * m_residual[nonBending] * m_wireProject * projHess);
+        // clang-format on
       } else {
         /// Mixed positional and angular derivative
         const auto angParam = isDirectionParam(param) ? param : param1;
         const auto posParam = isDirectionParam(param) ? param1 : param;
-        m_hessian[hessIdx][nonBending] =
-            (-line.gradient(posParam).dot(line.gradient(angParam)) *
-                 m_wireProject -
-             ///
-             line.gradient(posParam).dot(line.direction()) *
-                 m_projDirLenPartial[angParam] +
-             ///
-             2. * m_gradient[posParam][nonBending] * m_wireProject *
-                 m_projDirLenPartial[angParam]) *
-            m_invProjDirLenSq;
+        // clang-format off
+        m_hessian[hessIdx][nonBending] = m_invProjDirLenSq * (
+                -line.gradient(posParam).dot(line.gradient(angParam)) * m_wireProject -
+                 line.gradient(posParam).dot(line.direction()) * m_projDirLenPartial[angParam] +
+                 2. * m_gradient[posParam][nonBending] * m_wireProject * m_projDirLenPartial[angParam]);
+        // clang-format on
       }
       ACTS_VERBOSE("updateAlongTheStraw() - Second derivative w.r.t. "
                    << parName(param) << ", " << parName(param1) << " is. "
