@@ -57,14 +57,14 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
   { sp.measNonPrecCoord() } -> std::same_as<bool>;
 };
 
-/** @brief Define the Space Point pointer concept as an ordinary / smart pointer
- *         over space points */
+/// @brief Define the Space Point pointer concept as an ordinary / smart pointer
+///        over space points
 template <typename SpacePoint_t>
 concept StationSpacePointPtr =
     PointerConcept<SpacePoint_t> &&
     StationSpacePoint<typename RemovePointer<SpacePoint_t>::type>;
 
-/** @brief A station space point container is any std::container over space points */
+/// @brief A station space point container is any std::container over space points
 template <typename ContType_t>
 concept StationSpacePointContainer =
     requires(ContType_t mCont, const ContType_t cCont) {
