@@ -120,7 +120,13 @@ class ContainerSubset {
 
     friend constexpr auto operator<=>(const Iterator &a,
                                       const Iterator &b) noexcept {
-      return a.m_iterator <=> b.m_iterator;
+      if (a.m_iterator < b.m_iterator) {
+        return std::strong_ordering::less;
+      }
+      if (a.m_iterator > b.m_iterator) {
+        return std::strong_ordering::greater;
+      }
+      return std::strong_ordering::equal;
     }
     friend constexpr bool operator==(const Iterator &a,
                                      const Iterator &b) noexcept {
