@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
 using namespace Acts;
 using namespace Acts::detail;
 using namespace Acts::Experimental::detail;
