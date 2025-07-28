@@ -18,7 +18,7 @@ namespace Acts::Experimental {
 ///        usually consist of few layers of straw tubes which maybe sandwiched
 ///        by strip detector layers. The straws are used to measure the passage
 ///        of the particle in the bending plane, while the strip may supplement
-///        the track  measurement by providing the measurements along the straw.
+///        the track measurement by providing the measurements along the straw.
 template <typename SpacePointType>
 concept StationSpacePoint = requires(const SpacePointType sp) {
   ///  @brief Local position of the space point measurement. It's either the position of the wire
