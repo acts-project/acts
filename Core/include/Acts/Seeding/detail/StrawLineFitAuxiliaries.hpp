@@ -13,6 +13,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
+#include <cstdint>
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a StationSpacePoint measurement as well as the partial derivatives.
@@ -36,7 +38,7 @@ class StrawLineFitAuxiliaries {
  public:
   using Line_t = Acts::detail::Line3DWithPartialDerivatives<double>;
   using Vector = Line_t::Vector;
-  enum FitParIndices : std::size_t {
+  enum FitParIndices : std::uint8_t {
     x0 = Line_t::ParIndices::x0,
     y0 = Line_t::ParIndices::y0,
     theta = Line_t::ParIndices::theta,
@@ -44,8 +46,9 @@ class StrawLineFitAuxiliaries {
     t0 = 4,  // time offset
     nPars = 5
   };
+  static std::string parName(const FitParIndices idx);
   /// @brief Assignment of the residual components.
-  enum ResidualIdx { nonBending = 0, bending = 1, time = 2 };
+  enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
   /// @brief Configuration object of the residual calculator
   struct Config {
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
@@ -59,9 +62,9 @@ class StrawLineFitAuxiliaries {
     bool calcAlongStrip{true};
     /// @brief List of fit parameters to which the partial derivative of the
     ///        residual shall be calculated
-    std::vector<std::size_t> parsToUse{FitParIndices::x0, FitParIndices::y0,
-                                       FitParIndices::theta,
-                                       FitParIndices::phi};
+    std::vector<FitParIndices> parsToUse{FitParIndices::x0, FitParIndices::y0,
+                                         FitParIndices::theta,
+                                         FitParIndices::phi};
   };
   /// @brief Constructor to instantiate a new instance
   /// @param cfg: Configuration object to toggle the calculation of the complementary residual components & the full evaluation of the second derivative
@@ -85,20 +88,20 @@ class StrawLineFitAuxiliaries {
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param par: Index of the partiald derivative
-  const Vector& gradient(FitParIndices par) const;
+  const Vector& gradient(const FitParIndices param) const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param param1: First index of the second partial derivative
   /// @param param2: Second index of the second partial derivative
-  const Vector& hessian(const std::size_t param1,
-                        const std::size_t param2) const;
+  const Vector& hessian(const FitParIndices param1,
+                        const FitParIndices param2) const;
 
   /// @brief Returns whether the passed parameter describes a direction angle
-  static constexpr bool isDirectionParam(const std::size_t param) {
+  static constexpr bool isDirectionParam(const FitParIndices param) {
     return param == FitParIndices::theta || param == FitParIndices::phi;
   }
   /// @brief Returns whether the passed parameter describes the displacement
   ///        in the reference plane
-  static constexpr bool isPositionParam(const std::size_t param) {
+  static constexpr bool isPositionParam(const FitParIndices param) {
     return param == FitParIndices::x0 || param == FitParIndices::y0;
   }
   /// @brief Calculate whether the track passed on the left (-1) or the right (1) side
@@ -159,10 +162,11 @@ class StrawLineFitAuxiliaries {
   /// @brief Cached residual vector calculated from the measurement & the parametrized line
   Vector m_residual{Vector::Zero()};
   /// @brief Partial derivatives of the residual w.r.t. the fit parameters parameters
-  std::array<Vector3, FitParIndices::nPars> m_gradient{
+  static constexpr std::size_t s_nPars =
+      static_cast<std::size_t>(FitParIndices::nPars);
+  std::array<Vector3, s_nPars> m_gradient{
       filledArray<Vector3, FitParIndices::nPars>(Vector3::Zero())};
   /// @brief  Second partial derivatives of the residual w.r.t. the fit parameters parameters
-  static constexpr std::size_t s_nPars = FitParIndices::nPars;
   std::array<Vector3, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector3, sumUpToN(s_nPars)>(Vector3::Zero())};
 

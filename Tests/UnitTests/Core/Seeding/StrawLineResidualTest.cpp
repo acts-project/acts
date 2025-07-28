@@ -21,30 +21,12 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
 
 using Line_t = StrawLineFitAuxiliaries::Line_t;
-using Vector = Line_t::Vector;
 using Config_t = StrawLineFitAuxiliaries::Config;
+using ParIdx = StrawLineFitAuxiliaries::FitParIndices;
+
+using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
-using ParIdx = Line_t::ParIndices;
 
-namespace {
-std::string parName(const std::size_t idx) {
-  switch (idx) {
-    using enum ParIdx;
-    case x0:
-      return "x0";
-    case y0:
-      return "y0";
-    case theta:
-      return "theta";
-    case phi:
-      return "phi";
-    default:
-      break;
-  }
-  return "unknown";
-}
-
-}  // namespace
 namespace Acts::Test {
 class TestSpacePoint {
  public:
@@ -213,7 +195,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
 
-    std::cout << "Derivative test: " << parName(par)
+    std::cout << "Derivative test: " << StrawLineFitAuxiliaries::parName(par)
               << ", derivative: " << toString(resCalc.gradient(par))
               << ",  numerical: " << toString(numDeriv) << std::endl;
     BOOST_CHECK_LE((numDeriv - resCalc.gradient(par)).norm() /
@@ -235,7 +217,8 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
       const Vector numDeriv1{
           (resCalcUp.gradient(par) - resCalcDn.gradient(par)) / (2. * h)};
       const Vector& analyticDeriv = resCalc.hessian(par, par1);
-      std::cout << "Second deriv (" << parName(par) << ", " << parName(par1)
+      std::cout << "Second deriv (" << StrawLineFitAuxiliaries::parName(par)
+                << ", " << StrawLineFitAuxiliaries::parName(par1)
                 << ") -- numerical: " << toString(numDeriv1)
                 << ", analytic: " << toString(analyticDeriv) << std::endl;
       BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);

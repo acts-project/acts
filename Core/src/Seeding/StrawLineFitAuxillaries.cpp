@@ -9,14 +9,19 @@
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 namespace Acts::Experimental::detail {
-namespace {
 
 using Vector = StrawLineFitAuxiliaries::Vector;
 
-std::string parName(const std::size_t idx) {
-  using ParIdx = StrawLineFitAuxiliaries::FitParIndices;
+namespace {
+double angle(const Vector& v1, const Vector& v2) {
+  using namespace Acts::UnitLiterals;
+  return std::acos(std::clamp(v1.dot(v2), -1., 1.)) / 1_degree;
+}
+}  // namespace
+
+std::string StrawLineFitAuxiliaries::parName(const FitParIndices idx) {
   switch (idx) {
-    using enum ParIdx;
+    using enum FitParIndices;
     case x0:
       return "x0";
     case y0:
@@ -27,16 +32,11 @@ std::string parName(const std::size_t idx) {
       return "phi";
     case t0:
       return "t0";
+    case nPars:
+      return "nPars";
   }
   return "unknown";
 }
-
-double angle(const Vector& v1, const Vector& v2) {
-  using namespace Acts::UnitLiterals;
-  return std::acos(std::clamp(v1.dot(v2), -1., 1.)) / 1_degree;
-}
-}  // namespace
-
 StrawLineFitAuxiliaries::StrawLineFitAuxiliaries(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg{cfg}, m_logger{std::move(logger)} {
@@ -45,12 +45,12 @@ StrawLineFitAuxiliaries::StrawLineFitAuxiliaries(
 const Vector& StrawLineFitAuxiliaries::residual() const {
   return m_residual;
 }
-const Vector& StrawLineFitAuxiliaries::gradient(const std::size_t par) const {
+const Vector& StrawLineFitAuxiliaries::gradient(const FitParIndices par) const {
   assert(par < m_gradient.size());
   return m_gradient[par];
 }
-const Vector& StrawLineFitAuxiliaries::hessian(const std::size_t param1,
-                                               const std::size_t param2) const {
+const Vector& StrawLineFitAuxiliaries::hessian(
+    const FitParIndices param1, const FitParIndices param2) const {
   const std::size_t idx = vecIdxFromSymMat<s_nPars>(param1, param2);
   assert(idx < m_hessian.size());
   return m_hessian[idx];
@@ -401,7 +401,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   /// Update the residual accordingly
   assignResidual(line.position() + travelledDist * line.direction() - stripPos,
                  m_residual);
-  for (const std::size_t fitPar : m_cfg.parsToUse) {
+  for (const auto fitPar : m_cfg.parsToUse) {
     ACTS_VERBOSE("stripResidual() - Calculate partial derivative w.r.t "
                  << parName(fitPar));
     switch (fitPar) {
