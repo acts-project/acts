@@ -85,7 +85,7 @@ class StrawLineFitAuxiliaries {
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param par: Index of the partiald derivative
-  const Vector& gradient(const std::size_t par) const;
+  const Vector& gradient(FitParIndices par) const;
   /// @brief Returns the gradient of the previously calculated residual
   /// @param param1: First index of the second partial derivative
   /// @param param2: Second index of the second partial derivative
@@ -166,9 +166,8 @@ class StrawLineFitAuxiliaries {
   std::array<Vector3, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector3, sumUpToN(s_nPars)>(Vector3::Zero())};
 
-  ///
-  ///  Auxiliary parameters needed to calculate the residual of the
-  ///  point of closest approach and its derivatives
+  //  Auxiliary parameters needed to calculate the residual of the
+  //  point of closest approach and its derivatives
 
   /// @brief Number of spatial line parameters
   static constexpr std::size_t s_nLinePars = Line_t::ParIndices::nPars;
