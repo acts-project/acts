@@ -152,16 +152,17 @@ static constexpr IntersectionIndex s_maximumNumberOfIntersections = 2;
 template <unsigned int DIM>
 class MultiIntersection {
  public:
-  using Intersection = Intersection<DIM>;
-  using IndexedIntersection = std::pair<Intersection, IntersectionIndex>;
+  using IntersectionType = Intersection<DIM>;
+  using IndexedIntersection = std::pair<IntersectionType, IntersectionIndex>;
 
-  using Container = std::array<Intersection, s_maximumNumberOfIntersections>;
+  using Container =
+      std::array<IntersectionType, s_maximumNumberOfIntersections>;
 
   constexpr explicit MultiIntersection(
-      const Intersection& intersection) noexcept
-      : m_intersections{intersection, Intersection::Invalid()}, m_size{1} {}
-  constexpr MultiIntersection(const Intersection& intersection1,
-                              const Intersection& intersection2) noexcept
+      const IntersectionType& intersection) noexcept
+      : m_intersections{intersection, IntersectionType::Invalid()}, m_size{1} {}
+  constexpr MultiIntersection(const IntersectionType& intersection1,
+                              const IntersectionType& intersection2) noexcept
       : m_intersections{intersection1, intersection2}, m_size{2} {}
 
   constexpr MultiIntersection(const MultiIntersection&) noexcept = default;
@@ -171,11 +172,11 @@ class MultiIntersection {
   constexpr MultiIntersection& operator=(MultiIntersection&&) noexcept =
       default;
 
-  constexpr const Intersection& operator[](IntersectionIndex index) const {
+  constexpr const IntersectionType& operator[](IntersectionIndex index) const {
     return m_intersections[index];
   }
 
-  constexpr const Intersection& at(IntersectionIndex index) const {
+  constexpr const IntersectionType& at(IntersectionIndex index) const {
     return m_intersections.at(index);
   }
 
@@ -219,15 +220,15 @@ class MultiIntersection {
   }
 
   constexpr IndexedIntersection closest() const noexcept {
-    auto min =
-        std::ranges::min_element(m_intersections, Intersection::closestOrder);
+    auto min = std::ranges::min_element(m_intersections,
+                                        IntersectionType::closestOrder);
     return {*min, static_cast<IntersectionIndex>(
                       std::distance(m_intersections.begin(), min))};
   }
 
   constexpr IndexedIntersection closestForward() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
-                                        Intersection::closestForwardOrder);
+                                        IntersectionType::closestForwardOrder);
     return {*min, static_cast<IntersectionIndex>(
                       std::distance(m_intersections.begin(), min))};
   }
