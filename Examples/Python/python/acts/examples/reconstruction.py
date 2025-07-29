@@ -380,7 +380,11 @@ def addSeeding(
         )
     else:
         spacePoints = addSpacePointsMaking(
-            s, trackingGeometry, geoSelectionConfigFile, stripGeoSelectionConfigFile, logLevel
+            s,
+            trackingGeometry,
+            geoSelectionConfigFile,
+            stripGeoSelectionConfigFile,
+            logLevel,
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
@@ -667,9 +671,11 @@ def addSpacePointsMaking(
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
-        stripGeometrySelection=acts.examples.readJsonGeometryList(
-            str(stripGeoSelectionConfigFile)
-        ) if stripGeoSelectionConfigFile else []
+        stripGeometrySelection=(
+            acts.examples.readJsonGeometryList(str(stripGeoSelectionConfigFile))
+            if stripGeoSelectionConfigFile
+            else []
+        ),
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
