@@ -367,9 +367,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
           continue;
         }
         // store candidate
-        nextTargets.emplace_back(intersection, intersectionIndex,
-                                 *candidate.representation,
-                                 candidate.boundaryTolerance);
+        nextTargets.emplace_back(
+            candidate.target(intersection, intersectionIndex));
       }
     }
 
@@ -692,9 +691,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
             continue;
           }
           // store candidate
-          state.activeTargets.emplace_back(intersection, intersectionIndex,
-                                           *candidate.representation,
-                                           candidate.boundaryTolerance);
+          state.activeTargets.emplace_back(
+              candidate.target(intersection, intersectionIndex));
         }
       }
 

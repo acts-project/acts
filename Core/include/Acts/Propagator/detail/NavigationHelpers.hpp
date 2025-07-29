@@ -10,8 +10,10 @@
 
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <variant>
@@ -49,6 +51,24 @@ struct NavigationObjectCandidate {
                                 double tolerance) const {
     return representation->intersect(gctx, position, direction,
                                      boundaryTolerance, tolerance);
+  }
+
+  NavigationTarget target(const Intersection3D& intersection,
+                          IntersectionIndex intersectionIndex) const {
+    return std::visit(
+        overloaded{[&](const Surface* surface) -> NavigationTarget {
+                     return {intersection, intersectionIndex, *surface,
+                             boundaryTolerance};
+                   },
+                   [&](const Layer* layer) -> NavigationTarget {
+                     return {intersection, intersectionIndex, *layer,
+                             *representation, boundaryTolerance};
+                   },
+                   [&](const BoundarySurface* boundary) -> NavigationTarget {
+                     return {intersection, intersectionIndex, *boundary,
+                             boundaryTolerance};
+                   }},
+        object);
   }
 };
 
