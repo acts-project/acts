@@ -153,8 +153,7 @@ template <unsigned int DIM>
 class MultiIntersection {
  public:
   using IntersectionType = Intersection<DIM>;
-  using IndexedIntersection =
-      std::pair<const IntersectionType&, IntersectionIndex>;
+  using IndexedIntersection = std::pair<IntersectionType, IntersectionIndex>;
 
   using Container =
       std::array<IntersectionType, s_maximumNumberOfIntersections>;
