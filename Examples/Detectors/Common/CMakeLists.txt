@@ -1,4 +1,7 @@
-acts_add_library(ExamplesDetectorsCommon SHARED src/Detector.cpp
+acts_add_library(
+    ExamplesDetectorsCommon
+    SHARED
+    src/Detector.cpp
     src/AlignmentDecorator.cpp
     src/StructureSelector.cpp
 )

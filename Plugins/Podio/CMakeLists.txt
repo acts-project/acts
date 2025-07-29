@@ -1,4 +1,9 @@
-acts_add_library(PluginPodio SHARED src/PodioUtil.cpp ACTS_INCLUDE_FOLDER include/Acts)
+acts_add_library(
+    PluginPodio
+    SHARED
+    src/PodioUtil.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
+)
 
 target_include_directories(
     ActsPluginPodio
