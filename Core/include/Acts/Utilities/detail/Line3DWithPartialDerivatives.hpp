@@ -27,7 +27,7 @@ class Line3DWithPartialDerivatives {
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
-  enum ParIndices : std::uint8_t {
+  enum ParIndices : std::size_t {
     x0 = 0,
     y0 = 1,
     theta = 2,
