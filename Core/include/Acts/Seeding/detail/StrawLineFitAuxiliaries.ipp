@@ -16,7 +16,7 @@
 
 namespace Acts::Experimental::detail {
 
-template <StationSpacePoint Point_t>
+template <CompositeSpacePoint Point_t>
 int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
                                        const Point_t& strawSp) {
   if (!strawSp.isStraw()) {
@@ -28,7 +28,7 @@ int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
   return dist > 0. ? 1 : -1;
 }
 
-template <StationSpacePoint Point_t>
+template <CompositeSpacePoint Point_t>
 void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
                                                     const Point_t& spacePoint) {
   if (spacePoint.isStraw()) {

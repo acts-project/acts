@@ -20,12 +20,12 @@ namespace Acts::Experimental {
 ///        by strip detector layers. The straws are used to measure the passage
 ///        of the particle in the bending plane, while the strips may supplement
 ///        the track measurement by providing coordinates along the straw. The
-///        StationSpacePoint assumes an orthogonal coordinate system, where
+///        CompositeSpacePoint assumes an orthogonal coordinate system, where
 ///           x-axis: Is parallel to the straw wires
 ///           y-axis: Points to the next straw in a layer
 ///           z-axis: Points outwards from the experiment
 template <typename SpacePointType>
-concept StationSpacePoint = requires(const SpacePointType sp) {
+concept CompositeSpacePoint = requires(const SpacePointType sp) {
   ///  @brief Local position of the space point measurement. It's either the position of the wire
   ///         or the position of the fired strip in the station
   { sp.localPosition() } -> std::same_as<const Vector3&>;
@@ -65,13 +65,13 @@ concept StationSpacePoint = requires(const SpacePointType sp) {
 /// @brief Define the Space Point pointer concept as an ordinary / smart pointer
 ///        over space points
 template <typename SpacePoint_t>
-concept StationSpacePointPtr =
+concept CompositeSpacePointPtr =
     PointerConcept<SpacePoint_t> &&
-    StationSpacePoint<typename RemovePointer<SpacePoint_t>::type>;
+    CompositeSpacePoint<typename RemovePointer<SpacePoint_t>::type>;
 
 /// @brief A station space point container is any std::container over space points
 template <typename ContType_t>
-concept StationSpacePointContainer =
+concept CompositeSpacePointContainer =
     requires(ContType_t mCont, const ContType_t cCont) {
       { mCont.begin() } -> std::same_as<typename ContType_t::iterator>;
       { mCont.end() } -> std::same_as<typename ContType_t::iterator>;
@@ -79,7 +79,7 @@ concept StationSpacePointContainer =
       { cCont.end() } -> std::same_as<typename ContType_t::const_iterator>;
       { cCont.size() } -> std::same_as<typename ContType_t::size_type>;
       { cCont.empty() } -> std::same_as<bool>;
-      requires StationSpacePointPtr<typename ContType_t::value_type>;
+      requires CompositeSpacePointPtr<typename ContType_t::value_type>;
     };
 
 }  // namespace Acts::Experimental

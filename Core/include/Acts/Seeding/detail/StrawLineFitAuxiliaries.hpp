@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/StationSpacePoint.hpp"
+#include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
@@ -17,7 +17,7 @@
 
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
-///        a StationSpacePoint measurement as well as the partial derivatives.
+///        a CompositeSpacePoint measurement as well as the partial derivatives.
 ///        The residual is expressed as a 3D vector, where first two components
 ///        describe the spatial residual w.r.t. the precision & non-precision
 ///        direction, and the last one expresses the residual between the
@@ -81,7 +81,7 @@ class StrawLineFitAuxiliaries {
   ///        components are set to zero.
   /// @param line: Reference to the line to which the residual is calculated
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
-  template <StationSpacePoint Point_t>
+  template <CompositeSpacePoint Point_t>
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
 
   /// @brief Returns the previously calculated residual.
@@ -108,7 +108,7 @@ class StrawLineFitAuxiliaries {
   ///        of the straw wire. Returns 0 for strips
   /// @param line: Reference to the
   /// @param strawSp: Straw measurement of interest
-  template <StationSpacePoint Point_t>
+  template <CompositeSpacePoint Point_t>
   static int strawSign(const Line_t& line, const Point_t& strawSp);
 
  private:
