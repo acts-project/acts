@@ -37,16 +37,14 @@ concept CompositeSpacePoint = requires(const SpacePointType sp) {
   ///        in case of a combined measurement, the complementary strip
   ///        direction
   { sp.sensorVertical() } -> std::same_as<const Vector3&>;
-  /// @brief Normal vector on the strip-plane spanned by `sensorDirection()` & `sensorNormal()`.
+  /// @brief Normal vector on the strip-plane spanned by `sensorDirection()` & `sensorVertical()`.
   { sp.planeNormal() } -> std::same_as<const Vector3&>;
   /// @brief Radius of the straw-tube measurement. The returned value is zero for strip measurements
   { sp.driftRadius() } -> std::same_as<double>;
   /// @brief Recorded time of the measurement, if provided by the technology
   { sp.time() } -> std::same_as<double>;
-  /// @brief Measurement's covariance. The first two components correspond to
-  ///        the local covariances along the non-bending & bending direction
-  ///        The third component corresponds to the measurement's time
-  ///        covariance.
+  /// @brief Measurement covariance array. It's composed of the individual strip covariances, making up
+  ///        the composite space point and the covariance on time, if provided
   { sp.covariance() } -> std::same_as<const std::array<double, 3>&>;
 
   /// @brief Return whether the space point represents a straw measurement
