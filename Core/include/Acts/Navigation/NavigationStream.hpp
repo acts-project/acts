@@ -74,7 +74,7 @@ class NavigationStream {
     return m_candidates;
   }
 
-  /// Non-cost access the current target
+  /// Non-cost access the current candidate
   ///
   /// This will throw and out of bounds exception if the stream is not
   /// valid anymore.

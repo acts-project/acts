@@ -84,7 +84,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   m_candidates.erase(
       std::unique(m_candidates.begin(), m_candidates.end(),
                   [](const NavigationTarget& a, const NavigationTarget& b) {
-                    return (&a.surface()) == (&b.surface());
+                    return &a.surface() == &b.surface();
                   }),
       m_candidates.end());
 

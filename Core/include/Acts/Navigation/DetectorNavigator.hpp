@@ -344,8 +344,7 @@ class DetectorNavigator {
 
     // Sort properly the surface candidates
     auto& nCandidates = state.surfaceCandidates;
-    std::ranges::sort(nCandidates, {},
-                      [](const auto& c) { return c.pathLength(); });
+    std::ranges::sort(nCandidates, NavigationTarget::pathLengthOrder);
     state.surfaceCandidateIndex = -1;
   }
 

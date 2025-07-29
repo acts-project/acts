@@ -57,7 +57,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
           intersection.pathLength() > overstepTolerance) {
         if (sc.isPortalTarget()) {
           confirmedCandidates.emplace_back(intersection, intersectionIndex,
-                                           sc.portal(), boundaryTolerance);
+                                           sc.gen2Portal(), boundaryTolerance);
         } else {
           confirmedCandidates.emplace_back(intersection, intersectionIndex,
                                            surface, boundaryTolerance);

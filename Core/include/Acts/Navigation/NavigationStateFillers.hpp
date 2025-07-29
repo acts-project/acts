@@ -46,7 +46,7 @@ struct SurfacesFiller {
   /// @param surfaces the surfaces that are filled in
   inline static void fill(NavigationState& nState,
                           const std::vector<const Surface*>& surfaces) {
-    std::ranges::for_each(surfaces, [&](const auto& s) {
+    std::ranges::for_each(surfaces, [&](const Surface* s) {
       nState.surfaceCandidates.emplace_back(Intersection3D::Invalid(), 0, *s,
                                             nState.surfaceBoundaryTolerance);
     });
