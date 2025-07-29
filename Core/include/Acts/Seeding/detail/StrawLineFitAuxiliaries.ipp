@@ -49,10 +49,10 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
       updateAlongTheStraw(line, hitMinSeg, wireDir);
     }
   } else {
-    updateStripResidual(
-        line, spacePoint.planeNormal(), spacePoint.sensorVertical(),
-        spacePoint.sensorDirection(), spacePoint.localPosition(),
-        spacePoint.measuresLoc1(), spacePoint.measuresLoc0());
+    updateStripResidual(line, spacePoint.planeNormal(),
+                        spacePoint.toNextSensor(), spacePoint.sensorDirection(),
+                        spacePoint.localPosition(), spacePoint.measuresLoc1(),
+                        spacePoint.measuresLoc0());
   }
 }
 

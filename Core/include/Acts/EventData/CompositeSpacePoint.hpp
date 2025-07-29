@@ -36,8 +36,8 @@ concept CompositeSpacePoint = requires(const SpacePointType sp) {
   /// @brief Unit vector pointing to the next strip/straw in the plane or
   ///        in case of a combined measurement, the complementary strip
   ///        direction
-  { sp.sensorVertical() } -> std::same_as<const Vector3&>;
-  /// @brief Normal vector on the strip-plane spanned by `sensorDirection()` & `sensorVertical()`.
+  { sp.toNextSensor() } -> std::same_as<const Vector3&>;
+  /// @brief Normal vector on the strip-plane spanned by `sensorDirection()` & `toNextSensor()`.
   { sp.planeNormal() } -> std::same_as<const Vector3&>;
   /// @brief Radius of the straw-tube measurement. The returned value is zero for strip measurements
   { sp.driftRadius() } -> std::same_as<double>;

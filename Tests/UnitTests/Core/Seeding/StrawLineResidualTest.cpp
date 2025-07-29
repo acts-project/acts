@@ -62,7 +62,7 @@ class TestSpacePoint {
 
   const Vector3& localPosition() const { return m_pos; }
   const Vector3& sensorDirection() const { return m_dir; }
-  const Vector3& sensorVertical() const { return m_toNext; }
+  const Vector3& toNextSensor() const { return m_toNext; }
   const Vector3& planeNormal() const { return m_planeNorm; }
 
   bool isStraw() const { return m_isStraw; }
@@ -130,7 +130,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
               << toString(testPoint.localPosition())
               << ", normal: " << toString(testPoint.planeNormal())
               << ", strip: " << toString(testPoint.sensorDirection())
-              << ", to-next: " << toString(testPoint.sensorVertical())
+              << ", to-next: " << toString(testPoint.toNextSensor())
               << std::endl;
     const Vector3& n{testPoint.planeNormal()};
     const Vector3 planeIsect = intersectPlane(line.position(), line.direction(),
@@ -144,11 +144,11 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
 
     Acts::ActsSquareMatrix<3> coordTrf{Acts::ActsSquareMatrix<3>::Zero()};
     coordTrf.col(ResidualIdx::bending) = testPoint.measuresLoc1()
-                                             ? testPoint.sensorVertical()
+                                             ? testPoint.toNextSensor()
                                              : testPoint.sensorDirection();
     coordTrf.col(ResidualIdx::nonBending) = testPoint.measuresLoc1()
                                                 ? testPoint.sensorDirection()
-                                                : testPoint.sensorVertical();
+                                                : testPoint.toNextSensor();
     coordTrf.col(2) = n;
     std::cout << "Coordinate trf: \n" << coordTrf << std::endl;
 
