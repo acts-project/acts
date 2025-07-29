@@ -174,7 +174,7 @@ class StrawLineFitAuxiliaries {
   //  point of closest approach and its derivatives
 
   /// @brief Number of spatial line parameters
-  static constexpr std::size_t s_nLinePars = Line_t::ParIndices::nPars;
+  static constexpr std::uint8_t s_nLinePars = Line_t::ParIndices::nPars;
   /// @brief projection of the segment direction onto the wire planes
   Vector m_projDir{Vector::Zero()};
 

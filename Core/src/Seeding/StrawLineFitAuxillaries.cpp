@@ -124,7 +124,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       if (!(isDirectionParam(param) || isDirectionParam(param1))) {
         continue;
       }
-      const int resIdx = vecIdxFromSymMat<s_nLinePars>(param, param1);
+      const std::uint8_t resIdx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       /// Pure angular derivatives of the residual
       if (isDirectionParam(param) && isDirectionParam(param1)) {
         // clang-format off
@@ -433,7 +433,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
           "stripResidual() - Calculate second partial derivative w.r.t "
           << parName(param) << ", " << parName(param1));
 
-      const int resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
+      const std::uint8_t resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(param) && isDirectionParam(param1)) {
         // clang-format off
         auto calcMixedTerms = [&line, &normal, &normDot, &b1, &b2, this](const std::uint8_t p1,

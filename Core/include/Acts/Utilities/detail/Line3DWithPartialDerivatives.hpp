@@ -12,6 +12,8 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 
+#include <cstdint>
+
 namespace Acts::detail {
 /// @brief Helper to describe a line in 3D space. The line is described
 ///        by a point on the line and a corresponding direction vector with unit
@@ -25,7 +27,7 @@ class Line3DWithPartialDerivatives {
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
-  enum ParIndices : std::size_t {
+  enum ParIndices : std::uint8_t {
     x0 = 0,
     y0 = 1,
     theta = 2,
