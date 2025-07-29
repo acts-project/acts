@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace ActsExamples {
-/// @brief Example implementation of a CompositeSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
+/// @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
 ///         The space points are expressed in a local frame such that the x-axis
 ///         is parallel to the ATLAS Monitored Drift Tubes (Mdt), the y-axis
 ///         points within the tube layer & the z-axis outside of the plane.
