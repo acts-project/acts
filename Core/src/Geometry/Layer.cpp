@@ -125,7 +125,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
 
   auto isUnique = [&](const SurfaceIntersection& b) {
     return std::ranges::none_of(sIntersections, [&b](const auto& a) {
-      return a.object() == b.object() && a.index() == b.index();
+      return &a.surface() == &b.surface() && a.index() == b.index();
     });
   };
 
