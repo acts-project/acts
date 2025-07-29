@@ -251,7 +251,7 @@ NavigationTarget Layer::surfaceOnApproach(
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit)) {
-      return NavigationTarget(intersection, index, layerSurface,
+      return NavigationTarget(intersection, index, *this, layerSurface,
                               options.boundaryTolerance);
     }
   }
