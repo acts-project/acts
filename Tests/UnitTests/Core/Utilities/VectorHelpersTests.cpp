@@ -32,6 +32,15 @@ BOOST_AUTO_TEST_CASE(PhiFromVector) {
   // Test with 3D vectors
   CHECK_CLOSE_ABS(0.0, phi(Acts::Vector3{1, 0, 5}), 1e-6);
   CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(Acts::Vector3{0, 1, -2}), 1e-6);
+
+  // Test with dynamic vectors
+  Acts::ActsDynamicVector dynVec2(2);
+  dynVec2 << 1, 1;
+  CHECK_CLOSE_ABS(std::numbers::pi / 4, phi(dynVec2), 1e-6);
+
+  Acts::ActsDynamicVector dynVec3(3);
+  dynVec3 << 0, 1, 5;
+  CHECK_CLOSE_ABS(std::numbers::pi / 2, phi(dynVec3), 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(PhiFromObject) {
@@ -70,6 +79,14 @@ BOOST_AUTO_TEST_CASE(ThetaFromVector) {
   CHECK_CLOSE_ABS(std::numbers::pi / 4, theta(Acts::Vector3{1, 0, 1}), 1e-6);
   CHECK_CLOSE_ABS(3 * std::numbers::pi / 4, theta(Acts::Vector3{1, 0, -1}),
                   1e-6);
+  
+  // Test with dynamic vectors
+  Acts::ActsDynamicVector dynVec(3);
+  dynVec << 1, 0, 1;
+  CHECK_CLOSE_ABS(std::numbers::pi / 4, theta(dynVec), 1e-6);
+  
+  dynVec << 0, 0, 1;
+  CHECK_CLOSE_ABS(0.0, theta(dynVec), 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(EtaFromVector) {
@@ -88,6 +105,17 @@ BOOST_AUTO_TEST_CASE(EtaFromVector) {
   CHECK_CLOSE_ABS(std::asinh(-1.0), eta(Acts::Vector3{1, 0, -1}), 1e-6);
   CHECK_CLOSE_ABS(std::asinh(2.0), eta(Acts::Vector3{1, 1, 2 * std::sqrt(2)}),
                   1e-6);
+  
+  // Test with dynamic vectors
+  Acts::ActsDynamicVector dynVec(3);
+  dynVec << 1, 0, 1;
+  CHECK_CLOSE_ABS(std::asinh(1.0), eta(dynVec), 1e-6);
+  
+  dynVec << 0, 0, 1;
+  BOOST_CHECK_EQUAL(eta(dynVec), std::numeric_limits<double>::infinity());
+  
+  dynVec << 0, 0, -1;
+  BOOST_CHECK_EQUAL(eta(dynVec), -std::numeric_limits<double>::infinity());
 }
 
 BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
