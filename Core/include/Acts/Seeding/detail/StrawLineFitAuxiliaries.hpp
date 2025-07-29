@@ -162,8 +162,7 @@ class StrawLineFitAuxiliaries {
   /// @brief Cached residual vector calculated from the measurement & the parametrized line
   Vector m_residual{Vector::Zero()};
   /// @brief Partial derivatives of the residual w.r.t. the fit parameters parameters
-  static constexpr std::size_t s_nPars =
-      static_cast<std::size_t>(FitParIndices::nPars);
+  static constexpr std::uint8_t s_nPars =  static_cast<std::uint8_t>(FitParIndices::nPars);
   std::array<Vector3, s_nPars> m_gradient{
       filledArray<Vector3, FitParIndices::nPars>(Vector3::Zero())};
   /// @brief  Second partial derivatives of the residual w.r.t. the fit parameters parameters
