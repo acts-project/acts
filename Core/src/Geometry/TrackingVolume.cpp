@@ -390,8 +390,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return NavigationTarget(intersection, index, *boundary,
-                                options.boundaryTolerance);
+        return {intersection, index, *boundary, options.boundaryTolerance};
       }
     }
 
@@ -490,9 +489,9 @@ TrackingVolume::compatibleLayers(
   // In case of cylindrical layers we might resolve far intersection solutions
   // which are not valid for navigation. These are discarded here by checking
   // against the minimum path length.
-  auto min = std::min_element(targets.begin(), targets.end(),
-                              NavigationTarget::pathLengthOrder);
-  std::rotate(targets.begin(), min, targets.end());
+  auto min =
+      std::ranges::min_element(targets, NavigationTarget::pathLengthOrder);
+  std::ranges::rotate(targets, min);
   targets.resize(std::distance(min, targets.end()), NavigationTarget::None());
 
   return targets;

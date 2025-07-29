@@ -46,8 +46,7 @@ NavigationTarget GenericApproachDescriptor::approachSurface(
   if (targets.empty()) {
     return NavigationTarget::None();
   }
-  return *std::min_element(targets.begin(), targets.end(),
-                           NavigationTarget::pathLengthOrder);
+  return *std::ranges::min_element(targets, NavigationTarget::pathLengthOrder);
 }
 
 const std::vector<const Surface*>&

@@ -103,12 +103,14 @@ class Intersection {
   constexpr static bool closestOrder(
       const Intersection& aIntersection,
       const Intersection& bIntersection) noexcept {
-    if ((aIntersection.status() == IntersectionStatus::unreachable) &&
-        (bIntersection.status() != IntersectionStatus::unreachable)) {
+    using enum IntersectionStatus;
+
+    if ((aIntersection.status() == unreachable) &&
+        (bIntersection.status() != unreachable)) {
       return false;
     }
-    if ((aIntersection.status() != IntersectionStatus::unreachable) &&
-        (bIntersection.status() == IntersectionStatus::unreachable)) {
+    if ((aIntersection.status() != unreachable) &&
+        (bIntersection.status() == unreachable)) {
       return true;
     }
     // both are reachable or onSurface now

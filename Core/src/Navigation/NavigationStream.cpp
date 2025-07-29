@@ -81,12 +81,12 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
-  m_candidates.erase(
-      std::unique(m_candidates.begin(), m_candidates.end(),
-                  [](const NavigationTarget& a, const NavigationTarget& b) {
-                    return &a.surface() == &b.surface();
-                  }),
-      m_candidates.end());
+  auto nonUniqueRange = std::ranges::unique(
+      m_candidates.begin(), m_candidates.end(),
+      [](const NavigationTarget& a, const NavigationTarget& b) {
+        return &a.surface() == &b.surface();
+      });
+  m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
 
   // The we find the first invalid candidate
   auto firstInvalid = std::ranges::find_if(
