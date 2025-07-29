@@ -129,6 +129,7 @@ fi
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
+git config --global --add safe.directory /github/home/.spack/package_repos/fncqgg4
 spack repo update builtin --tag "${_spack_repo_version}"
 
 end_section
