@@ -8,8 +8,10 @@
 
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <initializer_list>
+#include <system_error>
 
 void ActsExamples::from_json(const nlohmann::json& data,
                              Acts::GeometryIdentifier& geoId) {
@@ -67,6 +69,11 @@ std::vector<Acts::GeometryIdentifier> ActsExamples::readJsonGeometryList(
     const std::string& path) {
   nlohmann::json data;
   std::vector<Acts::GeometryIdentifier> geoIdList;
+  namespace fs = std::filesystem;
+  if (!fs::exists(fs::status(fs::path(path)))) {
+    throw fs::filesystem_error(
+        path, std::make_error_code(std::errc::no_such_file_or_directory));
+  }
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   infile >> data;

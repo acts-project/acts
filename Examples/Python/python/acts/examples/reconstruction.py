@@ -272,6 +272,7 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
+    stripGeoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
@@ -312,6 +313,8 @@ def addSeeding(
     field : magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
+    stripGeoSelectionConfigFile : Path|str, path, None
+        Json file for space point geometry selection in strips. Needed for SpacePoint making.
     seedingAlgorithm : SeedingAlgorithm, Default
         seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
     trackSmearingSigmas : TrackSmearingSigmas(loc0, loc0PtA, loc0PtB, loc1, loc1PtA, loc1PtB, time, phi, theta, ptRel)
@@ -377,7 +380,7 @@ def addSeeding(
         )
     else:
         spacePoints = addSpacePointsMaking(
-            s, trackingGeometry, geoSelectionConfigFile, logLevel
+            s, trackingGeometry, geoSelectionConfigFile, stripGeoSelectionConfigFile, logLevel
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
@@ -649,6 +652,7 @@ def addSpacePointsMaking(
     sequence: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geoSelectionConfigFile: Union[Path, str],
+    stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
 ):
     """adds space points making
@@ -663,6 +667,9 @@ def addSpacePointsMaking(
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
+        stripGeometrySelection=acts.examples.readJsonGeometryList(
+            str(stripGeoSelectionConfigFile)
+        ) if stripGeoSelectionConfigFile else []
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
