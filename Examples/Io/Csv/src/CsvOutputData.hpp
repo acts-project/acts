@@ -378,12 +378,12 @@ struct TrackParameterData {
   double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
   double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
 
-  DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
-                 var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
-                 cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop,
-                 cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
-                 cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
-                 cov_qopphi, cov_qoptheta);
+  DFE_NAMEDTUPLE(TrackParameterData, trackId, d0, z0, phi, theta, qop, var_d0,
+                 var_z0, var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
+                 cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
+                 cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop,
+                 cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop,
+                 cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta);
 };
 
 struct ProtoTrackData {
