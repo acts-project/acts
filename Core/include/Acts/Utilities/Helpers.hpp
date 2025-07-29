@@ -52,7 +52,7 @@ std::vector<std::add_pointer_t<typename T::element_type>> unpackSmartPointers(
   std::vector<std::add_pointer_t<typename T::element_type>> rawPtrs{};
   rawPtrs.reserve(items.size());
   for (const auto& ptr : items) {
-    rawPtrs.push_back(ptr.operator->());
+    rawPtrs.push_back(&*ptr);
   }
   return rawPtrs;
 }
