@@ -127,7 +127,7 @@ if ! command -v spack &> /dev/null; then
 fi
 
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
-_spack_repo_directory=$(spack location --repo builtin)
+_spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
 
