@@ -273,7 +273,7 @@ class MultiIntersection {
     return Iterator(m_intersections.begin() + m_size, m_size);
   }
 
-  constexpr const IntersectionType& closest() const noexcept {
+  constexpr IntersectionType closest() const noexcept {
     return closestWithIndex().first;
   }
   constexpr IndexedIntersection closestWithIndex() const noexcept {
@@ -283,7 +283,7 @@ class MultiIntersection {
                       std::distance(m_intersections.begin(), min))};
   }
 
-  constexpr const IntersectionType& closestForward() const noexcept {
+  constexpr IntersectionType closestForward() const noexcept {
     return closestForwardWithIndex().first;
   }
   constexpr IndexedIntersection closestForwardWithIndex() const noexcept {
