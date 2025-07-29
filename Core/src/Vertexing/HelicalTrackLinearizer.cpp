@@ -34,8 +34,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
       perigeeSurface
           .intersect(gctx, params.position(gctx), params.direction(),
                      BoundaryTolerance::Infinite())
-          .closest()
-          .first;
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

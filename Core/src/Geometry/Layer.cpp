@@ -161,11 +161,11 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
       boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
-    auto [intersection, index] =
+    auto [intersection, intersectionIndex] =
         surface.intersect(gctx, position, direction, boundaryTolerance)
-            .closest();
-    NavigationTarget surfaceIntersection(intersection, index, surface,
-                                         boundaryTolerance);
+            .closestWithIndex();
+    NavigationTarget surfaceIntersection(intersection, intersectionIndex,
+                                         surface, boundaryTolerance);
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit) &&

@@ -48,7 +48,7 @@ void step(Vector3& pos, const Vector3& dir, double stepSize) {
 
 void step(Vector3& pos, const Vector3& dir, const Surface& surface) {
   Intersection3D intersection =
-      surface.intersect(tgContext, pos, dir).closestForward().first;
+      surface.intersect(tgContext, pos, dir).closestForward();
   step(pos, dir, intersection.pathLength());
 }
 
@@ -292,8 +292,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   Intersection3D targetIntersection =
       target.surface()
           .intersect(tgContext, position, direction)
-          .closestForward()
-          .first;
+          .closestForward();
   // Cache the beam pipe radius
   double beamPipeR = perp(state.navLayer().position());
   // step size has been updated
@@ -336,8 +335,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Intersect the target
   targetIntersection = target.surface()
                            .intersect(tgContext, position, direction)
-                           .closestForward()
-                           .first;
+                           .closestForward();
 
   // positive return: do the step
   step(position, direction, target);

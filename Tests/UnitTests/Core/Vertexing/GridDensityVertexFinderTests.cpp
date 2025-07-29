@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     Intersection3D intersection =
-        perigeeSurface->intersect(geoContext, pos, direction).closest().first;
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     Intersection3D intersection =
-        perigeeSurface->intersect(geoContext, pos, direction).closest().first;
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     Intersection3D intersection =
-        perigeeSurface->intersect(geoContext, pos, direction).closest().first;
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
     pos[eZ] = z1dist(gen);

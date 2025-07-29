@@ -973,8 +973,7 @@ class KalmanFitter {
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
                 BoundaryTolerance::None(), state.options.surfaceTolerance)
-            .closest()
-            .first;
+            .closest();
       };
 
       // The smoothed free params at the first/last measurement state.

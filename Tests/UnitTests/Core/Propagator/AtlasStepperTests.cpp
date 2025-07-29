@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
     auto [intersection, intersectionIndex] =
         s.intersect(geoCtx, stepper.position(state),
                     navDir * stepper.direction(state), bt)
-            .closest();
+            .closestWithIndex();
     return NavigationTarget(intersection, intersectionIndex, s, bt);
   };
 

@@ -235,8 +235,7 @@ void Acts::RootMaterialTrackIo::write(
             surface
                 ->intersect(gctx, mint.position, mint.direction,
                             Acts::BoundaryTolerance::None())
-                .closest()
-                .first;
+                .closest();
         m_surfacePayload.surfaceId.push_back(surface->geometryId().value());
         m_surfacePayload.surfacePathCorrection.push_back(1.0);
         m_surfacePayload.surfaceX.push_back(sfIntersection.position().x());

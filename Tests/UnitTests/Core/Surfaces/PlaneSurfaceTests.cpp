@@ -171,8 +171,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       planeSurfaceObject
           ->intersect(tgContext, offSurface, direction,
                       BoundaryTolerance::None())
-          .closest()
-          .first;
+          .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());

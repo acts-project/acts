@@ -74,7 +74,7 @@ class NoFieldIntersectionFinder {
                              BoundaryTolerance::AbsoluteEuclidean(m_tol));
 
       // Take the closest
-      Intersection3D closestForward = sMultiIntersection.closestForward().first;
+      Intersection3D closestForward = sMultiIntersection.closestForward();
 
       // Store if the intersection is reachable
       if (closestForward.status() == IntersectionStatus::reachable &&

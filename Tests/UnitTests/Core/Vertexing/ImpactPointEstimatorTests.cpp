@@ -258,8 +258,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
       refPerigeeSurface
           ->intersect(geoContext, params.position(geoContext),
                       params.direction(), BoundaryTolerance::Infinite())
-          .closest()
-          .first;
+          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

@@ -892,8 +892,7 @@ void VertexNTupleWriter::writeTrackInfo(
         perigeeSurface
             ->intersect(ctx.geoContext, params.position(ctx.geoContext),
                         params.direction(), Acts::BoundaryTolerance::Infinite())
-            .closest()
-            .first;
+            .closest();
 
     // Setting the geometry/magnetic field context for the event
     using PropagatorOptions = Propagator::Options<>;

@@ -203,8 +203,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
       surface
           .intersect(GeometryContext{}, position, direction,
                      BoundaryTolerance::Infinite())
-          .closest()
-          .first;
+          .closest();
   mean.head<3>() = intersection.position();
 
   return *transformFreeToBoundParameters(mean, surface, GeometryContext{});

@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
@@ -49,15 +50,14 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
     // However, if mean of all is on surface, we are happy as well
     if (averageOnSurface) {
-      const auto intersection =
+      const Intersection3D intersection =
           surface
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
                   state.options.direction * stepper.direction(state.stepping),
                   BoundaryTolerance(boundaryTolerance),
                   averageOnSurfaceTolerance)
-              .closest()
-              .first;
+              .closest();
 
       if (intersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(

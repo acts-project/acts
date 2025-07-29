@@ -150,8 +150,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
             .intersect(geoContext, params.segment<3>(eFreePos0),
                        navDir * params.segment<3>(eFreeDir0),
                        BoundaryTolerance::Infinite())
-            .closest()
-            .first;
+            .closest();
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
     // Transform the free to bound

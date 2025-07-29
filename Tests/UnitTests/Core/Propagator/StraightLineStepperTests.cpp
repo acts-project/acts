@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
     auto [intersection, intersectionIndex] =
         s.intersect(tgContext, sls.position(slsState),
                     navDir * sls.direction(slsState), bt)
-            .closest();
+            .closestWithIndex();
     return NavigationTarget(intersection, intersectionIndex, s, bt);
   };
 

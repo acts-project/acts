@@ -166,8 +166,7 @@ void ResPlotTool::fill(
   Acts::Intersection3D intersection =
       pSurface
           .intersect(gctx, truthParticle.position(), truthParticle.direction())
-          .closest()
-          .first;
+          .closest();
   if (intersection.isValid()) {
     auto lpResult = pSurface.globalToLocal(gctx, intersection.position(),
                                            truthParticle.direction());

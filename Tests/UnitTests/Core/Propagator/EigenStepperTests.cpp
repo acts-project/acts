@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     auto [intersection, intersectionIndex] =
         s.intersect(tgContext, es.position(esState),
                     navDir * es.direction(esState), bt)
-            .closest();
+            .closestWithIndex();
     return NavigationTarget(intersection, intersectionIndex, s, bt);
   };
 

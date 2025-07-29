@@ -153,7 +153,8 @@ template <unsigned int DIM>
 class MultiIntersection {
  public:
   using IntersectionType = Intersection<DIM>;
-  using IndexedIntersection = std::pair<IntersectionType, IntersectionIndex>;
+  using IndexedIntersection =
+      std::pair<const IntersectionType&, IntersectionIndex>;
 
   using Container =
       std::array<IntersectionType, s_maximumNumberOfIntersections>;
@@ -180,35 +181,89 @@ class MultiIntersection {
     return m_intersections.at(index);
   }
 
-  constexpr std::uint8_t size() const noexcept { return m_size; }
+  constexpr IntersectionIndex size() const noexcept { return m_size; }
 
   class Iterator {
    public:
     using container_iterator = Container::const_iterator;
 
     using value_type = IndexedIntersection;
-    using difference_type = std::ptrdiff_t;
-    using pointer = void;
-    using reference = void;
-    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::int8_t;
+
+    using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     constexpr Iterator(container_iterator it, IntersectionIndex index) noexcept
         : m_it(it), m_index(index) {}
+
+    constexpr value_type operator*() const noexcept { return {*m_it, m_index}; }
+    constexpr value_type operator[](difference_type n) const noexcept {
+      return {*(m_it + n), m_index + n};
+    }
 
     constexpr Iterator& operator++() noexcept {
       ++m_it;
       ++m_index;
       return *this;
     }
+    constexpr Iterator operator++(int) noexcept {
+      auto tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    constexpr Iterator& operator--() noexcept {
+      --m_it;
+      --m_index;
+      return *this;
+    }
+    constexpr Iterator operator--(int) noexcept {
+      auto tmp = *this;
+      --(*this);
+      return tmp;
+    }
 
-    constexpr value_type operator*() const noexcept { return {*m_it, m_index}; }
+    constexpr Iterator& operator+=(difference_type n) noexcept {
+      m_it += n;
+      m_index += n;
+      return *this;
+    }
+    constexpr Iterator& operator-=(difference_type n) noexcept {
+      m_it -= n;
+      m_index -= n;
+      return *this;
+    }
 
    private:
     container_iterator m_it;
     IntersectionIndex m_index;
 
-    friend bool operator==(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return lhs.m_it == rhs.m_it;
+    friend constexpr Iterator operator+(Iterator it,
+                                        difference_type n) noexcept {
+      return it += n;
+    }
+
+    friend constexpr Iterator operator+(difference_type n,
+                                        Iterator it) noexcept {
+      return it += n;
+    }
+
+    friend constexpr Iterator operator-(Iterator it,
+                                        difference_type n) noexcept {
+      return it -= n;
+    }
+
+    friend constexpr difference_type operator-(const Iterator& lhs,
+                                               const Iterator& rhs) noexcept {
+      return lhs.m_index - rhs.m_index;
+    }
+
+    friend constexpr auto operator<=>(const Iterator& a,
+                                      const Iterator& b) noexcept {
+      return a.m_index <=> b.m_index;
+    }
+    friend constexpr bool operator==(const Iterator& a,
+                                     const Iterator& b) noexcept {
+      return a.m_index == b.m_index;
     }
   };
 
@@ -219,14 +274,20 @@ class MultiIntersection {
     return Iterator(m_intersections.begin() + m_size, m_size);
   }
 
-  constexpr IndexedIntersection closest() const noexcept {
+  constexpr const IntersectionType& closest() const noexcept {
+    return closestWithIndex().first;
+  }
+  constexpr IndexedIntersection closestWithIndex() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
                                         IntersectionType::closestOrder);
     return {*min, static_cast<IntersectionIndex>(
                       std::distance(m_intersections.begin(), min))};
   }
 
-  constexpr IndexedIntersection closestForward() const noexcept {
+  constexpr const IntersectionType& closestForward() const noexcept {
+    return closestForwardWithIndex().first;
+  }
+  constexpr IndexedIntersection closestForwardWithIndex() const noexcept {
     auto min = std::ranges::min_element(m_intersections,
                                         IntersectionType::closestForwardOrder);
     return {*min, static_cast<IntersectionIndex>(
@@ -235,7 +296,7 @@ class MultiIntersection {
 
  private:
   Container m_intersections;
-  std::uint8_t m_size = 0;
+  IntersectionIndex m_size = 0;
 };
 
 using MultiIntersection2D = MultiIntersection<2>;

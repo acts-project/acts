@@ -207,8 +207,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
       discSurfaceObject
           ->intersect(tgContext, globalPosition, direction,
                       BoundaryTolerance::Infinite())
-          .closest()
-          .first;
+          .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());

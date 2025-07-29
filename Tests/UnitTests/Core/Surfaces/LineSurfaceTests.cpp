@@ -119,8 +119,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     Intersection3D sfIntersection =
         line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
                        BoundaryTolerance::Infinite())
-            .closest()
-            .first;
+            .closest();
     BOOST_CHECK(sfIntersection.isValid());
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
@@ -245,7 +244,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
     Intersection3D intersection =
-        surface.intersect(tgContext, pos, dir).closest().first;
+        surface.intersect(tgContext, pos, dir).closest();
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
@@ -283,7 +282,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     Vector3 pos = pca + dir;
 
     Intersection3D intersection =
-        surface.intersect(tgContext, pos, dir).closest().first;
+        surface.intersect(tgContext, pos, dir).closest();
 
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
@@ -335,8 +334,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
       surface
           ->intersect(tgContext, displacedParameters.position(tgContext),
                       displacedParameters.direction())
-          .closest()
-          .first;
+          .closest();
   CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
   BoundTrackParameters endParameters{surface,

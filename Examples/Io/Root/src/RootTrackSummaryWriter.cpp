@@ -343,8 +343,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                   ->intersect(ctx.geoContext, particle.position(),
                               particle.direction(),
                               Acts::BoundaryTolerance::Infinite())
-                  .closest()
-                  .first;
+                  .closest();
           auto position = intersection.position();
 
           // get the truth perigee parameter

@@ -66,8 +66,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
       }
       if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
-        Intersection3D closestForward =
-            multiIntersection.closestForward().first;
+        Intersection3D closestForward = multiIntersection.closestForward();
         if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(

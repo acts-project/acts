@@ -75,10 +75,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Intersection3D intersection =
       eSurface
           ->intersect(geoCtx, Vector3(0, 0, 0), dir, BoundaryTolerance::None())
-          .closest()
-          .first;
+          .closest();
   Vector3 tpos = intersection.position();
-  auto s = intersection.pathLength();
+  double s = intersection.pathLength();
 
   BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 

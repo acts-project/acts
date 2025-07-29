@@ -42,7 +42,7 @@ auto MultiEigenStepperLoop<E, R>::boundState(
                        cmpState.pars.template segment<3>(eFreeDir0),
                        BoundaryTolerance::Infinite())
             .closest()
-            .first.position();
+            .position();
 
     auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
                                         freeToBoundCorrection);

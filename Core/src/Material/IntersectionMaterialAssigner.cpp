@@ -39,11 +39,11 @@ std::vector<SurfaceIntersection> forwardOrderedIntersections(
   // Intersect the surfaces
   for (const Surface* surface : surfaces) {
     // Get the intersection
-    auto multiIntersection = surface->intersect(gctx, position, direction,
-                                                BoundaryTolerance::None());
+    MultiIntersection3D multiIntersection = surface->intersect(
+        gctx, position, direction, BoundaryTolerance::None());
 
     // Take the closest
-    auto [intersection, index] = multiIntersection.closestForward();
+    const Intersection3D& intersection = multiIntersection.closestForward();
     if (intersection.status() >= IntersectionStatus::reachable &&
         intersection.pathLength() > 0) {
       surfaceIntersections.emplace_back(intersection, surface);

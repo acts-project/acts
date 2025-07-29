@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     Intersection3D intersection =
-        perigeeSurface->intersect(geoContext, pos, direction).closest().first;
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,

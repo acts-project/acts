@@ -188,13 +188,11 @@ findTrackStateForExtrapolation(
       freeVector = MultiTrajectoryHelpers::freeFiltered(geoContext, state);
     }
 
-    auto closest =
-        referenceSurface
-            .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
-                       freeVector.template segment<3>(eFreeDir0),
-                       BoundaryTolerance::None(), s_onSurfaceTolerance)
-            .closest();
-    return closest.first;
+    return referenceSurface
+        .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
+                   freeVector.template segment<3>(eFreeDir0),
+                   BoundaryTolerance::None(), s_onSurfaceTolerance)
+        .closest();
   };
 
   switch (strategy) {

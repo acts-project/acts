@@ -109,8 +109,7 @@ struct SurfaceReached {
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
         boundaryTolerance, tolerance);
-    const auto [closestIntersection, closestIndex] =
-        multiIntersection.closest();
+    const Intersection3D closestIntersection = multiIntersection.closest();
 
     bool reached = false;
 
