@@ -38,7 +38,8 @@ NavigationTarget GenericApproachDescriptor::approachSurface(
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        targets.emplace_back(intersection, index, *surface, boundaryTolerance);
+        targets.emplace_back(intersection, index, *surface->associatedLayer(),
+                             *surface, boundaryTolerance);
       }
     }
   }
