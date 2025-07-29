@@ -131,10 +131,8 @@ _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
 
-set -x
 git config --global --add safe.directory "${_spack_repo_directory}"
 spack repo update builtin --tag "${_spack_repo_version}"
-set +x
 
 end_section
 
