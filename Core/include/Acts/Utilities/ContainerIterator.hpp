@@ -52,7 +52,7 @@ class ContainerIterator {
   constexpr container_type &container() const noexcept { return *m_container; }
   constexpr index_type index() const noexcept { return m_index; }
 
-  constexpr value_type operator*() const noexcept {
+  constexpr value_type operator*() const {
     static_assert(
         ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
         "Container must support at() or operator[] for indexing");
@@ -64,7 +64,7 @@ class ContainerIterator {
       return m_container->at(m_index);
     }
   }
-  constexpr value_type operator[](difference_type n) const noexcept {
+  constexpr value_type operator[](difference_type n) const {
     static_assert(
         ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
         "Container must support at() or operator[] for indexing");

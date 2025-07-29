@@ -41,7 +41,7 @@ class ContainerSubset {
                        subset_iterator iterator) noexcept
         : m_container(&container), m_iterator(iterator) {}
 
-    constexpr value_type operator*() const noexcept {
+    constexpr value_type operator*() const {
       static_assert(
           ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
           "Container must support at() or operator[] for indexing");
@@ -53,7 +53,7 @@ class ContainerSubset {
         return m_container->at(*m_iterator);
       }
     }
-    constexpr value_type operator[](difference_type n) const noexcept {
+    constexpr value_type operator[](difference_type n) const {
       static_assert(
           ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
           "Container must support at() or operator[] for indexing");
