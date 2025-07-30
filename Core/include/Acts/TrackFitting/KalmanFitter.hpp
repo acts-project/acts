@@ -307,7 +307,8 @@ class KalmanFitter {
         KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
     /// Allows retrieving measurements for a surface
-    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements =
+        nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -1095,7 +1096,8 @@ class KalmanFitter {
     // for (const auto& sl : sourceLinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl), std::move(sl));
+      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl),
+                                std::move(sl));
     }
 
     // Create the ActorList
@@ -1176,7 +1178,8 @@ class KalmanFitter {
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl), std::move(sl));
+      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl),
+                                std::move(sl));
     }
 
     // Create the ActorList
