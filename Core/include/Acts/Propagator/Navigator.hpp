@@ -34,6 +34,7 @@
 
 namespace Acts {
 
+using NavigatorExtSurfaces = std::vector<const Surface*>;
 /// @brief The navigation options for the tracking geometry
 ///
 /// @tparam object_t Type of the object for navigation to check against
@@ -56,7 +57,10 @@ struct NavigationOptions {
   const object_t* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
-  std::vector<const Surface*> externalSurfaces{};
+  NavigatorExtSurfaces externalSurfaces{};
+  /// Free surfaces which are not part of the tracking geometry but 
+  /// may be used as additional constaints in the fit
+  NavigatorExtSurfaces freeSurfaces{};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -92,7 +96,6 @@ class Navigator {
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
 
-  using ExternalSurfaces = std::vector<const Acts::Surface*>;
 
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -132,8 +135,7 @@ class Navigator {
     double farLimit = std::numeric_limits<double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces{};
-
+    NavigatorExtSurfaces externalSurfaces{};
     void insertExternalSurface(const Acts::Surface* surface) {
       assert(surface != nullptr);
       externalSurfaces.push_back(surface);
@@ -669,15 +671,19 @@ class Navigator {
       navOpts.endObject = state.targetSurface;
       navOpts.nearLimit = state.options.nearLimit;
       navOpts.farLimit = state.options.farLimit;
-
+      
       if (!state.options.externalSurfaces.empty()) {
         auto layerId = layerSurface->geometryId().layer();
         navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
-        std::ranges::copy_if(state.options.externalSurfaces,
-                             std::back_inserter(navOpts.externalSurfaces),
-                             [layerId](const Surface* copyMe) {
-                               return copyMe->geometryId().layer() == layerId;
-                             });
+        navOpts.freeSurfaces.reserve(state.options.externalSurfaces.size());
+        for (const Surface* extSurf : state.options.externalSurfaces) {
+           const auto extLayerId = extSurf->geometryId().layer();
+           if (extLayerId == layerId) {
+              navOpts.externalSurfaces.push_back(extSurf);
+           } else if (extLayerId == 0) {
+              navOpts.freeSurfaces.push_back(extSurf);
+           }
+        }
       }
 
       // Request the compatible surfaces
