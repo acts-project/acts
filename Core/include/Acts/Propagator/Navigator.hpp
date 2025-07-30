@@ -58,8 +58,8 @@ struct NavigationOptions {
 
   /// External surface identifier for which the boundary check is ignored
   NavigatorExtSurfaces externalSurfaces{};
-  /// Free surfaces which are not part of the tracking geometry but 
-  /// may be used as additional constaints in the fit
+  /// Free surfaces which are not part of the tracking geometry but
+  /// may be used as additional constraints in the fit
   NavigatorExtSurfaces freeSurfaces{};
 
   /// The minimum distance for a surface to be considered
@@ -95,7 +95,6 @@ class Navigator {
 
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
-
 
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -671,18 +670,18 @@ class Navigator {
       navOpts.endObject = state.targetSurface;
       navOpts.nearLimit = state.options.nearLimit;
       navOpts.farLimit = state.options.farLimit;
-      
+
       if (!state.options.externalSurfaces.empty()) {
         auto layerId = layerSurface->geometryId().layer();
         navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
         navOpts.freeSurfaces.reserve(state.options.externalSurfaces.size());
         for (const Surface* extSurf : state.options.externalSurfaces) {
-           const auto extLayerId = extSurf->geometryId().layer();
-           if (extLayerId == layerId) {
-              navOpts.externalSurfaces.push_back(extSurf);
-           } else if (extLayerId == 0) {
-              navOpts.freeSurfaces.push_back(extSurf);
-           }
+          const auto extLayerId = extSurf->geometryId().layer();
+          if (extLayerId == layerId) {
+            navOpts.externalSurfaces.push_back(extSurf);
+          } else if (extLayerId == 0) {
+            navOpts.freeSurfaces.push_back(extSurf);
+          }
         }
       }
 
