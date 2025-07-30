@@ -1,4 +1,4 @@
-add_library(ActsExamplesPropagation SHARED src/PropagationAlgorithm.cpp)
+acts_add_library(ExamplesPropagation SHARED src/PropagationAlgorithm.cpp)
 
 target_include_directories(
     ActsExamplesPropagation
@@ -7,12 +7,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesPropagation
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::Core Acts::ExamplesFramework
 )
 
-acts_compile_headers(ActsExamplesPropagation GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesPropagation
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+acts_compile_headers(ExamplesPropagation GLOB "include/**/*.hpp")

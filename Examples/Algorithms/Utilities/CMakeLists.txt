@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesUtilities
+acts_add_library(
+    ExamplesUtilities
     SHARED
     src/PrototracksToSeeds.cpp
     src/SeedsToPrototracks.cpp
@@ -15,10 +15,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesUtilities
-    PUBLIC ActsCore ActsExamplesFramework
-)
-
-install(
-    TARGETS ActsExamplesUtilities
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::Core Acts::ExamplesFramework
 )

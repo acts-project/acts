@@ -180,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   GeometryContext tgContext = GeometryContext();
 
   SrfVec brl = makeBarrel(30, 7, 2, 1);
-  std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
+  std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
   draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
