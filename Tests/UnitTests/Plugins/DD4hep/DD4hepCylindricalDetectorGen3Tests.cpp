@@ -30,6 +30,7 @@
 #include <Acts/Navigation/SurfaceArrayNavigationPolicy.hpp>
 #include <Acts/Navigation/TryAllNavigationPolicy.hpp>
 
+#include <format>
 #include <fstream>
 #include <string>
 
@@ -346,6 +347,72 @@ const DetElement* find_element(const DetElement& el, const std::string& el_name,
   }
   return nullptr;
 }
+
+// Helper function to convert shared_ptr vector to const ptr vector
+std::vector<const Acts::Surface*> makeConstPtrVector(
+    const std::vector<std::shared_ptr<Acts::Surface>>& surfs) {
+  std::vector<const Acts::Surface*> constPtrs;
+  constPtrs.reserve(surfs.size());
+  for (const auto& surf : surfs) {
+    constPtrs.push_back(surf.get());
+  }
+  return constPtrs;
+}
+
+// Helper struct to keep ProtoLayer and its associated surfaces together
+struct LayerData {
+  Acts::ProtoLayer protoLayer;
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+
+  LayerData(const Acts::GeometryContext& gctx,
+            std::vector<std::shared_ptr<Acts::Surface>> surfs)
+      : protoLayer(gctx, makeConstPtrVector(surfs)),
+        surfaces(std::move(surfs)) {}
+};
+
+// Helper function to merge layers that overlap in z
+std::vector<LayerData> mergeLayers(const Acts::GeometryContext& gctx,
+                                   std::vector<LayerData> layers) {
+  using enum Acts::AxisDirection;
+
+  std::vector<LayerData> mergedLayers;
+  if (layers.empty()) {
+    return mergedLayers;
+  }
+
+  mergedLayers.push_back(std::move(layers.front()));
+
+  for (std::size_t i = 1; i < layers.size(); i++) {
+    auto& current = layers[i];
+    auto& prev = mergedLayers.back();
+
+    // Check if they overlap in z
+    bool overlap =
+        (current.protoLayer.min(AxisZ) <= prev.protoLayer.max(AxisZ) &&
+         current.protoLayer.max(AxisZ) >= prev.protoLayer.min(AxisZ));
+
+    if (overlap) {
+      // Merge surfaces
+      std::vector<std::shared_ptr<Acts::Surface>> mergedSurfaces;
+      mergedSurfaces.reserve(current.surfaces.size() + prev.surfaces.size());
+      mergedSurfaces.insert(mergedSurfaces.end(), current.surfaces.begin(),
+                            current.surfaces.end());
+      mergedSurfaces.insert(mergedSurfaces.end(), prev.surfaces.begin(),
+                            prev.surfaces.end());
+
+      mergedLayers.pop_back();
+      mergedLayers.emplace_back(gctx, std::move(mergedSurfaces));
+      auto& merged = mergedLayers.back();
+      merged.protoLayer.envelope[AxisR] = current.protoLayer.envelope[AxisR];
+      merged.protoLayer.envelope[AxisZ] = current.protoLayer.envelope[AxisZ];
+    } else {
+      mergedLayers.push_back(std::move(current));
+    }
+  }
+
+  return mergedLayers;
+}
+
 // --------- Helper functions --------------
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
@@ -482,6 +549,89 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
                 .r = {2_mm, 2_mm},  // ???
             }});
           });
+    }
+
+    // Add endcap containers
+    for (int ecid : {-1, 1}) {
+      const std::string s = ecid == 1 ? "p" : "n";
+      auto& ecGeoId = pixelContainer.withGeometryIdentifier();
+      ecGeoId.setAllVolumeIdsTo(s_pixelVolumeId + ecid).incrementLayerIds(1);
+      auto& ec = ecGeoId.addCylinderContainer("Pixel_" + s + "EC", AxisZ);
+      ec.setAttachmentStrategy(AttachmentStrategy::Gap);
+      ec.setResizeStrategy(ResizeStrategy::Expand);
+
+      std::map<int, std::vector<std::shared_ptr<Acts::Surface>>>
+          initialLayers{};
+      const DetElement* pixelEndcapElement =
+          ecid == 1 ? find_element(*pixelElement, "PixelPositiveEndcap")
+                    : find_element(*pixelElement, "PixelNegativeEndcap");
+      layerId = 0;
+      for (const auto& [nameLayer, layer] : pixelEndcapElement->children()) {
+        for (const auto& [nameModule, module] : layer.children()) {
+          std::string detAxis =
+              Acts::getParamOr<std::string>("axis_definitions", module, "XYZ");
+          auto dd4hepDetEl = std::make_shared<Acts::DD4hepDetectorElement>(
+              module, detAxis, 1_cm, false, nullptr);
+          detectorElements.push_back(dd4hepDetEl);
+          initialLayers[layerId].push_back(
+              dd4hepDetEl->surface().getSharedPtr());
+        }
+        layerId++;
+      }
+
+      // Create proto layers from surfaces
+      std::vector<LayerData> protoLayers;
+      protoLayers.reserve(initialLayers.size());
+      for (const auto& [key, surfaces] : initialLayers) {
+        auto& layer =
+            protoLayers.emplace_back(Acts::GeometryContext(), surfaces);
+        layer.protoLayer.envelope[AxisR] = {2_mm, 2_mm};
+        layer.protoLayer.envelope[AxisZ] = {1_mm, 1_mm};
+      }
+      // Sort by z position
+      std::ranges::sort(protoLayers,
+                        [](const LayerData& a, const LayerData& b) {
+                          return std::abs(a.protoLayer.medium(AxisZ)) <
+                                 std::abs(b.protoLayer.medium(AxisZ));
+                        });
+
+      std::vector<LayerData> mergedLayers =
+          mergeLayers(Acts::GeometryContext(), protoLayers);
+
+      // Create layers from proto layers
+      for (const auto& [key, pl] : Acts::enumerate(mergedLayers)) {
+        pl.protoLayer.medium(AxisZ);
+        auto layerName = std::format("Pixel_{}EC_", key);
+        auto addLayer = [&layerName, &pl](auto& parent) {
+          // Add layer with surfaces
+          auto& layer = parent.addLayer(layerName);
+
+          layer.setNavigationPolicyFactory(
+              Acts::NavigationPolicyFactory::make()
+                  .add<Acts::SurfaceArrayNavigationPolicy>(
+                      Acts::SurfaceArrayNavigationPolicy::Config{
+                          .layerType = Disc, .bins = {30, 30}})
+                  .add<Acts::TryAllNavigationPolicy>(
+                      Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+                  .asUniquePtr());
+
+          layer.setSurfaces(pl.surfaces);
+          layer.setEnvelope(Acts::ExtentEnvelope{{
+              .z = {1_mm, 1_mm},
+              .r = {2_mm, 2_mm},
+          }});
+        };
+
+        if (key < mergedLayers.size() - 1) {
+          ec.addMaterial(layerName + "_Material", [&](auto& lmat) {
+            lmat.configureFace(ecid < 0 ? NegativeDisc : PositiveDisc,
+                               {AxisR, Bound, 40}, {AxisPhi, Bound, 40});
+            addLayer(lmat);
+          });
+        } else {
+          addLayer(ec);
+        }
+      }
     }
   });
   // ------- Add Pixel to Blueprint -------
