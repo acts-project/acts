@@ -856,7 +856,7 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourceLinkIt = inputMeasurements->find(geoId);
+      if (auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
@@ -953,6 +953,8 @@ class Gx2Fitter {
         result.measurementHoles = result.missedActiveSurfaces.size();
 
         return;
+      } else {
+         ACTS_VERBOSE("Surface "<<geoId<<" does not contain a measurement");
       }
 
       if (doMaterial) {
