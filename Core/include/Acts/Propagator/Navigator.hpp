@@ -135,8 +135,8 @@ class Navigator {
     ExternalSurfaces externalSurfaces{};
 
     void insertExternalSurface(const Acts::Surface* surface) {
-        assert(surface != nullptr);
-        externalSurfaces.push_back(surface);
+      assert(surface != nullptr);
+      externalSurfaces.push_back(surface);
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -673,10 +673,11 @@ class Navigator {
       if (!state.options.externalSurfaces.empty()) {
         auto layerId = layerSurface->geometryId().layer();
         navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
-        std::ranges::copy_if(state.options.externalSurfaces,std::back_inserter(navOpts.externalSurfaces),
-        [layerId](const Surface* copyMe){
-            return copyMe->geometryId().layer() == layerId;
-        });
+        std::ranges::copy_if(state.options.externalSurfaces,
+                             std::back_inserter(navOpts.externalSurfaces),
+                             [layerId](const Surface* copyMe) {
+                               return copyMe->geometryId().layer() == layerId;
+                             });
       }
 
       // Request the compatible surfaces
