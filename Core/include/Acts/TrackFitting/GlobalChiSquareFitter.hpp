@@ -720,7 +720,7 @@ class Gx2Fitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -1172,12 +1172,11 @@ class Gx2Fitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Acts::Surface*, SourceLink> inputMeasurements;
 
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(gx2fOptions.extensions.surfaceAccessor(sl), std::move(sl));
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this
