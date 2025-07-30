@@ -16,5 +16,5 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 add_executable(ShowActsVersion ShowActsVersion.cpp)
 target_link_libraries(
     ShowActsVersion
-    PRIVATE ActsCore Boost::boost Eigen3::Eigen
+    PRIVATE Acts::Core Boost::boost Eigen3::Eigen
 )
