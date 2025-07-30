@@ -1839,7 +1839,7 @@ def addTrackWriters(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 outputDir=str(outputDirCsv),
-                outputStem=str(f"track_parameters_{name}.csv"),
+                outputStem=str(f"track_parameters_{name}"),
             )
             s.addWriter(trackParameterWriter)
 
