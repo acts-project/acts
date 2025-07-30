@@ -19,8 +19,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r3
-  DEPENDENCY_TAG: v11.1.0
+  CCACHE_KEY_SUFFIX: r2
 
 jobs:
   linux_ubuntu:

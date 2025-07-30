@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <optional>
 #include <type_traits>
 #include <variant>
 
@@ -27,15 +26,6 @@ namespace Acts {
 /// Different types of boundary tolerances implemented:
 /// - Infinite: Infinite tolerance i.e. no boundary check will be performed.
 /// - None: No tolerance i.e. exact boundary check will be performed.
-/// - AbsoluteBound: Absolute tolerance in bound coordinates.
-///   The tolerance is defined as a pair of absolute values for the bound
-///   coordinates. Only if both coordinates are within the tolerance, the
-///   boundary check is considered as passed.
-/// - AbsoluteCartesian: Absolute tolerance in Cartesian coordinates.
-///   The tolerance is defined as a pair of absolute values for the Cartesian
-///   coordinates. The transformation to Cartesian coordinates can be done via
-///   the Jacobian for small distances. Only if both coordinates are within
-///   the tolerance, the boundary check is considered as passed.
 /// - AbsoluteEuclidean: Absolute tolerance in Euclidean distance.
 ///   The tolerance is defined as a single absolute value for the Euclidean
 ///   distance. The Euclidean distance can be calculated via the local bound
@@ -47,6 +37,9 @@ namespace Acts {
 ///   calculated from the bound coordinates residual and the weight matrix.
 ///   If the chi2 value is below the maximum chi2 value, the boundary check
 ///   is considered as passed.
+/// - Chi2Cartesian: Chi2 tolerance in Cartesian coordinates.
+///   Similar to Chi2Bound, but the chi2 value is calculated in Cartesian
+///   coordinates.
 ///
 /// The bound coordinates residual is defined as the difference between the
 /// point checked and the closest point on the boundary. The Jacobian is the
@@ -59,23 +52,26 @@ class BoundaryTolerance {
 
   struct NoneParams {};
 
-  struct AbsoluteBoundParams {
-    double tolerance0{};
-    double tolerance1{};
-  };
-
-  struct AbsoluteCartesianParams {
-    double tolerance0{};
-    double tolerance1{};
-  };
-
   struct AbsoluteEuclideanParams {
     double tolerance{};
   };
 
   struct Chi2BoundParams {
     double maxChi2{};
-    std::array<double, 4> weight;
+    std::array<double, 4> weight{};
+
+    Eigen::Map<SquareMatrix2> weightMatrix() {
+      return Eigen::Map<SquareMatrix2>(weight.data());
+    }
+
+    Eigen::Map<const SquareMatrix2> weightMatrix() const {
+      return Eigen::Map<const SquareMatrix2>(weight.data());
+    }
+  };
+
+  struct Chi2CartesianParams {
+    double maxChi2{};
+    std::array<double, 4> weight{};
 
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
@@ -90,9 +86,9 @@ class BoundaryTolerance {
 
  private:
   /// Underlying variant type
-  using Variant = std::variant<InfiniteParams, NoneParams, AbsoluteBoundParams,
-                               AbsoluteCartesianParams, AbsoluteEuclideanParams,
-                               Chi2BoundParams>;
+  using Variant =
+      std::variant<InfiniteParams, NoneParams, AbsoluteEuclideanParams,
+                   Chi2BoundParams, Chi2CartesianParams>;
   static_assert(std::is_trivially_copyable_v<Variant>);
 
   /// Construct from variant
@@ -109,29 +105,6 @@ class BoundaryTolerance {
     return BoundaryTolerance{NoneParams{}};
   }
 
-  /// Absolute tolerance in bound coordinates
-  constexpr static auto AbsoluteBound(double tolerance0, double tolerance1) {
-    if (tolerance0 < 0 || tolerance1 < 0) {
-      throw std::invalid_argument(
-          "AbsoluteBound: Tolerance must be non-negative");
-    }
-    return BoundaryTolerance{AbsoluteBoundParams{tolerance0, tolerance1}};
-  }
-
-  /// Absolute tolerance in Cartesian coordinates
-  constexpr static auto AbsoluteCartesian(double tolerance0,
-                                          double tolerance1) {
-    if (tolerance0 < 0 || tolerance1 < 0) {
-      throw std::invalid_argument(
-          "AbsoluteCartesian: Tolerance must be non-negative");
-    }
-    if ((tolerance0 == 0) != (tolerance1 == 0)) {
-      throw std::invalid_argument(
-          "AbsoluteCartesian: Both tolerances must be zero or non-zero");
-    }
-    return BoundaryTolerance{AbsoluteCartesianParams{tolerance0, tolerance1}};
-  }
-
   /// Absolute tolerance in Euclidean distance
   constexpr static auto AbsoluteEuclidean(double tolerance) noexcept {
     return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
@@ -144,6 +117,14 @@ class BoundaryTolerance {
     return BoundaryTolerance{tolerance};
   }
 
+  /// Chi2 tolerance in Cartesian coordinates
+  static auto Chi2Cartesian(const SquareMatrix2& weight,
+                            double maxChi2) noexcept {
+    Chi2CartesianParams tolerance{maxChi2, {}};
+    tolerance.weightMatrix() = weight;
+    return BoundaryTolerance{tolerance};
+  }
+
   BoundaryTolerance(const BoundaryTolerance& other) noexcept = default;
   BoundaryTolerance& operator=(const BoundaryTolerance& other) noexcept =
       default;
@@ -151,24 +132,15 @@ class BoundaryTolerance {
   BoundaryTolerance& operator=(BoundaryTolerance&& other) noexcept = default;
 
   enum class ToleranceMode {
-    Extend,  // Extend the boundary
-    None,    // No tolerance
-    Shrink   // Shrink the boundary
+    Extend,  //< Extend the boundary
+    None,    //< No tolerance
+    Shrink   //< Shrink the boundary
   };
 
   /// Check if the tolerance is infinite.
   constexpr bool isInfinite() const { return holdsVariant<InfiniteParams>(); }
   /// Check if the is no tolerance.
   constexpr bool isNone() const { return holdsVariant<NoneParams>(); }
-  /// Check if the tolerance is absolute with bound coordinates.
-  constexpr bool hasAbsoluteBound(bool isCartesian = false) const {
-    return holdsVariant<NoneParams>() || holdsVariant<AbsoluteBoundParams>() ||
-           (isCartesian && holdsVariant<AbsoluteCartesianParams>());
-  }
-  /// Check if the tolerance is absolute with Cartesian coordinates.
-  constexpr bool hasAbsoluteCartesian() const {
-    return holdsVariant<AbsoluteCartesianParams>();
-  }
   /// Check if the tolerance is absolute with Euclidean distance.
   constexpr bool hasAbsoluteEuclidean() const {
     return holdsVariant<AbsoluteEuclideanParams>();
@@ -177,16 +149,14 @@ class BoundaryTolerance {
   constexpr bool hasChi2Bound() const {
     return holdsVariant<Chi2BoundParams>();
   }
+  /// Check if the tolerance is chi2 with Cartesian coordinates.
+  constexpr bool hasChi2Cartesian() const {
+    return holdsVariant<Chi2CartesianParams>();
+  }
 
-  /// Check if any tolerance is set.
+  /// Get the tolerance mode.
   ToleranceMode toleranceMode() const;
 
-  /// Get the tolerance as absolute bound.
-  AbsoluteBoundParams asAbsoluteBound(bool isCartesian = false) const;
-  /// Get the tolerance as absolute Cartesian.
-  constexpr const AbsoluteCartesianParams& asAbsoluteCartesian() const {
-    return getVariant<AbsoluteCartesianParams>();
-  }
   /// Get the tolerance as absolute Euclidean.
   constexpr const AbsoluteEuclideanParams& asAbsoluteEuclidean() const {
     return getVariant<AbsoluteEuclideanParams>();
@@ -195,26 +165,14 @@ class BoundaryTolerance {
   constexpr const Chi2BoundParams& asChi2Bound() const {
     return getVariant<Chi2BoundParams>();
   }
-
-  /// Get the tolerance as absolute bound if possible.
-  constexpr std::optional<AbsoluteBoundParams> asAbsoluteBoundOpt(
-      bool isCartesian = false) const {
-    return hasAbsoluteBound(isCartesian)
-               ? std::optional(asAbsoluteBound(isCartesian))
-               : std::nullopt;
+  /// Get the tolerance as chi2 Cartesian.
+  constexpr const Chi2CartesianParams& asChi2Cartesian() const {
+    return getVariant<Chi2CartesianParams>();
   }
 
-  /// Check if the distance is tolerated.
-  bool isTolerated(const Vector2& distance,
-                   const std::optional<SquareMatrix2>& jacobianOpt) const;
-
-  /// Check if there is a metric assigned with this tolerance.
-  constexpr bool hasMetric(bool hasJacobian) const {
-    return hasJacobian || hasChi2Bound();
-  }
-
-  /// Get the metric for the tolerance.
-  SquareMatrix2 getMetric(const std::optional<SquareMatrix2>& jacobian) const;
+  /// Check if the bound position delta is tolerated.
+  bool isTolerated(const Vector2& boundDelta,
+                   const SquareMatrix2& boundToCartesian) const;
 
  private:
   Variant m_variant;

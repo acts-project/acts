@@ -137,4 +137,153 @@ bool detail::VerticesHelper::onHyperPlane(const std::vector<Vector3>& vertices,
   return true;
 }
 
+Vector2 detail::VerticesHelper::computeClosestPointOnPolygon(
+    const Vector2& point, std::span<const Vector2> vertices,
+    const SquareMatrix2& metric) {
+  auto squaredNorm = [&](const Vector2& x) {
+    return (x.transpose() * metric * x).value();
+  };
+
+  // calculate the closest position on the segment between `ll0` and `ll1` to
+  // the point as measured by the metric induced by the metric matrix
+  auto closestOnSegment = [&](auto&& ll0, auto&& ll1) {
+    // normal vector and position of the closest point along the normal
+    auto n = ll1 - ll0;
+    auto n_transformed = metric * n;
+    auto f = n.dot(n_transformed);
+    auto u = std::isnormal(f)
+                 ? (point - ll0).dot(n_transformed) / f
+                 : 0.5;  // ll0 and ll1 are so close it doesn't matter
+    // u must be in [0, 1] to still be on the polygon segment
+    return ll0 + std::clamp(u, 0.0, 1.0) * n;
+  };
+
+  auto iv = std::begin(vertices);
+  Vector2 l0 = *iv;
+  Vector2 l1 = *(++iv);
+  Vector2 closest = closestOnSegment(l0, l1);
+  auto closestDist = squaredNorm(closest - point);
+  // Calculate the closest point on other connecting lines and compare distances
+  for (++iv; iv != std::end(vertices); ++iv) {
+    l0 = l1;
+    l1 = *iv;
+    Vector2 current = closestOnSegment(l0, l1);
+    auto currentDist = squaredNorm(current - point);
+    if (currentDist < closestDist) {
+      closest = current;
+      closestDist = currentDist;
+    }
+  }
+  // final edge from last vertex back to the first vertex
+  Vector2 last = closestOnSegment(l1, *std::begin(vertices));
+  if (squaredNorm(last - point) < closestDist) {
+    closest = last;
+  }
+  return closest;
+}
+
+Vector2 detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
+    const Vector2& point, const Vector2& lowerLeft, const Vector2& upperRight) {
+  /*
+   *
+   *        |                 |
+   *   IV   |       V         | I
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *        |                 |
+   *   VIII |     INSIDE      | VI
+   *        |                 |
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *   III  |      VII        | II
+   *        |                 |
+   *
+   */
+
+  double l0 = point[0];
+  double l1 = point[1];
+  double loc0Min = lowerLeft[0];
+  double loc0Max = upperRight[0];
+  double loc1Min = lowerLeft[1];
+  double loc1Max = upperRight[1];
+
+  // check if inside
+  if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {
+    // INSIDE
+    double dist = std::abs(loc0Max - l0);
+    Vector2 cls(loc0Max, l1);
+
+    double test = std::abs(loc0Min - l0);
+    if (test <= dist) {
+      dist = test;
+      cls = {loc0Min, l1};
+    }
+
+    test = std::abs(loc1Max - l1);
+    if (test <= dist) {
+      dist = test;
+      cls = {l0, loc1Max};
+    }
+
+    test = std::abs(loc1Min - l1);
+    if (test <= dist) {
+      return {l0, loc1Min};
+    }
+    return cls;
+  } else {
+    // OUTSIDE, check sectors
+    if (l0 > loc0Max) {
+      if (l1 > loc1Max) {  // I
+        return {loc0Max, loc1Max};
+      } else if (l1 <= loc1Min) {  // II
+        return {loc0Max, loc1Min};
+      } else {  // VI
+        return {loc0Max, l1};
+      }
+    } else if (l0 < loc0Min) {
+      if (l1 > loc1Max) {  // IV
+        return {loc0Min, loc1Max};
+      } else if (l1 <= loc1Min) {  // III
+        return {loc0Min, loc1Min};
+      } else {  // VIII
+        return {loc0Min, l1};
+      }
+    } else {
+      if (l1 > loc1Max) {  // V
+        return {l0, loc1Max};
+      } else {  // l1 <= loc1Min # VII
+        return {l0, loc1Min};
+      }
+      // third case not necessary, see INSIDE above
+    }
+  }
+}
+
+Vector2 detail::VerticesHelper::computeClosestPointOnAlignedBox(
+    const Vector2& lowerLeft, const Vector2& upperRight, const Vector2& point,
+    const SquareMatrix2& metric) {
+  Vector2 closestPoint;
+
+  if (metric.isIdentity()) {
+    closestPoint =
+        detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
+            point, lowerLeft, upperRight);
+  } else {
+    // TODO there might be a more optimal way to compute the closest point to a
+    // box with metric
+
+    std::array<Vector2, 4> vertices = {{lowerLeft,
+                                        {upperRight[0], lowerLeft[1]},
+                                        upperRight,
+                                        {lowerLeft[0], upperRight[1]}}};
+
+    closestPoint = detail::VerticesHelper::computeClosestPointOnPolygon(
+        point, vertices, metric);
+  }
+
+  return closestPoint;
+}
+
 }  // namespace Acts
