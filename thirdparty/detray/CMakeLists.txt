@@ -90,7 +90,8 @@ set(DETRAY_SETUP_DFELIBS
     CACHE BOOL
     "Do not set up Dfelibs as part of Detray"
 )
-set(DETRAY_SVG_DISPLAY OFF CACHE BOOL "No not build the ActSVG display module")
+set(DETRAY_SVG_DISPLAY ON CACHE BOOL "No not build the ActSVG display module")
+set(DETRAY_SETUP_SVGTOOLS OFF CACHE BOOL "Set up SVGTools as part of Detray")
 
 set(DETRAY_SETUP_NLOHMANN
     OFF

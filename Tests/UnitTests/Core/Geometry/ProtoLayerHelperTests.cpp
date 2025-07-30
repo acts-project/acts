@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   std::vector<const Surface*> cylinderSurfaces;
   for (std::size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
+    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         dStore, moduleHalfX[ilp], moduleHalfY[ilp], moduleThickness[ilp],
         moduleTiltPhi[ilp], layerRadii[ilp], 2., 5., layerBinning[ilp]);
     cylinderSurfaces.insert(cylinderSurfaces.begin(), layerSurfaces.begin(),
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
+    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp], dModuleHalfY[ilp],
         dModuleThickness[ilp], dModuleTilt[ilp], discRadii[ilp], discZ[ilp], 2.,
         discModules[ilp]);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> rModuleThickness(11, 0.15);
 
   for (std::size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
+    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, rModuleHalfXMinY[ilp], rModuleHalfXMaxY[ilp], rModuleHalfY[ilp],
         rModuleThickness[ilp], rModuleTilt[ilp], ringRadii[ilp], ringZ[ilp], 2.,
         ringModules[ilp]);
