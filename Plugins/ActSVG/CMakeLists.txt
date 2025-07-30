@@ -1,5 +1,5 @@
-add_library(
-    ActsPluginActSVG
+acts_add_library(
+    PluginActSVG
     SHARED
     src/DetectorVolumeSvgConverter.cpp
     src/DetectorSvgConverter.cpp
@@ -9,6 +9,7 @@ add_library(
     src/SurfaceArraySvgConverter.cpp
     src/SurfaceSvgConverter.cpp
     src/TrackingGeometrySvgConverter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 target_include_directories(
@@ -19,12 +20,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginActSVG
-    PUBLIC ActsCore actsvg::core actsvg::meta
+    PUBLIC Acts::Core actsvg::core actsvg::meta
 )
-
-install(
-    TARGETS ActsPluginActSVG
-    EXPORT ActsPluginActSVGTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
