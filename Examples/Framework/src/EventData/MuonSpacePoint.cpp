@@ -29,8 +29,9 @@ std::ostream& operator<<(std::ostream& ostr,
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp) {
   ostr << "Id: " << sp.id() << ", pos: " << Acts::toString(sp.localPosition())
-       << ", dir: " << Acts::toString(sp.sensorDirection())
-       << ", covariance: " << Acts::toString(sp.covariance());
+       << ", sensor: " << Acts::toString(sp.sensorDirection())
+       << ", covariance: " << sp.covariance()[0] << ", " << sp.covariance()[1]
+       << ", " << sp.covariance()[2];
   return ostr;
 }
 
@@ -117,12 +118,12 @@ void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi) {
   m_measPhi = measPhi;
 }
 void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos,
-                                       Acts::Vector3&& sensorDir) {
+                                       Acts::Vector3&& sensorDir,
+                                       Acts::Vector3&& sensorNorm) {
   m_pos = std::move(pos);
   m_dir = std::move(sensorDir);
-}
-void MuonSpacePoint::defineNormal(Acts::Vector3&& norm) {
-  m_norm = std::move(norm);
+  m_toNext = std::move(sensorNorm);
+  m_norm = m_dir.cross(m_toNext).normalized();
 }
 void MuonSpacePoint::setRadius(const double r) {
   m_radius = r;
@@ -130,12 +131,11 @@ void MuonSpacePoint::setRadius(const double r) {
 void MuonSpacePoint::setTime(const double t) {
   m_time = t;
 }
-void MuonSpacePoint::setSpatialCov(const double xx, const double xy,
-                                   const double yx, const double yy) {
-  m_cov(Acts::eX, Acts::eX) = xx;
-  m_cov(Acts::eX, Acts::eY) = xy;
-  m_cov(Acts::eY, Acts::eX) = yx;
-  m_cov(Acts::eY, Acts::eY) = yy;
+void MuonSpacePoint::setCovariance(const double covX, const double covY,
+                                   const double covT) {
+  m_cov[0] = covX;
+  m_cov[1] = covY;
+  m_cov[2] = covT;
 }
 void MuonSpacePoint::setId(const MuonId& id) {
   m_id = id;

@@ -120,15 +120,14 @@ struct MuonSpacePointData {
   float locSensorDirX{0.f};
   float locSensorDirY{0.f};
   float locSensorDirZ{0.f};
-  /// @brief Direction of the vector normal to the plane
-  float locPlaneNormX{0.f};
-  float locPlaneNormY{0.f};
-  float locPlaneNormZ{0.f};
+  /// @brief Direction vector normal pointing to the next sensor
+  float locToNextSensorX{0.f};
+  float locToNextSensorY{0.f};
+  float locToNextSensorZ{0.f};
   /// @brief Measurement covariance entries in the local x-y plane
-  float covXX{0.f};
-  float covXY{0.f};
-  float covYX{0.f};
-  float covYY{0.f};
+  float covX{0.f};
+  float covY{0.f};
+  float covT{0.f};
   /// @brief Drift radius
   float driftR{0.f};
   //// @brief Associated gasGap type
@@ -137,13 +136,15 @@ struct MuonSpacePointData {
   unsigned short primaryCh{0u};
   /// @brief Flag toggling whether the measurement is a precision one
   bool measuresEta{false};
-  /// @brief Flag togglign whether the measurement is a non-precision one
+  /// @brief Flag toggling whether the measurement is a non-precision one
   bool measuresPhi{false};
+  /// @brief Flag toggling whether the measurement provides a time coordinate
+  bool measuresTime{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
                  locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
-                 locSensorDirZ, locPlaneNormX, locPlaneNormY, locPlaneNormZ,
-                 covXX, covXY, covYX, covYY, driftR, gasGap, primaryCh,
-                 measuresEta, measuresPhi);
+                 locSensorDirZ, locToNextSensorX, locToNextSensorY,
+                 locToNextSensorZ, covX, covY, covT, driftR, gasGap, primaryCh,
+                 measuresEta, measuresPhi, measuresTime);
 };
 
 struct TruthHitData {
