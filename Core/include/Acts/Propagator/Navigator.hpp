@@ -56,7 +56,7 @@ struct NavigationOptions {
   const object_t* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  std::vector<const Surface*> externalSurfaces{};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -92,7 +92,7 @@ class Navigator {
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
 
-  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
+  using ExternalSurfaces = std::vector<const Acts::Surface*>;
 
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -132,11 +132,11 @@ class Navigator {
     double farLimit = std::numeric_limits<double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
+    ExternalSurfaces externalSurfaces{};
 
-    void insertExternalSurface(GeometryIdentifier geoid) {
-      externalSurfaces.insert(
-          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    void insertExternalSurface(const Acts::Surface* surface) {
+        assert(surface != nullptr);
+        externalSurfaces.push_back(surface);
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -672,14 +672,11 @@ class Navigator {
 
       if (!state.options.externalSurfaces.empty()) {
         auto layerId = layerSurface->geometryId().layer();
-        auto externalSurfaceRange =
-            state.options.externalSurfaces.equal_range(layerId);
-        navOpts.externalSurfaces.reserve(
-            state.options.externalSurfaces.count(layerId));
-        for (auto itSurface = externalSurfaceRange.first;
-             itSurface != externalSurfaceRange.second; itSurface++) {
-          navOpts.externalSurfaces.push_back(itSurface->second);
-        }
+        navOpts.externalSurfaces.reserve(state.options.externalSurfaces.size());
+        std::ranges::copy_if(state.options.externalSurfaces,std::back_inserter(navOpts.externalSurfaces),
+        [layerId](const Surface* copyMe){
+            return copyMe->geometryId().layer() == layerId;
+        });
       }
 
       // Request the compatible surfaces

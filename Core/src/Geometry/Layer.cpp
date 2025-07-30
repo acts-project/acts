@@ -149,7 +149,8 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
 
   // lemma 1 : check and fill the surface
   // [&sIntersections, &options, &parameters
-  auto processSurface = [&](const Surface& sf, bool sensitive = false) {
+  auto processSurface = [&](const Surface& sf, bool sensitive = false,
+                            std::optional<BoundaryTolerance> boundaryTolerance = std::nullopt) {
     // veto if it's start surface
     if (options.startObject == &sf) {
       return;
@@ -158,13 +159,9 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    if (rangeContainsValue(options.externalSurfaces, sf.geometryId())) {
-      boundaryTolerance = BoundaryTolerance::Infinite();
-    }
     // the surface intersection
     SurfaceIntersection sfi =
-        sf.intersect(gctx, position, direction, boundaryTolerance).closest();
+        sf.intersect(gctx, position, direction, boundaryTolerance.value_or(options.boundaryTolerance)).closest();
     if (sfi.isValid() &&
         detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit) &&
         isUnique(sfi)) {
@@ -172,7 +169,12 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     }
   };
 
-  // (A) approach descriptor section
+  /// (A) process the external surfaces first
+  for (const Surface* external : options.externalSurfaces) {
+        processSurface(*external, external->associatedDetectorElement() != nullptr,
+                        BoundaryTolerance::Infinite());
+  }
+  // (B) approach descriptor section
   //
   // the approach surfaces are in principle always testSurfaces
   // - the surface on approach is excluded via the veto
@@ -190,7 +192,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     }
   }
 
-  // (B) sensitive surface section
+  // (C) sensitive surface section
   //
   // check the sensitive surfaces if you have some
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
@@ -218,7 +220,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     }
   }
 
-  // (C) representing surface section
+  // (D) representing surface section
   //
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
