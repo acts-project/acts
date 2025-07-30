@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesTrackFindingExaTrkX
+acts_add_library(
+    ExamplesTrackFindingExaTrkX
     SHARED
     src/TrackFindingAlgorithmExaTrkX.cpp
     src/PrototracksToParameters.cpp
@@ -15,10 +15,8 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFindingExaTrkX
-    PUBLIC ActsPluginExaTrkX ActsExamplesFramework ActsExamplesTrackFinding
-)
-
-install(
-    TARGETS ActsExamplesTrackFindingExaTrkX
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC
+        Acts::PluginExaTrkX
+        Acts::ExamplesFramework
+        Acts::ExamplesTrackFinding
 )
