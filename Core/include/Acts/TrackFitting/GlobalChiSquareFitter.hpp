@@ -717,7 +717,8 @@ class Gx2Fitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements =
+        nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -951,7 +952,7 @@ class Gx2Fitter {
 
         return;
       } else {
-         ACTS_VERBOSE("Surface "<<geoId<<" does not contain a measurement");
+        ACTS_VERBOSE("Surface " << geoId << " does not contain a measurement");
       }
 
       if (doMaterial) {
@@ -1175,7 +1176,8 @@ class Gx2Fitter {
 
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(gx2fOptions.extensions.surfaceAccessor(sl), std::move(sl));
+      inputMeasurements.emplace(gx2fOptions.extensions.surfaceAccessor(sl),
+                                std::move(sl));
     }
 
     // Store, if we want to do multiple scattering. We still need to pass this

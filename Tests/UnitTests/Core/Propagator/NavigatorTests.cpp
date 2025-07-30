@@ -474,7 +474,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
     layer.surfaceCfg.push_back(surfaceBottom);
 
     CuboidVolumeBuilder::VolumeConfig start;
-    start.position  = Vector3::Zero();
+    start.position = Vector3::Zero();
     start.length = {1.9_m, 1.9_m, 1.9_m};
     start.name = "start";
     start.layerCfg.push_back(layer);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     options.insertExternalSurface(&surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
-    Vector3 position  = Vector3::Zero();
+    Vector3 position = Vector3::Zero();
     Vector3 direction = Vector3::UnitZ();
 
     Result<void> result =
