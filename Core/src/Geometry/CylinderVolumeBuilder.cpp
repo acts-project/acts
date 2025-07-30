@@ -557,6 +557,7 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
       double thickness = layer->thickness();
       // get the center of the layer
       const Vector3& center = layer->surfaceRepresentation().center(gctx);
+      double rCenter = std::hypot(center.x(), center.y());
       // check if it is a cylinder layer
       const CylinderLayer* cLayer =
           dynamic_cast<const CylinderLayer*>(layer.get());
@@ -574,7 +575,7 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
         lConfig.rMin =
             std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =
-            std::max(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
+            std::max(lConfig.rMax, rCenter + rMaxC + m_cfg.layerEnvelopeR.second);
         lConfig.zMin =
             std::min(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
         lConfig.zMax =
@@ -592,7 +593,7 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
         lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =
-            std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
+            std::max(lConfig.rMax, rCenter + rMaxD + m_cfg.layerEnvelopeR.second);
         lConfig.rMin = std::max(0.0, lConfig.rMin);
         lConfig.zMin = std::min(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         lConfig.zMax = std::max(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
