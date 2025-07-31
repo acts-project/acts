@@ -32,6 +32,7 @@ from acts.examples import (
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
+    CsvTrackParameterWriter,
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
@@ -41,6 +42,21 @@ from acts.examples import (
     GenericDetector,
 )
 from acts.examples.odd import getOpenDataDetectorDirectory
+
+
+def assert_csv_output(csv_path, stem, num_files, size_threshold=100):
+    __tracebackhide__ = True
+    assert (
+        len([f for f in csv_path.iterdir() if f.name.endswith(stem + ".csv")])
+        == num_files
+    )
+    assert all(
+        [
+            f.stat().st_size > size_threshold
+            for f in csv_path.iterdir()
+            if f.name.endswith(stem + ".csv")
+        ]
+    )
 
 
 @pytest.mark.obj
@@ -89,8 +105,7 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     s.run()
 
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
-    assert all(f.stat().st_size > 200 for f in out.iterdir())
+    assert_csv_output(out, "particle", s.config.events, size_threshold=200)
 
 
 @pytest.mark.root
@@ -252,8 +267,9 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
     )
     s.run()
 
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events * 3
-    assert all(f.stat().st_size > 10 for f in out.iterdir())
+    assert_csv_output(out, "measurements", s.config.events, size_threshold=10)
+    assert_csv_output(out, "measurement-simhit-map", s.config.events, size_threshold=10)
+    assert_csv_output(out, "cells", s.config.events, size_threshold=10)
 
 
 @pytest.mark.csv
@@ -275,8 +291,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     )
 
     s.run()
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
-    assert all(f.stat().st_size > 200 for f in out.iterdir())
+    assert_csv_output(out, "hits", s.config.events, size_threshold=200)
 
 
 @pytest.mark.parametrize(
@@ -431,5 +446,40 @@ def test_csv_multitrajectory_writer(tmp_path):
         )
     )
     s.run()
-    assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
-    assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
+    assert_csv_output(csv_dir, "CKFtracks", s.config.events, size_threshold=20)
+
+
+@pytest.mark.csv
+def test_csv_trackparameter_writer(tmp_path):
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Configs/generic-digi-smearing-config.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    csv_dir = tmp_path / "csv"
+    csv_dir.mkdir()
+    s.addWriter(
+        CsvTrackParameterWriter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputStem="track_parameters",
+            outputDir=str(csv_dir),
+        )
+    )
+    s.run()
+    assert_csv_output(csv_dir, "track_parameters", s.config.events, size_threshold=20)

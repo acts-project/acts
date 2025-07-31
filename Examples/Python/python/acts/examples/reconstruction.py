@@ -1848,6 +1848,14 @@ def addTrackWriters(
             )
             s.addWriter(csvWriter)
 
+            trackParameterWriter = acts.examples.CsvTrackParameterWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                outputDir=str(outputDirCsv),
+                outputStem=str(f"track_parameters_{name}"),
+            )
+            s.addWriter(trackParameterWriter)
+
 
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,

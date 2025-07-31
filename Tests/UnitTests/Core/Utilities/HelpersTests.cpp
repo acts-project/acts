@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
     vec = {std::make_shared<int>(5), std::make_shared<int>(9),
            std::make_shared<int>(26), std::make_shared<int>(18473)};
 
-    std::vector<int*> unpacked = unpack_shared_vector(vec);
+    std::vector<int*> unpacked = unpackSmartPointers(vec);
 
     std::vector<int*> exp = {
         vec[0].get(),
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
     vec = {std::make_shared<const int>(5), std::make_shared<const int>(9),
            std::make_shared<const int>(26), std::make_shared<const int>(18473)};
 
-    std::vector<const int*> unpacked = unpack_shared_vector(vec);
+    std::vector<const int*> unpacked = unpackSmartPointers(vec);
 
     std::vector<const int*> exp = {
         vec[0].get(),
