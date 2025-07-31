@@ -16,7 +16,8 @@
 namespace Acts::detail {
 
 template <std::floating_point T>
-void Line3DWithPartialDerivatives<T>::updateParameters(const ParamVector& newPars) {
+void Line3DWithPartialDerivatives<T>::updateParameters(
+    const ParamVector& newPars) {
   constexpr auto x0 = static_cast<std::uint8_t>(ParIndex::x0);
   constexpr auto y0 = static_cast<std::uint8_t>(ParIndex::y0);
   constexpr auto theta = static_cast<std::uint8_t>(ParIndex::theta);
