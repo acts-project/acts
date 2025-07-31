@@ -33,6 +33,30 @@ class SeedContainer2 {
   using MutableProxy = MutableSeedProxy2;
   using ConstProxy = ConstSeedProxy2;
 
+  /// Constructs and empty seed container.
+  SeedContainer2() noexcept;
+
+  /// Constructs a copy of the given seed container.
+  /// @param other The seed container to copy.
+  SeedContainer2(const SeedContainer2 &other) noexcept;
+
+  /// Move constructs a seed container.
+  /// @param other The seed container to move.
+  SeedContainer2(SeedContainer2 &&other) noexcept;
+
+  /// Detructs the seed container.
+  ~SeedContainer2() noexcept = default;
+
+  /// Assignment operator for copying a seed container.
+  /// @param other The seed container to copy.
+  /// @return A reference to this seed container.
+  SeedContainer2 &operator=(const SeedContainer2 &other) noexcept;
+
+  /// Move assignment operator for a seed container.
+  /// @param other The seed container to move.
+  /// @return A reference to this seed container.
+  SeedContainer2 &operator=(SeedContainer2 &&other) noexcept;
+
   /// Returns the size of the seed container, i.e., the number of seeds
   /// contained in it.
   /// @return The number of seeds in the container.
@@ -163,6 +187,20 @@ class SeedContainer2 {
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;
   std::vector<SpacePointIndex2> m_spacePoints;
+
+  auto knownColumns() & noexcept {
+    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
+                    m_vertexZs, m_spacePoints);
+  }
+  auto knownColumns() const & noexcept {
+    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
+                    m_vertexZs, m_spacePoints);
+  }
+  auto knownColumns() && noexcept {
+    return std::tuple(std::move(m_spacePointOffsets),
+                      std::move(m_spacePointCounts), std::move(m_qualities),
+                      std::move(m_vertexZs), std::move(m_spacePoints));
+  }
 };
 
 }  // namespace Acts::Experimental
