@@ -81,7 +81,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   /** Distance from the segment line to the tube wire */
   const double lineDist = m_projDir.cross(wireDir).dot(hitMinSeg);
-  const double resVal = (lineDist - driftRadius);
+  const double resVal = lineDist - driftRadius;
   m_residual = resVal * Vector::Unit(bending);
 
   /** Calculate the first derivative of the residual */
