@@ -207,6 +207,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisR;
 
   Transform3 ftransform = transform;
+  Transform3 itransform = ftransform.inverse();
 
   if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisR,
@@ -223,7 +224,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
-      Vector3 bpos = srf->referencePosition(gctx, AxisDirection::AxisR);
+      Vector3 bpos = itransform * srf->referencePosition(gctx, AxisDirection::AxisR);
       std::size_t bin = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
@@ -266,7 +267,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
   auto globalToLocal = [ftransform](const Vector3& pos) {
     Vector3 loc = ftransform * pos;
