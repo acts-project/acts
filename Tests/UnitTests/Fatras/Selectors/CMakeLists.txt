@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsFatras)
+set(unittest_extra_libraries Acts::Fatras)
 
 add_unittest(FatrasKinematicCasts KinematicCastsTests.cpp)
 add_unittest(FatrasParticleSelectors ParticleSelectorsTests.cpp)
