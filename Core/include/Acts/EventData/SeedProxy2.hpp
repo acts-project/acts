@@ -190,16 +190,16 @@ class SeedProxy2 {
 
     friend constexpr difference_type operator-(
         const SpacePointIterator &lhs, const SpacePointIterator &rhs) noexcept {
-      return lhs.m_index - rhs.m_index;
+      return lhs.m_indexPointer - rhs.m_indexPointer;
     }
 
     friend constexpr auto operator<=>(const SpacePointIterator &a,
                                       const SpacePointIterator &b) noexcept {
-      return a.m_index <=> b.m_index;
+      return a.m_indexPointer <=> b.m_indexPointer;
     }
     friend constexpr bool operator==(const SpacePointIterator &a,
                                      const SpacePointIterator &b) noexcept {
-      return a.m_index == b.m_index;
+      return a.m_indexPointer == b.m_indexPointer;
     }
   };
 
