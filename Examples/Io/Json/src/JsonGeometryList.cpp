@@ -69,12 +69,11 @@ std::vector<Acts::GeometryIdentifier> ActsExamples::readJsonGeometryList(
     const std::string& path) {
   nlohmann::json data;
   std::vector<Acts::GeometryIdentifier> geoIdList;
-  namespace fs = std::filesystem;
-  if (!fs::exists(fs::status(fs::path(path)))) {
+  std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
+  if (!infile. good()) {
     throw fs::filesystem_error(
         path, std::make_error_code(std::errc::no_such_file_or_directory));
   }
-  std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   infile >> data;
   from_json(data, geoIdList);
