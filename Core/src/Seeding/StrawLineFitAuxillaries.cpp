@@ -72,7 +72,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                                                   const Vector& hitMinSeg,
                                                   const Vector& wireDir,
                                                   const double driftRadius) {
-  /** Fetch the hit position & direction */
+  // Fetch the hit position & direction
   if (!updateStrawAuxiliaries(line, wireDir)) {
     ACTS_WARNING("updateStrawResidual() - The line "
                  << toString(line.direction())
