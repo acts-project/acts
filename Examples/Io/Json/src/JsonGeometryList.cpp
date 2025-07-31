@@ -70,7 +70,7 @@ std::vector<Acts::GeometryIdentifier> ActsExamples::readJsonGeometryList(
   nlohmann::json data;
   std::vector<Acts::GeometryIdentifier> geoIdList;
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
-  if (!infile. good()) {
+  if (!infile.good()) {
     throw std::filesystem::filesystem_error(
         path, std::make_error_code(std::errc::no_such_file_or_directory));
   }
