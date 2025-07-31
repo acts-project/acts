@@ -227,7 +227,6 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
 }
 
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
-  return;
   /// Set the line to be 45 degrees
   using Pars_t = Line_t::ParamVector;
   using ParIdx = Line_t::ParIndex;

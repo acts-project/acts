@@ -446,7 +446,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   for (const auto partial1 : m_cfg.parsToUse) {
     for (const auto partial2 : m_cfg.parsToUse) {
       /// Avoid double counting
-      if (partial1 > partial2) {
+      if (partial2 > partial1) {
         break;
       }
       /// At least one parameter needs to be a directional one
