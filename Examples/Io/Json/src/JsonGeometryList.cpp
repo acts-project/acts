@@ -71,7 +71,7 @@ std::vector<Acts::GeometryIdentifier> ActsExamples::readJsonGeometryList(
   std::vector<Acts::GeometryIdentifier> geoIdList;
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   if (!infile. good()) {
-    throw fs::filesystem_error(
+    throw std::filesystem::filesystem_error(
         path, std::make_error_code(std::errc::no_such_file_or_directory));
   }
   infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
