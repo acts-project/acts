@@ -49,7 +49,7 @@ class StrawLineFitAuxiliaries {
   };
   static std::string parName(const FitParIndex idx);
   /// @brief Assignment of the residual components.
-  enum class ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
+  enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
   /// @brief Configuration object of the residual calculator
   struct Config {
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
