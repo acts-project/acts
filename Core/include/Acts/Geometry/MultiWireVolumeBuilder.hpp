@@ -43,7 +43,7 @@ class MultiWireVolumeBuilder {
   explicit MultiWireVolumeBuilder(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "MultiWireVolumeBuilder", Acts::Logging::VERBOSE));
+          "MultiWireVolumeBuilder", Acts::Logging::INFO));
 
   /// @brief Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume
