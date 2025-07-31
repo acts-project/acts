@@ -22,7 +22,7 @@ using namespace Acts::PlanarHelper;
 
 using Line_t = StrawLineFitAuxiliaries::Line_t;
 using Config_t = StrawLineFitAuxiliaries::Config;
-using ParIdx = StrawLineFitAuxiliaries::FitParIndices;
+using ParIdx = StrawLineFitAuxiliaries::FitParIndex;
 
 using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
@@ -178,8 +178,8 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   constexpr double tolerance = 1.e-3;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
-    lineParsUp[par] += h;
-    lineParsDn[par] -= h;
+    lineParsUp[static_cast<std::size_t>(par)] += h;
+    lineParsDn[static_cast<std::size_t>(par)] -= h;
     Line_t lineUp{}, lineDn{};
     lineUp.updateParameters(lineParsUp);
     lineDn.updateParameters(lineParsDn);
@@ -205,8 +205,8 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     for (auto par1 : resCfg.parsToUse) {
       lineParsUp = linePars;
       lineParsDn = linePars;
-      lineParsUp[par1] += h;
-      lineParsDn[par1] -= h;
+      lineParsUp[static_cast<std::size_t>(par1)] += h;
+      lineParsDn[static_cast<std::size_t>(par1)] -= h;
 
       lineUp.updateParameters(lineParsUp);
       lineDn.updateParameters(lineParsDn);
@@ -230,10 +230,10 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   return;
   /// Set the line to be 45 degrees
   using Pars_t = Line_t::ParamVector;
-  using ParIdx = Line_t::ParIndices;
+  using ParIdx = Line_t::ParIndex;
   Pars_t linePars{};
-  linePars[ParIdx::phi] = 90. * 1_degree;
-  linePars[ParIdx::theta] = 45. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 90. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45. * 1_degree;
 
   const Vector wireDir = Vector::UnitX();
   // /// Generate the first test measurement
@@ -250,8 +250,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
                TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
                               wireDir, 10. * 1_cm, true});
 
-  linePars[ParIdx::phi] = 30. * 1_degree;
-  linePars[ParIdx::theta] = 60. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60. * 1_degree;
 
   testResidual(linePars,
                TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
@@ -261,8 +261,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
                TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
                               wireDir, 10. * 1_cm, true});
 
-  linePars[ParIdx::phi] = 60. * 1_degree;
-  linePars[ParIdx::theta] = 30. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 30. * 1_degree;
 
   testResidual(linePars,
                TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
   Pars_t linePars{};
-  linePars[ParIdx::phi] = 60. * 1_degree;
-  linePars[ParIdx::theta] = 45 * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45 * 1_degree;
 
   testResidual(
       linePars,

@@ -20,21 +20,22 @@ namespace Acts::detail {
 ///        length. Additionally, the `Line3DWithPartialDerivatives` holds the
 ///        first and second derivative of the line with respect to the
 ///        parameters `x0`, `y0`, `theta`, and `phi` (the parameters are defined
-///        in the enum `ParIndices`).
+///        in the enum `ParIndex`).
 template <std::floating_point T>
 class Line3DWithPartialDerivatives {
  public:
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
-  enum class ParIndices : std::unit_8 {
+  enum class ParIndex : std::uint8_t {
     x0 = 0,
     y0 = 1,
     theta = 2,
     phi = 3,
     nPars = 4
   };
-  static constexpr std::uint8_t s_nPars = static_cast<std::uint8_t>(ParIndices::nPars);
+  static constexpr std::uint8_t s_nPars =
+      static_cast<std::uint8_t>(ParIndex::nPars);
   /// @brief Abrivation of the parameter vector type
   using ParamVector = std::array<T, s_nPars>;
 
@@ -47,12 +48,11 @@ class Line3DWithPartialDerivatives {
   const Vector& direction() const;
   /// @brief Returns the first derivative of the line with respect to the passed
   /// @param param: Index of the parameter to get the derivative for
-  const Vector& gradient(const ParIndices param) const;
+  const Vector& gradient(const ParIndex param) const;
   /// @brief Returns the second derivative of the line with respect to the passed
   /// @param param1: Index of the first parameter to get the derivative for
   /// @param param2: Index of the second parameter to get the derivative for
-  const Vector& hessian(const ParIndices param1,
-                        const ParIndices param2) const;
+  const Vector& hessian(const ParIndex param1, const ParIndex param2) const;
   /// @brief Returns a point along the line which is by lambda apart from
   ///        the line reference
   /// @param lambda: Separation from the reference
@@ -61,7 +61,8 @@ class Line3DWithPartialDerivatives {
  private:
   Vector m_pos{Vector::Zero()};
   Vector m_dir{Vector::Zero()};
-  std::array<Vector, s_nPars> m_gradient{filledArray<Vector, s_nPars>(Vector::Zero())};
+  std::array<Vector, s_nPars> m_gradient{
+      filledArray<Vector, s_nPars>(Vector::Zero())};
 
   std::array<Vector, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector, sumUpToN(s_nPars)>(Vector::Zero())};

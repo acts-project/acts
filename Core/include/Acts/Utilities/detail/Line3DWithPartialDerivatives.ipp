@@ -18,12 +18,10 @@ namespace Acts::detail {
 template <std::floating_point T>
 void Line3DWithPartialDerivatives<T>::updateParameters(
     const ParamVector& newPars) {
-  
-  
-  constexpr std::uint8_t x0 = static_cast<std::uint8_t>(ParIndices::x0);
-  constexpr std::uint8_t y0 = static_cast<std::uint8_t>(ParIndices::y0);
-  constexpr std::uint8_t theta = static_cast<std::uint8_t>(ParIndices::theta);
-  constexpr std::uint8_t phi = static_cast<std::uint8_t>(ParIndices::phi);
+  constexpr std::uint8_t x0 = static_cast<std::uint8_t>(ParIndex::x0);
+  constexpr std::uint8_t y0 = static_cast<std::uint8_t>(ParIndex::y0);
+  constexpr std::uint8_t theta = static_cast<std::uint8_t>(ParIndex::theta);
+  constexpr std::uint8_t phi = static_cast<std::uint8_t>(ParIndex::phi);
 
   m_pos[Acts::eX] = newPars[x0];
   m_pos[Acts::eY] = newPars[y0];
@@ -82,17 +80,17 @@ Line3DWithPartialDerivatives<T>::direction() const {
 }
 template <std::floating_point T>
 const Line3DWithPartialDerivatives<T>::Vector&
-Line3DWithPartialDerivatives<T>::gradient(const ParIndices par) const {
+Line3DWithPartialDerivatives<T>::gradient(const ParIndex par) const {
   const std::uint8_t param = static_cast<std::uint8_t>(par);
   assert(param < m_gradient.size());
   return m_gradient[param];
 }
 template <std::floating_point T>
 const Line3DWithPartialDerivatives<T>::Vector&
-Line3DWithPartialDerivatives<T>::hessian(const ParIndices param1,
-                                         const ParIndices param2) const {
-  const std::uint8_t idx{vecIdxFromSymMat<s_nPars>(static_cast<std::uint8_t>(param1), 
-                                                  static_cast<std::uint8_t>(param2))};
+Line3DWithPartialDerivatives<T>::hessian(const ParIndex param1,
+                                         const ParIndex param2) const {
+  const auto idx{vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(param1),
+                                           static_cast<std::size_t>(param2))};
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
