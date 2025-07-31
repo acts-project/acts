@@ -38,7 +38,7 @@ class StrawLineFitAuxiliaries {
  public:
   using Line_t = Acts::detail::Line3DWithPartialDerivatives<double>;
   using Vector = Line_t::Vector;
-  enum FitParIndices : std::uint8_t {
+  enum class FitParIndices : std::uint8_t {
     x0 = Line_t::ParIndices::x0,
     y0 = Line_t::ParIndices::y0,
     theta = Line_t::ParIndices::theta,

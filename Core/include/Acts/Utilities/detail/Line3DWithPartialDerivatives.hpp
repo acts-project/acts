@@ -27,15 +27,16 @@ class Line3DWithPartialDerivatives {
   /// @brief Abrivation of the Vector
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
-  enum ParIndices : std::size_t {
+  enum class ParIndices : std::unit_8 {
     x0 = 0,
     y0 = 1,
     theta = 2,
     phi = 3,
     nPars = 4
   };
+  static constexpr std::uint8_t s_nPars = static_cast<std::uint8_t>(ParIndices::nPars);
   /// @brief Abrivation of the parameter vector type
-  using ParamVector = std::array<T, nPars>;
+  using ParamVector = std::array<T, s_nPars>;
 
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
@@ -46,12 +47,12 @@ class Line3DWithPartialDerivatives {
   const Vector& direction() const;
   /// @brief Returns the first derivative of the line with respect to the passed
   /// @param param: Index of the parameter to get the derivative for
-  const Vector& gradient(const std::size_t param) const;
+  const Vector& gradient(const ParIndices param) const;
   /// @brief Returns the second derivative of the line with respect to the passed
   /// @param param1: Index of the first parameter to get the derivative for
   /// @param param2: Index of the second parameter to get the derivative for
-  const Vector& hessian(const std::size_t param1,
-                        const std::size_t param2) const;
+  const Vector& hessian(const ParIndices param1,
+                        const ParIndices param2) const;
   /// @brief Returns a point along the line which is by lambda apart from
   ///        the line reference
   /// @param lambda: Separation from the reference
@@ -60,9 +61,7 @@ class Line3DWithPartialDerivatives {
  private:
   Vector m_pos{Vector::Zero()};
   Vector m_dir{Vector::Zero()};
-  static constexpr std::size_t s_nPars = ParIndices::nPars;
-  std::array<Vector, s_nPars> m_gradient{
-      filledArray<Vector, s_nPars>(Vector::Zero())};
+  std::array<Vector, s_nPars> m_gradient{filledArray<Vector, s_nPars>(Vector::Zero())};
 
   std::array<Vector, sumUpToN(s_nPars)> m_hessian{
       filledArray<Vector, sumUpToN(s_nPars)>(Vector::Zero())};
