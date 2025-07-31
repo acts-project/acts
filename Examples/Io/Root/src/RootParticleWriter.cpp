@@ -63,6 +63,10 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("phi", &m_phi);
   m_outputTree->Branch("pt", &m_pt);
   m_outputTree->Branch("p", &m_p);
+  m_outputTree->Branch("q_over_p", &m_qop);
+  m_outputTree->Branch("theta", &m_theta);
+  m_outputTree->Branch("d0", &m_d0);
+  m_outputTree->Branch("z0", &m_z0);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
   m_outputTree->Branch("particle", &m_particle);
@@ -135,6 +139,10 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::VectorHelpers::phi(particle.direction())));
     m_pt.push_back(Acts::clampValue<float>(
         p * Acts::VectorHelpers::perp(particle.direction())));
+    m_theta.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::theta(particle.direction())));
+    m_qop.push_back(Acts::clampValue<float>(
+        particle.qOverP() * Acts::UnitConstants::GeV / Acts::UnitConstants::e));
     // decoded barcode components
     m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
     m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
@@ -150,6 +158,35 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::clampValue<float>(particle.pathInL0() / Acts::UnitConstants::mm));
     m_numberOfHits.push_back(particle.numberOfHits());
     m_outcome.push_back(static_cast<std::uint32_t>(particle.outcome()));
+
+    // Initialize the truth particle info
+    float d0 = NaNfloat;
+    float z0 = NaNfloat;
+
+    auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+        Acts::Vector3(m_cfg.referencePoint[0], m_cfg.referencePoint[1],
+                      m_cfg.referencePoint[2]));
+
+    auto intersection = pSurface
+                            ->intersect(ctx.geoContext, particle.position(),
+                                        particle.direction(),
+                                        Acts::BoundaryTolerance::Infinite())
+                            .closest();
+    auto position = intersection.position();
+
+    // get the truth perigee parameter
+    auto lpResult =
+        pSurface->globalToLocal(ctx.geoContext, position, particle.direction());
+    if (lpResult.ok()) {
+      d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
+      z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+    } else {
+      ACTS_ERROR("Global to local transformation did not succeed.");
+    }
+
+    // Push the truth particle info.
+    m_d0.push_back(Acts::clampValue<float>(d0 / Acts::UnitConstants::mm));
+    m_z0.push_back(Acts::clampValue<float>(z0 / Acts::UnitConstants::mm));
   }
 
   m_outputTree->Fill();
@@ -170,6 +207,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_eta.clear();
   m_phi.clear();
   m_pt.clear();
+  m_theta.clear();
+  m_qop.clear();
   m_vertexPrimary.clear();
   m_vertexSecondary.clear();
   m_particle.clear();
@@ -180,6 +219,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_outcome.clear();
   m_pathInX0.clear();
   m_pathInL0.clear();
+  m_d0.clear();
+  m_z0.clear();
 
   return ProcessCode::SUCCESS;
 }

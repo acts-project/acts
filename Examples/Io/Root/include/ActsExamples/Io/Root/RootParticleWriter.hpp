@@ -43,6 +43,10 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     std::string fileMode = "RECREATE";
     /// Name of the tree within the output file.
     std::string treeName = "particles";
+    /// Reference point for the perigee surface.
+    /// Usually the beamspot position.
+    /// Default is (0, 0, 0).
+    std::array<double, 3> referencePoint{0., 0., 0.};
   };
 
   /// Construct the particle writer.
@@ -106,6 +110,14 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_phi;
   /// Transverse momentum in GeV.
   std::vector<float> m_pt;
+  /// Polar angle.
+  std::vector<float> m_theta;
+  /// Charge over momentum in e.GeV^-1.
+  std::vector<float> m_qop;
+  /// Transverse impact parameter in mm.
+  std::vector<float> m_d0;
+  /// Longitudinal impact parameter in mm.
+  std::vector<float> m_z0;
   // Decoded particle identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
   std::vector<std::uint32_t> m_vertexSecondary;
