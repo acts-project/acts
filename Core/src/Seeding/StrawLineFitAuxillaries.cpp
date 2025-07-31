@@ -46,7 +46,7 @@ const Vector& StrawLineFitAuxiliaries::residual() const {
   return m_residual;
 }
 const Vector& StrawLineFitAuxiliaries::gradient(const FitParIndex param) const {
-  const auto = static_cast<std::uint8_t>(param);
+  const auto par = static_cast<std::uint8_t>(param);
   assert(par < m_gradient.size());
   return m_gradient[par];
 }
