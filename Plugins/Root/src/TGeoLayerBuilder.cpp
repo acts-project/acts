@@ -277,7 +277,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       if (m_cfg.protoLayerHelper != nullptr && !layerCfg.splitConfigs.empty()) {
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
-            gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
+            gctx, unpackSmartPointers(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
 
         // Number of options mismatch and has not been configured for

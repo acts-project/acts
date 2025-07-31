@@ -7,7 +7,7 @@ add_executable(
 )
 target_link_libraries(
     ActsExampleHelloWorld
-    PRIVATE ActsCore ActsExamplesFramework
+    PRIVATE Acts::Core Acts::ExamplesFramework
 )
 
 install(

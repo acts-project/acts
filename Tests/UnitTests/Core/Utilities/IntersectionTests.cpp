@@ -11,13 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <functional>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -143,39 +141,37 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
       CurvilinearSurface(Vector3(10., 0., 0.), Vector3(1., 0., 0.))
           .planeSurface();
 
-  using PlaneIntersection = ObjectIntersection<PlaneSurface>;
-
-  PlaneIntersection int6(
+  SurfaceIntersection int6(
       Intersection3D(Vector3(6., 0., 0.), 6., IntersectionStatus::reachable),
-      psf6.get());
-  PlaneIntersection int7(
+      *psf6);
+  SurfaceIntersection int7(
       Intersection3D(Vector3(7., 0., 0.), 7., IntersectionStatus::reachable),
-      psf7.get());
-  PlaneIntersection int8(
+      *psf7);
+  SurfaceIntersection int8(
       Intersection3D(Vector3(8., 0., 0.), 8., IntersectionStatus::reachable),
-      psf8.get());
-  PlaneIntersection int9a(
+      *psf8);
+  SurfaceIntersection int9a(
       Intersection3D(Vector3(9., 0., 0.), 9., IntersectionStatus::reachable),
-      psf9.get());
-  PlaneIntersection int9b(
+      *psf9);
+  SurfaceIntersection int9b(
       Intersection3D(Vector3(9., 1., 0.), std::hypot(9., 1.),
                      IntersectionStatus::reachable),
-      psf9.get());
-  PlaneIntersection int10(
+      *psf9);
+  SurfaceIntersection int10(
       Intersection3D(Vector3(10., 0., 0.), 10., IntersectionStatus::reachable),
-      psf10.get());
+      *psf10);
 
-  std::vector<PlaneIntersection> firstSet = {int6, int7, int9b, int10};
-  std::vector<PlaneIntersection> secondSet = {int8, int9a, int9b, int10};
+  std::vector<SurfaceIntersection> firstSet = {int6, int7, int9b, int10};
+  std::vector<SurfaceIntersection> secondSet = {int8, int9a, int9b, int10};
   // result of the standard union set
-  std::vector<PlaneIntersection> unionSetStd = {};
+  std::vector<SurfaceIntersection> unionSetStd = {};
   // result of the custominzed union set
-  std::vector<PlaneIntersection> unionSetCst = {};
+  std::vector<SurfaceIntersection> unionSetCst = {};
 
   // This should give 6 different intersections
   std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
                  secondSet.end(), std::back_inserter(unionSetStd),
-                 PlaneIntersection::pathLengthOrder);
+                 SurfaceIntersection::pathLengthOrder);
   BOOST_CHECK_EQUAL(unionSetStd.size(), 6u);
 }
 

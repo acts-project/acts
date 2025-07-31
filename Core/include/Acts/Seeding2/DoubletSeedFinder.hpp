@@ -62,7 +62,10 @@ class DoubletSeedFinder {
     float helixCutTolerance = 1;
 
     /// Delegate to apply experiment specific cuts during doublet finding
-    Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts;
+    Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
+                  const ConstSpacePointProxy2& /*other*/, float /*cotTheta*/,
+                  bool /*isBottomCandidate*/)>
+        experimentCuts;
 
     /// Whether the input space points are sorted by radius
     bool spacePointsSortedByRadius = false;
@@ -168,7 +171,8 @@ class DoubletSeedFinder {
    protected:
     DerivedConfig m_cfg;
   };
-  template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR>
+  template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR,
+            bool experimentCuts>
   class Impl;
 
   static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);

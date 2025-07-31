@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navLayerIndex.value(), 0);
   // Check the target is correct
-  BOOST_CHECK_EQUAL(target.surface, state.navLayer().first.object());
+  BOOST_CHECK_EQUAL(target.surface, &state.navLayer().first.surface());
   // Intersect the target
   auto targetIntersection =
       target.surface->intersect(tgContext, position, direction)
