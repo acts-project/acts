@@ -59,6 +59,18 @@ class SeedProxy2 {
   /// @return The index of the seed in the container.
   IndexType index() const noexcept { return m_index; }
 
+  /// Assigns space point indices to the seed at the given index.
+  /// @param index The index of the seed to assign space point indices to.
+  /// @param spacePointIndices A span of space point indices to assign to the seed.
+  /// @throws std::out_of_range if the index is out of range.
+  /// @throws std::logic_error if space point indices are already assigned to the seed.
+  void assignSpacePointIndices(
+      std::span<const SpacePointIndex2> spacePointIndices)
+    requires(!ReadOnly)
+  {
+    m_container->assignSpacePointIndices(m_index, spacePointIndices);
+  }
+
   /// Returns the size of the seed, i.e., the number of space points
   /// associated with it.
   /// @return The number of space points in the seed.
@@ -109,9 +121,13 @@ class SeedProxy2 {
 
   class SpacePointIterator {
    public:
-    using iterator_category = std::forward_iterator_tag;
     using value_type = ConstSpacePointProxy2;
     using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = void;
+
+    using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     SpacePointIterator() = default;
     SpacePointIterator(const SpacePointContainer2 &spacePointContainer,
@@ -119,28 +135,72 @@ class SeedProxy2 {
         : m_spacePointContainer{&spacePointContainer},
           m_indexPointer{indexPointer} {}
 
-    SpacePointIterator &operator++() noexcept {
+    value_type operator*() const noexcept {
+      return (*m_spacePointContainer)[*m_indexPointer];
+    }
+    value_type operator[](difference_type n) const noexcept {
+      return (*m_spacePointContainer)[m_indexPointer[n]];
+    }
+
+    constexpr SpacePointIterator &operator++() noexcept {
       ++m_indexPointer;
       return *this;
     }
-
-    SpacePointIterator operator++(int) noexcept {
-      SpacePointIterator tmp = *this;
+    constexpr SpacePointIterator operator++(int) noexcept {
+      auto tmp = *this;
       ++(*this);
       return tmp;
     }
+    constexpr SpacePointIterator &operator--() noexcept {
+      --m_indexPointer;
+      return *this;
+    }
+    constexpr SpacePointIterator operator--(int) noexcept {
+      auto tmp = *this;
+      --(*this);
+      return tmp;
+    }
 
-    value_type operator*() const noexcept {
-      return (*m_spacePointContainer)[*m_indexPointer];
+    constexpr SpacePointIterator &operator+=(difference_type n) noexcept {
+      m_indexPointer += n;
+      return *this;
+    }
+    constexpr SpacePointIterator &operator-=(difference_type n) noexcept {
+      m_indexPointer -= n;
+      return *this;
     }
 
    private:
     const SpacePointContainer2 *m_spacePointContainer{nullptr};
     const SpacePointIndex2 *m_indexPointer{nullptr};
 
-    friend bool operator==(const SpacePointIterator &a,
-                           const SpacePointIterator &b) noexcept {
-      return a.m_indexPointer == b.m_indexPointer;
+    friend constexpr SpacePointIterator operator+(SpacePointIterator it,
+                                                  difference_type n) noexcept {
+      return it += n;
+    }
+
+    friend constexpr SpacePointIterator operator+(
+        difference_type n, SpacePointIterator it) noexcept {
+      return it += n;
+    }
+
+    friend constexpr SpacePointIterator operator-(SpacePointIterator it,
+                                                  difference_type n) noexcept {
+      return it -= n;
+    }
+
+    friend constexpr difference_type operator-(
+        const SpacePointIterator &lhs, const SpacePointIterator &rhs) noexcept {
+      return lhs.m_index - rhs.m_index;
+    }
+
+    friend constexpr auto operator<=>(const SpacePointIterator &a,
+                                      const SpacePointIterator &b) noexcept {
+      return a.m_index <=> b.m_index;
+    }
+    friend constexpr bool operator==(const SpacePointIterator &a,
+                                     const SpacePointIterator &b) noexcept {
+      return a.m_index == b.m_index;
     }
   };
 
