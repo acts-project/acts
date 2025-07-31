@@ -574,8 +574,8 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
             CylinderBounds::eHalfLengthZ);
         lConfig.rMin =
             std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
-        lConfig.rMax =
-            std::max(lConfig.rMax, rCenter + rMaxC + m_cfg.layerEnvelopeR.second);
+        lConfig.rMax = std::max(lConfig.rMax,
+                                rCenter + rMaxC + m_cfg.layerEnvelopeR.second);
         lConfig.zMin =
             std::min(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
         lConfig.zMax =
@@ -592,8 +592,8 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
         double zMaxD = center.z() + 0.5 * thickness;
         lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
-        lConfig.rMax =
-            std::max(lConfig.rMax, rCenter + rMaxD + m_cfg.layerEnvelopeR.second);
+        lConfig.rMax = std::max(lConfig.rMax,
+                                rCenter + rMaxD + m_cfg.layerEnvelopeR.second);
         lConfig.rMin = std::max(0.0, lConfig.rMin);
         lConfig.zMin = std::min(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         lConfig.zMax = std::max(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
