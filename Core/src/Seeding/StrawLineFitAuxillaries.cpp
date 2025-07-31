@@ -46,14 +46,14 @@ const Vector& StrawLineFitAuxiliaries::residual() const {
   return m_residual;
 }
 const Vector& StrawLineFitAuxiliaries::gradient(const FitParIndex param) const {
-  const std::uint8_t par = static_cast<std::uint8_t>(param);
+  const auto = static_cast<std::uint8_t>(param);
   assert(par < m_gradient.size());
   return m_gradient[par];
 }
 const Vector& StrawLineFitAuxiliaries::hessian(const FitParIndex param1,
                                                const FitParIndex param2) const {
-  const std::uint8_t idx = vecIdxFromSymMat<s_nPars>(
-      static_cast<std::size_t>(param1), static_cast<std::size_t>(param2));
+  const auto idx = vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(param1),
+                                             static_cast<std::size_t>(param2));
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }

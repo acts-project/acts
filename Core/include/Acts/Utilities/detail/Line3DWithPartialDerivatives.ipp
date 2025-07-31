@@ -16,12 +16,11 @@
 namespace Acts::detail {
 
 template <std::floating_point T>
-void Line3DWithPartialDerivatives<T>::updateParameters(
-    const ParamVector& newPars) {
-  constexpr std::uint8_t x0 = static_cast<std::uint8_t>(ParIndex::x0);
-  constexpr std::uint8_t y0 = static_cast<std::uint8_t>(ParIndex::y0);
-  constexpr std::uint8_t theta = static_cast<std::uint8_t>(ParIndex::theta);
-  constexpr std::uint8_t phi = static_cast<std::uint8_t>(ParIndex::phi);
+void Line3DWithPartialDerivatives<T>::updateParameters(const PaautoewPars) {
+  constexpr auto x0 = static_cast<std::uint8_t>(ParIndex::x0);
+  constexpr auto y0 = static_cast<std::uint8_t>(ParIndex::y0);
+  constexpr auto theta = static_cast<std::uint8_t>(ParIndex::theta);
+  constexpr auto phi = static_cast<std::uint8_t>(ParIndex::phi);
 
   m_pos[Acts::eX] = newPars[x0];
   m_pos[Acts::eY] = newPars[y0];
@@ -60,9 +59,9 @@ void Line3DWithPartialDerivatives<T>::updateParameters(
    *   -------------     = cos(theta)   cos phi
    *    d theta dPhi                       0
    ************************************************************************************/
-  constexpr std::uint8_t idxThetaSq = vecIdxFromSymMat<s_nPars>(theta, theta);
-  constexpr std::uint8_t idxPhiSq = vecIdxFromSymMat<s_nPars>(phi, phi);
-  constexpr std::uint8_t idxPhiTheta = vecIdxFromSymMat<s_nPars>(theta, phi);
+  constexpr auto idxThetaSq = vecIdxFromSymMat<s_nPars>(theta, theta);
+  constexpr auto idxPhiSq = vecIdxFromSymMat<s_nPars>(phi, phi);
+  constexpr auto idxPhiTheta = vecIdxFromSymMat<s_nPars>(theta, phi);
   m_hessian[idxThetaSq] = -m_dir;
   m_hessian[idxPhiSq] = -sinTheta * Vector{cosPhi, sinPhi, 0.};
   m_hessian[idxPhiTheta] = cosTheta * Vector{-sinPhi, cosPhi, 0.};
