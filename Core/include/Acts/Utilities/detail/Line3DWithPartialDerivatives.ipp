@@ -81,7 +81,7 @@ Line3DWithPartialDerivatives<T>::direction() const {
 template <std::floating_point T>
 const Line3DWithPartialDerivatives<T>::Vector&
 Line3DWithPartialDerivatives<T>::gradient(const ParIndex par) const {
-  const std::uint8_t param = static_cast<std::uint8_t>(par);
+  const auto param = static_cast<std::uint8_t>(par);
   assert(param < m_gradient.size());
   return m_gradient[param];
 }
