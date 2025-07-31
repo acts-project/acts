@@ -60,7 +60,6 @@ class SeedProxy2 {
   IndexType index() const noexcept { return m_index; }
 
   /// Assigns space point indices to the seed at the given index.
-  /// @param index The index of the seed to assign space point indices to.
   /// @param spacePointIndices A span of space point indices to assign to the seed.
   /// @throws std::out_of_range if the index is out of range.
   /// @throws std::logic_error if space point indices are already assigned to the seed.
