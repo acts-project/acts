@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
-  // fitted parameter and total truth tracks (assumes one truth partilce has
+  // fitted parameter and total truth tracks (assumes one truth particle has
   // one truth track)
   for (const auto& particle : particles) {
     bool isReconstructed = false;

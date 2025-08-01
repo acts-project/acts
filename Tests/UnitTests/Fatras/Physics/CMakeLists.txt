@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsFatras)
+set(unittest_extra_libraries Acts::Fatras)
 
 add_unittest(FatrasBetheBloch BetheBlochTests.cpp)
 add_unittest(FatrasBetheHeitler BetheHeitlerTests.cpp)

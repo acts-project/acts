@@ -46,7 +46,10 @@ acts_code_generation(
 
 target_link_libraries(
     ActsCore
-    PRIVATE SympyCovarianceEngine SympyStepperMath SympyJacobianEngine
+    PRIVATE
+        Acts::SympyCovarianceEngine
+        Acts::SympyStepperMath
+        Acts::SympyJacobianEngine
 )
 
 # message(FATAL_ERROR "stop")
