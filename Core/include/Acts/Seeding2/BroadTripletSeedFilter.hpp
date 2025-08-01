@@ -101,6 +101,13 @@ class BroadTripletSeedFilter final {
   };
 
   struct State {
+    /// Map to store the best seed quality for each space point
+    /// This is used to avoid creating seeds with lower quality than the best
+    /// seed quality already found for that space point
+    /// The key is the space point index, and the value is the best seed quality
+    /// found for that space point
+    /// @note The index is the space point index, not the seed index.
+    ///       `copyFromIndex` will be used if available.
     std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
   };
 
