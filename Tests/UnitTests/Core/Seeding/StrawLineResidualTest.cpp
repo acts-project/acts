@@ -279,6 +279,7 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   constexpr double h = 5.e-9;
   constexpr double tolerance = 1.e-3;
 
+  Line_t lineUp{}, lineDn{};
   for (const auto partial : resCfg.parsToUse) {
     StrawLineFitAuxiliaries resCalcUp{
         resCfg, Acts::getDefaultLogger("timeResUp", logLvl)};
@@ -290,13 +291,14 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
     if (partial != ParIdx::t0) {
       lineParsUp[static_cast<std::size_t>(partial)] += h;
       lineParsDn[static_cast<std::size_t>(partial)] -= h;
+      lineUp.updateParameters(lineParsUp);
+      lineDn.updateParameters(lineParsDn);
+      resCalcUp.updateFullResidual(lineUp, timeT0, sp, locToGlob);
+      resCalcDn.updateFullResidual(lineDn, timeT0, sp, locToGlob);
+    } else {
+      resCalcUp.updateFullResidual(line, timeT0 + h, sp, locToGlob);
+      resCalcDn.updateFullResidual(line, timeT0 - h, sp, locToGlob);
     }
-
-    Line_t lineUp{}, lineDn{};
-    lineUp.updateParameters(lineParsUp);
-    lineDn.updateParameters(lineParsDn);
-    resCalcUp.updateFullResidual(lineUp, timeT0, sp, locToGlob);
-    resCalcDn.updateFullResidual(lineDn, timeT0, sp, locToGlob);
 
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
@@ -309,16 +311,27 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
     for (const auto partial2 : resCfg.parsToUse) {
-      lineParsUp = linePars;
-      lineParsDn = linePars;
-      lineParsUp[static_cast<std::size_t>(par1)] += h;
-      lineParsDn[static_cast<std::size_t>(par1)] -= h;
-
+      if (partial2 != ParIdx::t0) {
+        lineParsUp = linePars;
+        lineParsDn = linePars;
+        lineParsUp[static_cast<std::size_t>(partial2)] += h;
+        lineParsDn[static_cast<std::size_t>(partial2)] -= h;
+      }
       lineUp.updateParameters(lineParsUp);
       lineDn.updateParameters(lineParsDn);
 
-      resCalcUp.updateSpatialResidual(lineUp, testPoint);
-      resCalcDn.updateSpatialResidual(lineDn, testPoint);
+      resCalcUp.updateFullResidual(lineUp, timeT0, sp, locToGlob);
+      resCalcDn.updateFullResidual(lineDn, timeT0, sp, locToGlob);
+
+      const Vector numDeriv1{
+          (resCalcUp.gradient(partial) - resCalcDn.gradient(partial)) /
+          (2. * h)};
+      const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
+      std::cout << "Second deriv (" << StrawLineFitAuxiliaries::parName(partial)
+                << ", " << StrawLineFitAuxiliaries::parName(partial2)
+                << ") -- numerical: " << toString(numDeriv1)
+                << ", analytic: " << toString(analyticDeriv) << std::endl;
+      BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
     }
   }
 }

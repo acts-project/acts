@@ -516,18 +516,25 @@ void StrawLineFitAuxiliaries::updateTimeResidual(
           -(gradR[bending] * b1 + gradR[nonBending] * b2).dot(globIsect) /
           globIsect.norm() / PhysicalConstants::c;
     }
+  }
 
-    if (!m_cfg.useHessian) {
-      continue;
-    }
+  if (!m_cfg.useHessian) {
+    return;
+  }
+  for (const auto partial1 : m_cfg.parsToUse) {
     for (const auto partial2 : m_cfg.parsToUse) {
       if (partial2 > partial1 || partial2 == FitParIndex::t0) {
         break;
       }
-      const auto resIdx =
-          vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(partial1),
-                                    static_cast<std::size_t>(partial2));
-      Vector& hess = m_hessian[resIdx];
+      // clang-format off
+      const auto param1 = static_cast<std::size_t>(partial1);
+      const auto param2 = static_cast<std::size_t>(partial2);
+
+      const auto resIdx = vecIdxFromSymMat<s_nPars>(param1, param2);
+      m_hessian[resIdx][time] = -(m_hessian[resIdx][bending] * b1
+                                + m_hessian[resIdx][nonBending] * b2).dot(globIsect) / globIsect.norm() / PhysicalConstants::c
+                                - m_gradient[param1][time] * m_gradient[param2][time];
+      // clang-format on
     }
   }
 }
