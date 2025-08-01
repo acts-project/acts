@@ -56,4 +56,18 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
   }
 }
 
+template <CompositeSpacePoint Point_t>
+void StrawLineFitAuxiliaries::updateFullResidual(
+    const Line_t& line, const double timeOffset, const Point_t& spacePoint,
+    const Acts::Transform3& locToGlob) {
+  /// Calculate first the time residual
+  updateSpatialResidual(line, spacePoint);
+  /// Then calculate the time of arrival
+  if (!spacePoint.isStraw()) {
+    updateTimeResidual(spacePoint.toNextSensor(), spacePoint.sensorDirection(),
+                       spacePoint.localPosition(), spacePoint.measuresLoc1(),
+                       spacePoint.time(), locToGlob, timeOffset);
+  }
+}
+
 }  // namespace Acts::Experimental::detail

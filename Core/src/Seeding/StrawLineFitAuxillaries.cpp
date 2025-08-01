@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
 namespace Acts::Experimental::detail {
 
 using Vector = StrawLineFitAuxiliaries::Vector;
@@ -488,4 +490,45 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   }
 }
 
+void StrawLineFitAuxiliaries::updateTimeResidual(
+    const Vector& sensorN, const Vector& sensorD, const Vector& stripPos,
+    const bool isBending, const double recordTime,
+    const Acts::Transform3& locToGlob, const double timeOffset) {
+  const Vector& b1 = isBending ? sensorN : sensorD;
+  const Vector& b2 = isBending ? sensorD : sensorN;
+
+  /// Reconstruct the intersection point on the plane
+  const Vector iSectStrip =
+      residual()[bending] * b1 + residual()[nonBending] * b2 + stripPos;
+  /// Transform the intersection into the global detctor frame
+  const Vector globIsect = locToGlob * iSectStrip;
+  /// Time of flight
+  const double ToF = globIsect.norm() / PhysicalConstants::c + timeOffset;
+
+  m_residual[time] = recordTime - ToF;
+  constexpr auto timeIdx = static_cast<std::uint8_t>(FitParIndex::t0);
+  for (const auto partial1 : m_cfg.parsToUse) {
+    if (partial1 == FitParIndex::t0) {
+      m_gradient[timeIdx] = -Vector::Unit(time);
+    } else {
+      Vector& gradR = m_gradient[static_cast<std::uint8_t>(partial1)];
+      gradR[time] =
+          -(gradR[bending] * b1 + gradR[nonBending] * b2).dot(globIsect) /
+          globIsect.norm() / PhysicalConstants::c;
+    }
+
+    if (!m_cfg.useHessian) {
+      continue;
+    }
+    for (const auto partial2 : m_cfg.parsToUse) {
+      if (partial2 > partial1 || partial2 == FitParIndex::t0) {
+        break;
+      }
+      const auto resIdx =
+          vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(partial1),
+                                    static_cast<std::size_t>(partial2));
+      Vector& hess = m_hessian[resIdx];
+    }
+  }
+}
 }  // namespace Acts::Experimental::detail

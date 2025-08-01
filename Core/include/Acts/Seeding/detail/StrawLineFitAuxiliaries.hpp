@@ -83,6 +83,11 @@ class StrawLineFitAuxiliaries {
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
   template <CompositeSpacePoint Point_t>
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
+  /// @brief
+  template <CompositeSpacePoint Point_t>
+  void updateFullResidual(const Line_t& line, const double timeOffset,
+                          const Point_t& spacePoint,
+                          const Acts::Transform3& locToGlob);
 
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
@@ -154,6 +159,12 @@ class StrawLineFitAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
+
+  void updateTimeResidual(const Vector& sensorN, const Vector& sensorD,
+                          const Vector& stripPos, const bool isBending,
+                          const double recordTime,
+                          const Acts::Transform3& locToGlob,
+                          const double timeOffset);
   /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
   Config m_cfg{};
