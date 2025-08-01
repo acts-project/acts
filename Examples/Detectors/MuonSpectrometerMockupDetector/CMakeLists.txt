@@ -15,11 +15,7 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
         set(link_libs ${link_libs} ActsPluginGeoModel GeoModelIO::GeoModelWrite)
     endif()
 
-    acts_add_library(
-        ExamplesMuonSpectrometerMockupDetector
-        SHARED
-        ${src_files}
-    )
+    acts_add_library(ExamplesMuonSpectrometerMockupDetector SHARED ${src_files})
 
     target_include_directories(
         ActsExamplesMuonSpectrometerMockupDetector
