@@ -18,7 +18,6 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
     acts_add_library(
         ExamplesMuonSpectrometerMockupDetector
         SHARED
-        src/MuonSpectrometerMockupDetector.cpp
         ${src_files}
     )
 
