@@ -29,7 +29,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cstddef>
 #include <memory>

@@ -16,7 +16,6 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::Experimental {
 
@@ -84,21 +83,21 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     std::vector<Vector2> path = generatePath(locPosition, locDirection);
 
     const auto& surfaces = m_volume.surfaces();
-    std::vector<const Surface*> surfCandidates = {};
-    surfCandidates.reserve(surfaces.size());
+    std::vector<const Surface*> surfaceCandidates;
+    surfaceCandidates.reserve(surfaces.size());
 
     for (const auto& pos : path) {
       std::vector<std::size_t> indices = m_indexedGrid.grid.atPosition(pos);
 
-      std::ranges::transform(indices, std::back_inserter(surfCandidates),
+      std::ranges::transform(indices, std::back_inserter(surfaceCandidates),
                              [&](const auto& i) { return &surfaces[i]; });
     }
 
     ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
-                 << surfCandidates.size() << " candidates");
+                 << surfaceCandidates.size() << " candidates");
 
     // fill the navigation stream with the container
-    for (const auto* surf : surfCandidates) {
+    for (const Surface* surf : surfaceCandidates) {
       stream.addSurfaceCandidate(*surf, args.tolerance);
     }
   }

@@ -24,10 +24,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <numbers>
@@ -473,7 +470,8 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         tryAllPortals());
 
     // Make a container representation out of it
-    std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
+    std::map<unsigned int, std::shared_ptr<Acts::Experimental::Portal>>
+        ipContainer;
     for (auto [ip, p] : enumerate(innerPipe->portalPtrs())) {
       ipContainer[ip] = p;
     }
@@ -527,7 +525,8 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
         tryAllPortals());
 
-    std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
+    std::map<unsigned int, std::shared_ptr<Acts::Experimental::Portal>>
+        necContainer;
     for (auto [ip, p] : enumerate(necVolume->portalPtrs())) {
       necContainer[ip] = p;
     }

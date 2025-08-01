@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
@@ -49,7 +50,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
     // However, if mean of all is on surface, we are happy as well
     if (averageOnSurface) {
-      const auto sIntersection =
+      const Intersection3D intersection =
           surface
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
@@ -58,7 +59,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
                   averageOnSurfaceTolerance)
               .closest();
 
-      if (sIntersection.status() == IntersectionStatus::onSurface) {
+      if (intersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(
             "MultiStepperSurfaceReached aborter | "
             "Reached target in average mode");
@@ -71,7 +72,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
       ACTS_VERBOSE(
           "MultiStepperSurfaceReached aborter | Average distance to target: "
-          << sIntersection.pathLength());
+          << intersection.pathLength());
     }
 
     bool reached = true;

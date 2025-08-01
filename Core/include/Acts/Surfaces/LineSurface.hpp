@@ -238,7 +238,7 @@ class LineSurface : public Surface {
   /// @param boundaryTolerance The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
   /// @return is the intersection object
-  SurfaceMultiIntersection intersect(
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =

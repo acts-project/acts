@@ -14,19 +14,12 @@
 #include "Acts/Detector/MultiWireStructureBuilder.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
-#include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <fstream>
 #include <memory>
 #include <numbers>
 #include <string>

@@ -8,13 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>

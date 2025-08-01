@@ -12,8 +12,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
-#include <algorithm>
-
 namespace Acts {
 
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
@@ -80,7 +78,7 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 
-  for (const auto* surface : sensitiveSurfaces) {
+  for (const Surface* surface : sensitiveSurfaces) {
     stream.addSurfaceCandidate(*surface, args.tolerance);
   };
 }
