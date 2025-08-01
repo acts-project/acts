@@ -119,10 +119,10 @@ void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi) {
 }
 void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos,
                                        Acts::Vector3&& sensorDir,
-                                       Acts::Vector3&& sensorNorm) {
+                                       Acts::Vector3&& toNextSensor) {
   m_pos = std::move(pos);
   m_dir = std::move(sensorDir);
-  m_toNext = std::move(sensorNorm);
+  m_toNext = std::move(toNextSensor);
   m_norm = m_dir.cross(m_toNext).normalized();
 }
 void MuonSpacePoint::setRadius(const double r) {
