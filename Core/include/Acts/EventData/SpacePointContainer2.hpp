@@ -82,7 +82,7 @@ class SpacePointContainer2 {
   using ConstProxy = ConstSpacePointProxy2;
 
   /// Constructs and empty space point container.
-  /// /// @param columns The columns to create in the container.
+  /// @param columns The columns to create in the container.
   explicit SpacePointContainer2(
       SpacePointColumns columns = SpacePointColumns::Default) noexcept;
 

@@ -312,7 +312,8 @@ void BroadTripletSeedFilter::filter1SpFixed(
                                     << top << "], quality=" << bestSeedQuality
                                     << ", vertexZ=" << zOrigin);
 
-    auto seed = outputCollection.createSeed(
+    auto seed = outputCollection.createSeed();
+    seed.assignSpacePointIndices(
         std::array<SpacePointIndex2, 3>{bottom, middle, top});
     seed.vertexZ() = zOrigin;
     seed.quality() = bestSeedQuality;
