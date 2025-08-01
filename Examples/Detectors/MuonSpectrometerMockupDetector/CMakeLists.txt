@@ -16,19 +16,19 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
     endif()
 endif()
 
-add_library(
-    Acts::ExamplesMuonSpectrometerMockupDetector
+acts_add_library(
+    ExamplesMuonSpectrometerMockupDetector
     SHARED
     src/MuonSpectrometerMockupDetector.cpp
     ${src_files}
 )
 
 target_include_directories(
-    Acts::ExamplesMuonSpectrometerMockupDetector
+    ActsExamplesMuonSpectrometerMockupDetector
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(
-    Acts::ExamplesMuonSpectrometerMockupDetector
+    ActsExamplesMuonSpectrometerMockupDetector
     PUBLIC ActsCore ActsExamplesFramework ${link_libs}
 )
 
