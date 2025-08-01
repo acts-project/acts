@@ -2,7 +2,7 @@ set(src_files)
 set(link_libs)
 if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
     if(ACTS_BUILD_EXAMPLES_GEANT4)
-        set(src_files ${src_files} src/GeoMuonMockupExperiment.cpp)
+        set(src_files ${src_files} src/MockupSectorBuilder.cpp)
         set(link_libs
             ${link_libs}
             ActsExamplesGeant4
@@ -11,10 +11,9 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
         )
     endif()
     if(ACTS_BUILD_PLUGIN_GEOMODEL)
-        set(src_files ${src_files} src/MockupSectorBuilder.cpp)
+        set(src_files ${src_files} src/GeoMuonMockupExperiment.cpp)
         set(link_libs ${link_libs} ActsPluginGeoModel GeoModelIO::GeoModelWrite)
     endif()
-endif()
 
 acts_add_library(
     ExamplesMuonSpectrometerMockupDetector
@@ -38,3 +37,4 @@ install(
     TARGETS ActsExamplesMuonSpectrometerMockupDetector
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+endif()
