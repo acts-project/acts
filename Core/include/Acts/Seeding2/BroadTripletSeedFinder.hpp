@@ -101,10 +101,10 @@ class BroadTripletSeedFinder {
 
     std::size_t size() const { return topSpacePoints.size(); }
 
-    void resize(std::size_t size) {
-      topSpacePoints.resize(size);
-      curvatures.resize(size);
-      impactParameters.resize(size);
+    void reserve(std::size_t size) {
+      topSpacePoints.reserve(size);
+      curvatures.reserve(size);
+      impactParameters.reserve(size);
     }
 
     void clear() {
