@@ -265,7 +265,7 @@ struct SurfaceData {
   float rot_xu = 0, rot_xv = 0, rot_xw = 0;
   float rot_yu = 0, rot_yv = 0, rot_yw = 0;
   float rot_zu = 0, rot_zv = 0, rot_zw = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the surface bounds object, determines the parameters filled
   int bounds_type = 0;
   float bound_param0 = -1.f;
   float bound_param1 = -1.f;
@@ -292,7 +292,7 @@ struct LayerVolumeData {
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
   std::uint32_t volume_id = 0, layer_id = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the volume object, determines the parameters filled
   int volume_type = 0;
   float min_v0 = -1.f;
   float max_v0 = -1.f;
@@ -364,6 +364,7 @@ struct SpacepointData {
 };
 
 struct TrackParameterData {
+  std::size_t trackId;
   double d0;
   double z0;
   double phi;
@@ -378,12 +379,12 @@ struct TrackParameterData {
   double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
   double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
 
-  DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
-                 var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
-                 cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop,
-                 cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
-                 cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
-                 cov_qopphi, cov_qoptheta);
+  DFE_NAMEDTUPLE(TrackParameterData, trackId, d0, z0, phi, theta, qop, var_d0,
+                 var_z0, var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
+                 cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
+                 cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop,
+                 cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop,
+                 cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta);
 };
 
 struct ProtoTrackData {
