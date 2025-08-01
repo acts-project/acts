@@ -85,6 +85,10 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   };
 }
 
+const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
+  return *m_surfaceArray;
+}
+
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
 }
