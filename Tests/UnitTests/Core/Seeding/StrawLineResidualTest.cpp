@@ -9,16 +9,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/CombinatorialSeedSolver.hpp"
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
+#include <random>
 
 using namespace Acts;
 using namespace Acts::detail;
 using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
+using RandomEngine = std::mt19937;
 
 using Line_t = StrawLineFitAuxiliaries::Line_t;
 using Config_t = StrawLineFitAuxiliaries::Config;
@@ -314,6 +318,103 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
                      makeDirectionFromPhiTheta(30. * 1_degree, 90. * 1_degree),
                      makeDirectionFromPhiTheta(60. * 1_degree, 90 * 1_degree),
                      TestSpacePoint::bothDirections});
+}
+
+BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
+  RandomEngine rndEngine{23568};
+  const std::size_t nStrips = 8;
+  const std::size_t nEvents = 100;
+
+  const std::array<Vector3, nStrips> stripDirections = {
+      Vector3::UnitX(),
+      Vector3::UnitX(),
+      makeDirectionFromPhiTheta(1.5 * 1_degree, 90. * 1_degree),
+      makeDirectionFromPhiTheta(-1.5 * 1_degree, 90. * 1_degree),
+      makeDirectionFromPhiTheta(1.5 * 1_degree, 90. * 1_degree),
+      makeDirectionFromPhiTheta(-1.5 * 1_degree, 90. * 1_degree),
+      Vector3::UnitX(),
+      Vector3::UnitX()};
+
+  constexpr std::array<double, nStrips> distancesZ{-20., -264., 0.,  300.,
+                                                   350,  370.,  400, 450.};
+
+  std::array<double, nStrips> parameters{};
+  std::array<Vector3, nStrips> intersections{};
+
+  // pseudo track initilization
+  Line_t line{};
+  Pars_t linePars{};
+  linePars[static_cast<std::size_t>(ParIdx::x0)] = 0. * 1_mm;
+  linePars[static_cast<std::size_t>(ParIdx::y0)] = 0. * 1_mm;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 0. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 0. * 1_degree;
+  line.updateParameters(linePars);
+
+  for (std::size_t i = 0; i < nEvents; i++) {
+    std::cout << "Processing Event: " << i << std::endl;
+    // update pseudo track parameters with random values
+    linePars[static_cast<double>(ParIdx::x0)] = rndEngine() % 1000 - 500.;
+    linePars[static_cast<double>(ParIdx::y0)] = rndEngine() % 1000 - 500.;
+    linePars[static_cast<double>(ParIdx::phi)] = (rndEngine() % 90) * 1_degree;
+    linePars[static_cast<double>(ParIdx::theta)] =
+        (rndEngine() % 90) * 1_degree;
+    line.updateParameters(linePars);
+
+    Vector3 muonPos = line.position();
+    Vector3 muonDir = line.direction();
+
+    std::array<std::unique_ptr<TestSpacePoint>, nStrips> spacePoints{};
+    for (std::size_t layer = 0; layer < nStrips; layer++) {
+      auto intersection = PlanarHelper::intersectPlane(
+          muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
+      intersections[layer] = intersection.position();
+      // where the hit is along the strip
+      auto alongStrip = PlanarHelper::intersectPlane(
+          intersections[layer], stripDirections[layer], Vector3::UnitX(), 0.);
+      parameters[layer] = alongStrip.pathLength();
+
+      Vector3 stripPos =
+          intersections[layer] + parameters[layer] * stripDirections[layer];
+
+      spacePoints[layer] = std::make_unique<TestSpacePoint>(
+          stripPos, stripDirections[layer], Vector3::UnitZ(),
+          TestSpacePoint::nonBendingDir);
+    }
+
+    // let's pick four strips on fours different layers
+    // check combinatorics
+    std::array<TestSpacePoint*, 4> seedSpacePoints = {};
+    for (unsigned int l = 0; l < distancesZ.size() - 3; ++l) {
+      seedSpacePoints[0] = spacePoints[l].get();
+      for (unsigned int k = l + 1; k < distancesZ.size() - 2; ++k) {
+        seedSpacePoints[1] = spacePoints[k].get();
+        for (unsigned int m = k + 1; m < distancesZ.size() - 1; ++m) {
+          seedSpacePoints[2] = spacePoints[m].get();
+          for (unsigned int n = m + 1; n < distancesZ.size(); ++n) {
+            seedSpacePoints[3] = spacePoints[n].get();
+
+            const SquareMatrix2 bMatrix =
+                CombinatorialSeedSolver::betaMatrix(seedSpacePoints);
+            if (std::abs(bMatrix.determinant()) <
+                std::numeric_limits<float>::epsilon()) {
+              std::cout
+                  << "Beta Matrix has zero determinant -skip the combination"
+                  << std::endl;
+              continue;
+            }
+            const std::array<double, 4> distsAlongStrip =
+                CombinatorialSeedSolver::defineParameters(bMatrix,
+                                                          seedSpacePoints);
+            const auto [seedPos, seedDir] =
+                CombinatorialSeedSolver::seedSolution(seedSpacePoints,
+                                                      distsAlongStrip);
+
+            // TO DO include the tests/ checks
+          }
+        }
+      }
+    }
+  }
 }
 
 }  // namespace Acts::Test
