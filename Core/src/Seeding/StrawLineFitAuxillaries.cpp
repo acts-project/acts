@@ -7,7 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
+///
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+
 namespace Acts::Experimental::detail {
 
 using Vector = StrawLineFitAuxiliaries::Vector;
@@ -17,6 +21,8 @@ double angle(const Vector& v1, const Vector& v2) {
   using namespace Acts::UnitLiterals;
   return std::acos(std::clamp(v1.dot(v2), -1., 1.)) / 1_degree;
 }
+constexpr double s_tolerance = 1.e-12;
+
 }  // namespace
 
 std::string StrawLineFitAuxiliaries::parName(const FitParIndex idx) {
@@ -69,6 +75,16 @@ void StrawLineFitAuxiliaries::reset() {
     }
   }
 }
+void StrawLineFitAuxiliaries::resetTime() {
+  constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
+  m_gradient[timeIdx].setZero();
+  if (m_cfg.useHessian) {
+    for (const auto partial : m_cfg.parsToUse) {
+      const auto partIdx = static_cast<std::size_t>(partial);
+      m_hessian[vecIdxFromSymMat<s_nPars>(partIdx, timeIdx)].setZero();
+    }
+  }
+}
 
 bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                                                   const Vector& hitMinSeg,
@@ -81,12 +97,12 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
                  << " is parallel to the measurement: " << toString(wireDir));
     return false;
   }
-  /** Distance from the segment line to the tube wire */
+  // Distance from the segment line to the tube wire
   const double lineDist = m_projDir.cross(wireDir).dot(hitMinSeg);
   const double resVal = lineDist - driftRadius;
   m_residual = resVal * Vector::Unit(bending);
 
-  /** Calculate the first derivative of the residual */
+  // Calculate the first derivative of the residual
   for (const auto partial : m_cfg.parsToUse) {
     const auto pIdx = static_cast<std::uint8_t>(partial);
     if (isDirectionParam(partial)) {
@@ -110,7 +126,7 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
     ACTS_VERBOSE("updateStrawResidual() - Skip Hessian calculation");
     return true;
   }
-  /** Loop to include the second order derivatvies */
+  // Loop to include the second order derivatvies
   for (const auto partial1 : m_cfg.parsToUse) {
     if (partial1 == FitParIndex::t0) {
       continue;
@@ -130,11 +146,13 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       const auto hIdx1 = static_cast<std::size_t>(partial1);
       const auto hIdx2 = static_cast<std::size_t>(partial2);
 
-      const std::size_t resIdx = vecIdxFromSymMat<s_nLinePars>(hIdx1, hIdx2);
+      const std::size_t projDirHess =
+          vecIdxFromSymMat<s_nLinePars>(hIdx1, hIdx2);
+      const std::size_t resIdx = vecIdxFromSymMat<s_nPars>(hIdx1, hIdx2);
       /// Pure angular derivatives of the residual
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
-        const double partialSqDist = m_hessianProjDir[resIdx].cross(wireDir).dot(hitMinSeg);
+        const double partialSqDist = m_hessianProjDir[projDirHess].cross(wireDir).dot(hitMinSeg);
         // clang-format on
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
       } else {
@@ -157,7 +175,6 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
   const Vector& lineDir = line.direction();
   /// Between two calls the wire projection has not changed
   const double wireProject = lineDir.dot(wireDir);
-  constexpr double s_tolerance = 1.e-12;
 
   if (false && std::abs(wireProject - m_wireProject) < s_tolerance) {
     ACTS_VERBOSE("Projection of the line matches the previous one."
@@ -176,14 +193,14 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
   }
   m_invProjDirLenSq = 1. / projDirLenSq;
   m_invProjDirLen = std::sqrt(m_invProjDirLenSq);
-  /// Project the segment line onto the wire plane and normalize
+  // Project the segment line onto the wire plane and normalize
   m_projDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
-  /// Loop over all configured parameters and calculate the partials
-  /// of the wire projection
+  // Loop over all configured parameters and calculate the partials
+  // of the wire projection
   for (auto partial : m_cfg.parsToUse) {
-    /// Skip the parameters that are not directional
+    // Skip the parameters that are not directional
     if (!isDirectionParam(partial)) {
-      continue;  // skip these parameters
+      continue;
     }
     const std::size_t pIdx = static_cast<std::size_t>(partial);
     const Vector& lGrad{line.gradient(static_cast<LineIndex>(partial))};
@@ -192,11 +209,13 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     m_gradProjDir[pIdx] = m_invProjDirLen * (lGrad - m_projDirLenPartial[pIdx] * wireDir) +
                            m_projDirLenPartial[pIdx] * m_wireProject * m_projDir * m_invProjDirLenSq;
     // clang-format on
+
+    // skip the Hessian calculation, if toggled
     if (!m_cfg.useHessian) {
-      continue;  // skip the Hessian calculation
+      continue;
     }
     for (auto partial1 : m_cfg.parsToUse) {
-      /// Skip the parameters that are not directional or avoid double counting
+      // Skip the parameters that are not directional or avoid double counting
       if (!isDirectionParam(partial1)) {
         continue;
       } else if (partial1 > partial) {
@@ -238,6 +257,7 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
   m_residual[nonBending] =
       m_invProjDirLenSq * (hitMinSeg.dot(line.direction()) * m_wireProject -
                            hitMinSeg.dot(wireDir));
+
   ACTS_VERBOSE("updateAlongTheStraw() - Residual is "
                << m_residual[nonBending]);
 
@@ -303,7 +323,7 @@ void StrawLineFitAuxiliaries::updateAlongTheStraw(const Line_t& line,
                                                              2. * m_residual[nonBending] * m_wireProject * projHess);
         // clang-format on
       } else {
-        /// Mixed positional and angular derivative
+        // Mixed positional and angular derivative
         const auto angParam = static_cast<LineIndex>(
             isDirectionParam(partial1) ? partial1 : partial2);
         const auto posParam = static_cast<LineIndex>(
@@ -486,6 +506,111 @@ void StrawLineFitAuxiliaries::updateStripResidual(
       }
     }
   }
+}
+
+void StrawLineFitAuxiliaries::updateTimeStripRes(
+    const Vector& sensorN, const Vector& sensorD, const Vector& stripPos,
+    const bool isBending, const double recordTime, const double timeOffset) {
+  const Vector& b1 = isBending ? sensorN : sensorD;
+  const Vector& b2 = isBending ? sensorD : sensorN;
+
+  auto positionInPlane = [this, &b1, &b2](const Vector& residVec) {
+    return b1 * residVec[bending] + b2 * residVec[nonBending];
+  };
+
+  /// Calculate the line intersection in the global frame
+  const Vector globIsect =
+      m_cfg.includeToF
+          ? m_cfg.localToGlobal * (positionInPlane(residual()) + stripPos)
+          : Vector::Zero();
+  /// To calculate the time of flight
+  const double globDist = globIsect.norm();
+  const double ToF = globDist / PhysicalConstants::c + timeOffset;
+  ACTS_VERBOSE("Global intersection point: "
+               << toString(globIsect) << " -> distance: " << globDist
+               << " -> time of flight takinig t0 into account: " << ToF);
+
+  m_residual[time] = recordTime - ToF;
+  constexpr auto timeIdx = static_cast<std::uint8_t>(FitParIndex::t0);
+
+  const double invDist = m_cfg.includeToF && globDist > s_tolerance
+                             ? PhysicalConstants::c / globDist
+                             : 0.;
+  for (const auto partial1 : m_cfg.parsToUse) {
+    if (partial1 == FitParIndex::t0) {
+      m_gradient[timeIdx] = -Vector::Unit(time);
+    }
+    /// Time component of the spatial residual needs to be updated
+    else if (m_cfg.includeToF) {
+      Vector& gradVec = m_gradient[static_cast<std::uint8_t>(partial1)];
+      gradVec[time] = -globIsect.dot(m_cfg.localToGlobal.linear() *
+                                     positionInPlane(gradVec)) *
+                      invDist;
+      ACTS_VERBOSE("Partial of the time residual  w.r.t. "
+                   << parName(partial1) << ": " << gradVec[time] << ".");
+    }
+  }
+
+  if (!m_cfg.useHessian || !m_cfg.includeToF) {
+    return;
+  }
+  for (const auto partial1 : m_cfg.parsToUse) {
+    for (const auto partial2 : m_cfg.parsToUse) {
+      if (partial2 > partial1) {
+        break;
+      }
+      // clang-format off
+      const auto param1 = static_cast<std::size_t>(partial1);
+      const auto param2 = static_cast<std::size_t>(partial2);
+      Vector& hessVec = m_hessian[vecIdxFromSymMat<s_nPars>(param1, param2)];
+      if (partial1 != FitParIndex::t0) {
+        hessVec[time] = -( globIsect.dot(m_cfg.localToGlobal.linear()*positionInPlane(hessVec))  +
+                           positionInPlane(gradient(partial1)).dot(positionInPlane(gradient(partial2)))) * invDist
+                        + m_gradient[param1][time] * m_gradient[param2][time] * invDist;
+        // clang-format on
+        ACTS_VERBOSE("Hessian of  the time residual  w.r.t. "
+                     << parName(partial1) << ", " << parName(partial2) << ": "
+                     << hessVec[time] << ".");
+      } else {
+        hessVec.setZero();
+      }
+    }
+  }
+}
+
+void StrawLineFitAuxiliaries::updateTimeStrawRes(
+    const Line_t& line, const Vector& strawPos, const Vector& strawDir,
+    const double driftR, const double driftV, const double driftA) {
+  using namespace Acts::detail::LineHelper;
+  // Calculate the point of closest approach
+  const Vector hitMinSeg = strawPos - line.position();
+
+  const auto closestApproach =
+      lineIntersect(strawPos, strawDir, line.position(), line.direction());
+  ACTS_INFO("Point of closest approach along line "
+            << toString(line.point(hitMinSeg.dot(m_projDir))));
+  //
+  const Vector globApproach =
+      (m_cfg.localToGlobal * closestApproach.position());
+  const double distance = globApproach.norm();
+  const double ToF = distance / PhysicalConstants::c;
+  const double dSign = driftR > 0. ? 1 : -1;
+  ACTS_VERBOSE("Distance from the global origin: "
+               << distance << " -> time of flight: " << ToF);
+  /// lambda =  <K_{i} | D > - <K_{i} | D> <D | W_{i})
+  ACTS_INFO("Drift radius: " << driftR << ", driftV: " << driftV
+                             << ", driftA: " << driftA);
+  for (const auto partial : m_cfg.parsToUse) {
+    const auto idx = static_cast<std::size_t>(partial);
+    const Vector3& lGrad = line.gradient(static_cast<LineIndex>(partial));
+    if (isPositionParam(partial)) {
+      const double part = -lGrad.dot(m_projDir);
+
+      m_gradient[idx][bending] -= part * dSign;
+    }
+  }
+  constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
+  m_gradient[timeIdx] = -dSign * driftV * Vector::Unit(time);
 }
 
 }  // namespace Acts::Experimental::detail

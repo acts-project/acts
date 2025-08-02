@@ -52,6 +52,10 @@ class StrawLineFitAuxiliaries {
   enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
   /// @brief Configuration object of the residual calculator
   struct Config {
+    /// @brief Transform to place the composite station frame inside the
+    ///        global experiment's frame. Needed for the time residual
+    ///        calculation with time of flight
+    Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
@@ -61,6 +65,9 @@ class StrawLineFitAuxiliaries {
     ///        shall be calculated if the space point does not measure both
     ///        spatial coordinates on the plane
     bool calcAlongStrip{true};
+    /// @brief  Include the time of flight assuming that the particle travels with the
+    ///         speed of light in the time residual calculations
+    bool includeToF{true};
     /// @brief List of fit parameters to which the partial derivative of the
     ///        residual shall be calculated
     std::vector<FitParIndex> parsToUse{FitParIndex::x0, FitParIndex::y0,
@@ -83,6 +90,17 @@ class StrawLineFitAuxiliaries {
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
   template <CompositeSpacePoint Point_t>
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
+  /// @brief Updates all residual components between the line and the passed measurement
+  ///        First the spatial components are calculated and then if the
+  ///        measurement also provides time information, the time residual & the
+  ///        derivatives are evaluated.
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param timeOffet: Value of the t0 fit parameter.
+  /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
+  template <CompositeSpacePoint Point_t>
+  void updateFullResidual(const Line_t& line, const double timeOffset,
+                          const Point_t& spacePoint, const double driftV = 0.,
+                          const double driftA = 0.);
 
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
@@ -154,8 +172,25 @@ class StrawLineFitAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
+  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
+  ///            which is given by the sensor normal
+  /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
+  ///            which is given by the sensor direction
+  /// @param stripPos: Position of the strip measurement
+  /// @param isBending: Flag toggling whether the precision direction is constrained
+  /// @param timeOffet: Value of the t0 fit parameter.
+  void updateTimeStripRes(const Vector& sensorN, const Vector& sensorD,
+                          const Vector& stripPos, const bool isBending,
+                          const double recordTime, const double timeOffset);
+
+  void updateTimeStrawRes(const Line_t& line, const Vector& strawPos,
+                          const Vector& strawDir, const double driftR,
+                          const double driftV, const double driftA);
   /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
+  /// @brief Resets the time residual and the partial derivatives
+  void resetTime();
   Config m_cfg{};
   std::unique_ptr<const Logger> m_logger{};
 

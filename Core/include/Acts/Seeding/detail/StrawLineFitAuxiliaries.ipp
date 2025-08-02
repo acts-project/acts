@@ -56,4 +56,31 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
   }
 }
 
+template <CompositeSpacePoint Point_t>
+void StrawLineFitAuxiliaries::updateFullResidual(const Line_t& line,
+                                                 const double timeOffset,
+                                                 const Point_t& spacePoint,
+                                                 const double driftV,
+                                                 const double driftA) {
+  /// Calculate first the spatial residual
+  updateSpatialResidual(line, spacePoint);
+
+  /// Calculate the time residual for strip-like measurements
+  if (!spacePoint.isStraw()) {
+    /// If the measurement does not provide time, then simply reset the time
+    /// partial components
+    if (!spacePoint.hasTime()) {
+      resetTime();
+      return;
+    }
+    updateTimeStripRes(spacePoint.toNextSensor(), spacePoint.sensorDirection(),
+                       spacePoint.localPosition(), spacePoint.measuresLoc1(),
+                       spacePoint.time(), timeOffset);
+  } else {
+    updateTimeStrawRes(line, spacePoint.localPosition(),
+                       spacePoint.sensorDirection(), spacePoint.driftRadius(),
+                       driftV, driftA);
+  }
+}
+
 }  // namespace Acts::Experimental::detail
