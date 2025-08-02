@@ -21,6 +21,8 @@ double angle(const Vector& v1, const Vector& v2) {
   using namespace Acts::UnitLiterals;
   return std::acos(std::clamp(v1.dot(v2), -1., 1.)) / 1_degree;
 }
+constexpr double s_tolerance = 1.e-12;
+
 }  // namespace
 
 std::string StrawLineFitAuxiliaries::parName(const FitParIndex idx) {
@@ -173,7 +175,6 @@ bool StrawLineFitAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
   const Vector& lineDir = line.direction();
   /// Between two calls the wire projection has not changed
   const double wireProject = lineDir.dot(wireDir);
-  constexpr double s_tolerance = 1.e-12;
 
   if (false && std::abs(wireProject - m_wireProject) < s_tolerance) {
     ACTS_VERBOSE("Projection of the line matches the previous one."
@@ -509,8 +510,7 @@ void StrawLineFitAuxiliaries::updateStripResidual(
 
 void StrawLineFitAuxiliaries::updateTimeStripRes(
     const Vector& sensorN, const Vector& sensorD, const Vector& stripPos,
-    const bool isBending, const double recordTime,
-    const Acts::Transform3& locToGlob, const double timeOffset) {
+    const bool isBending, const double recordTime, const double timeOffset) {
   const Vector& b1 = isBending ? sensorN : sensorD;
   const Vector& b2 = isBending ? sensorD : sensorN;
 
@@ -520,8 +520,9 @@ void StrawLineFitAuxiliaries::updateTimeStripRes(
 
   /// Calculate the line intersection in the global frame
   const Vector globIsect =
-      m_cfg.includeToF ? locToGlob * (positionInPlane(residual()) + stripPos)
-                       : Vector::Zero();
+      m_cfg.includeToF
+          ? m_cfg.localToGlobal * (positionInPlane(residual()) + stripPos)
+          : Vector::Zero();
   /// To calculate the time of flight
   const double globDist = globIsect.norm();
   const double ToF = globDist / PhysicalConstants::c + timeOffset;
@@ -532,8 +533,9 @@ void StrawLineFitAuxiliaries::updateTimeStripRes(
   m_residual[time] = recordTime - ToF;
   constexpr auto timeIdx = static_cast<std::uint8_t>(FitParIndex::t0);
 
-  const double invDist =
-      m_cfg.includeToF ? PhysicalConstants::c / globDist : 0.;
+  const double invDist = m_cfg.includeToF && globDist > s_tolerance
+                             ? PhysicalConstants::c / globDist
+                             : 0.;
   for (const auto partial1 : m_cfg.parsToUse) {
     if (partial1 == FitParIndex::t0) {
       m_gradient[timeIdx] = -Vector::Unit(time);
@@ -541,9 +543,9 @@ void StrawLineFitAuxiliaries::updateTimeStripRes(
     /// Time component of the spatial residual needs to be updated
     else if (m_cfg.includeToF) {
       Vector& gradVec = m_gradient[static_cast<std::uint8_t>(partial1)];
-      gradVec[time] =
-          -globIsect.dot(locToGlob.linear() * positionInPlane(gradVec)) *
-          invDist;
+      gradVec[time] = -globIsect.dot(m_cfg.localToGlobal.linear() *
+                                     positionInPlane(gradVec)) *
+                      invDist;
       ACTS_VERBOSE("Partial of the time residual  w.r.t. "
                    << parName(partial1) << ": " << gradVec[time] << ".");
     }
@@ -562,7 +564,7 @@ void StrawLineFitAuxiliaries::updateTimeStripRes(
       const auto param2 = static_cast<std::size_t>(partial2);
       Vector& hessVec = m_hessian[vecIdxFromSymMat<s_nPars>(param1, param2)];
       if (partial1 != FitParIndex::t0) {
-        hessVec[time] = -( globIsect.dot(locToGlob.linear()*positionInPlane(hessVec))  +
+        hessVec[time] = -( globIsect.dot(m_cfg.localToGlobal.linear()*positionInPlane(hessVec))  +
                            positionInPlane(gradient(partial1)).dot(positionInPlane(gradient(partial2)))) * invDist
                         + m_gradient[param1][time] * m_gradient[param2][time] * invDist;
         // clang-format on
@@ -578,26 +580,37 @@ void StrawLineFitAuxiliaries::updateTimeStripRes(
 
 void StrawLineFitAuxiliaries::updateTimeStrawRes(
     const Line_t& line, const Vector& strawPos, const Vector& strawDir,
-    const Acts::Transform3& locToGlob, const double driftR, const double driftV,
-    const double driftA) {
+    const double driftR, const double driftV, const double driftA) {
   using namespace Acts::detail::LineHelper;
   // Calculate the point of closest approach
+  const Vector hitMinSeg = strawPos - line.position();
+
   const auto closestApproach =
       lineIntersect(strawPos, strawDir, line.position(), line.direction());
-  ACTS_VERBOSE("Point of closest approach along line "
-               << toString(closestApproach.position()));
+  ACTS_INFO("Point of closest approach along line "
+            << toString(line.point(hitMinSeg.dot(m_projDir))));
   //
-  const Vector globApproach = (locToGlob * closestApproach.position());
+  const Vector globApproach =
+      (m_cfg.localToGlobal * closestApproach.position());
   const double distance = globApproach.norm();
   const double ToF = distance / PhysicalConstants::c;
   const double dSign = driftR > 0. ? 1 : -1;
   ACTS_VERBOSE("Distance from the global origin: "
                << distance << " -> time of flight: " << ToF);
+  /// lambda =  <K_{i} | D > - <K_{i} | D> <D | W_{i})
+  ACTS_INFO("Drift radius: " << driftR << ", driftV: " << driftV
+                             << ", driftA: " << driftA);
+  for (const auto partial : m_cfg.parsToUse) {
+    const auto idx = static_cast<std::size_t>(partial);
+    const Vector3& lGrad = line.gradient(static_cast<LineIndex>(partial));
+    if (isPositionParam(partial)) {
+      const double part = -lGrad.dot(m_projDir);
 
+      m_gradient[idx][bending] -= part * dSign;
+    }
+  }
   constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
   m_gradient[timeIdx] = -dSign * driftV * Vector::Unit(time);
-  m_hessian[vecIdxFromSymMat<s_nPars>(timeIdx, timeIdx)] =
-      -driftA * Vector::Unit(time);
 }
 
 }  // namespace Acts::Experimental::detail

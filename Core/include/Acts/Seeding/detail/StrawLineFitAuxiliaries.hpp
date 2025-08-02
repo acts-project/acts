@@ -52,6 +52,10 @@ class StrawLineFitAuxiliaries {
   enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
   /// @brief Configuration object of the residual calculator
   struct Config {
+    /// @brief Transform to place the composite station frame inside the
+    ///        global experiment's frame. Needed for the time residual
+    ///        calculation with time of flight
+    Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
@@ -93,13 +97,10 @@ class StrawLineFitAuxiliaries {
   /// @param line: Reference to the line to which the residual is calculated
   /// @param timeOffet: Value of the t0 fit parameter.
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
-  /// @param locToGlob: Transform aligning the composite space point frame within the global frame of the
-  ///                   experiment.
   template <CompositeSpacePoint Point_t>
-  void updateFullResidual(
-      const Line_t& line, const double timeOffset, const Point_t& spacePoint,
-      const Acts::Transform3& locToGlob = Acts::Transform3::Identity(),
-      const double driftV = 0., const double driftA = 0.);
+  void updateFullResidual(const Line_t& line, const double timeOffset,
+                          const Point_t& spacePoint, const double driftV = 0.,
+                          const double driftA = 0.);
 
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
@@ -178,20 +179,14 @@ class StrawLineFitAuxiliaries {
   ///            which is given by the sensor direction
   /// @param stripPos: Position of the strip measurement
   /// @param isBending: Flag toggling whether the precision direction is constrained
-  /// @param locToGlob: Transform aligning the composite space point frame within the global frame of the
-  ///                   experiment.
   /// @param timeOffet: Value of the t0 fit parameter.
   void updateTimeStripRes(const Vector& sensorN, const Vector& sensorD,
                           const Vector& stripPos, const bool isBending,
-                          const double recordTime,
-                          const Acts::Transform3& locToGlob,
-                          const double timeOffset);
+                          const double recordTime, const double timeOffset);
 
   void updateTimeStrawRes(const Line_t& line, const Vector& strawPos,
-                          const Vector& strawDir,
-                          const Acts::Transform3& locToGlob,
-                          const double driftR, const double driftV,
-                          const double driftA);
+                          const Vector& strawDir, const double driftR,
+                          const double driftV, const double driftA);
   /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
   /// @brief Resets the time residual and the partial derivatives
