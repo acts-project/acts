@@ -83,7 +83,15 @@ class StrawLineFitAuxiliaries {
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
   template <CompositeSpacePoint Point_t>
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
-  /// @brief
+  /// @brief Updates all residual components between the line and the passed measurement
+  ///        First the spatial components are calculated and then if the
+  ///        measurement also provides time information, the time residual & the
+  ///        derivatives are evaluated.
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param timeOffet: Value of the t0 fit parameter.
+  /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
+  /// @param locToGlob: Transform aligning the composite space point frame within the global frame of the
+  ///                   experiment.
   template <CompositeSpacePoint Point_t>
   void updateFullResidual(const Line_t& line, const double timeOffset,
                           const Point_t& spacePoint,
@@ -159,8 +167,17 @@ class StrawLineFitAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
-
-  void updateTimeResidual(const Vector& sensorN, const Vector& sensorD,
+  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
+  ///            which is given by the sensor normal
+  /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
+  ///            which is given by the sensor direction
+  /// @param stripPos: Position of the strip measurement
+  /// @param isBending: Flag toggling whether the precision direction is constrained
+  /// @param locToGlob: Transform aligning the composite space point frame within the global frame of the
+  ///                   experiment.
+  /// @param timeOffet: Value of the t0 fit parameter.
+  void updateTimeStripRes(const Vector& sensorN, const Vector& sensorD,
                           const Vector& stripPos, const bool isBending,
                           const double recordTime,
                           const Acts::Transform3& locToGlob,

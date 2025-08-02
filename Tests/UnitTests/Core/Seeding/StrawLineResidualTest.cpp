@@ -223,19 +223,11 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
                    tolerance);
     /// Next attempt to calculate the second derivative
     for (auto par1 : resCfg.parsToUse) {
-      lineParsUp = linePars;
-      lineParsDn = linePars;
-      lineParsUp[static_cast<std::size_t>(par1)] += h;
-      lineParsDn[static_cast<std::size_t>(par1)] -= h;
-
-      lineUp.updateParameters(lineParsUp);
-      lineDn.updateParameters(lineParsDn);
-
-      resCalcUp.updateSpatialResidual(lineUp, testPoint);
-      resCalcDn.updateSpatialResidual(lineDn, testPoint);
-
+      if (par1 > par) {
+        break;
+      }
       const Vector numDeriv1{
-          (resCalcUp.gradient(par) - resCalcDn.gradient(par)) / (2. * h)};
+          (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
       const Vector& analyticDeriv = resCalc.hessian(par, par1);
       std::cout << "Second deriv (" << StrawLineFitAuxiliaries::parName(par)
                 << ", " << StrawLineFitAuxiliaries::parName(par1)
@@ -260,8 +252,9 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   Line_t line{};
   line.updateParameters(linePars);
 
-  std::cout << "\n\n\nResidual test - Test line: " << toString(line.position())
-            << ", " << toString(line.direction()) << std::endl;
+  std::cout << "\n\n\nResidual test for line: " << toString(line.position())
+            << ", " << toString(line.direction()) << " with t0: " << timeT0
+            << "." << std::endl;
 
   StrawLineFitAuxiliaries resCalc{resCfg,
                                   Acts::getDefaultLogger("timeRes", logLvl)};
@@ -276,6 +269,10 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
 
   BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::time], sp.time() - ToF,
                     1.e-10);
+  std::cout << "Time of flight: " << ToF << ", measured time : " << sp.time()
+            << " --> residual: " << (sp.time() - ToF)
+            << " vs. from calculator: " << resCalc.residual()[ResidualIdx::time]
+            << "." << std::endl;
   constexpr double h = 5.e-9;
   constexpr double tolerance = 1.e-3;
 
@@ -311,20 +308,11 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
     for (const auto partial2 : resCfg.parsToUse) {
-      if (partial2 != ParIdx::t0) {
-        lineParsUp = linePars;
-        lineParsDn = linePars;
-        lineParsUp[static_cast<std::size_t>(partial2)] += h;
-        lineParsDn[static_cast<std::size_t>(partial2)] -= h;
+      if (partial2 > partial) {
+        break;
       }
-      lineUp.updateParameters(lineParsUp);
-      lineDn.updateParameters(lineParsDn);
-
-      resCalcUp.updateFullResidual(lineUp, timeT0, sp, locToGlob);
-      resCalcDn.updateFullResidual(lineDn, timeT0, sp, locToGlob);
-
       const Vector numDeriv1{
-          (resCalcUp.gradient(partial) - resCalcDn.gradient(partial)) /
+          (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
           (2. * h)};
       const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
       std::cout << "Second deriv (" << StrawLineFitAuxiliaries::parName(partial)
@@ -341,103 +329,128 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   using Pars_t = Line_t::ParamVector;
   using ParIdx = Line_t::ParIndex;
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 90. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 90._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45._degree;
 
   const Vector wireDir = Vector::UnitX();
   // /// Generate the first test measurement
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm});
   testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm});
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                     makeDirectionFromPhiTheta(10. * 1_degree, 30. * 1_degree),
-                     10. * 1_cm});
+               TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                              makeDirectionFromPhiTheta(10._degree, 30._degree),
+                              10._cm});
 
-  testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm, true});
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60._degree;
 
-  testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm});
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm});
 
-  testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm, true});
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 30. * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 30._degree;
 
-  testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm});
-  testResidual(linePars,
-               TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                              wireDir, 10. * 1_cm, true});
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm});
+  testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                                        wireDir, 10._cm, true});
 
   testResidual(
       linePars,
-      TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                     makeDirectionFromPhiTheta(20. * 1_degree, 30 * 1_degree),
-                     10. * 1_cm});
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{100. * 1_cm, 50. * 1_cm, 30. * 1_cm},
-                     makeDirectionFromPhiTheta(40. * 1_degree, 50 * 1_degree),
-                     10. * 1_cm, true});
+      TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                     makeDirectionFromPhiTheta(20._degree, 30_degree), 10._cm});
+  testResidual(linePars,
+               TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
+                              makeDirectionFromPhiTheta(40._degree, 50_degree),
+                              10._cm, true});
 }
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45 * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
 
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{75. * 1_cm, -75. * 1_cm, 100. * 1_cm},
-                     makeDirectionFromPhiTheta(90. * 1_degree, 90. * 1_degree),
-                     makeDirectionFromPhiTheta(0. * 1_degree, 90 * 1_degree),
-                     TestSpacePoint::bendingDir});
+  testResidual(linePars,
+               TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                              makeDirectionFromPhiTheta(90._degree, 90._degree),
+                              makeDirectionFromPhiTheta(0._degree, 90_degree),
+                              TestSpacePoint::bendingDir});
 
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{75. * 1_cm, -75. * 1_cm, 100. * 1_cm},
-                     makeDirectionFromPhiTheta(0. * 1_degree, 90. * 1_degree),
-                     makeDirectionFromPhiTheta(90. * 1_degree, 90 * 1_degree),
-                     TestSpacePoint::nonBendingDir});
+  testResidual(linePars,
+               TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                              makeDirectionFromPhiTheta(0._degree, 90._degree),
+                              makeDirectionFromPhiTheta(90._degree, 90_degree),
+                              TestSpacePoint::nonBendingDir});
 
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{75. * 1_cm, -75. * 1_cm, 100. * 1_cm},
-                     makeDirectionFromPhiTheta(90. * 1_degree, 90. * 1_degree),
-                     makeDirectionFromPhiTheta(0. * 1_degree, 90 * 1_degree),
-                     TestSpacePoint::bothDirections});
+  testResidual(linePars,
+               TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                              makeDirectionFromPhiTheta(90._degree, 90._degree),
+                              makeDirectionFromPhiTheta(0._degree, 90_degree),
+                              TestSpacePoint::bothDirections});
 
-  testResidual(
-      linePars,
-      TestSpacePoint{Vector{75. * 1_cm, -75. * 1_cm, 100. * 1_cm},
-                     makeDirectionFromPhiTheta(30. * 1_degree, 90. * 1_degree),
-                     makeDirectionFromPhiTheta(60. * 1_degree, 90 * 1_degree),
-                     TestSpacePoint::bothDirections});
+  testResidual(linePars,
+               TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                              makeDirectionFromPhiTheta(30._degree, 90._degree),
+                              makeDirectionFromPhiTheta(60._degree, 90_degree),
+                              TestSpacePoint::bothDirections});
 }
 
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45 * 1_degree;
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+
+  Acts::Transform3 locToGlob{Acts::Transform3::Identity()};
 
   timeStripResidualTest(
       linePars, 10.,
-      TestSpacePoint{Vector{75. * 1_cm, -75. * 1_cm, 100. * 1_cm},
-                     makeDirectionFromPhiTheta(30. * 1_degree, 90. * 1_degree),
-                     makeDirectionFromPhiTheta(60. * 1_degree, 90 * 1_degree),
-                     15},
-      Acts::Transform3::Identity());
+      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                     makeDirectionFromPhiTheta(30._degree, 90._degree),
+                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
+      locToGlob);
+
+  timeStripResidualTest(
+      linePars, 10.,
+      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
+                     makeDirectionFromPhiTheta(0_degree, 90_degree),
+                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
+      locToGlob);
+
+  locToGlob.translation() = Vector{75._cm, -75._cm, -35._cm};
+  timeStripResidualTest(
+      linePars, 10.,
+      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                     makeDirectionFromPhiTheta(30._degree, 90._degree),
+                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
+      locToGlob);
+
+  timeStripResidualTest(
+      linePars, 10.,
+      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
+                     makeDirectionFromPhiTheta(0_degree, 90_degree),
+                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
+      locToGlob);
+  locToGlob *= Acts::AngleAxis3{
+      30_degree, makeDirectionFromPhiTheta(30_degree, -45_degree)};
+  timeStripResidualTest(
+      linePars, 10.,
+      TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
+                     makeDirectionFromPhiTheta(30._degree, 90._degree),
+                     makeDirectionFromPhiTheta(60._degree, 90_degree), 15},
+      locToGlob);
+
+  timeStripResidualTest(
+      linePars, 10.,
+      TestSpacePoint{Vector{75._cm, -75_cm, 200_cm},
+                     makeDirectionFromPhiTheta(0_degree, 90_degree),
+                     makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
+      locToGlob);
 }
 
 }  // namespace Acts::Test

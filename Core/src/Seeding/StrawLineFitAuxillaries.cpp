@@ -132,11 +132,13 @@ bool StrawLineFitAuxiliaries::updateStrawResidual(const Line_t& line,
       const auto hIdx1 = static_cast<std::size_t>(partial1);
       const auto hIdx2 = static_cast<std::size_t>(partial2);
 
-      const std::size_t resIdx = vecIdxFromSymMat<s_nLinePars>(hIdx1, hIdx2);
+      const std::size_t projDirHess =
+          vecIdxFromSymMat<s_nLinePars>(hIdx1, hIdx2);
+      const std::size_t resIdx = vecIdxFromSymMat<s_nPars>(hIdx1, hIdx2);
       /// Pure angular derivatives of the residual
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
-        const double partialSqDist = m_hessianProjDir[resIdx].cross(wireDir).dot(hitMinSeg);
+        const double partialSqDist = m_hessianProjDir[projDirHess].cross(wireDir).dot(hitMinSeg);
         // clang-format on
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bending);
       } else {
@@ -490,31 +492,42 @@ void StrawLineFitAuxiliaries::updateStripResidual(
   }
 }
 
-void StrawLineFitAuxiliaries::updateTimeResidual(
+void StrawLineFitAuxiliaries::updateTimeStripRes(
     const Vector& sensorN, const Vector& sensorD, const Vector& stripPos,
     const bool isBending, const double recordTime,
     const Acts::Transform3& locToGlob, const double timeOffset) {
   const Vector& b1 = isBending ? sensorN : sensorD;
   const Vector& b2 = isBending ? sensorD : sensorN;
 
-  /// Reconstruct the intersection point on the plane
-  const Vector iSectStrip =
-      residual()[bending] * b1 + residual()[nonBending] * b2 + stripPos;
-  /// Transform the intersection into the global detctor frame
-  const Vector globIsect = locToGlob * iSectStrip;
-  /// Time of flight
-  const double ToF = globIsect.norm() / PhysicalConstants::c + timeOffset;
+  auto positionInPlane = [this, &b1, &b2](const Vector& residVec) {
+    return b1 * residVec[bending] + b2 * residVec[nonBending];
+  };
+
+  /// Calculate the line intersection in the global frame
+  const Vector globIsect = locToGlob * (positionInPlane(residual()) + stripPos);
+  /// To calculate the time of flight
+  const double globDist = globIsect.norm();
+  const double ToF = globDist / PhysicalConstants::c + timeOffset;
+  ACTS_VERBOSE("Global intersection point: "
+               << toString(globIsect) << " -> distance: " << globDist
+               << " -> time of flight takinig t0 into account: " << ToF);
 
   m_residual[time] = recordTime - ToF;
   constexpr auto timeIdx = static_cast<std::uint8_t>(FitParIndex::t0);
+
+  const double invDist = PhysicalConstants::c / globDist;
   for (const auto partial1 : m_cfg.parsToUse) {
     if (partial1 == FitParIndex::t0) {
       m_gradient[timeIdx] = -Vector::Unit(time);
-    } else {
-      Vector& gradR = m_gradient[static_cast<std::uint8_t>(partial1)];
-      gradR[time] =
-          -(gradR[bending] * b1 + gradR[nonBending] * b2).dot(globIsect) /
-          globIsect.norm() / PhysicalConstants::c;
+    }
+    /// Time component of the spatial residual needs to be updated
+    else {
+      Vector& gradVec = m_gradient[static_cast<std::uint8_t>(partial1)];
+      gradVec[time] =
+          -globIsect.dot(locToGlob.linear() * positionInPlane(gradVec)) *
+          invDist;
+      ACTS_VERBOSE("Partial of the time residual  w.r.t. "
+                   << parName(partial1) << ": " << gradVec[time] << ".");
     }
   }
 
@@ -529,11 +542,14 @@ void StrawLineFitAuxiliaries::updateTimeResidual(
       // clang-format off
       const auto param1 = static_cast<std::size_t>(partial1);
       const auto param2 = static_cast<std::size_t>(partial2);
+      if (partial1 != FitParIndex::t0) {
+        Vector& hessVec = m_hessian[vecIdxFromSymMat<s_nPars>(param1, param2)];
+        hessVec[time] = -( globIsect.dot(locToGlob.linear()*positionInPlane(hessVec))  +
+                           positionInPlane(gradient(partial1)).dot(positionInPlane(gradient(partial2)))) * invDist
+                        + m_gradient[param1][time] * m_gradient[param2][time] * invDist;
+        ACTS_VERBOSE("Hessian of  the time residual  w.r.t. "<<parName(partial1)<<", "<<parName(partial2)<<": "<<hessVec[time]<<".");
 
-      const auto resIdx = vecIdxFromSymMat<s_nPars>(param1, param2);
-      m_hessian[resIdx][time] = -(m_hessian[resIdx][bending] * b1
-                                + m_hessian[resIdx][nonBending] * b2).dot(globIsect) / globIsect.norm() / PhysicalConstants::c
-                                - m_gradient[param1][time] * m_gradient[param2][time];
+      }
       // clang-format on
     }
   }

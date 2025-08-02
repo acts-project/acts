@@ -60,11 +60,26 @@ template <CompositeSpacePoint Point_t>
 void StrawLineFitAuxiliaries::updateFullResidual(
     const Line_t& line, const double timeOffset, const Point_t& spacePoint,
     const Acts::Transform3& locToGlob) {
-  /// Calculate first the time residual
+  /// Calculate first the spatial residual
   updateSpatialResidual(line, spacePoint);
-  /// Then calculate the time of arrival
+
+  /// Calculate the time residual for strip-like measurements
   if (!spacePoint.isStraw()) {
-    updateTimeResidual(spacePoint.toNextSensor(), spacePoint.sensorDirection(),
+    /// If the measurement does not provide time, then simply reset the time
+    /// partial components
+    if (!spacePoint.hasTime()) {
+      constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
+      m_gradient[timeIdx].setZero();
+      if (!m_cfg.useHessian) {
+        return;
+      }
+      for (const auto partial : m_cfg.parsToUse) {
+        const auto partIdx = static_cast<std::size_t>(partial);
+        m_hessian[vecIdxFromSymMat<s_nPars>(partIdx, timeIdx)].setZero();
+      }
+      return;
+    }
+    updateTimeStripRes(spacePoint.toNextSensor(), spacePoint.sensorDirection(),
                        spacePoint.localPosition(), spacePoint.measuresLoc1(),
                        spacePoint.time(), locToGlob, timeOffset);
   }
