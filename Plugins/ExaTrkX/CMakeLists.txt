@@ -1,11 +1,12 @@
-add_library(
-    ActsPluginExaTrkX
+acts_add_library(
+    PluginExaTrkX
     SHARED
     src/ExaTrkXPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
     src/GraphStoreHook.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -69,7 +70,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginExaTrkX PUBLIC ActsCore Boost::boost)
+target_link_libraries(ActsPluginExaTrkX PUBLIC Acts::Core Boost::boost)
 
 target_link_libraries(ActsPluginExaTrkX PRIVATE std::filesystem)
 
@@ -118,10 +119,3 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         target_link_options(ActsPluginExaTrkX PUBLIC "-Wl,-no-as-needed")
     endif()
 endif()
-
-install(
-    TARGETS ActsPluginExaTrkX
-    EXPORT ActsPluginExaTrkXTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

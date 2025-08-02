@@ -52,15 +52,15 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
       path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
-    for (Index measurmentId : tracks[trackId]) {
-      const auto spr = findSpacePointForIndex(measurmentId, spacepoints);
+    for (Index measurementId : tracks[trackId]) {
+      const auto spr = findSpacePointForIndex(measurementId, spacepoints);
       if (spr == nullptr) {
-        ACTS_WARNING("Could not convert index " << measurmentId
+        ACTS_WARNING("Could not convert index " << measurementId
                                                 << " to spacepoint");
         continue;
       }
       const auto& sp = *spr;
-      writer.append({trackId, measurmentId, sp.x(), sp.y(), sp.z()});
+      writer.append({trackId, measurementId, sp.x(), sp.y(), sp.z()});
     }
   }
   return ActsExamples::ProcessCode::SUCCESS;
