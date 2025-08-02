@@ -61,6 +61,9 @@ class StrawLineFitAuxiliaries {
     ///        shall be calculated if the space point does not measure both
     ///        spatial coordinates on the plane
     bool calcAlongStrip{true};
+    /// @brief  Include the time of flight assuming that the particle travels with the
+    ///         speed of light in the time residual calculations
+    bool includeToF{true};
     /// @brief List of fit parameters to which the partial derivative of the
     ///        residual shall be calculated
     std::vector<FitParIndex> parsToUse{FitParIndex::x0, FitParIndex::y0,
@@ -93,9 +96,10 @@ class StrawLineFitAuxiliaries {
   /// @param locToGlob: Transform aligning the composite space point frame within the global frame of the
   ///                   experiment.
   template <CompositeSpacePoint Point_t>
-  void updateFullResidual(const Line_t& line, const double timeOffset,
-                          const Point_t& spacePoint,
-                          const Acts::Transform3& locToGlob);
+  void updateFullResidual(
+      const Line_t& line, const double timeOffset, const Point_t& spacePoint,
+      const Acts::Transform3& locToGlob = Acts::Transform3::Identity(),
+      const double driftV = 0., const double driftA = 0.);
 
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
@@ -182,8 +186,16 @@ class StrawLineFitAuxiliaries {
                           const double recordTime,
                           const Acts::Transform3& locToGlob,
                           const double timeOffset);
+
+  void updateTimeStrawRes(const Line_t& line, const Vector& strawPos,
+                          const Vector& strawDir,
+                          const Acts::Transform3& locToGlob,
+                          const double driftR, const double driftV,
+                          const double driftA);
   /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
+  /// @brief Resets the time residual and the partial derivatives
+  void resetTime();
   Config m_cfg{};
   std::unique_ptr<const Logger> m_logger{};
 

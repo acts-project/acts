@@ -452,6 +452,58 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
                      makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
       locToGlob);
 }
+BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
+  using namespace Acts::detail::LineHelper;
+  Pars_t linePars{};
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = -90_degree;
+  linePars[static_cast<std::size_t>(ParIdx::x0)] = 50_cm;
+  linePars[static_cast<std::size_t>(ParIdx::y0)] = 50_cm;
+  Line_t line1{};
+  line1.updateParameters(linePars);
+
+  std::cout << "Line 1: " << toString(line1.position()) << ", "
+            << toString(line1.direction()) << std::endl;
+
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 150._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+  linePars[static_cast<std::size_t>(ParIdx::y0)] = -75_cm;
+  linePars[static_cast<std::size_t>(ParIdx::x0)] = -50_cm;
+
+  Line_t line2{};
+  line2.updateParameters(linePars);
+  std::cout << "Line 2: " << toString(line2.position()) << ", "
+            << toString(line2.direction()) << std::endl;
+  std::cout << "angle: "
+            << (std::acos(line2.direction().dot(line1.direction())) / 1_degree)
+            << std::endl;
+  auto isectP1 = lineIntersect(line1.position(), line1.direction(),
+                               line2.position(), line2.direction());
+  auto isectP2 = lineIntersect(line2.position(), line2.direction(),
+                               line1.position(), line1.direction());
+
+  std::cout << toString(isectP1.position()) << ", "
+            << toString(isectP2.position()) << std::endl;
+
+  const Vector K = line1.position() - line2.position();
+  const Vector D =
+      (line2.direction() -
+       line1.direction().dot(line2.direction()) * line1.direction())
+          .normalized();
+  const Vector C = K.cross(D);
+
+  std::cout << std::abs(signedDistance(line1.position(), line1.direction(),
+                                       line2.position(), line2.direction()))
+            << ", " << (isectP1.position() - isectP2.position()).norm()
+            << std::endl;
+
+  std::cout << "Test: "
+            << toString(isectP1.position() +
+                        C.dot(line2.direction()) * line2.direction())
+            << std::endl;
+
+  std::exit(1);
+}
 
 }  // namespace Acts::Test
 BOOST_AUTO_TEST_SUITE_END()
