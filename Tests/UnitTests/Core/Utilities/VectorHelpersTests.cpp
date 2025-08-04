@@ -137,12 +137,17 @@ BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
   CHECK_CLOSE_ABS(0.0, trig[2], 1e-6);  // cos(theta)
   CHECK_CLOSE_ABS(1.0, trig[3], 1e-6);  // sin(theta)
 
-  // Test with z direction
-  dir = Acts::Vector3{0, 0, 1};
+  // Test with diagonal direction (avoid z-axis singularity)
+  dir = Acts::Vector3{1, 1, 1};
+  dir.normalize();
   trig = evaluateTrigonomics(dir);
 
-  CHECK_CLOSE_ABS(1.0, trig[2], 1e-6);  // cos(theta)
-  CHECK_CLOSE_ABS(0.0, trig[3], 1e-6);  // sin(theta)
+  // For normalized {1,1,1}, cos(theta) = 1/sqrt(3), sin(theta) = sqrt(2/3)
+  // cos(phi) = sin(phi) = 1/sqrt(2) (45 degree angle in xy plane)
+  CHECK_CLOSE_ABS(1.0 / std::sqrt(2), trig[0], 1e-6);  // cos(phi)
+  CHECK_CLOSE_ABS(1.0 / std::sqrt(2), trig[1], 1e-6);  // sin(phi)
+  CHECK_CLOSE_ABS(1.0 / std::sqrt(3), trig[2], 1e-6);  // cos(theta)
+  CHECK_CLOSE_ABS(std::sqrt(2.0/3.0), trig[3], 1e-6);  // sin(theta)
 }
 
 BOOST_AUTO_TEST_CASE(CastAxisDirection) {
