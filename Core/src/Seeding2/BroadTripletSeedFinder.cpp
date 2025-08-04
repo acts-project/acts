@@ -14,11 +14,7 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <numeric>
-
-#include <Eigen/src/Core/Matrix.h>
-
-using namespace Acts::UnitLiterals;
+#include <Eigen/Dense>
 
 namespace Acts::Experimental {
 
@@ -82,49 +78,34 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
 /// @param topDoublets Top doublets to be used for triplet creation
 /// @param tripletTopCandidates Cache for triplet top candidates
 /// @param candidatesCollector Collector for candidates for middle space points
-void createTriplets(
+void createPixelTriplets(
     BroadTripletSeedFinder::TripletCache& cache,
     const BroadTripletSeedFinder::DerivedTripletCuts& cuts, float rMaxSeedConf,
     const BroadTripletSeedFilter& filter,
     BroadTripletSeedFilter::State& filterState,
     BroadTripletSeedFilter::Cache& filterCache,
     const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-    const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
-    const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
+    const DoubletsForMiddleSp& bottomDoublets,
+    const DoubletsForMiddleSp& topDoublets,
     BroadTripletSeedFinder::TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.r();
   const float varianceRM = spM.varianceR();
   const float varianceZM = spM.varianceZ();
 
-  // make index vectors for sorting
-  cache.sortedBottoms.resize(bottomDoublets.size());
-  std::iota(cache.sortedBottoms.begin(), cache.sortedBottoms.end(), 0);
-  std::ranges::sort(cache.sortedBottoms, {},
-                    [&bottomDoublets](const std::size_t s) {
-                      return bottomDoublets.cotTheta[s];
-                    });
-
-  cache.sortedTops.resize(topDoublets.size());
-  std::iota(cache.sortedTops.begin(), cache.sortedTops.end(), 0);
-  std::ranges::sort(cache.sortedTops, {}, [&topDoublets](const std::size_t s) {
-    return topDoublets.cotTheta[s];
-  });
-
   // Reserve enough space, in case current capacity is too little
   tripletTopCandidates.resize(topDoublets.size());
 
   std::size_t t0 = 0;
 
-  for (const std::size_t b : cache.sortedBottoms) {
+  for (auto bottomDoublet : bottomDoublets.subset(cache.sortedBottoms)) {
     // break if we reached the last top SP
     if (t0 >= topDoublets.size()) {
       break;
     }
 
-    const ConstSpacePointProxy2 spB =
-        spacePoints[bottomDoublets.spacePoints[b]];
-    const LinCircle& lb = bottomDoublets.linCircles[b];
+    const ConstSpacePointProxy2 spB = spacePoints[bottomDoublet.spacePoint()];
+    const LinCircle& lb = bottomDoublet.linCircle();
 
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
@@ -160,11 +141,10 @@ void createTriplets(
       minCompatibleTopSPs++;
     }
 
-    for (std::size_t indexSortedTop = t0; indexSortedTop < topDoublets.size();
-         ++indexSortedTop) {
-      const std::size_t t = cache.sortedTops[indexSortedTop];
-      const ConstSpacePointProxy2 spT = spacePoints[topDoublets.spacePoints[t]];
-      const LinCircle& lt = topDoublets.linCircles[t];
+    for (auto topDoublet : topDoublets.subset(std::span(
+             cache.sortedTops.begin() + t0, cache.sortedTops.end()))) {
+      const ConstSpacePointProxy2 spT = spacePoints[topDoublet.spacePoint()];
+      const LinCircle& lt = topDoublet.linCircle();
       float cotThetaT = lt.cotTheta;
 
       // use geometric average
@@ -199,7 +179,7 @@ void createTriplets(
         if (cotThetaB < cotThetaT) {
           break;
         }
-        t0 = indexSortedTop + 1;
+        t0 = topDoublet.index() + 1;
         continue;
       }
 
@@ -247,7 +227,7 @@ void createTriplets(
         if (cotThetaB < cotThetaT) {
           break;
         }
-        t0 = indexSortedTop;
+        t0 = topDoublet.index();
         continue;
       }
 
@@ -296,8 +276,8 @@ void createStripTriplets(
     BroadTripletSeedFilter::State& filterState,
     BroadTripletSeedFilter::Cache& filterCache,
     const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-    const DoubletSeedFinder::DoubletsForMiddleSp& bottomDoublets,
-    const DoubletSeedFinder::DoubletsForMiddleSp& topDoublets,
+    const DoubletsForMiddleSp& bottomDoublets,
+    const DoubletsForMiddleSp& topDoublets,
     BroadTripletSeedFinder::TripletTopCandidates& tripletTopCandidates,
     CandidatesForMiddleSp2& candidatesCollector) {
   const float rM = spM.r();
@@ -309,10 +289,9 @@ void createStripTriplets(
   // Reserve enough space, in case current capacity is too little
   tripletTopCandidates.resize(topDoublets.size());
 
-  for (std::size_t b = 0; b < bottomDoublets.size(); ++b) {
-    const ConstSpacePointProxy2 spB =
-        spacePoints[bottomDoublets.spacePoints[b]];
-    const LinCircle& lb = bottomDoublets.linCircles[b];
+  for (auto bottomDoublet : bottomDoublets) {
+    const ConstSpacePointProxy2 spB = spacePoints[bottomDoublet.spacePoint()];
+    const LinCircle& lb = bottomDoublet.linCircle();
 
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
@@ -356,9 +335,9 @@ void createStripTriplets(
       minCompatibleTopSPs++;
     }
 
-    for (std::size_t t = 0; t < topDoublets.size(); ++t) {
-      const ConstSpacePointProxy2 spT = spacePoints[topDoublets.spacePoints[t]];
-      const LinCircle& lt = topDoublets.linCircles[t];
+    for (const auto& topDoublet : topDoublets) {
+      const ConstSpacePointProxy2 spT = spacePoints[topDoublet.spacePoint()];
+      const LinCircle& lt = topDoublet.linCircle();
 
       // protects against division by 0
       float dU = lt.U - Ub;
@@ -545,8 +524,7 @@ void createSeedsFromGroupsImpl(
     SpacePointCollections& bottomSpGroups,
     const ConstSpacePointProxy2& middleSp, SpacePointCollections& topSpGroups,
     SeedContainer2& outputSeeds) {
-  DoubletSeedFinder::MiddleSpInfo middleSpInfo =
-      DoubletSeedFinder::computeMiddleSpInfo(middleSp);
+  MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
   // create middle-top doublets
   cache.topDoublets.clear();
@@ -615,10 +593,15 @@ void createSeedsFromGroupsImpl(
                         cache.bottomDoublets, cache.topDoublets,
                         cache.tripletTopCandidates, cache.candidatesCollector);
   } else {
-    createTriplets(cache.tripletCache, tripletCuts, rMaxSeedConf, filter,
-                   state.filter, cache.filter, spacePoints, middleSp,
-                   cache.bottomDoublets, cache.topDoublets,
-                   cache.tripletTopCandidates, cache.candidatesCollector);
+    cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
+                                        cache.tripletCache.sortedBottoms);
+    cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
+                                     cache.tripletCache.sortedTops);
+
+    createPixelTriplets(cache.tripletCache, tripletCuts, rMaxSeedConf, filter,
+                        state.filter, cache.filter, spacePoints, middleSp,
+                        cache.bottomDoublets, cache.topDoublets,
+                        cache.tripletTopCandidates, cache.candidatesCollector);
   }
 
   // retrieve all candidates
@@ -636,6 +619,8 @@ void createSeedsFromGroupsImpl(
 BroadTripletSeedFinder::DerivedTripletCuts::DerivedTripletCuts(
     const TripletCuts& cuts, float bFieldInZ_)
     : TripletCuts(cuts), bFieldInZ(bFieldInZ_) {
+  using namespace Acts::UnitLiterals;
+
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
     const double xOverX0 = radLengthPerSeed;

@@ -16,7 +16,6 @@
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cstdint>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -90,8 +89,8 @@ class BroadTripletSeedFinder {
   };
 
   struct TripletCache {
-    std::vector<std::uint32_t> sortedBottoms;
-    std::vector<std::uint32_t> sortedTops;
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
+    std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
   };
 
   struct TripletTopCandidates {
@@ -122,8 +121,8 @@ class BroadTripletSeedFinder {
   };
 
   struct Cache {
-    DoubletSeedFinder::DoubletsForMiddleSp bottomDoublets;
-    DoubletSeedFinder::DoubletsForMiddleSp topDoublets;
+    DoubletsForMiddleSp bottomDoublets;
+    DoubletsForMiddleSp topDoublets;
 
     TripletCache tripletCache;
     TripletTopCandidates tripletTopCandidates;
