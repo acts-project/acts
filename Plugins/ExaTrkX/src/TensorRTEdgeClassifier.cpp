@@ -106,8 +106,6 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
              << (totalMem - freeMem) * 1e-9 << " / " << totalMem * 1e-9
              << " GB");
 
-  m_count.emplace(m_contexts.size());
-
   if (m_engine->getNbOptimizationProfiles() > 1) {
     ACTS_WARNING("Cannot handle more then one optimization profile for now");
   }
