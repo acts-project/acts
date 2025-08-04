@@ -12,6 +12,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <span>
+#include <stdexcept>
 
 namespace Acts {
 
