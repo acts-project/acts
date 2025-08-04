@@ -106,7 +106,7 @@ class Table {
     }
     result += "\n";
 
-    // Build separator row 
+    // Build separator row
     result += "|";
     for (std::size_t i = 0; i < m_columns.size(); ++i) {
       std::size_t contentWidth = m_columns[i].width;
@@ -141,6 +141,11 @@ class Table {
     }
 
     return result;
+  }
+
+  /// Stream output operator for Table
+  friend std::ostream& operator<<(std::ostream& os, const Table& table) {
+    return os << table.toString();
   }
 
  private:
@@ -180,10 +185,5 @@ class Table {
   std::vector<std::vector<std::string>> m_rows;
   bool m_includeMarkdownMarkers = true;
 };
-
-/// Stream output operator for Table
-inline std::ostream& operator<<(std::ostream& os, const Table& table) {
-  return os << table.toString();
-}
 
 }  // namespace Acts
