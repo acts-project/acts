@@ -231,8 +231,8 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
 }
 
 void testSeed(const std::array<TestSpacePoint*, 4>& spacePoints,
-              const std::array<double, 4>& truthDistances, Vector3& truthPosZ0,
-              Vector3& truthDir) {
+              const std::array<double, 4>& truthDistances, const Vector3& truthPosZ0,
+              const Vector3& truthDir) {
   const SquareMatrix2 bMatrix =
       CombinatorialSeedSolver::betaMatrix(spacePoints);
   if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
@@ -357,15 +357,19 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   RandomEngine rndEngine{23568};
   const std::size_t nStrips = 8;
-  const std::size_t nEvents = 1;
+  const std::size_t nEvents = 100;
+  constexpr auto x0_idx = static_cast<std::size_t>(ParIdx::x0);
+  constexpr auto y0_idx = static_cast<std::size_t>(ParIdx::y0);
+  constexpr auto phi_idx = static_cast<std::size_t>(ParIdx::phi);
+  constexpr auto theta_idx = static_cast<std::size_t>(ParIdx::theta);
 
   const std::array<Vector3, nStrips> stripDirections = {
       Vector3::UnitX(),
       Vector3::UnitX(),
-      makeDirectionFromPhiTheta(1.5 * 1_degree, 90. * 1_degree),
-      makeDirectionFromPhiTheta(-1.5 * 1_degree, 90. * 1_degree),
-      makeDirectionFromPhiTheta(1.5 * 1_degree, 90. * 1_degree),
-      makeDirectionFromPhiTheta(-1.5 * 1_degree, 90. * 1_degree),
+      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
       Vector3::UnitX(),
       Vector3::UnitX()};
 
@@ -378,20 +382,20 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   // pseudo track initilization
   Line_t line{};
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::x0)] = 0. * 1_mm;
-  linePars[static_cast<std::size_t>(ParIdx::y0)] = 0. * 1_mm;
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 0. * 1_degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 0. * 1_degree;
+  linePars[x0_idx] = 0. * 1_mm;
+  linePars[y0_idx] = 0. * 1_mm;
+  linePars[phi_idx] = 0. * 1_degree;
+  linePars[theta_idx] = 0. * 1_degree;
   line.updateParameters(linePars);
 
   for (std::size_t i = 0; i < nEvents; i++) {
     std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
               << std::endl;
     // update pseudo track parameters with random values
-    linePars[static_cast<double>(ParIdx::x0)] = rndEngine() % 1000 - 500.;
-    linePars[static_cast<double>(ParIdx::y0)] = rndEngine() % 1000 - 500.;
-    linePars[static_cast<double>(ParIdx::phi)] = (rndEngine() % 90) * 1_degree;
-    linePars[static_cast<double>(ParIdx::theta)] =
+    linePars[x0_idx] = rndEngine() % 1000 - 500.;
+    linePars[y0_idx] = rndEngine() % 1000 - 500.;
+    linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
+    linePars[theta_idx] =
         (rndEngine() % 90) * 1_degree;
     line.updateParameters(linePars);
 
@@ -434,7 +438,6 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
 
             testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
 
-            // TO DO include the tests/ checks
           }
         }
       }
