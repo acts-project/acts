@@ -12,7 +12,6 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Utilities/ContainerIterator.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
 
@@ -137,6 +136,8 @@ class TripletSeedFinder {
 
   explicit TripletSeedFinder(const DerivedConfig& config);
 
+  const DerivedConfig& config() const { return m_impl->config(); }
+
   /// Create triplets from the bottom, middle, and top space points.
   ///
   /// @param spacePoints Space point container
@@ -148,7 +149,7 @@ class TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Range& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) {
+      TripletTopCandidates& tripletTopCandidates) const {
     m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                        topDoublets, tripletTopCandidates);
   }
@@ -164,7 +165,7 @@ class TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) {
+      TripletTopCandidates& tripletTopCandidates) const {
     m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                        topDoublets, tripletTopCandidates);
   }
@@ -180,7 +181,7 @@ class TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) {
+      TripletTopCandidates& tripletTopCandidates) const {
     m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                        topDoublets, tripletTopCandidates);
   }

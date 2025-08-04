@@ -16,6 +16,7 @@
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
+#include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -209,10 +210,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     return {minRange, maxRange};
   }();
 
-  Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
-  finderOptions.bFieldInZ = m_cfg.bFieldInZ;
-  finderOptions.spacePointsSortedByRadius = true;
-
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
@@ -249,16 +246,19 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
-  Acts::Experimental::BroadTripletSeedFinder::TripletCuts tripletCuts;
-  tripletCuts.minPt = m_cfg.minPt;
-  tripletCuts.sigmaScattering = m_cfg.sigmaScattering;
-  tripletCuts.radLengthPerSeed = m_cfg.radLengthPerSeed;
-  tripletCuts.maxPtScattering = m_cfg.maxPtScattering;
-  tripletCuts.impactMax = m_cfg.impactMax;
-  tripletCuts.helixCutTolerance = m_cfg.helixCutTolerance;
-  tripletCuts.toleranceParam = m_cfg.toleranceParam;
-  Acts::Experimental::BroadTripletSeedFinder::DerivedTripletCuts
-      derivedTripletCuts(tripletCuts, m_cfg.bFieldInZ);
+  Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
+  tripletFinderConfig.minPt = m_cfg.minPt;
+  tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
+  tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
+  tripletFinderConfig.maxPtScattering = m_cfg.maxPtScattering;
+  tripletFinderConfig.impactMax = m_cfg.impactMax;
+  tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
+  tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
+  tripletFinderConfig.useStripInfo = false;
+  tripletFinderConfig.sortedByCotTheta = true;
+  Acts::Experimental::TripletSeedFinder tripletFinder(
+      Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
+                                                           m_cfg.bFieldInZ));
 
   // variable middle SP radial region of interest
   Acts::Range1D<float> rMiddleSpRange = {
@@ -308,9 +308,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.second << "]");
 
     m_seedFinder->createSeedsFromGroups(
-        finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
-        derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSpRanges,
-        *middleSpRange, topSpRanges, radiusRangeForMiddle, seeds);
+        state, cache, bottomDoubletFinder, topDoubletFinder, tripletFinder,
+        *m_seedFilter, coreSpacePoints, bottomSpRanges, *middleSpRange,
+        topSpRanges, radiusRangeForMiddle, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

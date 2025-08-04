@@ -102,6 +102,7 @@ class DoubletsForMiddleSp {
     using Base::Base;
   };
 
+  Range range() const noexcept { return Range(*this, {0, size()}); }
   Range range(const IndexRange& range) const noexcept {
     return Range(*this, range);
   }
