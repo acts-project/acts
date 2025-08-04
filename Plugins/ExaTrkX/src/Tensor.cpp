@@ -214,8 +214,7 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 #else
     throw std::runtime_error(
         "Cannot apply edge limit to CUDA tensors, library was not compiled "
-        "with "
-        "CUDA");
+        "with CUDA");
 #endif
   }
 
