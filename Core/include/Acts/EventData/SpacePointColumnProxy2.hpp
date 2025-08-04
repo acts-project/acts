@@ -134,7 +134,13 @@ class SpacePointColumnProxy {
     return data()[index];
   }
 
-  using Subset = ContainerSubset<Column, Value, Index, ReadOnly>;
+  class Subset
+      : public ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
+   public:
+    using Base = ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
+
+    using Base::Base;
+  };
 
   Subset subset(const IndexSubset &subset) const noexcept {
     return Subset(*m_column, subset);
