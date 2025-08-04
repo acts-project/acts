@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
+    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -272,6 +272,7 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
+    stripGeoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
@@ -286,6 +287,9 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
+    adaptiveHoughTransformConfig: Optional[
+        acts.examples.AdaptiveHoughTransformSeeder.Config
+    ] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -312,6 +316,8 @@ def addSeeding(
     field : magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
+    stripGeoSelectionConfigFile : Path|str, path, None
+        Json file for space point geometry selection in strips. Needed for SpacePoint making.
     seedingAlgorithm : SeedingAlgorithm, Default
         seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
     trackSmearingSigmas : TrackSmearingSigmas(loc0, loc0PtA, loc0PtB, loc1, loc1PtA, loc1PtB, time, phi, theta, ptRel)
@@ -377,7 +383,11 @@ def addSeeding(
         )
     else:
         spacePoints = addSpacePointsMaking(
-            s, trackingGeometry, geoSelectionConfigFile, logLevel
+            s,
+            trackingGeometry,
+            geoSelectionConfigFile,
+            stripGeoSelectionConfigFile,
+            logLevel,
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
@@ -431,6 +441,24 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
+        elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
+            logger.info("Using Adaptive Hough Transform seeding")
+            adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
+            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
+            adaptiveHoughTransformConfig.outputSeeds = "seeds"
+            adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
+            adaptiveHoughTransformConfig.threshold = 4
+            adaptiveHoughTransformConfig.noiseThreshold = 12
+            adaptiveHoughTransformConfig.phiMinBinSize = 3.14 / (2.0 * 257.0)
+            adaptiveHoughTransformConfig.qOverPtMinBinSize = 1.1 / (2.0 * 257.0)
+            adaptiveHoughTransformConfig.qOverPtMin = 1.1
+            adaptiveHoughTransformConfig.doSecondPhase = True
+            adaptiveHoughTransformConfig.zMinBinSize = 1 * u.mm
+            adaptiveHoughTransformConfig.cotThetaMinBinSize = 0.1
+            adaptiveHoughTransformConfig.deduplicate = True
+            seeds = addAdaptiveHoughTransformSeeding(
+                s, adaptiveHoughTransformConfig, logLevel=logLevel
+            )
         elif seedingAlgorithm == SeedingAlgorithm.Gbts:
             logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
@@ -649,6 +677,7 @@ def addSpacePointsMaking(
     sequence: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geoSelectionConfigFile: Union[Path, str],
+    stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
 ):
     """adds space points making
@@ -662,6 +691,11 @@ def addSpacePointsMaking(
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
+        ),
+        stripGeometrySelection=(
+            acts.examples.readJsonGeometryList(str(stripGeoSelectionConfigFile))
+            if stripGeoSelectionConfigFile
+            else []
         ),
     )
     sequence.addAlgorithm(spAlg)
@@ -1209,6 +1243,23 @@ def addHoughTransformSeeding(
     sequence.addAlgorithm(ht)
     # potentially HT can be extended to also produce seeds, but it is not implemented yet
     # configuration option (outputSeeds) exists
+    return ht.config.outputSeeds
+
+
+def addAdaptiveHoughTransformSeeding(
+    sequence: acts.examples.Sequencer,
+    config: acts.examples.AdaptiveHoughTransformSeeder.Config,
+    logLevel: acts.logging.Level = None,
+):
+    """
+    Configures AdaptiveHoughTransform (AHT) for seeding, instead of extra proxy config objects it takes
+    directly the AHT example algorithm config.
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    ht = acts.examples.AdaptiveHoughTransformSeeder(config=config, level=logLevel)
+    sequence.addAlgorithm(ht)
+    # potentially HT can be extended to also produce proto-tracks, but it is not implemented yet
+    # configuration option (outputSeeds) exists and is used
     return ht.config.outputSeeds
 
 
