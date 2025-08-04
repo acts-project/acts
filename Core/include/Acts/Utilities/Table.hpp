@@ -106,27 +106,29 @@ class Table {
     }
     result += "\n";
 
-    // Build separator row with alignment indicators (only in markdown mode)
-    if (m_includeMarkdownMarkers) {
-      result += "|";
-      for (std::size_t i = 0; i < m_columns.size(); ++i) {
-        std::size_t contentWidth = m_columns[i].width;
+    // Build separator row 
+    result += "|";
+    for (std::size_t i = 0; i < m_columns.size(); ++i) {
+      std::size_t contentWidth = m_columns[i].width;
 
+      if (m_includeMarkdownMarkers) {
         switch (m_columns[i].alignment) {
           case Alignment::Left:
-            result += std::format(":{}", std::string(contentWidth + 1, '-'));
+            result += std::format(":{:-<{}}", "", contentWidth + 1);
             break;
           case Alignment::Right:
-            result += std::format("{}:", std::string(contentWidth + 1, '-'));
+            result += std::format("{:-<{}}:", "", contentWidth + 1);
             break;
           case Alignment::Center:
-            result += std::format(":{}:", std::string(contentWidth, '-'));
+            result += std::format(":{:-<{}}:", "", contentWidth);
             break;
         }
-        result += "|";
+      } else {
+        result += std::format("{:-<{}}", "", contentWidth + 2);
       }
-      result += "\n";
+      result += "|";
     }
+    result += "\n";
 
     // Build data rows
     for (const auto& row : m_rows) {

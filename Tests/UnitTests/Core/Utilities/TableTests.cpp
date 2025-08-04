@@ -222,6 +222,7 @@ BOOST_AUTO_TEST_CASE(TableMarkdownMode) {
   std::string withoutMarkers = table.toString();
   std::string expectedWithoutMarkers =
       "| Name  | Value |\n"
+      "|-------|-------|\n"
       "| Item1 |     A |\n" 
       "| Item2 |    BB |\n";
   
