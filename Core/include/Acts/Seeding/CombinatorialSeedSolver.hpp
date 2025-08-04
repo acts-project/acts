@@ -18,8 +18,7 @@
 #include <ranges>
 #include <vector>
 
-namespace Acts::Experimental {
-namespace CombinatorialSeedSolver {
+namespace Acts::Experimental::CombinatorialSeedSolver {
 
 /// @brief A Combinatorial Seed Solver for seed estimation from combinatoric hits from four layers (e.g Muon NSW seeding)
 
@@ -90,7 +89,8 @@ SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett) {
 /// @return an array of the calculated parameters
 template <Experimental::CompositeSpacePointPtr Point_t>
 std::array<double, 4> defineParameters(
-    SquareMatrix2 betaMatrix, const std::array<Point_t, 4>& layerQuartett) {
+    const SquareMatrix2& betaMatrix,
+    const std::array<Point_t, 4>& layerQuartett) {
   double A = (layerQuartett[0]->localPosition().z() -
               layerQuartett[1]->localPosition().z());
   double G = (layerQuartett[0]->localPosition().z() -
