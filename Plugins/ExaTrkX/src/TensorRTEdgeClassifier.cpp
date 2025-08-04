@@ -115,14 +115,18 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
 
   // get a context from the list of contexts
   std::unique_ptr<nvinfer1::IExecutionContext> context;
-  while (context == nullptr) {
+
+  // Try to decrement the count before getting a context. By this it should be
+  // garantueed that a context is available
+  m_count->acquire();
+  assert(!m_contexts.empty());
+
+  // Protect access to the context by a mutex
+  {
     std::lock_guard<std::mutex> lock(m_contextMutex);
-    if (!m_contexts.empty()) {
-      context = std::move(m_contexts.back());
-      m_contexts.pop_back();
-    }
+    context = std::move(m_contexts.back());
+    m_contexts.pop_back();
   }
-  assert(context != nullptr);
 
   context->setInputShape(
       "x", nvinfer1::Dims2{static_cast<long>(tensors.nodeFeatures.shape()[0]),
@@ -162,6 +166,9 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
     std::lock_guard<std::mutex> lock(m_contextMutex);
     m_contexts.push_back(std::move(context));
   }
+
+  // Increment the count after the context have been put back in the vector
+  m_count->release();
 
   sigmoid(scores, execContext.stream);
 
