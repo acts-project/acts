@@ -37,42 +37,41 @@ namespace CombinatorialSeedSolver {
 
 /// @brief defines the betaMatrix calculated from the combinatoric hits
 /// @tparam spacePointContainer the space point container
-/// @param spacePoints the space points of the combinatorics
+/// @param layerQuartett the space points of the combinatorics
 /// @return the 2x2 beta matrix
-template <typename spacePointContainer>
-  requires Acts::Experimental::CompositeSpacePointContainer<spacePointContainer>
-SquareMatrix2 betaMatrix(const spacePointContainer& spacePoints) {
+template <Experimental::CompositeSpacePointPtr Point_t>
+SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett) {
   SquareMatrix2 bMatrix{SquareMatrix2::Identity()};
 
-  Vector3 b1Aterm = (spacePoints[3]->sensorDirection().dot(
-                        spacePoints[1]->sensorDirection())) *
-                        spacePoints[1]->sensorDirection() -
-                    spacePoints[3]->sensorDirection();
-  Vector3 b1Gterm = (spacePoints[3]->sensorDirection().dot(
-                        spacePoints[0]->sensorDirection())) *
-                        spacePoints[0]->sensorDirection() -
-                    (spacePoints[3]->sensorDirection().dot(
-                        spacePoints[1]->sensorDirection())) *
-                        spacePoints[1]->sensorDirection();
+  Vector3 b1Aterm = (layerQuartett[3]->sensorDirection().dot(
+                        layerQuartett[1]->sensorDirection())) *
+                        layerQuartett[1]->sensorDirection() -
+                    layerQuartett[3]->sensorDirection();
+  Vector3 b1Gterm = (layerQuartett[3]->sensorDirection().dot(
+                        layerQuartett[0]->sensorDirection())) *
+                        layerQuartett[0]->sensorDirection() -
+                    (layerQuartett[3]->sensorDirection().dot(
+                        layerQuartett[1]->sensorDirection())) *
+                        layerQuartett[1]->sensorDirection();
 
-  Vector3 b2Aterm = spacePoints[2]->sensorDirection() -
-                    (spacePoints[2]->sensorDirection().dot(
-                        spacePoints[1]->sensorDirection())) *
-                        spacePoints[1]->sensorDirection();
-  Vector3 b2Kterm = (spacePoints[2]->sensorDirection().dot(
-                        spacePoints[1]->sensorDirection())) *
-                        spacePoints[1]->sensorDirection() -
-                    (spacePoints[2]->sensorDirection().dot(
-                        spacePoints[0]->sensorDirection())) *
-                        spacePoints[0]->sensorDirection();
+  Vector3 b2Aterm = layerQuartett[2]->sensorDirection() -
+                    (layerQuartett[2]->sensorDirection().dot(
+                        layerQuartett[1]->sensorDirection())) *
+                        layerQuartett[1]->sensorDirection();
+  Vector3 b2Kterm = (layerQuartett[2]->sensorDirection().dot(
+                        layerQuartett[1]->sensorDirection())) *
+                        layerQuartett[1]->sensorDirection() -
+                    (layerQuartett[2]->sensorDirection().dot(
+                        layerQuartett[0]->sensorDirection())) *
+                        layerQuartett[0]->sensorDirection();
 
   // get the distances of the layers along z direction
-  double A = (spacePoints[0]->localPosition().z() -
-              spacePoints[1]->localPosition().z());
-  double G = (spacePoints[0]->localPosition().z() -
-              spacePoints[2]->localPosition().z());
-  double K = (spacePoints[0]->localPosition().z() -
-              spacePoints[3]->localPosition().z());
+  double A = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[1]->localPosition().z());
+  double G = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[2]->localPosition().z());
+  double K = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[3]->localPosition().z());
 
   // define B matrix
   Vector3 b1 = A * b1Aterm + G * b1Gterm;
@@ -87,55 +86,57 @@ SquareMatrix2 betaMatrix(const spacePointContainer& spacePoints) {
 /// @brief calculates the parameters lamda,alpha,gamma,kappa of the system
 /// @tparam spacePointContainer the space point container
 /// @param betaMatrix the betaMatrix for the system
-/// @param spacePoints the space points of the combinatorics
+/// @param layerQuartett the space points of the combinatorics
 /// @return an array of the calculated parameters
-template <typename spacePointContainer>
-  requires Acts::Experimental::CompositeSpacePointContainer<spacePointContainer>
-std::array<double, 4> defineParameters(SquareMatrix2 betaMatrix,
-                                       const spacePointContainer& spacePoints) {
-  double A = (spacePoints[0]->localPosition().z() -
-              spacePoints[1]->localPosition().z());
-  double G = (spacePoints[0]->localPosition().z() -
-              spacePoints[2]->localPosition().z());
-  double K = (spacePoints[0]->localPosition().z() -
-              spacePoints[3]->localPosition().z());
+template <Experimental::CompositeSpacePointPtr Point_t>
+std::array<double, 4> defineParameters(
+    SquareMatrix2 betaMatrix, const std::array<Point_t, 4>& layerQuartett) {
+  double A = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[1]->localPosition().z());
+  double G = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[2]->localPosition().z());
+  double K = (layerQuartett[0]->localPosition().z() -
+              layerQuartett[3]->localPosition().z());
 
   // Define y2 for the linear system
-  Vector3 y0 =
-      K * (spacePoints[2]->localPosition() - spacePoints[0]->localPosition()) +
-      G * (spacePoints[0]->localPosition() - spacePoints[3]->localPosition());
-  Vector3 y1 =
-      A * (spacePoints[3]->localPosition() - spacePoints[2]->localPosition()) +
-      G * (spacePoints[1]->localPosition() - spacePoints[3]->localPosition()) +
-      K * (spacePoints[2]->localPosition() - spacePoints[1]->localPosition());
-  Vector3 y2 =
-      (K - G) *
-          (spacePoints[0]->localPosition() - spacePoints[1]->localPosition()) -
-      (y1.dot(spacePoints[1]->sensorDirection())) *
-          spacePoints[1]->sensorDirection() +
-      (y0.dot(spacePoints[0]->sensorDirection())) *
-          spacePoints[0]->sensorDirection() +
-      A * (spacePoints[3]->localPosition() - spacePoints[2]->localPosition());
+  Vector3 y0 = K * (layerQuartett[2]->localPosition() -
+                    layerQuartett[0]->localPosition()) +
+               G * (layerQuartett[0]->localPosition() -
+                    layerQuartett[3]->localPosition());
+  Vector3 y1 = A * (layerQuartett[3]->localPosition() -
+                    layerQuartett[2]->localPosition()) +
+               G * (layerQuartett[1]->localPosition() -
+                    layerQuartett[3]->localPosition()) +
+               K * (layerQuartett[2]->localPosition() -
+                    layerQuartett[1]->localPosition());
+  Vector3 y2 = (K - G) * (layerQuartett[0]->localPosition() -
+                          layerQuartett[1]->localPosition()) -
+               (y1.dot(layerQuartett[1]->sensorDirection())) *
+                   layerQuartett[1]->sensorDirection() +
+               (y0.dot(layerQuartett[0]->sensorDirection())) *
+                   layerQuartett[0]->sensorDirection() +
+               A * (layerQuartett[3]->localPosition() -
+                    layerQuartett[2]->localPosition());
 
   Vector2 solution = betaMatrix.inverse() * y2.block<2, 1>(0, 0);
   double kappa = solution.x();
   double gamma = solution.y();
 
-  double lamda = (y0.dot(spacePoints[0]->sensorDirection()) +
+  double lamda = (y0.dot(layerQuartett[0]->sensorDirection()) +
                   K * gamma *
-                      (spacePoints[0]->sensorDirection().dot(
-                          spacePoints[2]->sensorDirection())) -
+                      (layerQuartett[0]->sensorDirection().dot(
+                          layerQuartett[2]->sensorDirection())) -
                   G * kappa *
-                      (spacePoints[0]->sensorDirection().dot(
-                          spacePoints[3]->sensorDirection()))) /
+                      (layerQuartett[0]->sensorDirection().dot(
+                          layerQuartett[3]->sensorDirection()))) /
                  (K - G);
-  double alpha = (y1.dot(spacePoints[1]->sensorDirection()) +
+  double alpha = (y1.dot(layerQuartett[1]->sensorDirection()) +
                   (A - G) * kappa *
-                      spacePoints[3]->sensorDirection().dot(
-                          spacePoints[1]->sensorDirection()) +
+                      layerQuartett[3]->sensorDirection().dot(
+                          layerQuartett[1]->sensorDirection()) +
                   (K - A) * gamma *
-                      spacePoints[2]->sensorDirection().dot(
-                          spacePoints[1]->sensorDirection())) /
+                      layerQuartett[2]->sensorDirection().dot(
+                          layerQuartett[1]->sensorDirection())) /
                  (K - G);
 
   return std::array<double, 4>({lamda, alpha, gamma, kappa});
@@ -144,24 +145,23 @@ std::array<double, 4> defineParameters(SquareMatrix2 betaMatrix,
 // Solve the equations for the seed position and direction (M,DM)
 /// @brief solves the equation system to calculate the seed
 /// @tparam spacePointContainr the space point container
-/// @param spacePoints the space points of the combinatorics
+/// @param layerQuartett the space points of the combinatorics
 /// @param parameters the lamda,alpha,gamma,kappa paramaters of the four layers
 /// @return the pair of the seed position and direction
-template <typename spacePointContainer>
-  requires Acts::Experimental::CompositeSpacePointContainer<spacePointContainer>
+template <Experimental::CompositeSpacePointPtr Point_t>
 std::pair<Vector3, Vector3> seedSolution(
-    const spacePointContainer& spacePoints,
+    const std::array<Point_t, 4>& layerQuartett,
     const std::array<double, 4>& parameters) {
   // estimate the seed positionInChamber from the 1st equation of the system of
   // the layer equations
-  Vector3 seedPosition = spacePoints[0]->localPosition() +
-                         parameters[0] * spacePoints[0]->sensorDirection();
+  Vector3 seedPosition = layerQuartett[0]->localPosition() +
+                         parameters[0] * layerQuartett[0]->sensorDirection();
 
   // estimate the seed direction from the 2nd equation of the system of the
   // layer equations
   Vector3 seedDirection =
-      ((spacePoints[1]->localPosition() +
-        parameters[1] * spacePoints[1]->sensorDirection() - seedPosition))
+      ((layerQuartett[1]->localPosition() +
+        parameters[1] * layerQuartett[1]->sensorDirection() - seedPosition))
           .normalized();
 
   // calculate the position at z=0

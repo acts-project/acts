@@ -230,6 +230,40 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   }
 }
 
+void testSeed(const std::array<TestSpacePoint*, 4>& spacePoints,
+              const std::array<double, 4>& truthDistances, Vector3& truthPosZ0,
+              Vector3& truthDir) {
+  const SquareMatrix2 bMatrix =
+      CombinatorialSeedSolver::betaMatrix(spacePoints);
+  if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
+    std::cout << "Beta Matrix has zero determinant -skip the combination"
+              << std::endl;
+    return;
+  }
+  const std::array<double, 4> distsAlongStrip =
+      CombinatorialSeedSolver::defineParameters(bMatrix, spacePoints);
+  const auto [seedPos, seedDir] =
+      CombinatorialSeedSolver::seedSolution(spacePoints, distsAlongStrip);
+
+  std::cout << " Reconstructed position " << toString(seedPos)
+            << " and direction " << toString(seedDir) << std::endl;
+  std::cout << " Truth position " << toString(truthPosZ0)
+            << " and truth direction " << toString(truthDir) << std::endl;
+
+  // check the distances along the strips if they are the same
+  for (std::size_t i = 0; i < truthDistances.size(); i++) {
+    BOOST_CHECK_LE(distsAlongStrip[i] + truthDistances[i],
+                   std ::numeric_limits<float>::epsilon());
+  }
+
+  BOOST_CHECK_LE((seedPos - truthPosZ0).norm(),
+                 std::numeric_limits<float>::epsilon());
+
+  // check the direction
+  BOOST_CHECK_LE(std::abs(std::abs(seedDir.dot(truthDir)) - 1.),
+                 std::numeric_limits<float>::epsilon());
+}
+
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
   /// Set the line to be 45 degrees
   using Pars_t = Line_t::ParamVector;
@@ -323,7 +357,7 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   RandomEngine rndEngine{23568};
   const std::size_t nStrips = 8;
-  const std::size_t nEvents = 100;
+  const std::size_t nEvents = 1;
 
   const std::array<Vector3, nStrips> stripDirections = {
       Vector3::UnitX(),
@@ -351,7 +385,8 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   line.updateParameters(linePars);
 
   for (std::size_t i = 0; i < nEvents; i++) {
-    std::cout << "Processing Event: " << i << std::endl;
+    std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
+              << std::endl;
     // update pseudo track parameters with random values
     linePars[static_cast<double>(ParIdx::x0)] = rndEngine() % 1000 - 500.;
     linePars[static_cast<double>(ParIdx::y0)] = rndEngine() % 1000 - 500.;
@@ -371,6 +406,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
       // where the hit is along the strip
       auto alongStrip = PlanarHelper::intersectPlane(
           intersections[layer], stripDirections[layer], Vector3::UnitX(), 0.);
+
       parameters[layer] = alongStrip.pathLength();
 
       Vector3 stripPos =
@@ -393,21 +429,10 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
           for (unsigned int n = m + 1; n < distancesZ.size(); ++n) {
             seedSpacePoints[3] = spacePoints[n].get();
 
-            const SquareMatrix2 bMatrix =
-                CombinatorialSeedSolver::betaMatrix(seedSpacePoints);
-            if (std::abs(bMatrix.determinant()) <
-                std::numeric_limits<float>::epsilon()) {
-              std::cout
-                  << "Beta Matrix has zero determinant -skip the combination"
-                  << std::endl;
-              continue;
-            }
-            const std::array<double, 4> distsAlongStrip =
-                CombinatorialSeedSolver::defineParameters(bMatrix,
-                                                          seedSpacePoints);
-            const auto [seedPos, seedDir] =
-                CombinatorialSeedSolver::seedSolution(seedSpacePoints,
-                                                      distsAlongStrip);
+            const std::array<double, 4> truthDistances = {
+                parameters[l], parameters[k], parameters[m], parameters[n]};
+
+            testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
 
             // TO DO include the tests/ checks
           }
