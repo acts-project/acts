@@ -9,7 +9,6 @@
 #pragma once
 
 #include <format>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -79,66 +78,57 @@ class Table {
       return "";
     }
 
-    std::ostringstream oss;
+    std::string result;
 
-    // Print header
-    oss << "|";
+    // Build header row
+    result += "|";
     for (std::size_t i = 0; i < m_columns.size(); ++i) {
-      oss << " " << alignText(m_columns[i].header, m_columns[i].width, m_columns[i].alignment) << " |";
+      result += std::format(" {} |", formatAligned(m_columns[i].header, m_columns[i].width, m_columns[i].alignment));
     }
-    oss << "\n";
+    result += "\n";
 
-    // Print separator with alignment indicators
-    oss << "|";
+    // Build separator row with alignment indicators
+    result += "|";
     for (std::size_t i = 0; i < m_columns.size(); ++i) {
       std::size_t contentWidth = m_columns[i].width;
       
       switch (m_columns[i].alignment) {
         case Alignment::Left:
-          oss << ":" << std::string(contentWidth + 1, '-');
+          result += std::format(":{}", std::string(contentWidth + 1, '-'));
           break;
         case Alignment::Right:
-          oss << std::string(contentWidth + 1, '-') << ":";
+          result += std::format("{}:", std::string(contentWidth + 1, '-'));
           break;
         case Alignment::Center:
-          oss << ":" << std::string(contentWidth, '-') << ":";
+          result += std::format(":{}:", std::string(contentWidth, '-'));
           break;
       }
-      oss << "|";
+      result += "|";
     }
-    oss << "\n";
+    result += "\n";
 
-    // Print rows
+    // Build data rows
     for (const auto& row : m_rows) {
-      oss << "|";
+      result += "|";
       for (std::size_t i = 0; i < row.size(); ++i) {
-        oss << " " << alignText(row[i], m_columns[i].width, m_columns[i].alignment) << " |";
+        result += std::format(" {} |", formatAligned(row[i], m_columns[i].width, m_columns[i].alignment));
       }
-      oss << "\n";
+      result += "\n";
     }
 
-    return oss.str();
+    return result;
   }
 
  private:
-  std::string alignText(const std::string& text, std::size_t width,
-                        Alignment alignment) const {
-    if (text.length() >= width) {
-      return text;
-    }
-
-    std::size_t padding = width - text.length();
-
+  std::string formatAligned(const std::string& text, std::size_t width,
+                           Alignment alignment) const {
     switch (alignment) {
       case Alignment::Left:
-        return text + std::string(padding, ' ');
+        return std::format("{:<{}}", text, width);
       case Alignment::Right:
-        return std::string(padding, ' ') + text;
-      case Alignment::Center: {
-        std::size_t leftPad = padding / 2;
-        std::size_t rightPad = padding - leftPad;
-        return std::string(leftPad, ' ') + text + std::string(rightPad, ' ');
-      }
+        return std::format("{:>{}}", text, width);
+      case Alignment::Center:
+        return std::format("{:^{}}", text, width);
     }
     return text;
   }
