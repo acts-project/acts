@@ -173,6 +173,4 @@ std::pair<Vector3, Vector3> seedSolution(
                         seedDirection.z() > 0 ? seedDirection : -seedDirection);
 };
 
-}  // namespace CombinatorialSeedSolver
-
-}  // namespace Acts::Experimental
+}  // namespace Acts::Experimental::CombinatorialSeedSolver
