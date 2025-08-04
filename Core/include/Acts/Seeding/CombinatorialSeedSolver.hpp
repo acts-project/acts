@@ -24,7 +24,7 @@ namespace CombinatorialSeedSolver {
 /// @brief A Combinatorial Seed Solver for seed estimation from combinatoric hits from four layers (e.g Muon NSW seeding)
 
 ///***The layers equations for the four layers (Si,Di) can be */
-/// S1 + lamda*D1 = M
+/// S1 + lambda*D1 = M
 /// S2 + alpha*D2 = M + A*Dm
 /// S3 + gamma*D3 = M + G*Dm
 /// S4 + kappa*D4 = M + K*Dm
@@ -83,7 +83,7 @@ SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett) {
   return bMatrix;
 }
 
-/// @brief calculates the parameters lamda,alpha,gamma,kappa of the system
+/// @brief calculates the parameters lambda,alpha,gamma,kappa of the system
 /// @tparam spacePointContainer the space point container
 /// @param betaMatrix the betaMatrix for the system
 /// @param layerQuartett the space points of the combinatorics
@@ -122,7 +122,7 @@ std::array<double, 4> defineParameters(
   double kappa = solution.x();
   double gamma = solution.y();
 
-  double lamda = (y0.dot(layerQuartett[0]->sensorDirection()) +
+  double lambda = (y0.dot(layerQuartett[0]->sensorDirection()) +
                   K * gamma *
                       (layerQuartett[0]->sensorDirection().dot(
                           layerQuartett[2]->sensorDirection())) -
@@ -139,14 +139,14 @@ std::array<double, 4> defineParameters(
                           layerQuartett[1]->sensorDirection())) /
                  (K - G);
 
-  return std::array<double, 4>({lamda, alpha, gamma, kappa});
+  return std::array<double, 4>({lambda, alpha, gamma, kappa});
 }
 
 // Solve the equations for the seed position and direction (M,DM)
 /// @brief solves the equation system to calculate the seed
 /// @tparam spacePointContainr the space point container
 /// @param layerQuartett the space points of the combinatorics
-/// @param parameters the lamda,alpha,gamma,kappa paramaters of the four layers
+/// @param parameters the lambda,alpha,gamma,kappa parameters of the four layers
 /// @return the pair of the seed position and direction
 template <Experimental::CompositeSpacePointPtr Point_t>
 std::pair<Vector3, Vector3> seedSolution(

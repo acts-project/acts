@@ -231,8 +231,8 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
 }
 
 void testSeed(const std::array<TestSpacePoint*, 4>& spacePoints,
-              const std::array<double, 4>& truthDistances, const Vector3& truthPosZ0,
-              const Vector3& truthDir) {
+              const std::array<double, 4>& truthDistances,
+              const Vector3& truthPosZ0, const Vector3& truthDir) {
   const SquareMatrix2 bMatrix =
       CombinatorialSeedSolver::betaMatrix(spacePoints);
   if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   std::array<double, nStrips> parameters{};
   std::array<Vector3, nStrips> intersections{};
 
-  // pseudo track initilization
+  // pseudo track initialization
   Line_t line{};
   Pars_t linePars{};
   linePars[x0_idx] = 0. * 1_mm;
@@ -395,8 +395,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
     linePars[x0_idx] = rndEngine() % 1000 - 500.;
     linePars[y0_idx] = rndEngine() % 1000 - 500.;
     linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
-    linePars[theta_idx] =
-        (rndEngine() % 90) * 1_degree;
+    linePars[theta_idx] = (rndEngine() % 90) * 1_degree;
     line.updateParameters(linePars);
 
     Vector3 muonPos = line.position();
@@ -437,7 +436,6 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
                 parameters[l], parameters[k], parameters[m], parameters[n]};
 
             testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
-
           }
         }
       }
