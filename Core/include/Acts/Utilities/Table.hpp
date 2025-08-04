@@ -8,23 +8,26 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cctype>
 #include <format>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace Acts {
 
-/// A utility class for creating formatted markdown tables with automatic 
+/// A utility class for creating formatted markdown tables with automatic
 /// column sizing and alignment.
 ///
 /// Usage:
 /// ```cpp
 /// Table table;
-/// table.addColumn("Name", "{}", Table::Alignment::Left);
-/// table.addColumn("Value", "{:.2f}", Table::Alignment::Right);
-/// table.addRow("Item1", 1.23);
-/// table.addRow("Item2", 4.56);
+/// table.addColumn("Name", "{}", "left");        // String alignment
+/// table.addColumn("Value", "{:.2f}", "right");  // or "r" for short
+/// table.addColumn("Count", "{}", Table::Alignment::Center);  // Enum also
+/// supported table.addRow("Item1", 1.23, 42); table.addRow("Item2", 4.56, 7);
 /// std::cout << table.toString();
 /// ```
 class Table {
@@ -44,15 +47,29 @@ class Table {
     m_columns.push_back({header, format, alignment, header.length()});
   }
 
+  /// Add a column with header, format string, and alignment as string
+  /// @param alignment String alignment: "left"/"l", "right"/"r", "center"/"c" (case insensitive)
+  /// @throws std::invalid_argument if alignment string is not recognized
+  void addColumn(const std::string& header, const std::string& format,
+                 const std::string& alignment = "left") {
+    addColumn(header, format, parseAlignment(alignment));
+  }
+
+  /// Set whether to include markdown alignment markers in output
+  /// @param includeMarkers If true (default), includes markdown alignment markers
+  void setMarkdownMode(bool includeMarkers) {
+    m_includeMarkdownMarkers = includeMarkers;
+  }
+
   /// Add a row with variable arguments matching the number of columns
   /// @throws std::runtime_error if argument count doesn't match column count
   template <typename... Args>
   void addRow(Args&&... args) {
     if (sizeof...(Args) != m_columns.size()) {
-      throw std::runtime_error(
-          "Number of arguments (" + std::to_string(sizeof...(Args)) +
-          ") does not match number of columns (" +
-          std::to_string(m_columns.size()) + ")");
+      throw std::runtime_error("Number of arguments (" +
+                               std::to_string(sizeof...(Args)) +
+                               ") does not match number of columns (" +
+                               std::to_string(m_columns.size()) + ")");
     }
 
     std::vector<std::string> row;
@@ -83,35 +100,40 @@ class Table {
     // Build header row
     result += "|";
     for (std::size_t i = 0; i < m_columns.size(); ++i) {
-      result += std::format(" {} |", formatAligned(m_columns[i].header, m_columns[i].width, m_columns[i].alignment));
+      result += std::format(
+          " {} |", formatAligned(m_columns[i].header, m_columns[i].width,
+                                 m_columns[i].alignment));
     }
     result += "\n";
 
-    // Build separator row with alignment indicators
-    result += "|";
-    for (std::size_t i = 0; i < m_columns.size(); ++i) {
-      std::size_t contentWidth = m_columns[i].width;
-      
-      switch (m_columns[i].alignment) {
-        case Alignment::Left:
-          result += std::format(":{}", std::string(contentWidth + 1, '-'));
-          break;
-        case Alignment::Right:
-          result += std::format("{}:", std::string(contentWidth + 1, '-'));
-          break;
-        case Alignment::Center:
-          result += std::format(":{}:", std::string(contentWidth, '-'));
-          break;
-      }
+    // Build separator row with alignment indicators (only in markdown mode)
+    if (m_includeMarkdownMarkers) {
       result += "|";
+      for (std::size_t i = 0; i < m_columns.size(); ++i) {
+        std::size_t contentWidth = m_columns[i].width;
+
+        switch (m_columns[i].alignment) {
+          case Alignment::Left:
+            result += std::format(":{}", std::string(contentWidth + 1, '-'));
+            break;
+          case Alignment::Right:
+            result += std::format("{}:", std::string(contentWidth + 1, '-'));
+            break;
+          case Alignment::Center:
+            result += std::format(":{}:", std::string(contentWidth, '-'));
+            break;
+        }
+        result += "|";
+      }
+      result += "\n";
     }
-    result += "\n";
 
     // Build data rows
     for (const auto& row : m_rows) {
       result += "|";
       for (std::size_t i = 0; i < row.size(); ++i) {
-        result += std::format(" {} |", formatAligned(row[i], m_columns[i].width, m_columns[i].alignment));
+        result += std::format(" {} |", formatAligned(row[i], m_columns[i].width,
+                                                     m_columns[i].alignment));
       }
       result += "\n";
     }
@@ -120,8 +142,27 @@ class Table {
   }
 
  private:
+  /// Parse alignment string to enum
+  /// @throws std::invalid_argument if alignment string is not recognized
+  static Alignment parseAlignment(const std::string& alignment) {
+    std::string lower = alignment;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+    if (lower == "left" || lower == "l") {
+      return Alignment::Left;
+    } else if (lower == "right" || lower == "r") {
+      return Alignment::Right;
+    } else if (lower == "center" || lower == "c") {
+      return Alignment::Center;
+    } else {
+      throw std::invalid_argument(
+          "Invalid alignment string: '" + alignment +
+          "'. Valid options: 'left'/'l', 'right'/'r', 'center'/'c'");
+    }
+  }
+
   std::string formatAligned(const std::string& text, std::size_t width,
-                           Alignment alignment) const {
+                            Alignment alignment) const {
     switch (alignment) {
       case Alignment::Left:
         return std::format("{:<{}}", text, width);
@@ -135,6 +176,12 @@ class Table {
 
   std::vector<Column> m_columns;
   std::vector<std::vector<std::string>> m_rows;
+  bool m_includeMarkdownMarkers = true;
 };
+
+/// Stream output operator for Table
+inline std::ostream& operator<<(std::ostream& os, const Table& table) {
+  return os << table.toString();
+}
 
 }  // namespace Acts
