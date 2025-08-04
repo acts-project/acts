@@ -19,6 +19,7 @@
 
 using namespace Acts;
 using namespace Acts::detail;
+using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;

@@ -18,7 +18,7 @@
 #include <ranges>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 namespace CombinatorialSeedSolver {
 
 /// @brief A Combinatorial Seed Solver for seed estimation from combinatoric hits from four layers (e.g Muon NSW seeding)
@@ -175,4 +175,4 @@ std::pair<Vector3, Vector3> seedSolution(
 
 }  // namespace CombinatorialSeedSolver
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
