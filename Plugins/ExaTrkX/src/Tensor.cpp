@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <numeric>
+#include <span>
 
 namespace Acts {
 
@@ -137,6 +138,89 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
   }
 
   return {std::move(outputScores), std::move(outputEdges)};
+}
+
+std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
+    const Tensor<std::int64_t> &edgeIndex,
+    const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
+    std::optional<cudaStream_t> stream) {
+  if (edgeFeatures.has_value() &&
+      edgeIndex.device() != edgeFeatures->device()) {
+    throw std::invalid_argument(
+        "limitEdges: edgeIndex and edgeFeatures must be on the same device!");
+  }
+  if (edgeFeatures.has_value() &&
+      edgeFeatures->shape().at(0) != edgeIndex.shape().at(1)) {
+    throw std::invalid_argument("limitEdges: inconsistent number of edges");
+  }
+
+  const auto nEdgeFeatures =
+      edgeFeatures.has_value() ? edgeFeatures->shape().at(1) : 0;
+  const auto nEdgesOld = edgeIndex.shape().at(1);
+
+  std::optional<Tensor<std::int64_t>> newEdgeIndexTensor;
+  std::optional<Tensor<float>> newEdgeFeatureTensor;
+
+  if (nEdgesOld <= maxEdges) {
+    // No need to limit edges, just clone the original tensors
+    newEdgeIndexTensor = edgeIndex.clone({edgeIndex.device(), stream});
+    if (edgeFeatures.has_value()) {
+      newEdgeFeatureTensor =
+          edgeFeatures->clone({edgeFeatures->device(), stream});
+    }
+  } else if (edgeIndex.device().isCpu()) {
+    ExecutionContext cpuCtx{Acts::Device::Cpu(), {}};
+
+    std::span<const std::int64_t> edge0(edgeIndex.data(), maxEdges);
+    std::span<const std::int64_t> edge1(edgeIndex.data() + nEdgesOld, maxEdges);
+
+    newEdgeIndexTensor = Tensor<std::int64_t>::Create({2, maxEdges}, cpuCtx);
+    std::copy(edge0.begin(), edge0.end(), newEdgeIndexTensor->data());
+    std::copy(edge1.begin(), edge1.end(),
+              newEdgeIndexTensor->data() + maxEdges);
+
+    if (edgeFeatures.has_value()) {
+      std::span<const float> edgeFeaturesResized(edgeFeatures->data(),
+                                                 maxEdges * nEdgeFeatures);
+
+      newEdgeFeatureTensor =
+          Tensor<float>::Create({maxEdges, nEdgeFeatures}, cpuCtx);
+      std::copy(edgeFeaturesResized.begin(), edgeFeaturesResized.end(),
+                newEdgeFeatureTensor->data());
+    }
+  } else {
+#ifdef ACTS_EXATRKX_WITH_CUDA
+    ExecutionContext gpuCtx{edgeIndex.device(), stream};
+
+    newEdgeIndexTensor = Tensor<std::int64_t>::Create({2, maxEdges}, gpuCtx);
+    ACTS_CUDA_CHECK(cudaMemcpyAsync(newEdgeIndexTensor->data(),
+                                    edgeIndex.data(),
+                                    maxEdges * sizeof(std::int64_t),
+                                    cudaMemcpyDeviceToDevice, stream.value()));
+    ACTS_CUDA_CHECK(cudaMemcpyAsync(newEdgeIndexTensor->data() + maxEdges,
+                                    edgeIndex.data() + nEdgesOld,
+                                    maxEdges * sizeof(std::int64_t),
+                                    cudaMemcpyDeviceToDevice, stream.value()));
+
+    if (edgeFeatures.has_value()) {
+      newEdgeFeatureTensor =
+          Tensor<float>::Create({maxEdges, nEdgeFeatures}, gpuCtx);
+
+      ACTS_CUDA_CHECK(
+          cudaMemcpyAsync(newEdgeFeatureTensor->data(), edgeFeatures->data(),
+                          maxEdges * nEdgeFeatures * sizeof(float),
+                          cudaMemcpyDeviceToDevice, stream.value()));
+    }
+#else
+    throw std::runtime_error(
+        "Cannot apply edge limit to CUDA tensors, library was not compiled "
+        "with "
+        "CUDA");
+#endif
+  }
+
+  return {std::move(newEdgeIndexTensor.value()),
+          std::move(newEdgeFeatureTensor)};
 }
 
 }  // namespace Acts
