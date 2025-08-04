@@ -306,7 +306,8 @@ void BroadTripletSeedFilter::filter1SpFixed(
                  << top << "], quality=" << bestSeedQuality
                  << ", vertexZ=" << zOrigin);
 
-    auto seed = outputCollection.createSeed(triplet);
+    auto seed = outputCollection.createSeed();
+    seed.assignSpacePointIndices(triplet);
     seed.vertexZ() = zOrigin;
     seed.quality() = bestSeedQuality;
 

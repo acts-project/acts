@@ -29,7 +29,7 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     throw std::invalid_argument("You have to provide tracks");
   }
 
-  m_inputTracks.maybeInitialize(m_cfg.inputTracks);
+  m_inputTracks.initialize(m_cfg.inputTracks);
 }
 
 ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
