@@ -20,7 +20,8 @@
 
 namespace Acts::VectorHelpers {
 
-/// Calculate phi (transverse plane angle) from compatible Eigen types with static size
+/// Calculate phi (transverse plane angle) from compatible Eigen types with
+/// static size
 /// @tparam Derived Eigen derived concrete type with compile-time known size >= 2
 /// @param v Any vector like Eigen type with static size
 /// @return The value of the angle in the transverse plane.
@@ -31,7 +32,8 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept
   return std::atan2(v[1], v[0]);
 }
 
-/// Calculate phi (transverse plane angle) from compatible Eigen types with dynamic size
+/// Calculate phi (transverse plane angle) from compatible Eigen types with
+/// dynamic size
 /// @tparam Derived Eigen derived concrete type with dynamic size
 /// @param v Any vector like Eigen type with dynamic size
 /// @note Will abort execution if the number of rows of @p v is less than 2.
@@ -79,7 +81,8 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
   return v.template head<2>().norm();
 }
 
-/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with static size
+/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with
+/// static size
 /// @tparam Derived Eigen derived concrete type with compile-time size == 3
 /// @param v Any 3D vector like Eigen type with static size
 /// @return The theta value
@@ -90,7 +93,8 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept
   return std::atan2(perp(v), v[2]);
 }
 
-/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with dynamic size
+/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with
+/// dynamic size
 /// @tparam Derived Eigen derived concrete type with dynamic size
 /// @param v Any vector like Eigen type with dynamic size
 /// @note Will abort execution if the number of rows of @p v is not exactly 3.
