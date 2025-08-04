@@ -123,13 +123,13 @@ std::array<double, 4> defineParameters(
   double gamma = solution.y();
 
   double lambda = (y0.dot(layerQuartett[0]->sensorDirection()) +
-                  K * gamma *
-                      (layerQuartett[0]->sensorDirection().dot(
-                          layerQuartett[2]->sensorDirection())) -
-                  G * kappa *
-                      (layerQuartett[0]->sensorDirection().dot(
-                          layerQuartett[3]->sensorDirection()))) /
-                 (K - G);
+                   K * gamma *
+                       (layerQuartett[0]->sensorDirection().dot(
+                           layerQuartett[2]->sensorDirection())) -
+                   G * kappa *
+                       (layerQuartett[0]->sensorDirection().dot(
+                           layerQuartett[3]->sensorDirection()))) /
+                  (K - G);
   double alpha = (y1.dot(layerQuartett[1]->sensorDirection()) +
                   (A - G) * kappa *
                       layerQuartett[3]->sensorDirection().dot(
