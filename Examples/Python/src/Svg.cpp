@@ -219,12 +219,18 @@ struct SurfaceArrayCollector {
         }
       }
     }
-    // Now trey Gen2
-    auto sArrayPolicy = dynamic_cast<const Acts::SurfaceArrayNavigationPolicy*>(
-        tVolume->navigationPolicy());
-    if (sArrayPolicy != nullptr) {
-      surfaceArrays.emplace_back(tVolume->geometryId(),
-                                 &sArrayPolicy->surfaceArray());
+    // Now try Gen3
+    if (const auto* policyPtr = tVolume->navigationPolicy();
+        policyPtr != nullptr) {
+      policyPtr->visit([&](const auto& policy) {
+        if (auto sArrayPolicy =
+                dynamic_cast<const Acts::SurfaceArrayNavigationPolicy*>(
+                    &policy);
+            sArrayPolicy != nullptr) {
+          surfaceArrays.emplace_back(tVolume->geometryId(),
+                                     &sArrayPolicy->surfaceArray());
+        }
+      });
     }
   }
 };
