@@ -182,35 +182,19 @@ class ContainerSubset {
     return iterator(*m_container, m_subset.end());
   }
 
-  constexpr auto operator[](std::size_t index) const noexcept {
-    static_assert(
-        ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
-        "Container must support at() or operator[] for indexing");
-    constexpr bool HasArrayAccess = ContainerHasArrayAccess<Container>;
-
+  constexpr auto operator[](Index index) const noexcept
+    requires(ContainerHasArrayAccess<Container>)
+  {
     assert(index < size() && "Index out of bounds");
-
-    if constexpr (HasArrayAccess) {
-      return (*m_container)[m_subset[index]];
-    } else {
-      return m_container->at(m_subset[index]);
-    }
+    return (*m_container)[m_subset[index]];
   }
-  constexpr auto at(std::size_t index) const {
-    static_assert(
-        ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
-        "Container must support at() or operator[] for indexing");
-    constexpr bool HasArrayAccess = ContainerHasArrayAccess<Container>;
-
+  constexpr auto at(Index index) const
+    requires(ContainerHasAt<Container>)
+  {
     if (index >= size()) {
       throw std::out_of_range("Index out of bounds");
     }
-
-    if constexpr (HasArrayAccess) {
-      return (*m_container)[m_subset[index]];
-    } else {
-      return m_container->at(m_subset[index]);
-    }
+    return m_container->at(m_subset[index]);
   }
 
  private:
