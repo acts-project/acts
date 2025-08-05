@@ -34,8 +34,11 @@ void createAndFilterTriplets(float rMaxSeedConf,
       break;
     }
 
-    auto spB = spacePoints[lb.spacePoint()];
+    cache.tripletTopCandidates.clear();
+    tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
+                                             cache.tripletTopCandidates);
 
+    auto spB = spacePoints[lb.spacePoint()];
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
@@ -47,11 +50,6 @@ void createAndFilterTriplets(float rMaxSeedConf,
         cache.candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
-
-    cache.tripletTopCandidates.clear();
-    tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
-                                             cache.tripletTopCandidates);
-
     // continue if number of top SPs is smaller than minimum required for filter
     if (cache.tripletTopCandidates.size() < minCompatibleTopSPs) {
       continue;
