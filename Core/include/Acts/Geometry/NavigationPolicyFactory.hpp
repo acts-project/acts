@@ -22,6 +22,9 @@ class INavigationPolicy;
 
 namespace detail {
 
+/// Concept for factory functions that create navigation policies
+/// @tparam F The factory function type
+/// @tparam Args The argument types for the factory function
 template <typename F, typename... Args>
 concept NavigationPolicyIsolatedFactoryConcept = requires(
     F f, const GeometryContext& gctx, const TrackingVolume& volume,
@@ -46,24 +49,36 @@ concept NavigationPolicyIsolatedFactoryConcept = requires(
 /// ```
 class NavigationPolicyFactory {
  private:
+  /// Type alias for factory functions that create navigation policies
   using factory_type = std::function<std::unique_ptr<INavigationPolicy>(
       const GeometryContext&, const TrackingVolume&, const Logger&)>;
 
+  /// Private constructor for internal use
+  /// @param factories Vector of factory functions
   explicit NavigationPolicyFactory(std::vector<factory_type>&& factories)
       : m_factories(std::move(factories)) {}
 
  public:
+  /// Default constructor
   NavigationPolicyFactory() = default;
+  /// Move constructor
   NavigationPolicyFactory(NavigationPolicyFactory&& other) = default;
+  /// Copy constructor
   NavigationPolicyFactory(const NavigationPolicyFactory& other) = default;
 
-  // This needs to be listed here, but the return type cannot be spelled out
-  // yet.
+  /// Create a new navigation policy factory
+  /// @deprecated Use the default constructor instead
   [[deprecated("Use the default constructor")]]
   static auto make() {
     return NavigationPolicyFactory{};
   }
 
+  /// Add a navigation policy to the factory
+  /// @tparam P The policy type to add
+  /// @param args The arguments to pass to the policy constructor
+  /// @note Arguments need to be copy constructible because the factory must be
+  ///       able to execute multiple times.
+  /// @return Reference to this factory for method chaining
   template <NavigationPolicyConcept P, typename... Args>
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
@@ -79,19 +94,19 @@ class NavigationPolicyFactory {
     return *this;
   }
 
-  /// Create a factory with a policy returned by a factory function
+  /// Add a policy created by a factory function
   /// @tparam Fn The type of the function to construct the policy
+  /// @param fn The factory function
   /// @param args The arguments to pass to the policy factory
   /// @note Arguments need to be copy constructible because the factory must be
   ///       able to execute multiple times.
-  /// @return A new policy factory including the function
+  /// @return Reference to this factory for method chaining
   template <typename Fn, typename... Args>
     requires(detail::NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr NavigationPolicyFactory& add(Fn&& fn, Args&&... args) {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       using policy_type = decltype(fn(gctx, volume, logger, args...));
-      // @TODO: This is a move construction, might have to
       return std::make_unique<policy_type>(fn(gctx, volume, logger, args...));
     };
 
@@ -100,16 +115,17 @@ class NavigationPolicyFactory {
   }
 
   /// Move the factory into a unique pointer
-  /// @note Only callable on rvalue references
   /// @return A unique pointer to the factory
   std::unique_ptr<NavigationPolicyFactory> asUniquePtr() {
     return std::make_unique<NavigationPolicyFactory>(std::move(*this));
   }
 
-  /// Construct a navigation policy using the factories
+  /// Construct a multi-navigation policy using the registered factories
   /// @param gctx The geometry context
   /// @param volume The tracking volume
   /// @param logger The logger
+  /// @return A unique pointer to the constructed MultiNavigationPolicy
+  /// @throws std::runtime_error if no factories are registered
   std::unique_ptr<MultiNavigationPolicy> operator()(
       const GeometryContext& gctx, const TrackingVolume& volume,
       const Logger& logger) const {
@@ -127,10 +143,11 @@ class NavigationPolicyFactory {
     return std::make_unique<MultiNavigationPolicy>(std::move(policies));
   }
 
-  /// Construct a navigation policy using the factories
+  /// Construct a navigation policy using the factories (alias for operator())
   /// @param gctx The geometry context
   /// @param volume The tracking volume
   /// @param logger The logger
+  /// @return A unique pointer to the constructed navigation policy
   std::unique_ptr<INavigationPolicy> build(const GeometryContext& gctx,
                                            const TrackingVolume& volume,
                                            const Logger& logger) const {
@@ -138,6 +155,7 @@ class NavigationPolicyFactory {
   }
 
  private:
+  /// Vector of factory functions to create navigation policies
   std::vector<factory_type> m_factories;
 };
 

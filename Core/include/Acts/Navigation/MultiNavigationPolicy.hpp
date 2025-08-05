@@ -13,9 +13,13 @@
 namespace Acts {
 
 /// Combined navigation policy that calls all contained other navigation
-/// policies.
+/// policies. This class manages multiple navigation policies and executes
+/// them sequentially to populate the navigation stream with candidates.
 class MultiNavigationPolicy final : public INavigationPolicy {
  public:
+  /// Constructor from multiple unique_ptr policies
+  /// @tparam Policies The types of the navigation policies
+  /// @param policies Unique pointers to navigation policies
   template <typename... Policies>
   explicit MultiNavigationPolicy(std::unique_ptr<Policies>... policies)
       : MultiNavigationPolicy{[](auto... args) {
@@ -29,20 +33,32 @@ class MultiNavigationPolicy final : public INavigationPolicy {
           return policyPtrs;
         }(std::move(policies)...)} {}
 
+  /// Constructor from a vector of navigation policies
+  /// @param policies Vector of unique pointers to navigation policies
   explicit MultiNavigationPolicy(
       std::vector<std::unique_ptr<INavigationPolicy>>&& policies);
 
+  /// Connect this policy to a navigation delegate
+  /// @param delegate The navigation delegate to connect to
   void connect(NavigationDelegate& delegate) const override;
 
+  /// Access the contained navigation policies
+  /// @return Span of const unique pointers to the navigation policies
   const std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
  private:
+  /// Initialize navigation candidates by calling all contained policies
+  /// @param args The navigation arguments
+  /// @param stream The navigation stream to populate
+  /// @param logger Logger for debug output
   void initializeCandidates(const NavigationArguments& args,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 
+  /// Vector of unique pointers to the contained navigation policies
   std::vector<std::unique_ptr<INavigationPolicy>> m_policyPtrs;
 
+  /// Vector of navigation delegates, one for each policy
   std::vector<NavigationDelegate> m_delegates;
 };
 }  // namespace Acts
