@@ -468,10 +468,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   linePars[static_cast<std::size_t>(ParIdx::x0)] = 0._cm;
   linePars[static_cast<std::size_t>(ParIdx::y0)] = -105_cm;
 
-  const Vector wPos{0._cm, -75._cm, 150._cm};
-  const Vector wDir{Vector::UnitX()};
-  const double t0{10._ns};
-
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
                      10._ns);
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
