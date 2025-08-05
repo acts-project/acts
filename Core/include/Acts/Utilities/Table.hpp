@@ -47,6 +47,9 @@ class Table {
   /// @param alignment Column alignment (default: Left)
   void addColumn(const std::string& header, const std::string& format,
                  Alignment alignment = Alignment::Left) {
+    if (!m_rows.empty()) {
+      throw std::runtime_error("Cannot add columns after rows have been added");
+    }
     m_columns.push_back({header, format, alignment, header.length()});
   }
 
