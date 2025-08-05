@@ -137,7 +137,7 @@ struct MuonSpacePointData {
   unsigned short primaryCh{0u};
   /// @brief Flag toggling whether the measurement is a precision one
   bool measuresEta{false};
-  /// @brief Flag togglign whether the measurement is a non-precision one
+  /// @brief Flag toggling whether the measurement is a non-precision one
   bool measuresPhi{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
                  locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
@@ -264,7 +264,7 @@ struct SurfaceData {
   float rot_xu = 0, rot_xv = 0, rot_xw = 0;
   float rot_yu = 0, rot_yv = 0, rot_yw = 0;
   float rot_zu = 0, rot_zv = 0, rot_zw = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the surface bounds object, determines the parameters filled
   int bounds_type = 0;
   float bound_param0 = -1.f;
   float bound_param1 = -1.f;
@@ -291,7 +291,7 @@ struct LayerVolumeData {
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
   std::uint32_t volume_id = 0, layer_id = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the volume object, determines the parameters filled
   int volume_type = 0;
   float min_v0 = -1.f;
   float max_v0 = -1.f;
