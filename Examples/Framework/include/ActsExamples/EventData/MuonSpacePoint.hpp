@@ -131,7 +131,7 @@ class MuonSpacePoint {
   const Acts::Vector3& planeNormal() const { return m_norm; }
   /// @brief Returns the vector pointing to the next wire / strip
   const Acts::Vector3& toNextSensor() const { return m_toNext; }
-  /// @brief Returns the space point covariance
+  /// @brief Returns the space point covariance values
   const std::array<double, 3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
