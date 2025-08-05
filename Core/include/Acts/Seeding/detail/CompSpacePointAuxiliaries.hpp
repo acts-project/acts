@@ -38,17 +38,20 @@ namespace Acts::Experimental::detail {
 ///        If the strip measurements provide also the time of their record, the
 ///        residual calculation can be extended to the time of arrival parameter
 ///        The residual is then defined as the strip's recorded time minus the
-///        time of flight of a particle on a straight line minus the time offset.
-///        
-///        Straw measurements are indirectly influenced by the time offset parameter.
-///        The primary electrons produced by the traversing ionizing particle drift 
-///        towards the central straw wire. The drift time can be directly mapped to the
-///        drift radius during the calibration procedure where the rt relation and its
-///        first two derivatives are known apprxomately. Further, it's assumed that the 
-///        chip records are composed timestamp that includes the drift time & the time of
-///        flight of the ionizing particle. An update of the point of closest approach
-///        leads to an indirect update of the drift radius and hence additional terms
-///        need to be considered when calculating the residual's derivatives.
+///        time of flight of a particle on a straight line minus the time
+///        offset.
+///
+///        Straw measurements are indirectly influenced by the time offset
+///        parameter. The primary electrons produced by the traversing ionizing
+///        particle drift towards the central straw wire. The drift time can be
+///        directly mapped to the drift radius during the calibration procedure
+///        where the rt relation and its first two derivatives are known
+///        apprxomately. Further, it's assumed that the chip records are
+///        composed timestamp that includes the drift time & the time of flight
+///        of the ionizing particle. An update of the point of closest approach
+///        leads to an indirect update of the drift radius and hence additional
+///        terms need to be considered when calculating the residual's
+///        derivatives.
 
 class CompSpacePointAuxiliaries {
  public:
@@ -274,6 +277,12 @@ class CompSpacePointAuxiliaries {
   std::array<Vector, sumUpToN(s_nLinePars)> m_hessianProjDir{
       filledArray<Vector, sumUpToN(s_nLinePars)>(Vector::Zero())};
 
+  /// @brief Gradient vector of the point of closest approach
+  std::array<Vector, s_nLinePars> m_gradCloseApproach{
+      filledArray<Vector, s_nLinePars>(Vector::Zero())};
+  /// @brief Partial derivative of the actual distance of the closest approach
+  std::array<double, s_nLinePars> m_partialApproachDist{
+      filledArray<double, s_nLinePars>(0.)};
   /// @brief Tansform matrix to treat stereo angles amongst the strips
   ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
 };

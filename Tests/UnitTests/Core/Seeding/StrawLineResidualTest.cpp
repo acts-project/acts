@@ -242,8 +242,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   }
 }
 
-
-void testSeed(const std::array<TestSpacePoint*, 4>& spacePoints,
+void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
               const std::array<double, 4>& truthDistances,
               const Vector3& truthPosZ0, const Vector3& truthDir) {
   const SquareMatrix2 bMatrix =
@@ -276,7 +275,6 @@ void testSeed(const std::array<TestSpacePoint*, 4>& spacePoints,
   BOOST_CHECK_LE(std::abs(std::abs(seedDir.dot(truthDir)) - 1.),
                  std::numeric_limits<float>::epsilon());
 }
-
 
 void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
                            const TestSpacePoint& sp,
@@ -405,6 +403,55 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     return resCalc;
   };
 
+  auto testTimingResidual = [&makeCalculator, &resCfg](
+      const Pars_t& linePars, const Vector& wPos, const Vector& wDir,
+      const double t0) {
+    auto resCalc = makeCalculator(linePars, wPos, wDir, t0);
+    std::cout << "Residual: " << toString(resCalc.residual()) << std::endl;
+    for (const auto partial : resCfg.parsToUse) {
+      std::cout << " *** partial: "
+                << CompSpacePointAuxiliaries::parName(partial) << " "
+                << toString(resCalc.gradient(partial)) << std::endl;
+    }
+    constexpr double h = 1.e-7;
+    constexpr double tolerance = 1.e-3;
+    for (const auto partial : resCfg.parsToUse) {
+      Pars_t lineParsUp{linePars}, lineParsDn{linePars};
+      double t0Up{t0}, t0Dn{t0};
+      if (partial != ParIdx::t0) {
+        lineParsUp[static_cast<std::size_t>(partial)] += h;
+        lineParsDn[static_cast<std::size_t>(partial)] -= h;
+      } else {
+        t0Up += h;
+        t0Dn -= h;
+      }
+      auto resCalcUp = makeCalculator(lineParsUp, wPos, wDir, t0Up);
+      auto resCalcDn = makeCalculator(lineParsDn, wPos, wDir, t0Dn);
+
+      const Vector numDeriv =
+          (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
+      std::cout << "\nPartial " << CompSpacePointAuxiliaries::parName(partial)
+                << " --  numerical: " << toString(numDeriv)
+                << ", analytical: " << toString(resCalc.gradient(partial))
+                << "\n"
+                << std::endl;
+      BOOST_CHECK_LE((numDeriv - resCalc.gradient(partial)).norm() /
+                         std::max(numDeriv.norm(), 1.),
+                     tolerance);
+      for (const auto partial2 : resCfg.parsToUse) {
+        const Vector numDeriv1{
+            (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
+            (2. * h)};
+        const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
+        std::cout << "Second deriv ("
+                  << CompSpacePointAuxiliaries::parName(partial) << ", "
+                  << CompSpacePointAuxiliaries::parName(partial2)
+                  << ") -- numerical: " << toString(numDeriv1)
+                  << ", analytic: " << toString(analyticDeriv) << std::endl;
+        BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
+      }
+    }
+  };
   Pars_t linePars{};
   linePars[static_cast<std::size_t>(ParIdx::phi)] = 90._degree;
   linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
@@ -414,49 +461,12 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   const Vector wPos{0._cm, -75._cm, 150._cm};
   const Vector wDir{Vector::UnitX()};
   const double t0{10._ns};
-  auto resCalc = makeCalculator(linePars, wPos, wDir, t0);
-  std::cout << "Residual: " << toString(resCalc.residual()) << std::endl;
-  for (const auto partial : resCfg.parsToUse) {
-    std::cout << " *** partial: " << CompSpacePointAuxiliaries::parName(partial)
-              << " " << toString(resCalc.gradient(partial)) << std::endl;
-  }
-  constexpr double h = 1.e-7;
-  constexpr double tolerance = 1.e-3;
-  for (const auto partial : resCfg.parsToUse) {
-    Pars_t lineParsUp{linePars}, lineParsDn{linePars};
-    double t0Up{t0}, t0Dn{t0};
-    if (partial != ParIdx::t0) {
-      lineParsUp[static_cast<std::size_t>(partial)] += h;
-      lineParsDn[static_cast<std::size_t>(partial)] -= h;
-    } else {
-      t0Up += h;
-      t0Dn -= h;
-    }
-    auto resCalcUp = makeCalculator(lineParsUp, wPos, wDir, t0Up);
-    auto resCalcDn = makeCalculator(lineParsDn, wPos, wDir, t0Dn);
 
-    const Vector numDeriv =
-        (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
-    std::cout << "\nPartial " << CompSpacePointAuxiliaries::parName(partial)
-              << " --  numerical: " << toString(numDeriv)
-              << ", analytical: " << toString(resCalc.gradient(partial)) << "\n"
-              << std::endl;
-    BOOST_CHECK_LE((numDeriv - resCalc.gradient(partial)).norm() /
-                       std::max(numDeriv.norm(), 1.),
-                   tolerance);
-    for (const auto partial2 : resCfg.parsToUse) {
-      const Vector numDeriv1{
-          (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
-          (2. * h)};
-      const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
-      std::cout << "Second deriv ("
-                << CompSpacePointAuxiliaries::parName(partial) << ", "
-                << CompSpacePointAuxiliaries::parName(partial2)
-                << ") -- numerical: " << toString(numDeriv1)
-                << ", analytic: " << toString(analyticDeriv) << std::endl;
-      BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
-    }
-  }
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector::UnitX(), 10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector{1.,1.,0.}.normalized(), 10._ns);
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector::UnitX(), 10._ns);
+
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
   // Set the line to be 45 degrees
@@ -534,95 +544,6 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
                               TestSpacePoint::bothDirections});
 }
 
-BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
-  RandomEngine rndEngine{23568};
-  const std::size_t nStrips = 8;
-  const std::size_t nEvents = 100;
-  constexpr auto x0_idx = static_cast<std::size_t>(ParIdx::x0);
-  constexpr auto y0_idx = static_cast<std::size_t>(ParIdx::y0);
-  constexpr auto phi_idx = static_cast<std::size_t>(ParIdx::phi);
-  constexpr auto theta_idx = static_cast<std::size_t>(ParIdx::theta);
-
-  const std::array<Vector3, nStrips> stripDirections = {
-      Vector3::UnitX(),
-      Vector3::UnitX(),
-      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
-      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
-      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
-      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
-      Vector3::UnitX(),
-      Vector3::UnitX()};
-
-  constexpr std::array<double, nStrips> distancesZ{-20., -264., 0.,  300.,
-                                                   350,  370.,  400, 450.};
-
-  std::array<double, nStrips> parameters{};
-  std::array<Vector3, nStrips> intersections{};
-
-  // pseudo track initialization
-  Line_t line{};
-  Pars_t linePars{};
-  linePars[x0_idx] = 0. * 1_mm;
-  linePars[y0_idx] = 0. * 1_mm;
-  linePars[phi_idx] = 0. * 1_degree;
-  linePars[theta_idx] = 0. * 1_degree;
-  line.updateParameters(linePars);
-
-  for (std::size_t i = 0; i < nEvents; i++) {
-    std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
-              << std::endl;
-    // update pseudo track parameters with random values
-    linePars[x0_idx] = rndEngine() % 1000 - 500.;
-    linePars[y0_idx] = rndEngine() % 1000 - 500.;
-    linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
-    linePars[theta_idx] = (rndEngine() % 90) * 1_degree;
-    line.updateParameters(linePars);
-
-    Vector3 muonPos = line.position();
-    Vector3 muonDir = line.direction();
-
-    std::array<std::unique_ptr<TestSpacePoint>, nStrips> spacePoints{};
-    for (std::size_t layer = 0; layer < nStrips; layer++) {
-      auto intersection = PlanarHelper::intersectPlane(
-          muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
-      intersections[layer] = intersection.position();
-      // where the hit is along the strip
-      auto alongStrip = PlanarHelper::intersectPlane(
-          intersections[layer], stripDirections[layer], Vector3::UnitX(), 0.);
-
-      parameters[layer] = alongStrip.pathLength();
-
-      Vector3 stripPos =
-          intersections[layer] + parameters[layer] * stripDirections[layer];
-
-      spacePoints[layer] = std::make_unique<TestSpacePoint>(
-          stripPos, stripDirections[layer], Vector3::UnitZ(),
-          TestSpacePoint::nonBendingDir);
-    }
-
-    // let's pick four strips on fours different layers
-    // check combinatorics
-    std::array<TestSpacePoint*, 4> seedSpacePoints = {};
-    for (unsigned int l = 0; l < distancesZ.size() - 3; ++l) {
-      seedSpacePoints[0] = spacePoints[l].get();
-      for (unsigned int k = l + 1; k < distancesZ.size() - 2; ++k) {
-        seedSpacePoints[1] = spacePoints[k].get();
-        for (unsigned int m = k + 1; m < distancesZ.size() - 1; ++m) {
-          seedSpacePoints[2] = spacePoints[m].get();
-          for (unsigned int n = m + 1; n < distancesZ.size(); ++n) {
-            seedSpacePoints[3] = spacePoints[n].get();
-
-            const std::array<double, 4> truthDistances = {
-                parameters[l], parameters[k], parameters[m], parameters[n]};
-
-            testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
-          }
-        }
-      }
-    }
-  }
-}
-
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   Pars_t linePars{};
   linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
@@ -673,6 +594,95 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
                      makeDirectionFromPhiTheta(0_degree, 90_degree),
                      makeDirectionFromPhiTheta(60._degree, 75_degree), 15},
       locToGlob);
+}
+
+BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
+  RandomEngine rndEngine{23568};
+  const std::size_t nStrips = 8;
+  const std::size_t nEvents = 100;
+  constexpr auto x0_idx = static_cast<std::size_t>(ParIdx::x0);
+  constexpr auto y0_idx = static_cast<std::size_t>(ParIdx::y0);
+  constexpr auto phi_idx = static_cast<std::size_t>(ParIdx::phi);
+  constexpr auto theta_idx = static_cast<std::size_t>(ParIdx::theta);
+
+  const std::array<Vector3, nStrips> stripDirections = {
+      Vector3::UnitX(),
+      Vector3::UnitX(),
+      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(1.5_degree, 90_degree),
+      makeDirectionFromPhiTheta(-1.5_degree, 90_degree),
+      Vector3::UnitX(),
+      Vector3::UnitX()};
+
+  constexpr std::array<double, nStrips> distancesZ{-20., -264., 0.,  300.,
+                                                   350,  370.,  400, 450.};
+
+  std::array<double, nStrips> parameters{};
+  std::array<Vector3, nStrips> intersections{};
+
+  // pseudo track initialization
+  Line_t line{};
+  Pars_t linePars{};
+  linePars[x0_idx] = 0. * 1_mm;
+  linePars[y0_idx] = 0. * 1_mm;
+  linePars[phi_idx] = 0. * 1_degree;
+  linePars[theta_idx] = 0. * 1_degree;
+  line.updateParameters(linePars);
+
+  for (std::size_t i = 0; i < nEvents; i++) {
+    std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
+              << std::endl;
+    // update pseudo track parameters with random values
+    linePars[x0_idx] = rndEngine() % 1000 - 500.;
+    linePars[y0_idx] = rndEngine() % 1000 - 500.;
+    linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
+    linePars[theta_idx] = (rndEngine() % 90) * 1_degree;
+    line.updateParameters(linePars);
+
+    Vector3 muonPos = line.position();
+    Vector3 muonDir = line.direction();
+
+    std::array<std::shared_ptr<TestSpacePoint>, nStrips> spacePoints{};
+    for (std::size_t layer = 0; layer < nStrips; layer++) {
+      auto intersection = PlanarHelper::intersectPlane(
+          muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
+      intersections[layer] = intersection.position();
+      // where the hit is along the strip
+      auto alongStrip = PlanarHelper::intersectPlane(
+          intersections[layer], stripDirections[layer], Vector3::UnitX(), 0.);
+
+      parameters[layer] = alongStrip.pathLength();
+
+      Vector3 stripPos =
+          intersections[layer] + parameters[layer] * stripDirections[layer];
+
+      spacePoints[layer] = std::make_shared<TestSpacePoint>(
+          stripPos, stripDirections[layer], Vector3::UnitZ(),
+          TestSpacePoint::nonBendingDir);
+    }
+
+    // let's pick four strips on fours different layers
+    // check combinatorics
+    std::array<std::shared_ptr<TestSpacePoint>, 4> seedSpacePoints{};
+    for (unsigned int l = 0; l < distancesZ.size() - 3; ++l) {
+      seedSpacePoints[0] = spacePoints[l];
+      for (unsigned int k = l + 1; k < distancesZ.size() - 2; ++k) {
+        seedSpacePoints[1] = spacePoints[k];
+        for (unsigned int m = k + 1; m < distancesZ.size() - 1; ++m) {
+          seedSpacePoints[2] = spacePoints[m];
+          for (unsigned int n = m + 1; n < distancesZ.size(); ++n) {
+            seedSpacePoints[3] = spacePoints[n];
+
+            const std::array<double, 4> truthDistances = {
+                parameters[l], parameters[k], parameters[m], parameters[n]};
+
+            testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
+          }
+        }
+      }
+    }
+  }
 }
 
 }  // namespace Acts::Test

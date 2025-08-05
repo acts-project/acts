@@ -643,9 +643,6 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
 
   const double invDist =
       distance > s_tolerance ? 1. / (distance * PhysicalConstants::c) : 0.;
-  std::array<Vector, s_nPars> gradApproach{
-      filledArray<Vector, s_nPars>(Vector::Zero())};
-  std::array<double, s_nPars> gradDist{filledArray<double, s_nPars>(0.)};
   for (const auto partial : m_cfg.parsToUse) {
     const auto idx = static_cast<std::size_t>(partial);
     if (partial == FitParIndex::t0) {
@@ -655,22 +652,24 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
     const Vector3& lGrad = line.gradient(static_cast<LineIndex>(partial));
     if (isPositionParam(partial)) {
       // clang-format off
-      gradApproach[idx] = lGrad - lGrad.dot(m_projDir * m_invProjDirLen) * line.direction();
+      m_gradCloseApproach[idx] = lGrad - lGrad.dot(m_projDir * m_invProjDirLen) * line.direction();
       // clang-format on
     } else if (isDirectionParam(partial)) {
       // clang-format off
-      gradApproach[idx] =  hitMinSeg.dot(m_gradProjDir[idx]) * m_invProjDirLen * line.direction()
+      m_gradCloseApproach[idx] =  hitMinSeg.dot(m_gradProjDir[idx]) * m_invProjDirLen * line.direction()
                         + travDist * lGrad
                         + m_wireProject  * m_projDirLenPartial[idx] * m_invProjDirLenSq * travDist  * line.direction();
       // clang-format on
     }
-    gradDist[idx] = -dSign * globApproach.dot(gradApproach[idx]) * invDist;
-    ACTS_INFO("updateTimeStrawRes() - Correct the partial derivative w.r.t. "
-              << parName(partial) << " " << m_gradient[idx][bending] << " by "
-              << toString(gradApproach[idx])
-              << " dCoA: " << gradDist[idx] * driftV << " -> "
-              << (m_gradient[idx][bending] - gradDist[idx] * driftV));
-    m_gradient[idx][bending] -= gradDist[idx] * driftV;
+    m_partialApproachDist[idx] =
+        -dSign * globApproach.dot(m_gradCloseApproach[idx]) * invDist;
+    ACTS_VERBOSE(
+        "updateTimeStrawRes() - Correct the partial derivative w.r.t. "
+        << parName(partial) << " " << m_gradient[idx][bending] << " by "
+        << toString(m_gradCloseApproach[idx])
+        << " dCoA: " << m_partialApproachDist[idx] * driftV << " -> "
+        << (m_gradient[idx][bending] - m_partialApproachDist[idx] * driftV));
+    m_gradient[idx][bending] -= m_partialApproachDist[idx] * driftV;
   }
 
   if (!m_cfg.useHessian) {
@@ -689,8 +688,8 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
         if (partial2 == FitParIndex::t0) {
           m_hessian[hessIdx] = -dSign * driftA * Vector::Unit(bending);
         } else {
-          m_hessian[hessIdx] =
-              dSign * driftA * gradDist[idx2] * Vector::Unit(bending);
+          m_hessian[hessIdx] = dSign * driftA * m_partialApproachDist[idx2] *
+                               Vector::Unit(bending);
         }
         ACTS_VERBOSE("updateTimeStrawRes() -"
                      << " Second partial derivative of the drift "
@@ -702,9 +701,9 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       Vector hessCmp{Vector::Zero()};
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
-        auto calcMixedTerms = [this, &hitMinSeg, &gradApproach, &travDist, &line]
+        auto calcMixedTerms = [this, &hitMinSeg, &travDist, &line]
            (const std::size_t pIdx1, const std::size_t pIdx2) ->Vector {
-           return m_projDirLenPartial[pIdx1] * m_wireProject * m_invProjDirLenSq * gradApproach[pIdx2]
+           return m_projDirLenPartial[pIdx1] * m_wireProject * m_invProjDirLenSq * m_gradCloseApproach[pIdx2]
                   + hitMinSeg.dot(m_gradProjDir[pIdx1]) * m_invProjDirLen * line.gradient(static_cast<LineIndex>(pIdx2))
                   + 0.5 * m_invProjDirLenSq *  m_projDirLenPartial[pIdx1] * m_projDirLenPartial[pIdx2] *
                    travDist*( 1. + Acts::pow(m_wireProject* m_invProjDirLen, 2)) * line.direction();
@@ -716,9 +715,13 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
         const std::size_t hessProjIdx = vecIdxFromSymMat<s_nLinePars>(idx1, idx2);
         hessCmp = m_invProjDirLen * hitMinSeg.dot(m_hessianProjDir[hessProjIdx]) * line.direction()
                  + travDist*lHessian
-                 + travDist*m_wireProject*lHessian.dot(wireDir)*m_invProjDirLenSq *line.direction()
-                 + (idx1!= idx2 ? calcMixedTerms(idx1, idx2) : 2.*calcMixedTerms(idx1, idx2));
+                 + travDist*m_wireProject*lHessian.dot(wireDir)*m_invProjDirLenSq *line.direction();
         // clang-format on
+        if (idx1 != idx2) {
+           hessCmp += calcMixedTerms(idx1, idx2) + calcMixedTerms(idx2, idx1);
+        } else {
+           hessCmp += 2.*calcMixedTerms(idx1, idx2);
+        }
       } else if (isDirectionParam(partial1) || isDirectionParam(partial2)) {
         // clang-format off
         const auto angParam = isDirectionParam(partial1) ? idx1 : idx2;
@@ -731,10 +734,10 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
         // clang-format on
       }
       // clang-format off
-      const double partialCoA = gradApproach[idx1].dot(gradApproach[idx2]) * invDist +
+      const double partialCoA = m_gradCloseApproach[idx1].dot(m_gradCloseApproach[idx2]) * invDist +
                                 globApproach.dot(hessCmp) * invDist -
-                                gradDist[idx1] * gradDist[idx2]* invDist;
-      const double hessianR = driftA * gradDist[idx1] * gradDist[idx2]
+                                m_partialApproachDist[idx1] * m_partialApproachDist[idx2]* invDist;
+      const double hessianR = driftA * m_partialApproachDist[idx1] * m_partialApproachDist[idx2]
                             - driftV * partialCoA;
       // clang-format on
       ACTS_VERBOSE(
