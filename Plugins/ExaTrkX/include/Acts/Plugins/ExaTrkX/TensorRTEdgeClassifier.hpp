@@ -54,6 +54,9 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
   std::unique_ptr<nvinfer1::ICudaEngine> m_engine;
   std::unique_ptr<nvinfer1::ILogger> m_trtLogger;
 
+  std::size_t m_maxEdges = 0;
+  std::size_t m_maxNodes = 0;
+
   mutable std::optional<std::counting_semaphore<>> m_count;
   mutable std::mutex m_contextMutex;
   mutable std::vector<std::unique_ptr<nvinfer1::IExecutionContext>> m_contexts;
