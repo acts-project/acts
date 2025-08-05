@@ -27,9 +27,9 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
         target_link_libraries(
             ActsExamplesMuonSpectrometerMockupDetector
             PUBLIC
-                ActsExamplesGeant4
-                ActsExamplesDetectorGeant4
-                ActsPluginGeant4
+                Acts::ExamplesGeant4
+                Acts::ExamplesDetectorGeant4
+                Acts::PluginGeant4
         )
     endif()
 endif()
