@@ -33,7 +33,23 @@ namespace Acts::Experimental::detail {
 ///
 ///        For strip type measurements, the residual is the distance in the
 ///        strip-readout plane between the point along the line that intersects
-///        the plane and the measurement.
+///        the plane spanned by the measurement.
+///
+///        If the strip measurements provide also the time of their record, the
+///        residual calculation can be extended to the time of arrival parameter
+///        The residual is then defined as the strip's recorded time minus the
+///        time of flight of a particle on a straight line minus the time offset.
+///        
+///        Straw measurements are indirectly influenced by the time offset parameter.
+///        The primary electrons produced by the traversing ionizing particle drift 
+///        towards the central straw wire. The drift time can be directly mapped to the
+///        drift radius during the calibration procedure where the rt relation and its
+///        first two derivatives are known apprxomately. Further, it's assumed that the 
+///        chip records are composed timestamp that includes the drift time & the time of
+///        flight of the ionizing particle. An update of the point of closest approach
+///        leads to an indirect update of the drift radius and hence additional terms
+///        need to be considered when calculating the residual's derivatives.
+
 class CompSpacePointAuxiliaries {
  public:
   using Line_t = Acts::detail::Line3DWithPartialDerivatives<double>;
@@ -95,7 +111,7 @@ class CompSpacePointAuxiliaries {
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
   /// @brief Updates all residual components between the line and the passed measurement
   ///        First the spatial components are calculated and then if the
-  ///        measurement also provides time information, the time residual & the
+  ///        measurement also provides time information, the time residual & its
   ///        derivatives are evaluated.
   /// @param line: Reference to the line to which the residual is calculated
   /// @param timeOffet: Value of the t0 fit parameter.
