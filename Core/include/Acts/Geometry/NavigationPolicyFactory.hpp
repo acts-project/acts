@@ -61,10 +61,6 @@ class NavigationPolicyFactory {
  public:
   /// Default constructor
   NavigationPolicyFactory() = default;
-  /// Move constructor
-  NavigationPolicyFactory(NavigationPolicyFactory&& other) = default;
-  /// Copy constructor
-  NavigationPolicyFactory(const NavigationPolicyFactory& other) = default;
 
   /// Create a new navigation policy factory
   /// @deprecated Use the default constructor instead
