@@ -146,56 +146,58 @@ BOOST_AUTO_TEST_CASE(TableMixedTypes) {
 
 BOOST_AUTO_TEST_CASE(TableStringAlignment) {
   Table table;
-  
+
   // Test string alignment overload with full names
   table.addColumn("Left", "{}", "left");
   table.addColumn("Right", "{}", "right");
   table.addColumn("Center", "{}", "center");
-  
+
   table.addRow("Item1", "Value1", "Data1");
   table.addRow("LongerItem", "V2", "D2");
-  
+
   std::string result = table.toString();
-  
+
   // Expected output with string-based alignments
   std::string expected =
       "| Left       |  Right | Center |\n"
       "|:-----------|-------:|:------:|\n"
       "| Item1      | Value1 | Data1  |\n"
       "| LongerItem |     V2 |   D2   |\n";
-  
+
   BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(TableStringAlignmentShort) {
   Table table;
-  
+
   // Test string alignment overload with short names (case insensitive)
   table.addColumn("Col1", "{}", "L");
-  table.addColumn("Col2", "{}", "r");  
+  table.addColumn("Col2", "{}", "r");
   table.addColumn("Col3", "{}", "C");
-  
+
   table.addRow("A", "B", "C");
   table.addRow("XX", "YY", "ZZ");
-  
+
   std::string result = table.toString();
-  
+
   // Expected output with short alignment strings
   std::string expected =
       "| Col1 | Col2 | Col3 |\n"
       "|:-----|-----:|:----:|\n"
       "| A    |    B |  C   |\n"
       "| XX   |   YY |  ZZ  |\n";
-  
+
   BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(TableInvalidAlignment) {
   Table table;
-  
+
   // Test invalid alignment string
-  BOOST_CHECK_THROW(table.addColumn("Test", "{}", "invalid"), std::invalid_argument);
-  BOOST_CHECK_THROW(table.addColumn("Test", "{}", "middle"), std::invalid_argument);
+  BOOST_CHECK_THROW(table.addColumn("Test", "{}", "invalid"),
+                    std::invalid_argument);
+  BOOST_CHECK_THROW(table.addColumn("Test", "{}", "middle"),
+                    std::invalid_argument);
   BOOST_CHECK_THROW(table.addColumn("Test", "{}", ""), std::invalid_argument);
 }
 
@@ -203,10 +205,10 @@ BOOST_AUTO_TEST_CASE(TableMarkdownMode) {
   Table table;
   table.addColumn("Name", "{}", "left");
   table.addColumn("Value", "{}", "right");
-  
+
   table.addRow("Item1", "A");
   table.addRow("Item2", "BB");
-  
+
   // Test with markdown markers (default)
   std::string withMarkers = table.toString();
   std::string expectedWithMarkers =
@@ -214,18 +216,18 @@ BOOST_AUTO_TEST_CASE(TableMarkdownMode) {
       "|:------|------:|\n"
       "| Item1 |     A |\n"
       "| Item2 |    BB |\n";
-  
+
   BOOST_CHECK_EQUAL(withMarkers, expectedWithMarkers);
-  
+
   // Test without markdown markers
   table.setMarkdownMode(false);
   std::string withoutMarkers = table.toString();
   std::string expectedWithoutMarkers =
       "| Name  | Value |\n"
       "|-------|-------|\n"
-      "| Item1 |     A |\n" 
+      "| Item1 |     A |\n"
       "| Item2 |    BB |\n";
-  
+
   BOOST_CHECK_EQUAL(withoutMarkers, expectedWithoutMarkers);
 }
 
@@ -233,20 +235,20 @@ BOOST_AUTO_TEST_CASE(TableOstreamOperator) {
   Table table;
   table.addColumn("Col1", "{}", "left");
   table.addColumn("Col2", "{}", "center");
-  
+
   table.addRow("A", "B");
   table.addRow("C", "D");
-  
+
   // Test ostream operator
   std::ostringstream oss;
   oss << table;
-  
+
   std::string expected =
       "| Col1 | Col2 |\n"
       "|:-----|:----:|\n"
       "| A    |  B   |\n"
       "| C    |  D   |\n";
-  
+
   BOOST_CHECK_EQUAL(oss.str(), expected);
 }
 

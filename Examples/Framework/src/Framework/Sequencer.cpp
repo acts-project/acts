@@ -336,9 +336,10 @@ void printTiming(const std::vector<std::string>& identifiers,
   // Create sorted indices based on total duration (descending)
   std::vector<std::size_t> sortedIndices(identifiers.size());
   std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
-  std::sort(sortedIndices.begin(), sortedIndices.end(), [&](std::size_t a, std::size_t b) {
-    return durations[a] > durations[b];
-  });
+  std::sort(sortedIndices.begin(), sortedIndices.end(),
+            [&](std::size_t a, std::size_t b) {
+              return durations[a] > durations[b];
+            });
 
   for (std::size_t idx : sortedIndices) {
     double fraction =
@@ -350,14 +351,16 @@ void printTiming(const std::vector<std::string>& identifiers,
             : 0.0;
 
     double totalValue = durationToMs(durations[idx]);
-    double perEventValue = numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
+    double perEventValue =
+        numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
 
     table.addRow(identifiers[idx], totalValue, perEventValue, fraction);
   }
 
   // Add summary row
   double totalSummaryValue = durationToMs(totalTime);
-  double totalPerEventValue = numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
+  double totalPerEventValue =
+      numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
   table.addRow("TOTAL", totalSummaryValue, totalPerEventValue, 100.0);
 
   ACTS_INFO("Timing breakdown:\n" << table);

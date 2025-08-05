@@ -42,12 +42,17 @@ class Table {
   };
 
   /// Add a column with header, format string, and alignment
+  /// @param header Column header text
+  /// @param format Format string for the column values
+  /// @param alignment Column alignment (default: Left)
   void addColumn(const std::string& header, const std::string& format,
                  Alignment alignment = Alignment::Left) {
     m_columns.push_back({header, format, alignment, header.length()});
   }
 
   /// Add a column with header, format string, and alignment as string
+  /// @param header Column header text
+  /// @param format Format string for the column values
   /// @param alignment String alignment: "left"/"l", "right"/"r", "center"/"c" (case insensitive)
   /// @throws std::invalid_argument if alignment string is not recognized
   void addColumn(const std::string& header, const std::string& format,
