@@ -84,14 +84,14 @@ class NavigationPolicyFactory {
                                      const TrackingVolume&, const Logger&,
                                      Args...> &&
              (std::is_copy_constructible_v<Args> && ...))
-  constexpr NavigationPolicyFactory& add(Args&&... args) {
+  constexpr NavigationPolicyFactory add(Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       return std::make_unique<P>(gctx, volume, logger, args...);
     };
 
     m_factories.push_back(std::move(factory));
-    return *this;
+    return std::move(*this);
   }
 
   /// Add a policy created by a factory function
@@ -103,7 +103,7 @@ class NavigationPolicyFactory {
   /// @return Reference to this factory for method chaining
   template <typename Fn, typename... Args>
     requires(detail::NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
-  constexpr NavigationPolicyFactory& add(Fn&& fn, Args&&... args) {
+  constexpr NavigationPolicyFactory add(Fn&& fn, Args&&... args) && {
     auto factory = [=](const GeometryContext& gctx,
                        const TrackingVolume& volume, const Logger& logger) {
       using policy_type = decltype(fn(gctx, volume, logger, args...));
@@ -111,12 +111,12 @@ class NavigationPolicyFactory {
     };
 
     m_factories.push_back(std::move(factory));
-    return *this;
+    return std::move(*this);
   }
 
   /// Move the factory into a unique pointer
   /// @return A unique pointer to the factory
-  std::unique_ptr<NavigationPolicyFactory> asUniquePtr() {
+  std::unique_ptr<NavigationPolicyFactory> asUniquePtr() && {
     return std::make_unique<NavigationPolicyFactory>(std::move(*this));
   }
 
