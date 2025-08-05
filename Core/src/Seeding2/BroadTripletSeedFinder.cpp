@@ -30,6 +30,10 @@ void createAndFilterTriplets(float rMaxSeedConf,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
   for (DoubletsForMiddleSp::Proxy lb : bottomDoublets) {
+    if (topDoublets.empty()) {
+      break;
+    }
+
     auto spB = spacePoints[lb.spacePoint()];
 
     // minimum number of compatible top SPs to trigger the filter for a certain
@@ -44,6 +48,7 @@ void createAndFilterTriplets(float rMaxSeedConf,
       minCompatibleTopSPs++;
     }
 
+    cache.tripletTopCandidates.clear();
     tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
                                              cache.tripletTopCandidates);
 
@@ -164,7 +169,12 @@ void createSeedsFromGroupsImpl(
 
 BroadTripletSeedFinder::BroadTripletSeedFinder(
     std::unique_ptr<const Logger> logger_)
-    : m_logger(std::move(logger_)) {}
+    : m_logger(std::move(logger_)) {
+  if (m_logger == nullptr) {
+    throw std::invalid_argument(
+        "BroadTripletSeedFinder: logger cannot be null");
+  }
+}
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
     State& state, Cache& cache, const DoubletSeedFinder& bottomFinder,

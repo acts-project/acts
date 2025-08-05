@@ -103,9 +103,8 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
     float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(topDoublets.size());
-    // clear all vectors used in each inner for loop
-    tripletTopCandidates.clear();
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
 
     for (std::size_t topDoubletIndex = 0; topDoubletIndex < topDoublets.size();
          ++topDoubletIndex) {
@@ -228,7 +227,8 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
     float varianceZM = spM.varianceZ();
 
     // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(topDoublets.size());
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
 
     const ConstSpacePointProxy2 spB = spacePoints[bottomDoublet.spacePoint()];
     const LinCircle& lb = bottomDoublet.linCircle();
@@ -254,9 +254,6 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
 
     float sinTheta = 1 / std::sqrt(iSinTheta2);
     float cosTheta = cotThetaB * sinTheta;
-
-    // clear all vectors used in each inner for loop
-    tripletTopCandidates.clear();
 
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
@@ -508,6 +505,11 @@ std::shared_ptr<TripletSeedFinder::ImplBase> TripletSeedFinder::makeImpl(
         TripletSeedFinder::Impl<UseStripInfo::value, SortedInCotTheta::value>>(
         config);
   });
+  if (result == nullptr) {
+    throw std::runtime_error(
+        "TripletSeedFinder: No implementation found for the given "
+        "configuration");
+  }
   return result;
 }
 
@@ -540,6 +542,6 @@ TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
 }
 
 TripletSeedFinder::TripletSeedFinder(const DerivedConfig& config)
-    : m_cfg(config) {}
+    : m_impl(makeImpl(config)) {}
 
 }  // namespace Acts::Experimental

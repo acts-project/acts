@@ -120,7 +120,7 @@ class TripletSeedFinder {
     bool useStripInfo = false;
 
     /// Whether the input doublets are sorted by cotTheta
-    bool sortedByCotTheta = false;
+    bool sortedByCotTheta = true;
   };
 
   struct DerivedConfig : public Config {
@@ -224,8 +224,6 @@ class TripletSeedFinder {
   static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
 
   std::shared_ptr<ImplBase> m_impl;
-
-  DerivedConfig m_cfg;
 };
 
 }  // namespace Acts::Experimental
