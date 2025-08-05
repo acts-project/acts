@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesMuonSpectrometerMockupDetector
+acts_add_library(
+    ExamplesMuonSpectrometerMockupDetector
     SHARED
     src/MockupSectorBuilder.cpp
 )
@@ -10,14 +10,20 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesMuonSpectrometerMockupDetector
     PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesGeant4
-        ActsExamplesDetectorGeant4
-        ActsPluginGeant4
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesGeant4
+        Acts::ExamplesDetectorGeant4
+        Acts::PluginGeant4
 )
 
-install(
-    TARGETS ActsExamplesMuonSpectrometerMockupDetector
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    target_link_libraries(
+        ActsExamplesMuonSpectrometerMockupDetector
+        PUBLIC Acts::PluginGeoModel GeoModelIO::GeoModelWrite
+    )
+    target_sources(
+        ActsExamplesMuonSpectrometerMockupDetector
+        PUBLIC src/GeoMuonMockupExperiment.cpp
+    )
+endif()

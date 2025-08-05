@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <variant>
@@ -20,18 +19,21 @@
 
 namespace Acts {
 
-/// @class BinFinder
 /// @tparam DIM Dimension of the Grid on which the GridBinFinder will be used
 ///
-/// The BinFinder is used by the ISPGroupSelector. It can be
-/// used to find both bins that could be bottom bins as well as bins that could
-/// be top bins, which are assumed to be the same bins. Does not take
-/// interaction region into account to limit z-bins.
+/// The GridBinFinder is used by the ISPGroupSelector. It can be used to find
+/// both bins that could be bottom bins as well as bins that could be top bins,
+/// which are assumed to be the same bins. Does not take interaction region into
+/// account to limit z-bins.
 template <std::size_t DIM>
 class GridBinFinder {
  public:
-  static constexpr std::size_t dimCubed = Acts::detail::ipow(3, DIM);
-  /// @brief Constructor
+  static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
+
+  using stored_values_t =
+      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
+
+  /// @brief Constructor that takes the individual values for each axis
   /// @tparam args ... Input parameters provided by the user
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
@@ -50,6 +52,14 @@ class GridBinFinder {
     storeValue(std::forward<args>(vals)...);
   }
 
+  /// @brief Constructor that takes an array of axes values
+  ///
+  /// @param [in] values The array of stored values that define how many neighbours we need to find
+  explicit GridBinFinder(std::array<stored_values_t, DIM> values)
+      : m_values(std::move(values)) {}
+
+  const std::array<stored_values_t, DIM>& values() const { return m_values; }
+
   /// @brief Retrieve the neighbouring bins given a local position in the grid
   ///
   /// Return all bins that could contain space points that can be used with the
@@ -66,7 +76,7 @@ class GridBinFinder {
   template <typename stored_t, class... Axes>
   boost::container::small_vector<std::size_t, dimCubed> findBins(
       const std::array<std::size_t, DIM>& locPosition,
-      const Acts::Grid<stored_t, Axes...>& grid) const;
+      const Grid<stored_t, Axes...>& grid) const;
 
  private:
   /// @brief Store the values provided by the user for each axis in the grid
@@ -103,11 +113,9 @@ class GridBinFinder {
   /// @param [in] grid The Grid
   /// @return If the GridBinFinder is compatible with the grid
   template <typename stored_t, class... Axes>
-  bool isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const;
+  bool isGridCompatible(const Grid<stored_t, Axes...>& grid) const;
 
  private:
-  using stored_values_t =
-      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
   /// These values are provided by the user and can be ints, a pair of ints or a
   /// vector of pair of ints. In the first case, the neighbours will be +/- bins
@@ -122,4 +130,5 @@ class GridBinFinder {
 };
 
 }  // namespace Acts
+
 #include "Acts/Utilities/GridBinFinder.ipp"

@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 
   // (BOX object) - XY
   std::vector<double> dims = {5, 6, 50};
-  auto tube = new GeoTube(dims[0], dims[1], dims[2]);
-  auto logTube = new GeoLogVol("Tube", tube, material);
+  auto tube = make_intrusive<GeoTube>(dims[0], dims[1], dims[2]);
+  auto logTube = make_intrusive<GeoLogVol>("Tube", tube, material);
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   Acts::GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
-  std::shared_ptr<Acts::Experimental::DetectorVolume> volumeTube =
-      gmCache.boundingBoxes[0];
+  BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
+  const auto& volumeTube = gmCache.volumeBoxFPVs[0].volume;
   const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
       &volumeTube->volumeBounds());
   std::vector<double> convDims = bounds->values();

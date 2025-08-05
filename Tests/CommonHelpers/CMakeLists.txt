@@ -7,6 +7,9 @@ add_library(
     src/DataDirectory.cpp
     src/CylindricalDetector.cpp
 )
+
+add_library(Acts::TestsCommonHelpers ALIAS ActsTestsCommonHelpers)
+
 target_compile_definitions(
     ActsTestsCommonHelpers
     PRIVATE
@@ -19,8 +22,8 @@ target_include_directories(
 )
 target_link_libraries(
     ActsTestsCommonHelpers
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC Acts::Core Acts::ExamplesFramework
     PRIVATE std::filesystem
 )
 
-acts_compile_headers(ActsTestsCommonHelpers GLOB "include/Acts/**/*.hpp")
+acts_compile_headers(TestsCommonHelpers GLOB "include/Acts/**/*.hpp")

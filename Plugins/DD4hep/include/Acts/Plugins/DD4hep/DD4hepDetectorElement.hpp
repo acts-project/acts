@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <map>
@@ -44,7 +44,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
-  /// Define a string based story
+  /// Define a string based store
   using Store = std::map<std::string,
                          std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
 
@@ -84,14 +84,12 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
 
   ~DD4hepDetectorElement() override = default;
 
-  // Give access to the DD4hep detector element
+  /// Give access to the DD4hep detector element
   const dd4hep::DetElement& sourceElement() const { return m_detElement; }
 
  private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;
-  /// DD4hep segmentation
-  dd4hep::Segmentation m_segmentation;
 };
 
 /// This extension holds an ACTS detector element belonging to a DD4hep detector

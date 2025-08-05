@@ -13,6 +13,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <cstddef>
@@ -84,14 +85,11 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
                          convertLength * step->GetStepLength());
 
   // Create the RecordedMaterialSlab
-  const auto& rawPos = step->GetPreStepPoint()->GetPosition();
-  const auto& rawDir = step->GetPreStepPoint()->GetMomentum();
   Acts::MaterialInteraction mInteraction;
   mInteraction.position =
-      Acts::Vector3(convertLength * rawPos.x(), convertLength * rawPos.y(),
-                    convertLength * rawPos.z());
-  mInteraction.direction = Acts::Vector3(rawDir.x(), rawDir.y(), rawDir.z());
-  mInteraction.direction.normalized();
+      convertPosition(step->GetPreStepPoint()->GetPosition());
+  mInteraction.direction =
+      convertDirection(step->GetPreStepPoint()->GetMomentum()).normalized();
   mInteraction.materialSlab = slab;
   mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
 
@@ -100,10 +98,8 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
   auto& materialTracks = eventStore().materialTracks;
   if (!materialTracks.contains(trackID - 1)) {
     Acts::RecordedMaterialTrack rmTrack;
-    const auto& g4Vertex = g4Track->GetVertexPosition();
-    Acts::Vector3 vertex(g4Vertex[0], g4Vertex[1], g4Vertex[2]);
-    const auto& g4Direction = g4Track->GetMomentumDirection();
-    Acts::Vector3 direction(g4Direction[0], g4Direction[1], g4Direction[2]);
+    Acts::Vector3 vertex = convertPosition(g4Track->GetVertexPosition());
+    Acts::Vector3 direction = convertDirection(g4Track->GetMomentumDirection());
     rmTrack.first = {vertex, direction};
     rmTrack.second.materialInteractions.push_back(mInteraction);
     materialTracks[trackID - 1] = rmTrack;

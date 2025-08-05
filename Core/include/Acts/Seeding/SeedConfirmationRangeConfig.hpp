@@ -10,15 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 
-#include <cstdint>
 #include <limits>
 
 namespace Acts {
-
-/// defaults experimental cuts to no operation in both seeding algorithms
-inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
-  return true;
-}
 
 /// @brief Contains parameters for quality seed confirmation
 /// @note Requirements on the number of compatible space-points and impact parameters can be defined

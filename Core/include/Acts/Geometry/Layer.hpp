@@ -23,7 +23,6 @@
 
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
@@ -37,9 +36,6 @@ class ApproachDescriptor;
 class IMaterialDecorator;
 template <typename object_t>
 struct NavigationOptions;
-
-// Simple surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
 
 // master typedef
 class Layer;
@@ -299,4 +295,4 @@ using LayerArray = BinnedArray<LayerPtr>;
 
 }  // namespace Acts
 
-#include "Acts/Geometry/detail/Layer.ipp"
+#include "Acts/Geometry/Layer.ipp"

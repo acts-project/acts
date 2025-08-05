@@ -9,7 +9,6 @@
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -18,12 +17,9 @@
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
 #include <NvInferRuntimeBase.h>
-#include <c10/cuda/CUDAGuard.h>
 #include <cuda_runtime.h>
 
 #include "printCudaMemInfo.hpp"
-
-using namespace torch::indexing;
 
 namespace {
 
@@ -93,6 +89,9 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
     throw std::runtime_error("Failed to deserialize CUDA engine");
   }
 
+  ACTS_INFO("Device memory required by TRT context: "
+            << m_engine->getDeviceMemorySizeV2() * 1e-9 << " GB");
+
   for (auto i = 0ul; i < m_cfg.numExecutionContexts; ++i) {
     ACTS_DEBUG("Create execution context " << i);
     m_contexts.emplace_back(m_engine->createExecutionContext());
@@ -106,37 +105,63 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
   ACTS_DEBUG("Used CUDA memory after TensorRT initialization: "
              << (totalMem - freeMem) * 1e-9 << " / " << totalMem * 1e-9
              << " GB");
+
+  if (m_engine->getNbOptimizationProfiles() > 1) {
+    ACTS_WARNING("Cannot handle more then one optimization profile for now");
+  }
+
+  m_maxNodes =
+      m_engine->getProfileShape("x", 0, nvinfer1::OptProfileSelector::kMAX)
+          .d[0];
+  ACTS_INFO("Maximum number of nodes: " << m_maxNodes);
+
+  auto maxEdgesA =
+      m_engine
+          ->getProfileShape("edge_index", 0, nvinfer1::OptProfileSelector::kMAX)
+          .d[1];
+  auto maxEdgesB =
+      m_engine
+          ->getProfileShape("edge_attr", 0, nvinfer1::OptProfileSelector::kMAX)
+          .d[0];
+
+  if (maxEdgesA != maxEdgesB) {
+    throw std::invalid_argument(
+        "Inconsistent max edges definition in engine for 'edge_index' and "
+        "'edge_attr'");
+  }
+
+  m_maxEdges = maxEdgesA;
+  ACTS_INFO("Maximum number of edges: " << m_maxEdges);
 }
 
 TensorRTEdgeClassifier::~TensorRTEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any, std::any>
-TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
-                                   std::any inEdgeIndex,
-                                   std::any inEdgeFeatures,
-                                   const ExecutionContext &execContext) {
+PipelineTensors TensorRTEdgeClassifier::operator()(
+    PipelineTensors tensors, const ExecutionContext &execContext) {
   assert(execContext.device.type == Acts::Device::Type::eCUDA);
-  const auto torchDevice =
-      execContext.device.type == Acts::Device::Type::eCUDA
-          ? torch::Device(torch::kCUDA, execContext.device.index)
-          : torch::kCPU;
 
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
-  c10::cuda::CUDAStreamGuard(execContext.stream.value());
+  // Curing this would require more complicated handling, and should happen
+  // almost never
+  if (auto nNodes = tensors.nodeFeatures.shape().at(0); nNodes > m_maxNodes) {
+    ACTS_WARNING("Number of nodes ("
+                 << nNodes << ") exceeds configured maximum, return 0 edges");
+    throw NoEdgesError{};
+  }
 
-  auto nodeFeatures =
-      std::any_cast<torch::Tensor>(inNodeFeatures).to(torchDevice);
+  if (auto nEdges = tensors.edgeIndex.shape().at(1); nEdges > m_maxEdges) {
+    ACTS_WARNING("Number of edges ("
+                 << nEdges << ") exceeds maximum, shrink edge tensor to "
+                 << m_maxEdges);
 
-  auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(torchDevice);
-  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
-
-  auto edgeFeatures =
-      std::any_cast<torch::Tensor>(inEdgeFeatures).to(torchDevice);
-  ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
-
-  t1 = std::chrono::high_resolution_clock::now();
+    auto [newEdgeIndex, newEdgeFeatures] =
+        applyEdgeLimit(tensors.edgeIndex, tensors.edgeFeatures, m_maxEdges,
+                       execContext.stream);
+    tensors.edgeIndex = std::move(newEdgeIndex);
+    tensors.edgeFeatures = std::move(newEdgeFeatures);
+  }
 
   // get a context from the list of contexts
   std::unique_ptr<nvinfer1::IExecutionContext> context;
@@ -150,25 +175,31 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
   assert(context != nullptr);
 
   context->setInputShape(
-      "x", nvinfer1::Dims2{nodeFeatures.size(0), nodeFeatures.size(1)});
-  context->setTensorAddress("x", nodeFeatures.data_ptr());
-
-  context->setInputShape("edge_index",
-                         nvinfer1::Dims2{edgeIndex.size(0), edgeIndex.size(1)});
-  context->setTensorAddress("edge_index", edgeIndex.data_ptr());
+      "x", nvinfer1::Dims2{static_cast<long>(tensors.nodeFeatures.shape()[0]),
+                           static_cast<long>(tensors.nodeFeatures.shape()[1])});
+  context->setTensorAddress("x", tensors.nodeFeatures.data());
 
   context->setInputShape(
-      "edge_attr", nvinfer1::Dims2{edgeFeatures.size(0), edgeFeatures.size(1)});
-  context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
+      "edge_index",
+      nvinfer1::Dims2{static_cast<long>(tensors.edgeIndex.shape()[0]),
+                      static_cast<long>(tensors.edgeIndex.shape()[1])});
+  context->setTensorAddress("edge_index", tensors.edgeIndex.data());
 
-  auto scores = torch::empty(
-      edgeIndex.size(1),
-      torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat32));
-  context->setTensorAddress("output", scores.data_ptr());
+  if (tensors.edgeFeatures.has_value()) {
+    context->setInputShape(
+        "edge_attr",
+        nvinfer1::Dims2{static_cast<long>(tensors.edgeFeatures->shape()[0]),
+                        static_cast<long>(tensors.edgeFeatures->shape()[1])});
+    context->setTensorAddress("edge_attr", tensors.edgeFeatures->data());
+  }
+
+  auto scores =
+      Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul}, execContext);
+  context->setTensorAddress("output", scores.data());
 
   t2 = std::chrono::high_resolution_clock::now();
 
-  auto stream = execContext.stream.value().stream();
+  auto stream = execContext.stream.value();
   auto status = context->enqueueV3(stream);
   if (!status) {
     throw std::runtime_error("Failed to execute TensorRT model");
@@ -182,18 +213,14 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
     m_contexts.push_back(std::move(context));
   }
 
-  scores.sigmoid_();
+  sigmoid(scores, execContext.stream);
 
-  ACTS_VERBOSE("Size after classifier: " << scores.size(0));
-  ACTS_VERBOSE("Slice of classified output:\n"
-               << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
+  ACTS_VERBOSE("Size after classifier: " << scores.shape()[0]);
   printCudaMemInfo(logger());
 
-  torch::Tensor mask = scores > m_cfg.cut;
-  torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), mask});
-
-  scores = scores.masked_select(mask);
-  ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
+  auto [newScores, newEdgeIndex] =
+      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext.stream);
+  ACTS_VERBOSE("Size after score cut: " << newEdgeIndex.shape()[1]);
   printCudaMemInfo(logger());
 
   t4 = std::chrono::high_resolution_clock::now();
@@ -206,7 +233,8 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
   ACTS_DEBUG("Time inference:       " << milliseconds(t2, t3));
   ACTS_DEBUG("Time sigmoid and cut: " << milliseconds(t3, t4));
 
-  return {nodeFeatures, edgesAfterCut, edgeFeatures, scores};
+  return {std::move(tensors.nodeFeatures), std::move(newEdgeIndex),
+          std::nullopt, std::move(newScores)};
 }
 
 }  // namespace Acts

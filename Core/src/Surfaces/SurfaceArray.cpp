@@ -24,7 +24,7 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                            const Transform3& transform)
     : p_gridLookup(std::move(gridLookup)),
       m_surfaces(std::move(surfaces)),
-      m_surfacesRawPointers(unpack_shared_vector(m_surfaces)),
+      m_surfacesRawPointers(unpackSmartPointers(m_surfaces)),
       m_transform(transform) {}
 
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)

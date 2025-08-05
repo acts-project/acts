@@ -62,7 +62,7 @@ detray::io::surface_payload Acts::DetrayGeometryConverter::convertSurface(
              : (surface.geometryId().sensitive() > 0
                     ? detray::surface_id::e_sensitive
                     : detray::surface_id::e_passive));
-  surfacePayload.mask = convertMask(surface.bounds());
+  surfacePayload.masks = {convertMask(surface.bounds())};
   return surfacePayload;
 }
 
@@ -118,7 +118,7 @@ Acts::DetrayGeometryConverter::convertPortal(
     // Single link can be written out
     std::size_t vLink = cCache.volumeIndex(singleLink->object());
     auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
-    portalPayload.mask.volume_link.link = vLink;
+    portalPayload.masks.at(0).volume_link.link = vLink;
     portals.push_back(portalPayload);
   } else {
     // Multi link detected - 1D
@@ -135,8 +135,7 @@ Acts::DetrayGeometryConverter::convertPortal(
 
       // Apply the correction from local to global boundaries
       double gCorr = VectorHelpers::cast(transform.translation(), cast);
-      std::for_each(boundaries.begin(), boundaries.end(),
-                    [&gCorr](double& b) { b -= gCorr; });
+      std::ranges::for_each(boundaries, [&gCorr](double& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -214,7 +213,8 @@ Acts::DetrayGeometryConverter::convertPortal(
             subSurface->assignGeometryId(surface.geometryId());
 
             auto portalPayload = convertSurface(gctx, *subSurface, true);
-            portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
+            portalPayload.masks.at(0).volume_link.link =
+                clippedIndices[ib - 1u];
             portals.push_back(portalPayload);
           }
         }
@@ -236,7 +236,8 @@ Acts::DetrayGeometryConverter::convertPortal(
 
             subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
-            portalPayload.mask.volume_link.link = clippedIndices[ib - 1u];
+            portalPayload.masks.at(0).volume_link.link =
+                clippedIndices[ib - 1u];
             portals.push_back(portalPayload);
           }
         }
@@ -247,7 +248,7 @@ Acts::DetrayGeometryConverter::convertPortal(
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
       using NavigationLink =
           typename DetrayHostDetector::surface_type::navigation_link;
-      portalPayload.mask.volume_link.link =
+      portalPayload.masks.at(0).volume_link.link =
           std::numeric_limits<NavigationLink>::max();
 
       portals.push_back(portalPayload);
@@ -284,7 +285,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     localSurfaceLinks.insert(
         {surface->geometryId(), surfacePayload.index_in_coll.value()});
     // Set mask to volume link
-    surfacePayload.mask.volume_link.link =
+    surfacePayload.masks.at(0).volume_link.link =
         volumePayload.index.link;  // link surface' mask to volume
     volumePayload.surfaces.push_back(surfacePayload);
   }
@@ -300,7 +301,7 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     ACTS_VERBOSE(" > portal " << ip << " split into " << portals.size()
                               << " surfaces");
     GeometryIdentifier geoID = p->surface().geometryId();
-    std::for_each(portals.begin(), portals.end(), [&](auto& portalPayload) {
+    std::ranges::for_each(portals, [&](auto& portalPayload) {
       // Set the index in the collection & remember it in the cache
       portalPayload.index_in_coll = sIndex++;
       localSurfaceLinks.insert({geoID, portalPayload.index_in_coll.value()});

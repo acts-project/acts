@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <algorithm>
+
 #include <unsupported/Eigen/Splines>
 
 namespace Acts::Interpolation3D {
@@ -82,17 +84,16 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
   if (keepOriginalHits) {
     output.insert(output.begin(), inputsRaw.begin() + 1, inputsRaw.end() - 1);
     // We need to sort the output in distance to first
-    std::sort(output.begin(), output.end(),
-              [&inputs](const auto& a, const auto& b) {
-                const auto ifront = inputs.front();
-                double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
-                             (a[1] - ifront[1]) * (a[1] - ifront[1]) +
-                             (a[2] - ifront[2]) * (a[2] - ifront[2]);
-                double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
-                             (b[1] - ifront[1]) * (b[1] - ifront[1]) +
-                             (b[2] - ifront[2]) * (b[2] - ifront[2]);
-                return da2 < db2;
-              });
+    std::ranges::sort(output, [&inputs](const auto& a, const auto& b) {
+      const auto ifront = inputs.front();
+      double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
+                   (a[1] - ifront[1]) * (a[1] - ifront[1]) +
+                   (a[2] - ifront[2]) * (a[2] - ifront[2]);
+      double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
+                   (b[1] - ifront[1]) * (b[1] - ifront[1]) +
+                   (b[2] - ifront[2]) * (b[2] - ifront[2]);
+      return da2 < db2;
+    });
   }
 
   return output;

@@ -1,6 +1,7 @@
-add_library(
-    ActsExamplesGeant4
+acts_add_library(
+    ExamplesGeant4
     SHARED
+    src/AlgebraConverters.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
@@ -28,11 +29,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesGeant4
     PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesDetectorsCommon
+        Acts::Core
+        Acts::ExamplesFramework
+        Acts::ExamplesDetectorsCommon
         Boost::headers
         ${Geant4_LIBRARIES}
 )
-
-install(TARGETS ActsExamplesGeant4 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
