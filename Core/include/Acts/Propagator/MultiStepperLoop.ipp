@@ -14,8 +14,8 @@
 
 namespace Acts {
 
-template <Acts::Concepts::SingleStepper SS, typename R>
-auto MultiStepperLoop<SS, R>::boundState(
+template <Concepts::SingleStepper S, typename R>
+auto MultiStepperLoop<S, R>::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
@@ -65,8 +65,8 @@ auto MultiStepperLoop<SS, R>::boundState(
                     Jacobian::Zero(), accumulatedPathLength};
 }
 
-template <Acts::Concepts::SingleStepper SS, typename R>
-auto MultiStepperLoop<SS, R>::curvilinearState(
+template <Concepts::SingleStepper S, typename R>
+auto MultiStepperLoop<S, R>::curvilinearState(
     State& state, bool transportCov) const -> BoundState {
   assert(!state.components.empty());
 
@@ -92,8 +92,8 @@ auto MultiStepperLoop<SS, R>::curvilinearState(
       Jacobian::Zero(), accumulatedPathLength};
 }
 
-template <Acts::Concepts::SingleStepper SS, typename R>
-Result<double> MultiStepperLoop<SS, R>::step(
+template <Concepts::SingleStepper S, typename R>
+Result<double> MultiStepperLoop<S, R>::step(
     State& state, Direction propDir, const IVolumeMaterial* material) const {
   using Status = Acts::IntersectionStatus;
 

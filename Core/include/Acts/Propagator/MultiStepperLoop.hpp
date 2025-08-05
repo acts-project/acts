@@ -137,9 +137,9 @@ using MaxWeightReducerLoop =
 /// @tparam sstepper_t The single-component stepper type to use
 /// @tparam component_reducer_t How to map the multi-component state to a single
 /// component
-template <Acts::Concepts::SingleStepper sstepper_t,
+template <Concepts::SingleStepper single_stepper_t,
           typename component_reducer_t = MaxWeightReducerLoop>
-class MultiStepperLoop : public sstepper_t {
+class MultiStepperLoop : public single_stepper_t {
   /// Limits the number of steps after at least one component reached the
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
@@ -154,7 +154,7 @@ class MultiStepperLoop : public sstepper_t {
 
  public:
   /// @brief Typedef to the Single-Component Eigen Stepper
-  using SingleStepper = sstepper_t;
+  using SingleStepper = single_stepper_t;
 
   /// @brief Typedef to the Single-Component Stepper Options
   using SingleOptions = typename SingleStepper::Options;
