@@ -280,8 +280,8 @@ void addSvg(Context& ctx) {
 
   py::class_<actsvg::svg::file>(svg, "file")
       .def(py::init<>())
-      .def("addObject", &actsvg::svg::file::add_object)
-      .def("addObjects", &actsvg::svg::file::add_objects)
+      .def("add_object", &actsvg::svg::file::add_object)
+      .def("add_objects", &actsvg::svg::file::add_objects)
       .def("clip",
            [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
              self.set_view_box(box);
@@ -439,13 +439,9 @@ void addSvg(Context& ctx) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  {
-    svg.def("drawDetector", &drawDetector);
-  }
+  { svg.def("drawDetector", &drawDetector); }
 
-  {
-    svg.def("drawSurfaceArrays", &drawSurfaceArrays);
-  }
+  { svg.def("drawSurfaceArrays", &drawSurfaceArrays); }
 
   // Legacy geometry drawing
   {
