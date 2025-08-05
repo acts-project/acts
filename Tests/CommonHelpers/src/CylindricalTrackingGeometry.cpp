@@ -282,11 +282,9 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
       0., 5.,
       179.48552,  // empirical maximum radius
   };
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
+  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open, AxisR);
   binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+                                 Acts::BinningOption::closed, AxisPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {lProperties, lProperties};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {lProperties, lProperties};
