@@ -74,7 +74,8 @@ class NavigationPolicyFactory {
   /// @param args The arguments to pass to the policy constructor
   /// @note Arguments need to be copy constructible because the factory must be
   ///       able to execute multiple times.
-  /// @return Reference to this factory for method chaining
+  /// @return New instance of this object with the added factory for method
+  ///         chaining
   template <NavigationPolicyConcept P, typename... Args>
     requires(std::is_constructible_v<P, const GeometryContext&,
                                      const TrackingVolume&, const Logger&,
@@ -96,7 +97,8 @@ class NavigationPolicyFactory {
   /// @param args The arguments to pass to the policy factory
   /// @note Arguments need to be copy constructible because the factory must be
   ///       able to execute multiple times.
-  /// @return Reference to this factory for method chaining
+  /// @return New instance of this object with the added factory for method
+  ///         chaining
   template <typename Fn, typename... Args>
     requires(detail::NavigationPolicyIsolatedFactoryConcept<Fn, Args...>)
   constexpr NavigationPolicyFactory add(Fn&& fn, Args&&... args) && {
