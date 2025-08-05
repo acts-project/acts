@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+#include "Acts/Propagator/MultiStepperLoop.hpp"
 
 #include "Acts/Propagator/MultiStepperError.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-template <typename E, typename R>
-auto MultiEigenStepperLoop<E, R>::boundState(
+template <Acts::Concepts::SingleStepper SS, typename R>
+auto MultiStepperLoop<SS, R>::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
@@ -66,8 +65,8 @@ auto MultiEigenStepperLoop<E, R>::boundState(
                     Jacobian::Zero(), accumulatedPathLength};
 }
 
-template <typename E, typename R>
-auto MultiEigenStepperLoop<E, R>::curvilinearState(
+template <Acts::Concepts::SingleStepper SS, typename R>
+auto MultiStepperLoop<SS, R>::curvilinearState(
     State& state, bool transportCov) const -> BoundState {
   assert(!state.components.empty());
 
@@ -93,8 +92,8 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
       Jacobian::Zero(), accumulatedPathLength};
 }
 
-template <typename E, typename R>
-Result<double> MultiEigenStepperLoop<E, R>::step(
+template <Acts::Concepts::SingleStepper SS, typename R>
+Result<double> MultiStepperLoop<SS, R>::step(
     State& state, Direction propDir, const IVolumeMaterial* material) const {
   using Status = Acts::IntersectionStatus;
 
