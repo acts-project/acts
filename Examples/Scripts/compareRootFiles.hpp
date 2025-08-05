@@ -40,13 +40,13 @@ class AnyVector {
   AnyVector() = default;
 
   // Move-construct a type-erased vector
-  AnyVector(AnyVector&& other)
+  AnyVector(AnyVector&& other) noexcept
       : m_vector{other.m_vector}, m_deleter{std::move(other.m_deleter)} {
     other.m_vector = nullptr;
   }
 
   // Move-assign a type-erased vector
-  AnyVector& operator=(AnyVector&& other) {
+  AnyVector& operator=(AnyVector&& other) noexcept {
     if (&other != this) {
       m_vector = other.m_vector;
       m_deleter = std::move(other.m_deleter);
