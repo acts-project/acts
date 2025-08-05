@@ -63,7 +63,7 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   if (rMin == 0) {
     ACTS_ERROR("CylinderNavigationPolicy can only be used with "
                << "non-zero inner radius, which " << m_volume->volumeName()
-               << " has");
+               << " has not");
     throw std::invalid_argument(
         "CylinderNavigationPolicy can only be used with "
         "non-zero inner radius");
@@ -175,7 +175,6 @@ void CylinderNavigationPolicy::initializeCandidates(
   if (std::abs(dir[2]) > s_onSurfaceTolerance) {
     ACTS_VERBOSE(
         "-> Not parallel to the disc, see if we're inside the disc radii");
-    // Not parallel to the disc, see if we're inside the disc radii
 
     double t = (zDisk - pos[2]) / dir[2];
 
