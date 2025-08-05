@@ -623,7 +623,6 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   }
 }
 
-=======
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   Pars_t linePars{};
   linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
