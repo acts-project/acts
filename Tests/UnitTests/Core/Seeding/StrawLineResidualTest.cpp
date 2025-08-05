@@ -33,7 +33,7 @@ using ParIdx = CompSpacePointAuxiliaries::FitParIndex;
 using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
-constexpr auto logLvl = Logging::Level::VERBOSE;
+constexpr auto logLvl = Logging::Level::INFO;
 
 namespace Acts::Test {
 class TestSpacePoint {
@@ -79,7 +79,12 @@ class TestSpacePoint {
         m_dirMask{mask},
         m_cov{cov},
         m_isStraw{false} {}
-  ///
+  /// @brief Constructor for strip space points with time measurements
+  /// @param pos: Position of the (combined) strip space point
+  /// @param stripDir: Orientation of the strip in space
+  /// @param toNext: Vector pointing to the next strip
+  /// @param stripTime: Recorded strip time used to calculate the residual
+  /// @param cov: Strip's covariance
   TestSpacePoint(
       const Vector3& pos, const Vector3& stripDir, const Vector3& toNext,
       const double stripTime,
@@ -375,16 +380,19 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                       ParIdx::t0};
 
   auto makeCalculator = [&rtCoeffs, &resCfg](
-                            const Pars_t& linePars, const Vector& pos,
-                            const Vector& dir, const double t0) {
+                            const std::string& calcName, const Pars_t& linePars,
+                            const Vector& pos, const Vector& dir,
+                            const double t0) {
     Line_t line{};
     line.updateParameters(linePars);
     std::cout << "Calculate residual w.r.t. " << toString(line.position())
               << ", " << toString(line.direction()) << std::endl;
     auto isectP = lineIntersect(pos, dir, line.position(), line.direction());
 
-    const double driftT =
-        recordedT - isectP.position().norm() / PhysicalConstants::c - t0;
+    const double driftT = recordedT -
+                          (resCfg.localToGlobal * isectP.position()).norm() /
+                              PhysicalConstants::c -
+                          t0;
 
     const double driftR = polynomialSum(driftT, rtCoeffs);
     const double driftV = derivativeSum<1>(driftT, rtCoeffs);
@@ -395,8 +403,8 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
               << ", driftV: " << driftV << ", "
               << "driftA: " << driftA << std::endl;
 
-    CompSpacePointAuxiliaries resCalc{
-        resCfg, Acts::getDefaultLogger("timeRes", logLvl)};
+    CompSpacePointAuxiliaries resCalc{resCfg,
+                                      Acts::getDefaultLogger(calcName, logLvl)};
 
     resCalc.updateFullResidual(line, t0, TestSpacePoint{pos, dir, driftR},
                                driftV, driftA);
@@ -404,9 +412,9 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   };
 
   auto testTimingResidual = [&makeCalculator, &resCfg](
-      const Pars_t& linePars, const Vector& wPos, const Vector& wDir,
-      const double t0) {
-    auto resCalc = makeCalculator(linePars, wPos, wDir, t0);
+                                const Pars_t& linePars, const Vector& wPos,
+                                const Vector& wDir, const double t0) {
+    auto resCalc = makeCalculator("strawT0Res", linePars, wPos, wDir, t0);
     std::cout << "Residual: " << toString(resCalc.residual()) << std::endl;
     for (const auto partial : resCfg.parsToUse) {
       std::cout << " *** partial: "
@@ -425,8 +433,10 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
         t0Up += h;
         t0Dn -= h;
       }
-      auto resCalcUp = makeCalculator(lineParsUp, wPos, wDir, t0Up);
-      auto resCalcDn = makeCalculator(lineParsDn, wPos, wDir, t0Dn);
+      auto resCalcUp =
+          makeCalculator("strawT0ResUp", lineParsUp, wPos, wDir, t0Up);
+      auto resCalcDn =
+          makeCalculator("strawT0ResDn", lineParsDn, wPos, wDir, t0Dn);
 
       const Vector numDeriv =
           (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
@@ -462,11 +472,29 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   const Vector wDir{Vector::UnitX()};
   const double t0{10._ns};
 
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector::UnitX(), 10._ns);
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector{1.,1.,0.}.normalized(), 10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
+                     10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
+                     Vector{1., 1., 0.}.normalized(), 10._ns);
   linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},Vector::UnitX(), 10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
+                     10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
+                     Vector{1., 1., 0.}.normalized(), 10._ns);
 
+  resCfg.localToGlobal.translation() = Vector{10._cm, 20._cm, -50._cm};
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
+                     10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
+                     Vector{1., 1., 0.}.normalized(), 10._ns);
+
+  //// Next test the displacement
+  resCfg.localToGlobal *= Acts::AngleAxis3{
+      30_degree, makeDirectionFromPhiTheta(30_degree, -45_degree)};
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
+                     10._ns);
+  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
+                     Vector{1., 1., 0.}.normalized(), 10._ns);
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
   // Set the line to be 45 degrees

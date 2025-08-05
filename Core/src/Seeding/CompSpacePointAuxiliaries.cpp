@@ -629,7 +629,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   const double travDist = hitMinSeg.dot(m_projDir * m_invProjDirLen);
 
   const Vector clApproach = line.point(travDist);
-  const Vector globApproach = (m_cfg.localToGlobal * clApproach);
+  const Vector globApproach = m_cfg.localToGlobal * clApproach;
   ACTS_VERBOSE("updateTimeStrawRes() - Point of closest approach along line "
                << toString(clApproach));
 
@@ -638,8 +638,8 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   const double dSign = driftR > 0. ? 1 : -1;
   ACTS_VERBOSE("updateTimeStrawRes() - Distance from the global origin: "
                << distance << " -> time of flight: " << ToF);
-  ACTS_INFO("updateTimeStrawRes() - Drift radius: "
-            << driftR << ", driftV: " << driftV << ", driftA: " << driftA);
+  ACTS_VERBOSE("updateTimeStrawRes() - Drift radius: "
+               << driftR << ", driftV: " << driftV << ", driftA: " << driftA);
 
   const double invDist =
       distance > s_tolerance ? 1. / (distance * PhysicalConstants::c) : 0.;
@@ -661,8 +661,10 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
                         + m_wireProject  * m_projDirLenPartial[idx] * m_invProjDirLenSq * travDist  * line.direction();
       // clang-format on
     }
-    m_partialApproachDist[idx] =
-        -dSign * globApproach.dot(m_gradCloseApproach[idx]) * invDist;
+    m_partialApproachDist[idx] = -dSign *
+                                 globApproach.dot(m_cfg.localToGlobal.linear() *
+                                                  m_gradCloseApproach[idx]) *
+                                 invDist;
     ACTS_VERBOSE(
         "updateTimeStrawRes() - Correct the partial derivative w.r.t. "
         << parName(partial) << " " << m_gradient[idx][bending] << " by "
@@ -718,9 +720,9 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
                  + travDist*m_wireProject*lHessian.dot(wireDir)*m_invProjDirLenSq *line.direction();
         // clang-format on
         if (idx1 != idx2) {
-           hessCmp += calcMixedTerms(idx1, idx2) + calcMixedTerms(idx2, idx1);
+          hessCmp += calcMixedTerms(idx1, idx2) + calcMixedTerms(idx2, idx1);
         } else {
-           hessCmp += 2.*calcMixedTerms(idx1, idx2);
+          hessCmp += 2. * calcMixedTerms(idx1, idx2);
         }
       } else if (isDirectionParam(partial1) || isDirectionParam(partial2)) {
         // clang-format off
@@ -735,7 +737,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       }
       // clang-format off
       const double partialCoA = m_gradCloseApproach[idx1].dot(m_gradCloseApproach[idx2]) * invDist +
-                                globApproach.dot(hessCmp) * invDist -
+                                globApproach.dot(m_cfg.localToGlobal.linear()*hessCmp) * invDist -
                                 m_partialApproachDist[idx1] * m_partialApproachDist[idx2]* invDist;
       const double hessianR = driftA * m_partialApproachDist[idx1] * m_partialApproachDist[idx2]
                             - driftV * partialCoA;
