@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -133,115 +134,7 @@ class SpacePointColumnProxy {
     return data()[index];
   }
 
-  class Subset {
-   public:
-    class Iterator {
-     public:
-      using SubsetIterator = IndexSubset::iterator;
-
-      using value_type = T;
-      using difference_type = std::ptrdiff_t;
-
-      using iterator_category = std::random_access_iterator_tag;
-      using iterator_concept = std::random_access_iterator_tag;
-
-      constexpr Iterator() noexcept = default;
-      constexpr Iterator(Column &column, SubsetIterator iterator) noexcept
-          : m_column(&column), m_iterator(iterator) {}
-
-      constexpr value_type operator*() const noexcept {
-        return (*m_column)[*m_iterator];
-      }
-      constexpr value_type operator[](difference_type n) const noexcept {
-        return (*m_column)[m_iterator[n]];
-      }
-
-      constexpr Iterator &operator++() noexcept {
-        ++m_iterator;
-        return *this;
-      }
-      constexpr Iterator operator++(int) noexcept {
-        auto tmp = *this;
-        ++(*this);
-        return tmp;
-      }
-      constexpr Iterator &operator--() noexcept {
-        --m_iterator;
-        return *this;
-      }
-      constexpr Iterator operator--(int) noexcept {
-        auto tmp = *this;
-        --(*this);
-        return tmp;
-      }
-
-      constexpr Iterator &operator+=(difference_type n) noexcept {
-        m_iterator += n;
-        return *this;
-      }
-      constexpr Iterator &operator-=(difference_type n) noexcept {
-        m_iterator -= n;
-        return *this;
-      }
-
-     private:
-      Column *m_column{};
-      SubsetIterator m_iterator{};
-
-      friend constexpr Iterator operator+(Iterator it,
-                                          difference_type n) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator+(difference_type n,
-                                          Iterator it) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator-(Iterator it,
-                                          difference_type n) noexcept {
-        return it -= n;
-      }
-
-      friend constexpr difference_type operator-(const Iterator &lhs,
-                                                 const Iterator &rhs) noexcept {
-        return lhs.m_iterator - rhs.m_iterator;
-      }
-
-      friend constexpr auto operator<=>(const Iterator &a,
-                                        const Iterator &b) noexcept {
-        return a.m_iterator <=> b.m_iterator;
-      }
-      friend constexpr bool operator==(const Iterator &a,
-                                       const Iterator &b) noexcept {
-        return a.m_iterator == b.m_iterator;
-      }
-    };
-    using iterator = Iterator;
-
-    constexpr Subset(Column &column, const IndexSubset &subset) noexcept
-        : m_column(&column), m_subset(subset) {}
-
-    constexpr Container &column() const noexcept { return *m_column; }
-    constexpr const IndexSubset &subset() const noexcept { return m_subset; }
-
-    constexpr std::size_t size() const noexcept { return m_subset.size(); }
-    constexpr bool empty() const noexcept { return size() == 0; }
-
-    constexpr auto front() const noexcept { return column()[m_subset.front()]; }
-    constexpr auto back() const noexcept { return column()[m_subset.back()]; }
-
-    constexpr iterator begin() const noexcept {
-      return iterator(*m_column, m_subset.begin());
-    }
-    constexpr iterator end() const noexcept {
-      return iterator(*m_column, m_subset.end());
-    }
-
-   private:
-    Column *m_column{};
-    IndexSubset m_subset{};
-  };
+  using Subset = ContainerSubset<Column, Value, Index, ReadOnly>;
 
   Subset subset(const IndexSubset &subset) const noexcept {
     return Subset(*m_column, subset);

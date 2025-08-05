@@ -1,11 +1,12 @@
-add_library(
-    ActsPluginDetray
+acts_add_library(
+    PluginDetray
     SHARED
     src/DetrayConversionUtils.cpp
     src/DetrayConverter.cpp
     src/DetrayGeometryConverter.cpp
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 add_dependencies(ActsPluginDetray detray::core covfie::core vecmem::core)
@@ -20,8 +21,8 @@ target_include_directories(
 target_link_libraries(
     ActsPluginDetray
     PUBLIC
-        ActsCore
-        ActsPluginJson
+        Acts::Core
+        Acts::PluginJson
         detray::core
         detray::core_array
         detray::io
@@ -29,11 +30,3 @@ target_link_libraries(
         detray::test_utils
         vecmem::core
 )
-
-install(
-    TARGETS ActsPluginDetray
-    EXPORT ActsPluginDetrayTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

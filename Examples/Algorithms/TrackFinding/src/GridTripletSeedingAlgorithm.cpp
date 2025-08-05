@@ -27,6 +27,41 @@
 
 namespace ActsExamples {
 
+namespace {
+
+static inline bool itkFastTrackingCuts(
+    const Acts::Experimental::ConstSpacePointProxy2& /*middle*/,
+    const Acts::Experimental::ConstSpacePointProxy2& other, float cotTheta,
+    bool isBottomCandidate) {
+  static float rMin = 45;
+  static float cotThetaMax = 1.5;
+
+  if (isBottomCandidate && other.r() < rMin &&
+      (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
+    return false;
+  }
+  return true;
+}
+
+static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+  // At small r we remove points beyond |z| > 200.
+  float r = sp.r();
+  float zabs = std::abs(sp.z());
+  if (zabs > 200. && r < 45.) {
+    return false;
+  }
+
+  // Remove space points beyond eta=4 if their z is larger than the max seed
+  // z0 (150.)
+  float cotTheta = 27.2899;  // corresponds to eta=4
+  if ((zabs - 150.) > cotTheta * r) {
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
 GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("GridTripletSeedingAlgorithm", lvl), m_cfg(cfg) {
@@ -176,6 +211,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::BroadTripletSeedFinder::Options finderOptions;
   finderOptions.bFieldInZ = m_cfg.bFieldInZ;
+  finderOptions.spacePointsSortedByRadius = true;
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
@@ -197,7 +233,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  bottomDoubletFinderConfig.sortedInR = true;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
@@ -271,7 +307,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.first << ", "
                  << radiusRangeForMiddle.second << "]");
 
-    m_seedFinder->createSeedsFromSortedGroups(
+    m_seedFinder->createSeedsFromGroups(
         finderOptions, state, cache, bottomDoubletFinder, topDoubletFinder,
         derivedTripletCuts, *m_seedFilter, coreSpacePoints, bottomSpRanges,
         *middleSpRange, topSpRanges, radiusRangeForMiddle, seeds);

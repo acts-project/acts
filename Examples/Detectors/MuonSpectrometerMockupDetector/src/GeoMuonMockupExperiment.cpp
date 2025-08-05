@@ -495,7 +495,7 @@ FpvLink GeoMuonMockupExperiment::assembleRpcChamber(const double chamberWidth) {
         make_intrusive<GeoBox>(0.5 * s_rpcGasHeight, rpcBox->getYHalfLength(),
                                rpcBox->getZHalfLength());
     auto gasLogVol = cacheVolume(make_intrusive<GeoLogVol>(
-        "RpcGas", cacheShape(gasBox), matMan->getMaterial("std::ArCO2")));
+        "RpcGasGap", cacheShape(gasBox), matMan->getMaterial("std::ArCO2")));
 
     rpcEnvelope->add(geoId(gap));
     rpcEnvelope->add(makeTransform(GeoTrf::TranslateX3D(currentX)));

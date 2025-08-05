@@ -20,7 +20,6 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v11.1.0
 
 jobs:
   linux_ubuntu:
@@ -467,7 +466,7 @@ jobs:
             export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
             echo "::group::EICrecon configure phase"
             ccache -z && \
-            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include" \
+            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include -L$CMAKE_INSTALL_PREFIX/lib" \
                 LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
             cmake -B build -S . \
               -GNinja \

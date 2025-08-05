@@ -163,9 +163,8 @@ void addOutput(Context& ctx) {
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackParameterWriter, mex,
-                             "CsvTrackParameterWriter", inputTrackParameters,
-                             inputTracks, outputDir, outputStem,
-                             outputPrecision);
+                             "CsvTrackParameterWriter", inputTracks, outputDir,
+                             outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvProtoTrackWriter, mex,
                              "CsvProtoTrackWriter", inputSpacepoints,

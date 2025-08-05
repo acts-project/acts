@@ -246,6 +246,15 @@ const Transform3& Surface::transform(const GeometryContext& gctx) const {
   return *m_transform;
 }
 
+Vector2 Surface::closestPointOnBoundary(const Vector2& lposition,
+                                        const SquareMatrix2& metric) const {
+  return bounds().closestPoint(lposition, metric);
+}
+
+double Surface::distanceToBoundary(const Vector2& lposition) const {
+  return bounds().distance(lposition);
+}
+
 bool Surface::insideBounds(const Vector2& lposition,
                            const BoundaryTolerance& boundaryTolerance) const {
   return bounds().inside(lposition, boundaryTolerance);
