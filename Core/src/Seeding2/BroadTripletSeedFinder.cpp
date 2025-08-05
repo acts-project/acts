@@ -13,6 +13,8 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
+#include <cstdlib>
+
 #include <Eigen/Dense>
 
 namespace Acts::Experimental {
@@ -38,7 +40,7 @@ void createAndFilterTriplets(float rMaxSeedConf,
     tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
                                              cache.tripletTopCandidates);
 
-    auto spB = spacePoints[lb.spacePoint()];
+    auto spB = spacePoints[lb.spacePointIndex()];
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
@@ -50,6 +52,9 @@ void createAndFilterTriplets(float rMaxSeedConf,
         cache.candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
+    std::cout << "cache.tripletTopCandidates.size() = "
+              << cache.tripletTopCandidates.size()
+              << ", minCompatibleTopSPs = " << minCompatibleTopSPs << std::endl;
     // continue if number of top SPs is smaller than minimum required for filter
     if (cache.tripletTopCandidates.size() < minCompatibleTopSPs) {
       continue;
@@ -57,7 +62,7 @@ void createAndFilterTriplets(float rMaxSeedConf,
 
     float zOrigin = spM.z() - spM.r() * lb.linCircle().cotTheta;
     filter.filter2SpFixed(state.filter, cache.filter, spacePoints,
-                          lb.spacePoint(), spM.index(),
+                          lb.spacePointIndex(), spM.index(),
                           cache.tripletTopCandidates.topSpacePoints(),
                           cache.tripletTopCandidates.curvatures(),
                           cache.tripletTopCandidates.impactParameters(),
@@ -147,6 +152,8 @@ void createSeedsFromGroupsImpl(
         rMaxSeedConf, state, cache, tripletFinder, filter, spacePoints,
         cache.bottomDoublets.subset(cache.sortedBottoms), middleSp,
         cache.topDoublets.subset(cache.sortedTops));
+
+    std::exit(0);
   } else {
     createAndFilterTriplets(rMaxSeedConf, state, cache, tripletFinder, filter,
                             spacePoints, cache.bottomDoublets.range(), middleSp,

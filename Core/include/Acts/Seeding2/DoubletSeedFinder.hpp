@@ -70,7 +70,7 @@ class DoubletsForMiddleSp {
     const DoubletsForMiddleSp& container() const { return *m_container; }
     Index index() const { return m_index; }
 
-    SpacePointIndex2 spacePoint() const {
+    SpacePointIndex2 spacePointIndex() const {
       return m_container->m_spacePoints[m_index];
     }
 

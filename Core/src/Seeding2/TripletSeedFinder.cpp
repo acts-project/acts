@@ -11,6 +11,9 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
+
+#include <ranges>
 
 #include <Eigen/Dense>
 #include <boost/mp11.hpp>
@@ -106,10 +109,12 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    for (std::size_t topDoubletIndex = 0; topDoubletIndex < topDoublets.size();
-         ++topDoubletIndex) {
-      auto topDoublet = topDoublets[topDoubletIndex];
-      const ConstSpacePointProxy2 spT = spacePoints[topDoublet.spacePoint()];
+    std::size_t topDoubletOffset = 0;
+    for (auto [topDoublet, topDoubletIndex] :
+         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
+                              0, topDoublets.size()))) {
+      const ConstSpacePointProxy2 spT =
+          spacePoints[topDoublet.spacePointIndex()];
       const LinCircle& lt = topDoublet.linCircle();
       float cotThetaT = lt.cotTheta;
 
@@ -146,7 +151,7 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
           if (cotThetaB < cotThetaT) {
             break;
           }
-          topDoublets = topDoublets.subrange(topDoubletIndex + 1);
+          topDoubletOffset = topDoubletIndex + 1;
         }
         continue;
       }
@@ -196,7 +201,7 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
           if (cotThetaB < cotThetaT) {
             break;
           }
-          topDoublets = topDoublets.subrange(topDoubletIndex);
+          topDoubletOffset = topDoubletIndex;
         }
         continue;
       }
@@ -213,6 +218,11 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
       // positive/negative in phi
       tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), Im);
     }  // loop on tops
+
+    if constexpr (sortedInCotTheta) {
+      // remove the top doublets that were skipped due to cotTheta sorting
+      topDoublets = topDoublets.subrange(topDoubletOffset);
+    }
   }
 
   template <typename TopDoublets>
@@ -230,7 +240,8 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    const ConstSpacePointProxy2 spB = spacePoints[bottomDoublet.spacePoint()];
+    const ConstSpacePointProxy2 spB =
+        spacePoints[bottomDoublet.spacePointIndex()];
     const LinCircle& lb = bottomDoublet.linCircle();
 
     float cotThetaB = lb.cotTheta;
@@ -261,7 +272,8 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
                                            sinPhiM * sinTheta};
 
     for (auto topDoublet : topDoublets) {
-      const ConstSpacePointProxy2 spT = spacePoints[topDoublet.spacePoint()];
+      const ConstSpacePointProxy2 spT =
+          spacePoints[topDoublet.spacePointIndex()];
       const LinCircle& lt = topDoublet.linCircle();
 
       // protects against division by 0
