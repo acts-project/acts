@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/detail/StrawLineFitAuxiliaries.hpp"
+#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
@@ -17,8 +17,8 @@
 namespace Acts::Experimental::detail {
 
 template <CompositeSpacePoint Point_t>
-int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
-                                       const Point_t& strawSp) {
+int CompSpacePointAuxiliaries::strawSign(const Line_t& line,
+                                         const Point_t& strawSp) {
   if (!strawSp.isStraw()) {
     return 0;
   }
@@ -29,8 +29,8 @@ int StrawLineFitAuxiliaries::strawSign(const Line_t& line,
 }
 
 template <CompositeSpacePoint Point_t>
-void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
-                                                    const Point_t& spacePoint) {
+void CompSpacePointAuxiliaries::updateSpatialResidual(
+    const Line_t& line, const Point_t& spacePoint) {
   if (spacePoint.isStraw()) {
     /// Fetch the hit position & direction
     const auto& wireDir{spacePoint.sensorDirection()};
@@ -53,6 +53,33 @@ void StrawLineFitAuxiliaries::updateSpatialResidual(const Line_t& line,
                         spacePoint.toNextSensor(), spacePoint.sensorDirection(),
                         spacePoint.localPosition(), spacePoint.measuresLoc1(),
                         spacePoint.measuresLoc0());
+  }
+}
+
+template <CompositeSpacePoint Point_t>
+void CompSpacePointAuxiliaries::updateFullResidual(const Line_t& line,
+                                                   const double timeOffset,
+                                                   const Point_t& spacePoint,
+                                                   const double driftV,
+                                                   const double driftA) {
+  /// Calculate first the spatial residual
+  updateSpatialResidual(line, spacePoint);
+
+  /// Calculate the time residual for strip-like measurements
+  if (!spacePoint.isStraw()) {
+    /// If the measurement does not provide time, then simply reset the time
+    /// partial components
+    if (!spacePoint.hasTime()) {
+      resetTime();
+      return;
+    }
+    updateTimeStripRes(spacePoint.toNextSensor(), spacePoint.sensorDirection(),
+                       spacePoint.localPosition(), spacePoint.measuresLoc1(),
+                       spacePoint.time(), timeOffset);
+  } else {
+    updateTimeStrawRes(line, spacePoint.localPosition() - line.position(),
+                       spacePoint.sensorDirection(), spacePoint.driftRadius(),
+                       driftV, driftA);
   }
 }
 

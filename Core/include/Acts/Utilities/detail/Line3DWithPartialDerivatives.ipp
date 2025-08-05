@@ -10,10 +10,23 @@
 
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::detail {
+
+template <std::floating_point T>
+Line3DWithPartialDerivatives<T>::ParamVector
+Line3DWithPartialDerivatives<T>::parameters() const {
+  ParamVector pars{};
+  pars[static_cast<std::uint8_t>(ParIndex::x0)] = m_pos[Acts::eX];
+  pars[static_cast<std::uint8_t>(ParIndex::y0)] = m_pos[Acts::eY];
+  pars[static_cast<std::uint8_t>(ParIndex::theta)] =
+      Acts::VectorHelpers::theta(m_dir);
+  pars[static_cast<std::uint8_t>(ParIndex::phi)] =
+      Acts::VectorHelpers::phi(m_dir);
+  return pars;
+}
 
 template <std::floating_point T>
 void Line3DWithPartialDerivatives<T>::updateParameters(
