@@ -10,6 +10,7 @@
 ///
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::Experimental::detail {
@@ -68,20 +69,18 @@ void CompSpacePointAuxiliaries::updateChiSq(
            v1[2] * v2[2] * invCov[2];
   };
   chiSqObj.chi2 += contract(residual(), residual());
-  for (auto partial1 : m_cfg.parsToUse) {
-    const auto idx1 = static_cast<std::uint8_t>(partial1);
-    chiSqObj.gradient[idx1] += 2. * contract(residual(), gradient(partial1));
-    for (auto partial2 : m_cfg.parsToUse) {
+  for (const auto partial1 : m_cfg.parsToUse) {
+    chiSqObj.gradient[toUnderlying(partial1)] +=
+        2. * contract(residual(), gradient(partial1));
+    for (const auto partial2 : m_cfg.parsToUse) {
       if (partial2 > partial1) {
         break;
       }
-      const auto idx2 = static_cast<std::uint8_t>(partial2);
-      chiSqObj.hessian(idx1, idx2) +=
-          2. * contract(gradient(partial1), gradient(partial2));
-      if (m_cfg.useHessian) {
-        chiSqObj.hessian(idx1, idx2) +=
-            2. * contract(residual(), hessian(partial1, partial2));
-      }
+      chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2)) +=
+          2. * contract(gradient(partial1), gradient(partial2)) +
+          (m_cfg.useHessian
+               ? 2. * contract(residual(), hessian(partial1, partial2))
+               : 0.0);
     }
   }
 }
@@ -91,14 +90,13 @@ const Vector& CompSpacePointAuxiliaries::residual() const {
 }
 const Vector& CompSpacePointAuxiliaries::gradient(
     const FitParIndex param) const {
-  const auto par = static_cast<std::uint8_t>(param);
-  assert(par < m_gradient.size());
-  return m_gradient[par];
+  assert(toUnderlying(param) < m_gradient.size());
+  return m_gradient[toUnderlying(param)];
 }
 const Vector& CompSpacePointAuxiliaries::hessian(
     const FitParIndex param1, const FitParIndex param2) const {
-  const auto idx = vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(param1),
-                                             static_cast<std::size_t>(param2));
+  const auto idx =
+      vecIdxFromSymMat<s_nPars>(toUnderlying(param1), toUnderlying(param2));
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }
@@ -115,12 +113,12 @@ void CompSpacePointAuxiliaries::reset() {
   }
 }
 void CompSpacePointAuxiliaries::resetTime() {
-  constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
-  m_gradient[timeIdx].setZero();
+  m_gradient[toUnderlying(FitParIndex::t0)].setZero();
   if (m_cfg.useHessian) {
     for (const auto partial : m_cfg.parsToUse) {
-      const auto partIdx = static_cast<std::size_t>(partial);
-      m_hessian[vecIdxFromSymMat<s_nPars>(partIdx, timeIdx)].setZero();
+      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
+                                          toUnderlying(partial))]
+          .setZero();
     }
   }
 }
@@ -143,7 +141,7 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
 
   // Calculate the first derivative of the residual
   for (const auto partial : m_cfg.parsToUse) {
-    const auto pIdx = static_cast<std::uint8_t>(partial);
+    const auto pIdx = toUnderlying(partial);
     if (isDirectionParam(partial)) {
       const double partialDist =
           m_gradProjDir[pIdx].cross(wireDir).dot(hitMinSeg);
@@ -179,8 +177,8 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
       ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
                    << parName(partial1) << ", " << parName(partial2) << ".");
       // Second derivative w.r.t to the position parameters is zero
-      const auto hIdx1 = static_cast<std::size_t>(partial1);
-      const auto hIdx2 = static_cast<std::size_t>(partial2);
+      const auto hIdx1 = toUnderlying(partial1);
+      const auto hIdx2 = toUnderlying(partial2);
       const std::size_t resIdx = vecIdxFromSymMat<s_nPars>(hIdx1, hIdx2);
       if (!(isDirectionParam(partial1) || isDirectionParam(partial2)) ||
           partial2 == FitParIndex::t0 || partial1 == FitParIndex::t0) {
@@ -242,7 +240,7 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     if (!isDirectionParam(partial)) {
       continue;
     }
-    const std::size_t pIdx = static_cast<std::size_t>(partial);
+    const std::size_t pIdx = toUnderlying(partial);
     const Vector& lGrad{line.gradient(static_cast<LineIndex>(partial))};
     m_projDirLenPartial[pIdx] = lGrad.dot(wireDir);
     // clang-format off
@@ -261,8 +259,8 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
       } else if (partial1 > partial) {
         break;
       }
-      const auto param = static_cast<std::size_t>(partial);
-      const auto param1 = static_cast<std::size_t>(partial1);
+      const auto param = toUnderlying(partial);
+      const auto param1 = toUnderlying(partial1);
       const auto resIdx = vecIdxFromSymMat<s_nLinePars>(param, param1);
       const Vector& lHessian = line.hessian(static_cast<LineIndex>(partial),
                                             static_cast<LineIndex>(partial1));
@@ -305,7 +303,7 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
     if (partial == FitParIndex::t0) {
       continue;
     }
-    const auto param = static_cast<std::size_t>(partial);
+    const auto param = toUnderlying(partial);
     const Vector& lGradient = line.gradient(static_cast<LineIndex>(partial));
     if (isDirectionParam(partial)) {
       // clang-format off
@@ -343,8 +341,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
           partial2 == FitParIndex::t0 || partial1 == FitParIndex::t0) {
         continue;
       }
-      const auto param = static_cast<std::size_t>(partial1);
-      const auto param1 = static_cast<std::size_t>(partial2);
+      const auto param = toUnderlying(partial1);
+      const auto param1 = toUnderlying(partial2);
       const auto hessIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
@@ -369,12 +367,12 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
             isDirectionParam(partial1) ? partial1 : partial2);
         const auto posParam = static_cast<LineIndex>(
             isDirectionParam(partial1) ? partial2 : partial1);
-        const auto angIdx = static_cast<std::size_t>(angParam);
+        const auto angIdx = toUnderlying(angParam);
         // clang-format off
         m_hessian[hessIdx][nonBending] = m_invProjDirLenSq * (
                 -line.gradient(posParam).dot(line.gradient(angParam)) * m_wireProject -
                  line.gradient(posParam).dot(line.direction()) * m_projDirLenPartial[angIdx] +
-                 2. * m_gradient[static_cast<std::size_t>(posParam)][nonBending] * m_wireProject * m_projDirLenPartial[angIdx]);
+                 2. * m_gradient[toUnderlying(posParam)][nonBending] * m_wireProject * m_projDirLenPartial[angIdx]);
         // clang-format on
       }
       ACTS_VERBOSE("updateAlongTheStraw() - Second derivative w.r.t. "
@@ -483,7 +481,7 @@ void CompSpacePointAuxiliaries::updateStripResidual(
         const Vector gradCmp = travelledDist * lGrad +
                                partialDist * line.direction();
         // clang-format on
-        assignResidual(gradCmp, m_gradient[static_cast<std::uint8_t>(partial)]);
+        assignResidual(gradCmp, m_gradient[toUnderlying(partial)]);
         break;
       }
       case FitParIndex::y0:
@@ -491,7 +489,7 @@ void CompSpacePointAuxiliaries::updateStripResidual(
         // clang-format off
         const Vector& lGrad = line.gradient(static_cast<LineIndex>(partial));
         const Vector gradCmp = lGrad - lGrad.dot(normal) / normDot * line.direction();
-        assignResidual(gradCmp, m_gradient[static_cast<std::uint8_t>(partial)]);
+        assignResidual(gradCmp, m_gradient[toUnderlying(partial)]);
         // clang-format on
         break;
       }
@@ -510,8 +508,8 @@ void CompSpacePointAuxiliaries::updateStripResidual(
       if (partial2 > partial1) {
         break;
       }
-      const auto param = static_cast<std::size_t>(partial1);
-      const auto param1 = static_cast<std::size_t>(partial2);
+      const auto param = toUnderlying(partial1);
+      const auto param1 = toUnderlying(partial2);
       const auto resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
       /// At least one parameter needs to be a directional one
       if (!(isDirectionParam(partial1) || isDirectionParam(partial2)) ||
@@ -575,7 +573,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
                << " -> time of flight takinig t0 into account: " << ToF);
 
   m_residual[time] = recordTime - ToF;
-  constexpr auto timeIdx = static_cast<std::uint8_t>(FitParIndex::t0);
+  constexpr auto timeIdx = toUnderlying(FitParIndex::t0);
 
   const double invDist = m_cfg.includeToF && globDist > s_tolerance
                              ? PhysicalConstants::c / globDist
@@ -586,7 +584,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
     }
     /// Time component of the spatial residual needs to be updated
     else if (m_cfg.includeToF) {
-      Vector& gradVec = m_gradient[static_cast<std::uint8_t>(partial1)];
+      Vector& gradVec = m_gradient[toUnderlying(partial1)];
       gradVec[time] = -globIsect.dot(m_cfg.localToGlobal.linear() *
                                      positionInPlane(gradVec)) *
                       invDist;
@@ -603,8 +601,8 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
       if (partial2 > partial1) {
         break;
       }
-      const auto param1 = static_cast<std::size_t>(partial1);
-      const auto param2 = static_cast<std::size_t>(partial2);
+      const auto param1 = toUnderlying(partial1);
+      const auto param2 = toUnderlying(partial2);
       Vector& hessVec = m_hessian[vecIdxFromSymMat<s_nPars>(param1, param2)];
       if (partial1 != FitParIndex::t0) {
         // clang-format off
@@ -631,7 +629,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   // Only assign drift velocity and acceleration
   if (!m_cfg.includeToF) {
     resetTime();
-    constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
+    constexpr auto timeIdx = toUnderlying(FitParIndex::t0);
     constexpr auto hessIdx = vecIdxFromSymMat<s_nPars>(timeIdx, timeIdx);
     m_gradient[timeIdx] = -dSign * driftV * Vector::Unit(bending);
     m_hessian[hessIdx] = -dSign * driftA * Vector::Unit(bending);
@@ -655,7 +653,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   const double invDist =
       distance > s_tolerance ? 1. / (distance * PhysicalConstants::c) : 0.;
   for (const auto partial : m_cfg.parsToUse) {
-    const auto idx = static_cast<std::size_t>(partial);
+    const auto idx = toUnderlying(partial);
     if (partial == FitParIndex::t0) {
       m_gradient[idx] = dSign * driftV * Vector::Unit(bending);
       continue;
@@ -694,8 +692,8 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
       if (partial2 > partial1) {
         break;
       }
-      const auto idx1 = static_cast<std::size_t>(partial1);
-      const auto idx2 = static_cast<std::size_t>(partial2);
+      const auto idx1 = toUnderlying(partial1);
+      const auto idx2 = toUnderlying(partial2);
       const auto hessIdx = vecIdxFromSymMat<s_nPars>(idx1, idx2);
       if (partial1 == FitParIndex::t0) {
         if (partial2 == FitParIndex::t0) {

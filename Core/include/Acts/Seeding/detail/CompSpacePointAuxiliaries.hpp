@@ -223,6 +223,7 @@ class CompSpacePointAuxiliaries {
   ///            which is given by the sensor direction
   /// @param stripPos: Position of the strip measurement
   /// @param isBending: Flag toggling whether the precision direction is constrained
+  /// @param recordTime: Time of the measurement
   /// @param timeOffet: Value of the t0 fit parameter.
   void updateTimeStripRes(const Vector& sensorN, const Vector& sensorD,
                           const Vector& stripPos, const bool isBending,
@@ -232,7 +233,7 @@ class CompSpacePointAuxiliaries {
   //         offset parameter
   /// @param line: Reference to the line to which the residual is calculated
   /// @param hitMinSeg: Difference of the straw position & the line reference point
-   /// @param wireDir: The direction along the wire
+  /// @param wireDir: The direction along the wire
   /// @param driftR: Current drift radius of the straw measurement
 
   /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
