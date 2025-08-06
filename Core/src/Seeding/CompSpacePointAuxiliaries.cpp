@@ -565,7 +565,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
       m_cfg.includeToF
           ? m_cfg.localToGlobal * (positionInPlane(residual()) + stripPos)
           : Vector::Zero();
-  /// To calculate the time of flight
+  // To calculate the time of flight
   const double globDist = globIsect.norm();
   const double ToF = globDist / PhysicalConstants::c + timeOffset;
   ACTS_VERBOSE("Global intersection point: "
