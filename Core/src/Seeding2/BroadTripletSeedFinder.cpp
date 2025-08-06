@@ -147,8 +147,6 @@ void createSeedsFromGroupsImpl(
         rMaxSeedConf, state, cache, tripletFinder, filter, spacePoints,
         cache.bottomDoublets.subset(cache.sortedBottoms), middleSp,
         cache.topDoublets.subset(cache.sortedTops));
-
-    std::exit(0);
   } else {
     createAndFilterTriplets(rMaxSeedConf, state, cache, tripletFinder, filter,
                             spacePoints, cache.bottomDoublets.range(), middleSp,
