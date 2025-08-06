@@ -15,8 +15,6 @@
 #include <memory>
 namespace ActsExamples {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief  Calibration class of M
 class MuonSpacePointCalibrator {
  public:
@@ -43,19 +41,19 @@ class MuonSpacePointCalibrator {
     /// @brief Minimum drift time covered by the r-t relation
     double minDriftT{0.};
     /// @brief Maximum drift time covered by the r-t relation
-    double maxDriftT{740.203_ns};
+    double maxDriftT{740.203 * Acts::UnitConstants::ns};
     /// @brief Minimum radius mapped by the t-r relation
-    double minTubeR{0.065987_mm};
+    double minTubeR{0.065987 * Acts::UnitConstants::mm};
     /// @brief Maximum radius mapped by the t-r relation
-    double maxTubeR{14.567_mm};
+    double maxTubeR{14.567 * Acts::UnitConstants::mm};
     /// @brief Propagation velocity of the electronic signal along the wire
     double propagationV{0.};
     /// @brief Include trackT0 & time offset in the calibration
     bool includeTrackT0{false};
     /// @brief
-    double rpcEtaStripPitch{2.6_cm};
+    double rpcEtaStripPitch{2.6 * Acts::UnitConstants::cm};
 
-    double rpcPhiStripPitch{3.5_cm};
+    double rpcPhiStripPitch{3.5 * Acts::UnitConstants::cm};
   };
 
   /// @brief default constructor */
