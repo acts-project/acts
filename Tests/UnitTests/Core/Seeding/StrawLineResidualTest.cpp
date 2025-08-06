@@ -620,6 +620,91 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
       locToGlob);
 }
 
+BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
+  Pars_t linePars{};
+  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
+  linePars[static_cast<std::size_t>(ParIdx::theta)] = 75_degree;
+  linePars[static_cast<std::size_t>(ParIdx::x0)] = 10._cm;
+  linePars[static_cast<std::size_t>(ParIdx::y0)] = -10_cm;
+
+  Config_t resCfg{};
+  resCfg.useHessian = true;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
+                      ParIdx::t0};
+
+  Line_t line{};
+  line.updateParameters(linePars);
+
+  const TestSpacePoint strip{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
+      makeDirectionFromPhiTheta(0_degree, 90_degree),
+      makeDirectionFromPhiTheta(90._degree, 0._degree),
+      15._ns,
+      {std::pow(5._cm, 2), std::pow(10._cm, 2), std::pow(1._ns, 2)}};
+  CompSpacePointAuxiliaries resCalc{resCfg,
+                                    Acts::getDefaultLogger("testRes", logLvl)};
+
+  const double t0{1._ns};
+  resCalc.updateFullResidual(line, t0, strip);
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+  resCalc.updateChiSq(chi2, strip.covariance());
+  std::cout << "Calculated chi2: " << chi2.chi2 << std::endl;
+  std::cout << "Gradient: " << toString(chi2.gradient) << std::endl;
+  std::cout << "Hessian: \n" << chi2.hessian << std::endl;
+
+  constexpr double h = 1.e-7;
+  constexpr double tolerance = 1.e-3;
+  for (const auto par : resCfg.parsToUse) {
+    Pars_t lineParsUp{linePars}, lineParsDn{linePars};
+
+    const auto dIdx = static_cast<std::size_t>(par);
+    double t0Up{t0}, t0Dn{t0};
+    if (par != ParIdx::t0) {
+      lineParsUp[dIdx] += h;
+      lineParsDn[dIdx] -= h;
+    } else {
+      t0Up += h;
+      t0Dn -= h;
+    }
+    ChiSq_t chi2Up{}, chi2Dn{};
+    /// Calculate the updated chi2
+    line.updateParameters(lineParsUp);
+    resCalc.updateFullResidual(line, t0Up, strip);
+    resCalc.updateChiSq(chi2Up, strip.covariance());
+
+    line.updateParameters(lineParsDn);
+    resCalc.updateFullResidual(line, t0Dn, strip);
+    resCalc.updateChiSq(chi2Dn, strip.covariance());
+
+    const double anaDeriv = chi2.gradient[dIdx];
+    const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);
+
+    std::cout << "\nPartial " << CompSpacePointAuxiliaries::parName(par)
+              << " --  numerical: " << numDeriv << ", analytical: " << anaDeriv
+              << std::endl;
+    BOOST_CHECK_LE(std::abs(numDeriv - anaDeriv) / std::max(numDeriv, 1.),
+                   tolerance);
+    for (const auto par2 : resCfg.parsToUse) {
+      if (par2 > par) {
+        break;
+      }
+      const auto dIdx2 = static_cast<std::size_t>(par2);
+      const double anaHess = chi2.hessian(dIdx, dIdx2);
+      const double numHess =
+          (chi2Up.gradient[dIdx2] - chi2Dn.gradient[dIdx2]) / (2. * h);
+
+      std::cout << "Second deriv (" << CompSpacePointAuxiliaries::parName(par)
+                << ", " << CompSpacePointAuxiliaries::parName(par2)
+                << ") -- numerical: " << numHess << ", analytic: " << anaHess
+                << std::endl;
+      BOOST_CHECK_LE(std::abs(anaHess - numHess), tolerance);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   RandomEngine rndEngine{23568};
   const std::size_t nStrips = 8;

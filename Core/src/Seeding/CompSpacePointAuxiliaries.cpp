@@ -626,6 +626,18 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
     const Line_t& line, const Vector& hitMinSeg, const Vector& wireDir,
     const double driftR, const double driftV, const double driftA) {
   using namespace Acts::detail::LineHelper;
+
+  const double dSign = driftR > 0. ? 1 : -1;
+  /// Only assign drift velocity and acceleration
+  if (!m_cfg.includeToF) {
+    resetTime();
+    constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
+    constexpr auto hessIdx = vecIdxFromSymMat<s_nPars>(timeIdx, timeIdx);
+    m_gradient[timeIdx] = -dSign * driftV * Vector::Unit(bending);
+    m_hessian[hessIdx] = -dSign * driftA * Vector::Unit(bending);
+    return;
+  }
+
   const double travDist = hitMinSeg.dot(m_projDir * m_invProjDirLen);
 
   const Vector clApproach = line.point(travDist);
@@ -635,7 +647,6 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
 
   const double distance = globApproach.norm();
   const double ToF = distance / PhysicalConstants::c;
-  const double dSign = driftR > 0. ? 1 : -1;
   ACTS_VERBOSE("updateTimeStrawRes() - Distance from the global origin: "
                << distance << " -> time of flight: " << ToF);
   ACTS_VERBOSE("updateTimeStrawRes() - Drift radius: "
