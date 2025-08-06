@@ -9,14 +9,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/CompositeSpacePoint.hpp"
+#include "Acts/Utilities/ArrayHelpers.hpp"
 
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace ActsExamples {
-/// @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
+/// @brief Example implementation of a CompositeSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
 ///         The space points are expressed in a local frame such that the x-axis
 ///         is parallel to the ATLAS Monitored Drift Tubes (Mdt), the y-axis
 ///         points within the tube layer & the z-axis outside of the plane.
@@ -125,38 +128,51 @@ class MuonSpacePoint {
   /// @brief Returns the local sensor direction
   const Acts::Vector3& sensorDirection() const { return m_dir; }
   /// @brief Returns the normal vector to the plane
-  const Acts::Vector3& stripPlaneNormal() const { return m_norm; }
-  /// @brief Returns the space point covariance
-  const Acts::ActsSquareMatrix<3>& covariance() const { return m_cov; }
+  const Acts::Vector3& planeNormal() const { return m_norm; }
+  /// @brief Returns the vector pointing to the next wire / strip
+  const Acts::Vector3& toNextSensor() const { return m_toNext; }
+  /// @brief Returns the space point covariance values
+  const std::array<double, 3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
   /// @brief Returns the measurement time *
-  double time() const { return m_time; }
+  double time() const { return m_time.value_or(0.); }
+  /// @brief Returns whether the measurement is a straw measurement
+  bool isStraw() const { return id().technology() == MuonId::TechField::Mdt; }
+  /// @brief Returns whether the measurement provides time information
+  bool hasTime() const { return m_time.has_value(); }
+  /// @brief Returns whether the measurement constrains the bending plane
+  bool measuresLoc1() const { return id().measuresEta(); }
+  /// @brief Returns whether the measurement constrains the non-bending plane
+  bool measuresLoc0() const { return id().measuresPhi(); }
   /// @brief Define the space point's identifier
   void setId(const MuonId& id);
   /// @brief Define the space point coordinates.
   /// @param pos: Space point position
   /// @param sensorDir: Direction of the sensor
-  void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir);
-  /// @brief Define the space point normal
-  void defineNormal(Acts::Vector3&& norm);
+  /// @param toNextSensor: Vector pointing to the next sensor
+  void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir,
+                         Acts::Vector3&& toNextSensor);
   /// @brief Define the space point radius
   void setRadius(const double r);
   /// @brief Define the time of the space point measurement
   void setTime(const double t);
   /// @brief Define the spatial components of the covariance
-  void setSpatialCov(const double xx, const double xy, const double yx,
-                     const double yy);
+  void setCovariance(const double covX, const double covY, const double covT);
 
  private:
   MuonId m_id{};
   Acts::Vector3 m_pos{Acts::Vector3::Zero()};
   Acts::Vector3 m_dir{Acts::Vector3::Zero()};
+  Acts::Vector3 m_toNext{Acts::Vector3::Zero()};
   Acts::Vector3 m_norm{Acts::Vector3::Zero()};
-  Acts::ActsSquareMatrix<3> m_cov{Acts::ActsSquareMatrix<3>::Identity()};
+
+  std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
   double m_radius{0.};
-  double m_time{0.};
+  std::optional<double> m_time{std::nullopt};
 };
+
+static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
 /// @brief Abbrivation of the MuonSpace point container as a jagged vector of
 ///        space point objects. The inner vector represents a collection of
 ///        spacepoints that are close-by together in space, a so-called bucket

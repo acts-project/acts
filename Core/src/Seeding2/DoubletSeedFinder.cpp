@@ -11,9 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <memory>
 #include <stdexcept>
-#include <type_traits>
 
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>

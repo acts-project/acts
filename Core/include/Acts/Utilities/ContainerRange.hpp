@@ -76,35 +76,19 @@ class ContainerRange {
     return container().begin() + m_range.second;
   }
 
-  constexpr auto operator[](Index index) const noexcept {
-    static_assert(
-        ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
-        "Container must support at() or operator[] for indexing");
-    constexpr bool HasArrayAccess = ContainerHasArrayAccess<Container>;
-
+  constexpr auto operator[](Index index) const noexcept
+    requires(ContainerHasArrayAccess<Container>)
+  {
     assert(index < size() && "Index out of bounds");
-
-    if constexpr (HasArrayAccess) {
-      return (*m_container)[m_range.first + index];
-    } else {
-      return m_container->at(m_range.first + index);
-    }
+    return (*m_container)[m_range.first + index];
   }
-  constexpr auto at(Index index) const {
-    static_assert(
-        ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
-        "Container must support at() or operator[] for indexing");
-    constexpr bool HasArrayAccess = ContainerHasArrayAccess<Container>;
-
+  constexpr auto at(Index index) const
+    requires(ContainerHasAt<Container>)
+  {
     if (index >= size()) {
       throw std::out_of_range("Index out of bounds");
     }
-
-    if constexpr (HasArrayAccess) {
-      return (*m_container)[m_range.first + index];
-    } else {
-      return m_container->at(m_range.first + index);
-    }
+    return m_container->at(m_range.first + index);
   }
 
  private:
