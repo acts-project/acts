@@ -628,7 +628,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   using namespace Acts::detail::LineHelper;
 
   const double dSign = driftR > 0. ? 1 : -1;
-  /// Only assign drift velocity and acceleration
+  // Only assign drift velocity and acceleration
   if (!m_cfg.includeToF) {
     resetTime();
     constexpr auto timeIdx = static_cast<std::size_t>(FitParIndex::t0);
