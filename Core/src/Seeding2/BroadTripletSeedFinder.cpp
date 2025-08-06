@@ -20,10 +20,9 @@ namespace Acts::Experimental {
 namespace {
 
 template <typename DoubletCollections>
-void createAndFilterTriplets(float rMaxSeedConf,
-                             BroadTripletSeedFinder::Cache& cache,
+void createAndFilterTriplets(BroadTripletSeedFinder::Cache& cache,
                              const TripletSeedFinder& tripletFinder,
-                             const BroadTripletSeedFilter& filter,
+                             const ITripletSeedFilter& filter,
                              const SpacePointContainer2& spacePoints,
                              DoubletCollections bottomDoublets,
                              const ConstSpacePointProxy2& spM,
@@ -37,44 +36,23 @@ void createAndFilterTriplets(float rMaxSeedConf,
     tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
                                              cache.tripletTopCandidates);
 
-    auto spB = spacePoints[lb.spacePointIndex()];
-    // minimum number of compatible top SPs to trigger the filter for a certain
-    // middle bottom pair if seedConfirmation is false we always ask for at
-    // least one compatible top to trigger the filter
-    std::size_t minCompatibleTopSPs = 2;
-    if (!filter.config().seedConfirmation || spB.r() > rMaxSeedConf) {
-      minCompatibleTopSPs = 1;
-    }
-    if (filter.config().seedConfirmation &&
-        cache.candidatesCollector.nHighQualityCandidates() > 0) {
-      minCompatibleTopSPs++;
-    }
-    // continue if number of top SPs is smaller than minimum required for filter
-    if (cache.tripletTopCandidates.size() < minCompatibleTopSPs) {
-      continue;
-    }
-
-    float zOrigin = spM.z() - spM.r() * lb.linCircle().cotTheta;
-    filter.filter2SpFixed(spacePoints, lb.spacePointIndex(), spM.index(),
-                          cache.tripletTopCandidates.topSpacePoints(),
-                          cache.tripletTopCandidates.curvatures(),
-                          cache.tripletTopCandidates.impactParameters(),
-                          zOrigin, cache.candidatesCollector);
+    filter.filterTripletTopCandidates(
+        spacePoints, lb, spM, cache.tripletTopCandidates.topSpacePoints(),
+        cache.tripletTopCandidates.curvatures(),
+        cache.tripletTopCandidates.impactParameters(),
+        cache.candidatesCollector);
   }
 }
 
 template <typename SpacePointCollections>
-void createSeedsFromGroupsImpl(const Logger& logger,
-                               BroadTripletSeedFinder::Cache& cache,
-                               const DoubletSeedFinder& bottomFinder,
-                               const DoubletSeedFinder& topFinder,
-                               const TripletSeedFinder& tripletFinder,
-                               const BroadTripletSeedFilter& filter,
-                               const SpacePointContainer2& spacePoints,
-                               SpacePointCollections& bottomSpGroups,
-                               const ConstSpacePointProxy2& middleSp,
-                               SpacePointCollections& topSpGroups,
-                               SeedContainer2& outputSeeds) {
+void createSeedsFromGroupsImpl(
+    const Logger& logger, BroadTripletSeedFinder::Cache& cache,
+    const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
+    const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
+    const SpacePointContainer2& spacePoints,
+    SpacePointCollections& bottomSpGroups,
+    const ConstSpacePointProxy2& middleSp, SpacePointCollections& topSpGroups,
+    SeedContainer2& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
   // create middle-top doublets
@@ -90,32 +68,8 @@ void createSeedsFromGroupsImpl(const Logger& logger,
     return;
   }
 
-  // apply cut on the number of top SP if seedConfirmation is true
-  float rMaxSeedConf = 0;
-  if (filter.config().seedConfirmation) {
-    // check if middle SP is in the central or forward region
-    const bool isForwardRegion =
-        middleSp.z() >
-            filter.config().centralSeedConfirmationRange.zMaxSeedConf ||
-        middleSp.z() <
-            filter.config().centralSeedConfirmationRange.zMinSeedConf;
-    SeedConfirmationRangeConfig seedConfRange =
-        isForwardRegion ? filter.config().forwardSeedConfirmationRange
-                        : filter.config().centralSeedConfirmationRange;
-    // set the minimum number of top SP depending on whether the middle SP is
-    // in the central or forward region
-    std::size_t nTopSeedConf = middleSp.r() > seedConfRange.rMaxSeedConf
-                                   ? seedConfRange.nTopForLargeR
-                                   : seedConfRange.nTopForSmallR;
-    // set max bottom radius for seed confirmation
-    rMaxSeedConf = seedConfRange.rMaxSeedConf;
-    // continue if number of top SPs is smaller than minimum
-    if (cache.topDoublets.size() < nTopSeedConf) {
-      ACTS_VERBOSE("Number of top SPs is "
-                   << cache.topDoublets.size()
-                   << " and is smaller than minimum, returning");
-      return;
-    }
+  if (!filter.sufficientTopDoublets(spacePoints, middleSp, cache.topDoublets)) {
+    return;
   }
 
   // create middle-bottom doublets
@@ -143,13 +97,13 @@ void createSeedsFromGroupsImpl(const Logger& logger,
     cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
                                      cache.sortedTops);
 
-    createAndFilterTriplets(
-        rMaxSeedConf, cache, tripletFinder, filter, spacePoints,
-        cache.bottomDoublets.subset(cache.sortedBottoms), middleSp,
-        cache.topDoublets.subset(cache.sortedTops));
+    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
+                            cache.bottomDoublets.subset(cache.sortedBottoms),
+                            middleSp,
+                            cache.topDoublets.subset(cache.sortedTops));
   } else {
-    createAndFilterTriplets(rMaxSeedConf, cache, tripletFinder, filter,
-                            spacePoints, cache.bottomDoublets.range(), middleSp,
+    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
+                            cache.bottomDoublets.range(), middleSp,
                             cache.topDoublets.range());
   }
 
@@ -159,8 +113,8 @@ void createSeedsFromGroupsImpl(const Logger& logger,
       cache.candidatesCollector.nHighQualityCandidates();
   cache.candidatesCollector.toSortedCandidates(spacePoints,
                                                cache.sortedCandidates);
-  filter.filter1SpFixed(spacePoints, cache.sortedCandidates, numQualitySeeds,
-                        outputSeeds);
+  filter.filterTripletsMiddleFixed(spacePoints, cache.sortedCandidates,
+                                   numQualitySeeds, outputSeeds);
 }
 
 }  // namespace
@@ -177,8 +131,7 @@ BroadTripletSeedFinder::BroadTripletSeedFinder(
 void BroadTripletSeedFinder::createSeedsFromGroup(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const BroadTripletSeedFilter& filter,
-    const SpacePointContainer2& spacePoints,
+    const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
     SpacePointContainer2::ConstSubset& bottomSps,
     const ConstSpacePointProxy2& middleSp,
     SpacePointContainer2::ConstSubset& topSps,
@@ -187,9 +140,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
 
-  cache.candidatesCollector.setMaxElements(
-      filter.config().maxSeedsPerSpMConf,
-      filter.config().maxQualitySeedsPerSpMConf);
+  filter.initialize(cache.candidatesCollector);
 
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
@@ -202,8 +153,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
 void BroadTripletSeedFinder::createSeedsFromGroups(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const BroadTripletSeedFilter& filter,
-    const SpacePointContainer2& spacePoints,
+    const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
     const std::span<SpacePointContainer2::ConstRange>& bottomSpGroups,
     const SpacePointContainer2::ConstRange& middleSpGroup,
     const std::span<SpacePointContainer2::ConstRange>& topSpGroups,
@@ -219,10 +169,7 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
     return;
   }
 
-  // initialize cache
-  cache.candidatesCollector.setMaxElements(
-      filter.config().maxSeedsPerSpMConf,
-      filter.config().maxQualitySeedsPerSpMConf);
+  filter.initialize(cache.candidatesCollector);
 
   if (spacePointsSortedByRadius) {
     // Initialize initial offsets for bottom and top space points with binary

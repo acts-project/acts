@@ -55,14 +55,72 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                const Logger& logger)
     : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {}
 
-void BroadTripletSeedFilter::filter2SpFixed(
-    const SpacePointContainer2& spacePoints, SpacePointIndex2 bottomSp,
-    SpacePointIndex2 middleSp, std::span<const SpacePointIndex2> topSpVec,
-    std::span<const float> invHelixDiameterVec,
-    std::span<const float> impactParametersVec, float zOrigin,
+void BroadTripletSeedFilter::initialize(
     CandidatesForMiddleSp2& candidatesCollector) const {
-  auto spB = spacePoints[bottomSp];
-  auto spM = spacePoints[middleSp];
+  candidatesCollector.setMaxElements(config().maxSeedsPerSpMConf,
+                                     config().maxQualitySeedsPerSpMConf);
+}
+
+bool BroadTripletSeedFilter::sufficientTopDoublets(
+    const SpacePointContainer2& /*spacePoints*/,
+    const ConstSpacePointProxy2& spM,
+    const DoubletsForMiddleSp& topDoublets) const {
+  // apply cut on the number of top SP if seedConfirmation is true
+  if (config().seedConfirmation) {
+    // check if middle SP is in the central or forward region
+    const bool isForwardRegion =
+        spM.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
+        spM.z() < config().centralSeedConfirmationRange.zMinSeedConf;
+    SeedConfirmationRangeConfig seedConfRange =
+        isForwardRegion ? config().forwardSeedConfirmationRange
+                        : config().centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
+                                   ? seedConfRange.nTopForLargeR
+                                   : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    state().rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
+    if (topDoublets.size() < nTopSeedConf) {
+      ACTS_VERBOSE("Number of top SPs is "
+                   << topDoublets.size()
+                   << " and is smaller than minimum, returning");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void BroadTripletSeedFilter::filterTripletTopCandidates(
+    const SpacePointContainer2& spacePoints,
+    const DoubletsForMiddleSp::Proxy& bottomLink,
+    const ConstSpacePointProxy2& spM,
+    std::span<const SpacePointIndex2> topSpVec,
+    std::span<const float> invHelixDiameterVec,
+    std::span<const float> impactParametersVec,
+    CandidatesForMiddleSp2& candidatesCollector) const {
+  auto spB = spacePoints[bottomLink.spacePointIndex()];
+  auto bottomSp = spB.index();
+  auto middleSp = spM.index();
+
+  // minimum number of compatible top SPs to trigger the filter for a certain
+  // middle bottom pair if seedConfirmation is false we always ask for at
+  // least one compatible top to trigger the filter
+  std::size_t minCompatibleTopSPs = 2;
+  if (!config().seedConfirmation || spB.r() > state().rMaxSeedConf) {
+    minCompatibleTopSPs = 1;
+  }
+  if (config().seedConfirmation &&
+      candidatesCollector.nHighQualityCandidates() > 0) {
+    minCompatibleTopSPs++;
+  }
+  // continue if number of top SPs is smaller than minimum required for filter
+  if (invHelixDiameterVec.size() < minCompatibleTopSPs) {
+    return;
+  }
+  float zOrigin = spM.z() - spM.r() * bottomLink.linCircle().cotTheta;
 
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -252,7 +310,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
   }
 }
 
-void BroadTripletSeedFilter::filter1SpFixed(
+void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     const SpacePointContainer2& spacePoints,
     std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
     SeedContainer2& outputCollection) const {

@@ -250,7 +250,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::Experimental::BroadTripletSeedFinder> m_seedFinder;
-  std::optional<Acts::Experimental::BroadTripletSeedFilter> m_seedFilter;
 
   Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
       Acts::DelegateFuncTag<voidSpacePointSelector>{}};
