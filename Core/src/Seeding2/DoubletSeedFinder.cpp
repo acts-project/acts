@@ -11,9 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <memory>
 #include <stdexcept>
-#include <type_traits>
 
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>
@@ -40,7 +38,7 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
   void createDoubletsImpl(
       const ConstSpacePointProxy2& middleSp,
       const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
-      const CandidateSps& candidateSps,
+      CandidateSps& candidateSps,
       DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
@@ -71,6 +69,28 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
       return iDeltaR2 * ((varianceZM + varianceZO) +
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
+
+    if constexpr (sortedByR) {
+      // find the first SP inside the radius region of interest and update
+      // the iterator so we don't need to look at the other SPs again
+      std::uint32_t offset = 0;
+      for (ConstSpacePointProxy2 otherSp : candidateSps) {
+        if constexpr (isBottomCandidate) {
+          // if r-distance is too big, try next SP in bin
+          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
+            break;
+          }
+        } else {
+          // if r-distance is too small, try next SP in bin
+          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
+            break;
+          }
+        }
+
+        ++offset;
+      }
+      candidateSps = candidateSps.subrange(offset);
+    }
 
     const SpacePointContainer2& container = candidateSps.container();
     for (auto [indexO, xO, yO, zO, rO, varianceZO, varianceRO] :
@@ -240,31 +260,6 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer2::ConstSubset& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
-    if constexpr (sortedByR) {
-      const float rM = middleSp.r();
-
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy2 otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.container().subset(
-          candidateSps.subset().subspan(offset));
-    }
-
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
@@ -273,30 +268,6 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
                       const MiddleSpInfo& middleSpInfo,
                       SpacePointContainer2::ConstRange& candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
-    if constexpr (sortedByR) {
-      const float rM = middleSp.r();
-
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy2 otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.subrange(offset);
-    }
-
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
@@ -306,6 +277,7 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
     const DerivedConfig& config) {
   using BooleanOptions =
       boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
+
   using IsBottomCandidateOptions = BooleanOptions;
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
@@ -319,6 +291,7 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
   std::shared_ptr<DoubletSeedFinder::ImplBase> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
     using OptionType = decltype(option);
+
     using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
     using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
