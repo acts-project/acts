@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
+#include "Acts/Seeding2/ITripletSeedFilter.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -69,7 +69,7 @@ class BroadTripletSeedFinder {
   void createSeedsFromGroup(Cache& cache, const DoubletSeedFinder& bottomFinder,
                             const DoubletSeedFinder& topFinder,
                             const TripletSeedFinder& tripletFinder,
-                            const BroadTripletSeedFilter& filter,
+                            const ITripletSeedFilter& filter,
                             const SpacePointContainer2& spacePoints,
                             SpacePointContainer2::ConstSubset& bottomSps,
                             const ConstSpacePointProxy2& middleSp,
@@ -93,8 +93,7 @@ class BroadTripletSeedFinder {
   void createSeedsFromGroups(
       Cache& cache, const DoubletSeedFinder& bottomFinder,
       const DoubletSeedFinder& topFinder,
-      const TripletSeedFinder& tripletFinder,
-      const BroadTripletSeedFilter& filter,
+      const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
       const SpacePointContainer2& spacePoints,
       const std::span<SpacePointContainer2::ConstRange>& bottomSpGroups,
       const SpacePointContainer2::ConstRange& middleSpGroup,

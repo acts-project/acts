@@ -361,9 +361,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
     m_seedFinder->createSeedsFromGroups(
         cache, m_bottomDoubletFinder.value(), m_topDoubletFinder.value(),
-        m_tripletFinder.value(), m_seedFilter.value(), coreSpacePoints,
-        bottomSpRanges, *middleSpRange, topSpRanges, radiusRangeForMiddle,
-        seeds);
+        m_tripletFinder.value(), seedFilter, coreSpacePoints, bottomSpRanges,
+        *middleSpRange, topSpRanges, radiusRangeForMiddle, seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
