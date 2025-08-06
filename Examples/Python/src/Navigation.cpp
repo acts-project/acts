@@ -75,8 +75,8 @@ void addNavigation(Context& ctx) {
       .def_static("make", []() { return Acts::NavigationPolicyFactory{}; })
       .def("add",
            [](Acts::NavigationPolicyFactory* self, const py::object& cls) {
-             auto m = py::module_::import("acts");
-             if (py::object o = m.attr("TryAllNavigationPolicy"); cls.is(o)) {
+             auto mod = py::module_::import("acts");
+             if (py::object o = mod.attr("TryAllNavigationPolicy"); cls.is(o)) {
                return std::move(*self).template add<TryAllNavigationPolicy>();
              } else {
                throw std::invalid_argument(
@@ -88,8 +88,8 @@ void addNavigation(Context& ctx) {
       .def("add",
            [](Acts::NavigationPolicyFactory* self, const py::object& cls,
               const SurfaceArrayNavigationPolicy::Config& config) {
-             auto m = py::module_::import("acts");
-             if (py::object o = m.attr("SurfaceArrayNavigationPolicy");
+             auto mod = py::module_::import("acts");
+             if (py::object o = mod.attr("SurfaceArrayNavigationPolicy");
                  !cls.is(o)) {
                throw std::invalid_argument(
                    "Unknown navigation policy class: " +
@@ -103,8 +103,9 @@ void addNavigation(Context& ctx) {
       .def("add",
            [](Acts::NavigationPolicyFactory* self, const py::object& cls,
               const TryAllNavigationPolicy::Config& config) {
-             auto m = py::module_::import("acts");
-             if (py::object o = m.attr("TryAllNavigationPolicy"); !cls.is(o)) {
+             auto mod = py::module_::import("acts");
+             if (py::object o = mod.attr("TryAllNavigationPolicy");
+                 !cls.is(o)) {
                throw std::invalid_argument(
                    "Unknown navigation policy class: " +
                    cls.attr("__name__").cast<std::string>());
