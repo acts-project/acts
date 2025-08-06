@@ -85,8 +85,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   GeometryContext gctx{};
 
-  using MuonId_t = MuonSpacePoint::auto rndEngine =
-      m_cfg.randomNumbers->spawnGenerator(ctx);
+  using MuonId_t = MuonSpacePoint::MuonId;
+  auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   std::map<GeometryIdentifier, MuonSpacePointBucket> spacePointsPerChamber{};
   for (const auto& hit : gotSimHits) {
@@ -147,6 +147,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
               Acts::Vector3{parentTrf * smearedHit},
               Acts::Vector3{parentTrf.linear() * Vector3::UnitX()},
               Acts::Vector3{parentTrf.linear() * Vector3::UnitY()});
+          MuonId_t id{};
+          id.setChamber(MuonId_t::StationName::BIS,
+                        hit.position().z() > 0 ? MuonId_t::DetSide::A
+                                               : MuonId_t::DetSide::C,
+                        1, MuonId_t::TechField::Rpc);
+          newSp.setId(id);
         }
 
         break;
@@ -175,6 +181,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
               Vector3{parentTrf * hitSurf->center(gctx)},
               Vector3{parentTrf.linear() * Vector3::UnitZ()},
               Vector3{parentTrf.linear() * Vector3::UnitX()});
+          MuonId_t id{};
+          id.setChamber(MuonId_t::StationName::BIS,
+                        hit.position().z() > 0 ? MuonId_t::DetSide::A
+                                               : MuonId_t::DetSide::C,
+                        1, MuonId_t::TechField::Mdt);
+          newSp.setId(id);
         }
         break;
       }
