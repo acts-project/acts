@@ -46,9 +46,7 @@ std::string CompSpacePointAuxiliaries::parName(const FitParIndex idx) {
 }
 
 void CompSpacePointAuxiliaries::ChiSqWithDerivatives::reset() {
-  chi2 = 0.;
-  gradient.setZero();
-  hessian.setZero();
+  *this = ChiSqWithDerivatives();
 }
 
 CompSpacePointAuxiliaries::CompSpacePointAuxiliaries(
