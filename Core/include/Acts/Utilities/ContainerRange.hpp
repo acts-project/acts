@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/ContainerConcepts.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {
@@ -72,6 +74,21 @@ class ContainerRange {
   }
   constexpr auto end() const noexcept {
     return container().begin() + m_range.second;
+  }
+
+  constexpr auto operator[](Index index) const noexcept
+    requires(ContainerHasArrayAccess<Container>)
+  {
+    assert(index < size() && "Index out of bounds");
+    return (*m_container)[m_range.first + index];
+  }
+  constexpr auto at(Index index) const
+    requires(ContainerHasAt<Container>)
+  {
+    if (index >= size()) {
+      throw std::out_of_range("Index out of bounds");
+    }
+    return m_container->at(m_range.first + index);
   }
 
  private:

@@ -136,4 +136,15 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
     const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
     float cut, std::optional<cudaStream_t> stream = {});
 
+/// Apply a limit on the number of edges consistently on edgeIndex and
+/// edgeFeatures.
+/// @param edgeIndex The edge index tensor
+/// @param edgeFeatures The edge feature tensor
+/// @param maxEdges The edge limit to apply
+/// @param stream The stream to use for operation in case of CUDA
+std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
+    const Tensor<std::int64_t> &edgeIndex,
+    const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
+    std::optional<cudaStream_t> stream);
+
 }  // namespace Acts
