@@ -13,8 +13,6 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
-#include <cstdlib>
-
 #include <Eigen/Dense>
 
 namespace Acts::Experimental {
@@ -52,9 +50,6 @@ void createAndFilterTriplets(float rMaxSeedConf,
         cache.candidatesCollector.nHighQualityCandidates() > 0) {
       minCompatibleTopSPs++;
     }
-    std::cout << "cache.tripletTopCandidates.size() = "
-              << cache.tripletTopCandidates.size()
-              << ", minCompatibleTopSPs = " << minCompatibleTopSPs << std::endl;
     // continue if number of top SPs is smaller than minimum required for filter
     if (cache.tripletTopCandidates.size() < minCompatibleTopSPs) {
       continue;
