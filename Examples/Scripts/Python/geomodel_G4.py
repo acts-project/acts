@@ -161,17 +161,19 @@ def main():
 
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
-    runGeant4(
+    algSequence = runGeant4(
         detector=detector,
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.outDir,
         volumeMappings=gmFactoryConfig.nameList,
         events=args.nEvents,
-    ).run()
+    )
 
-    # runPropagation(trackingGeometry, field, args.outDir).run()
+    from acts.examples.digitization import MuonSpacePointDigitizer
 
+    algSequence.run()
+    
     wb = WhiteBoard(acts.logging.INFO)
 
     context = AlgorithmContext(0, 0, wb, 10)

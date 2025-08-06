@@ -47,6 +47,9 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   ProcessCode initialize() override;
   /// @brief Execute the digitization
   ProcessCode execute(const AlgorithmContext& ctx) const override;
+  /// @brief  Const access to the config
+  const Config& config() const { return m_cfg; }
+
 
  private:
   /// @brief Configuration of the digitizer

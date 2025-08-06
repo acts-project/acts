@@ -15,7 +15,7 @@ using TechField = MuonSpacePoint::MuonId::TechField;
 
 MuonSpacePointCalibrator::MuonSpacePointCalibrator(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : m_cfg{std::move(cfg)}, m_logger{std::move(logger)} {}
+    : m_logger{std::move(logger)}, m_cfg{std::move(cfg)} {}
 
 MuonSpacePointCalibrator::CalibSpCont_t MuonSpacePointCalibrator::calibrate(
     const Acts::CalibrationContext& ctx, const Acts::Vector3& trackPos,
@@ -116,7 +116,13 @@ double MuonSpacePointCalibrator::driftRadius(const double driftTime) const {
                           m_cfg.minDriftT, m_cfg.rtCoefficients)
       .value_or(0.);
 }
-
+double MuonSpacePointCalibrator::driftRadiusUncert(
+    const double driftRadius) const {
+  return expandPolySeries(driftTime(driftRadius), 0u, m_cfg.rtPolyType,
+                          m_cfg.maxDriftT, m_cfg.minDriftT,
+                          m_cfg.rtCoefficients)
+      .value_or(0.);
+}
 double MuonSpacePointCalibrator::driftVelocity(const double driftTime) const {
   return expandPolySeries(driftTime, 1u, m_cfg.rtPolyType, m_cfg.maxDriftT,
                           m_cfg.minDriftT, m_cfg.rtCoefficients)
