@@ -12,10 +12,12 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <span>
+#include <stdexcept>
 
 namespace Acts {
 
-template <typename Container, typename Value, typename Index, bool ReadOnly>
+template <typename Derived, typename Container, typename Value, typename Index,
+          bool ReadOnly>
 class ContainerSubset {
  public:
   using container_type = const_if_t<ReadOnly, Container>;
@@ -140,12 +142,12 @@ class ContainerSubset {
       : m_container(&container), m_subset(subset) {}
   template <bool OtherReadOnly>
   explicit constexpr ContainerSubset(
-      const ContainerSubset<Container, Value, Index, OtherReadOnly>
+      const ContainerSubset<Derived, Container, Value, Index, OtherReadOnly>
           &other) noexcept
     requires(ReadOnly && !OtherReadOnly)
       : m_container(&other.container()), m_subset(other.subset()) {}
 
-  constexpr ContainerSubset<Container, Value, Index, true> asConst()
+  constexpr ContainerSubset<Derived, Container, Value, Index, true> asConst()
       const noexcept
     requires(!ReadOnly)
   {
@@ -160,6 +162,14 @@ class ContainerSubset {
   constexpr std::size_t size() const noexcept { return m_subset.size(); }
   constexpr bool empty() const noexcept { return size() == 0; }
 
+  constexpr Derived subrange(std::size_t offset) const noexcept {
+    return {container(), m_subset.subspan(offset)};
+  }
+  constexpr Derived subrange(std::size_t offset,
+                             std::size_t count) const noexcept {
+    return {container(), m_subset.subspan(offset, count)};
+  }
+
   constexpr auto front() const noexcept {
     return container()[m_subset.front()];
   }
@@ -170,6 +180,21 @@ class ContainerSubset {
   }
   constexpr iterator end() const noexcept {
     return iterator(*m_container, m_subset.end());
+  }
+
+  constexpr auto operator[](Index index) const noexcept
+    requires(ContainerHasArrayAccess<Container>)
+  {
+    assert(index < size() && "Index out of bounds");
+    return (*m_container)[m_subset[index]];
+  }
+  constexpr auto at(Index index) const
+    requires(ContainerHasAt<Container>)
+  {
+    if (index >= size()) {
+      throw std::out_of_range("Index out of bounds");
+    }
+    return m_container->at(m_subset[index]);
   }
 
  private:
