@@ -23,7 +23,7 @@ struct AlgorithmContext;
 
 /// This class takes fractions of recorded events that represent the
 /// effect of a nuclear interaction and produces histograms and parameters which
-/// can be used for a parametrisation based simultion of nuclear interaction.
+/// can be used for a parametrisation based simulation of nuclear interaction.
 /// Since the parameters are based on the set of all provided events, during the
 /// event loop newly provided events are stored until the end of the run. Then
 /// all parts are calculated and written to file.

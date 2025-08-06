@@ -41,7 +41,7 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
   const auto pTransform = portal.surface().transform(gctx);
   // Creating a link to the mother
   auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
-      boundaries, binning, unpack_shared_const_vector(volumes),
+      boundaries, binning, unpackConstSmartPointers(volumes),
       pTransform.inverse());
   ExternalNavigationDelegate dVolumeUpdater;
   dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
@@ -55,7 +55,7 @@ void Acts::Experimental::detail::PortalHelper::
         const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
         std::vector<PortalReplacement>& pReplacements) {
   // Unpack to navigation bare points
-  auto cVolumes = unpack_shared_const_vector(volumes);
+  auto cVolumes = unpackConstSmartPointers(volumes);
   // Set to the constructed portals (p), at index (i), in direction (d)
   // using boundaries and binning
   for (auto& [p, i, dir, boundaries, binning] : pReplacements) {

@@ -40,7 +40,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
       : ApproachDescriptor(),
         m_surfaces(std::move(aSurfaces)),
         m_surfaceCache() {
-    m_surfaceCache = unpack_shared_vector(m_surfaces);
+    m_surfaceCache = unpackSmartPointers(m_surfaces);
   }
 
   /// A generic approach descriptor with n surfaces to test

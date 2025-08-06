@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -94,6 +95,13 @@ class SurfaceArray {
     /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*> getAxes() const = 0;
 
+    virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const = 0;
+
+    virtual const Transform3& getTransform() const = 0;
+
+    virtual Surface::SurfaceType surfaceType() const = 0;
+
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
     virtual std::size_t dimensions() const = 0;
@@ -129,22 +137,59 @@ class SurfaceArray {
 
     /// @brief Default constructor
     ///
-    /// @param globalToLocal Callable that converts from global to local
-    /// @param localToGlobal Callable that converts from local to global
+    /// @param type The surface type, this determines the local to global calculation
+    /// @param transform The transform to apply to the surface`
+    /// @param R the radius (interpretation depends on @p type)
+    /// @param Z the z position (interpretation depends on @p type)
     /// @param axes The axes to build the grid data structure.
     /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVector<DIM> else
     ///       @c std::array<double, 1>.
-    SurfaceGridLookup(std::function<point_t(const Vector3&)> globalToLocal,
-                      std::function<Vector3(const point_t&)> localToGlobal,
-                      std::tuple<Axes...> axes,
+    SurfaceGridLookup(Surface::SurfaceType type, const Transform3& transform,
+                      double R, double Z, std::tuple<Axes...> axes,
                       std::vector<AxisDirection> bValues = {})
-        : m_globalToLocal(std::move(globalToLocal)),
-          m_localToGlobal(std::move(localToGlobal)),
+        : m_type(type),
+          m_transform(transform),
+          m_itransform(transform.inverse()),
           m_grid(std::move(axes)),
           m_binValues(std::move(bValues)) {
       m_neighborMap.resize(m_grid.size());
+
+      using namespace VectorHelpers;
+
+      switch (type) {
+        using enum Surface::SurfaceType;
+        case Cylinder:
+          m_globalToLocal = [](const Vector3& pos) {
+            return Vector2(phi(pos), pos.z());
+          };
+          m_localToGlobal = [R](const Vector2& loc) {
+            // Technically, this is not correct, the radius is arbitrary
+            return Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+          };
+          break;
+        case Disc:
+          m_globalToLocal = [](const Vector3& pos) {
+            return Vector2(perp(pos), phi(pos));
+          };
+          m_localToGlobal = [Z](const Vector2& loc) {
+            // Technically, this is not correct, the z position is arbitrary
+            return Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]),
+                           Z);
+          };
+          break;
+        case Plane:
+          m_globalToLocal = [](const Vector3& pos) {
+            return Vector2(perp(pos), phi(pos));
+          };
+          m_localToGlobal = [](const Vector2& loc) {
+            return Vector3(loc.x(), loc.y(), 0.);
+          };
+          break;
+        default:
+          throw std::invalid_argument("Surface type not supported");
+      }
     }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
@@ -217,7 +262,7 @@ class SurfaceArray {
     /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
     SurfaceVector& lookup(const Vector3& position) override {
-      return m_grid.atPosition(m_globalToLocal(position));
+      return m_grid.atPosition(m_globalToLocal(m_transform * position));
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as const
@@ -225,7 +270,7 @@ class SurfaceArray {
     /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
     const SurfaceVector& lookup(const Vector3& position) const override {
-      return m_grid.atPosition(m_globalToLocal(position));
+      return m_grid.atPosition(m_globalToLocal(m_transform * position));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -247,7 +292,7 @@ class SurfaceArray {
     /// @param position Lookup position
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position) const override {
-      auto lposition = m_globalToLocal(position);
+      auto lposition = m_globalToLocal(m_transform * position);
       return m_neighborMap.at(m_grid.globalBinFromPosition(lposition));
     }
 
@@ -276,6 +321,15 @@ class SurfaceArray {
       auto arr = m_grid.axes();
       return std::vector<const IAxis*>(arr.begin(), arr.end());
     }
+
+    std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const override {
+      return AnyGridConstView<SurfaceVector>{m_grid};
+    }
+
+    const Transform3& getTransform() const override { return m_transform; }
+
+    Surface::SurfaceType surfaceType() const override { return m_type; }
 
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
@@ -332,8 +386,9 @@ class SurfaceArray {
     Vector3 getBinCenterImpl(std::size_t bin) const
       requires(DIM != 1)
     {
-      return m_localToGlobal(ActsVector<DIM>(
-          m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
+      return m_itransform *
+             m_localToGlobal(ActsVector<DIM>(
+                 m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
     /// Internal method, see above.
@@ -342,9 +397,12 @@ class SurfaceArray {
       requires(DIM == 1)
     {
       point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
-      return m_localToGlobal(pos);
+      return m_itransform * m_localToGlobal(pos);
     }
 
+    Surface::SurfaceType m_type;
+    Transform3 m_transform;
+    Transform3 m_itransform;
     std::function<point_t(const Vector3&)> m_globalToLocal;
     std::function<Vector3(const point_t&)> m_localToGlobal;
     Grid_t m_grid;
@@ -406,6 +464,20 @@ class SurfaceArray {
     /// @brief Returns an empty vector of @c AnyAxis
     /// @return empty vector
     std::vector<const IAxis*> getAxes() const override { return {}; }
+
+    std::optional<AnyGridConstView<SurfaceVector>> getGridView()
+        const override {
+      return std::nullopt;
+    }
+
+    const Transform3& getTransform() const override {
+      static const Transform3 identityTransform = Transform3::Identity();
+      return identityTransform;
+    }
+
+    Surface::SurfaceType surfaceType() const override {
+      return Surface::SurfaceType::Other;
+    }
 
     /// @brief Get the number of dimensions
     /// @return always 0
@@ -530,6 +602,9 @@ class SurfaceArray {
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
   std::ostream& toStream(const GeometryContext& gctx, std::ostream& sl) const;
+
+  /// Return the lookup object
+  const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
  private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;

@@ -64,7 +64,6 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   using RecoTrackInfo = std::pair<TrackInfo, std::size_t>;
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
 
-  std::size_t trackId = 0;
   for (const auto& track : tracks) {
     // Reco track selection
     //@TODO: add interface for applying others cuts on reco tracks:
@@ -113,7 +112,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // track info
     TrackInfo toAdd;
-    toAdd.trackId = trackId;
+    toAdd.trackId = track.index();
     if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
       toAdd.seedID = seedNumber(track);
     } else {
@@ -149,8 +148,6 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     }
 
     infoMap[toAdd.trackId] = toAdd;
-
-    trackId++;
   }
 
   // Find duplicates
@@ -174,7 +171,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       << "pT,eta,phi,"
       << "truthMatchProbability,"
       << "good/duplicate/fake,"
-      << "Hits_ID";
+      << "Measurements_ID";
 
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);

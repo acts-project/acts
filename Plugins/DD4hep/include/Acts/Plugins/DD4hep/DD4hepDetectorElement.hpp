@@ -90,8 +90,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
  private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;
-  /// DD4hep segmentation
-  dd4hep::Segmentation m_segmentation;
 };
 
 /// This extension holds an ACTS detector element belonging to a DD4hep detector

@@ -19,21 +19,26 @@ using namespace Acts;
 using namespace Acts::detail;
 using Line_t = Line3DWithPartialDerivatives<double>;
 using ParamVector = Line_t::ParamVector;
-using ParIndices = Line_t::ParIndices;
+using ParIndices = Line_t::ParIndex;
 using namespace Acts::UnitLiterals;
 /// The random number generator used in the framework.
 using RandomEngine = std::mt19937;  ///< Mersenne Twister
 
+constexpr auto p_x0 = static_cast<std::size_t>(ParIndices::x0);
+constexpr auto p_y0 = static_cast<std::size_t>(ParIndices::y0);
+constexpr auto p_theta = static_cast<std::size_t>(ParIndices::theta);
+constexpr auto p_phi = static_cast<std::size_t>(ParIndices::phi);
+
 ParamVector makeTrack(RandomEngine& rndEngine) {
   ParamVector pars{};
-  pars[ParIndices::x0] =
+  pars[p_x0] =
       static_cast<double>(rndEngine() % 1000) - 500;  // Random x0 in [-50, 50]
-  pars[ParIndices::y0] =
+  pars[p_y0] =
       static_cast<double>(rndEngine() % 1000) - 500;  // Random y0 in [-50, 50]
-  pars[ParIndices::theta] = static_cast<double>(rndEngine() % 180) *
-                            1_degree;  // Random theta in [0, 180)
-  pars[ParIndices::phi] = static_cast<double>(rndEngine() % 360) *
-                          1_degree;  // Random phi in [-180, 180)
+  pars[p_theta] = static_cast<double>(rndEngine() % 180) *
+                  1_degree;  // Random theta in [0, 180)
+  pars[p_phi] = static_cast<double>(rndEngine() % 360) *
+                1_degree;  // Random phi in [-180, 180)
   return pars;
 }
 
@@ -47,13 +52,11 @@ BOOST_AUTO_TEST_CASE(lineParameterTest) {
   for (std::size_t i = 0; i < trials; ++i) {
     auto pars = makeTrack(rndEngine);
     newLine.updateParameters(pars);
-    BOOST_CHECK_CLOSE(newLine.position()[Acts::eX], pars[ParIndices::x0],
-                      tolerance);
-    BOOST_CHECK_CLOSE(newLine.position()[Acts::eY], pars[ParIndices::y0],
-                      tolerance);
+    BOOST_CHECK_CLOSE(newLine.position()[Acts::eX], pars[p_x0], tolerance);
+    BOOST_CHECK_CLOSE(newLine.position()[Acts::eY], pars[p_y0], tolerance);
     BOOST_CHECK_LE(newLine.position()[Acts::eZ], tolerance);
-    const Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
-        pars[ParIndices::phi], pars[ParIndices::theta]);
+    const Acts::Vector3 dir =
+        Acts::makeDirectionFromPhiTheta(pars[p_phi], pars[p_theta]);
     BOOST_CHECK_CLOSE(newLine.direction().dot(dir), 1., tolerance);
   }
 }
@@ -64,10 +67,10 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
   constexpr double tolerance = 1.e-7;
   for (std::size_t trial = 0; trial < trials; ++trial) {
     const ParamVector pars{makeTrack(rndEngine)};
-    std::cout << "lineGradientTest -- Generated parameters  x: "
-              << pars[ParIndices::x0] << ", y: " << pars[ParIndices::y0]
-              << ", theta: " << (pars[ParIndices::theta] / 1_degree)
-              << ", phi: " << (pars[ParIndices::phi] / 1_degree) << std::endl;
+    std::cout << "lineGradientTest -- Generated parameters  x: " << pars[p_x0]
+              << ", y: " << pars[p_y0]
+              << ", theta: " << (pars[p_theta] / 1_degree)
+              << ", phi: " << (pars[p_phi] / 1_degree) << std::endl;
     Line_t segLine{};
     segLine.updateParameters(pars);
 
@@ -76,11 +79,10 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
     BOOST_CHECK_LE((segLine.gradient(ParIndices::y0) - Vector3::UnitY()).norm(),
                    tolerance);
 
-    for (const std::size_t param : {ParIndices::theta, ParIndices::phi}) {
-      break;
+    for (const auto param : {ParIndices::theta, ParIndices::phi}) {
       ParamVector parsUp{pars}, parsDn{pars};
-      parsUp[param] += h;
-      parsDn[param] -= h;
+      parsUp[static_cast<std::size_t>(param)] += h;
+      parsDn[static_cast<std::size_t>(param)] -= h;
       Line_t segLineUp{}, segLineDn{};
       segLineUp.updateParameters(parsUp);
       segLineDn.updateParameters(parsDn);
@@ -89,11 +91,11 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
                              (2. * h)};
       BOOST_CHECK_LE((numDeriv - segLine.gradient(param)).norm(), tolerance);
       /** Calculate the second order derivatives of the line partials */
-      for (const std::size_t param1 : {ParIndices::theta, ParIndices::phi,
-                                       ParIndices::x0, ParIndices::y0}) {
+      for (const auto param1 : {ParIndices::theta, ParIndices::phi,
+                                ParIndices::x0, ParIndices::y0}) {
         ParamVector parsUp1{pars}, parsDn1{pars};
-        parsUp1[param1] += h;
-        parsDn1[param1] -= h;
+        parsUp1[static_cast<std::size_t>(param1)] += h;
+        parsDn1[static_cast<std::size_t>(param1)] -= h;
 
         segLineUp.updateParameters(parsUp1);
         segLineDn.updateParameters(parsDn1);

@@ -18,18 +18,23 @@ namespace Acts::detail {
 template <std::floating_point T>
 void Line3DWithPartialDerivatives<T>::updateParameters(
     const ParamVector& newPars) {
-  m_pos[Acts::eX] = newPars[ParIndices::x0];
-  m_pos[Acts::eY] = newPars[ParIndices::y0];
+  constexpr auto x0 = static_cast<std::uint8_t>(ParIndex::x0);
+  constexpr auto y0 = static_cast<std::uint8_t>(ParIndex::y0);
+  constexpr auto theta = static_cast<std::uint8_t>(ParIndex::theta);
+  constexpr auto phi = static_cast<std::uint8_t>(ParIndex::phi);
 
-  const T cosTheta = std::cos(newPars[ParIndices::theta]);
-  const T sinTheta = std::sin(newPars[ParIndices::theta]);
-  const T cosPhi = std::cos(newPars[ParIndices::phi]);
-  const T sinPhi = std::sin(newPars[ParIndices::phi]);
+  m_pos[Acts::eX] = newPars[x0];
+  m_pos[Acts::eY] = newPars[y0];
+
+  const T cosTheta = std::cos(newPars[theta]);
+  const T sinTheta = std::sin(newPars[theta]);
+  const T cosPhi = std::cos(newPars[phi]);
+  const T sinPhi = std::sin(newPars[phi]);
 
   m_dir = Vector{cosPhi * sinTheta, sinPhi * sinTheta, cosTheta};
 
-  m_gradient[ParIndices::y0] = Vector::UnitY();
-  m_gradient[ParIndices::x0] = Vector::UnitX();
+  m_gradient[y0] = Vector::UnitY();
+  m_gradient[x0] = Vector::UnitX();
   /**            x_{0}                cos (phi) sin (theta)
    *  position = y_{0}  , Direction = sin (phi) sin (theta)
    *             0                         cos theta
@@ -41,10 +46,8 @@ void Line3DWithPartialDerivatives<T>::updateParameters(
    *(theta) dTheta         - sin (theta)             dPhi                 0
    *
    *******************************************************************************/
-  m_gradient[ParIndices::theta] =
-      Vector{cosPhi * cosTheta, sinPhi * cosTheta, -sinTheta};
-  m_gradient[ParIndices::phi] =
-      Vector{-sinTheta * sinPhi, sinTheta * cosPhi, 0};
+  m_gradient[theta] = Vector{cosPhi * cosTheta, sinPhi * cosTheta, -sinTheta};
+  m_gradient[phi] = Vector{-sinTheta * sinPhi, sinTheta * cosPhi, 0};
   /*********************************************************************************
    *   Non-vanishing second order derivatives
    *
@@ -57,12 +60,9 @@ void Line3DWithPartialDerivatives<T>::updateParameters(
    *   -------------     = cos(theta)   cos phi
    *    d theta dPhi                       0
    ************************************************************************************/
-  constexpr std::size_t idxThetaSq =
-      vecIdxFromSymMat<ParIndices::nPars>(ParIndices::theta, ParIndices::theta);
-  constexpr std::size_t idxPhiSq =
-      vecIdxFromSymMat<ParIndices::nPars>(ParIndices::phi, ParIndices::phi);
-  constexpr std::size_t idxPhiTheta =
-      vecIdxFromSymMat<ParIndices::nPars>(ParIndices::theta, ParIndices::phi);
+  constexpr auto idxThetaSq = vecIdxFromSymMat<s_nPars>(theta, theta);
+  constexpr auto idxPhiSq = vecIdxFromSymMat<s_nPars>(phi, phi);
+  constexpr auto idxPhiTheta = vecIdxFromSymMat<s_nPars>(theta, phi);
   m_hessian[idxThetaSq] = -m_dir;
   m_hessian[idxPhiSq] = -sinTheta * Vector{cosPhi, sinPhi, 0.};
   m_hessian[idxPhiTheta] = cosTheta * Vector{-sinPhi, cosPhi, 0.};
@@ -80,15 +80,17 @@ Line3DWithPartialDerivatives<T>::direction() const {
 }
 template <std::floating_point T>
 const Line3DWithPartialDerivatives<T>::Vector&
-Line3DWithPartialDerivatives<T>::gradient(const std::size_t param) const {
+Line3DWithPartialDerivatives<T>::gradient(const ParIndex par) const {
+  const auto param = static_cast<std::uint8_t>(par);
   assert(param < m_gradient.size());
   return m_gradient[param];
 }
 template <std::floating_point T>
 const Line3DWithPartialDerivatives<T>::Vector&
-Line3DWithPartialDerivatives<T>::hessian(const std::size_t param1,
-                                         const std::size_t param2) const {
-  const std::size_t idx{vecIdxFromSymMat<s_nPars>(param1, param2)};
+Line3DWithPartialDerivatives<T>::hessian(const ParIndex param1,
+                                         const ParIndex param2) const {
+  const auto idx{vecIdxFromSymMat<s_nPars>(static_cast<std::size_t>(param1),
+                                           static_cast<std::size_t>(param2))};
   assert(idx < m_hessian.size());
   return m_hessian[idx];
 }

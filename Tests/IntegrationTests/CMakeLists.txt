@@ -19,8 +19,8 @@ macro(add_integrationtest _name)
     target_link_libraries(
         ${_target}
         PRIVATE
-            ActsCore
-            ActsTestsCommonHelpers
+            Acts::Core
+            Acts::TestsCommonHelpers
             Boost::unit_test_framework
             ${integrationtest_extra_libraries}
     )

@@ -120,7 +120,6 @@ RootTrackParameterWriter::RootTrackParameterWriter(
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
 
   // The truth track parameters
-  m_outputTree->Branch("particleId", &m_t_particleId);
   m_outputTree->Branch("t_loc0", &m_t_loc0);
   m_outputTree->Branch("t_loc1", &m_t_loc1);
   m_outputTree->Branch("t_phi", &m_t_phi);

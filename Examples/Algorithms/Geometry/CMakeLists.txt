@@ -1,4 +1,4 @@
-add_library(ActsExamplesGeometry SHARED src/VolumeAssociationTest.cpp)
+acts_add_library(ExamplesGeometry SHARED src/VolumeAssociationTest.cpp)
 
 target_include_directories(
     ActsExamplesGeometry
@@ -7,10 +7,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesGeometry
-    PUBLIC ActsCore ActsExamplesFramework
-)
-
-install(
-    TARGETS ActsExamplesGeometry
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::Core Acts::ExamplesFramework
 )

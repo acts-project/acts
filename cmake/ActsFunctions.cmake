@@ -1,3 +1,48 @@
+# This function creates a library with Acts namespace support
+# It takes the library name without the "Acts" prefix and creates:
+# 1. A direct CMake target named "Acts${library_name}"
+# 2. An ALIAS target named "Acts::${library_name}"
+function(acts_add_library library_name)
+    set(options "")
+    set(oneValueArgs ACTS_INCLUDE_FOLDER)
+    set(multiValueArgs "")
+    cmake_parse_arguments(
+        PARSE_ARGV
+        1
+        lib_args
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+    )
+
+    set(full_target_name "Acts${library_name}")
+
+    # Forward all arguments except the first (library_name) to add_library
+    add_library(${full_target_name} ${lib_args_UNPARSED_ARGUMENTS})
+
+    # Create alias target with Acts:: namespace
+    add_library(Acts::${library_name} ALIAS ${full_target_name})
+
+    set_target_properties(
+        ${full_target_name}
+        PROPERTIES EXPORT_NAME Acts::${library_name}
+    )
+
+    install(
+        TARGETS ${full_target_name}
+        EXPORT ${full_target_name}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    if(lib_args_ACTS_INCLUDE_FOLDER)
+        install(
+            DIRECTORY ${lib_args_ACTS_INCLUDE_FOLDER}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+    endif()
+endfunction()
+
 # This function adds a helper target called ${target}_HEADERS which has
 # generated source files that include each hedaer that was given one-by-one.
 # The generated target links against the one given in `target` and therefore
@@ -70,6 +115,6 @@ function(acts_compile_headers target)
         list(APPEND _sources "${_temporary_path}")
     endforeach()
 
-    add_library(${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
-    target_link_libraries(${target}_HEADERS PRIVATE ${target})
+    add_library(Acts${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
+    target_link_libraries(Acts${target}_HEADERS PRIVATE Acts::${target})
 endfunction()

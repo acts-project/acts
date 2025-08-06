@@ -83,11 +83,12 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // access the global transformation matrix of the layer
       auto transform =
           convertTransform(&(detElement.nominal().worldTransformation()));
+      auto itransform = transform.inverse();
       // get the shape of the layer
       TGeoShape* geoShape =
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(gctx, layerSurfaces);
+      ProtoLayer pl(gctx, layerSurfaces, itransform);
       if (logger().doPrint(Logging::VERBOSE)) {
         std::stringstream ss;
         pl.toStream(ss);

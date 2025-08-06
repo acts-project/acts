@@ -2,8 +2,8 @@ include(ActsTargetLinkLibrariesSystem)
 
 set(ActsExamplesFramework_SOURCES)
 
-add_library(
-    ActsExamplesFramework
+acts_add_library(
+    ExamplesFramework
     SHARED
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSPLayerSplitter.cpp
@@ -31,6 +31,7 @@ add_library(
     src/Validation/TrackClassification.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
+    ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
 target_include_directories(
@@ -40,9 +41,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesFramework
     PUBLIC
-        ActsCore
-        ActsFatras
-        ActsPluginFpeMonitoring
+        Acts::Core
+        Acts::Fatras
+        Acts::PluginFpeMonitoring
         Boost::boost
         ROOT::Core
         ROOT::Hist
@@ -66,13 +67,6 @@ endif()
 
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 
-acts_compile_headers(ActsExamplesFramework GLOB "include/**/*.hpp")
-
-install(
-    TARGETS ActsExamplesFramework
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
 
 add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)

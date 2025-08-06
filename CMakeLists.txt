@@ -253,7 +253,7 @@ set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.10.5)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_geomodel_version 6.3.0)
+set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)

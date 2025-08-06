@@ -27,7 +27,7 @@ struct AlgorithmContext;
 /// Each entry in the TTree corresponds to one seed for optimum writing
 /// speed. The event number is part of the written data.
 ///
-/// Safe to use from multiple writer threads. To avoid thread-saftey issues,
+/// Safe to use from multiple writer threads. To avoid thread-safety issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
 class RootSeedWriter final : public WriterT<SimSeedContainer> {

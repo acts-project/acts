@@ -1,4 +1,9 @@
-add_library(ActsPluginEDM4hep SHARED src/EDM4hepUtil.cpp)
+acts_add_library(
+    PluginEDM4hep
+    SHARED
+    src/EDM4hepUtil.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
+)
 
 target_include_directories(
     ActsPluginEDM4hep
@@ -8,12 +13,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginEDM4hep
-    PUBLIC ActsCore ActsPluginPodio EDM4HEP::edm4hep
+    PUBLIC Acts::Core Acts::PluginPodio EDM4HEP::edm4hep
 )
-
-install(
-    TARGETS ActsPluginEDM4hep
-    EXPORT ActsPluginEDM4hepTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

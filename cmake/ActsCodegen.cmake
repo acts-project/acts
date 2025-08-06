@@ -142,6 +142,7 @@ function(acts_code_generation)
 
     add_custom_target(${ARGS_TARGET}_Internal DEPENDS ${_output_file})
     add_library(${ARGS_TARGET} INTERFACE)
+    add_library(Acts::${ARGS_TARGET} ALIAS ${ARGS_TARGET})
     target_include_directories(${ARGS_TARGET} INTERFACE ${_codegen_root})
 
     add_dependencies(${ARGS_TARGET} ${ARGS_TARGET}_Internal)

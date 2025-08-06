@@ -10,6 +10,8 @@
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Table.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +28,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -306,6 +309,62 @@ void storeTiming(const std::vector<std::string>& identifiers,
   }
   file << "\n";
 }
+
+// Convert duration to milliseconds
+double durationToMs(Duration duration) {
+  double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
+  return ns / 1e6;
+}
+
+void printTiming(const std::vector<std::string>& identifiers,
+                 const std::vector<Duration>& durations, std::size_t numEvents,
+                 const Acts::Logger& logger) {
+  if (identifiers.empty() || durations.empty()) {
+    return;
+  }
+
+  Acts::Table table;
+  using enum Acts::Table::Alignment;
+  table.addColumn("Algorithm", "{}", Left);
+  table.addColumn("Total Time (ms)", "{:.2f}", Right);
+  table.addColumn("Time/Event (ms)", "{:.2f}", Right);
+  table.addColumn("Fraction", "{:.1f}%", Right);
+
+  Duration totalTime =
+      std::accumulate(durations.begin(), durations.end(), Duration::zero());
+
+  // Create sorted indices based on total duration (descending)
+  std::vector<std::size_t> sortedIndices(identifiers.size());
+  std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+  std::sort(sortedIndices.begin(), sortedIndices.end(),
+            [&](std::size_t a, std::size_t b) {
+              return durations[a] > durations[b];
+            });
+
+  for (std::size_t idx : sortedIndices) {
+    double fraction =
+        totalTime > Duration::zero()
+            ? 100.0 *
+                  std::chrono::duration_cast<NanoSeconds>(durations[idx])
+                      .count() /
+                  std::chrono::duration_cast<NanoSeconds>(totalTime).count()
+            : 0.0;
+
+    double totalValue = durationToMs(durations[idx]);
+    double perEventValue =
+        numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
+
+    table.addRow(identifiers[idx], totalValue, perEventValue, fraction);
+  }
+
+  // Add summary row
+  double totalSummaryValue = durationToMs(totalTime);
+  double totalPerEventValue =
+      numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
+  table.addRow("TOTAL", totalSummaryValue, totalPerEventValue, 100.0);
+
+  ACTS_INFO("Timing breakdown:\n" << table);
+}
 }  // namespace
 
 int Sequencer::run() {
@@ -528,6 +587,8 @@ int Sequencer::run() {
     ACTS_DEBUG("  " << names[i] << ": "
                     << perEvent(clocksAlgorithms[i], numEvents));
   }
+
+  printTiming(names, clocksAlgorithms, numEvents, logger());
 
   if (!m_cfg.outputDir.empty()) {
     storeTiming(names, clocksAlgorithms, numEvents,

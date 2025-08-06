@@ -24,33 +24,38 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 add_executable(ShowActsVersion ShowActsVersion.cpp)
 target_link_libraries(
     ShowActsVersion
-    PRIVATE ActsCore ActsFatras ActsPluginJson ActsPluginRoot ActsPluginCovfie
+    PRIVATE
+        Acts::Core
+        Acts::Fatras
+        Acts::PluginJson
+        Acts::PluginRoot
+        Acts::PluginCovfie
 )
 
 option(DD4HEP "Build with DD4hep" ON)
 if(DD4HEP)
     message(STATUS "Adding DD4hep plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginDD4hep)
-    target_link_libraries(ShowActsVersion PRIVATE ActsPluginDD4hep)
+    target_link_libraries(ShowActsVersion PRIVATE Acts::PluginDD4hep)
 endif()
 
 option(PODIO "Build with podio" ON)
 if(PODIO)
     message(STATUS "Adding podio plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginPodio)
-    target_link_libraries(ShowActsVersion PRIVATE ActsPluginPodio)
+    target_link_libraries(ShowActsVersion PRIVATE Acts::PluginPodio)
 endif()
 
 option(EDM4HEP "Build with EDM4hep" ON)
 if(EDM4HEP)
     message(STATUS "Adding EDM4hep plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginEDM4hep)
-    target_link_libraries(ShowActsVersion PRIVATE ActsPluginEDM4hep)
+    target_link_libraries(ShowActsVersion PRIVATE Acts::PluginEDM4hep)
 endif()
 
 option(GEOMODEL "Build with GeoModel" ON)
 if(GEOMODEL)
     message(STATUS "Adding GeoModel plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginGeoModel)
-    target_link_libraries(ShowActsVersion PRIVATE ActsPluginGeoModel)
+    target_link_libraries(ShowActsVersion PRIVATE Acts::PluginGeoModel)
 endif()

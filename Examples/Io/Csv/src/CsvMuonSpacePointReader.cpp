@@ -79,16 +79,15 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
     MuonSpacePoint& newSpacePoint{spacePoints.back().emplace_back()};
 
     newSpacePoint.setId(id);
-
     newSpacePoint.defineCoordinates(
         Acts::Vector3{data.locPositionX, data.locPositionY, data.locPositionZ},
         Acts::Vector3{data.locSensorDirX, data.locSensorDirY,
-                      data.locSensorDirZ});
-    newSpacePoint.defineNormal(Acts::Vector3{
-        data.locPlaneNormX, data.locPlaneNormY, data.locPlaneNormZ});
+                      data.locSensorDirZ},
+        Acts::Vector3{data.locToNextSensorX, data.locToNextSensorY,
+                      data.locToNextSensorZ});
     newSpacePoint.setRadius(data.driftR);
 
-    newSpacePoint.setSpatialCov(data.covXX, data.covXY, data.covYX, data.covYY);
+    newSpacePoint.setCovariance(data.covX, data.covY, data.covT);
     ACTS_VERBOSE("New spacepoint loaded: " << newSpacePoint);
   }
 

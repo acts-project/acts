@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/PointerTraits.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,18 +23,36 @@
 
 namespace Acts {
 
+/// Helper function to unpack a vector of smart pointers (e.g. @c shared_ptr ) into a vector of raw
+/// const pointers
+/// @tparam T the stored type
+/// @param items The vector of smart pointers
+/// @return The unpacked vector
+
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+unpackConstSmartPointers(const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<std::add_const_t<typename T::element_type>>>
+      rawPtrs{};
+  rawPtrs.reserve(items.size());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(ptr.operator->());
+  }
+  return rawPtrs;
+}
+
 /// Helper function to unpack a vector of @c shared_ptr into a vector of raw
 /// pointers
 /// @tparam T the stored type
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
-template <typename T>
-std::vector<T*> unpack_shared_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<T*> rawPtrs;
+template <SmartPointerConcept T>
+std::vector<std::add_pointer_t<typename T::element_type>> unpackSmartPointers(
+    const std::vector<T>& items) {
+  std::vector<std::add_pointer_t<typename T::element_type>> rawPtrs{};
   rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
-    rawPtrs.push_back(item.get());
+  for (const auto& ptr : items) {
+    rawPtrs.push_back(&*ptr);
   }
   return rawPtrs;
 }
@@ -44,27 +63,11 @@ std::vector<T*> unpack_shared_vector(
 /// @param items The vector of @c shared_ptr
 /// @return The unpacked vector
 template <typename T>
-std::vector<const T*> unpack_shared_vector(
+std::vector<const T*> unpackSmartPointers(
     const std::vector<std::shared_ptr<const T>>& items) {
   std::vector<const T*> rawPtrs;
   rawPtrs.reserve(items.size());
   for (const std::shared_ptr<const T>& item : items) {
-    rawPtrs.push_back(item.get());
-  }
-  return rawPtrs;
-}
-
-/// Helper function to unpack a vector of @c shared_ptr into a vector of raw
-/// pointers
-/// @tparam T the stored type
-/// @param items The vector of @c shared_ptr
-/// @return The unpacked vector
-template <typename T>
-std::vector<const T*> unpack_shared_const_vector(
-    const std::vector<std::shared_ptr<T>>& items) {
-  std::vector<const T*> rawPtrs;
-  rawPtrs.reserve(items.size());
-  for (const std::shared_ptr<T>& item : items) {
     rawPtrs.push_back(item.get());
   }
   return rawPtrs;

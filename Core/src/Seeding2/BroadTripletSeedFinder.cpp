@@ -112,7 +112,7 @@ void createTriplets(
   });
 
   // Reserve enough space, in case current capacity is too little
-  tripletTopCandidates.resize(topDoublets.size());
+  tripletTopCandidates.reserve(topDoublets.size());
 
   std::size_t t0 = 0;
 
@@ -307,7 +307,7 @@ void createStripTriplets(
   const float varianceZM = spM.varianceZ();
 
   // Reserve enough space, in case current capacity is too little
-  tripletTopCandidates.resize(topDoublets.size());
+  tripletTopCandidates.reserve(topDoublets.size());
 
   for (std::size_t b = 0; b < bottomDoublets.size(); ++b) {
     const ConstSpacePointProxy2 spB =

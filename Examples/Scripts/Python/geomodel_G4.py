@@ -136,7 +136,7 @@ def main():
         "MDTDriftGas",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
