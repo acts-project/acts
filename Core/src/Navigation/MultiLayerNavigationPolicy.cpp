@@ -12,7 +12,7 @@ namespace Acts::Experimental {
 
 MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
-    const Logger& logger, const Config& config, indexedUpdatorType grid)
+    const Logger& logger, const Config& config, IndexedUpdatorType grid)
     : m_volume(volume), m_indexedGrid(std::move(grid)) {
   ACTS_VERBOSE("Constructing MultiLayerNavigationPolicy for volume "
                << m_volume.volumeName());

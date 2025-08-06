@@ -25,11 +25,11 @@ namespace Acts::Experimental {
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
-  using gridType =
+  using GridType =
       Grid<std::vector<std::size_t>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
            Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
-  using indexedUpdatorType = IndexedSurfacesNavigation<gridType>;
+  using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
 
   struct Config {
     // The binning expansion for grid neighbor lookups
@@ -48,7 +48,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
                                       const TrackingVolume& volume,
                                       const Logger& logger,
                                       const Config& config,
-                                      indexedUpdatorType grid);
+                                      IndexedUpdatorType grid);
 
   /// Update the navigation state from the surface array
   /// @param args The navigation arguments
@@ -76,7 +76,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
-  indexedUpdatorType m_indexedGrid;
+  IndexedUpdatorType m_indexedGrid;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
