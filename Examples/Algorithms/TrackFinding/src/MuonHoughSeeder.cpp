@@ -41,7 +41,7 @@ auto etaHoughParamDC_right = [](double tanAlpha, const MuonSpacePoint& DC) {
 auto houghWidth_fromDC = [](double, const MuonSpacePoint& DC) {
   // scale reported errors up to at least 1mm or 3 times the reported error as
   // drift circle calib not fully reliable at this stage
-  return std::min(std::sqrt(DC.covariance()(Acts::eY, Acts::eY)) * 3., 1.0);
+  return std::min(std::sqrt(DC.covariance()[Acts::eY]) * 3., 1.0);
 };
 
 /// strip solution
@@ -54,10 +54,10 @@ auto phiHoughParam_strip = [](double tanBeta, const MuonSpacePoint& strip) {
 
 /// @brief Strip uncertainty
 auto etaHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
-  return std::sqrt(strip.covariance()(Acts::eY, Acts::eY)) * 3.;
+  return std::sqrt(strip.covariance()[Acts::eY]) * 3.;
 };
 auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
-  return std::sqrt(strip.covariance()(Acts::eX, Acts::eX)) * 3.;
+  return std::sqrt(strip.covariance()[Acts::eX]) * 3.;
 };
 
 MuonHoughSeeder::MuonHoughSeeder(MuonHoughSeeder::Config cfg,
@@ -324,6 +324,8 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
       legend->AddEntry(box.get(), "Hough uncertainties");
       addedLeg = true;
     }
+    primitives.push_back(std::move(box));
+    primitives.push_back(std::move(marker));
   }
   primitives.emplace_back(std::move(legend));
   for (auto& prim : primitives) {
