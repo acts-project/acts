@@ -75,7 +75,7 @@ void addDigitization(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer",
       inputSimHits, inputParticles, outputSpacePoints, randomNumbers,
-      // calibrator;
+      /// @todo: Expose <calibrator> to python bindings
       trackingGeometry);
 
   {

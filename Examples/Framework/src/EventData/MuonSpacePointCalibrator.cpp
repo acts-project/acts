@@ -15,7 +15,7 @@ using TechField = MuonSpacePoint::MuonId::TechField;
 
 MuonSpacePointCalibrator::MuonSpacePointCalibrator(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : m_logger{std::move(logger)}, m_cfg{std::move(cfg)} {}
+    : m_logger{std::move(logger)}, m_cfg{cfg} {}
 MuonSpacePointCalibrator::CalibSpCont_t MuonSpacePointCalibrator::calibrate(
     const Acts::CalibrationContext& ctx, const Acts::Vector3& trackPos,
     const Acts::Vector3& trackDir, const double trackT0,
@@ -96,7 +96,8 @@ std::optional<double> MuonSpacePointCalibrator::expandPolySeries(
   const double xNorm = intervalNorm * (x - 0.5 * (upperBound + lowerBound));
   const double chainFactor = Acts::pow(intervalNorm, derivative);
   double result{0.};
-  for (std::size_t k = 0; k < coeffs.size(); ++k) {
+  const auto N = static_cast<std::uint32_t>(coeffs.size());
+  for (std::uint32_t k = 0; k < N; ++k) {
     switch (polyType) {
       case CalibPolyType::Chebychev:
         result +=

@@ -40,13 +40,14 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
     : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {}
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
+  using enum ActsExamples::ProcessCode;
   if (!m_cfg.trackingGeometry) {
     ACTS_ERROR("No tracking geometry was parsed");
-    return ProcessCode::ABORT;
+    return ABORT;
   }
   if (!m_cfg.randomNumbers) {
     ACTS_ERROR("No random number generator was parsed");
-    return ProcessCode::ABORT;
+    return ABORT;
   }
   MuonSpacePointCalibrator::Config calibCfg{};
   m_cfg.calibrator =
@@ -54,15 +55,15 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
 
   if (m_cfg.inputSimHits.empty()) {
     ACTS_ERROR("No sim hits have been parsed ");
-    return ProcessCode::ABORT;
+    return ABORT;
   }
   if (m_cfg.inputParticles.empty()) {
     ACTS_ERROR("No simulated particles were parsed");
-    return ProcessCode::ABORT;
+    return ABORT;
   }
   if (m_cfg.outputSpacePoints.empty()) {
     ACTS_ERROR("No output space points were defined");
-    return ProcessCode::ABORT;
+    return ABORT;
   }
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
@@ -71,7 +72,7 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 
-  return ProcessCode::SUCCESS;
+  return SUCCESS;
 }
 
 ProcessCode MuonSpacePointDigitizer::execute(
@@ -202,7 +203,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     }
   }
 
-  for (const auto& [volId, bucket] : spacePointsPerChamber) {
+  for (auto& [volId, bucket] : spacePointsPerChamber) {
     ACTS_DEBUG("Safe " << bucket.size() << " space points for chamber "
                        << volId);
     outSpacePoints.push_back(std::move(bucket));

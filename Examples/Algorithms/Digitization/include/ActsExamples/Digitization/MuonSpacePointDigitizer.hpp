@@ -41,12 +41,12 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Constructor
   MuonSpacePointDigitizer(const Config& cfg, Acts::Logging::Level lvl);
   /// @brief Destructor
-  ~MuonSpacePointDigitizer() = default;
+  ~MuonSpacePointDigitizer() override final = default;
 
   /// @brief Initialize the digitizer
-  ProcessCode initialize() override;
+  ProcessCode initialize() override final;
   /// @brief Execute the digitization
-  ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override final;
   /// @brief  Const access to the config
   const Config& config() const { return m_cfg; }
 
