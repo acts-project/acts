@@ -562,7 +562,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
     return b1 * residVec[bending] + b2 * residVec[nonBending];
   };
 
-  /// Calculate the line intersection in the global frame
+  // Calculate the line intersection in the global frame
   const Vector globIsect =
       m_cfg.includeToF
           ? m_cfg.localToGlobal * (positionInPlane(residual()) + stripPos)
