@@ -16,13 +16,13 @@
 #include "Acts/Utilities/ContainerRange.hpp"
 #include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
+#include "Acts/Utilities/IndexRange.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -763,16 +763,14 @@ class SpacePointContainer2 {
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
-    return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
-                     columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-    return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
-                     columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.
@@ -783,7 +781,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(
-        std::ranges::iota_view<Index, Index>(range.first, range.second),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
@@ -794,7 +792,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(
-        std::ranges::iota_view<Index, Index>(range.first, range.second),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
 
