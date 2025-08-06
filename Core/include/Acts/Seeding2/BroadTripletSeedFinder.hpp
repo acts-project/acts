@@ -45,14 +45,8 @@ class BroadTripletSeedFinder {
 
     TripletTopCandidates tripletTopCandidates;
 
-    BroadTripletSeedFilter::Cache filter;
-
     CandidatesForMiddleSp2 candidatesCollector;
     std::vector<TripletCandidate2> sortedCandidates;
-  };
-
-  struct State {
-    BroadTripletSeedFilter::State filter;
   };
 
   explicit BroadTripletSeedFinder(std::unique_ptr<const Logger> logger =
@@ -72,8 +66,7 @@ class BroadTripletSeedFinder {
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param topSps Subset of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
-  void createSeedsFromGroup(State& state, Cache& cache,
-                            const DoubletSeedFinder& bottomFinder,
+  void createSeedsFromGroup(Cache& cache, const DoubletSeedFinder& bottomFinder,
                             const DoubletSeedFinder& topFinder,
                             const TripletSeedFinder& tripletFinder,
                             const BroadTripletSeedFilter& filter,
@@ -98,7 +91,7 @@ class BroadTripletSeedFinder {
   /// @param radiusRangeForMiddle Range of radii for the middle space points
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroups(
-      State& state, Cache& cache, const DoubletSeedFinder& bottomFinder,
+      Cache& cache, const DoubletSeedFinder& bottomFinder,
       const DoubletSeedFinder& topFinder,
       const TripletSeedFinder& tripletFinder,
       const BroadTripletSeedFilter& filter,

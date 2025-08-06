@@ -12,6 +12,7 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding2/ITripletSeedFilter.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -27,7 +28,7 @@ class ITripletSeedCuts;
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class BroadTripletSeedFilter final {
+class BroadTripletSeedFilter final : public ITripletSeedFilter {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
@@ -116,18 +117,23 @@ class BroadTripletSeedFilter final {
     std::vector<float> compatibleSeedR;
   };
 
-  explicit BroadTripletSeedFilter(const Config& config,
-                                  std::unique_ptr<const Logger> logger =
-                                      getDefaultLogger("BroadTripletSeedFilter",
-                                                       Logging::Level::INFO));
+  /// @param config Configuration parameters for the seed filter
+  /// @param state Mutable state that is used to store intermediate results
+  /// @param cache Cache object to store intermediate results
+  /// @param logger Logger for debugging and information messages
+  /// @note objects from this class depend on a per-event state and cache
+  ///       and should not be used across events.
+  explicit BroadTripletSeedFilter(const Config& config, State& state,
+                                  Cache& cache, const Logger& logger);
 
-  const Config& config() const { return m_cfg; }
+  const Config& config() const { return *m_cfg; }
+  State& state() const { return *m_state; }
+  Cache& cache() const { return *m_cache; }
+  const Logger& logger() const { return *m_logger; }
 
   /// Create seed candidates with fixed bottom and middle space points and
   /// all compatible top space points.
   ///
-  /// @param state Mutable state that is used to store intermediate results
-  /// @param cache Cache object to store intermediate results
   /// @param spacePoints Container with all space points
   /// @param bottomSp Fixed bottom space point
   /// @param middleSp Fixed middle space point
@@ -138,32 +144,29 @@ class BroadTripletSeedFilter final {
   /// @param impactParametersVec Vector containing the impact parameters
   /// @param zOrigin Z origin of the detector, used for z0 calculation
   /// @param candidatesCollector Container for the seed candidates
-  void filter2SpFixed(State& state, Cache& cache,
-                      const SpacePointContainer2& spacePoints,
-                      SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
-                      std::span<const SpacePointIndex2> topSpVec,
-                      std::span<const float> invHelixDiameterVec,
-                      std::span<const float> impactParametersVec, float zOrigin,
-                      CandidatesForMiddleSp2& candidatesCollector) const;
+  void filter2SpFixed(
+      const SpacePointContainer2& spacePoints, SpacePointIndex2 bottomSp,
+      SpacePointIndex2 middleSp, std::span<const SpacePointIndex2> topSpVec,
+      std::span<const float> invHelixDiameterVec,
+      std::span<const float> impactParametersVec, float zOrigin,
+      CandidatesForMiddleSp2& candidatesCollector) const override;
 
   /// Create final seeds for all candidates with the same middle space point
   ///
-  /// @param state Mutable state that is used to store intermediate results
   /// @param spacePoints Container with all space points
   /// @param candidates Collection of seed candidates
   /// @param numQualitySeeds Number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
-  void filter1SpFixed(State& state, const SpacePointContainer2& spacePoints,
+  void filter1SpFixed(const SpacePointContainer2& spacePoints,
                       std::span<TripletCandidate2> candidates,
                       std::size_t numQualitySeeds,
-                      SeedContainer2& outputCollection) const;
+                      SeedContainer2& outputCollection) const override;
 
  private:
-  const Logger& logger() const { return *m_logger; }
-
-  Config m_cfg;
-
-  std::unique_ptr<const Logger> m_logger;
+  const Config* m_cfg;
+  State* m_state;
+  Cache* m_cache;
+  const Logger* m_logger;
 };
 
 }  // namespace Acts::Experimental

@@ -244,6 +244,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
+  std::optional<Acts::Experimental::DoubletSeedFinder> m_bottomDoubletFinder;
+  std::optional<Acts::Experimental::DoubletSeedFinder> m_topDoubletFinder;
+  std::optional<Acts::Experimental::TripletSeedFinder> m_tripletFinder;
+  Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
+  std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::Experimental::BroadTripletSeedFinder> m_seedFinder;
   std::optional<Acts::Experimental::BroadTripletSeedFilter> m_seedFilter;
 

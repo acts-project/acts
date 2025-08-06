@@ -50,14 +50,14 @@ void setBestSeedQuality(
 
 }  // namespace
 
-BroadTripletSeedFilter::BroadTripletSeedFilter(
-    const Config& config, std::unique_ptr<const Logger> logger)
-    : m_cfg(config), m_logger(std::move(logger)) {}
+BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
+                                               State& state, Cache& cache,
+                                               const Logger& logger)
+    : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {}
 
 void BroadTripletSeedFilter::filter2SpFixed(
-    State& state, Cache& cache, const SpacePointContainer2& spacePoints,
-    SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
-    std::span<const SpacePointIndex2> topSpVec,
+    const SpacePointContainer2& spacePoints, SpacePointIndex2 bottomSp,
+    SpacePointIndex2 middleSp, std::span<const SpacePointIndex2> topSpVec,
     std::span<const float> invHelixDiameterVec,
     std::span<const float> impactParametersVec, float zOrigin,
     CandidatesForMiddleSp2& candidatesCollector) const {
@@ -67,13 +67,13 @@ void BroadTripletSeedFilter::filter2SpFixed(
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
   std::size_t nTopSeedConf = 0;
-  if (m_cfg.seedConfirmation) {
+  if (config().seedConfirmation) {
     // check if bottom SP is in the central or forward region
     const bool isForwardRegion =
-        spB.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-        spB.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf;
-    seedConfRange = isForwardRegion ? m_cfg.forwardSeedConfirmationRange
-                                    : m_cfg.centralSeedConfirmationRange;
+        spB.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
+        spB.z() < config().centralSeedConfirmationRange.zMinSeedConf;
+    seedConfRange = isForwardRegion ? config().forwardSeedConfirmationRange
+                                    : config().centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
     nTopSeedConf = spB.r() > seedConfRange.rMaxSeedConf
@@ -86,18 +86,18 @@ void BroadTripletSeedFilter::filter2SpFixed(
   float weightMax = std::numeric_limits<float>::lowest();
 
   // initialize original index locations
-  cache.topSpIndexVec.resize(topSpVec.size());
-  std::iota(cache.topSpIndexVec.begin(), cache.topSpIndexVec.end(), 0);
-  std::ranges::sort(cache.topSpIndexVec, {},
+  cache().topSpIndexVec.resize(topSpVec.size());
+  std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
+  std::ranges::sort(cache().topSpIndexVec, {},
                     [&invHelixDiameterVec](const std::size_t t) {
                       return invHelixDiameterVec[t];
                     });
 
   // vector containing the radius of all compatible seeds
-  cache.compatibleSeedR.reserve(m_cfg.compatSeedLimit);
+  cache().compatibleSeedR.reserve(config().compatSeedLimit);
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
-    if (m_cfg.useDeltaRinsteadOfTopRadius) {
+    if (config().useDeltaRinsteadOfTopRadius) {
       return fastHypot(spT.r() - spM.r(), spT.z() - spM.z());
     }
     return spT.r();
@@ -105,26 +105,26 @@ void BroadTripletSeedFilter::filter2SpFixed(
 
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (const std::size_t topSpIndex : cache.topSpIndexVec) {
+  for (const std::size_t topSpIndex : cache().topSpIndexVec) {
     auto topSp = topSpVec[topSpIndex];
     auto spT = spacePoints[topSp];
 
-    cache.compatibleSeedR.clear();
+    cache().compatibleSeedR.clear();
 
     float invHelixDiameter = invHelixDiameterVec[topSpIndex];
-    float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
-    float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
+    float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
+    float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
     float impact = impactParametersVec[topSpIndex];
 
-    float weight = -impact * m_cfg.impactWeightFactor;
+    float weight = -impact * config().impactWeightFactor;
 
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
-         variableCompTopIndex < cache.topSpIndexVec.size();
+         variableCompTopIndex < cache().topSpIndexVec.size();
          variableCompTopIndex++) {
       std::size_t compatibletopSpIndex =
-          cache.topSpIndexVec[variableCompTopIndex];
+          cache().topSpIndexVec[variableCompTopIndex];
       if (compatibletopSpIndex == topSpIndex) {
         continue;
       }
@@ -144,50 +144,50 @@ void BroadTripletSeedFilter::filter2SpFixed(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
-      if (std::abs(deltaR) < m_cfg.deltaRMin) {
+      if (std::abs(deltaR) < config().deltaRMin) {
         continue;
       }
       bool newCompSeed = true;
-      for (const float previousDiameter : cache.compatibleSeedR) {
+      for (const float previousDiameter : cache().compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
-        if (std::abs(previousDiameter - otherTopR) < m_cfg.deltaRMin) {
+        if (std::abs(previousDiameter - otherTopR) < config().deltaRMin) {
           newCompSeed = false;
           break;
         }
       }
       if (newCompSeed) {
-        cache.compatibleSeedR.push_back(otherTopR);
-        weight += m_cfg.compatSeedWeight;
+        cache().compatibleSeedR.push_back(otherTopR);
+        weight += config().compatSeedWeight;
       }
-      if (cache.compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
+      if (cache().compatibleSeedR.size() >= config().compatSeedLimit) {
         break;
       }
     }
 
-    if (m_cfg.experimentCuts != nullptr) {
+    if (config().experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
-      weight += m_cfg.experimentCuts->seedWeight(spB, spM, spT);
+      weight += config().experimentCuts->seedWeight(spB, spM, spT);
       // discard seeds according to detector specific cuts (e.g.: weight)
-      if (!m_cfg.experimentCuts->singleSeedCut(weight, spB, spM, spT)) {
+      if (!config().experimentCuts->singleSeedCut(weight, spB, spM, spT)) {
         continue;
       }
     }
 
     // increment in seed weight if number of compatible seeds is larger than
     // numSeedIncrement
-    if (cache.compatibleSeedR.size() > m_cfg.numSeedIncrement) {
-      weight += m_cfg.seedWeightIncrement;
+    if (cache().compatibleSeedR.size() > config().numSeedIncrement) {
+      weight += config().seedWeightIncrement;
     }
 
-    if (m_cfg.seedConfirmation) {
+    if (config().seedConfirmation) {
       // seed confirmation cuts - keep seeds if they have specific values of
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      int deltaSeedConf = cache.compatibleSeedR.size() + 1 - nTopSeedConf;
+      int deltaSeedConf = cache().compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
           (candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
@@ -201,16 +201,16 @@ void BroadTripletSeedFilter::filter2SpFixed(
       }
 
       // term on the weight that depends on the value of zOrigin
-      weight += -(std::abs(zOrigin) * m_cfg.zOriginWeightFactor) +
-                m_cfg.compatSeedWeight;
+      weight += -(std::abs(zOrigin) * config().zOriginWeightFactor) +
+                config().compatSeedWeight;
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < getBestSeedQuality(state.bestSeedQualityMap,
+      if (weight < getBestSeedQuality(state().bestSeedQualityMap,
                                       spB.resolvedIndex()) &&
-          weight < getBestSeedQuality(state.bestSeedQualityMap,
+          weight < getBestSeedQuality(state().bestSeedQualityMap,
                                       spM.resolvedIndex()) &&
-          weight < getBestSeedQuality(state.bestSeedQualityMap,
+          weight < getBestSeedQuality(state().bestSeedQualityMap,
                                       spT.resolvedIndex())) {
         continue;
       }
@@ -242,7 +242,7 @@ void BroadTripletSeedFilter::filter2SpFixed(
 
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
-  if (m_cfg.seedConfirmation && maxWeightSeed &&
+  if (config().seedConfirmation && maxWeightSeed &&
       candidatesCollector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
@@ -253,17 +253,17 @@ void BroadTripletSeedFilter::filter2SpFixed(
 }
 
 void BroadTripletSeedFilter::filter1SpFixed(
-    State& state, const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2& spacePoints,
     std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
     SeedContainer2& outputCollection) const {
-  if (m_cfg.experimentCuts != nullptr) {
-    m_cfg.experimentCuts->cutPerMiddleSp(candidates);
+  if (config().experimentCuts != nullptr) {
+    config().experimentCuts->cutPerMiddleSp(candidates);
   }
 
   std::size_t maxSeeds = candidates.size();
 
-  if (maxSeeds > m_cfg.maxSeedsPerSpM) {
-    maxSeeds = m_cfg.maxSeedsPerSpM + 1;
+  if (maxSeeds > config().maxSeedsPerSpM) {
+    maxSeeds = config().maxSeedsPerSpM + 1;
   }
 
   // default filter removes the last seeds if maximum amount exceeded
@@ -281,23 +281,23 @@ void BroadTripletSeedFilter::filter1SpFixed(
                                             spacePoints[middle].resolvedIndex(),
                                             spacePoints[top].resolvedIndex()};
 
-    if (m_cfg.seedConfirmation) {
+    if (config().seedConfirmation) {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
       if (bestSeedQuality <
-              getBestSeedQuality(state.bestSeedQualityMap, triplet[0]) &&
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[0]) &&
           bestSeedQuality <
-              getBestSeedQuality(state.bestSeedQualityMap, triplet[1]) &&
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[1]) &&
           bestSeedQuality <
-              getBestSeedQuality(state.bestSeedQualityMap, triplet[2])) {
+              getBestSeedQuality(state().bestSeedQualityMap, triplet[2])) {
         continue;
       }
     }
 
     // set quality of seed components
-    setBestSeedQuality(state.bestSeedQualityMap, triplet[0], triplet[1],
+    setBestSeedQuality(state().bestSeedQualityMap, triplet[0], triplet[1],
                        triplet[2], bestSeedQuality);
 
     ACTS_VERBOSE("Adding seed: original indices=["

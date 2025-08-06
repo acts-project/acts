@@ -21,7 +21,6 @@ namespace {
 
 template <typename DoubletCollections>
 void createAndFilterTriplets(float rMaxSeedConf,
-                             BroadTripletSeedFinder::State& state,
                              BroadTripletSeedFinder::Cache& cache,
                              const TripletSeedFinder& tripletFinder,
                              const BroadTripletSeedFilter& filter,
@@ -56,8 +55,7 @@ void createAndFilterTriplets(float rMaxSeedConf,
     }
 
     float zOrigin = spM.z() - spM.r() * lb.linCircle().cotTheta;
-    filter.filter2SpFixed(state.filter, cache.filter, spacePoints,
-                          lb.spacePointIndex(), spM.index(),
+    filter.filter2SpFixed(spacePoints, lb.spacePointIndex(), spM.index(),
                           cache.tripletTopCandidates.topSpacePoints(),
                           cache.tripletTopCandidates.curvatures(),
                           cache.tripletTopCandidates.impactParameters(),
@@ -66,15 +64,17 @@ void createAndFilterTriplets(float rMaxSeedConf,
 }
 
 template <typename SpacePointCollections>
-void createSeedsFromGroupsImpl(
-    const Logger& logger, BroadTripletSeedFinder::State& state,
-    BroadTripletSeedFinder::Cache& cache, const DoubletSeedFinder& bottomFinder,
-    const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
-    const BroadTripletSeedFilter& filter,
-    const SpacePointContainer2& spacePoints,
-    SpacePointCollections& bottomSpGroups,
-    const ConstSpacePointProxy2& middleSp, SpacePointCollections& topSpGroups,
-    SeedContainer2& outputSeeds) {
+void createSeedsFromGroupsImpl(const Logger& logger,
+                               BroadTripletSeedFinder::Cache& cache,
+                               const DoubletSeedFinder& bottomFinder,
+                               const DoubletSeedFinder& topFinder,
+                               const TripletSeedFinder& tripletFinder,
+                               const BroadTripletSeedFilter& filter,
+                               const SpacePointContainer2& spacePoints,
+                               SpacePointCollections& bottomSpGroups,
+                               const ConstSpacePointProxy2& middleSp,
+                               SpacePointCollections& topSpGroups,
+                               SeedContainer2& outputSeeds) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
 
   // create middle-top doublets
@@ -144,11 +144,11 @@ void createSeedsFromGroupsImpl(
                                      cache.sortedTops);
 
     createAndFilterTriplets(
-        rMaxSeedConf, state, cache, tripletFinder, filter, spacePoints,
+        rMaxSeedConf, cache, tripletFinder, filter, spacePoints,
         cache.bottomDoublets.subset(cache.sortedBottoms), middleSp,
         cache.topDoublets.subset(cache.sortedTops));
   } else {
-    createAndFilterTriplets(rMaxSeedConf, state, cache, tripletFinder, filter,
+    createAndFilterTriplets(rMaxSeedConf, cache, tripletFinder, filter,
                             spacePoints, cache.bottomDoublets.range(), middleSp,
                             cache.topDoublets.range());
   }
@@ -159,8 +159,8 @@ void createSeedsFromGroupsImpl(
       cache.candidatesCollector.nHighQualityCandidates();
   cache.candidatesCollector.toSortedCandidates(spacePoints,
                                                cache.sortedCandidates);
-  filter.filter1SpFixed(state.filter, spacePoints, cache.sortedCandidates,
-                        numQualitySeeds, outputSeeds);
+  filter.filter1SpFixed(spacePoints, cache.sortedCandidates, numQualitySeeds,
+                        outputSeeds);
 }
 
 }  // namespace
@@ -175,7 +175,7 @@ BroadTripletSeedFinder::BroadTripletSeedFinder(
 }
 
 void BroadTripletSeedFinder::createSeedsFromGroup(
-    State& state, Cache& cache, const DoubletSeedFinder& bottomFinder,
+    Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
     const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
@@ -194,13 +194,13 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
 
-  createSeedsFromGroupsImpl(*m_logger, state, cache, bottomFinder, topFinder,
+  createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                             tripletFinder, filter, spacePoints, bottomSpGroups,
                             middleSp, topSpGroups, outputSeeds);
 }
 
 void BroadTripletSeedFinder::createSeedsFromGroups(
-    State& state, Cache& cache, const DoubletSeedFinder& bottomFinder,
+    Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
     const BroadTripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
@@ -264,7 +264,7 @@ void BroadTripletSeedFinder::createSeedsFromGroups(
       }
     }
 
-    createSeedsFromGroupsImpl(*m_logger, state, cache, bottomFinder, topFinder,
+    createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                               tripletFinder, filter, spacePoints,
                               bottomSpGroups, spM, topSpGroups, outputSeeds);
   }
