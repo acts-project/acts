@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
-
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <sstream>
@@ -383,6 +384,75 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
       view);
 
   return objects;
+}
+
+namespace {
+
+struct SurfaceArrayCollector {
+  std::vector<std::tuple<Acts::GeometryIdentifier, const Acts::SurfaceArray*>>
+      surfaceArrays;
+  // Visitor pattern to collect the surface arrays
+  void operator()(const Acts::TrackingVolume* tVolume) {
+    // This is trying Gen1 first
+    const auto& cLayers = tVolume->confinedLayers();
+    if (cLayers != nullptr) {
+      for (const auto& layer : cLayers->arrayObjects()) {
+        if (layer != nullptr) {
+          const auto& surfaceArray = layer->surfaceArray();
+          if (surfaceArray != nullptr) {
+            surfaceArrays.emplace_back(layer->geometryId(), surfaceArray);
+          }
+        }
+      }
+    }
+    // Now try Gen3
+    if (const auto* policyPtr = tVolume->navigationPolicy();
+        policyPtr != nullptr) {
+      policyPtr->visit([&](const auto& policy) {
+        if (auto sArrayPolicy =
+                dynamic_cast<const Acts::SurfaceArrayNavigationPolicy*>(
+                    &policy);
+            sArrayPolicy != nullptr) {
+          surfaceArrays.emplace_back(tVolume->geometryId(),
+                                     &sArrayPolicy->surfaceArray());
+        }
+      });
+    }
+  }
+};
+}  // namespace
+
+// Helper function to be picked to draw surface arrays
+std::vector<actsvg::svg::object> drawSurfaceArrays(
+    const Acts::GeometryContext& gctx, const TrackingGeometry& tGeometry) {
+  // The svg objects to be returned
+  std::vector<actsvg::svg::object> svgSurfaceArrays;
+
+  std::vector<const Acts::SurfaceArray*> surfaceArrays;
+  // Retrieve the surface arrays from the geometry
+  // - try Gen1 first
+  SurfaceArrayCollector saCollector;
+  tGeometry.visitVolumes(saCollector);
+  // Now draw the surface arrays
+  for (const auto& [geoId, surfaceArray] : saCollector.surfaceArrays) {
+    // Get the surface array and convert it
+    auto pIndexedSurfaceGrid =
+        Svg::SurfaceArrayConverter::convert(gctx, *surfaceArray);
+
+    // Decide the xy / rz view on the grid
+    const auto& [pSurfaces, pGrid, pAssociations] = pIndexedSurfaceGrid;
+    std::string sArrayName =
+        "SurfaceArray_vol" + std::to_string(geoId.volume());
+    sArrayName += "_lay" + std::to_string(geoId.layer());
+    if (pGrid._type == actsvg::proto::grid::e_r_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "xy_" + sArrayName));
+    } else if (pGrid._type == actsvg::proto::grid::e_z_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "zphi_" + sArrayName));
+    }
+  }
+  return svgSurfaceArrays;
 }
 
 }  // namespace Acts::Svg

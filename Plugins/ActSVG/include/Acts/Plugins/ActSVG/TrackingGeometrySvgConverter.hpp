@@ -92,6 +92,10 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
     std::variant<actsvg::views::x_y, actsvg::views::z_r> view,
     bool drawSurfaces = true, bool highlightMaterial = false);
 
+[[nodiscard("Not drawing svg outputs")]]
+std::vector<actsvg::svg::object> drawSurfaceArrays(
+    const Acts::GeometryContext& gctx, const TrackingGeometry& tGeometry);
+
 }  // namespace Svg
 
 }  // namespace Acts
