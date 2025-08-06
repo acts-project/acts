@@ -62,8 +62,8 @@ struct CylindricalTrackingGeometry {
 
   /// Only allowed constructor with reference wrapper
   explicit CylindricalTrackingGeometry(const GeometryContext& gctx,
-                                       bool gen3 = false)
-      : geoContext(gctx), gen3(gen3) {}
+                                       bool gen3_ = false)
+      : geoContext(gctx), gen3(gen3_) {}
 
   using DetectorStore = std::vector<std::unique_ptr<const DetectorElementStub>>;
 
