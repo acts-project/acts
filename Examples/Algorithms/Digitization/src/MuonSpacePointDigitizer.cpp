@@ -152,6 +152,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                         hit.position().z() > 0 ? MuonId_t::DetSide::A
                                                : MuonId_t::DetSide::C,
                         1, MuonId_t::TechField::Rpc);
+          id.setCoordFlags(true, true);
           newSp.setId(id);
         }
 
@@ -186,6 +187,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                         hit.position().z() > 0 ? MuonId_t::DetSide::A
                                                : MuonId_t::DetSide::C,
                         1, MuonId_t::TechField::Mdt);
+          id.setCoordFlags(true, false);
           newSp.setId(id);
         }
         break;
