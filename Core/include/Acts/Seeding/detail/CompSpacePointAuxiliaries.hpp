@@ -232,7 +232,9 @@ class CompSpacePointAuxiliaries {
   //         offset parameter
   /// @param line: Reference to the line to which the residual is calculated
   /// @param hitMinSeg: Difference of the straw position & the line reference point
+   /// @param wireDir: The direction along the wire
   /// @param driftR: Current drift radius of the straw measurement
+
   /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
   /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
