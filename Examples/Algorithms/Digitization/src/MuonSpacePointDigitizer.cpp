@@ -20,6 +20,8 @@
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
+#include <map>
+
 using namespace Acts;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
@@ -83,8 +85,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   GeometryContext gctx{};
 
-  auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
+  using MuonId_t = MuonSpacePoint::auto rndEngine =
+      m_cfg.randomNumbers->spawnGenerator(ctx);
 
+  std::map<GeometryIdentifier, MuonSpacePointBucket> spacePointsPerChamber{};
   for (const auto& hit : gotSimHits) {
     const GeometryIdentifier hitId = hit.geometryId();
 
@@ -98,9 +102,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Vector3 locPos = surfLocToGlob.inverse() * hit.position();
     const Vector3 locDir = surfLocToGlob.inverse().linear() * hit.direction();
-    ACTS_INFO("Process hit: " << toString(locPos)
-                              << ", dir: " << toString(locDir)
-                              << ", id: " << hit.geometryId());
+    ACTS_DEBUG("Process hit: " << toString(locPos)
+                               << ", dir: " << toString(locDir)
+                               << ", id: " << hit.geometryId());
     bool convertSp{true};
 
     MuonSpacePoint newSp{};
@@ -179,14 +183,16 @@ ProcessCode MuonSpacePointDigitizer::execute(
         convertSp = false;
     }
 
-    if (!convertSp) {
-      continue;
+    if (convertSp) {
+      spacePointsPerChamber[volId].push_back(std::move(newSp));
     }
-    ACTS_INFO("New space point: " << toString(newSp.localPosition()) << ", "
-                                  << toString(newSp.sensorDirection())
-                                  << toString(newSp.toNextSensor()));
   }
 
+  for (const auto& [volId, bucket] : spacePointsPerChamber) {
+    ACTS_DEBUG("Safe " << bucket.size() << " space points for chamber "
+                       << volId);
+    outSpacePoints.push_back(std::move(bucket));
+  }
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
 
   return ProcessCode::SUCCESS;

@@ -15,7 +15,7 @@
 #include <memory>
 namespace ActsExamples {
 
-/// @brief  Calibration class of M
+/// @brief Calibration class of MuonSpacePoints primarily designed for hits recorded by the ATLAS experiment
 class MuonSpacePointCalibrator {
  public:
   enum class CalibPolyType { Chebychev, Legendre };
@@ -68,24 +68,38 @@ class MuonSpacePointCalibrator {
   /// @brief Use a simple vector of unique_ptrs as container type
   using CalibSpCont_t = std::vector<CalibSp_t>;
 
+  /// @brief Calibrate a list of input space points
+  /// @param ctx: Calibration context
+  /// @param trackPos: Position of the track expressed in the MuonSpacePoint's frame
+  /// @param trackDir: Direction of the track expressed in the MonSpacePoint's frame
+  /// @param trackT0: Offset in the time of arrival of the track
+  /// @param uncalibCont: List of uncalibrated space points.
   CalibSpCont_t calibrate(const Acts::CalibrationContext& ctx,
                           const Acts::Vector3& trackPos,
                           const Acts::Vector3& trackDir, const double trackT0,
                           const UnCalibSpVec_t& uncalibCont) const;
 
-  CalibSpCont_t calibrate(const Acts::CalibrationContext& ctx,
-                          const Acts::Vector3& trackPos,
-                          const Acts::Vector3& trackDir, const double trackT0,
-                          const CalibSpCont_t& uncalibCont) const;
-
+  /// @param ctx: Calibration context
+  /// @param trackPos: Position of the track expressed in the MuonSpacePoint's frame
+  /// @param trackDir: Direction of the track expressed in the MonSpacePoint's frame
+  /// @param trackT0: Offset in the time of arrival of the track
+  /// @param spacePoint: Reference to the space point to calibrate
+  /// @param outContainer: Reference to the mutable output container into which the
+  ///                      calibrated space point is appended.
   void calibrate(const Acts::CalibrationContext& ctx,
                  const Acts::Vector3& trackPos, const Acts::Vector3& trackDir,
                  const double trackT0, const MuonSpacePoint& spacePoint,
                  CalibSpCont_t& outContainer) const;
-
+  /// @brief Returns the associated drift velocity for a Mdt space point with
+  ///        drift radius R
+  /// @param ctx: Calibration context
+  /// @param sp: Reference to the space point of interest
   double driftVelocity(const Acts::CalibrationContext& ctx,
                        const MuonSpacePoint& sp) const;
-
+  /// @brief Returns the associated drift acceleration for a Mdt space point with
+  ///        drift radius R
+  /// @param ctx: Calibration context
+  /// @param sp: Reference to the space point of interest
   double driftAcceleration(const Acts::CalibrationContext& ctx,
                            const MuonSpacePoint& sp) const;
 
