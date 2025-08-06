@@ -603,11 +603,11 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
       if (partial2 > partial1) {
         break;
       }
-      // clang-format off
       const auto param1 = static_cast<std::size_t>(partial1);
       const auto param2 = static_cast<std::size_t>(partial2);
       Vector& hessVec = m_hessian[vecIdxFromSymMat<s_nPars>(param1, param2)];
       if (partial1 != FitParIndex::t0) {
+        // clang-format off
         hessVec[time] = -( globIsect.dot(m_cfg.localToGlobal.linear()*positionInPlane(hessVec))  +
                            positionInPlane(gradient(partial1)).dot(positionInPlane(gradient(partial2)))) * invDist
                         + m_gradient[param1][time] * m_gradient[param2][time] * invDist;
