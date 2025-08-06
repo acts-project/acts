@@ -108,31 +108,80 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
   m_gridConfig.navigation[2ul] = {};
 
+  Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
+  bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
+                                            ? m_cfg.deltaRMin
+                                            : m_cfg.deltaRMinBottom;
+  bottomDoubletFinderConfig.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                                            ? m_cfg.deltaRMax
+                                            : m_cfg.deltaRMaxBottom;
+  bottomDoubletFinderConfig.deltaZMin = m_cfg.deltaZMin;
+  bottomDoubletFinderConfig.deltaZMax = m_cfg.deltaZMax;
+  bottomDoubletFinderConfig.impactMax = m_cfg.impactMax;
+  bottomDoubletFinderConfig.interactionPointCut = m_cfg.interactionPointCut;
+  bottomDoubletFinderConfig.collisionRegionMin = m_cfg.collisionRegionMin;
+  bottomDoubletFinderConfig.collisionRegionMax = m_cfg.collisionRegionMax;
+  bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
+  bottomDoubletFinderConfig.minPt = m_cfg.minPt;
+  bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
+  if (m_cfg.useExtraCuts) {
+    bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
+  }
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
+  m_bottomDoubletFinder = Acts::Experimental::DoubletSeedFinder(
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          bottomDoubletFinderConfig, m_cfg.bFieldInZ));
+
+  Acts::Experimental::DoubletSeedFinder::Config topDoubletFinderConfig =
+      bottomDoubletFinderConfig;
+  topDoubletFinderConfig.candidateDirection = Acts::Direction::Forward();
+  topDoubletFinderConfig.deltaRMin =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
+  topDoubletFinderConfig.deltaRMax =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
+  m_topDoubletFinder = Acts::Experimental::DoubletSeedFinder(
+      Acts::Experimental::DoubletSeedFinder::DerivedConfig(
+          topDoubletFinderConfig, m_cfg.bFieldInZ));
+
+  Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
+  tripletFinderConfig.minPt = m_cfg.minPt;
+  tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
+  tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
+  tripletFinderConfig.maxPtScattering = m_cfg.maxPtScattering;
+  tripletFinderConfig.impactMax = m_cfg.impactMax;
+  tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
+  tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
+  tripletFinderConfig.useStripInfo = false;
+  tripletFinderConfig.sortedByCotTheta = true;
+  m_tripletFinder = Acts::Experimental::TripletSeedFinder(
+      Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
+                                                           m_cfg.bFieldInZ));
+
+  m_filterConfig.deltaInvHelixDiameter = m_cfg.deltaInvHelixDiameter;
+  m_filterConfig.deltaRMin = m_cfg.deltaRMin;
+  m_filterConfig.compatSeedWeight = m_cfg.compatSeedWeight;
+  m_filterConfig.impactWeightFactor = m_cfg.impactWeightFactor;
+  m_filterConfig.zOriginWeightFactor = m_cfg.zOriginWeightFactor;
+  m_filterConfig.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
+  m_filterConfig.compatSeedLimit = m_cfg.compatSeedLimit;
+  m_filterConfig.seedWeightIncrement = m_cfg.seedWeightIncrement;
+  m_filterConfig.numSeedIncrement = m_cfg.numSeedIncrement;
+  m_filterConfig.seedConfirmation = m_cfg.seedConfirmation;
+  m_filterConfig.centralSeedConfirmationRange =
+      m_cfg.centralSeedConfirmationRange;
+  m_filterConfig.forwardSeedConfirmationRange =
+      m_cfg.forwardSeedConfirmationRange;
+  m_filterConfig.maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
+  m_filterConfig.maxQualitySeedsPerSpMConf =
+      std::numeric_limits<std::size_t>::max();
+  m_filterConfig.useDeltaRinsteadOfTopRadius =
+      m_cfg.useDeltaRinsteadOfTopRadius;
+
+  m_filterLogger = logger().cloneWithSuffix("Filter");
+
   m_seedFinder = Acts::Experimental::BroadTripletSeedFinder(
       logger().cloneWithSuffix("Finder"));
-
-  Acts::Experimental::BroadTripletSeedFilter::Config filterConfig;
-  filterConfig.deltaInvHelixDiameter = m_cfg.deltaInvHelixDiameter;
-  filterConfig.deltaRMin = m_cfg.deltaRMin;
-  filterConfig.compatSeedWeight = m_cfg.compatSeedWeight;
-  filterConfig.impactWeightFactor = m_cfg.impactWeightFactor;
-  filterConfig.zOriginWeightFactor = m_cfg.zOriginWeightFactor;
-  filterConfig.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  filterConfig.compatSeedLimit = m_cfg.compatSeedLimit;
-  filterConfig.seedWeightIncrement = m_cfg.seedWeightIncrement;
-  filterConfig.numSeedIncrement = m_cfg.numSeedIncrement;
-  filterConfig.seedConfirmation = m_cfg.seedConfirmation;
-  filterConfig.centralSeedConfirmationRange =
-      m_cfg.centralSeedConfirmationRange;
-  filterConfig.forwardSeedConfirmationRange =
-      m_cfg.forwardSeedConfirmationRange;
-  filterConfig.maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
-  filterConfig.maxQualitySeedsPerSpMConf =
-      std::numeric_limits<std::size_t>::max();
-  filterConfig.useDeltaRinsteadOfTopRadius = m_cfg.useDeltaRinsteadOfTopRadius;
-
-  m_seedFilter = Acts::Experimental::BroadTripletSeedFilter(
-      filterConfig, logger().cloneWithSuffix("Filter"));
 }
 
 ProcessCode GridTripletSeedingAlgorithm::execute(
@@ -267,7 +316,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   // run the seeding
   Acts::Experimental::SeedContainer2 seeds;
-  Acts::Experimental::BroadTripletSeedFinder::State state;
+  Acts::Experimental::BroadTripletSeedFilter::State filterState;
+  Acts::Experimental::BroadTripletSeedFilter::Cache filterCache;
+  Acts::Experimental::BroadTripletSeedFilter seedFilter(
+      m_filterConfig, filterState, filterCache, *m_filterLogger);
   static thread_local Acts::Experimental::BroadTripletSeedFinder::Cache cache;
 
   std::vector<Acts::Experimental::SpacePointContainer2::ConstRange>
@@ -308,9 +360,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.second << "]");
 
     m_seedFinder->createSeedsFromGroups(
-        state, cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        m_seedFilter.value(), coreSpacePoints, bottomSpRanges, *middleSpRange,
-        topSpRanges, radiusRangeForMiddle, seeds);
+        cache, m_bottomDoubletFinder.value(), m_topDoubletFinder.value(),
+        m_tripletFinder.value(), m_seedFilter.value(), coreSpacePoints,
+        bottomSpRanges, *middleSpRange, topSpRanges, radiusRangeForMiddle,
+        seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
