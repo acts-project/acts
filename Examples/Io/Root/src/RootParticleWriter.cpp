@@ -166,6 +166,13 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     float d0 = NaNfloat;
     float z0 = NaNfloat;
 
+    if (particle.charge() == 0) {
+      ACTS_WARNING("Particle has zero charge, can't write d0/z0");
+      m_d0.push_back(NaNfloat);
+      m_z0.push_back(NaNfloat);
+      continue;
+    }
+
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         Acts::Vector3(m_cfg.referencePoint[0], m_cfg.referencePoint[1],
                       m_cfg.referencePoint[2]));
