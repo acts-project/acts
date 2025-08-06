@@ -26,7 +26,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
  public:
   struct Config {
     /// @brief Name of the input simulated hits collection
-    std::string inputSimHits{"simHits"};
+    std::string inputSimHits{"simhits"};
     /// @brief Name of the input simulated particles collection
     std::string inputParticles{"particles_simulated"};
     /// @brief Name of the output space points collection
@@ -49,7 +49,6 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   /// @brief  Const access to the config
   const Config& config() const { return m_cfg; }
-
 
  private:
   /// @brief Configuration of the digitizer

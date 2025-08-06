@@ -8,26 +8,32 @@
 
 #include "ActsExamples/Digitization/MuonSpacePointDigitizer.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Surfaces/detail/LineHelper.hpp"
+
+using namespace Acts;
+using namespace Acts::detail::LineHelper;
+using namespace Acts::PlanarHelper;
 namespace ActsExamples {
 MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
+                                                 Logging::Level lvl)
     : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {}
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
-  std::shared_ptr<const RandomNumbers> randomNumbers{};
-  /// @brief
-  std::shared_ptr<const MuonSpacePointCalibrator> calibrator{};
-  /// @brief Pointer to the tracking geometry to fetch the surfaces
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry{};
-
-  if (!trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     ACTS_ERROR("No tracking geometry was parsed");
     return ProcessCode::ABORT;
   }
+  if (!m_cfg.randomNumbers) {
+    ACTS_ERROR("No random number generator was parsed");
+    return ProcessCode::ABORT;
+  }
   MuonSpacePointCalibrator::Config calibCfg{};
-  calibrator =
+  m_cfg.calibrator =
       std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
   if (m_cfg.inputSimHits.empty()) {
@@ -60,6 +66,61 @@ ProcessCode MuonSpacePointDigitizer::execute(
                           << simParticles.size() << " associated particles.");
 
   MuonSpacePointContainer outSpacePoints{};
+
+  GeometryContext gctx{};
+
+  for (const auto& hit : gotSimHits) {
+    const GeometryIdentifier hitId = hit.geometryId();
+
+    const Surface* hitSurf =
+        m_cfg.trackingGeometry->findSurface(hitId);
+    
+    assert(hitSurf != nullptr);
+    const GeometryIdentifier volId{GeometryIdentifier{}.withVolume(hitId.volume()).withLayer(hitId.layer())};
+    const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
+
+   
+    const Vector3 locPos = surfLocToGlob.inverse() * hit.position();
+    const Vector3 locDir = surfLocToGlob.inverse().linear() * hit.direction();
+    ACTS_INFO("Process hit: " << toString(locPos) << ", dir: "<<toString(locDir)<<", id: "
+                              << hit.geometryId());
+    bool convertSp{true};
+
+    Vector3 hitPos{Vector3::Zero()};
+    switch (hitSurf->type()) {
+       using enum Surface::SurfaceType;
+       case Plane:{
+          ACTS_VERBOSE("Hit is from a strip detector");
+          auto planeCross = intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
+          hitPos = planeCross.position(); 
+          break;
+       }
+       case Straw:{
+        ACTS_VERBOSE("Hit is from a straw detector");
+        auto closeApproach = lineIntersect<3>(Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
+        hitPos = closeApproach.position();
+        break;
+       }
+       ///
+       default:
+        convertSp = false;
+    
+    }
+    
+    if (!convertSp) {
+        continue;
+    }
+    ACTS_INFO("Digitize hit at "<<toString(hitPos)<<", ");
+    ///
+    MuonSpacePoint newSp{};
+    // if (hitSu)
+
+
+    const TrackingVolume* volume = m_cfg.trackingGeometry->findVolume(volId);
+    assert(volume != nullptr);
+    const Transform3 parentTrf{volume->itransform() * surfLocToGlob};
+
+  }
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
 

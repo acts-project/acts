@@ -120,8 +120,8 @@ def main():
         mockUpCfg = gm.GeoMuonMockupExperiment.Config()
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
-        mockUpCfg.nSectors = 12
-        mockUpCfg.nEtaStations = 8
+        mockUpCfg.nSectors = 4
+        mockUpCfg.nEtaStations = 1
         mockUpCfg.buildEndcaps = False
         mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
@@ -156,7 +156,7 @@ def main():
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
-        gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.INFO
+        gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
@@ -170,10 +170,17 @@ def main():
         events=args.nEvents,
     )
 
-    from acts.examples.digitization import MuonSpacePointDigitizer
+    from acts.examples import MuonSpacePointDigitizer
+
+    digiAlg = MuonSpacePointDigitizer(
+        randomNumbers=acts.examples.RandomNumbers(),
+        trackingGeometry=trackingGeometry,
+        level=logLevel,
+    )
+    algSequence.addAlgorithm(digiAlg)
 
     algSequence.run()
-    
+
     wb = WhiteBoard(acts.logging.INFO)
 
     context = AlgorithmContext(0, 0, wb, 10)

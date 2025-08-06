@@ -24,12 +24,16 @@ class MuonSpacePointCalibrator {
   /// @brief Calibration configuration struct */
   struct Config {
     /// @brief Coefficients of the r-t relation parametrised as othogonal polynomial
-    std::vector<double> rtCoefficients{9.0077, 6.7416, -1.5805, 0.56482, -0.1911, 0.018885, 0.03027, -0.034393, 0.023613};
+    std::vector<double> rtCoefficients{9.0077,  6.7416,    -1.5805,
+                                       0.56482, -0.1911,   0.018885,
+                                       0.03027, -0.034393, 0.023613};
     ///  @brief Coefficients of the t-r relation as othogonal polynomial
-    std::vector<double> trCoefficients{256.328, 348.773, 118.157, 18.667, -6.4899};
+    std::vector<double> trCoefficients{256.328, 348.773, 118.157, 18.667,
+                                       -6.4899};
     /// @brief Coefficients of the drift radius uncertainty parameterized as an othogonal polynomial
     ///        as a function of the drift time
-    std::vector<double> rtUncertCoefficients{0.10833, -0.071956, 0.037702, -0.011763};
+    std::vector<double> rtUncertCoefficients{0.10833, -0.071956, 0.037702,
+                                             -0.011763};
     /// @brief Type of the calibration polynomial
     CalibPolyType rtPolyType{CalibPolyType::Chebychev};
     /// @brief Type of the calibration polynomial
@@ -98,12 +102,12 @@ class MuonSpacePointCalibrator {
   /// @param driftTime: Drift time in nanoseconds
   double driftAcceleration(const double driftTime) const;
   /// @brief Calculate the drift time from the drift radius
-  /// @param driftRadius: Drift radius in mm 
+  /// @param driftRadius: Drift radius in mm
   double driftTime(const double driftRadius) const;
   /// @brief Calculates the uncertainty on the drift radius measurement
   ///        as a function of the drift radius
   double driftRadiusUncert(const double driftRadius) const;
-   /// @brief  Const access to the config
+  /// @brief  Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
@@ -124,12 +128,11 @@ class MuonSpacePointCalibrator {
       const double upperBound, const double lowerBound,
       const std::vector<double>& coeffs) const;
 
-
   const Acts::Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Acts::Logger> m_logger{};
   Config m_cfg{};
-  /// @brief Boundary values on the drift radius uncertainty 
+  /// @brief Boundary values on the drift radius uncertainty
   double m_minDriftRUncert{driftRadius(m_cfg.minDriftT)};
   double m_maxDriftRUncert{driftRadius(m_cfg.maxDriftT)};
 };
