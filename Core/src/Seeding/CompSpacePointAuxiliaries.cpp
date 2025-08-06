@@ -582,7 +582,7 @@ void CompSpacePointAuxiliaries::updateTimeStripRes(
     if (partial1 == FitParIndex::t0) {
       m_gradient[timeIdx] = -Vector::Unit(time);
     }
-    /// Time component of the spatial residual needs to be updated
+    // Time component of the spatial residual needs to be updated
     else if (m_cfg.includeToF) {
       Vector& gradVec = m_gradient[toUnderlying(partial1)];
       gradVec[time] = -globIsect.dot(m_cfg.localToGlobal.linear() *
