@@ -79,6 +79,57 @@ void testConstructionAndMove(Acts::ExecutionContext execContext) {
   BOOST_CHECK(tensor.data() == nullptr);
 }
 
+void testEdgeLimit(Acts::ExecutionContext execContext) {
+  // Create a sample edge tensor with 10 edges on CPU
+  auto edgeTensor = Acts::Tensor<std::int64_t>::Create({2, 10}, execContextCpu);
+  for (std::size_t i = 0; i < 10; ++i) {
+    edgeTensor.data()[i] = i;
+    edgeTensor.data()[i + 10] = 2 * i;
+  }
+
+  // Create a sample edge feature tensor with 3 };
+  auto edgeFeatureTensor = Acts::Tensor<float>::Create({10, 3}, execContextCpu);
+  for (std::size_t i = 0; i < 10; ++i) {
+    edgeFeatureTensor.data()[i * 3] = static_cast<float>(i);  // Feature 1
+    edgeFeatureTensor.data()[i * 3 + 1] =
+        static_cast<float>(i + 1);  // Feature 2
+    edgeFeatureTensor.data()[i * 3 + 2] =
+        static_cast<float>(i + 2);  // Feature 3
+  }
+
+  // Clone to execContext
+  auto edgeTensorTarget = edgeTensor.clone(execContext);
+  std::optional<Acts::Tensor<float>> edgeFeatureTensorTarget =
+      edgeFeatureTensor.clone(execContext);
+
+  // Apply edge limit
+  auto [limitedEdges, limitedEdgeFeatures] = Acts::applyEdgeLimit(
+      edgeTensorTarget, edgeFeatureTensorTarget, 5, execContext.stream);
+
+  // Clone results back to CPU
+  auto limitedEdgesHost = limitedEdges.clone(execContextCpu);
+  auto limitedEdgeFeaturesHost = limitedEdgeFeatures->clone(execContextCpu);
+
+  // Check the size of the limited edges
+  BOOST_CHECK(limitedEdgesHost.shape()[1] == 5);
+  BOOST_CHECK(limitedEdgesHost.shape()[0] == 2);
+  BOOST_CHECK(limitedEdgeFeaturesHost.shape()[0] == 5);
+  BOOST_CHECK(limitedEdgeFeaturesHost.shape()[1] == 3);
+
+  // Check the data of the limited edges
+  for (std::size_t i = 0; i < 5; ++i) {
+    BOOST_CHECK(limitedEdgesHost.data()[i] == edgeTensor.data()[i]);
+    BOOST_CHECK(limitedEdgesHost.data()[i + 5] == edgeTensor.data()[i + 10]);
+
+    BOOST_CHECK(limitedEdgeFeaturesHost.data()[i * 3] ==
+                edgeFeatureTensor.data()[i * 3]);
+    BOOST_CHECK(limitedEdgeFeaturesHost.data()[i * 3 + 1] ==
+                edgeFeatureTensor.data()[i * 3 + 1]);
+    BOOST_CHECK(limitedEdgeFeaturesHost.data()[i * 3 + 2] ==
+                edgeFeatureTensor.data()[i * 3 + 2]);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(tensor_create_move_cpu) {
   testConstructionAndMove(execContextCpu);
 }
@@ -110,6 +161,10 @@ const std::vector<std::int64_t> edgeIndexExpected = {2, 3, 6, 7};
 
 BOOST_AUTO_TEST_CASE(tensor_edge_selection_cpu) {
   testEdgeSelection(scores, edgeIndex, edgeIndexExpected, execContextCpu);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_edge_limit_cpu) {
+  testEdgeLimit(execContextCpu);
 }
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
@@ -146,6 +201,10 @@ BOOST_AUTO_TEST_CASE(tensor_sigmoid_cuda) {
 
 BOOST_AUTO_TEST_CASE(tensor_edge_selection_cuda) {
   testEdgeSelection(scores, edgeIndex, edgeIndexExpected, execContextCuda);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_edge_limit_cuda) {
+  testEdgeLimit(execContextCuda);
 }
 
 #endif
