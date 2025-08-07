@@ -127,29 +127,12 @@ if ! command -v spack &> /dev/null; then
 fi
 
 _spack_repo_version=${SPACK_REPO_VERSION:-develop}
+_spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure repo is synced with version ${_spack_repo_version}"
-echo "Location:"
-# spack location --help
-# spack location --repo builtin
-# @TODO: Fix this with --repo builtin for newer spack version
 
-if [ -d /Users/runner/.spack/package_repos/ ]; then
-  _spack_repo_dir=/Users/runner/.spack/package_repos/
-elif [ -d /root/.spack/package_repos/ ]; then
-  _spack_repo_dir=/root/.spack/package_repos/
-elif [ -d /github/home/.spack/package_repos/ ]; then
-  _spack_repo_dir=/github/home/.spack/package_repos/
-else
-  echo "No spack package repository found"
-  exit 1
-fi
-
-pushd "$_spack_repo_dir/"*"/repos/spack_repo/builtin"
-git fetch --all
-git fetch --tags
-git checkout "${_spack_repo_version}"
-popd
+git config --global --add safe.directory "${_spack_repo_directory}"
+spack repo update builtin --tag "${_spack_repo_version}"
 
 end_section
 

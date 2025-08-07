@@ -29,8 +29,10 @@ namespace Acts {
 
 namespace detail {
 
-template <typename T, bool isConst>
-class AnyGridViewBase;
+template <typename>
+class AnyGridView;
+template <typename>
+class AnyGridConstView;
 
 }  // namespace detail
 
@@ -114,8 +116,10 @@ class IGrid {
   ///         value
   virtual std::any atLocalBinsAny(AnyIndexType indices) = 0;
 
-  template <typename T, bool isConst>
-  friend class detail::AnyGridViewBase;
+  template <typename>
+  friend class AnyGridView;
+  template <typename>
+  friend class AnyGridConstView;
 };
 
 /// @brief class for describing a regular multi-dimensional grid

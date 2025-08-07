@@ -12,8 +12,11 @@
 #include "Acts/EventData/SpacePointColumnProxy2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
+#include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/ContainerRange.hpp"
+#include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/IndexRange.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
@@ -23,6 +26,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -78,7 +82,7 @@ class SpacePointContainer2 {
   using ConstProxy = ConstSpacePointProxy2;
 
   /// Constructs and empty space point container.
-  /// /// @param columns The columns to create in the container.
+  /// @param columns The columns to create in the container.
   explicit SpacePointContainer2(
       SpacePointColumns columns = SpacePointColumns::Default) noexcept;
 
@@ -260,7 +264,8 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the copy from index column.
   /// @return A mutable proxy to the copy from index column.
-  MutableSpacePointColumnProxy<std::size_t> copyFromIndexColumn() noexcept {
+  MutableSpacePointColumnProxy<SpacePointIndex2>
+  copyFromIndexColumn() noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
@@ -350,7 +355,8 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the copy from index column.
   /// @return A const proxy to the copy from index column.
-  ConstSpacePointColumnProxy<std::size_t> copyFromIndexColumn() const noexcept {
+  ConstSpacePointColumnProxy<SpacePointIndex2> copyFromIndexColumn()
+      const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
@@ -515,7 +521,7 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the copy from index of the space point.
-  std::size_t &copyFromIndex(Index index) noexcept {
+  SpacePointIndex2 &copyFromIndex(Index index) noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
@@ -651,110 +657,32 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A const reference to the copy from index of the space point.
-  std::size_t copyFromIndex(Index index) const noexcept {
+  SpacePointIndex2 copyFromIndex(Index index) const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
     return m_copyFromIndexColumn->proxy(*this)[index];
   }
 
+  /// Resolves the index to the actual index in the container.
+  /// If the copyFromIndex column is set, it will return the index from that
+  /// column. Otherwise, it will return the index itself.
+  /// @param index The index to resolve.
+  /// @return The resolved index.
+  SpacePointIndex2 resolvedIndex(Index index) const noexcept {
+    if (m_copyFromIndexColumn.has_value()) {
+      return this->copyFromIndex(index);
+    }
+    return index;
+  }
+
   template <bool read_only>
-  class Iterator {
-   public:
-    static constexpr bool ReadOnly = read_only;
-    using Container = const_if_t<ReadOnly, SpacePointContainer2>;
+  using Iterator =
+      ContainerIterator<SpacePointContainer2,
+                        std::conditional_t<read_only, ConstSpacePointProxy2,
+                                           MutableSpacePointProxy2>,
+                        Index, read_only>;
 
-    using value_type = SpacePointProxy2<ReadOnly>;
-    using difference_type = std::ptrdiff_t;
-
-    using iterator_category = std::random_access_iterator_tag;
-    using iterator_concept = std::random_access_iterator_tag;
-
-    constexpr Iterator() noexcept = default;
-    constexpr Iterator(Container &container, Index index) noexcept
-        : m_container(&container), m_index(index) {}
-    template <bool other_read_only>
-    explicit constexpr Iterator(const Iterator<other_read_only> &other) noexcept
-      requires(ReadOnly && !other_read_only)
-        : m_container(&other.container()), m_index(other.index()) {}
-
-    constexpr Iterator<true> asConst() const noexcept
-      requires(!ReadOnly)
-    {
-      return {*m_container, m_index};
-    }
-
-    constexpr Container &container() const noexcept { return *m_container; }
-    constexpr Index index() const noexcept { return m_index; }
-
-    constexpr value_type operator*() const noexcept {
-      return value_type(*m_container, m_index);
-    }
-    constexpr value_type operator[](difference_type n) const noexcept {
-      return value_type(*m_container, m_index + n);
-    }
-
-    constexpr Iterator &operator++() noexcept {
-      ++m_index;
-      return *this;
-    }
-    constexpr Iterator operator++(int) noexcept {
-      auto tmp = *this;
-      ++(*this);
-      return tmp;
-    }
-    constexpr Iterator &operator--() noexcept {
-      --m_index;
-      return *this;
-    }
-    constexpr Iterator operator--(int) noexcept {
-      auto tmp = *this;
-      --(*this);
-      return tmp;
-    }
-
-    constexpr Iterator &operator+=(difference_type n) noexcept {
-      m_index += n;
-      return *this;
-    }
-    constexpr Iterator &operator-=(difference_type n) noexcept {
-      m_index -= n;
-      return *this;
-    }
-
-   private:
-    Container *m_container{};
-    Index m_index{};
-
-    friend constexpr Iterator operator+(Iterator it,
-                                        difference_type n) noexcept {
-      return it += n;
-    }
-
-    friend constexpr Iterator operator+(difference_type n,
-                                        Iterator it) noexcept {
-      return it += n;
-    }
-
-    friend constexpr Iterator operator-(Iterator it,
-                                        difference_type n) noexcept {
-      return it -= n;
-    }
-
-    friend constexpr difference_type operator-(const Iterator &lhs,
-                                               const Iterator &rhs) noexcept {
-      return lhs.m_index - rhs.m_index;
-    }
-
-    friend constexpr auto operator<=>(const Iterator &a,
-                                      const Iterator &b) noexcept {
-      return a.m_index <=> b.m_index;
-    }
-    friend constexpr bool operator==(const Iterator &a,
-                                     const Iterator &b) noexcept {
-      return a.m_index == b.m_index;
-    }
-  };
   using iterator = Iterator<false>;
   using const_iterator = Iterator<true>;
 
@@ -765,68 +693,18 @@ class SpacePointContainer2 {
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
   template <bool read_only>
-  class Range {
+  class Range : public ContainerRange<Range<read_only>, Range<true>,
+                                      SpacePointContainer2, Index, read_only> {
    public:
-    static constexpr bool ReadOnly = read_only;
-    using Container = const_if_t<ReadOnly, SpacePointContainer2>;
-    using RangeIterator = Iterator<read_only>;
+    using Base = ContainerRange<Range<read_only>, Range<true>,
+                                SpacePointContainer2, Index, read_only>;
 
-    constexpr Range(Container &container, const IndexRange &range) noexcept
-        : m_container(&container), m_range(range) {}
-    template <bool other_read_only>
-    explicit constexpr Range(const Range<other_read_only> &other) noexcept
-      requires(ReadOnly && !other_read_only)
-        : m_container(&other.container()), m_range(other.range()) {}
-
-    constexpr Range<true> asConst() const noexcept
-      requires(!ReadOnly)
-    {
-      return {container(), range()};
-    }
-
-    constexpr Container &container() const noexcept { return *m_container; }
-    constexpr const IndexRange &range() const noexcept { return m_range; }
-
-    constexpr std::size_t size() const noexcept {
-      return m_range.second - m_range.first;
-    }
-    constexpr bool empty() const noexcept { return size() == 0; }
-
-    constexpr Range subrange(std::uint32_t offset) const noexcept {
-      assert(offset <= m_range.second - m_range.first &&
-             "Subrange offset out of bounds");
-      return Range(container(), {m_range.first + offset, m_range.second});
-    }
-    constexpr Range subrange(std::uint32_t offset,
-                             std::uint32_t count) const noexcept {
-      assert(offset <= m_range.second - m_range.first &&
-             "Subrange offset out of bounds");
-      assert(count <= m_range.second - m_range.first - offset &&
-             "Subrange count out of bounds");
-      return Range(container(),
-                   {m_range.first + offset, m_range.first + offset + count});
-    }
-
-    constexpr auto front() const noexcept { return container()[m_range.first]; }
-    constexpr auto back() const noexcept {
-      return container()[m_range.second - 1];
-    }
-
-    constexpr RangeIterator begin() const noexcept {
-      return RangeIterator(container(), m_range.first);
-    }
-    constexpr RangeIterator end() const noexcept {
-      return RangeIterator(container(), m_range.second);
-    }
+    using Base::Base;
 
     template <typename... Ts>
     auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-      return m_container->zip(m_range, columns...);
+      return Base::container().zip(Base::range(), columns...);
     }
-
-   private:
-    Container *m_container{};
-    IndexRange m_range{};
   };
   using MutableRange = Range<false>;
   using ConstRange = Range<true>;
@@ -845,137 +723,24 @@ class SpacePointContainer2 {
   }
 
   template <bool read_only>
-  class Subset {
+  class Subset : public ContainerSubset<
+                     Subset<read_only>, SpacePointContainer2,
+                     std::conditional_t<read_only, ConstSpacePointProxy2,
+                                        MutableSpacePointProxy2>,
+                     SpacePointIndex2, read_only> {
    public:
-    static constexpr bool ReadOnly = read_only;
-    using Container = const_if_t<ReadOnly, SpacePointContainer2>;
+    using Base =
+        ContainerSubset<Subset<read_only>, SpacePointContainer2,
+                        std::conditional_t<read_only, ConstSpacePointProxy2,
+                                           MutableSpacePointProxy2>,
+                        SpacePointIndex2, read_only>;
 
-    class Iterator {
-     public:
-      using Container = const_if_t<ReadOnly, SpacePointContainer2>;
-      using SubsetIterator = IndexSubset::iterator;
-
-      using value_type = SpacePointProxy2<ReadOnly>;
-      using difference_type = std::ptrdiff_t;
-
-      using iterator_category = std::random_access_iterator_tag;
-      using iterator_concept = std::random_access_iterator_tag;
-
-      constexpr Iterator() noexcept = default;
-      constexpr Iterator(Container &container, SubsetIterator iterator) noexcept
-          : m_container(&container), m_iterator(iterator) {}
-
-      constexpr value_type operator*() const noexcept {
-        return value_type(*m_container, *m_iterator);
-      }
-      constexpr value_type operator[](difference_type n) const noexcept {
-        return value_type(*m_container, m_iterator[n]);
-      }
-
-      constexpr Iterator &operator++() noexcept {
-        ++m_iterator;
-        return *this;
-      }
-      constexpr Iterator operator++(int) noexcept {
-        auto tmp = *this;
-        ++(*this);
-        return tmp;
-      }
-      constexpr Iterator &operator--() noexcept {
-        --m_iterator;
-        return *this;
-      }
-      constexpr Iterator operator--(int) noexcept {
-        auto tmp = *this;
-        --(*this);
-        return tmp;
-      }
-
-      constexpr Iterator &operator+=(difference_type n) noexcept {
-        m_iterator += n;
-        return *this;
-      }
-      constexpr Iterator &operator-=(difference_type n) noexcept {
-        m_iterator -= n;
-        return *this;
-      }
-
-     private:
-      Container *m_container{};
-      SubsetIterator m_iterator{};
-
-      friend constexpr Iterator operator+(Iterator it,
-                                          difference_type n) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator+(difference_type n,
-                                          Iterator it) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator-(Iterator it,
-                                          difference_type n) noexcept {
-        return it -= n;
-      }
-
-      friend constexpr difference_type operator-(const Iterator &lhs,
-                                                 const Iterator &rhs) noexcept {
-        return lhs.m_iterator - rhs.m_iterator;
-      }
-
-      friend constexpr auto operator<=>(const Iterator &a,
-                                        const Iterator &b) noexcept {
-        return a.m_iterator <=> b.m_iterator;
-      }
-      friend constexpr bool operator==(const Iterator &a,
-                                       const Iterator &b) noexcept {
-        return a.m_iterator == b.m_iterator;
-      }
-    };
-    using iterator = Iterator;
-
-    constexpr Subset(Container &container, const IndexSubset &subset) noexcept
-        : m_container(&container), m_subset(subset) {}
-    template <bool other_read_only>
-    explicit constexpr Subset(const Subset<other_read_only> &other) noexcept
-      requires(ReadOnly && !other_read_only)
-        : m_container(&other.container()), m_subset(other.subset()) {}
-
-    constexpr Subset<true> asConst() const noexcept
-      requires(!ReadOnly)
-    {
-      return {*m_container, m_subset};
-    }
-
-    constexpr Container &container() const noexcept { return *m_container; }
-    constexpr const IndexSubset &subset() const noexcept { return m_subset; }
-
-    constexpr std::size_t size() const noexcept { return m_subset.size(); }
-    constexpr bool empty() const noexcept { return size() == 0; }
-
-    constexpr auto front() const noexcept {
-      return container()[m_subset.front()];
-    }
-    constexpr auto back() const noexcept {
-      return container()[m_subset.back()];
-    }
-
-    constexpr iterator begin() const noexcept {
-      return iterator(*m_container, m_subset.begin());
-    }
-    constexpr iterator end() const noexcept {
-      return iterator(*m_container, m_subset.end());
-    }
+    using Base::Base;
 
     template <typename... Ts>
     auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-      return m_container->zip(m_subset, columns...);
+      return Base::container().zip(Base::subset(), columns...);
     }
-
-   private:
-    Container *m_container{};
-    IndexSubset m_subset{};
   };
   using MutableSubset = Subset<false>;
   using ConstSubset = Subset<true>;
@@ -993,108 +758,19 @@ class SpacePointContainer2 {
     return ConstSubset(*this, subset);
   }
 
-  class IndexIteratorRange {
-   public:
-    class Iterator {
-     public:
-      using value_type = Index;
-      using difference_type = std::ptrdiff_t;
-
-      using iterator_category = std::random_access_iterator_tag;
-      using iterator_concept = std::random_access_iterator_tag;
-
-      constexpr Iterator() noexcept = default;
-      explicit constexpr Iterator(SpacePointIndex2 index) noexcept
-          : m_index{index} {}
-
-      constexpr value_type operator*() const noexcept { return m_index; }
-      constexpr value_type operator[](difference_type n) const noexcept {
-        return m_index + n;
-      }
-
-      constexpr Iterator &operator++() noexcept {
-        ++m_index;
-        return *this;
-      }
-      constexpr Iterator operator++(int) noexcept {
-        auto tmp = *this;
-        ++(*this);
-        return tmp;
-      }
-      constexpr Iterator &operator--() noexcept {
-        --m_index;
-        return *this;
-      }
-      constexpr Iterator operator--(int) noexcept {
-        auto tmp = *this;
-        --(*this);
-        return tmp;
-      }
-
-      constexpr Iterator &operator+=(difference_type n) noexcept {
-        m_index += n;
-        return *this;
-      }
-      constexpr Iterator &operator-=(difference_type n) noexcept {
-        m_index -= n;
-        return *this;
-      }
-
-     private:
-      SpacePointIndex2 m_index{0};
-
-      friend constexpr Iterator operator+(Iterator it,
-                                          difference_type n) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator+(difference_type n,
-                                          Iterator it) noexcept {
-        return it += n;
-      }
-
-      friend constexpr Iterator operator-(Iterator it,
-                                          difference_type n) noexcept {
-        return it -= n;
-      }
-
-      friend constexpr difference_type operator-(const Iterator &lhs,
-                                                 const Iterator &rhs) noexcept {
-        return lhs.m_index - rhs.m_index;
-      }
-
-      friend constexpr auto operator<=>(const Iterator &a,
-                                        const Iterator &b) noexcept = default;
-      friend constexpr bool operator==(const Iterator &a,
-                                       const Iterator &b) noexcept = default;
-    };
-    using iterator = Iterator;
-
-    explicit IndexIteratorRange(IndexRange range) noexcept : m_range(range) {}
-
-    std::size_t size() const noexcept { return m_range.second - m_range.first; }
-    bool empty() const noexcept { return size() == 0; }
-
-    iterator begin() const noexcept { return iterator(m_range.first); }
-    iterator end() const noexcept { return iterator(m_range.second); }
-
-   private:
-    IndexRange m_range{};
-  };
-
   /// Creates a zipped mutable range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
-    return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-    return Acts::zip(IndexIteratorRange({0, size()}), columns.data()...);
+    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.
@@ -1105,7 +781,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(
-        IndexIteratorRange(range),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
@@ -1116,7 +792,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(
-        IndexIteratorRange(range),
+        Acts::IndexRange<Index>(range),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
 
@@ -1168,7 +844,7 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<Eigen::Vector3f>> m_stripCenterDistanceColumn;
   std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
   // copy information
-  std::optional<ColumnHolder<std::size_t>> m_copyFromIndexColumn;
+  std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
   static auto knownColumnMaks() noexcept {
     using enum SpacePointColumns;
@@ -1189,7 +865,7 @@ class SpacePointContainer2 {
                       float{0}, float{0}, float{0}, float{NoTime}, float{0},
                       float{0}, Eigen::Vector3f{0, 0, 0},
                       Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
-                      Eigen::Vector3f{0, 0, 0}, std::size_t{0});
+                      Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0});
   }
 
   auto knownColumns() & noexcept {
