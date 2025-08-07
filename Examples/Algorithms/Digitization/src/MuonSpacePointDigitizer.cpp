@@ -75,6 +75,14 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   return SUCCESS;
 }
 
+const MuonSpacePointCalibrator& MuonSpacePointDigitizer::calibrator() const {
+  assert(m_cfg.calibrator != nullptr);
+  return *m_cfg.calibrator;
+}
+const Acts::TrackingGeometry MuonSpacePointDigitizer::trackingGeometry() const {
+  assert(m_cfg.trackingGeometry != nullptr);
+  return *m_cfg.trackingGeometry;
+}
 ProcessCode MuonSpacePointDigitizer::execute(
     const AlgorithmContext& ctx) const {
   const SimHitContainer& gotSimHits = m_inputSimHits(ctx);
@@ -93,7 +101,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
   for (const auto& hit : gotSimHits) {
     const GeometryIdentifier hitId = hit.geometryId();
 
-    const Surface* hitSurf = m_cfg.trackingGeometry->findSurface(hitId);
+    const Surface* hitSurf = trackingGeometry().findSurface(hitId);
 
     assert(hitSurf != nullptr);
     const GeometryIdentifier volId{GeometryIdentifier{}
@@ -109,12 +117,13 @@ ProcessCode MuonSpacePointDigitizer::execute(
     bool convertSp{true};
 
     MuonSpacePoint newSp{};
-    const TrackingVolume* volume = m_cfg.trackingGeometry->findVolume(volId);
+    const TrackingVolume* volume = trackingGeometry().findVolume(volId);
     assert(volume != nullptr);
     const Transform3 parentTrf{Acts::AngleAxis3{90._degree, Vector3::UnitZ()} *
                                volume->itransform() * surfLocToGlob};
 
     const auto& bounds = hitSurf->bounds();
+    const auto& calibCfg = calibrator().config();
     switch (hitSurf->type()) {
       using enum Surface::SurfaceType;
       case Plane: {
@@ -124,16 +133,27 @@ ProcessCode MuonSpacePointDigitizer::execute(
         Acts::Vector3 smearedHit{Acts::Vector3::Zero()};
         switch (bounds.type()) {
           case SurfaceBounds::BoundsType::eRectangle: {
-            smearedHit[ePos0] = quantize(
-                hitPos[ePos0], m_cfg.calibrator->config().rpcPhiStripPitch);
-            smearedHit[ePos1] = quantize(
-                hitPos[ePos1], m_cfg.calibrator->config().rpcEtaStripPitch);
+            smearedHit[ePos0] =
+                quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
+            smearedHit[ePos1] =
+                quantize(hitPos[ePos1], calibCfg.rpcEtaStripPitch);
             ACTS_VERBOSE("Position before "
                          << toString(hitPos) << ", after smearing"
                          << toString(smearedHit) << ", " << bounds);
 
             if (!bounds.inside(Vector2{smearedHit[ePos0], smearedHit[ePos1]})) {
               convertSp = false;
+            } else {
+              if (m_cfg.digitizeTime) {
+                const double stripTime =
+                    (*Digitization::Gauss{calibCfg.rpcTimeResolution}(
+                         hit.time(), rndEngine))
+                        .first;
+                newSp.setTime(stripTime);
+              }
+              newSp.setCovariance(
+                  calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
+                  m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
             }
             break;
           }
@@ -166,7 +186,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
         const auto nominalPos = closeApproach.position();
         const double unsmearedR =
             Acts::fastHypot(nominalPos.x(), nominalPos.y());
-        const double uncert = m_cfg.calibrator->driftRadiusUncert(unsmearedR);
+        const double uncert = calibrator().driftRadiusUncert(unsmearedR);
 
         const double driftR =
             (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
@@ -179,6 +199,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
           convertSp = false;
         } else {
           newSp.setRadius(driftR);
+          newSp.setCovariance(Acts::square(0.5 * maxZ),
+                              calibrator().driftRadiusUncert(driftR), 0.);
           newSp.defineCoordinates(
               Vector3{parentTrf * hitSurf->center(gctx)},
               Vector3{parentTrf.linear() * Vector3::UnitZ()},

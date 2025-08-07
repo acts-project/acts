@@ -37,20 +37,26 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::shared_ptr<const MuonSpacePointCalibrator> calibrator{};
     /// @brief Pointer to the tracking geometry to fetch the surfaces
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry{};
+    /// @brief Add strip times
+    bool digitizeTime{false};
   };
   /// @brief Constructor
   MuonSpacePointDigitizer(const Config& cfg, Acts::Logging::Level lvl);
   /// @brief Destructor
-  ~MuonSpacePointDigitizer() override final = default;
+  ~MuonSpacePointDigitizer() final = default;
 
   /// @brief Initialize the digitizer
-  ProcessCode initialize() override final;
+  ProcessCode initialize() final;
   /// @brief Execute the digitization
-  ProcessCode execute(const AlgorithmContext& ctx) const override final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
   /// @brief  Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
+  /// @brief Returns the reference to the configured calibrator
+  const MuonSpacePointCalibrator& calibrator() const;
+  /// @brief Returns the reference to the passed tracking geometry
+  const Acts::TrackingGeometry trackingGeometry() const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits

@@ -50,10 +50,14 @@ class MuonSpacePointCalibrator {
     double propagationV{0.};
     /// @brief Include trackT0 & time offset in the calibration
     bool includeTrackT0{false};
-    /// @brief
+    /// @brief Pitch between two Rpc strips oriented parallel to
+    ///        the Mdt tubes
     double rpcEtaStripPitch{2.6 * Acts::UnitConstants::cm};
-
+    /// @brief Pitch between two Rpc strips oriented orthogonal
+    ///     to the Mdt tubes
     double rpcPhiStripPitch{3.5 * Acts::UnitConstants::cm};
+    /// @brief Time resolution of the Rpc detectors
+    double rpcTimeResolution{0.6 * Acts::UnitConstants::ns};
   };
 
   /// @brief default constructor */

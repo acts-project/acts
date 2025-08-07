@@ -76,7 +76,7 @@ void addDigitization(Context& ctx) {
       ActsExamples::MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer",
       inputSimHits, inputParticles, outputSpacePoints, randomNumbers,
       /// @todo: Expose <calibrator> to python bindings
-      trackingGeometry);
+      trackingGeometry, digitizeTime);
 
   {
     using DC = DigitizationConfigurator;
