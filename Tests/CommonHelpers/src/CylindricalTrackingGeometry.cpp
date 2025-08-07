@@ -275,7 +275,7 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
   using enum Acts::AxisDirection;
   using LayerType = LayerBlueprintNode::LayerType;
 
-  MaterialSlab lProperties(makeSilicon(), 1.5_mm);
+  const MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
   // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
   std::vector<float> binEdges = {
@@ -317,8 +317,6 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
           std::make_shared<HomogeneousSurfaceMaterial>(beamPipeMaterial));
       bpMat.addStaticVolume(std::move(beampipe));
     });
-
-    MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
     auto layerMaterialPtr =
         std::make_shared<HomogeneousSurfaceMaterial>(lProperties);
