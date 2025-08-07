@@ -90,6 +90,7 @@ option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx 
 option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
+option(ACTS_EXATRKX_ENABLE_NVTX "Include NVTX ranges for analysis with nsight-systems" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
