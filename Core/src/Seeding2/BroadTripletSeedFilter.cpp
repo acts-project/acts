@@ -9,6 +9,7 @@
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/ITripletSeedCuts.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -20,12 +21,8 @@ namespace Acts::Experimental {
 namespace {
 
 float getBestSeedQuality(
-    const SpacePointContainer2& spacePoints,
     const std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
     SpacePointIndex2 sp) {
-  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
-    sp = spacePoints[sp].extra(spacePoints.copyFromIndexColumn());
-  }
   auto it = bestSeedQualityMap.find(sp);
   if (it != bestSeedQualityMap.end()) {
     return it->second;
@@ -34,16 +31,9 @@ float getBestSeedQuality(
 }
 
 void setBestSeedQuality(
-    const SpacePointContainer2& spacePoints,
     std::unordered_map<SpacePointIndex2, float>& bestSeedQualityMap,
-    SpacePointIndex2 top, SpacePointIndex2 middle, SpacePointIndex2 bottom,
+    SpacePointIndex2 bottom, SpacePointIndex2 middle, SpacePointIndex2 top,
     float quality) {
-  if (spacePoints.hasColumns(SpacePointColumns::CopyFromIndex)) {
-    top = spacePoints[top].copyFromIndex();
-    middle = spacePoints[middle].copyFromIndex();
-    bottom = spacePoints[bottom].copyFromIndex();
-  }
-
   const auto set = [&](SpacePointIndex2 sp) {
     auto it = bestSeedQualityMap.find(sp);
     if (it != bestSeedQualityMap.end()) {
@@ -216,12 +206,12 @@ void BroadTripletSeedFilter::filter2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < getBestSeedQuality(spacePoints, state.bestSeedQualityMap,
-                                      bottomSp) &&
-          weight < getBestSeedQuality(spacePoints, state.bestSeedQualityMap,
-                                      middleSp) &&
-          weight < getBestSeedQuality(spacePoints, state.bestSeedQualityMap,
-                                      topSp)) {
+      if (weight < getBestSeedQuality(state.bestSeedQualityMap,
+                                      spB.resolvedIndex()) &&
+          weight < getBestSeedQuality(state.bestSeedQualityMap,
+                                      spM.resolvedIndex()) &&
+          weight < getBestSeedQuality(state.bestSeedQualityMap,
+                                      spT.resolvedIndex())) {
         continue;
       }
 
@@ -287,34 +277,37 @@ void BroadTripletSeedFilter::filter1SpFixed(
       break;
     }
 
+    std::array<SpacePointIndex2, 3> triplet{spacePoints[bottom].resolvedIndex(),
+                                            spacePoints[middle].resolvedIndex(),
+                                            spacePoints[top].resolvedIndex()};
+
     if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < getBestSeedQuality(spacePoints,
-                                               state.bestSeedQualityMap,
-                                               bottom) &&
-          bestSeedQuality < getBestSeedQuality(spacePoints,
-                                               state.bestSeedQualityMap,
-                                               middle) &&
+      if (bestSeedQuality <
+              getBestSeedQuality(state.bestSeedQualityMap, triplet[0]) &&
           bestSeedQuality <
-              getBestSeedQuality(spacePoints, state.bestSeedQualityMap, top)) {
+              getBestSeedQuality(state.bestSeedQualityMap, triplet[1]) &&
+          bestSeedQuality <
+              getBestSeedQuality(state.bestSeedQualityMap, triplet[2])) {
         continue;
       }
     }
 
     // set quality of seed components
-    setBestSeedQuality(spacePoints, state.bestSeedQualityMap, top, middle,
-                       bottom, bestSeedQuality);
+    setBestSeedQuality(state.bestSeedQualityMap, triplet[0], triplet[1],
+                       triplet[2], bestSeedQuality);
 
-    ACTS_VERBOSE("Adding seed: [b=" << bottom << ", m=" << middle << ", t="
-                                    << top << "], quality=" << bestSeedQuality
-                                    << ", vertexZ=" << zOrigin);
+    ACTS_VERBOSE("Adding seed: original indices=["
+                 << triplet[0] << ", " << triplet[1] << ", " << triplet[2]
+                 << "], internal indices=[" << bottom << ", " << middle << ", "
+                 << top << "], quality=" << bestSeedQuality
+                 << ", vertexZ=" << zOrigin);
 
     auto seed = outputCollection.createSeed();
-    seed.assignSpacePointIndices(
-        std::array<SpacePointIndex2, 3>{bottom, middle, top});
+    seed.assignSpacePointIndices(triplet);
     seed.vertexZ() = zOrigin;
     seed.quality() = bestSeedQuality;
 
