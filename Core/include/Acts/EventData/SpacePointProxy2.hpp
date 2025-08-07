@@ -183,7 +183,7 @@ class SpacePointProxy2 {
   }
   /// Mutable access to the copy from index of the space point.
   /// @return A mutable reference to the copy from index of the space point.
-  std::size_t &copyFromIndex() const noexcept
+  SpacePointIndex2 &copyFromIndex() const noexcept
     requires(!ReadOnly)
   {
     return m_container->copyFromIndex(m_index);
@@ -248,7 +248,7 @@ class SpacePointProxy2 {
   }
   /// Const access to the copy from index of the space point.
   /// @return A const reference to the copy from index of the space point.
-  std::size_t copyFromIndex() const noexcept {
+  SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
   }
 
@@ -258,6 +258,13 @@ class SpacePointProxy2 {
   template <typename T>
   const T &extra(const ConstSpacePointColumnProxy<T> &column) const noexcept {
     return column[m_index];
+  }
+
+  /// Returns the resolved index of the space point.
+  /// This resolves the index if the space point was copied from another index.
+  /// @return The resolved index of the space point.
+  SpacePointIndex2 resolvedIndex() const noexcept {
+    return m_container->resolvedIndex(m_index);
   }
 
  private:
