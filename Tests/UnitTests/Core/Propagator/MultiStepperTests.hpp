@@ -130,6 +130,16 @@ struct MultiStepperTester {
                                               particleHypothesis);
   }
 
+  void test_config_constructor() const {
+    typename SingleStepper::Config singleCfg;
+    singleCfg.bField = defaultBField;
+
+    typename MultiStepper::Config multiCfg;
+    static_cast<typename SingleStepper::Config &>(multiCfg) = singleCfg;
+
+    MultiStepper ms(multiCfg);
+  }
+
   //////////////////////
   /// Test the reducers
   //////////////////////

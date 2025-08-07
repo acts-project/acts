@@ -179,10 +179,7 @@ class MultiStepperLoop : public single_stepper_t {
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
-  struct Config {
-    /// Configuration object of the single stepper
-    SingleConfig singleStepperConfig;
-
+  struct Config : public SingleStepper::Config {
     /// Limits the number of steps after at least one component reached the
     /// surface
     std::size_t stepLimitAfterFirstComponentOnSurface = 50;
@@ -247,7 +244,7 @@ class MultiStepperLoop : public single_stepper_t {
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiStepperLoop",
                                                  Logging::INFO))
-      : SingleStepper(std::move(config.singleStepperConfig)),
+      : SingleStepper(config),
         m_stepLimitAfterFirstComponentOnSurface(
             config.stepLimitAfterFirstComponentOnSurface),
         m_logger(std::move(logger)) {}

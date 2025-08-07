@@ -18,6 +18,9 @@ const MultiStepperTester<MyEigenStepper, MultiStepperLoop<MyEigenStepper>>
 
 BOOST_AUTO_TEST_SUITE(multi_eigen_stepper_tests)
 
+BOOST_AUTO_TEST_CASE(multi_stepper_config_constructor) {
+  tester.test_config_constructor();
+}
 BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
   tester.test_multi_stepper_state<false>();
 }
