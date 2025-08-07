@@ -5,10 +5,7 @@ add_executable(
     HelloRandomAlgorithm.cpp
     HelloWhiteBoardAlgorithm.cpp
 )
-target_link_libraries(
-    ActsExampleHelloWorld
-    PRIVATE Acts::Core Acts::ExamplesFramework
-)
+target_link_libraries(ActsExampleHelloWorld PRIVATE Acts::ExamplesFramework)
 
 install(
     TARGETS ActsExampleHelloWorld

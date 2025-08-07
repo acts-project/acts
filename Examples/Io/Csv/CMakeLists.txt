@@ -30,9 +30,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoCsv
-    PRIVATE
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::ExamplesDigitization
-        Threads::Threads
+    PRIVATE Acts::ExamplesFramework Acts::ExamplesDigitization Threads::Threads
 )

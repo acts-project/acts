@@ -8,4 +8,4 @@ acts_code_generation(
     OUTPUT ParticleDataTable.hpp
 )
 
-target_link_libraries(ActsCore PRIVATE Acts::ParticleDataTable)
+target_link_libraries(ActsCore PRIVATE $<COMPILE_ONLY:Acts::ParticleDataTable>)
