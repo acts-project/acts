@@ -278,7 +278,7 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-SurfaceMultiIntersection ConeSurface::intersect(
+MultiIntersection3D ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -287,9 +287,8 @@ SurfaceMultiIntersection ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            *this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -319,9 +318,9 @@ SurfaceMultiIntersection ConeSurface::intersect(
   Intersection3D second(tf * solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, *this, boundaryTolerance};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, *this, boundaryTolerance};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
