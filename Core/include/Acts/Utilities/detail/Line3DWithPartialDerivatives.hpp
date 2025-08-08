@@ -57,10 +57,12 @@ class Line3DWithPartialDerivatives {
   ///        the line reference
   /// @param lambda: Separation from the reference
   Vector point(const double lambda) const;
+  /// @brief Returns the currently set parameters
+  ParamVector parameters() const;
 
  private:
   Vector m_pos{Vector::Zero()};
-  Vector m_dir{Vector::Zero()};
+  Vector m_dir{Vector::UnitZ()};
   std::array<Vector, s_nPars> m_gradient{
       filledArray<Vector, s_nPars>(Vector::Zero())};
 
