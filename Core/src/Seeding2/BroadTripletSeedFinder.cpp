@@ -29,7 +29,7 @@ void createAndFilterTriplets(float rMaxSeedConf,
                              DoubletCollections bottomDoublets,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
-  for (DoubletsForMiddleSp::Proxy bottomDoublet : bottomDoublets) {
+  for (auto bottomDoublet : bottomDoublets) {
     if (topDoublets.empty()) {
       break;
     }
