@@ -205,7 +205,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     SpacePointMutableData& mutableData,
     boost::container::small_vector<
         Neighbour<grid_t>, detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
-    const external_spacepoint_t& mediumSP, std::vector<LinCircle>& linCircleVec,
+    const external_spacepoint_t& mediumSP, LinCircleVector& linCircleVec,
     out_range_t& outVec, const float deltaRMinSP, const float deltaRMaxSP,
     const float uIP, const float uIP2, const float cosPhiM,
     const float sinPhiM) const {
@@ -502,20 +502,12 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   }
 
   if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDefault) {
-    std::vector<float> cotThetaBottoms(state.compatBottomSP.size());
-    for (std::uint32_t i = 0; i < sortedBottoms.size(); ++i) {
-      cotThetaBottoms[i] = state.linCircleBottom[i].cotTheta;
-    }
     std::ranges::sort(sortedBottoms, {}, [&](const std::uint32_t s) {
-      return cotThetaBottoms[s];
+      return state.linCircleBottom.cotTheta[s];
     });
-
-    std::vector<float> cotThetaTops(state.linCircleTop.size());
-    for (std::uint32_t i = 0; i < sortedTops.size(); ++i) {
-      cotThetaTops[i] = state.linCircleTop[i].cotTheta;
-    }
-    std::ranges::sort(sortedTops, {},
-                      [&](const std::uint32_t s) { return cotThetaTops[s]; });
+    std::ranges::sort(sortedTops, {}, [&](const std::uint32_t s) {
+      return state.linCircleTop.cotTheta[s];
+    });
   }
 
   // Reserve enough space, in case current capacity is too little
@@ -534,12 +526,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       break;
     }
 
-    auto lb = state.linCircleBottom[b];
-    float cotThetaB = lb.cotTheta;
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
+    float cotThetaB = state.linCircleBottom.cotTheta[b];
+    float Vb = state.linCircleBottom.V[b];
+    float Ub = state.linCircleBottom.U[b];
+    float ErB = state.linCircleBottom.Er[b];
+    float iDeltaRB = state.linCircleBottom.iDeltaR[b];
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -587,9 +578,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     for (std::size_t index_t = t0; index_t < numTopSp; index_t++) {
       const std::size_t t = sortedTops[index_t];
 
-      auto lt = state.linCircleTop[t];
-
-      float cotThetaT = lt.cotTheta;
+      float cotThetaT = state.linCircleTop.cotTheta[t];
       float rMxy = 0.;
       float ub = 0.;
       float vb = 0.;
@@ -605,13 +594,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
         // protects against division by 0
-        float dU = lt.U - Ub;
+        float dU = state.linCircleTop.U[t] - Ub;
         if (dU == 0.) {
           continue;
         }
         // A and B are evaluated as a function of the circumference parameters
         // x_0 and y_0
-        float A0 = (lt.V - Vb) / dU;
+        float A0 = (state.linCircleTop.V[t] - Vb) / dU;
 
         float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
@@ -628,8 +617,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
         // coordinate transformation and checks for bottom spacepoint
         float B0 = 2. * (Vb - A0 * Ub);
-        float Cb = 1. - B0 * lb.y;
-        float Sb = A0 + B0 * lb.x;
+        float Cb = 1. - B0 * state.linCircleBottom.y[b];
+        float Sb = A0 + B0 * state.linCircleBottom.x[b];
         double positionBottom[3] = {
             rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
@@ -642,8 +631,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         }
 
         // coordinate transformation and checks for top spacepoint
-        float Ct = 1. - B0 * lt.y;
-        float St = A0 + B0 * lt.x;
+        float Ct = 1. - B0 * state.linCircleTop.y[t];
+        float St = A0 + B0 * state.linCircleTop.x[t];
         double positionTop[3] = {
             rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
@@ -682,9 +671,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 =
-          lt.Er + ErB +
-          2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB * lt.iDeltaR;
+      float error2 = state.linCircleTop.Er[t] + ErB +
+                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                         state.linCircleTop.iDeltaR[t];
 
       float deltaCotTheta = cotThetaB - cotThetaT;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -743,14 +732,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         B = vb - A * ub;
         B2 = B * B;
       } else {
-        dU = lt.U - Ub;
+        dU = state.linCircleTop.U[t] - Ub;
         // protects against division by 0
         if (dU == 0.) {
           continue;
         }
         // A and B are evaluated as a function of the circumference parameters
         // x_0 and y_0
-        A = (lt.V - Vb) / dU;
+        A = (state.linCircleTop.V[t] - Vb) / dU;
         S2 = 1. + A * A;
         B = Vb - A * Ub;
         B2 = B * B;
@@ -821,7 +810,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       continue;
     }
 
-    seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
+    seedFilterState.zOrigin = spM.z() - rM * state.linCircleBottom.cotTheta[b];
 
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointMutableData, *state.compatBottomSP[b], spM,

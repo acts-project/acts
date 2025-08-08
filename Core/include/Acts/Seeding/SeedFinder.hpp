@@ -48,32 +48,32 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<const external_spacepoint_t*> compatBottomSP{};
-    std::vector<const external_spacepoint_t*> compatTopSP{};
+    std::vector<const external_spacepoint_t*> compatBottomSP;
+    std::vector<const external_spacepoint_t*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
-    std::vector<LinCircle> linCircleBottom{};
+    LinCircleVector linCircleBottom;
     // ...for middle-top
-    std::vector<LinCircle> linCircleTop{};
+    LinCircleVector linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const external_spacepoint_t*> topSpVec{};
-    std::vector<float> curvatures{};
-    std::vector<float> impactParameters{};
+    std::vector<const external_spacepoint_t*> topSpVec;
+    std::vector<float> curvatures;
+    std::vector<float> impactParameters;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const external_spacepoint_t> candidatesCollector{};
+    CandidatesForMiddleSp<const external_spacepoint_t> candidatesCollector;
 
     // managing doublet candidates
     boost::container::small_vector<Neighbour<grid_t>,
                                    detail::ipow(3, grid_t::DIM)>
-        bottomNeighbours{};
+        bottomNeighbours;
     boost::container::small_vector<Neighbour<grid_t>,
                                    detail::ipow(3, grid_t::DIM)>
-        topNeighbours{};
+        topNeighbours;
 
     // Mutable variables for Space points used in the seeding
-    SpacePointMutableData spacePointMutableData{};
+    SpacePointMutableData spacePointMutableData;
   };
 
   SeedFinder() = default;
@@ -139,10 +139,10 @@ class SeedFinder {
       SpacePointMutableData& mutableData,
       boost::container::small_vector<
           Neighbour<grid_t>, detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
-      const external_spacepoint_t& mediumSP,
-      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
-      const float uIP2, const float cosPhiM, const float sinPhiM) const;
+      const external_spacepoint_t& mediumSP, LinCircleVector& linCircleVec,
+      out_range_t& outVec, const float deltaRMinSP, const float deltaRMaxSP,
+      const float uIP, const float uIP2, const float cosPhiM,
+      const float sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
