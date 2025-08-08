@@ -33,8 +33,27 @@ namespace Acts::Experimental::detail {
 ///
 ///        For strip type measurements, the residual is the distance in the
 ///        strip-readout plane between the point along the line that intersects
-///        the plane and the measurement.
-class StrawLineFitAuxiliaries {
+///        the plane spanned by the measurement.
+///
+///        If the strip measurements provide also the time of their record, the
+///        residual calculation can be extended to the time of arrival parameter
+///        The residual is then defined as the strip's recorded time minus the
+///        time of flight of a particle on a straight line minus the time
+///        offset.
+///
+///        Straw measurements are indirectly influenced by the time offset
+///        parameter. The primary electrons produced by the traversing ionizing
+///        particle drift towards the central straw wire. The drift time can be
+///        directly mapped to the drift radius during the calibration procedure
+///        where the rt relation and its first two derivatives are known
+///        apprxomately. Further, it's assumed that the chip records are
+///        composed timestamp that includes the drift time & the time of flight
+///        of the ionizing particle. An update of the point of closest approach
+///        leads to an indirect update of the drift radius and hence additional
+///        terms need to be considered when calculating the residual's
+///        derivatives.
+
+class CompSpacePointAuxiliaries {
  public:
   using Line_t = Acts::detail::Line3DWithPartialDerivatives<double>;
   using LineIndex = Line_t::ParIndex;
@@ -47,11 +66,18 @@ class StrawLineFitAuxiliaries {
     t0 = 4,  // time offset
     nPars = 5
   };
+  static constexpr std::uint8_t s_nPars =
+      static_cast<std::uint8_t>(FitParIndex::nPars);
+  /// @brief Prints a fit parameter as string
   static std::string parName(const FitParIndex idx);
   /// @brief Assignment of the residual components.
   enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
   /// @brief Configuration object of the residual calculator
   struct Config {
+    /// @brief Transform to place the composite station frame inside the
+    ///        global experiment's frame. Needed for the time residual
+    ///        calculation with time of flight
+    Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
     bool useHessian{false};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
@@ -61,6 +87,9 @@ class StrawLineFitAuxiliaries {
     ///        shall be calculated if the space point does not measure both
     ///        spatial coordinates on the plane
     bool calcAlongStrip{true};
+    /// @brief  Include the time of flight assuming that the particle travels with the
+    ///         speed of light in the time residual calculations
+    bool includeToF{true};
     /// @brief List of fit parameters to which the partial derivative of the
     ///        residual shall be calculated
     std::vector<FitParIndex> parsToUse{FitParIndex::x0, FitParIndex::y0,
@@ -69,10 +98,10 @@ class StrawLineFitAuxiliaries {
   /// @brief Constructor to instantiate a new instance
   /// @param cfg: Configuration object to toggle the calculation of the complementary residual components & the full evaluation of the second derivative
   /// @param logger: New logging object for debugging
-  explicit StrawLineFitAuxiliaries(
+  explicit CompSpacePointAuxiliaries(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("StrawLineFitAuxiliaries", Logging::Level::INFO));
+          getDefaultLogger("CompSpacePointAuxiliaries", Logging::Level::INFO));
 
   /// @brief Updates the spatial residual components between the line and the passed
   ///        measurement. The result is cached internally and can be later
@@ -83,6 +112,41 @@ class StrawLineFitAuxiliaries {
   /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
   template <CompositeSpacePoint Point_t>
   void updateSpatialResidual(const Line_t& line, const Point_t& spacePoint);
+  /// @brief Updates all residual components between the line and the passed measurement
+  ///        First the spatial components are calculated and then if the
+  ///        measurement also provides time information, the time residual & its
+  ///        derivatives are evaluated.
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param timeOffet: Value of the t0 fit parameter.
+  /// @param spacePoint: Reference to the space point measurement to which the residual is calculated
+  /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
+  /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
+  template <CompositeSpacePoint Point_t>
+  void updateFullResidual(const Line_t& line, const double timeOffset,
+                          const Point_t& spacePoint, const double driftV = 0.,
+                          const double driftA = 0.);
+
+  /// @brief Helper struct to calculate the overall chi2 from the composite space points
+  struct ChiSqWithDerivatives {
+    /// @brief Chi2 squared term
+    double chi2{0.};
+    /// @brief First derivative of the chi2 w.r.t. the fit parameters
+    Acts::ActsVector<s_nPars> gradient{Acts::ActsVector<s_nPars>::Zero()};
+    /// @brief Second derivative of the chi2 w.r.t. the fit parameters
+    Acts::ActsSquareMatrix<s_nPars> hessian{
+        Acts::ActsSquareMatrix<s_nPars>::Zero()};
+    /// @brief Set the chi2, the gradient and hessian back to zero
+    void reset();
+  };
+  /// @brief Updates the passed chi2 object by adding up the residual contributions
+  ///        from the previous composite space point used to update the
+  ///        Auxiliary class. For the Hessian term only the lower triangle is
+  ///        updated. The other triangle needs to be copied later from the lower
+  ///        one.
+  /// @param chiSqObj: Chi2 & derivatives to be updated
+  /// @param cov: The composite space point's covariance values
+  void updateChiSq(ChiSqWithDerivatives& chiSqObj,
+                   const std::array<double, 3>& cov) const;
 
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
@@ -94,7 +158,6 @@ class StrawLineFitAuxiliaries {
   /// @param param2: Second index of the second partial derivative
   const Vector& hessian(const FitParIndex param1,
                         const FitParIndex param2) const;
-
   /// @brief Returns whether the passed parameter describes a direction angle
   static constexpr bool isDirectionParam(const FitParIndex param) {
     return param == FitParIndex::theta || param == FitParIndex::phi;
@@ -135,8 +198,7 @@ class StrawLineFitAuxiliaries {
   /// @brief Calculates the along-the wire component of the straw
   ///        measurement's residual to the line
   /// @param line: Reference to the line to which the residual is calculated
-  /// @param hitMinSeg: Difference of the line reference point & the straw
-  ///                   position
+  /// @param hitMinSeg: Difference of the straw position & the line reference point
   /// @param wireDir: Direction vector of the straw wire
   void updateAlongTheStraw(const Line_t& line, const Vector& hitMinSeg,
                            const Vector& wireDir);
@@ -154,16 +216,41 @@ class StrawLineFitAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
+  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
+  ///            which is given by the sensor normal
+  /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
+  ///            which is given by the sensor direction
+  /// @param stripPos: Position of the strip measurement
+  /// @param isBending: Flag toggling whether the precision direction is constrained
+  /// @param recordTime: Time of the measurement
+  /// @param timeOffet: Value of the t0 fit parameter.
+  void updateTimeStripRes(const Vector& sensorN, const Vector& sensorD,
+                          const Vector& stripPos, const bool isBending,
+                          const double recordTime, const double timeOffset);
+  /// @brief Calculates the residual derivatives of a straw tube measurement when the drift radius is
+  //         an implicit function of the point of closest approach and the time
+  //         offset parameter
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param hitMinSeg: Difference of the straw position & the line reference point
+  /// @param wireDir: The direction along the wire
+  /// @param driftR: Current drift radius of the straw measurement
+
+  /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
+  /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
+  void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
+                          const Vector& wireDir, const double driftR,
+                          const double driftV, const double driftA);
   /// @brief Resets the residual and all partial derivatives to zero.
   void reset();
+  /// @brief Resets the time residual and the partial derivatives
+  void resetTime();
   Config m_cfg{};
   std::unique_ptr<const Logger> m_logger{};
 
   /// @brief Cached residual vector calculated from the measurement & the parametrized line
   Vector m_residual{Vector::Zero()};
   /// @brief Partial derivatives of the residual w.r.t. the fit parameters parameters
-  static constexpr std::uint8_t s_nPars =
-      static_cast<std::uint8_t>(FitParIndex::nPars);
   std::array<Vector3, s_nPars> m_gradient{
       filledArray<Vector3, s_nPars>(Vector3::Zero())};
   /// @brief  Second partial derivatives of the residual w.r.t. the fit parameters parameters
@@ -175,9 +262,8 @@ class StrawLineFitAuxiliaries {
 
   /// @brief Number of spatial line parameters
   static constexpr std::uint8_t s_nLinePars = Line_t::s_nPars;
-  /// @brief projection of the segment direction onto the wire planes
+  /// @brief projection of the segment direction onto the wire plane
   Vector m_projDir{Vector::Zero()};
-
   /// @brief Partial derivatives of the dir projection w.r.t. line parameters
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
@@ -193,9 +279,16 @@ class StrawLineFitAuxiliaries {
 
   std::array<Vector, sumUpToN(s_nLinePars)> m_hessianProjDir{
       filledArray<Vector, sumUpToN(s_nLinePars)>(Vector::Zero())};
-  /// Transform matrix to treat stereo angles amongst the strips
+
+  /// @brief Gradient vector of the point of closest approach
+  std::array<Vector, s_nLinePars> m_gradCloseApproach{
+      filledArray<Vector, s_nLinePars>(Vector::Zero())};
+  /// @brief Partial derivative of the actual distance of the closest approach
+  std::array<double, s_nLinePars> m_partialApproachDist{
+      filledArray<double, s_nLinePars>(0.)};
+  /// @brief Tansform matrix to treat stereo angles amongst the strips
   ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
 };
 
 }  // namespace Acts::Experimental::detail
-#include "Acts/Seeding/detail/StrawLineFitAuxiliaries.ipp"
+#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.ipp"
