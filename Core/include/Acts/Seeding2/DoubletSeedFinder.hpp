@@ -9,14 +9,186 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
+
+class DoubletsForMiddleSp {
+ public:
+  using Index = std::uint32_t;
+  using IndexRange = std::pair<Index, Index>;
+  using IndexSubset = std::span<const Index>;
+
+  [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
+  [[nodiscard]] Index size() const { return m_spacePoints.size(); }
+
+  void clear() {
+    m_spacePoints.clear();
+    m_cotTheta.clear();
+    m_iDeltaR.clear();
+    m_Er.clear();
+    m_U.clear();
+    m_V.clear();
+    m_x.clear();
+    m_y.clear();
+  }
+
+  void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
+                    float Er, float U, float V, float x, float y) {
+    m_spacePoints.emplace_back(sp);
+    m_cotTheta.emplace_back(cotTheta);
+    m_iDeltaR.emplace_back(iDeltaR);
+    m_Er.emplace_back(Er);
+    m_U.emplace_back(U);
+    m_V.emplace_back(V);
+    m_x.emplace_back(x);
+    m_y.emplace_back(y);
+  }
+
+  const std::vector<SpacePointIndex2>& spacePoints() const {
+    return m_spacePoints;
+  }
+  const std::vector<float>& cotTheta() const { return m_cotTheta; }
+  const std::vector<float>& iDeltaR() const { return m_iDeltaR; }
+  const std::vector<float>& Er() const { return m_Er; }
+  const std::vector<float>& U() const { return m_U; }
+  const std::vector<float>& V() const { return m_V; }
+  const std::vector<float>& x() const { return m_x; }
+  const std::vector<float>& y() const { return m_y; }
+
+  struct IndexAndCotTheta {
+    Index index{};
+    float cotTheta{};
+  };
+
+  using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
+
+  void sortByCotTheta(const IndexRange& range,
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
+    indexAndCotTheta.clear();
+    indexAndCotTheta.reserve(range.second - range.first);
+    for (Index i = range.first; i < range.second; ++i) {
+      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+    }
+    std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
+      return item.cotTheta;
+    });
+  }
+
+  class Proxy {
+   public:
+    Proxy(const DoubletsForMiddleSp* container, Index index)
+        : m_container(container), m_index(index) {}
+
+    const DoubletsForMiddleSp& container() const { return *m_container; }
+    Index index() const { return m_index; }
+
+    SpacePointIndex2 spacePointIndex() const {
+      return m_container->m_spacePoints[m_index];
+    }
+
+    float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+    float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
+    float Er() const { return m_container->m_Er[m_index]; }
+    float U() const { return m_container->m_U[m_index]; }
+    float V() const { return m_container->m_V[m_index]; }
+    float x() const { return m_container->m_x[m_index]; }
+    float y() const { return m_container->m_y[m_index]; }
+
+   private:
+    const DoubletsForMiddleSp* m_container{};
+    Index m_index{};
+  };
+  class Proxy2 : public Proxy {
+   public:
+    Proxy2(const DoubletsForMiddleSp* container,
+           IndexAndCotTheta indexAndCotTheta)
+        : Proxy(container, indexAndCotTheta.index),
+          m_cotTheta(indexAndCotTheta.cotTheta) {}
+
+    float cotTheta() const { return m_cotTheta; }
+
+   private:
+    float m_cotTheta{};
+  };
+
+  Proxy operator[](Index index) const { return Proxy(this, index); }
+  Proxy2 operator[](IndexAndCotTheta indexAndCotTheta) const {
+    return Proxy2(this, indexAndCotTheta);
+  }
+
+  using const_iterator =
+      ContainerIterator<DoubletsForMiddleSp, Proxy, Index, true>;
+
+  const_iterator begin() const { return const_iterator(*this, 0); }
+  const_iterator end() const { return const_iterator(*this, size()); }
+
+  class Range
+      : public ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true> {
+   public:
+    using Base = ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true>;
+
+    using Base::Base;
+  };
+
+  Range range() const noexcept { return Range(*this, {0, size()}); }
+  Range range(const IndexRange& range) const noexcept {
+    return Range(*this, range);
+  }
+
+  class Subset : public ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
+                                        Index, true> {
+   public:
+    using Base =
+        ContainerSubset<Subset, DoubletsForMiddleSp, Proxy, Index, true>;
+
+    using Base::Base;
+  };
+  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
+                                         IndexAndCotTheta, true> {
+   public:
+    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
+                                 IndexAndCotTheta, true>;
+
+    using Base::Base;
+  };
+
+  Subset subset(const IndexSubset& subset) const noexcept {
+    return Subset(*this, subset);
+  }
+  Subset2 subset(const IndexAndCotThetaSubset& subset) const noexcept {
+    return Subset2(*this, subset);
+  }
+
+ private:
+  std::vector<SpacePointIndex2> m_spacePoints;
+
+  // parameters required to calculate a circle with linear equation
+  std::vector<float> m_cotTheta;
+  std::vector<float> m_iDeltaR;
+  std::vector<float> m_Er;
+  std::vector<float> m_U;
+  std::vector<float> m_V;
+  std::vector<float> m_x;
+  std::vector<float> m_y;
+};
+
+struct MiddleSpInfo {
+  /// minus one over radius of middle SP
+  float uIP{};
+  /// square of uIP
+  float uIP2{};
+  /// ratio between middle SP x position and radius
+  float cosPhiM{};
+  /// ratio between middle SP y position and radius
+  float sinPhiM{};
+};
 
 class DoubletSeedFinder {
  public:
@@ -26,9 +198,9 @@ class DoubletSeedFinder {
     Direction candidateDirection = Direction::Forward();
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * Acts::UnitConstants::mm;
+    float deltaRMin = 5 * UnitConstants::mm;
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * Acts::UnitConstants::mm;
+    float deltaRMax = 270 * UnitConstants::mm;
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
@@ -74,49 +246,17 @@ class DoubletSeedFinder {
   struct DerivedConfig : public Config {
     DerivedConfig(const Config& config, float bFieldInZ);
 
-    float bFieldInZ = 0;
+    float bFieldInZ = std::numeric_limits<float>::quiet_NaN();
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
-  };
-
-  struct DoubletsForMiddleSp {
-    std::vector<SpacePointIndex2> spacePoints;
-    /// contains parameters required to calculate a circle with linear equation
-    std::vector<LinCircle> linCircles;
-    std::vector<float> cotTheta;
-
-    [[nodiscard]] bool empty() const { return spacePoints.empty(); }
-
-    [[nodiscard]] std::size_t size() const { return spacePoints.size(); }
-
-    void clear() {
-      spacePoints.clear();
-      linCircles.clear();
-      cotTheta.clear();
-    }
-
-    void emplace_back(SpacePointIndex2 sp, const LinCircle& linCircle) {
-      spacePoints.emplace_back(sp);
-      linCircles.emplace_back(linCircle);
-      cotTheta.emplace_back(linCircle.cotTheta);
-    }
-  };
-
-  struct MiddleSpInfo {
-    /// minus one over radius of middle SP
-    float uIP{};
-    /// square of uIP
-    float uIP2{};
-    /// ratio between middle SP x position and radius
-    float cosPhiM{};
-    /// ratio between middle SP y position and radius
-    float sinPhiM{};
   };
 
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
-  explicit DoubletSeedFinder(const DerivedConfig& config);
+  static std::unique_ptr<DoubletSeedFinder> create(const DerivedConfig& config);
 
-  const DerivedConfig& config() const { return m_impl->config(); }
+  virtual ~DoubletSeedFinder() = default;
+
+  virtual const DerivedConfig& config() const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
@@ -126,13 +266,10 @@ class DoubletSeedFinder {
   /// @param candidateSps Subset of space points to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
-                      const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstSubset& candidateSps,
-                      DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
-                           compatibleDoublets);
-  }
+  virtual void createDoublets(
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer2::ConstSubset& candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
@@ -142,42 +279,10 @@ class DoubletSeedFinder {
   /// @param candidateSps Range of space points to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
-                      const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstRange& candidateSps,
-                      DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
-                           compatibleDoublets);
-  }
-
- private:
-  class ImplBase {
-   public:
-    explicit ImplBase(const DerivedConfig& config) : m_cfg(config) {}
-    virtual ~ImplBase() = default;
-
-    const DerivedConfig& config() const { return m_cfg; }
-
-    virtual void createDoublets(
-        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-        SpacePointContainer2::ConstSubset& candidateSps,
-        DoubletsForMiddleSp& compatibleDoublets) const = 0;
-
-    virtual void createDoublets(
-        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-        SpacePointContainer2::ConstRange& candidateSpRange,
-        DoubletsForMiddleSp& compatibleDoublets) const = 0;
-
-   protected:
-    DerivedConfig m_cfg;
-  };
-  template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR,
-            bool experimentCuts>
-  class Impl;
-
-  static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
-
-  std::shared_ptr<ImplBase> m_impl;
+  virtual void createDoublets(
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer2::ConstRange& candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 
 }  // namespace Acts::Experimental
