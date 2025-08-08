@@ -81,7 +81,7 @@ Vector3 CylinderSurface::referencePosition(const GeometryContext& gctx,
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
+    return localToGlobal(gctx, Vector2{phi * R, 0});
   }
   // give the center as default for all of these binning types
   // AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ,
