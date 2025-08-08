@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <cstdint>
@@ -30,18 +30,37 @@ class DoubletsForMiddleSp {
 
   void clear() {
     m_spacePoints.clear();
-    m_linCircles.clear();
+    m_cotTheta.clear();
+    m_iDeltaR.clear();
+    m_Er.clear();
+    m_U.clear();
+    m_V.clear();
+    m_x.clear();
+    m_y.clear();
   }
 
-  void emplace_back(SpacePointIndex2 sp, const LinCircle& linCircle) {
+  void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
+                    float Er, float U, float V, float x, float y) {
     m_spacePoints.emplace_back(sp);
-    m_linCircles.emplace_back(linCircle);
+    m_cotTheta.emplace_back(cotTheta);
+    m_iDeltaR.emplace_back(iDeltaR);
+    m_Er.emplace_back(Er);
+    m_U.emplace_back(U);
+    m_V.emplace_back(V);
+    m_x.emplace_back(x);
+    m_y.emplace_back(y);
   }
 
   const std::vector<SpacePointIndex2>& spacePoints() const {
     return m_spacePoints;
   }
-  const std::vector<LinCircle>& linCircles() const { return m_linCircles; }
+  const std::vector<float>& cotTheta() const { return m_cotTheta; }
+  const std::vector<float>& iDeltaR() const { return m_iDeltaR; }
+  const std::vector<float>& Er() const { return m_Er; }
+  const std::vector<float>& U() const { return m_U; }
+  const std::vector<float>& V() const { return m_V; }
+  const std::vector<float>& x() const { return m_x; }
+  const std::vector<float>& y() const { return m_y; }
 
   struct IndexAndCotTheta {
     Index index{};
@@ -55,7 +74,7 @@ class DoubletsForMiddleSp {
     indexAndCotTheta.clear();
     indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_linCircles[i].cotTheta);
+      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
     std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
       return item.cotTheta;
@@ -74,9 +93,13 @@ class DoubletsForMiddleSp {
       return m_container->m_spacePoints[m_index];
     }
 
-    const LinCircle& linCircle() const {
-      return m_container->m_linCircles[m_index];
-    }
+    float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+    float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
+    float Er() const { return m_container->m_Er[m_index]; }
+    float U() const { return m_container->m_U[m_index]; }
+    float V() const { return m_container->m_V[m_index]; }
+    float x() const { return m_container->m_x[m_index]; }
+    float y() const { return m_container->m_y[m_index]; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
@@ -133,8 +156,15 @@ class DoubletsForMiddleSp {
 
  private:
   std::vector<SpacePointIndex2> m_spacePoints;
-  /// contains parameters required to calculate a circle with linear equation
-  std::vector<LinCircle> m_linCircles;
+
+  // parameters required to calculate a circle with linear equation
+  std::vector<float> m_cotTheta;
+  std::vector<float> m_iDeltaR;
+  std::vector<float> m_Er;
+  std::vector<float> m_U;
+  std::vector<float> m_V;
+  std::vector<float> m_x;
+  std::vector<float> m_y;
 };
 
 struct MiddleSpInfo {
@@ -156,9 +186,9 @@ class DoubletSeedFinder {
     Direction candidateDirection = Direction::Forward();
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * Acts::UnitConstants::mm;
+    float deltaRMin = 5 * UnitConstants::mm;
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * Acts::UnitConstants::mm;
+    float deltaRMax = 270 * UnitConstants::mm;
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
