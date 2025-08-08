@@ -48,6 +48,10 @@ class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
   /// @return The contained policies
   const std::tuple<Policies...>& policies() const { return m_policies; }
 
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const override;
+
  private:
   /// Internal helper to build the delegate chain
   template <std::size_t... Is>
