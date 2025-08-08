@@ -2,7 +2,7 @@ name: Check PR milestone
 
 on:
   pull_request_target:
-    types: [milestoned, demilestoned, opened, reopened]
+    types: [milestoned, demilestoned, opened, reopened, synchronize]
     branches:
       - main
 
