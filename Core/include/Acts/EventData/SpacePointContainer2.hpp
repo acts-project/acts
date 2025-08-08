@@ -12,12 +12,12 @@
 #include "Acts/EventData/SpacePointColumnProxy2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
-#include "Acts/Utilities/ContainerRange.hpp"
-#include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/IndexRange.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerRange.hpp"
+#include "Acts/Utilities/detail/ContainerSubset.hpp"
 
 #include <cassert>
 #include <limits>
@@ -677,11 +677,11 @@ class SpacePointContainer2 {
   }
 
   template <bool read_only>
-  using Iterator =
-      ContainerIterator<SpacePointContainer2,
-                        std::conditional_t<read_only, ConstSpacePointProxy2,
-                                           MutableSpacePointProxy2>,
-                        Index, read_only>;
+  using Iterator = Acts::detail::ContainerIterator<
+      SpacePointContainer2,
+      std::conditional_t<read_only, ConstSpacePointProxy2,
+                         MutableSpacePointProxy2>,
+      Index, read_only>;
 
   using iterator = Iterator<false>;
   using const_iterator = Iterator<true>;
@@ -693,11 +693,14 @@ class SpacePointContainer2 {
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
   template <bool read_only>
-  class Range : public ContainerRange<Range<read_only>, Range<true>,
-                                      SpacePointContainer2, Index, read_only> {
+  class Range
+      : public Acts::detail::ContainerRange<Range<read_only>, Range<true>,
+                                            SpacePointContainer2, Index,
+                                            read_only> {
    public:
-    using Base = ContainerRange<Range<read_only>, Range<true>,
-                                SpacePointContainer2, Index, read_only>;
+    using Base =
+        Acts::detail::ContainerRange<Range<read_only>, Range<true>,
+                                     SpacePointContainer2, Index, read_only>;
 
     using Base::Base;
 
@@ -723,17 +726,17 @@ class SpacePointContainer2 {
   }
 
   template <bool read_only>
-  class Subset : public ContainerSubset<
+  class Subset : public Acts::detail::ContainerSubset<
                      Subset<read_only>, SpacePointContainer2,
                      std::conditional_t<read_only, ConstSpacePointProxy2,
                                         MutableSpacePointProxy2>,
                      SpacePointIndex2, read_only> {
    public:
-    using Base =
-        ContainerSubset<Subset<read_only>, SpacePointContainer2,
-                        std::conditional_t<read_only, ConstSpacePointProxy2,
-                                           MutableSpacePointProxy2>,
-                        SpacePointIndex2, read_only>;
+    using Base = Acts::detail::ContainerSubset<
+        Subset<read_only>, SpacePointContainer2,
+        std::conditional_t<read_only, ConstSpacePointProxy2,
+                           MutableSpacePointProxy2>,
+        SpacePointIndex2, read_only>;
 
     using Base::Base;
 
