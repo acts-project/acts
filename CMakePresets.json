@@ -140,6 +140,7 @@
                 "ACTS_EXATRKX_ENABLE_ONNX": "ON",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
                 "ACTS_EXATRKX_ENABLE_MODULEMAP": "ON",
+                "ACTS_EXATRKX_ENABLE_NVTX": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
             }
