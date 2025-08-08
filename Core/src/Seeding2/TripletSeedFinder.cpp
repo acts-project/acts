@@ -120,9 +120,6 @@ class Impl final : public TripletSeedFinder {
 
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if (cotThetaAvg2 <= 0) {
-        continue;
-      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -158,7 +155,7 @@ class Impl final : public TripletSeedFinder {
 
       float dU = lt.U - Ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
@@ -188,7 +185,7 @@ class Impl final : public TripletSeedFinder {
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
         // p2scatterSigma is calculated directly from maxPtScattering
         if (B2 == 0 || m_cfg.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * m_cfg.maxPtScattering) {
+                           2 * m_cfg.maxPtScattering) {
           float pTscatterSigma =
               (m_cfg.highland / m_cfg.maxPtScattering) * m_cfg.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
@@ -278,7 +275,7 @@ class Impl final : public TripletSeedFinder {
 
       // protects against division by 0
       float dU = lt.U - Ub;
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
@@ -384,7 +381,7 @@ class Impl final : public TripletSeedFinder {
 
       dU = ut - ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       float A = (vt - vb) / dU;
@@ -412,7 +409,7 @@ class Impl final : public TripletSeedFinder {
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
         // p2scatterSigma is calculated directly from maxPtScattering
         if (B2 == 0 || m_cfg.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * m_cfg.maxPtScattering) {
+                           2 * m_cfg.maxPtScattering) {
           float pTscatterSigma =
               (m_cfg.highland / m_cfg.maxPtScattering) * m_cfg.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
