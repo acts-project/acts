@@ -29,16 +29,17 @@ void createAndFilterTriplets(float rMaxSeedConf,
                              DoubletCollections bottomDoublets,
                              const ConstSpacePointProxy2& spM,
                              DoubletCollections topDoublets) {
-  for (DoubletsForMiddleSp::Proxy lb : bottomDoublets) {
+  for (DoubletsForMiddleSp::Proxy bottomDoublet : bottomDoublets) {
     if (topDoublets.empty()) {
       break;
     }
 
     cache.tripletTopCandidates.clear();
-    tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
+    tripletFinder.createTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets,
                                              cache.tripletTopCandidates);
 
-    auto spB = spacePoints[lb.spacePointIndex()];
+    auto spB = spacePoints[bottomDoublet.spacePointIndex()];
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
@@ -55,9 +56,9 @@ void createAndFilterTriplets(float rMaxSeedConf,
       continue;
     }
 
-    float zOrigin = spM.z() - spM.r() * lb.linCircle().cotTheta;
+    float zOrigin = spM.z() - spM.r() * bottomDoublet.cotTheta();
     filter.filter2SpFixed(state.filter, cache.filter, spacePoints,
-                          lb.spacePointIndex(), spM.index(),
+                          bottomDoublet.spacePointIndex(), spM.index(),
                           cache.tripletTopCandidates.topSpacePoints(),
                           cache.tripletTopCandidates.curvatures(),
                           cache.tripletTopCandidates.impactParameters(),
