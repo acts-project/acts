@@ -22,7 +22,7 @@ template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
           bool experimentCuts>
 class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
  public:
-  explicit Impl(const DerivedConfig& config) : ImplBase(config) {}
+  using ImplBase::ImplBase;
 
   /// Iterates over dublets and tests the compatibility by applying a series of
   /// cuts that can be tested with only two SPs.
@@ -35,11 +35,10 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
   ///   applied based on the middle SP radius.
   /// @param compatibleDoublets Output container for compatible doublets
   template <typename CandidateSps>
-  void createDoubletsImpl(
-      const ConstSpacePointProxy2& middleSp,
-      const DoubletSeedFinder::MiddleSpInfo& middleSpInfo,
-      CandidateSps& candidateSps,
-      DoubletSeedFinder::DoubletsForMiddleSp& compatibleDoublets) const {
+  void createDoubletsImpl(const ConstSpacePointProxy2& middleSp,
+                          const MiddleSpInfo& middleSpInfo,
+                          CandidateSps& candidateSps,
+                          DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
@@ -319,6 +318,11 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
         IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
         ExperimentCuts::value>>(config);
   });
+  if (result == nullptr) {
+    throw std::runtime_error(
+        "DoubletSeedFinder: No implementation found for the given "
+        "configuration");
+  }
   return result;
 }
 
@@ -330,7 +334,7 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
 }
 
-DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
+MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
     const ConstSpacePointProxy2& spM) {
   const float rM = spM.r();
   const float uIP = -1 / rM;
@@ -342,12 +346,6 @@ DoubletSeedFinder::MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 }
 
 DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& config)
-    : m_impl(makeImpl(config)) {
-  if (m_impl == nullptr) {
-    throw std::runtime_error(
-        "DoubletSeedFinder: No implementation found for the given "
-        "configuration");
-  }
-}
+    : m_impl(makeImpl(config)) {}
 
 }  // namespace Acts::Experimental
