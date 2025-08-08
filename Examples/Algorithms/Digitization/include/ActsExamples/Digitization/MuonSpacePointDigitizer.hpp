@@ -46,9 +46,9 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   ~MuonSpacePointDigitizer() final = default;
 
   /// @brief Initialize the digitizer
-  ProcessCode initialize() final;
+  ProcessCode initialize() override;
   /// @brief Execute the digitization
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
   /// @brief  Const access to the config
   const Config& config() const { return m_cfg; }
 
@@ -56,7 +56,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Returns the reference to the configured calibrator
   const MuonSpacePointCalibrator& calibrator() const;
   /// @brief Returns the reference to the passed tracking geometry
-  const Acts::TrackingGeometry trackingGeometry() const;
+  const Acts::TrackingGeometry& trackingGeometry() const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits

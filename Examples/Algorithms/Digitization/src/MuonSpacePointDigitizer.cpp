@@ -79,7 +79,7 @@ const MuonSpacePointCalibrator& MuonSpacePointDigitizer::calibrator() const {
   assert(m_cfg.calibrator != nullptr);
   return *m_cfg.calibrator;
 }
-const Acts::TrackingGeometry MuonSpacePointDigitizer::trackingGeometry() const {
+const Acts::TrackingGeometry& MuonSpacePointDigitizer::trackingGeometry() const {
   assert(m_cfg.trackingGeometry != nullptr);
   return *m_cfg.trackingGeometry;
 }
