@@ -18,7 +18,4 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(
-    ActsFatrasGeant4
-    PUBLIC Acts::Core Acts::Fatras ${Geant4_LIBRARIES}
-)
+target_link_libraries(ActsFatrasGeant4 PUBLIC Acts::Fatras ${Geant4_LIBRARIES})

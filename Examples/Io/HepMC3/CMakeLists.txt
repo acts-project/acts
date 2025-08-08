@@ -18,7 +18,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC Acts::Core Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
+    PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
     PRIVATE Acts::Fatras
 )
 

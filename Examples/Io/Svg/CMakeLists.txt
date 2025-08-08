@@ -5,9 +5,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoSvg
-    PUBLIC
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::PluginActSVG
-        Threads::Threads
+    PUBLIC Acts::ExamplesFramework Acts::PluginActSVG Threads::Threads
 )

@@ -10,9 +10,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesAlignment
-    PUBLIC
-        Acts::Core
-        Acts::Alignment
-        Acts::ExamplesFramework
-        Acts::ExamplesMagneticField
+    PUBLIC Acts::Alignment Acts::ExamplesFramework Acts::ExamplesMagneticField
 )
