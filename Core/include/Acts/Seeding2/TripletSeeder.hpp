@@ -20,21 +20,7 @@
 
 namespace Acts::Experimental {
 
-/// @brief Triplet seeding algorithm front-end
-///
-/// This class implements the triplet seeding algorithm, which is typical
-/// procedure to find track seeds using space points in a cylindrical detector.
-/// It is designed to be fast, flexible, and configurable.
-///
-/// The algorithm works by first finding compatible doublets of space points,
-/// two space points that can be connected by a track coming from the
-/// interaction region, and then forming triplets by combinding these
-/// doublets at a common middle space point. The triplets are then filtered
-/// using a seed filter to produce a set of track seeds.
-///
-/// Note that this algorithm is designed and tuned for cylindrical detectors and
-/// uses R-Z coordinates for the space points.
-class BroadTripletSeedFinder {
+class TripletSeeder {
  public:
   struct Cache {
     DoubletsForMiddleSp bottomDoublets;
@@ -49,9 +35,9 @@ class BroadTripletSeedFinder {
     std::vector<TripletCandidate2> sortedCandidates;
   };
 
-  explicit BroadTripletSeedFinder(std::unique_ptr<const Logger> logger =
-                                      getDefaultLogger("BroadTripletSeedFinder",
-                                                       Logging::Level::INFO));
+  explicit TripletSeeder(std::unique_ptr<const Logger> logger =
+                             getDefaultLogger("TripletSeeder",
+                                              Logging::Level::INFO));
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
