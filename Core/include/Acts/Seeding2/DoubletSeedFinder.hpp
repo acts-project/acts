@@ -105,10 +105,22 @@ class DoubletsForMiddleSp {
     const DoubletsForMiddleSp* m_container{};
     Index m_index{};
   };
+  class Proxy2 : public Proxy {
+   public:
+    Proxy2(const DoubletsForMiddleSp* container,
+           IndexAndCotTheta indexAndCotTheta)
+        : Proxy(container, indexAndCotTheta.index),
+          m_cotTheta(indexAndCotTheta.cotTheta) {}
+
+    float cotTheta() const { return m_cotTheta; }
+
+   private:
+    float m_cotTheta{};
+  };
 
   Proxy operator[](Index index) const { return Proxy(this, index); }
-  Proxy operator[](IndexAndCotTheta indexAndCotTheta) const {
-    return Proxy(this, indexAndCotTheta.index);
+  Proxy2 operator[](IndexAndCotTheta indexAndCotTheta) const {
+    return Proxy2(this, indexAndCotTheta);
   }
 
   using const_iterator =
@@ -138,10 +150,10 @@ class DoubletsForMiddleSp {
 
     using Base::Base;
   };
-  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy,
+  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
                                          IndexAndCotTheta, true> {
    public:
-    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy,
+    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
                                  IndexAndCotTheta, true>;
 
     using Base::Base;
