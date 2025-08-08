@@ -18,11 +18,15 @@
 
 namespace Acts::Experimental {
 
+namespace {
+
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
           bool experimentCuts>
-class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
+class Impl final : public DoubletSeedFinder {
  public:
-  using ImplBase::ImplBase;
+  explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
+
+  const DerivedConfig& config() const override { return m_cfg; }
 
   /// Iterates over dublets and tests the compatibility by applying a series of
   /// cuts that can be tested with only two SPs.
@@ -270,9 +274,14 @@ class DoubletSeedFinder::Impl final : public DoubletSeedFinder::ImplBase {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
   }
+
+ private:
+  DerivedConfig m_cfg;
 };
 
-std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
+}  // namespace
+
+std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     const DerivedConfig& config) {
   using BooleanOptions =
       boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
@@ -287,7 +296,7 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
                               InteractionPointCutOptions, SortedByROptions,
                               ExperimentCutsOptions>;
 
-  std::shared_ptr<DoubletSeedFinder::ImplBase> result;
+  std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
     using OptionType = decltype(option);
 
@@ -314,9 +323,9 @@ std::shared_ptr<DoubletSeedFinder::ImplBase> DoubletSeedFinder::makeImpl(
     }
 
     // create the implementation for the given configuration
-    result = std::make_shared<DoubletSeedFinder::Impl<
-        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
-        ExperimentCuts::value>>(config);
+    result = std::make_unique<
+        Impl<IsBottomCandidate::value, InteractionPointCut::value,
+             SortedByR::value, ExperimentCuts::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
@@ -344,8 +353,5 @@ MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
 
   return {uIP, uIP2, cosPhiM, sinPhiM};
 }
-
-DoubletSeedFinder::DoubletSeedFinder(const DerivedConfig& config)
-    : m_impl(makeImpl(config)) {}
 
 }  // namespace Acts::Experimental

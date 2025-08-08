@@ -231,7 +231,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
   bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
-  Acts::Experimental::DoubletSeedFinder bottomDoubletFinder(
+  auto bottomDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
 
@@ -242,7 +242,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
   topDoubletFinderConfig.deltaRMax =
       std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
-  Acts::Experimental::DoubletSeedFinder topDoubletFinder(
+  auto topDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
@@ -256,7 +256,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
   tripletFinderConfig.useStripInfo = false;
   tripletFinderConfig.sortedByCotTheta = true;
-  Acts::Experimental::TripletSeedFinder tripletFinder(
+  auto tripletFinder = Acts::Experimental::TripletSeedFinder::create(
       Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
                                                            m_cfg.bFieldInZ));
 
@@ -308,7 +308,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.second << "]");
 
     m_seedFinder->createSeedsFromGroups(
-        state, cache, bottomDoubletFinder, topDoubletFinder, tripletFinder,
+        state, cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
         m_seedFilter.value(), coreSpacePoints, bottomSpRanges, *middleSpRange,
         topSpRanges, radiusRangeForMiddle, seeds);
   }

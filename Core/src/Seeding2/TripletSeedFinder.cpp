@@ -68,12 +68,12 @@ static bool stripCoordinateCheck(float tolerance,
   return true;
 }
 
-}  // namespace
-
 template <bool useStripInfo, bool sortedInCotTheta>
-class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
+class Impl final : public TripletSeedFinder {
  public:
-  using ImplBase::ImplBase;
+  explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
+
+  const DerivedConfig& config() const override { return m_cfg; }
 
   template <typename TopDoublets>
   void createPixelTripletTopCandidates(
@@ -479,51 +479,12 @@ class TripletSeedFinder::Impl final : public TripletSeedFinder::ImplBase {
                                       topDoublets, tripletTopCandidates);
     }
   }
+
+ private:
+  DerivedConfig m_cfg;
 };
 
-std::shared_ptr<TripletSeedFinder::ImplBase> TripletSeedFinder::makeImpl(
-    const DerivedConfig& config) {
-  using BooleanOptions =
-      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
-
-  using UseStripInfoOptions = BooleanOptions;
-  using SortedInCotThetaOptions = BooleanOptions;
-
-  using TripletOptions =
-      boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
-                              SortedInCotThetaOptions>;
-
-  std::shared_ptr<TripletSeedFinder::ImplBase> result;
-  boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
-    using OptionType = decltype(option);
-
-    using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
-    using SortedInCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
-
-    if (config.useStripInfo != UseStripInfo::value ||
-        config.sortedByCotTheta != SortedInCotTheta::value) {
-      return;  // skip if the configuration does not match
-    }
-
-    // check if we already have an implementation for this configuration
-    if (result != nullptr) {
-      throw std::runtime_error(
-          "TripletSeedFinder: Multiple implementations found for one "
-          "configuration");
-    }
-
-    // create the implementation for the given configuration
-    result = std::make_shared<
-        TripletSeedFinder::Impl<UseStripInfo::value, SortedInCotTheta::value>>(
-        config);
-  });
-  if (result == nullptr) {
-    throw std::runtime_error(
-        "TripletSeedFinder: No implementation found for the given "
-        "configuration");
-  }
-  return result;
-}
+}  // namespace
 
 TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
@@ -553,7 +514,48 @@ TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   multipleScattering2 = maxScatteringAngle2 * square(sigmaScattering);
 }
 
-TripletSeedFinder::TripletSeedFinder(const DerivedConfig& config)
-    : m_impl(makeImpl(config)) {}
+std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
+    const DerivedConfig& config) {
+  using BooleanOptions =
+      boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
+
+  using UseStripInfoOptions = BooleanOptions;
+  using SortedInCotThetaOptions = BooleanOptions;
+
+  using TripletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
+                              SortedInCotThetaOptions>;
+
+  std::unique_ptr<TripletSeedFinder> result;
+  boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
+    using OptionType = decltype(option);
+
+    using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
+    using SortedInCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
+
+    if (config.useStripInfo != UseStripInfo::value ||
+        config.sortedByCotTheta != SortedInCotTheta::value) {
+      return;  // skip if the configuration does not match
+    }
+
+    // check if we already have an implementation for this configuration
+    if (result != nullptr) {
+      throw std::runtime_error(
+          "TripletSeedFinder: Multiple implementations found for one "
+          "configuration");
+    }
+
+    // create the implementation for the given configuration
+    result =
+        std::make_unique<Impl<UseStripInfo::value, SortedInCotTheta::value>>(
+            config);
+  });
+  if (result == nullptr) {
+    throw std::runtime_error(
+        "TripletSeedFinder: No implementation found for the given "
+        "configuration");
+  }
+  return result;
+}
 
 }  // namespace Acts::Experimental

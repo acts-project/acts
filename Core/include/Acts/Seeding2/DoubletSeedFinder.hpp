@@ -210,9 +210,11 @@ class DoubletSeedFinder {
 
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
-  explicit DoubletSeedFinder(const DerivedConfig& config);
+  static std::unique_ptr<DoubletSeedFinder> create(const DerivedConfig& config);
 
-  const DerivedConfig& config() const { return m_impl->config(); }
+  virtual ~DoubletSeedFinder() = default;
+
+  virtual const DerivedConfig& config() const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
@@ -222,13 +224,10 @@ class DoubletSeedFinder {
   /// @param candidateSps Subset of space points to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
-                      const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstSubset& candidateSps,
-                      DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
-                           compatibleDoublets);
-  }
+  virtual void createDoublets(
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer2::ConstSubset& candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
@@ -238,42 +237,10 @@ class DoubletSeedFinder {
   /// @param candidateSps Range of space points to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
-  void createDoublets(const ConstSpacePointProxy2& middleSp,
-                      const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer2::ConstRange& candidateSps,
-                      DoubletsForMiddleSp& compatibleDoublets) const {
-    m_impl->createDoublets(middleSp, middleSpInfo, candidateSps,
-                           compatibleDoublets);
-  }
-
- private:
-  class ImplBase {
-   public:
-    explicit ImplBase(const DerivedConfig& config) : m_cfg(config) {}
-    virtual ~ImplBase() = default;
-
-    const DerivedConfig& config() const { return m_cfg; }
-
-    virtual void createDoublets(
-        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-        SpacePointContainer2::ConstSubset& candidateSps,
-        DoubletsForMiddleSp& compatibleDoublets) const = 0;
-
-    virtual void createDoublets(
-        const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
-        SpacePointContainer2::ConstRange& candidateSpRange,
-        DoubletsForMiddleSp& compatibleDoublets) const = 0;
-
-   protected:
-    DerivedConfig m_cfg;
-  };
-  template <bool isBottomCandidate, bool interactionPointCut, bool sortedInR,
-            bool experimentCuts>
-  class Impl;
-
-  static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
-
-  std::shared_ptr<ImplBase> m_impl;
+  virtual void createDoublets(
+      const ConstSpacePointProxy2& middleSp, const MiddleSpInfo& middleSpInfo,
+      SpacePointContainer2::ConstRange& candidateSps,
+      DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 
 }  // namespace Acts::Experimental

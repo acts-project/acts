@@ -134,9 +134,11 @@ class TripletSeedFinder {
     float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
   };
 
-  explicit TripletSeedFinder(const DerivedConfig& config);
+  static std::unique_ptr<TripletSeedFinder> create(const DerivedConfig& config);
 
-  const DerivedConfig& config() const { return m_impl->config(); }
+  virtual ~TripletSeedFinder() = default;
+
+  virtual const DerivedConfig& config() const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
@@ -145,14 +147,11 @@ class TripletSeedFinder {
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  void createTripletTopCandidates(
+  virtual void createTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Range& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const {
-    m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                       topDoublets, tripletTopCandidates);
-  }
+      TripletTopCandidates& tripletTopCandidates) const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
@@ -161,14 +160,11 @@ class TripletSeedFinder {
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  void createTripletTopCandidates(
+  virtual void createTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const {
-    m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                       topDoublets, tripletTopCandidates);
-  }
+      TripletTopCandidates& tripletTopCandidates) const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
@@ -177,53 +173,11 @@ class TripletSeedFinder {
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  void createTripletTopCandidates(
+  virtual void createTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
       DoubletsForMiddleSp::Subset2& topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const {
-    m_impl->createTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                       topDoublets, tripletTopCandidates);
-  }
-
- private:
-  class ImplBase {
-   public:
-    explicit ImplBase(const DerivedConfig& config) : m_cfg(config) {}
-    virtual ~ImplBase() = default;
-
-    const DerivedConfig& config() const { return m_cfg; }
-
-    virtual void createTripletTopCandidates(
-        const SpacePointContainer2& spacePoints,
-        const ConstSpacePointProxy2& spM,
-        const DoubletsForMiddleSp::Proxy& bottomDoublet,
-        DoubletsForMiddleSp::Range& topDoublets,
-        TripletTopCandidates& tripletTopCandidates) const = 0;
-
-    virtual void createTripletTopCandidates(
-        const SpacePointContainer2& spacePoints,
-        const ConstSpacePointProxy2& spM,
-        const DoubletsForMiddleSp::Proxy& bottomDoublet,
-        DoubletsForMiddleSp::Subset& topDoublets,
-        TripletTopCandidates& tripletTopCandidates) const = 0;
-
-    virtual void createTripletTopCandidates(
-        const SpacePointContainer2& spacePoints,
-        const ConstSpacePointProxy2& spM,
-        const DoubletsForMiddleSp::Proxy& bottomDoublet,
-        DoubletsForMiddleSp::Subset2& topDoublets,
-        TripletTopCandidates& tripletTopCandidates) const = 0;
-
-   protected:
-    DerivedConfig m_cfg;
-  };
-  template <bool useStripInfo, bool sortedInCotTheta>
-  class Impl;
-
-  static std::shared_ptr<ImplBase> makeImpl(const DerivedConfig& config);
-
-  std::shared_ptr<ImplBase> m_impl;
+      TripletTopCandidates& tripletTopCandidates) const = 0;
 };
 
 }  // namespace Acts::Experimental
