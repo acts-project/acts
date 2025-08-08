@@ -103,7 +103,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   };
 
   struct State {
-    float rMaxSeedConf;
+    float rMaxSeedConf{};
 
     /// Map to store the best seed quality for each space point
     /// This is used to avoid creating seeds with lower quality than the best
@@ -155,10 +155,10 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
       SeedContainer2& outputCollection) const override;
 
  private:
-  const Config* m_cfg;
-  State* m_state;
-  Cache* m_cache;
-  const Logger* m_logger;
+  const Config* m_cfg{};
+  State* m_state{};
+  Cache* m_cache{};
+  const Logger* m_logger{};
 };
 
 }  // namespace Acts::Experimental

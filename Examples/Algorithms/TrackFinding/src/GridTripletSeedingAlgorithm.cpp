@@ -14,7 +14,6 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -180,8 +179,8 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
 
   m_filterLogger = logger().cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::Experimental::BroadTripletSeedFinder(
-      logger().cloneWithSuffix("Finder"));
+  m_seedFinder =
+      Acts::Experimental::TripletSeeder(logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode GridTripletSeedingAlgorithm::execute(
@@ -320,7 +319,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFilter::Cache filterCache;
   Acts::Experimental::BroadTripletSeedFilter seedFilter(
       m_filterConfig, filterState, filterCache, *m_filterLogger);
-  static thread_local Acts::Experimental::BroadTripletSeedFinder::Cache cache;
+  static thread_local Acts::Experimental::TripletSeeder::Cache cache;
 
   std::vector<Acts::Experimental::SpacePointContainer2::ConstRange>
       bottomSpRanges;

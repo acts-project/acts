@@ -6,10 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
+#include "Acts/Seeding2/TripletSeeder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
@@ -20,7 +19,7 @@ namespace Acts::Experimental {
 namespace {
 
 template <typename DoubletCollections>
-void createAndFilterTriplets(BroadTripletSeedFinder::Cache& cache,
+void createAndFilterTriplets(TripletSeeder::Cache& cache,
                              const TripletSeedFinder& tripletFinder,
                              const ITripletSeedFilter& filter,
                              const SpacePointContainer2& spacePoints,
@@ -46,7 +45,7 @@ void createAndFilterTriplets(BroadTripletSeedFinder::Cache& cache,
 
 template <typename SpacePointCollections>
 void createSeedsFromGroupsImpl(
-    const Logger& logger, BroadTripletSeedFinder::Cache& cache,
+    const Logger& logger, TripletSeeder::Cache& cache,
     const DoubletSeedFinder& bottomFinder, const DoubletSeedFinder& topFinder,
     const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
     const SpacePointContainer2& spacePoints,
@@ -119,16 +118,14 @@ void createSeedsFromGroupsImpl(
 
 }  // namespace
 
-BroadTripletSeedFinder::BroadTripletSeedFinder(
-    std::unique_ptr<const Logger> logger_)
+TripletSeeder::TripletSeeder(std::unique_ptr<const Logger> logger_)
     : m_logger(std::move(logger_)) {
   if (m_logger == nullptr) {
-    throw std::invalid_argument(
-        "BroadTripletSeedFinder: logger cannot be null");
+    throw std::invalid_argument("TripletSeeder: logger cannot be null");
   }
 }
 
-void BroadTripletSeedFinder::createSeedsFromGroup(
+void TripletSeeder::createSeedsFromGroup(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
     const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
@@ -150,7 +147,7 @@ void BroadTripletSeedFinder::createSeedsFromGroup(
                             middleSp, topSpGroups, outputSeeds);
 }
 
-void BroadTripletSeedFinder::createSeedsFromGroups(
+void TripletSeeder::createSeedsFromGroups(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
     const ITripletSeedFilter& filter, const SpacePointContainer2& spacePoints,
