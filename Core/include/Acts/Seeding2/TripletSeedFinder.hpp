@@ -100,8 +100,6 @@ class TripletSeedFinder {
     /// lengths in the Lynch & Dahl correction to the Highland equation default
     /// is 5%
     float radLengthPerSeed = 0.05;
-    /// Maximum transverse momentum for scattering calculation
-    float maxPtScattering = 10 * UnitConstants::GeV;
     /// Maximum value of impact parameter estimation of the seed candidates
     float impactMax = 20 * UnitConstants::mm;
     /// Parameter which can loosen the tolerance of the track seed to form a
