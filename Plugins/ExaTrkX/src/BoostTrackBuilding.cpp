@@ -56,7 +56,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
           : static_cast<RTI>(tensors.edgeIndex.clone(
                 {Acts::Device::Cpu(), execContext.stream}));
 
-  assert(tensors.scoreTensor.has_value());
+  assert(tensors.edgeScores.has_value());
   using RTF = const Tensor<float>&;
   const auto& scoreTensor =
       tensors.edgeScores->device().isCpu()
