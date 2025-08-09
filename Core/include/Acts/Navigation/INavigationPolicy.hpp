@@ -10,7 +10,6 @@
 
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Utilities/DelegateChainBuilder.hpp"
 
 #include <type_traits>
 
@@ -67,8 +66,7 @@ class INavigationPolicy {
   void connectDefault(NavigationDelegate& delegate) const {
     // This cannot be a concept because we use it in CRTP below
     const auto* self = static_cast<const T*>(this);
-    DelegateChainBuilder{delegate}.add<&T::initializeCandidates>(self).store(
-        delegate);
+    delegate.template connect<&T::initializeCandidates>(self);
   }
 };
 
