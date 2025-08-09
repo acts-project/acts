@@ -118,6 +118,6 @@ using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseExtension>;
 
 By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::EigenStepperDenseExtension`.
 
-### MultiEigenStepperLoop
+### MultiStepperLoop
 
-The {class}`Acts::MultiEigenStepperLoop` is an extension of the {class}`Acts::EigenStepper` and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {struct}`Acts::GaussianSumFitter`.
+The {class}`Acts::MultiStepperLoop` can extend any single-component stepper and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {struct}`Acts::GaussianSumFitter`.
