@@ -92,7 +92,8 @@ void addGnnTrackFinding(Context &ctx) {
 
 #ifdef ACTS_GNN_WITH_CUDA
   ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, mex,
-                                useOneBlockImplementation, doJunctionRemoval);
+                                useOneBlockImplementation, doJunctionRemoval,
+                                minCandidateSize);
 #endif
 
 #ifdef ACTS_GNN_ONNX_BACKEND
