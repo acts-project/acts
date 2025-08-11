@@ -51,7 +51,7 @@ struct ActorList {
   /// Default move constructor
   ///
   /// @param actors The source action list
-  ActorList(ActorList<actors_t...>&& actors) = default;
+  ActorList(ActorList<actors_t...>&& actors) noexcept = default;
 
   /// Default move assignment operator
   ///
@@ -62,7 +62,8 @@ struct ActorList {
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) = default;
+  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) noexcept =
+      default;
 
   /// Constructor from tuple
   ///
