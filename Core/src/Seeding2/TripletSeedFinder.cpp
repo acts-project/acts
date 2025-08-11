@@ -77,7 +77,7 @@ class Impl final : public TripletSeedFinder {
 
   template <typename TopDoublets>
   void createPixelTripletTopCandidates(
-      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.r();
@@ -113,8 +113,7 @@ class Impl final : public TripletSeedFinder {
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
-      const ConstSpacePointProxy2 spT =
-          spacePoints[topDoublet.spacePointIndex()];
+      SpacePointIndex2 spT = topDoublet.spacePointIndex();
       const LinCircle& lt = topDoublet.linCircle();
       float cotThetaT = lt.cotTheta;
 
@@ -216,7 +215,7 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), Im);
+      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), Im);
     }  // loop on tops
 
     if constexpr (sortedInCotTheta) {
@@ -447,8 +446,8 @@ class Impl final : public TripletSeedFinder {
       createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                       topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                      tripletTopCandidates);
     }
   }
 
@@ -461,8 +460,8 @@ class Impl final : public TripletSeedFinder {
       createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                       topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                      tripletTopCandidates);
     }
   }
 
@@ -475,8 +474,8 @@ class Impl final : public TripletSeedFinder {
       createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                       topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                      tripletTopCandidates);
     }
   }
 
