@@ -247,6 +247,17 @@ SurfaceMultiIntersection CylinderSurface::intersect(
     if (boundaryTolerance.isInfinite()) {
       return status;
     }
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
+      // Project out the current Z value via local z axis
+      // Built-in local to global for speed reasons
+      const auto& tMatrix = gctxTransform.matrix();
+      // Create the reference vector in local
+      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : IntersectionStatus::unreachable;
+    }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status
                : IntersectionStatus::unreachable;
