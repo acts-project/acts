@@ -86,12 +86,13 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// other "high-quality" seed has been found for that inner-middle doublet
     /// Maximum number of normal seeds (not classified as "high-quality" seeds)
     /// in seed confirmation
-    std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
+    std::uint32_t maxSeedsPerSpMConf =
+        std::numeric_limits<std::uint32_t>::max();
     /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
     /// in seed confirmation. If the limit is reached we check if there is a
     /// normal quality seed to be replaced
-    std::size_t maxQualitySeedsPerSpMConf =
-        std::numeric_limits<std::size_t>::max();
+    std::uint32_t maxQualitySeedsPerSpMConf =
+        std::numeric_limits<std::uint32_t>::max();
 
     // Other parameters
 

@@ -25,10 +25,9 @@ namespace {
 
 /// Check the compatibility of strip space point coordinates in xyz assuming
 /// the Bottom-Middle direction with the strip measurement details
-static bool stripCoordinateCheck(float tolerance,
-                                 const ConstSpacePointProxy2& sp,
-                                 const Eigen::Vector3f& spacePointPosition,
-                                 Eigen::Vector3f& outputCoordinates) {
+bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
+                          const Eigen::Vector3f& spacePointPosition,
+                          Eigen::Vector3f& outputCoordinates) {
   const Eigen::Vector3f& topStripVector = sp.topStripVector();
   const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
   const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
