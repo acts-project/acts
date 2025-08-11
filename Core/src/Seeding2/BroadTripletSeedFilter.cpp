@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/ITripletSeedCuts.hpp"
+#include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
@@ -53,12 +54,10 @@ void setBestSeedQuality(
 BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                State& state, Cache& cache,
                                                const Logger& logger)
-    : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {}
-
-void BroadTripletSeedFilter::initialize(
-    CandidatesForMiddleSp2& candidatesCollector) const {
-  candidatesCollector.setMaxElements(config().maxSeedsPerSpMConf,
-                                     config().maxQualitySeedsPerSpMConf);
+    : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {
+  state.candidatesCollector.setMaxElements(
+      this->config().maxSeedsPerSpMConf,
+      this->config().maxQualitySeedsPerSpMConf);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
@@ -94,13 +93,9 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
 }
 
 void BroadTripletSeedFilter::filterTripletTopCandidates(
-    const SpacePointContainer2& spacePoints,
+    const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
     const DoubletsForMiddleSp::Proxy& bottomLink,
-    const ConstSpacePointProxy2& spM,
-    std::span<const SpacePointIndex2> topSpVec,
-    std::span<const float> invHelixDiameterVec,
-    std::span<const float> impactParametersVec,
-    CandidatesForMiddleSp2& candidatesCollector) const {
+    const TripletTopCandidates& tripletTopCandidates) const {
   auto spB = spacePoints[bottomLink.spacePointIndex()];
   auto bottomSp = spB.index();
   auto middleSp = spM.index();
@@ -113,11 +108,11 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     minCompatibleTopSPs = 1;
   }
   if (config().seedConfirmation &&
-      candidatesCollector.nHighQualityCandidates() > 0) {
+      state().candidatesCollector.nHighQualityCandidates() > 0) {
     minCompatibleTopSPs++;
   }
   // continue if number of top SPs is smaller than minimum required for filter
-  if (invHelixDiameterVec.size() < minCompatibleTopSPs) {
+  if (tripletTopCandidates.size() < minCompatibleTopSPs) {
     return;
   }
   float zOrigin = spM.z() - spM.r() * bottomLink.linCircle().cotTheta;
@@ -144,11 +139,11 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   float weightMax = std::numeric_limits<float>::lowest();
 
   // initialize original index locations
-  cache().topSpIndexVec.resize(topSpVec.size());
+  cache().topSpIndexVec.resize(tripletTopCandidates.size());
   std::iota(cache().topSpIndexVec.begin(), cache().topSpIndexVec.end(), 0);
   std::ranges::sort(cache().topSpIndexVec, {},
-                    [&invHelixDiameterVec](const std::size_t t) {
-                      return invHelixDiameterVec[t];
+                    [&tripletTopCandidates](const std::size_t t) {
+                      return tripletTopCandidates.curvatures()[t];
                     });
 
   // vector containing the radius of all compatible seeds
@@ -164,16 +159,16 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSpIndex : cache().topSpIndexVec) {
-    auto topSp = topSpVec[topSpIndex];
+    auto topSp = tripletTopCandidates.topSpacePoints()[topSpIndex];
     auto spT = spacePoints[topSp];
 
     cache().compatibleSeedR.clear();
 
-    float invHelixDiameter = invHelixDiameterVec[topSpIndex];
+    float invHelixDiameter = tripletTopCandidates.curvatures()[topSpIndex];
     float lowerLimitCurv = invHelixDiameter - config().deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + config().deltaInvHelixDiameter;
     float currentTopR = getTopR(spT);
-    float impact = impactParametersVec[topSpIndex];
+    float impact = tripletTopCandidates.impactParameters()[topSpIndex];
 
     float weight = -impact * config().impactWeightFactor;
 
@@ -186,17 +181,20 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       if (compatibletopSpIndex == topSpIndex) {
         continue;
       }
-      auto otherSpT = spacePoints[topSpVec[compatibletopSpIndex]];
+      auto otherSpT = spacePoints[tripletTopCandidates
+                                      .topSpacePoints()[compatibletopSpIndex]];
 
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (invHelixDiameterVec[compatibletopSpIndex] < lowerLimitCurv) {
+      if (tripletTopCandidates.curvatures()[compatibletopSpIndex] <
+          lowerLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         beginCompTopIndex = variableCompTopIndex + 1;
         continue;
       }
-      if (invHelixDiameterVec[compatibletopSpIndex] > upperLimitCurv) {
+      if (tripletTopCandidates.curvatures()[compatibletopSpIndex] >
+          upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;
       }
@@ -247,7 +245,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       // forward or central region) defined by SeedConfirmationRange
       int deltaSeedConf = cache().compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (candidatesCollector.nHighQualityCandidates() != 0 &&
+          (state().candidatesCollector.nHighQualityCandidates() != 0 &&
            deltaSeedConf == 0)) {
         continue;
       }
@@ -280,8 +278,8 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
         // Internally, "push" will also check the max number of quality seeds
         // for a middle sp.
         // If this is reached, we remove the seed with the lowest weight.
-        candidatesCollector.push(bottomSp, middleSp, topSp, weight, zOrigin,
-                                 true);
+        state().candidatesCollector.push(bottomSp, middleSp, topSp, weight,
+                                         zOrigin, true);
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
@@ -293,32 +291,39 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       // if we have not yet reached our max number of seeds we add the new seed
       // to outCont
 
-      candidatesCollector.push(bottomSp, middleSp, topSp, weight, zOrigin,
-                               false);
+      state().candidatesCollector.push(bottomSp, middleSp, topSp, weight,
+                                       zOrigin, false);
     }
   }  // loop on tops
 
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (config().seedConfirmation && maxWeightSeed &&
-      candidatesCollector.nHighQualityCandidates() == 0) {
+      state().candidatesCollector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
-    candidatesCollector.push(bottomSp, middleSp, maxWeightTopSp, weightMax,
-                             zOrigin, false);
+    state().candidatesCollector.push(bottomSp, middleSp, maxWeightTopSp,
+                                     weightMax, zOrigin, false);
   }
 }
 
 void BroadTripletSeedFilter::filterTripletsMiddleFixed(
     const SpacePointContainer2& spacePoints,
-    std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
     SeedContainer2& outputCollection) const {
+  const std::size_t numQualitySeeds =
+      state().candidatesCollector.nHighQualityCandidates();
+
+  cache().sortedCandidates.clear();
+  state().candidatesCollector.toSortedCandidates(spacePoints,
+                                                 cache().sortedCandidates);
+  std::span<TripletCandidate2> sortedCandidates = cache().sortedCandidates;
+
   if (config().experimentCuts != nullptr) {
-    config().experimentCuts->cutPerMiddleSp(candidates);
+    config().experimentCuts->cutPerMiddleSp(sortedCandidates);
   }
 
-  std::size_t maxSeeds = candidates.size();
+  std::size_t maxSeeds = sortedCandidates.size();
 
   if (maxSeeds > config().maxSeedsPerSpM) {
     maxSeeds = config().maxSeedsPerSpM + 1;
@@ -329,7 +334,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
   // weight seeds
   std::size_t numTotalSeeds = 0;
   for (const auto& [bottom, middle, top, bestSeedQuality, zOrigin,
-                    qualitySeed] : candidates) {
+                    qualitySeed] : sortedCandidates) {
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;

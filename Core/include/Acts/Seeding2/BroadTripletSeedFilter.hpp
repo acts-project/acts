@@ -103,6 +103,8 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   };
 
   struct State {
+    CandidatesForMiddleSp2 candidatesCollector;
+
     float rMaxSeedConf{};
 
     /// Map to store the best seed quality for each space point
@@ -118,6 +120,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   struct Cache {
     std::vector<std::uint32_t> topSpIndexVec;
     std::vector<float> compatibleSeedR;
+    std::vector<TripletCandidate2> sortedCandidates;
   };
 
   /// @param config Configuration parameters for the seed filter
@@ -134,24 +137,17 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   Cache& cache() const { return *m_cache; }
   const Logger& logger() const { return *m_logger; }
 
-  void initialize(CandidatesForMiddleSp2& candidatesCollector) const override;
-
   bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp& topDoublets) const override;
 
   void filterTripletTopCandidates(
-      const SpacePointContainer2& spacePoints,
+      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomLink,
-      const ConstSpacePointProxy2& spM,
-      std::span<const SpacePointIndex2> topSpVec,
-      std::span<const float> invHelixDiameterVec,
-      std::span<const float> impactParametersVec,
-      CandidatesForMiddleSp2& candidatesCollector) const override;
+      const TripletTopCandidates& tripletTopCandidates) const override;
 
   void filterTripletsMiddleFixed(
       const SpacePointContainer2& spacePoints,
-      std::span<TripletCandidate2> candidates, std::size_t numQualitySeeds,
       SeedContainer2& outputCollection) const override;
 
  private:

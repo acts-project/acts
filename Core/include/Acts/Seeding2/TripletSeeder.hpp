@@ -13,7 +13,6 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/ITripletSeedFilter.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
-#include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
@@ -30,9 +29,6 @@ class TripletSeeder {
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
 
     TripletTopCandidates tripletTopCandidates;
-
-    CandidatesForMiddleSp2 candidatesCollector;
-    std::vector<TripletCandidate2> sortedCandidates;
   };
 
   explicit TripletSeeder(std::unique_ptr<const Logger> logger =

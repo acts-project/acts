@@ -35,11 +35,8 @@ void createAndFilterTriplets(TripletSeeder::Cache& cache,
     tripletFinder.createTripletTopCandidates(spacePoints, spM, lb, topDoublets,
                                              cache.tripletTopCandidates);
 
-    filter.filterTripletTopCandidates(
-        spacePoints, lb, spM, cache.tripletTopCandidates.topSpacePoints(),
-        cache.tripletTopCandidates.curvatures(),
-        cache.tripletTopCandidates.impactParameters(),
-        cache.candidatesCollector);
+    filter.filterTripletTopCandidates(spacePoints, spM, lb,
+                                      cache.tripletTopCandidates);
   }
 }
 
@@ -106,14 +103,7 @@ void createSeedsFromGroupsImpl(
                             cache.topDoublets.range());
   }
 
-  // retrieve all candidates
-  // this collection is already sorted, higher weights first
-  const std::size_t numQualitySeeds =
-      cache.candidatesCollector.nHighQualityCandidates();
-  cache.candidatesCollector.toSortedCandidates(spacePoints,
-                                               cache.sortedCandidates);
-  filter.filterTripletsMiddleFixed(spacePoints, cache.sortedCandidates,
-                                   numQualitySeeds, outputSeeds);
+  filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);
 }
 
 }  // namespace
@@ -136,8 +126,6 @@ void TripletSeeder::createSeedsFromGroup(
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
-
-  filter.initialize(cache.candidatesCollector);
 
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
@@ -165,8 +153,6 @@ void TripletSeeder::createSeedsFromGroups(
   if (middleSpGroup.empty()) {
     return;
   }
-
-  filter.initialize(cache.candidatesCollector);
 
   if (spacePointsSortedByRadius) {
     // Initialize initial offsets for bottom and top space points with binary
