@@ -192,15 +192,15 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
 
       SimParticle simParticle{particleId, pdg, charge, mass};
-      simParticle.initial().setPosition4(vertex.position4);
+      simParticle.initialState().setPosition4(vertex.position4);
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
                              genMomentum.pz() * 1_GeV};
       double p = momentum.norm();
 
-      simParticle.initial().setDirection(momentum.normalized());
-      simParticle.initial().setAbsoluteMomentum(p);
+      simParticle.initialState().setDirection(momentum.normalized());
+      simParticle.initialState().setAbsoluteMomentum(p);
 
       particles.push_back(simParticle);
       vertex.outgoing.insert(particleId);
