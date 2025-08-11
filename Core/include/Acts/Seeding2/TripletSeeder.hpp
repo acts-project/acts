@@ -41,7 +41,6 @@ class TripletSeeder {
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
-  /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
   /// @param bottomFinder Finder for bottom doublets
   /// @param topFinder Finder for top doublets
@@ -64,7 +63,6 @@ class TripletSeeder {
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
-  /// @param state State of the seed finder
   /// @param cache Cache object to store intermediate results
   /// @param bottomFinder Finder for bottom doublets
   /// @param topFinder Finder for top doublets

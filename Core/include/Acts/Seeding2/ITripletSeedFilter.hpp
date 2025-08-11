@@ -31,7 +31,7 @@ class ITripletSeedFilter {
   ///
   /// @param spacePoints Container with all space points
   /// @param bottomLink Link to the bottom doublet space point
-  /// @param middleSp Fixed middle space point
+  /// @param spM Fixed middle space point
   /// @param topSpVec Vector containing all space points that may be compatible
   ///                 with both bottom and middle space point
   /// @param invHelixDiameterVec Vector containing 1/(2*r) values where r is the
