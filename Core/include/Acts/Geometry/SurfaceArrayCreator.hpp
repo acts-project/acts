@@ -363,15 +363,17 @@ class SurfaceArrayCreator {
   /// @tparam bdtB AxisBoundaryType of axis B
   /// @tparam F1 type-deducted value of g2l lambda
   /// @tparam F2 type-deducted value of l2g lambda
-  /// @param globalToLocal transform callable
-  /// @param localToGlobal transform callable
+  /// @param type The surface type, this determines the local to global calculation
+  /// @param transform The transform to apply to the surface`
+  /// @param R the radius (interpretation depends on @p type)
+  /// @param Z the z position (interpretation depends on @p type)
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB, typename F1,
-            typename F2>
+  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(F1 globalToLocal, F2 localToGlobal, ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) {
+  makeSurfaceGridLookup2D(Surface::SurfaceType type,
+                          const Transform3& transform, double R, double Z,
+                          ProtoAxis pAxisA, ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
@@ -384,7 +386,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+            type, transform, R, Z, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
@@ -393,7 +395,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+            type, transform, R, Z, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
@@ -402,7 +404,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+            type, transform, R, Z, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
@@ -411,7 +413,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+            type, transform, R, Z, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
     // clang-format on
 

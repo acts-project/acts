@@ -16,13 +16,13 @@
 #include "Acts/Utilities/ContainerRange.hpp"
 #include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
-#include "Acts/Utilities/IndexRange.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -264,7 +264,8 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the copy from index column.
   /// @return A mutable proxy to the copy from index column.
-  MutableSpacePointColumnProxy<std::size_t> copyFromIndexColumn() noexcept {
+  MutableSpacePointColumnProxy<SpacePointIndex2>
+  copyFromIndexColumn() noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
@@ -354,7 +355,8 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the copy from index column.
   /// @return A const proxy to the copy from index column.
-  ConstSpacePointColumnProxy<std::size_t> copyFromIndexColumn() const noexcept {
+  ConstSpacePointColumnProxy<SpacePointIndex2> copyFromIndexColumn()
+      const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
@@ -519,7 +521,7 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the copy from index of the space point.
-  std::size_t &copyFromIndex(Index index) noexcept {
+  SpacePointIndex2 &copyFromIndex(Index index) noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
@@ -655,11 +657,23 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A const reference to the copy from index of the space point.
-  std::size_t copyFromIndex(Index index) const noexcept {
+  SpacePointIndex2 copyFromIndex(Index index) const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
     return m_copyFromIndexColumn->proxy(*this)[index];
+  }
+
+  /// Resolves the index to the actual index in the container.
+  /// If the copyFromIndex column is set, it will return the index from that
+  /// column. Otherwise, it will return the index itself.
+  /// @param index The index to resolve.
+  /// @return The resolved index.
+  SpacePointIndex2 resolvedIndex(Index index) const noexcept {
+    if (m_copyFromIndexColumn.has_value()) {
+      return this->copyFromIndex(index);
+    }
+    return index;
   }
 
   template <bool read_only>
@@ -710,13 +724,13 @@ class SpacePointContainer2 {
 
   template <bool read_only>
   class Subset : public ContainerSubset<
-                     SpacePointContainer2,
+                     Subset<read_only>, SpacePointContainer2,
                      std::conditional_t<read_only, ConstSpacePointProxy2,
                                         MutableSpacePointProxy2>,
                      SpacePointIndex2, read_only> {
    public:
     using Base =
-        ContainerSubset<SpacePointContainer2,
+        ContainerSubset<Subset<read_only>, SpacePointContainer2,
                         std::conditional_t<read_only, ConstSpacePointProxy2,
                                            MutableSpacePointProxy2>,
                         SpacePointIndex2, read_only>;
@@ -749,14 +763,16 @@ class SpacePointContainer2 {
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
-    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
+    return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
+                     columns.data()...);
   }
   /// Creates a zipped const range of space point data from the given columns.
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
-    return Acts::zip(Acts::IndexRange<Index>({0, size()}), columns.data()...);
+    return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
+                     columns.data()...);
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.
@@ -767,7 +783,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(
-        Acts::IndexRange<Index>(range),
+        std::ranges::iota_view<Index, Index>(range.first, range.second),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
   /// Creates a zipped const range of space point data from the given columns.
@@ -778,7 +794,7 @@ class SpacePointContainer2 {
   auto zip(const IndexRange &range,
            const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(
-        Acts::IndexRange<Index>(range),
+        std::ranges::iota_view<Index, Index>(range.first, range.second),
         columns.data().subspan(range.first, range.second - range.first)...);
   }
 
@@ -830,7 +846,7 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<Eigen::Vector3f>> m_stripCenterDistanceColumn;
   std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
   // copy information
-  std::optional<ColumnHolder<std::size_t>> m_copyFromIndexColumn;
+  std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
   static auto knownColumnMaks() noexcept {
     using enum SpacePointColumns;
@@ -851,7 +867,7 @@ class SpacePointContainer2 {
                       float{0}, float{0}, float{0}, float{NoTime}, float{0},
                       float{0}, Eigen::Vector3f{0, 0, 0},
                       Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
-                      Eigen::Vector3f{0, 0, 0}, std::size_t{0});
+                      Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0});
   }
 
   auto knownColumns() & noexcept {

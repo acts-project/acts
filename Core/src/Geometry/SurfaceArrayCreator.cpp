@@ -50,21 +50,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   double R = protoLayer.medium(AxisDirection::AxisR, true);
 
-  Transform3 itransform = ftransform.inverse();
-  // Transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(phi(loc), loc.z());
-  };
-  auto localToGlobal = [itransform, R](const Vector2& loc) {
-    return itransform *
-           Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-  };
-
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+          Surface::SurfaceType::Cylinder, ftransform, R, 0, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
   completeBinning(gctx, *sl, surfacesRaw);
@@ -106,20 +95,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 protoLayer, ftransform);
   }
 
-  Transform3 itransform = ftransform.inverse();
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(phi(loc), loc.z());
-  };
-  auto localToGlobal = [itransform, R](const Vector2& loc) {
-    return itransform *
-           Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-  };
-
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+          Surface::SurfaceType::Cylinder, ftransform, R, 0, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
   completeBinning(gctx, *sl, surfacesRaw);
@@ -160,21 +139,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  Transform3 itransform = ftransform.inverse();
-  // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(perp(loc), phi(loc));
-  };
-  auto localToGlobal = [itransform, Z](const Vector2& loc) {
-    return itransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
-  };
-
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          globalToLocal, localToGlobal, pAxisR, pAxisPhi);
+          Surface::SurfaceType::Disc, ftransform, 0, Z, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -207,6 +175,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisR;
 
   Transform3 ftransform = transform;
+  Transform3 itransform = ftransform.inverse();
 
   if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisR,
@@ -223,7 +192,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
-      Vector3 bpos = srf->referencePosition(gctx, AxisDirection::AxisR);
+      Vector3 bpos =
+          itransform * srf->referencePosition(gctx, AxisDirection::AxisR);
       std::size_t bin = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
@@ -266,21 +236,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  Transform3 itransform = ftransform.inverse();
-  // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(perp(loc), phi(loc));
-  };
-  auto localToGlobal = [itransform, Z](const Vector2& loc) {
-    return itransform *
-           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
-  };
-
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          globalToLocal, localToGlobal, pAxisR, pAxisPhi);
+          Surface::SurfaceType::Disc, ftransform, 0, Z, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -315,15 +274,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
   Transform3 ftransform = transform;
-  Transform3 itransform = ftransform.inverse();
-  // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(loc.x(), loc.y());
-  };
-  auto localToGlobal = [itransform](const Vector2& loc) {
-    return itransform * Vector3(loc.x(), loc.y(), 0);
-  };
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
 
@@ -338,7 +288,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                 protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisY: {
@@ -350,7 +300,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                 protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisZ: {
@@ -362,7 +312,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                 protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     default: {
