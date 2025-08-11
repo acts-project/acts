@@ -44,7 +44,7 @@ class MultiNavigationPolicy final : public INavigationPolicy {
 
   /// Access the contained navigation policies
   /// @return Span of const unique pointers to the navigation policies
-  const std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
+  std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
  private:
   /// Initialize navigation candidates by calling all contained policies

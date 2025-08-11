@@ -14,7 +14,7 @@ MultiNavigationPolicy::MultiNavigationPolicy(
     std::vector<std::unique_ptr<INavigationPolicy>>&& policies)
     : m_policyPtrs(std::move(policies)) {
   m_delegates.reserve(m_policyPtrs.size());
-  for (auto& policy : m_policyPtrs) {
+  for (const auto& policy : m_policyPtrs) {
     auto& delegate = m_delegates.emplace_back();
     policy->connect(delegate);
     if (!delegate.connected()) {
@@ -33,7 +33,7 @@ void MultiNavigationPolicy::connect(NavigationDelegate& delegate) const {
   delegate.connect<&MultiNavigationPolicy::initializeCandidates>(this);
 }
 
-const std::span<const std::unique_ptr<INavigationPolicy>>
+std::span<const std::unique_ptr<INavigationPolicy>>
 MultiNavigationPolicy::policies() const {
   return std::span{m_policyPtrs};
 }
