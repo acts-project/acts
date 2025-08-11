@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <TChain.h>
@@ -230,7 +231,7 @@ void Acts::RootMaterialTrackIo::write(
         m_surfacePayload.surfaceDistance.push_back(
             (mint.position - mint.intersection).norm());
       } else if (surface != nullptr) {
-        auto sfIntersection =
+        Intersection3D sfIntersection =
             surface
                 ->intersect(gctx, mint.position, mint.direction,
                             Acts::BoundaryTolerance::None())

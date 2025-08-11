@@ -78,7 +78,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.intersect(gctx, Vector3{}, Vector3{}, tolerance, std::declval<double>())
-  } -> std::same_as<SurfaceMultiIntersection>;
+  } -> std::same_as<MultiIntersection3D>;
 
   { cs.toStream(gctx) } -> std::same_as<GeometryContextOstreamWrapper<Surface>>;
 

@@ -20,6 +20,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
@@ -562,23 +563,24 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    const Surface& surface = *oIntersection.object();
+    const Surface& surface = target.surface();
 
     for (auto& component : state.components) {
-      auto intersection = surface.intersect(
-          component.state.options.geoContext,
-          SingleStepper::position(component.state),
-          direction * SingleStepper::direction(component.state),
-          BoundaryTolerance::None())[oIntersection.index()];
+      auto componentIntersection =
+          surface
+              .intersect(component.state.options.geoContext,
+                         SingleStepper::position(component.state),
+                         direction * SingleStepper::direction(component.state),
+                         BoundaryTolerance::None())
+              .at(target.intersectionIndex());
 
-      SingleStepper::updateStepSize(component.state, intersection, direction,
-                                    stype);
+      SingleStepper::updateStepSize(component.state, componentIntersection,
+                                    direction, stype);
     }
   }
 

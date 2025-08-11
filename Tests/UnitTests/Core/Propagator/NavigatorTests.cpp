@@ -47,12 +47,13 @@ void step(Vector3& pos, const Vector3& dir, double stepSize) {
 }
 
 void step(Vector3& pos, const Vector3& dir, const Surface& surface) {
-  auto intersection = surface.intersect(tgContext, pos, dir).closestForward();
+  Intersection3D intersection =
+      surface.intersect(tgContext, pos, dir).closestForward();
   step(pos, dir, intersection.pathLength());
 }
 
 void step(Vector3& pos, const Vector3& dir, const NavigationTarget& target) {
-  step(pos, dir, *target.surface);
+  step(pos, dir, target.surface());
 }
 
 /// @brief Method for testing vectors in @c Navigator::State
@@ -286,13 +287,14 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navLayerIndex.value(), 0);
   // Check the target is correct
-  BOOST_CHECK_EQUAL(target.surface, &state.navLayer().first.surface());
+  BOOST_CHECK_EQUAL(&target.surface(), &state.navLayer().surface());
   // Intersect the target
-  auto targetIntersection =
-      target.surface->intersect(tgContext, position, direction)
+  Intersection3D targetIntersection =
+      target.surface()
+          .intersect(tgContext, position, direction)
           .closestForward();
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navLayer().first.position());
+  double beamPipeR = perp(state.navLayer().position());
   // step size has been updated
   CHECK_CLOSE_ABS(targetIntersection.pathLength(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -304,7 +306,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (2) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // Check that the currentVolume is the still startVolume
   BOOST_CHECK_EQUAL(state.currentVolume, state.startVolume);
   // The layer number has not changed
@@ -323,7 +325,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (3) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
 
   ACTS_INFO("<<< Test 1c >>> step to the Boundary at  " << toString(position));
 
@@ -331,7 +333,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
   // Intersect the target
-  targetIntersection = target.surface->intersect(tgContext, position, direction)
+  targetIntersection = target.surface()
+                           .intersect(tgContext, position, direction)
                            .closestForward();
 
   // positive return: do the step
@@ -339,7 +342,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // (4) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
 
   ACTS_INFO("<<< Test 1d >>> step to 1st layer at  " << toString(position));
 
@@ -352,7 +355,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (5-9) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -365,7 +369,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (10) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -377,7 +381,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (11-15) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -390,7 +395,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (16) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -402,7 +407,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (17-19) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -415,7 +421,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (20) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(!target.isNone());
@@ -427,7 +433,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     step(position, direction, target);
     // (21-23) re-entering navigator:
     // POST STEP
-    navigator.handleSurfaceReached(state, position, direction, *target.surface);
+    navigator.handleSurfaceReached(state, position, direction,
+                                   target.surface());
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
     BOOST_CHECK(!target.isNone());
@@ -440,7 +447,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   step(position, direction, target);
   // (24) re-entering navigator:
   // POST STEP
-  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  navigator.handleSurfaceReached(state, position, direction, target.surface());
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
   BOOST_CHECK(target.isNone());
@@ -530,8 +537,8 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
-    BOOST_CHECK_NE(target.surface, surfaces.at(0));
-    BOOST_CHECK_NE(target.surface, surfaces.at(1));
+    BOOST_CHECK_NE(&target.surface(), surfaces.at(0));
+    BOOST_CHECK_NE(&target.surface(), surfaces.at(1));
   }
 
   // check if we find a target starting from the top without external surfaces
@@ -551,7 +558,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
   // check if we find a target starting from the bottom without external
@@ -572,7 +579,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
   // check if we find the top surface starting from the middle with external
@@ -594,7 +601,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
   // check if we find the bottom surface starting from the top with external
@@ -616,7 +623,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
   // check if we find the top surface starting from the bottom with external
@@ -638,7 +645,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     NavigationTarget target = navigator.nextTarget(state, position, direction);
 
     BOOST_CHECK(!target.isNone());
-    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+    BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 }
 
