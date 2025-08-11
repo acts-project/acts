@@ -113,10 +113,11 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
                  << chamberVolume->boundarySurfaces().size());
 
     std::size_t childVol = 1;
+    auto chamberId = chamberVolume->geometryId();
     for (const auto& child : childrenTrkVols) {
       auto trVol =
           std::make_unique<Acts::TrackingVolume>(*child.volume, child.name);
-      trVol->assignGeometryId(geoId.withVolume(stationNum).withExtra(childVol));
+      trVol->assignGeometryId(chamberId.withExtra(childVol));
       ++childVol;
 
       // add the sensitives (tubes) in the constructed tracking volume
