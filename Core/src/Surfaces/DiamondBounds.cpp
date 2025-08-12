@@ -77,7 +77,7 @@ const RectangleBounds& DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-Vector2 DiamondBounds::centroid() const {
+Vector2 DiamondBounds::center() const {
   // The diamond is symmetric about both x and y axes,
   // so centroid is at origin
   return Vector2(0.0, 0.0);

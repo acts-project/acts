@@ -42,7 +42,7 @@ Vector2 LineBounds::closestPoint(const Vector2& lposition,
       Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ), lposition, metric);
 }
 
-Vector2 LineBounds::centroid() const {
+Vector2 LineBounds::center() const {
   // LineBounds is symmetric around the origin in both dimensions
   return Vector2(0.0, 0.0);
 }

@@ -391,7 +391,7 @@ Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
-Vector2 AnnulusBounds::centroid() const {
+Vector2 AnnulusBounds::center() const {
   // For annulus bounds in polar coordinates (r, phi),
   // centroid is at the middle radius and average of phi range
   double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));

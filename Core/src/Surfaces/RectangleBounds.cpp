@@ -73,7 +73,7 @@ const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
 }
 
-Vector2 RectangleBounds::centroid() const {
+Vector2 RectangleBounds::center() const {
   return 0.5 * (m_min + m_max);
 }
 

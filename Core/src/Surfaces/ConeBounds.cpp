@@ -86,7 +86,7 @@ Vector2 ConeBounds::closestPoint(const Vector2& lposition,
       shifted(lposition), metric);
 }
 
-Vector2 ConeBounds::centroid() const {
+Vector2 ConeBounds::center() const {
   // Centroid in z is at the middle of the z range
   double zCentroid = 0.5 * (get(eMinZ) + get(eMaxZ));
   // In phi, centroid is at the average phi position

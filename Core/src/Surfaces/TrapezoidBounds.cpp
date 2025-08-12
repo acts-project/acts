@@ -105,7 +105,7 @@ const RectangleBounds& TrapezoidBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-Vector2 TrapezoidBounds::centroid() const {
+Vector2 TrapezoidBounds::center() const {
   // For a trapezoid, the centroid is at (0, 0) when unrotated
   // since it's symmetric about both axes
   const double rotAngle = get(TrapezoidBounds::eRotationAngle);

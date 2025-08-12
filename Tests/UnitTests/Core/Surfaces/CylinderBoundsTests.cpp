@@ -183,20 +183,20 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
 }
 
-BOOST_AUTO_TEST_CASE(CylinderBoundsCentroid) {
+BOOST_AUTO_TEST_CASE(CylinderBoundsCenter) {
   const double radius = 5.0;
   const double halfZ = 10.0;
 
   // Test full cylinder
   CylinderBounds fullCylinder(radius, halfZ);
-  Vector2 centroid = fullCylinder.centroid();
-  CHECK_CLOSE_ABS(centroid, Vector2(0., 0.), 1e-6);
+  Vector2 center = fullCylinder.center();
+  CHECK_CLOSE_ABS(center, Vector2(0., 0.), 1e-6);
 
   // Test cylinder with average phi offset
   const double averagePhi = std::numbers::pi / 4.;
   CylinderBounds offsetCylinder(radius, halfZ, std::numbers::pi, averagePhi);
-  Vector2 centroidOffset = offsetCylinder.centroid();
-  CHECK_CLOSE_ABS(centroidOffset, Vector2(averagePhi, 0.), 1e-6);
+  Vector2 centerOffset = offsetCylinder.center();
+  CHECK_CLOSE_ABS(centerOffset, Vector2(averagePhi, 0.), 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

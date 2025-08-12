@@ -90,8 +90,8 @@ class RectangleBounds : public PlanarBounds {
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
 
-  /// @copydoc SurfaceBounds::centroid
-  Vector2 centroid() const final;
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Output Method for std::ostream
   ///

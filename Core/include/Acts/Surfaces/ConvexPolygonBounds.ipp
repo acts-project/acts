@@ -121,7 +121,7 @@ const RectangleBounds& ConvexPolygonBounds<N>::boundingBox() const {
 }
 
 template <int N>
-Vector2 ConvexPolygonBounds<N>::centroid() const {
+Vector2 ConvexPolygonBounds<N>::center() const {
   // Calculate centroid as average of all vertices
   Vector2 sum = Vector2::Zero();
   for (const auto& vertex : m_vertices) {

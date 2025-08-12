@@ -89,8 +89,8 @@ class AnnulusBounds : public DiscBounds {
 
   using SurfaceBounds::inside;
 
-  /// @copydoc SurfaceBounds::centroid
-  Vector2 centroid() const final;
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Outstream operator
   /// @param sl is the ostream to be dumped into

@@ -64,7 +64,7 @@ const RectangleBounds& ConvexPolygonBounds<PolygonDynamic>::boundingBox()
   return m_boundingBox;
 }
 
-Vector2 ConvexPolygonBounds<PolygonDynamic>::centroid() const {
+Vector2 ConvexPolygonBounds<PolygonDynamic>::center() const {
   // Calculate centroid as average of all vertices
   Vector2 sum = Vector2::Zero();
   for (const auto& vertex : m_vertices) {

@@ -103,8 +103,8 @@ class TrapezoidBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
-  /// @copydoc SurfaceBounds::centroid
-  Vector2 centroid() const final;
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Return the vertices
   ///

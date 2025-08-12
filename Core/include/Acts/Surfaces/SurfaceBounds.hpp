@@ -104,9 +104,9 @@ class SurfaceBounds {
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const;
 
-  /// Calculate the centroid of the surface bounds in local coordinates
-  /// @return Vector2 representing the centroid position
-  virtual Vector2 centroid() const = 0;
+  /// Calculate the center of the surface bounds in local coordinates
+  /// @return Vector2 representing the center position
+  virtual Vector2 center() const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param os is the outstream in which the string dump is done

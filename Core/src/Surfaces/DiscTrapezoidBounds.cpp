@@ -102,7 +102,7 @@ std::vector<Vector2> DiscTrapezoidBounds::vertices(
           halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
-Vector2 DiscTrapezoidBounds::centroid() const {
+Vector2 DiscTrapezoidBounds::center() const {
   // For disc trapezoid bounds in polar coordinates (r, phi),
   // centroid is at the middle radius and average phi
   double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
