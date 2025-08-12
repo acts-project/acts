@@ -40,7 +40,8 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
-      inputParticleMeasurementsMap, outputProtoTracks);
+      inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
+      inputMeasurementSimHitsMap, outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,

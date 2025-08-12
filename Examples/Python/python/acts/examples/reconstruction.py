@@ -637,7 +637,10 @@ def addTruthSmearedSeeding(
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
         inputParticles=selectedParticles,
+        inputMeasurements="measurements",
         inputParticleMeasurementsMap="particle_measurements_map",
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
         outputProtoTracks="truth_particle_tracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
