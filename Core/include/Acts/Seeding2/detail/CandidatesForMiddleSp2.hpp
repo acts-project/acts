@@ -34,9 +34,9 @@ struct TripletCandidate2 {
   SpacePointIndex2 bottom{};
   SpacePointIndex2 middle{};
   SpacePointIndex2 top{};
-  float weight{0.};
-  float zOrigin{0.};
-  bool isQuality{false};
+  float weight{};
+  float zOrigin{};
+  bool isQuality{};
 };
 
 class CandidatesForMiddleSp2 {
