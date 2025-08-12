@@ -44,25 +44,27 @@ class CandidatesForMiddleSp2 {
   using Index = std::uint32_t;
   using Size = std::uint32_t;
 
+  static constexpr Size NoSize = std::numeric_limits<Size>::max();
+
   CandidatesForMiddleSp2();
 
   /// @brief Setting maximum number of candidates to keep
-  /// @param nHigh Maximum number of candidates in the high-quality collection
   /// @param nLow Maximum number of candidates in the low-quality collection
-  CandidatesForMiddleSp2(Size nHigh, Size nLow);
+  /// @param nHigh Maximum number of candidates in the high-quality collection
+  CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
   Size size() const { return m_storage.size(); }
 
   /// @brief Clear the internal storage
   void clear();
 
-  /// @brief Retrieve the number of High quality candidates
-  /// @returns The number of High quality candidates
-  Size nHighQualityCandidates() const { return m_nHigh; }
-
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
   Size nLowQualityCandidates() const { return m_nLow; }
+
+  /// @brief Retrieve the number of High quality candidates
+  /// @returns The number of High quality candidates
+  Size nHighQualityCandidates() const { return m_nHigh; }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -85,12 +87,12 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  Size m_maxSizeHigh{std::numeric_limits<Size>::max()};
   Size m_maxSizeLow{std::numeric_limits<Size>::max()};
+  Size m_maxSizeHigh{std::numeric_limits<Size>::max()};
   // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
-  Size m_nHigh{0};
   Size m_nLow{0};
+  Size m_nHigh{0};
 
   // storage contains the collection of the candidates
   std::vector<TripletCandidate2> m_storage;
@@ -104,10 +106,10 @@ class CandidatesForMiddleSp2 {
   // This is in effect faster sorted container - implementation with std::set
   // and std::priority_queue were tried and were found to be slower.
 
-  // list of indexes of candidates with high quality in the storage
-  std::vector<Index> m_indicesHigh;
   // list of indexes of candidates with low quality in the storage
   std::vector<Index> m_indicesLow;
+  // list of indexes of candidates with high quality in the storage
+  std::vector<Index> m_indicesHigh;
 
   /// @brief A function for sorting the triplet candidates from higher to lower quality
   /// @param spacePoints The input spacepoints from which to create seeds.

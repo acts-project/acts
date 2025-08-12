@@ -56,7 +56,7 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                const Logger& logger)
     : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {
   state.candidatesCollector = CandidatesForMiddleSp2(
-      config.maxQualitySeedsPerSpMConf, config.maxSeedsPerSpMConf);
+      config.maxSeedsPerSpMConf, config.maxQualitySeedsPerSpMConf);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
