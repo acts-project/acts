@@ -8,12 +8,10 @@
 
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
-#include <fstream>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -63,9 +61,6 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   ProtoTrackContainer tracks;
   tracks.reserve(particles.size());
 
-  std::ofstream ofs{"debug.csv"};
-  ofs << "ptcl,h_x,h_y,h_z,h_r" << std::endl;
-
   ACTS_VERBOSE("Create prototracks for " << particles.size() << " particles");
   for (const auto& [i, particle] : Acts::enumerate(particles)) {
     // find the corresponding hits for this particle
@@ -78,6 +73,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     ProtoTrack track;
     std::vector<const SimHit*> hits;
     track.reserve(measurements.size());
+    hits.reserve(measurements.size());
     for (const auto& [barcode, index] : measurements) {
       ConstVariableBoundMeasurementProxy measurement =
           measurementsIn.getMeasurement(index);
@@ -103,12 +99,6 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
 
       const auto& simHit = *simHitIt;
 
-      ACTS_VERBOSE("     - SimHit: " << simHit.geometryId() << " "
-                                     << simHit.fourPosition().transpose() << " "
-                                     << simHit.particleId());
-
-      Acts::Vector3 hp = simHit.position();
-
       track.emplace_back(index);
       hits.emplace_back(&simHit);
     }
@@ -122,15 +112,8 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
                 return hits[a]->time() < hits[b]->time();
               });
     ProtoTrack sortedTrack;
-    std::cout << "n indices: " << indices.size() << std::endl;
     for (const auto& idx : indices) {
       sortedTrack.emplace_back(track[idx]);
-
-      const auto& simHit = *hits[idx];
-      Acts::Vector3 hp = simHit.position();
-      std::cout << "I=" << i << " nhits: " << hits.size() << std::endl;
-      ofs << i << "," << hp[0] << "," << hp[1] << "," << hp[2] << ","
-          << Acts::VectorHelpers::perp(hp) << std::endl;
     }
 
     // add proto track to the output collection
