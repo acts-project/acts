@@ -8,21 +8,12 @@
 
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
-#include <limits>
-
 namespace Acts::Experimental {
 
-void CandidatesForMiddleSp2::setMaxElements(Size nLow, Size nHigh) {
-  m_maxSizeHigh = nHigh;
-  m_maxSizeLow = nLow;
+CandidatesForMiddleSp2::CandidatesForMiddleSp2() = default;
 
-  // protection against default numbers
-  // it may cause std::bad_alloc if we don't protect
-  if (nHigh == std::numeric_limits<Size>::max() ||
-      nLow == std::numeric_limits<Size>::max()) {
-    return;
-  }
-
+CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nHigh, Size nLow)
+    : m_maxSizeHigh(nHigh), m_maxSizeLow(nLow) {
   // Reserve enough memory for all collections
   m_storage.reserve(nLow + nHigh);
   m_indicesHigh.reserve(nHigh);

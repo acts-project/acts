@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 
+#include <limits>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -43,12 +44,14 @@ class CandidatesForMiddleSp2 {
   using Index = std::uint32_t;
   using Size = std::uint32_t;
 
-  Size size() const { return m_storage.size(); }
+  CandidatesForMiddleSp2();
 
   /// @brief Setting maximum number of candidates to keep
-  /// @param nLow Maximum number of candidates in the low-quality collection
   /// @param nHigh Maximum number of candidates in the high-quality collection
-  void setMaxElements(Size nLow, Size nHigh);
+  /// @param nLow Maximum number of candidates in the low-quality collection
+  CandidatesForMiddleSp2(Size nHigh, Size nLow);
+
+  Size size() const { return m_storage.size(); }
 
   /// @brief Clear the internal storage
   void clear();
@@ -82,8 +85,8 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  Size m_maxSizeHigh{0};
-  Size m_maxSizeLow{0};
+  Size m_maxSizeHigh{std::numeric_limits<Size>::max()};
+  Size m_maxSizeLow{std::numeric_limits<Size>::max()};
   // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
   Size m_nHigh{0};
