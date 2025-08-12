@@ -51,7 +51,7 @@ void ActsExamples::identifyContributingParticles(
     std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
-  for (auto hitIndex : protoTrack) {
+  for (auto hitIndex : protoTrack.hitIndices) {
     // register all particles that generated this hit
     for (const auto& [_, value] :
          makeRange(hitParticlesMap.equal_range(hitIndex))) {

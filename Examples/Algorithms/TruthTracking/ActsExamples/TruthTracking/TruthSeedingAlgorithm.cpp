@@ -118,22 +118,22 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         makeRange(particleMeasurementsMap.equal_range(particle.particleId()));
     // fill measurement indices to create the proto track
     ProtoTrack track;
-    track.reserve(measurements.size());
+    track.hitIndices.reserve(measurements.size());
     for (const auto& measurement : measurements) {
-      track.push_back(measurement.second);
+      track.hitIndices.push_back(measurement.second);
     }
 
     // The list of measurements and the initial start parameters
-    if (track.size() < 3) {
+    if (track.hitIndices.size() < 3) {
       ACTS_WARNING("Particle " << particle << " has less than 3 measurements");
       continue;
     }
     // Space points on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
-    spacePointsOnTrack.reserve(track.size());
+    spacePointsOnTrack.reserve(track.hitIndices.size());
     // Loop over the measurement index on the proto track to find the space
     // points
-    for (const auto& measurementIndex : track) {
+    for (const auto& measurementIndex : track.hitIndices) {
       auto it = spMap.find(measurementIndex);
       if (it != spMap.end()) {
         spacePointsOnTrack.push_back(it->second);

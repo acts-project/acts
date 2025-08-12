@@ -18,11 +18,11 @@
 ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
     const ActsExamples::SimSeed& seed) {
   ProtoTrack track;
-  track.reserve(seed.sp().size());
+  track.hitIndices.reserve(seed.sp().size());
   for (const auto& spacePoints : seed.sp()) {
     for (const auto& slink : spacePoints->sourceLinks()) {
       const auto& islink = slink.get<IndexSourceLink>();
-      track.emplace_back(islink.index());
+      track.hitIndices.emplace_back(islink.index());
     }
   }
   return track;
@@ -58,17 +58,17 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
     return found;
   };
 
-  const auto s = track.size();
+  const auto s = track.hitIndices.size();
   if (s < 3) {
     throw std::runtime_error(
         "Cannot convert track with less then 3 spacepoints to seed");
   }
 
   std::vector<const SimSpacePoint*> ps;
-  ps.reserve(track.size());
+  ps.reserve(track.hitIndices.size());
 
-  std::transform(track.begin(), track.end(), std::back_inserter(ps),
-                 findSpacePoint);
+  std::transform(track.hitIndices.begin(), track.hitIndices.end(),
+                 std::back_inserter(ps), findSpacePoint);
   std::ranges::sort(ps, {}, [](const auto& p) { return p->r(); });
 
   // Simply use r = m*z + t and solve for r=0 to find z vertex position...

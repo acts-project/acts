@@ -53,16 +53,16 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   for (std::size_t i = 0; i < prototracks.size(); ++i) {
     const auto& protoTrack = prototracks[i];
 
-    if (protoTrack.empty()) {
+    if (protoTrack.hitIndices.empty()) {
       continue;
     }
 
-    avgSize += static_cast<float>(protoTrack.size());
-    minSize = std::min(minSize, protoTrack.size());
-    maxSize = std::max(maxSize, protoTrack.size());
+    avgSize += static_cast<float>(protoTrack.hitIndices.size());
+    minSize = std::min(minSize, protoTrack.hitIndices.size());
+    maxSize = std::max(maxSize, protoTrack.hitIndices.size());
 
     auto track = tracks.makeTrack();
-    for (auto measIndex : protoTrack) {
+    for (auto measIndex : protoTrack.hitIndices) {
       ConstVariableBoundMeasurementProxy measurement =
           measurements.getMeasurement(measIndex);
       IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
@@ -73,7 +73,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink(sourceLink));
     }
 
-    track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
+    track.nMeasurements() =
+        static_cast<std::uint32_t>(protoTrack.hitIndices.size());
     track.nHoles() = 0;
     track.nOutliers() = 0;
 

@@ -235,7 +235,7 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_nMajorityHits = particleHitCounts.front().hitCount;
 
       // Get the index of the first space point
-      const auto& hitIdx = ptrack.front();
+      const auto& hitIdx = ptrack.hitIndices.front();
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
       auto [truthLocal, truthPos4, truthUnitDir] =

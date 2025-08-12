@@ -52,7 +52,7 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
       path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
-    for (Index measurementId : tracks[trackId]) {
+    for (Index measurementId : tracks[trackId].hitIndices) {
       const auto spr = findSpacePointForIndex(measurementId, spacepoints);
       if (spr == nullptr) {
         ACTS_WARNING("Could not convert index " << measurementId
