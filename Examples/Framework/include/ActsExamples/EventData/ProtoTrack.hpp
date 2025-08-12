@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <vector>
 
@@ -19,6 +20,7 @@ namespace ActsExamples {
 /// A proto track is a collection of hits identified by their indices.
 struct ProtoTrack {
   boost::container::small_vector<Index, 3> hitIndices;
+  const SimParticle* particle;
 };
 /// Container of proto tracks. Each proto track is identified by its index.
 using ProtoTrackContainer = std::vector<ProtoTrack>;

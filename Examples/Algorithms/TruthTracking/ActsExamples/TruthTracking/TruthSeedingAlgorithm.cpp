@@ -122,6 +122,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     for (const auto& measurement : measurements) {
       track.hitIndices.push_back(measurement.second);
     }
+    track.particle = &particle;
 
     // The list of measurements and the initial start parameters
     if (track.hitIndices.size() < 3) {
