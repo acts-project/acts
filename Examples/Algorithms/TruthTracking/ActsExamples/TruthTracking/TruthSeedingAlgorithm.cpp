@@ -177,6 +177,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
                    *spacePointsOnTrack[bestSPIndices[1]],
                    *spacePointsOnTrack[bestSPIndices[2]]};
+      seed.setParticle(particle);
       seed.setVertexZ(
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 

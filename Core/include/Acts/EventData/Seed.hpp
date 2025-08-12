@@ -11,6 +11,10 @@
 #include <array>
 #include <limits>
 
+namespace ActsExamples {
+class SimParticle;
+}
+
 namespace Acts {
 
 template <typename external_spacepoint_t, std::size_t N = 3ul>
@@ -33,10 +37,17 @@ class Seed {
   float z() const;
   float seedQuality() const;
 
+  void setParticle(const ActsExamples::SimParticle& particle) {
+    m_particle = &particle;
+  }
+  const ActsExamples::SimParticle* particle() const { return m_particle; }
+
  private:
   std::array<const external_spacepoint_t*, N> m_spacepoints{};
   float m_vertexZ{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
+
+  const ActsExamples::SimParticle* m_particle{nullptr};
 };
 
 }  // namespace Acts
