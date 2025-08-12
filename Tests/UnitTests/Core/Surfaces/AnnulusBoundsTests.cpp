@@ -272,6 +272,33 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(AnnulusBoundsCenter) {
+  // Test annulus bounds center calculation
+  AnnulusBounds annulus(minRadius, maxRadius, minPhi, maxPhi, offset);
+  Vector2 center = annulus.center();
+
+  // The center should be inside the annulus bounds
+  BOOST_CHECK(annulus.inside(center));
+
+  // Test with symmetric annulus (no offset)
+  Vector2 noOffset(0., 0.);
+  AnnulusBounds symmetricAnnulus(minRadius, maxRadius, minPhi, maxPhi,
+                                 noOffset);
+  Vector2 symmetricCenter = symmetricAnnulus.center();
+
+  // For symmetric case, center should also be inside bounds
+  BOOST_CHECK(symmetricAnnulus.inside(symmetricCenter));
+
+  // The center should be in polar coordinates (r, phi) in strip system
+  // Verify that r component is reasonable (between min and max radius)
+  BOOST_CHECK(symmetricCenter.x() >= minRadius);
+  BOOST_CHECK(symmetricCenter.x() <= maxRadius);
+
+  // Verify that phi component is within phi range
+  BOOST_CHECK(symmetricCenter.y() >= minPhi);
+  BOOST_CHECK(symmetricCenter.y() <= maxPhi);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

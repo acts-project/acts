@@ -186,6 +186,9 @@ class AnnulusBounds : public DiscBounds {
   Vector2 m_outRightStripXY;
   Vector2 m_inRightStripXY;
 
+  /// Pre-calculated center point (average of vertices)
+  Vector2 m_center;
+
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
   void checkConsistency() noexcept(false);

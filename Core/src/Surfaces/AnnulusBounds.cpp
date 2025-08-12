@@ -108,6 +108,14 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
   m_inLeftModulePC = stripXYToModulePC(m_inLeftStripXY);
   m_outRightModulePC = stripXYToModulePC(m_outRightStripXY);
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
+
+  // Pre-calculate center as average of corner vertices
+  // Use simple 4-corner approximation for efficiency
+  Vector2 centerXY = 0.25 * (m_outLeftStripXY + m_inLeftStripXY +
+                             m_outRightStripXY + m_inRightStripXY);
+
+  // Convert center from cartesian (strip XY) to polar (strip PC) coordinates
+  m_center = Vector2(centerXY.norm(), VectorHelpers::phi(centerXY));
 }
 
 std::vector<double> AnnulusBounds::values() const {
@@ -392,12 +400,9 @@ Vector2 AnnulusBounds::moduleOrigin() const {
 }
 
 Vector2 AnnulusBounds::center() const {
-  // For annulus bounds in polar coordinates (r, phi),
-  // centroid is at the middle radius and average of phi range
-  double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
-  double phiCentroid =
-      0.5 * (get(eMinPhiRel) + get(eMaxPhiRel)) + get(eAveragePhi);
-  return Vector2(rCentroid, phiCentroid);
+  // Return pre-calculated center that accounts for the complex coordinate
+  // transformations between radial and angular coordinate systems
+  return m_center;
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
