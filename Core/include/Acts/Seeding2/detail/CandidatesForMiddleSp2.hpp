@@ -87,8 +87,8 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  Size m_maxSizeLow{std::numeric_limits<Size>::max()};
-  Size m_maxSizeHigh{std::numeric_limits<Size>::max()};
+  Size m_maxSizeLow{NoSize};
+  Size m_maxSizeHigh{NoSize};
   // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
   Size m_nLow{0};
