@@ -56,13 +56,13 @@ class CandidatesForMiddleSp2 {
   /// @brief Clear the internal storage
   void clear();
 
-  /// @brief Retrieve the number of Low quality candidates
-  /// @returns The number of Low quality candidates
-  Size nLowQualityCandidates() const { return m_nLow; }
-
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
   Size nHighQualityCandidates() const { return m_nHigh; }
+
+  /// @brief Retrieve the number of Low quality candidates
+  /// @returns The number of Low quality candidates
+  Size nLowQualityCandidates() const { return m_nLow; }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
