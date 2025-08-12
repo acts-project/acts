@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -42,6 +43,9 @@ struct RootMeasurementWriter::DigitizationTree {
   // Reconstruction information
   float recBound[Acts::eBoundSize] = {};
   float varBound[Acts::eBoundSize] = {};
+  float recGx = 0.;
+  float recGy = 0.;
+  float recGz = 0.;
 
   // Truth parameters
   float trueBound[Acts::eBoundSize] = {};
@@ -83,6 +87,10 @@ struct RootMeasurementWriter::DigitizationTree {
     for (auto ib : recoIndices) {
       tree->Branch(("var_" + bNames[ib]).c_str(), &varBound[ib]);
     }
+
+    tree->Branch("rec_x", &recGx);
+    tree->Branch("rec_y", &recGy);
+    tree->Branch("rec_z", &recGz);
 
     tree->Branch("clus_size", &nch);
     tree->Branch("channel_value", &chValue);
@@ -164,6 +172,17 @@ struct RootMeasurementWriter::DigitizationTree {
     }
   }
 
+  void fillGlobalMeasurement(const Acts::GeometryContext& gctx,
+                             const Acts::Surface& surface,
+                             const ConstVariableBoundMeasurementProxy& m) {
+    // passing invalid direction but we expect this to be a regular surface
+    Acts::Vector3 global = surface.localToGlobal(
+        gctx, m.fullParameters().head<2>(), Acts::Vector3::Zero());
+    recGx = global[Acts::ePos0];
+    recGy = global[Acts::ePos1];
+    recGz = global[Acts::ePos2];
+  }
+
   /// Convenience function to fill the cluster information
   ///
   /// @param c The cluster
@@ -190,6 +209,9 @@ struct RootMeasurementWriter::DigitizationTree {
       residual[ib] = std::numeric_limits<float>::quiet_NaN();
       pull[ib] = std::numeric_limits<float>::quiet_NaN();
     }
+    recGx = std::numeric_limits<float>::quiet_NaN();
+    recGy = std::numeric_limits<float>::quiet_NaN();
+    recGz = std::numeric_limits<float>::quiet_NaN();
     trueGx = std::numeric_limits<float>::quiet_NaN();
     trueGy = std::numeric_limits<float>::quiet_NaN();
     trueGz = std::numeric_limits<float>::quiet_NaN();
@@ -280,6 +302,14 @@ ProcessCode RootMeasurementWriter::writeT(
     // Fill the identification
     m_outputTree->fillIdentification(ctx.eventNumber, geoId);
 
+    // Fill reco information
+    m_outputTree->fillBoundMeasurement(meas);
+    if (clusters != nullptr) {
+      const auto& c = (*clusters)[hitIdx];
+      m_outputTree->fillCluster(c);
+    }
+    m_outputTree->fillGlobalMeasurement(ctx.geoContext, surface, meas);
+
     // Find the contributing simulated hits
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     // Use average truth in the case of multiple contributing sim hits
@@ -293,11 +323,6 @@ ProcessCode RootMeasurementWriter::writeT(
         Acts::VectorHelpers::incidentAngles(dir, rot);
 
     m_outputTree->fillTruthParameters(local, pos4, dir, angles);
-    m_outputTree->fillBoundMeasurement(meas);
-    if (clusters != nullptr) {
-      const auto& c = (*clusters)[hitIdx];
-      m_outputTree->fillCluster(c);
-    }
 
     m_outputTree->fill();
     m_outputTree->clear();
