@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/LineBounds.hpp"
-
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>
@@ -41,6 +40,11 @@ Vector2 LineBounds::closestPoint(const Vector2& lposition,
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::VerticesHelper::computeClosestPointOnAlignedBox(
       Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ), lposition, metric);
+}
+
+Vector2 LineBounds::centroid() const {
+  // LineBounds is symmetric around the origin in both dimensions
+  return Vector2(0.0, 0.0);
 }
 
 std::ostream& LineBounds::toStream(std::ostream& sl) const {

@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/RadialBounds.hpp"
-
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -76,6 +75,14 @@ Vector2 RadialBounds::closestPoint(const Vector2& lposition,
 std::vector<Vector2> RadialBounds::vertices(unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);
+}
+
+Vector2 RadialBounds::centroid() const {
+  // For radial bounds in polar coordinates (r, phi),
+  // centroid is at the middle radius and average phi
+  double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
+  double phiCentroid = get(eAveragePhi);
+  return Vector2(rCentroid, phiCentroid);
 }
 
 std::ostream& RadialBounds::toStream(std::ostream& sl) const {

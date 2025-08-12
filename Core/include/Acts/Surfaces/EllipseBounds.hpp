@@ -83,6 +83,9 @@ class EllipseBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Return the vertices
   ///
   /// @param quarterSegments is the number of segments to approximate a quarter

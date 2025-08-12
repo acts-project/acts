@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -390,6 +389,15 @@ Vector2 AnnulusBounds::modulePCToStripPC(const Vector2& vModulePC) const {
 
 Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
+}
+
+Vector2 AnnulusBounds::centroid() const {
+  // For annulus bounds in polar coordinates (r, phi),
+  // centroid is at the middle radius and average of phi range
+  double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
+  double phiCentroid =
+      0.5 * (get(eMinPhiRel) + get(eMaxPhiRel)) + get(eAveragePhi);
+  return Vector2(rCentroid, phiCentroid);
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {

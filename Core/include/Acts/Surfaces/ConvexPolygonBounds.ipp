@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -119,6 +118,16 @@ std::vector<Vector2> ConvexPolygonBounds<N>::vertices(
 template <int N>
 const RectangleBounds& ConvexPolygonBounds<N>::boundingBox() const {
   return m_boundingBox;
+}
+
+template <int N>
+Vector2 ConvexPolygonBounds<N>::centroid() const {
+  // Calculate centroid as average of all vertices
+  Vector2 sum = Vector2::Zero();
+  for (const auto& vertex : m_vertices) {
+    sum += vertex;
+  }
+  return sum / static_cast<double>(N);
 }
 
 template <int N>

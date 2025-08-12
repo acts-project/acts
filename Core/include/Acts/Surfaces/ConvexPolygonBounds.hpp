@@ -107,6 +107,9 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Return the vertices
   ///
   /// @param ignoredSegments the number of segments used to approximate
@@ -154,6 +157,9 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
                        const SquareMatrix2& metric) const final;
 
   using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
 
   /// Return the vertices
   ///

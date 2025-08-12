@@ -83,6 +83,9 @@ class DiamondBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Return the vertices that describe this shape
   ///
   /// @param ignoredSegments is an ignored parameter only used for

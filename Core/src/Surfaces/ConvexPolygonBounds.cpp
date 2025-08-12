@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <ostream>
@@ -63,6 +62,15 @@ std::vector<Vector2> ConvexPolygonBounds<PolygonDynamic>::vertices(
 const RectangleBounds& ConvexPolygonBounds<PolygonDynamic>::boundingBox()
     const {
   return m_boundingBox;
+}
+
+Vector2 ConvexPolygonBounds<PolygonDynamic>::centroid() const {
+  // Calculate centroid as average of all vertices
+  Vector2 sum = Vector2::Zero();
+  for (const auto& vertex : m_vertices) {
+    sum += vertex;
+  }
+  return sum / static_cast<double>(m_vertices.size());
 }
 
 void ConvexPolygonBounds<PolygonDynamic>::checkConsistency() const

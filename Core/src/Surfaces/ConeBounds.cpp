@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/ConeBounds.hpp"
-
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -85,6 +84,14 @@ Vector2 ConeBounds::closestPoint(const Vector2& lposition,
   return detail::VerticesHelper::computeClosestPointOnAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
       shifted(lposition), metric);
+}
+
+Vector2 ConeBounds::centroid() const {
+  // Centroid in z is at the middle of the z range
+  double zCentroid = 0.5 * (get(eMinZ) + get(eMaxZ));
+  // In phi, centroid is at the average phi position
+  double phiCentroid = get(eAveragePhi);
+  return Vector2(phiCentroid, zCentroid);
 }
 
 std::ostream& ConeBounds::toStream(std::ostream& sl) const {

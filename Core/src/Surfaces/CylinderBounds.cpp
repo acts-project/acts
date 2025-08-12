@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
-
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -97,6 +96,12 @@ Vector2 CylinderBounds::closestPoint(const Vector2& lposition,
 
   return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
                                                               vertices, metric);
+}
+
+Vector2 CylinderBounds::centroid() const {
+  // For cylinder bounds in local coordinates (rphi, z),
+  // centroid is at (averagePhi, 0) since z extends symmetrically
+  return Vector2(get(eAveragePhi), 0.0);
 }
 
 std::ostream& CylinderBounds::toStream(std::ostream& sl) const {

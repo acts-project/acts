@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
-
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -69,6 +68,12 @@ std::vector<Vector2> EllipseBounds::vertices(
 
 const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
+}
+
+Vector2 EllipseBounds::centroid() const {
+  // For ellipse bounds, the centroid is at the center of the ellipse ring,
+  // positioned at the average phi
+  return Vector2(0.0, 0.0);
 }
 
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {

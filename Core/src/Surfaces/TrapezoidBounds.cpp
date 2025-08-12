@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -104,6 +103,20 @@ std::vector<Vector2> TrapezoidBounds::vertices(
 
 const RectangleBounds& TrapezoidBounds::boundingBox() const {
   return m_boundingBox;
+}
+
+Vector2 TrapezoidBounds::centroid() const {
+  // For a trapezoid, the centroid is at (0, 0) when unrotated
+  // since it's symmetric about both axes
+  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+  Vector2 centroid(0.0, 0.0);
+
+  // Apply rotation if present
+  if (rotAngle != 0.0) {
+    centroid = Eigen::Rotation2Dd(-rotAngle) * centroid;
+  }
+
+  return centroid;
 }
 
 std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {

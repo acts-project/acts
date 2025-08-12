@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/DiamondBounds.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>
@@ -76,6 +75,12 @@ std::vector<Vector2> DiamondBounds::vertices(
 
 const RectangleBounds& DiamondBounds::boundingBox() const {
   return m_boundingBox;
+}
+
+Vector2 DiamondBounds::centroid() const {
+  // The diamond is symmetric about both x and y axes,
+  // so centroid is at origin
+  return Vector2(0.0, 0.0);
 }
 
 std::ostream& DiamondBounds::toStream(std::ostream& sl) const {

@@ -86,6 +86,9 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 

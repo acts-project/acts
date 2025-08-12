@@ -72,6 +72,9 @@ class LineBounds : public SurfaceBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into

@@ -134,6 +134,9 @@ class CylinderBounds : public SurfaceBounds {
   std::vector<Vector3> circleVertices(const Transform3 transform,
                                       unsigned int quarterSegments) const;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 

@@ -103,6 +103,9 @@ class TrapezoidBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::centroid
+  Vector2 centroid() const final;
+
   /// Return the vertices
   ///
   /// @param ignoredSegments is and ignored parameter used to describe

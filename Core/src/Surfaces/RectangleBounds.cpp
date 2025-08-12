@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/RectangleBounds.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>
@@ -72,6 +71,10 @@ std::vector<Vector2> RectangleBounds::vertices(unsigned int /*lseg*/) const {
 
 const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
+}
+
+Vector2 RectangleBounds::centroid() const {
+  return 0.5 * (m_min + m_max);
 }
 
 std::ostream& RectangleBounds::toStream(std::ostream& sl) const {

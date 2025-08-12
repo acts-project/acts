@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -101,6 +100,14 @@ std::vector<Vector2> DiscTrapezoidBounds::vertices(
           -halfY * cAxis + get(eHalfLengthXminR) * nAxis,
           halfY * cAxis + get(eHalfLengthXmaxR) * nAxis,
           halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
+}
+
+Vector2 DiscTrapezoidBounds::centroid() const {
+  // For disc trapezoid bounds in polar coordinates (r, phi),
+  // centroid is at the middle radius and average phi
+  double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
+  double phiCentroid = get(eAveragePhi);
+  return Vector2(rCentroid, phiCentroid);
 }
 
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
