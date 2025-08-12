@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -32,6 +33,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
+    std::string inputSimHits;
+    std::string inputMeasurementSimHitsMap;
     /// Input space point collections.
     ///
     /// We allow multiple space point collections to allow different parts of
@@ -80,6 +83,11 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
+
+  ReadDataHandle<InverseMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "MeasurementSimHitsMap"};
 };
 
 }  // namespace ActsExamples
