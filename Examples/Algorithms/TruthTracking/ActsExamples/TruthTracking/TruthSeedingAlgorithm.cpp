@@ -134,10 +134,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // fill measurement indices to create the proto track
     ProtoTrack track;
     track.hitIndices.reserve(measurements.size());
-    for (const auto& measurement : measurements) {
-      track.hitIndices.push_back(measurement.second);
-    }
-    track.hitIndices.reserve(measurements.size());
 
     std::vector<std::pair<const SimHit*, Index>> hits;
     hits.reserve(measurements.size());
@@ -172,7 +168,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     });
 
     for (const auto& [hit, index] : hits) {
-      track.hitIndices.emplace_back(index);
       Acts::Vector3 hp = hit->position();
       track.hitIndices.emplace_back(index);
     }
