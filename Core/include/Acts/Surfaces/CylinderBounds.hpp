@@ -135,6 +135,7 @@ class CylinderBounds : public SurfaceBounds {
                                       unsigned int quarterSegments) const;
 
   /// @copydoc SurfaceBounds::center
+  /// @note For CylinderBounds: returns (averagePhi, 0) in local (rphi, z) coordinates
   Vector2 center() const final;
 
   /// Output Method for std::ostream

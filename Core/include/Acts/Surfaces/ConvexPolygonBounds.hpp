@@ -108,6 +108,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   using SurfaceBounds::inside;
 
   /// @copydoc SurfaceBounds::center
+  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex centroid)
   Vector2 center() const final;
 
   /// Return the vertices
@@ -159,6 +160,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   using SurfaceBounds::inside;
 
   /// @copydoc SurfaceBounds::center
+  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex centroid)
   Vector2 center() const final;
 
   /// Return the vertices

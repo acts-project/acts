@@ -91,6 +91,7 @@ class RectangleBounds : public PlanarBounds {
   const RectangleBounds& boundingBox() const final;
 
   /// @copydoc SurfaceBounds::center
+  /// @note For RectangleBounds: returns the geometric center (min + max) / 2
   Vector2 center() const final;
 
   /// Output Method for std::ostream

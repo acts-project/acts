@@ -73,6 +73,7 @@ class LineBounds : public SurfaceBounds {
   using SurfaceBounds::inside;
 
   /// @copydoc SurfaceBounds::center
+  /// @note For LineBounds: returns (0,0) since bounds are symmetric around origin
   Vector2 center() const final;
 
   /// Output Method for std::ostream
