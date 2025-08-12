@@ -64,28 +64,30 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
     const ConstSpacePointProxy2& spM,
     const DoubletsForMiddleSp& topDoublets) const {
   // apply cut on the number of top SP if seedConfirmation is true
-  if (config().seedConfirmation) {
-    // check if middle SP is in the central or forward region
-    const bool isForwardRegion =
-        spM.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
-        spM.z() < config().centralSeedConfirmationRange.zMinSeedConf;
-    SeedConfirmationRangeConfig seedConfRange =
-        isForwardRegion ? config().forwardSeedConfirmationRange
-                        : config().centralSeedConfirmationRange;
-    // set the minimum number of top SP depending on whether the middle SP is
-    // in the central or forward region
-    std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
-                                   ? seedConfRange.nTopForLargeR
-                                   : seedConfRange.nTopForSmallR;
-    // set max bottom radius for seed confirmation
-    state().rMaxSeedConf = seedConfRange.rMaxSeedConf;
-    // continue if number of top SPs is smaller than minimum
-    if (topDoublets.size() < nTopSeedConf) {
-      ACTS_VERBOSE("Number of top SPs is "
-                   << topDoublets.size()
-                   << " and is smaller than minimum, returning");
-      return false;
-    }
+  if (!config().seedConfirmation) {
+    return true;
+  }
+
+  // check if middle SP is in the central or forward region
+  const bool isForwardRegion =
+      spM.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
+      spM.z() < config().centralSeedConfirmationRange.zMinSeedConf;
+  SeedConfirmationRangeConfig seedConfRange =
+      isForwardRegion ? config().forwardSeedConfirmationRange
+                      : config().centralSeedConfirmationRange;
+  // set the minimum number of top SP depending on whether the middle SP is
+  // in the central or forward region
+  std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
+                                 ? seedConfRange.nTopForLargeR
+                                 : seedConfRange.nTopForSmallR;
+  // set max bottom radius for seed confirmation
+  state().rMaxSeedConf = seedConfRange.rMaxSeedConf;
+  // continue if number of top SPs is smaller than minimum
+  if (topDoublets.size() < nTopSeedConf) {
+    ACTS_VERBOSE("Number of top SPs is "
+                 << topDoublets.size()
+                 << " and is smaller than minimum, returning");
+    return false;
   }
 
   return true;

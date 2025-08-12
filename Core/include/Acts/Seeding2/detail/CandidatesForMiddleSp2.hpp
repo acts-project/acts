@@ -44,7 +44,7 @@ class CandidatesForMiddleSp2 {
   using Index = std::uint32_t;
   using Size = std::uint32_t;
 
-  static constexpr Size NoSize = std::numeric_limits<Size>::max();
+  static constexpr Size kNoSize = std::numeric_limits<Size>::max();
 
   CandidatesForMiddleSp2();
 
@@ -87,8 +87,8 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  Size m_maxSizeLow{NoSize};
-  Size m_maxSizeHigh{NoSize};
+  Size m_maxSizeLow{kNoSize};
+  Size m_maxSizeHigh{kNoSize};
   // m_n_* is the current size of the indices collections [0, m_maxSize*).
   // These values are set internally by the class
   Size m_nLow{0};

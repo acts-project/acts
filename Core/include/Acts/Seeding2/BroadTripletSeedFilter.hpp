@@ -103,6 +103,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };
 
+  /// State of the filter that is communicated between different stages
   struct State {
     CandidatesForMiddleSp2 candidatesCollector;
 
@@ -118,6 +119,8 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
   };
 
+  /// Cache for intermediate results to avoid reallocations. No information is
+  /// carried over between different stages.
   struct Cache {
     std::vector<std::uint32_t> topSpIndexVec;
     std::vector<float> compatibleSeedR;
@@ -132,11 +135,6 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   ///       and should not be used across events.
   explicit BroadTripletSeedFilter(const Config& config, State& state,
                                   Cache& cache, const Logger& logger);
-
-  const Config& config() const { return *m_cfg; }
-  State& state() const { return *m_state; }
-  Cache& cache() const { return *m_cache; }
-  const Logger& logger() const { return *m_logger; }
 
   bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
@@ -156,6 +154,11 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   State* m_state{};
   Cache* m_cache{};
   const Logger* m_logger{};
+
+  const Config& config() const { return *m_cfg; }
+  State& state() const { return *m_state; }
+  Cache& cache() const { return *m_cache; }
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts::Experimental

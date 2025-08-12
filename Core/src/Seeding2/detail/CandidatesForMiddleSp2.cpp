@@ -15,10 +15,10 @@ CandidatesForMiddleSp2::CandidatesForMiddleSp2() = default;
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
     : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
   // Reserve enough memory for all collections
-  m_storage.reserve((nLow == NoSize ? 0 : nLow) +
-                    (nHigh == NoSize ? 0 : nHigh));
-  m_indicesHigh.reserve((nHigh == NoSize ? 0 : nHigh));
-  m_indicesLow.reserve((nLow == NoSize ? 0 : nLow));
+  m_storage.reserve((nLow == kNoSize ? 0 : nLow) +
+                    (nHigh == kNoSize ? 0 : nHigh));
+  m_indicesHigh.reserve((nHigh == kNoSize ? 0 : nHigh));
+  m_indicesLow.reserve((nLow == kNoSize ? 0 : nLow));
 }
 
 void CandidatesForMiddleSp2::pop(std::vector<Index>& indices,
