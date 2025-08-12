@@ -132,6 +132,21 @@ BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedRadialBoundsObject, radialBoundsObject);
 }
 
+BOOST_AUTO_TEST_CASE(RadialBoundsCentroid) {
+  // Test radial bounds with default phi
+  RadialBounds radial(rMin, rMax);
+  Vector2 centroid = radial.centroid();
+  double expectedR = 0.5 * (rMin + rMax);
+  BOOST_CHECK_EQUAL(centroid.x(), expectedR);
+  BOOST_CHECK_EQUAL(centroid.y(), 0.0);  // avgPhi = 0
+
+  // Test radial bounds with non-zero average phi
+  RadialBounds radialOffset(rMin, rMax, halfPhiSector, avgPhi);
+  Vector2 centroidOffset = radialOffset.centroid();
+  BOOST_CHECK_EQUAL(centroidOffset.x(), expectedR);
+  BOOST_CHECK_EQUAL(centroidOffset.y(), avgPhi);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

@@ -114,6 +114,23 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
       assignedVertices.cbegin(), assignedVertices.cend());
 }
 
+BOOST_AUTO_TEST_CASE(RectangleBoundsCentroid) {
+  // Test symmetric rectangle
+  const double halfX = 10.;
+  const double halfY = 5.;
+  RectangleBounds rect(halfX, halfY);
+  Vector2 centroid = rect.centroid();
+  CHECK_CLOSE_ABS(centroid, Vector2(0., 0.), 1e-6);
+
+  // Test asymmetric rectangle
+  Vector2 min(-3., -2.);
+  Vector2 max(7., 4.);
+  RectangleBounds rectAsym(min, max);
+  Vector2 centroidAsym = rectAsym.centroid();
+  Vector2 expected = 0.5 * (min + max);
+  CHECK_CLOSE_ABS(centroidAsym, expected, 1e-6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

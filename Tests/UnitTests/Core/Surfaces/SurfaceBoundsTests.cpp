@@ -67,6 +67,8 @@ class SurfaceBoundsStub : public SurfaceBounds {
     return lposition;
   }
 
+  Vector2 centroid() const final { return Vector2(0.0, 0.0); }
+
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final {
     (void)lposition;

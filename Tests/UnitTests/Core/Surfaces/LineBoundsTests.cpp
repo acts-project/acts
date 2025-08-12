@@ -114,6 +114,18 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
       "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
 }
 
+BOOST_AUTO_TEST_CASE(LineBoundsCentroid) {
+  const double radius = 2.5;
+  const double halfZ = 15.0;
+
+  LineBounds lineBounds(radius, halfZ);
+  Vector2 centroid = lineBounds.centroid();
+
+  // LineBounds should have centroid at origin since it's symmetric
+  BOOST_CHECK_EQUAL(centroid.x(), 0.0);
+  BOOST_CHECK_EQUAL(centroid.y(), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
