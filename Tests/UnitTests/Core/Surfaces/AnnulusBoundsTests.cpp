@@ -297,6 +297,19 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsCenter) {
   // Verify that phi component is within phi range
   BOOST_CHECK(symmetricCenter.y() >= minPhi);
   BOOST_CHECK(symmetricCenter.y() <= maxPhi);
+
+  // Test with non-zero average phi to verify proper rotation handling
+  double avgPhi = 0.5;  // Non-zero average phi
+  AnnulusBounds rotatedAnnulus(minRadius, maxRadius, minPhi, maxPhi, noOffset,
+                               avgPhi);
+  Vector2 rotatedCenter = rotatedAnnulus.center();
+
+  // The center should still be inside the bounds after rotation
+  BOOST_CHECK(rotatedAnnulus.inside(rotatedCenter));
+
+  // Center should be in strip polar coordinates
+  BOOST_CHECK(rotatedCenter.x() >= minRadius);
+  BOOST_CHECK(rotatedCenter.x() <= maxRadius);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

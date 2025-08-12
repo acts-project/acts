@@ -90,7 +90,7 @@ class AnnulusBounds : public DiscBounds {
   using SurfaceBounds::inside;
 
   /// @copydoc SurfaceBounds::center
-  /// @note For AnnulusBounds: returns pre-calculated center from corner vertices in strip polar coordinates (r, phi)
+  /// @note For AnnulusBounds: returns pre-calculated center from corner vertices in strip polar coordinates (r, phi), accounting for average phi rotation
   Vector2 center() const final;
 
   /// Outstream operator

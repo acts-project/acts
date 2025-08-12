@@ -115,7 +115,9 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
                              m_outRightStripXY + m_inRightStripXY);
 
   // Convert center from cartesian (strip XY) to polar (strip PC) coordinates
-  m_center = Vector2(centerXY.norm(), VectorHelpers::phi(centerXY));
+  // Apply inverse rotation to account for average phi, matching other methods
+  Vector2 centerPC = Vector2(centerXY.norm(), VectorHelpers::phi(centerXY));
+  m_center = m_rotationStripPC.inverse() * centerPC;
 }
 
 std::vector<double> AnnulusBounds::values() const {
