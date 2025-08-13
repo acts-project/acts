@@ -23,8 +23,8 @@ class TrackingGeometryPrintVisitor : public Acts::TrackingGeometryVisitor {
   /// @brief Constructor
   /// @param gctx: Reference to the geometry context needed to align the surfaces inside the detector
   /// @param indentation: How many spaces indicate a new step inside the volume hierarchy.
-  TrackingGeometryPrintVisitor(const Acts::GeometryContext& gctx,
-                               std::size_t indentation = 4);
+  explicit TrackingGeometryPrintVisitor(const Acts::GeometryContext& gctx,
+                                        std::size_t indentation = 4);
   ~TrackingGeometryPrintVisitor() override;
 
   /// @brief Visit a tracking volume in the geometry

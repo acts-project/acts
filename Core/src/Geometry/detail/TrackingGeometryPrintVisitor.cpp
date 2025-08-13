@@ -44,8 +44,9 @@ void TrackingGeometryPrintVisitor::visitVolume(
 std::size_t TrackingGeometryPrintVisitor::volNumber(
     const TrackingVolume& trkVol) const {
   const TrackingVolume* parent = trkVol.motherVolume();
-  if (!parent)
+  if (parent == nullptr) {
     return 1;
+  }
   return 1 + std::distance(
                  parent->volumes().begin(),
                  std::ranges::find_if(parent->volumes(),
@@ -75,7 +76,7 @@ void TrackingGeometryPrintVisitor::visitSurface(const Surface& surface) {
 void TrackingGeometryPrintVisitor::updateDepth(const TrackingVolume& trkVol) {
   m_currentDepth = 0;
   const TrackingVolume* parent = trkVol.motherVolume();
-  while (parent) {
+  while (parent != nullptr) {
     ++m_currentDepth;
     parent = parent->motherVolume();
   }
