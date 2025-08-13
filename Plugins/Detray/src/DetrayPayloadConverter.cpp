@@ -297,6 +297,26 @@ std::vector<const TrivialPortalLink*> decomposeToTrivials(
 
   return trivials;
 }
+/// Check compatibility between ACTS surface type and detray material_id
+/// @returns pair<is_compatible, expected_material_id>
+std::pair<bool, detray::io::material_id> isGridMaterialCompatible(
+    Surface::SurfaceType surfaceType, detray::io::material_id materialId) {
+  using enum Surface::SurfaceType;
+  using enum detray::io::material_id;
+
+  switch (surfaceType) {
+    case Cylinder:
+      return {materialId == concentric_cylinder2_map, concentric_cylinder2_map};
+    case Disc:
+      return {materialId == ring2_map, ring2_map};
+    case Plane:
+      return {materialId == rectangle2_map, rectangle2_map};
+    default:
+      // For other surface types, we don't have specific checks yet
+      return {true, unknown};
+  }
+}
+
 }  // namespace
 
 void DetrayPayloadConverter::handlePortalLink(
@@ -478,27 +498,48 @@ DetrayPayloadConverter::convertMaterial(
           }
         };
 
-    auto handleGrid =
-        [&](const detray::io::grid_payload<detray::io::material_slab_payload,
-                                           detray::io::material_id>& grid) {
-          ACTS_DEBUG("Assigning grid material to surface " << srfIdx);
-          auto it = srfIdxToMaterial.find(srfIdx);
+    auto handleGrid = [&](const detray::io::grid_payload<
+                          detray::io::material_slab_payload,
+                          detray::io::material_id>& grid) {
+      ACTS_DEBUG("Assigning grid material to surface " << srfIdx);
+      auto it = srfIdxToMaterial.find(srfIdx);
 
-          if (it != srfIdxToMaterial.end()) {
-            // Surface already has some material assigned
-            if (it->second != material) {
-              ACTS_ERROR("Surface "
-                         << srfIdx
-                         << " already has a different material assigned");
-              throw std::runtime_error("Material mismatch for surface");
-            }
+      if (it != srfIdxToMaterial.end()) {
+        // Surface already has some material assigned
+        if (it->second != material) {
+          ACTS_ERROR("Surface "
+                     << srfIdx << " already has a different material assigned");
+          throw std::runtime_error("Material mismatch for surface");
+        }
 
-            // It's the same material again, we just skip adding a duplicate
-            return;
-          }
-          grids.emplace_back(grid);
-          grids.back().owner_link.link = srfIdx;
-        };
+        // It's the same material again, we just skip adding a duplicate
+        return;
+      }
+
+      // @TODO: Add a consistency check between the surface type and the
+      //        axis types: detray's consistency check will find this but
+      //        the error message is not trivial. In this location, we can
+      //        print out the surface id and guide debugging!
+
+      // Check compatibility between surface type and grid material_id
+      auto [isCompatible, expectedId] =
+          isGridMaterialCompatible(surface.type(), grid.grid_link.type);
+
+      if (!isCompatible) {
+        ACTS_ERROR("Grid material compatibility error for surface "
+                   << surface.geometryId() << " (index " << srfIdx << "): "
+                   << "Surface type " << surface.type()
+                   << " is incompatible with material_id '"
+                   << grid.grid_link.type << "'. Expected '" << expectedId
+                   << "'. This indicates the BinUtility axis definition "
+                   << "does not match the surface geometry.");
+        throw std::runtime_error(
+            "Grid material has incompatible axis definition for surface type");
+      }
+
+      grids.emplace_back(grid);
+      grids.back().owner_link.link = srfIdx;
+    };
 
     std::visit(overloaded{handleHomogeneous, handleGrid}, detrayMaterial);
 
@@ -547,7 +588,7 @@ DetrayPayloadConverter::convertMaterial(
 
     printSurfaceInfo(*detrayMaterial, surface);
 
-    assignMaterial(surface.surfaceMaterial(), *detrayMaterial, srfIdx);
+    assignMaterial(surface.surfaceMaterial(), *detrayMaterial, srfIdx, surface);
   }
   ACTS_VERBOSE("Looping over " << volume.portals().size()
                                << " portals in volume " << volPayload.name);
@@ -608,7 +649,8 @@ DetrayPayloadConverter::convertMaterial(
 
         // Assign (a copy of) the detray material to the surface payload
         // associated with this trivial
-        assignMaterial(surfaceMaterial, *detrayMaterial, srfIdx);
+        assignMaterial(surfaceMaterial, *detrayMaterial, srfIdx,
+                       trivial->surface());
       }
     }
   }
