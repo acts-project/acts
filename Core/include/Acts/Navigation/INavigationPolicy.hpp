@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
@@ -70,10 +69,6 @@ class INavigationPolicy {
       const std::function<void(const INavigationPolicy&)>& visitor) const {
     visitor(*this);
   }
-
-  virtual std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup,
-      const Logger& logger) const = 0;
 
  protected:
   /// Internal helper function for derived classes that conform to the concept
