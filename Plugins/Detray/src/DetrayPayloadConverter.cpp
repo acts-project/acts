@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/DetrayFwd.hpp"
@@ -19,6 +17,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -799,17 +798,32 @@ DetrayPayloadConverter::convertTrackingGeometry(
         return it->second;
       };
 
-      auto detrayGrids = navPolicy->toDetrayPayload(surfaceLookupFn, logger());
-      if (detrayGrids != nullptr) {
+      std::unique_ptr<DetraySurfaceGrid> detrayGrid = nullptr;
+
+      navPolicy->visit([&](const INavigationPolicy& policy) {
+        if (detrayGrid != nullptr) {
+          ACTS_ERROR("Volume "
+                     << volume.volumeName()
+                     << " has more than one detray-convertible navigation "
+                        "policy. This cannot currently be handled.");
+          throw std::runtime_error{
+              "Multiple detray-compatible navigation policies"};
+        }
+
+        detrayGrid = m_cfg.convertNavigationPolicy.invokeWithFallback(
+            nullptr, policy, surfaceLookupFn, logger());
+      });
+
+      if (detrayGrid != nullptr) {
         ACTS_DEBUG("Volume " << volume.volumeName()
                              << " (detray idx: " << volPayload.index.link
                              << ") has navigation policy which produced "
-                             << detrayGrids->bins.size() << " populated bins");
+                             << detrayGrid->bins.size() << " populated bins");
 
-        detrayGrids->owner_link.link = volPayload.index.link;
+        detrayGrid->owner_link.link = volPayload.index.link;
 
         // Add the surface grid to the payload
-        surfaceGrids.grids[volPayload.index.link].push_back(*detrayGrids);
+        surfaceGrids.grids[volPayload.index.link].push_back(*detrayGrid);
       }
       // per volume, we have a VECTOR of grids: what are they? are they always
       // tied to a surface? which one?

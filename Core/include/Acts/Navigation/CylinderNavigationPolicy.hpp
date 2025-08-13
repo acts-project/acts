@@ -77,10 +77,6 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// @param delegate is the navigation delegate
   void connect(NavigationDelegate& delegate) const override;
 
-  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
-      const SurfaceLookupFunction& surfaceLookup,
-      const Logger& logger) const override;
-
  private:
   /// Pointer to the cylindrical tracking volume this policy navigates
   const TrackingVolume* m_volume;

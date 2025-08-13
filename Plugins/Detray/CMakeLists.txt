@@ -7,6 +7,7 @@ acts_add_library(
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
     src/DetrayPayloadConverter.cpp
+    src/DetrayNavigationConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
