@@ -10,7 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetrayFwd.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Plugins/Detray/DetrayNavigationConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeDispatcher.hpp"
 
 #include <map>
 #include <memory>
@@ -42,6 +45,12 @@ class DetrayPayloadConverter {
 
     /// Detray MUST have beampipe volume at index 0
     const TrackingVolume* beampipeVolume = nullptr;
+
+    TypeDispatcher<INavigationPolicy,
+                   std::unique_ptr<DetraySurfaceGrid>(
+                       const SurfaceLookupFunction& surfaceLookup,
+                       const Logger& logger)>
+        convertNavigationPolicy{convertSurfaceArrayToDetray};
   };
 
   static detray::io::transform_payload convertTransform(

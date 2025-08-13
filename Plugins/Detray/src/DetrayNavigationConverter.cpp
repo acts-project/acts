@@ -27,24 +27,24 @@
 
 namespace Acts {
 
-std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
-  // Only ONE of the child policies should return a non-nullptr payload
-  for (const auto& policy : m_policyPtrs) {
-    auto payload = policy->toDetrayPayload(surfaceLookup, logger);
-    if (payload) {
-      return payload;
-    }
-  }
-  return nullptr;
-}
+// std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
+//     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
+//   // Only ONE of the child policies should return a non-nullptr payload
+//   for (const auto& policy : m_policyPtrs) {
+//     auto payload = policy->toDetrayPayload(surfaceLookup, logger);
+//     if (payload) {
+//       return payload;
+//     }
+//   }
+//   return nullptr;
+// }
 
-std::unique_ptr<DetraySurfaceGrid>
-Experimental::MultiLayerNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& /*surfaceLookup*/,
-    const Logger& /*logger*/) const {
-  return nullptr;
-}
+// std::unique_ptr<DetraySurfaceGrid>
+// Experimental::MultiLayerNavigationPolicy::toDetrayPayload(
+//     const SurfaceLookupFunction& /*surfaceLookup*/,
+//     const Logger& /*logger*/) const {
+//   return nullptr;
+// }
 
 namespace {
 
@@ -115,12 +115,12 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 
 }  // namespace
 
-std::unique_ptr<DetraySurfaceGrid>
-SurfaceArrayNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
+std::unique_ptr<DetraySurfaceGrid> convertSurfaceArrayToDetray(
+    const SurfaceArrayNavigationPolicy& policy,
+    const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
   const auto* gridLookup =
       dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
-          &m_surfaceArray->gridLookup());
+          &policy.surfaceArray().gridLookup());
 
   if (gridLookup == nullptr) {
     throw std::runtime_error(
@@ -294,20 +294,22 @@ SurfaceArrayNavigationPolicy::toDetrayPayload(
   return gridPayload;
 }
 
-std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& /*surfaceLookup*/,
-    const Logger& logger) const {
-  ACTS_DEBUG(
-      "TryAllNavigationPolicy does not implement explicit detray conversion");
-  return nullptr;
-}
-
-std::unique_ptr<DetraySurfaceGrid> CylinderNavigationPolicy::toDetrayPayload(
-    const SurfaceLookupFunction& /*surfaceLookup*/,
-    const Logger& logger) const {
-  ACTS_DEBUG(
-      "CylinderNavigationPolicy does not implement explicit detray conversion");
-  return nullptr;
-}
+// std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
+//     const SurfaceLookupFunction& /*surfaceLookup*/,
+//     const Logger& logger) const {
+//   ACTS_DEBUG(
+//       "TryAllNavigationPolicy does not implement explicit detray
+//       conversion");
+//   return nullptr;
+// }
+//
+// std::unique_ptr<DetraySurfaceGrid> CylinderNavigationPolicy::toDetrayPayload(
+//     const SurfaceLookupFunction& /*surfaceLookup*/,
+//     const Logger& logger) const {
+//   ACTS_DEBUG(
+//       "CylinderNavigationPolicy does not implement explicit detray
+//       conversion");
+//   return nullptr;
+// }
 
 }  // namespace Acts
