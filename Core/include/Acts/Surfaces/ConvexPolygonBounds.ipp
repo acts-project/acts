@@ -77,6 +77,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
     m_vertices[i] = vertices[i];
   }
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>
@@ -84,6 +85,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
     const vertex_array& vertices) noexcept(false)
     : m_vertices(vertices), m_boundingBox(makeBoundingBox(vertices)) {
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>
@@ -93,8 +95,9 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(const value_array& values) noexcept(
   for (std::size_t i = 0; i < N; i++) {
     m_vertices[i] = Vector2(values[2 * i], values[2 * i + 1]);
   }
-  makeBoundingBox(m_vertices);
+  m_boundingBox = makeBoundingBox(m_vertices);
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>
@@ -118,16 +121,6 @@ std::vector<Vector2> ConvexPolygonBounds<N>::vertices(
 template <int N>
 const RectangleBounds& ConvexPolygonBounds<N>::boundingBox() const {
   return m_boundingBox;
-}
-
-template <int N>
-Vector2 ConvexPolygonBounds<N>::center() const {
-  // Calculate centroid as average of all vertices
-  Vector2 sum = Vector2::Zero();
-  for (const auto& vertex : m_vertices) {
-    sum += vertex;
-  }
-  return sum / static_cast<double>(N);
 }
 
 template <int N>

@@ -16,6 +16,7 @@
 #include <array>
 #include <cstddef>
 #include <iosfwd>
+#include <span>
 #include <vector>
 
 #include <boost/container/small_vector.hpp>
@@ -41,6 +42,11 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex
+  ///       centroid)
+  Vector2 center() const final;
+
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
   /// @param vertices A collection of vertices to enclose.
@@ -56,6 +62,12 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   template <typename coll_t>
     requires std::same_as<typename coll_t::value_type, Acts::Vector2>
   static void convex_impl(const coll_t& vertices) noexcept(false);
+
+  void calculateCenter(std::span<const Vector2> vertices);
+
+ private:
+  /// Cached center position
+  Vector2 m_center;
 };
 
 /// This is the actual implementation of the bounds.
@@ -107,10 +119,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   using SurfaceBounds::inside;
 
-  /// @copydoc SurfaceBounds::center
-  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex centroid)
-  Vector2 center() const final;
-
   /// Return the vertices
   ///
   /// @param ignoredSegments the number of segments used to approximate
@@ -158,10 +166,6 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
                        const SquareMatrix2& metric) const final;
 
   using SurfaceBounds::inside;
-
-  /// @copydoc SurfaceBounds::center
-  /// @note For ConvexPolygonBounds: returns average of all vertices (vertex centroid)
-  Vector2 center() const final;
 
   /// Return the vertices
   ///
