@@ -87,7 +87,6 @@ struct RootMeasurementWriter::DigitizationTree {
     for (auto ib : recoIndices) {
       tree->Branch(("var_" + bNames[ib]).c_str(), &varBound[ib]);
     }
-
     tree->Branch("rec_x", &recGx);
     tree->Branch("rec_y", &recGy);
     tree->Branch("rec_z", &recGz);
