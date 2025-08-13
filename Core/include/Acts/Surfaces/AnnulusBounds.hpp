@@ -169,8 +169,8 @@ class AnnulusBounds : public DiscBounds {
       Vector2::Zero()};  ///< The origin of the module in the strip frame
   Vector2 m_shiftXY{Vector2::Zero()};  // == -m_moduleOrigin
   Vector2 m_shiftPC{Vector2::Zero()};
-  Transform2 m_rotationStripPC{Vector2::Zero()};
-  Transform2 m_translation{Vector2::Zero()};
+  Transform2 m_rotationStripPC{Transform2::Identity()};  ///< Rotation to strip
+  Transform2 m_translation{Transform2::Identity()};  ///< Translation to strip
 
   // Vectors needed for inside checking
   Vector2 m_outLeftStripPC{Vector2::Zero()};
