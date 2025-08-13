@@ -11,6 +11,7 @@
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <numbers>
 
@@ -104,6 +105,7 @@ detray::io::axis_payload convertBinningData(const BinningData& bData) {
 
 std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
     const {
+  using enum AxisDirection;
   // BinUtility modifications
   bool swapped = false;
   // Get the bin utility (make a copy as we may modify it)
@@ -112,27 +114,27 @@ std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
   BinUtility bUtility = binUtility();
   // Turn the bin value into a 2D grid
   if (bUtility.dimensions() == 1u) {
-    if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisX) {
+    if (bUtility.binningData()[0u].binvalue == AxisX) {
       // Turn to X-Y
       bUtility += BinUtility(1u, std::numeric_limits<float>::lowest(),
                              std::numeric_limits<float>::max(),
-                             BinningOption::closed, AxisDirection::AxisY);
-    } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisY) {
+                             BinningOption::closed, AxisY);
+    } else if (bUtility.binningData()[0u].binvalue == AxisY) {
       // Turn to X-Y
       BinUtility nbUtility(1u, std::numeric_limits<float>::lowest(),
                            std::numeric_limits<float>::max(),
-                           BinningOption::closed, AxisDirection::AxisX);
+                           BinningOption::closed, AxisX);
       nbUtility += bUtility;
       bUtility = std::move(nbUtility);
       swapped = true;
-    } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisR) {
+    } else if (bUtility.binningData()[0u].binvalue == AxisR) {
       // Turn to R-Phi
-      bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                             AxisDirection::AxisPhi);
-    } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ) {
+      bUtility +=
+          BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed, AxisPhi);
+    } else if (bUtility.binningData()[0u].binvalue == AxisZ) {
       // Turn to Phi-Z - swap needed
       BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                           AxisDirection::AxisPhi);
+                           AxisPhi);
       nbUtility += bUtility;
       bUtility = std::move(nbUtility);
       swapped = true;
@@ -140,8 +142,8 @@ std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
       std::invalid_argument("Unsupported binning for Detray");
     }
   } else if (bUtility.dimensions() == 2u &&
-             bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ &&
-             bUtility.binningData()[1u].binvalue == AxisDirection::AxisPhi) {
+             bUtility.binningData()[0u].binvalue == AxisZ &&
+             bUtility.binningData()[1u].binvalue == AxisPhi) {
     BinUtility nbUtility(bUtility.binningData()[1u]);
     nbUtility += BinUtility{bUtility.binningData()[0u]};
     bUtility = std::move(nbUtility);
@@ -153,11 +155,11 @@ std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
 
   // Translate into grid index type
   detray::io::material_id gridIndexType = detray::io::material_id::unknown;
-  if (bVal0 == AxisDirection::AxisR && bVal1 == AxisDirection::AxisPhi) {
+  if (bVal0 == AxisR && bVal1 == AxisPhi) {
     gridIndexType = detray::io::material_id::ring2_map;
-  } else if (bVal0 == AxisDirection::AxisPhi && bVal1 == AxisDirection::AxisZ) {
+  } else if (bVal0 == AxisPhi && bVal1 == AxisZ) {
     gridIndexType = detray::io::material_id::concentric_cylinder2_map;
-  } else if (bVal0 == AxisDirection::AxisX && bVal1 == AxisDirection::AxisY) {
+  } else if (bVal0 == AxisX && bVal1 == AxisY) {
     gridIndexType = detray::io::material_id::rectangle2_map;
   } else {
     std::runtime_error(
