@@ -12,12 +12,17 @@
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <strstream>
+#include <sstream>
 
 namespace Acts::detail {
-
+/// @brief  Visitor class which prints the content of the tracking geometry (volumes, surfaces, portals) in an
+///         indented list. The indentation reflects the position of a volume
+///         inside the overall tracking geometry
 class TrackingGeometryPrintVisitor : public Acts::TrackingGeometryVisitor {
  public:
+  /// @brief Constructor
+  /// @param gctx: Reference to the geometry context needed to align the surfaces inside the detector
+  /// @param indentation: How many spaces indicate a new step inside the volume hierarchy.
   TrackingGeometryPrintVisitor(const Acts::GeometryContext& gctx,
                                std::size_t indentation = 4);
   ~TrackingGeometryPrintVisitor() override;
