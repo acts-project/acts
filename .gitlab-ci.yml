@@ -129,6 +129,7 @@ build_exatrkx_cpu:
       --preset=gitlab-ci-exatrkx
       -DACTS_EXATRKX_ENABLE_CUDA=OFF
       -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
+      -DACTS_EXATRKX_ENABLE_NVTX=OFF
 
     - ccache -z
     - cmake --build build -- -j6
