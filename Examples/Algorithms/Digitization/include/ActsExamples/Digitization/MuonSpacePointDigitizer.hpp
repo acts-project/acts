@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -79,6 +80,18 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   void visualizeBucket(const AlgorithmContext& ctx,
                        const Acts::GeometryContext& gctx,
                        const MuonSpacePointBucket& bucket) const;
+  /// @brief Determines the axis ranges in the z-y plane to draw
+  ///        the measurements on the canvas
+  /// @param bucket: List of all measurements in the chamber
+  Acts::RangeXD<2, double> canvasRanges(
+      const MuonSpacePointBucket& bucket) const;
+  /// @brief Returns whether a surface should be drawn on the canvas
+  /// @param gctx: Geometry context to construct the toSpacePoint transforms
+  /// @param surface: Reference to the surface of question to depict
+  /// @param canvasBoundaries: Visible section on the canvas
+  bool isSurfaceToDraw(const Acts::GeometryContext& gctx,
+                       const Acts::Surface& surface,
+                       const Acts::RangeXD<2, double>& canvasBoundaries) const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits
