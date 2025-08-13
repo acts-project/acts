@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/PointerTraits.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -22,6 +23,26 @@
 
 namespace ActsExamples {
 namespace detail {
+/// @brief Concept to define objects that have a geometryId getter method
+template <typename ObjType>
+concept GeometryIdObj = requires(const ObjType& obj) {
+  { obj.geometryId() } -> std::same_as<Acts::GeometryIdentifier>;
+};
+/// @brief Concept to define objects to pointer that have a geometryId getter method
+template <typename ObjType>
+concept GeometryIdPtrObj =
+    Acts::PointerConcept<ObjType> &&
+    GeometryIdObj<typename Acts::RemovePointer<ObjType>::type>;
+
+/// @brief Concept to define an object which carries time
+template <typename ObjType>
+concept TimedObj = requires(const ObjType& obj) {
+  { obj.time() };
+};
+/// @brief Concept to define a pointer to an object which carries time
+template <typename ObjType>
+concept TimedObjPtr = Acts::PointerConcept<ObjType> &&
+                      TimedObj<typename Acts::RemovePointer<ObjType>::type>;
 
 // extract the geometry identifier from a variety of types
 struct GeometryIdGetter {
@@ -42,24 +63,17 @@ struct GeometryIdGetter {
     return mapItem.first;
   }
   // Support pointer to object that implement `.geometryId()`.
-  template <typename T>
-  constexpr Acts::GeometryIdentifier operator()(const T* thing) const {
+  template <GeometryIdPtrObj T>
+  constexpr Acts::GeometryIdentifier operator()(const T& thing) const {
     return thing->geometryId();
   }
   // support elements that implement `.geometryId()`.
-  template <typename T>
-  inline auto operator()(const T& thing) const
-      -> decltype(thing.geometryId(), Acts::GeometryIdentifier()) {
+  template <GeometryIdObj T>
+  inline auto operator()(const T& thing) const {
     return thing.geometryId();
   }
-  // support pointer type elements that implements `geometryId()`.
-  template <typename T>
-  inline auto operator()(const T& thing) const
-      -> decltype(thing->geometryId(), Acts::GeometryIdentifier()) {
-    return thing->geometryId();
-  }
   // support reference_wrappers around such types as well
-  template <typename T>
+  template <GeometryIdObj T>
   inline auto operator()(std::reference_wrapper<T> thing) const
       -> decltype(thing.get().geometryId(), Acts::GeometryIdentifier()) {
     return thing.get().geometryId();
@@ -69,6 +83,21 @@ struct GeometryIdGetter {
 struct CompareGeometryId {
   // indicate that comparisons between keys and full objects are allowed.
   using is_transparent = void;
+
+  /// @brief Comparator that sorts objects with the same geometry id by time
+  template <TimedObj Left, TimedObj Right>
+  constexpr bool operator()(const Left& lhs, const Right& rhs) const {
+    const auto lId = GeometryIdGetter{}(lhs);
+    const auto rId = GeometryIdGetter{}(rhs);
+    if (lId == rId) {
+      return lhs.time() < rhs.time();
+    }
+    return lId < rId;
+  }
+  template <TimedObjPtr Left, TimedObjPtr Right>
+  constexpr bool operator()(const Left& lhs, const Right& rhs) const {
+    return (*this)(*lhs, *rhs);
+  }
   // compare two elements using the automatic key extraction.
   template <typename Left, typename Right>
   constexpr bool operator()(Left&& lhs, Right&& rhs) const {
@@ -91,7 +120,6 @@ struct CompareGeometryId {
 template <typename T>
 using GeometryIdMultiset =
     boost::container::flat_multiset<T, detail::CompareGeometryId>;
-
 /// Store elements indexed by an geometry id.
 ///
 /// @tparam T type to be stored
