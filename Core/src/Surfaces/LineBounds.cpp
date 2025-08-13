@@ -44,7 +44,7 @@ Vector2 LineBounds::closestPoint(const Vector2& lposition,
 
 Vector2 LineBounds::center() const {
   // LineBounds is symmetric around the origin in both dimensions
-  return Vector2(0.0, 0.0);
+  return Vector2::Zero();
 }
 
 std::ostream& LineBounds::toStream(std::ostream& sl) const {

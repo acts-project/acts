@@ -66,7 +66,7 @@ class InfiniteBounds : public SurfaceBounds {
   /// @copydoc SurfaceBounds::center
   Vector2 center() const final {
     // For infinite bounds, return conceptual center at origin
-    return Vector2(0.0, 0.0);
+    return Vector2::Zero();
   }
 
   /// Output Method for std::ostream

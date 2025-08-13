@@ -165,30 +165,31 @@ class AnnulusBounds : public DiscBounds {
   std::array<double, eSize> m_values;
 
   // @TODO: Does this need to be in bound values?
-  Vector2 m_moduleOrigin;
-  Vector2 m_shiftXY;  // == -m_moduleOrigin
-  Vector2 m_shiftPC;
-  Transform2 m_rotationStripPC;
-  Transform2 m_translation;
+  Vector2 m_moduleOrigin{
+      Vector2::Zero()};  ///< The origin of the module in the strip frame
+  Vector2 m_shiftXY{Vector2::Zero()};  // == -m_moduleOrigin
+  Vector2 m_shiftPC{Vector2::Zero()};
+  Transform2 m_rotationStripPC{Vector2::Zero()};
+  Transform2 m_translation{Vector2::Zero()};
 
   // Vectors needed for inside checking
-  Vector2 m_outLeftStripPC;
-  Vector2 m_inLeftStripPC;
-  Vector2 m_outRightStripPC;
-  Vector2 m_inRightStripPC;
+  Vector2 m_outLeftStripPC{Vector2::Zero()};
+  Vector2 m_inLeftStripPC{Vector2::Zero()};
+  Vector2 m_outRightStripPC{Vector2::Zero()};
+  Vector2 m_inRightStripPC{Vector2::Zero()};
 
-  Vector2 m_outLeftModulePC;
-  Vector2 m_inLeftModulePC;
-  Vector2 m_outRightModulePC;
-  Vector2 m_inRightModulePC;
+  Vector2 m_outLeftModulePC{Vector2::Zero()};
+  Vector2 m_inLeftModulePC{Vector2::Zero()};
+  Vector2 m_outRightModulePC{Vector2::Zero()};
+  Vector2 m_inRightModulePC{Vector2::Zero()};
 
-  Vector2 m_outLeftStripXY;
-  Vector2 m_inLeftStripXY;
-  Vector2 m_outRightStripXY;
-  Vector2 m_inRightStripXY;
+  Vector2 m_outLeftStripXY{Vector2::Zero()};
+  Vector2 m_inLeftStripXY{Vector2::Zero()};
+  Vector2 m_outRightStripXY{Vector2::Zero()};
+  Vector2 m_inRightStripXY{Vector2::Zero()};
 
   /// Pre-calculated center point (average of vertices)
-  Vector2 m_center;
+  Vector2 m_center{Vector2::Zero()};
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
