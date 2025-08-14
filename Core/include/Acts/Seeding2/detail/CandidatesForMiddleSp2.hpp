@@ -11,7 +11,6 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 
 #include <limits>
-#include <map>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -61,11 +60,15 @@ class CandidatesForMiddleSp2 {
 
   /// @brief Retrieve the number of Low quality candidates
   /// @returns The number of Low quality candidates
-  Size nLowQualityCandidates() const { return m_indicesLow.size(); }
+  Size nLowQualityCandidates() const {
+    return static_cast<Size>(m_indicesLow.size());
+  }
 
   /// @brief Retrieve the number of High quality candidates
   /// @returns The number of High quality candidates
-  Size nHighQualityCandidates() const { return m_indicesHigh.size(); }
+  Size nHighQualityCandidates() const {
+    return static_cast<Size>(m_indicesHigh.size());
+  }
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -86,7 +89,7 @@ class CandidatesForMiddleSp2 {
 
  private:
   using WeightIndex = std::pair<float, Index>;
-  using Heap = std::vector<WeightIndex>;
+  using Container = std::vector<WeightIndex>;
   static constexpr auto comparator = [](const WeightIndex& a,
                                         const WeightIndex& b) {
     return a.first > b.first;
@@ -101,11 +104,12 @@ class CandidatesForMiddleSp2 {
   // storage contains the collection of the candidates
   std::vector<TripletCandidate2> m_storage;
 
-  Heap m_indicesLow;
-  Heap m_indicesHigh;
+  Container m_indicesLow;
+  Container m_indicesHigh;
 
-  bool push(Heap& heap, Size nMax, SpacePointIndex2 spB, SpacePointIndex2 spM,
-            SpacePointIndex2 spT, float weight, float zOrigin, bool isQuality);
+  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
+            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
+            float zOrigin, bool isQuality);
 };
 
 }  // namespace Acts::Experimental
