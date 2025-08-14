@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
-
 // This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
@@ -20,40 +18,51 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Acts::Experimental::detail {
 
 class FastStrawLineFitter {
  public:
+  /// @brief abrivation of the residual indices to fetch the proper covariance
+  using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
+  /// @brief Vector3 type
+  using Vector = CompSpacePointAuxiliaries::Vector;
+  /// @brief Configuration object
   struct Config {
+    /// @brief Number of maximum iterations
     std::uint32_t maxIter{10};
   };
 
-  ///@brief Auxiliary struct to calculate the fast-fit constants 
+  /// @param logger: New logging object for debugging
+  explicit FastStrawLineFitter(const Config& cfg,
+                               std::unique_ptr<const Logger> logger =
+                                   getDefaultLogger("FastStrawLineFitter",
+                                                    Logging::Level::INFO));
+
+  ///@brief Auxiliary struct to calculate the fast-fit constants
   struct SeedFitAuxilliaries {
-    ///@brief Tube position center weighted with inverse covariances 
-    Vector2 centerOfGrav{Vector2::Zero()};
+    ///@brief Tube position center weighted with inverse covariances
+    Vector centerOfGrav{Vector::Zero()};
     ///@brief Vector of inverse covariances */
     std::vector<double> invCovs{};
-    ///@brief Vector of drfit signs */
-    std::vector<std::int32_t> driftSigns{};
     ///@brief Covariance norm */
     double covNorm{0.};
-    ///@brief Expectation value of T_{z}^{2} - T_{y}^{2} 
+    ///@brief Expectation value of T_{z}^{2} - T_{y}^{2}
     double T_zzyy{0.};
-    ///@brief Expectation value of T_{y} * T_{z} 
+    ///@brief Expectation value of T_{y} * T_{z}
     double T_yz{0.};
-    ///@brief Expectation value of T_{z} * r  
+    ///@brief Expectation value of T_{z} * r
     double T_rz{0.};
-    ///@brief Expectation value of T_{y} * r  
+    ///@brief Expectation value of T_{y} * r
     double T_ry{0.};
     ///@brief Prediced y0 given as the expectation value of the radii
-    ///         divided by the inverse covariance sum. 
+    ///         divided by the inverse covariance sum.
     double fitY0{0.};
   };
   ///@brief Extension of the auxiliary fit constants needed for the
@@ -62,23 +71,23 @@ class FastStrawLineFitter {
     ///@brief Constructor */
     SeedFitAuxWithT0(SeedFitAuxilliaries&& parent)
         : SeedFitAuxilliaries{std::move(parent)} {}
-    ///@brief Expectation value of T_{y} * v */
+    ///@brief Expectation value of T_{y} * v
     double T_vy{0.};
-    ///@brief Expectation value of T_{z} * v */
+    ///@brief Expectation value of T_{z} * v
     double T_vz{0.};
-    ///@brief Expectation value of T_{y} * a */
+    ///@brief Expectation value of T_{y} * a
     double T_ay{0.};
-    ///@brief Expectation value of T_{z} * a */
+    ///@brief Expectation value of T_{z} * a
     double T_az{0.};
-    ///@brief Expectation value of r * v */
+    ///@brief Expectation value of r * v
     double R_vr{0.};
-    ///@brief Expectation value of v * v */
+    ///@brief Expectation value of v * v
     double R_vv{0.};
-    ///@brief Expectation value of r * a */
+    ///@brief Expectation value of r * a
     double R_va{0.};
-    ///@brief First derivative of the fitted Y0 */
+    ///@brief First derivative of the fitted Y0
     double fitY0Prime{0.};
-    ///@brief Second derivative of the ftted Y0 */
+    ///@brief Second derivative of the ftted Y0
     double fitY0TwoPrime{0.};
   };
 
@@ -92,15 +101,16 @@ class FastStrawLineFitter {
 
   /// @brief
   template <CompositeSpacePointContainer StrawCont_t>
-    Acts::Result<FitResult> fit(const StrawCont_t& measurements,
-                                const std::vector<std::int32_t>& signs) const;
-    private:
-       const Config m_cfg{};
-       std::unique_ptr<const Acts::Logger> m_logger{};
+  Acts::Result<FitResult> fit(const StrawCont_t& measurements,
+                              const std::vector<std::int32_t>& signs) const;
 
-       const Acts::Logger& logger() const;
+ private:
+  // void
 
-        
+  const Config m_cfg{};
+  std::unique_ptr<const Acts::Logger> m_logger{};
+
+  const Acts::Logger& logger() const;
 };
 
 }  // namespace Acts::Experimental::detail

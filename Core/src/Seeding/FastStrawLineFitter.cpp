@@ -14,27 +14,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#pragma once
-
 #include "Acts/Seeding/detail/FastStrawLineFitter.hpp"
 
 namespace Acts::Experimental::detail {
-Acts::Result<FitResult> FastStrawLineFitter::fit(
-    const StrawCont_t& measurements,
-    const std::vector<std::int32_t>& signs) const {
-  bool basisDefined{false};
-  Vector bY{Vector::Zero()}, bZ{Vector::Zero()};
-  for (const auto& strawMeas : measurements) {
-    if (!basisDefined) {
-    }
-  }
 
-  if (measurements.size() != signs.size()) {
-    ACTS_WARNINGS("Not all measurements are associated with a drift sign");
-    return Acts::Result<FitResult>::error();
-  }
-
-  return Result{};
-}
+FastStrawLineFitter::FastStrawLineFitter(const Config& cfg,
+                                         std::unique_ptr<const Logger> logger)
+    : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
 }  // namespace Acts::Experimental::detail
