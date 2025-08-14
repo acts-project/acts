@@ -168,7 +168,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     });
 
     for (const auto& [hit, index] : hits) {
-      Acts::Vector3 hp = hit->position();
       track.hitIndices.emplace_back(index);
     }
 
