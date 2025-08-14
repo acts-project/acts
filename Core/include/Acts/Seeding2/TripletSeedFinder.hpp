@@ -21,7 +21,7 @@ class TripletTopCandidates {
  public:
   using Index = std::uint32_t;
 
-  Index size() const { return m_topSpacePoints.size(); }
+  Index size() const { return static_cast<Index>(m_topSpacePoints.size()); }
 
   void reserve(Index size) {
     m_topSpacePoints.reserve(size);
@@ -70,7 +70,7 @@ class TripletTopCandidates {
     Index m_index{};
   };
 
-  Proxy operator[](std::size_t index) const { return Proxy(this, index); }
+  Proxy operator[](Index index) const { return Proxy(this, index); }
 
   using const_iterator =
       ContainerIterator<TripletTopCandidates, Proxy, Index, true>;
