@@ -16,11 +16,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include "GeoModelKernel/throwExcept.h"
-
+#include <format>
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
@@ -63,6 +63,11 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   }
 
   auto trackingGeometry = root.construct({}, gctx, *m_logger);
+  if (logger().doPrint(Acts::Logging::Level::DEBUG)) {
+    Acts::detail::TrackingGeometryPrintVisitor trkGeoPrinter{gctx};
+    trackingGeometry->apply(trkGeoPrinter);
+    ACTS_DEBUG(std::endl << trkGeoPrinter.stream().str());
+  }
 
   return trackingGeometry;
 }
@@ -106,7 +111,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         parentPhysVol->getLogVol()->getShape(), boundFactory);
 
     auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
-        *parentVolume, name + "Chamber_" + std::to_string(stationNum));
+        *parentVolume, std::format("{:}_Chamber_{:d}", name, stationNum));
     chamberVolume->assignGeometryId(geoId.withVolume(stationNum));
     ++stationNum;
     ACTS_VERBOSE("Boundaries of the chamber volume: "
@@ -148,7 +153,7 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
       std::make_unique<Acts::TrackingVolume>(
           Acts::Transform3::Identity(),
           std::make_shared<Acts::CylinderVolumeBounds>(rmincyl, rmaxcyl, halfZ),
-          name + "_Barrel"));
+          std::format("{:}_Barrel", name)));
 
   // create the bluprint nodes for the chambers and add them as children to the
   // cylinder barrel node
