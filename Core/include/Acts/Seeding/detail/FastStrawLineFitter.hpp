@@ -21,6 +21,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <vector>
+#include <memory>
+
 namespace Acts::Experimental::detail {
 
 class FastStrawLineFitter {
@@ -82,7 +87,7 @@ class FastStrawLineFitter {
     double y0{0.};
     double chi2{0.};
     std::uint32_t nDoF{0};
-    std::unit32_t nIter{0};
+    std::uint32_t nIter{0};
   };
 
   /// @brief
@@ -90,6 +95,11 @@ class FastStrawLineFitter {
     Acts::Result<FitResult> fit(const StrawCont_t& measurements,
                                 const std::vector<std::int32_t>& signs) const;
     private:
+       const Config m_cfg{};
+       std::unique_ptr<const Acts::Logger> m_logger{};
+
+       const Acts::Logger& logger() const;
+
         
 };
 

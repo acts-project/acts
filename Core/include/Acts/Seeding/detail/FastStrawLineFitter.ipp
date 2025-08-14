@@ -22,7 +22,5 @@
 
 namespace Acts::Experimental::detail {
 
-template <CompositeSpacePointContainer StrawCont_t>
-Acts::res
 
 }
