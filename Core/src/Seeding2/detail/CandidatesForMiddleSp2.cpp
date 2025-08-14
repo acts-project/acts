@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#include <__algorithm/ranges_lower_bound.h>
+
 namespace Acts::Experimental {
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2()
@@ -41,24 +43,26 @@ bool CandidatesForMiddleSp2::push(SpacePointIndex2 spB, SpacePointIndex2 spM,
               isQuality);
 }
 
-bool CandidatesForMiddleSp2::push(Heap& heap, Size nMax, SpacePointIndex2 spB,
-                                  SpacePointIndex2 spM, SpacePointIndex2 spT,
-                                  float weight, float zOrigin, bool isQuality) {
+bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
+                                  SpacePointIndex2 spB, SpacePointIndex2 spM,
+                                  SpacePointIndex2 spT, float weight,
+                                  float zOrigin, bool isQuality) {
   if (nMax == 0) {
     return false;
   }
 
-  if (heap.size() < nMax) {
+  if (container.size() < nMax) {
     // If there is still space, add anything
     m_storage.emplace_back(spB, spM, spT, weight, zOrigin, isQuality);
-    heap.emplace_back(weight, m_storage.size() - 1);
-    std::ranges::push_heap(heap, comparator);
+    WeightIndex newIndex{weight, m_storage.size() - 1};
+    auto it = std::ranges::lower_bound(container, newIndex, comparator);
+    container.insert(it, newIndex);
     return true;
   }
 
   // If no space, replace one if quality is enough
   // Compare to element with lowest weight
-  const auto& smallest = heap.front();
+  const auto& smallest = container.back();
   if (weight <= smallest.first) {
     return false;
   }
@@ -66,9 +70,10 @@ bool CandidatesForMiddleSp2::push(Heap& heap, Size nMax, SpacePointIndex2 spB,
   // Remove element with lower weight and add this one
   m_storage[smallest.second] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
-  std::ranges::pop_heap(heap, comparator);
-  heap.back() = {weight, m_storage.size() - 1};
-  std::ranges::push_heap(heap, comparator);
+  container.pop_back();
+  WeightIndex newIndex{weight, smallest.second};
+  auto it = std::ranges::lower_bound(container, newIndex, comparator);
+  container.insert(it, newIndex);
 
   return true;
 }
@@ -77,9 +82,6 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     const SpacePointContainer2& /*spacePoints*/,
     std::vector<TripletCandidate2>& output) {
   output.reserve(output.size() + size());
-
-  std::ranges::sort_heap(m_indicesHigh, comparator);
-  std::ranges::sort_heap(m_indicesLow, comparator);
 
   for (const auto& [weight, index] : m_indicesHigh) {
     output.emplace_back(m_storage[index]);
