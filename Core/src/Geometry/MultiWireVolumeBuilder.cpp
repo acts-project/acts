@@ -105,7 +105,7 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
   navConfig.binExpansion = {expansionA, expansionB};
 
   std::unique_ptr<NavigationPolicyFactory> factory =
-      NavigationPolicyFactory::make()
+      NavigationPolicyFactory{}
           .add<TryAllNavigationPolicy>(tryAllConfig)
           .add<MultiLayerNavigationPolicy>(navConfig, indexedGrid)
           .asUniquePtr();
