@@ -10,12 +10,14 @@
 
 namespace Acts::Experimental {
 
-CandidatesForMiddleSp2::CandidatesForMiddleSp2() = default;
+CandidatesForMiddleSp2::CandidatesForMiddleSp2()
+    : CandidatesForMiddleSp2(kNoSize, kNoSize) {}
 
 CandidatesForMiddleSp2::CandidatesForMiddleSp2(Size nLow, Size nHigh)
     : m_maxSizeLow(nLow), m_maxSizeHigh(nHigh) {
   // Reserve enough memory for all collections
-  m_storage.reserve(nLow + nHigh);
+  m_storage.reserve((nLow != kNoSize ? nLow : 0) +
+                    (nHigh != kNoSize ? nHigh : 0));
 }
 
 void CandidatesForMiddleSp2::clear() {

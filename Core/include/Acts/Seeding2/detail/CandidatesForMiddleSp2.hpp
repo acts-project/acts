@@ -45,6 +45,8 @@ class CandidatesForMiddleSp2 {
   using Index = std::uint32_t;
   using Size = std::uint32_t;
 
+  static constexpr Size kNoSize = std::numeric_limits<Size>::max();
+
   CandidatesForMiddleSp2();
 
   /// @brief Setting maximum number of candidates to keep
@@ -88,8 +90,8 @@ class CandidatesForMiddleSp2 {
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
   // are set by the user once
-  Size m_maxSizeLow{std::numeric_limits<Size>::max()};
-  Size m_maxSizeHigh{std::numeric_limits<Size>::max()};
+  Size m_maxSizeLow{kNoSize};
+  Size m_maxSizeHigh{kNoSize};
 
   // storage contains the collection of the candidates
   std::vector<TripletCandidate2> m_storage;
