@@ -85,7 +85,12 @@ class CandidatesForMiddleSp2 {
                           std::vector<TripletCandidate2>& output);
 
  private:
-  using Container = std::multimap<float, Index, std::greater<float>>;
+  using WeightIndex = std::pair<float, Index>;
+  using Heap = std::vector<WeightIndex>;
+  static constexpr auto comparator = [](const WeightIndex& a,
+                                        const WeightIndex& b) {
+    return a.first > b.first;
+  };
 
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
@@ -96,12 +101,11 @@ class CandidatesForMiddleSp2 {
   // storage contains the collection of the candidates
   std::vector<TripletCandidate2> m_storage;
 
-  Container m_indicesLow;
-  Container m_indicesHigh;
+  Heap m_indicesLow;
+  Heap m_indicesHigh;
 
-  bool push(Container& container, Size nMax, SpacePointIndex2 spB,
-            SpacePointIndex2 spM, SpacePointIndex2 spT, float weight,
-            float zOrigin, bool isQuality);
+  bool push(Heap& heap, Size nMax, SpacePointIndex2 spB, SpacePointIndex2 spM,
+            SpacePointIndex2 spT, float weight, float zOrigin, bool isQuality);
 };
 
 }  // namespace Acts::Experimental
