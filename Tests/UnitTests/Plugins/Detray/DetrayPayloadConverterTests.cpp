@@ -572,9 +572,10 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   GeometryContext gctx;
+  auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
 
   CylindricalTrackingGeometry cGeometry(gctx, true);
-  auto tGeometry = cGeometry();
+  auto tGeometry = cGeometry(*geoLogger);
 
   ObjVisualization3D obj;
 
