@@ -385,7 +385,6 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
     if (!result) {
       continue;
     }
-   
   }
 }
 

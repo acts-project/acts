@@ -158,6 +158,48 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
                << std::format("y_{{0}}^{{'}} :  {:.3f}", fitPars.fitY0Prime));
 
   FitResultT0 result{};
+  result.nDoF = fitPars.nDoF;
+
+  ActsSquareMatrix<2> cov{ActsSquareMatrix<2>::Zero()};
+  Vector2 grad{Vector2::Zero()};
+  Vector2 pars{Vector2::Zero()};
+
+  bool converged{false};
+  while (converged == false && result.nIter <= m_cfg.maxIter) {
+    ++result.nIter;
+    const double cosTheta = std::cos(pars[0]);
+    const double sinTheta = std::sin(pars[0]);
+    const double cos2Theta = std::cos(2. * pars[0]);
+    const double sin2Theta = std::sin(2. * pars[0]);
+    /// d^{2}chi^{2} / d^{2}theta
+    cov(0, 0) = fitPars.T_zzyy * cos2Theta + 2. * fitPars.T_yz * sin2Theta +
+                fitPars.T_rz * sinTheta - fitPars.T_ry * cosTheta;
+
+    cov(1, 0) = cov(0, 1) = fitPars.T_vz * cosTheta + fitPars.T_vy * sinTheta;
+    cov(1, 1) = -fitPars.fitY0Prime * fitPars.fitY0Prime -
+                fitPars.fitY0Prime * fitPars.fitY0TwoPrime -
+                fitPars.T_az * sinTheta - fitPars.T_ay * cosTheta +
+                fitPars.R_vv + fitPars.R_va;
+
+    grad[0] = 0.5 * fitPars.T_zzyy * sin2Theta - fitPars.T_yz * cos2Theta -
+              fitPars.T_rz * cosTheta - fitPars.T_ry * sinTheta;
+    grad[1] = fitPars.fitY0 * fitPars.fitY0Prime - fitPars.R_vr +
+              fitPars.T_vz * sinTheta - fitPars.T_vy * cosTheta;
+
+    const Vector2 update = cov.inverse() * grad;
+    if (update.norm() < m_cfg.precCutOff) {
+      converged = true;
+      break;
+    }
+    ACTS_INFO(__func__ << "() - " << __LINE__ << " Iteration: " << result.nIter
+                       << ", theta: " << inDeg(pars[0]) << ", time: " << pars[1]
+                       << " gradient: (" << inDeg(grad[0]) << ", " << grad[1]
+                       << "), covariance:" << std::endl
+                       << toString(cov) << std::endl
+                       << " update: (" << inDeg(update[0]) << ", " << update[1]
+                       << ").");
+    pars -= update;
+  }
   return std::nullopt;
 }
 
