@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
   auto rSurfacesR1 = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125, 0.,
                                             80., rZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> rSurfaces = {rSurfacesR0,
-                                                              rSurfacesR1};
+  std::vector<std::vector<Acts::Surface*>> rSurfaces = {rSurfacesR0,
+                                                        rSurfacesR1};
 
   // Running three tests with
   // - no binning / no support
