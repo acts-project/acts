@@ -80,8 +80,7 @@ class CandidatesForMiddleSp2 {
 
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
   /// elements with higher quality first
-  void toSortedCandidates(const SpacePointContainer2& spacePoints,
-                          std::vector<TripletCandidate2>& output);
+  void toSortedCandidates(std::vector<TripletCandidate2>& output);
 
  private:
   // sizes
@@ -110,24 +109,6 @@ class CandidatesForMiddleSp2 {
   std::vector<Index> m_indicesLow;
   // list of indexes of candidates with high quality in the storage
   std::vector<Index> m_indicesHigh;
-
-  /// @brief A function for sorting the triplet candidates from higher to lower quality
-  /// @param spacePoints The input spacepoints from which to create seeds.
-  /// @param i1 First triplet candidate
-  /// @param i2 Second triplet candidate
-  /// @returns The comparison result
-  static bool descendingByQuality(const SpacePointContainer2& spacePoints,
-                                  const TripletCandidate2& i1,
-                                  const TripletCandidate2& i2);
-
-  /// @brief A function for sorting the triplet candidates from lower to higher quality
-  /// @param spacePoints The input spacepoints from which to create seeds.
-  /// @param i1 First triplet candidate
-  /// @param i2 Second triplet candidate
-  /// @returns The comparison result
-  static bool ascendingByQuality(const SpacePointContainer2& spacePoints,
-                                 const TripletCandidate2& i1,
-                                 const TripletCandidate2& i2);
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria

@@ -316,8 +316,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
       state().candidatesCollector.nHighQualityCandidates();
 
   cache().sortedCandidates.clear();
-  state().candidatesCollector.toSortedCandidates(spacePoints,
-                                                 cache().sortedCandidates);
+  state().candidatesCollector.toSortedCandidates(cache().sortedCandidates);
   std::span<TripletCandidate2> sortedCandidates = cache().sortedCandidates;
 
   if (config().experimentCuts != nullptr) {
