@@ -9,6 +9,7 @@
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 
 #include <algorithm>
+#include <iterator>
 
 namespace Acts::Experimental {
 
@@ -75,19 +76,25 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
 }
 
 void CandidatesForMiddleSp2::toSortedCandidates(
-    const SpacePointContainer2& /*spacePoints*/,
     std::vector<TripletCandidate2>& output) {
-  output.reserve(output.size() + size());
+  output.clear();
+  output.reserve(size());
 
   std::ranges::sort_heap(m_indicesHigh, comparator);
   std::ranges::sort_heap(m_indicesLow, comparator);
 
-  for (const auto& [weight, index] : m_indicesHigh) {
-    output.emplace_back(m_storage[index]);
-  }
-
-  for (const auto& [weight, index] : m_indicesLow) {
-    output.emplace_back(m_storage[index]);
+  // custom merge sort
+  for (std::size_t h = 0, l = 0;
+       h < m_indicesHigh.size() || l < m_indicesLow.size();) {
+    if (h < m_indicesHigh.size() &&
+        (l >= m_indicesLow.size() ||
+         m_indicesHigh[h].first > m_indicesLow[l].first)) {
+      output.push_back(m_storage[m_indicesHigh[h].second]);
+      ++h;
+    } else {
+      output.push_back(m_storage[m_indicesLow[l].second]);
+      ++l;
+    }
   }
 
   clear();

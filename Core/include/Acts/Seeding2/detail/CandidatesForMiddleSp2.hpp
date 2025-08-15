@@ -84,16 +84,15 @@ class CandidatesForMiddleSp2 {
 
   /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
   /// elements with higher quality first
-  void toSortedCandidates(const SpacePointContainer2& spacePoints,
-                          std::vector<TripletCandidate2>& output);
+  void toSortedCandidates(std::vector<TripletCandidate2>& output);
 
  private:
   using WeightIndex = std::pair<float, Index>;
   using Container = std::vector<WeightIndex>;
-  static constexpr auto comparator = [](const WeightIndex& a,
-                                        const WeightIndex& b) {
+
+  static constexpr bool comparator(const WeightIndex& a, const WeightIndex& b) {
     return a.first > b.first;
-  };
+  }
 
   // sizes
   // m_maxSize* is the maximum size of the indices collections. These values
