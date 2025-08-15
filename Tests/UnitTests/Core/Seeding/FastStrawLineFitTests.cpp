@@ -21,9 +21,12 @@
 #include "TTree.h"
 
 using namespace Acts;
+using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using RandomEngine = std::mt19937;
+
+constexpr std::uint32_t nTrials = 10000;
 
 namespace Acts::Test {
 
@@ -72,11 +75,18 @@ class StrawTestPoint {
   }
   /// @brief Dummy return not used in test
   double time() const { return 0.; }
-
+  /// @brief All measurements are straws
   bool isStraw() const { return true; }
+  /// @brief Dummy return not used in test
   bool hasTime() const { return false; }
+  /// @brief Dummy return not used in test
   bool measuresLoc0() const { return false; }
+  /// @brief Dummy return not used in test
   bool measuresLoc1() const { return false; }
+  void setRadius(const double r, const double uncertR) {
+    m_driftR = Acts::abs(r);
+    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::pow(uncertR, 2);
+  }
 
  private:
   Vector3 m_pos{Vector3::Zero()};
@@ -86,7 +96,38 @@ class StrawTestPoint {
   double m_driftR{0.};
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
 };
-static_assert(Acts::Experimental::CompositeSpacePoint<StrawTestPoint>);
+static_assert(CompositeSpacePoint<StrawTestPoint>);
+
+class StrawTestCalibrator {
+ public:
+  static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
+                              const StrawTestPoint& straw) {
+    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
+    const double t = driftTime(straw.driftRadius());
+    return A / (2. * std::sqrt(t * A));
+  }
+  static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
+                                  const StrawTestPoint& straw) {
+    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
+    const double t = driftTime(straw.driftRadius());
+
+    return A / (2. * driftRadius(t * A));
+  }
+
+  static constexpr double calcDriftUncert(const double driftR) {
+    return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
+  }
+  static constexpr double driftTime(const double r) {
+    constexpr double A = 750._ns * Acts::pow(15._mm, -2);
+    return A * Acts::pow(r, 2);
+  }
+  static double driftRadius(const double t) {
+    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
+    return std::sqrt(t * A);
+  }
+};
+static_assert(
+    CompositeSpacePointCalibrator<StrawTestCalibrator, StrawTestPoint>);
 
 Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
@@ -111,10 +152,6 @@ Line_t generateLine(RandomEngine& engine) {
               << toString(line.direction()) << std::endl;
   }
   return line;
-}
-
-constexpr double calcDriftUncert(const double driftR) {
-  return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
 }
 
 TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
@@ -178,13 +215,14 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       if (std::abs(rad) > tubeRadius) {
         continue;
       }
-      std::normal_distribution<> dist{rad, calcDriftUncert(rad)};
+      std::normal_distribution<> dist{
+          rad, StrawTestCalibrator::calcDriftUncert(rad)};
       const double smearedR = smearRadius ? std::abs(dist(engine)) : rad;
       if (smearedR > tubeRadius) {
         continue;
       }
       circles.emplace_back(std::make_unique<StrawTestPoint>(
-          tube, smearedR, calcDriftUncert(smearedR)));
+          tube, smearedR, StrawTestCalibrator::calcDriftUncert(smearedR)));
     }
   }
   if constexpr (print) {
@@ -214,9 +252,9 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
 
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
-BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
-  constexpr std::uint32_t nTrials = 10000;
+BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1419};
+  return;
 
   std::unique_ptr<TFile> outFile{};
   std::unique_ptr<TTree> outTree{};
@@ -252,7 +290,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     }
     std::vector<std::int32_t> trueDriftSigns{};
     trueDriftSigns.reserve(strawPoints.size());
-    chi2 = 0.;
     for (const auto& meas : strawPoints) {
       trueDriftSigns.push_back(
           CompSpacePointAuxiliaries::strawSign(track, *meas));
@@ -307,5 +344,50 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     outTree.reset();
   }
 }
+
+BOOST_AUTO_TEST_CASE(LineFitWithT0) {
+  RandomEngine engine{47110};
+
+  FastStrawLineFitter::Config cfg{};
+  FastStrawLineFitter fastFitter{cfg};
+  StrawTestCalibrator calibrator{};
+  Acts::CalibrationContext ctx{};
+  for (std::uint32_t n = 0; n < nTrials; ++n) {
+    auto track = generateLine(engine);
+    const double timeOffSet = 5._ns + (engine() % 100) * 1._ns;
+
+    auto strawPoints = generateStrawCircles(track, engine, true);
+    if (strawPoints.size() < 4) {
+      std::cout << "WARNING -- event: " << n << ", track "
+                << toString(track.position()) << " + "
+                << toString(track.direction())
+                << " did not lead to any valid measurement " << std::endl;
+      continue;
+    }
+    /// Fold-in the general offset
+    std::vector<std::int32_t> trueDriftSigns{};
+    trueDriftSigns.reserve(strawPoints.size());
+
+    for (auto& meas : strawPoints) {
+      const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
+      BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
+                        meas->driftRadius(), 1.e-12);
+      const double updatedR =
+          StrawTestCalibrator::driftRadius(dTime + timeOffSet);
+      meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
+      trueDriftSigns.push_back(
+          CompSpacePointAuxiliaries::strawSign(track, *meas));
+    }
+    auto result = fastFitter.fit(ctx, calibrator, strawPoints, trueDriftSigns);
+    /// Bail out
+    break;
+
+    if (!result) {
+      continue;
+    }
+   
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Acts::Test

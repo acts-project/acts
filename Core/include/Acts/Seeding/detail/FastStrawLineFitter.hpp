@@ -18,7 +18,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
+#include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -51,30 +53,53 @@ class FastStrawLineFitter {
                                                     Logging::Level::INFO));
 
   struct FitResult {
-    /// @brief
+    /// @brief Fitted inclanation angle
     double theta{0.};
+    /// @brief Uncertainty on the fitted angle
     double dTheta{0.};
+    /// @brief Fitted line intercept
     double y0{0.};
+    /// @brief Uncertainty on the intercept
     double dY0{0.};
-
+    /// @brief Evaluated chi2 postfit
     double chi2{0.};
+    /// @brief Number of degrees of freedom
     std::uint32_t nDoF{0};
+    /// @brief Number of iterations to converge
     std::uint32_t nIter{0};
   };
 
-  /// @brief
+  struct FitResultT0 : public FitResult {
+    /// @brief Fitted time offset t0
+    double t0{0.};
+    /// @brief Uncertainty on the time offset
+    double dT0{0.};
+  };
+
+  /// @brief Fit the theta & y0 parameters to a set of straw measurements.
   template <CompositeSpacePointContainer StrawCont_t>
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<std::int32_t>& signs) const;
 
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  std::optional<FitResultT0> fit(const Acts::CalibrationContext& ctx,
+                                 const Calibrator_t& calibrator,
+                                 const StrawCont_t& measurements,
+                                 const std::vector<std::int32_t>& signs) const;
+
  private:
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
-    ///@brief Tube position center weighted with inverse covariances
+    ///@brief Tube position center - y weighted with inverse covariances
     double centerY{0.};
-
+    ///@brief Tube position center - z weighted with inverse covariances
     double centerZ{0.};
-    ///@brief Covariance norm */
+    /// @brief Inverse covariances per straw measurement
+    std::vector<double> invCovs{};
+    ///@brief One over the sum of the inverse straw measurement covariances
     double covNorm{0.};
     ///@brief Expectation value of T_{z}^{2} - T_{y}^{2}
     double T_zzyy{0.};
@@ -119,8 +144,22 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   FitAuxiliaries fillAuxiliaries(const StrawCont_t& measurements,
                                  const std::vector<std::int32_t>& signs) const;
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  FitAuxiliariesWithT0 fillAuxiliaries(
+      const CalibrationContext& ctx, const Calibrator_t& calibrator,
+      const StrawCont_t& measurements,
+      const std::vector<std::int32_t>& signs) const;
+
+  template <CompositeSpacePointContainer StrawCont_t>
+  void calcPostFitChi2(const StrawCont_t& measurements,
+                       FitResult& result) const;
 
   std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
+
+  std::optional<FitResultT0> fit(const FitAuxiliariesWithT0& fitPars) const;
 
   const Config m_cfg{};
   std::unique_ptr<const Acts::Logger> m_logger{};

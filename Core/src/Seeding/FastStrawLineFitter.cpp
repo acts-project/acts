@@ -45,22 +45,23 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   if (!fitPars.nDoF) {
     return std::nullopt;
   }
-  ACTS_DEBUG("Input fit parameters "
-             << std::format("T_zzyy: {:.3f}, ", fitPars.T_zzyy)
-             << std::format("T_yz: {:.3f}, ", fitPars.T_yz)
-             << std::format("T_rz: {:.3f}, ", fitPars.T_rz)
-             << std::format("T_ry: {:.3f}, ", fitPars.T_ry)
-             << std::format("centre ( {:.3f}, {:3f}), ", fitPars.centerY,
-                            fitPars.centerZ)
-             << ", y0: " << fitPars.fitY0 << ", norm: " << fitPars.covNorm
-             << ", nDoF: " << fitPars.nDoF);
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Input fit parameters "
+                      << std::format("T_zzyy: {:.3f}, ", fitPars.T_zzyy)
+                      << std::format("T_yz: {:.3f}, ", fitPars.T_yz)
+                      << std::format("T_rz: {:.3f}, ", fitPars.T_rz)
+                      << std::format("T_ry: {:.3f}, ", fitPars.T_ry)
+                      << std::format("centre ( {:.3f}, {:3f}), ",
+                                     fitPars.centerY, fitPars.centerZ)
+                      << "y0: " << fitPars.fitY0 << ", norm: "
+                      << fitPars.covNorm << ", nDoF: " << fitPars.nDoF);
 
   double thetaGuess =
       std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
   if (thetaGuess < 0) {
     thetaGuess += std::numbers::pi;
   }
-  ACTS_DEBUG("Start fast fit seed  theta: " << inDeg(thetaGuess));
+  ACTS_DEBUG(__func__ << "() - " << __LINE__
+                      << ": Start fast fit seed  theta: " << inDeg(thetaGuess));
   ////
   bool converged{false};
   FitResult result{};
@@ -68,7 +69,8 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
 
   result.nDoF = fitPars.nDoF;
   double thetaPrime{0.}, thetaTwoPrime{0.};
-  while (!converged && result.nIter++ <= m_cfg.maxIter) {
+  while ((converged == false) && result.nIter <= m_cfg.maxIter) {
+    ++result.nIter;
     const double cosTheta = std::cos(result.theta);
     const double sinTheta = std::sin(result.theta);
     const double cosTwoTheta = std::cos(2. * result.theta);
@@ -80,8 +82,8 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                     2. * fitPars.T_yz * sinTwoTheta + fitPars.T_rz * sinTheta -
                     fitPars.T_ry * cosTheta;
     const double update = thetaPrime / thetaTwoPrime;
-    ACTS_VERBOSE("Fit iteration #"
-                 << result.nIter
+    ACTS_VERBOSE(
+        __func__ << "() - " << __LINE__ << ": Fit iteration #" << result.nIter
                  << std::format("-- theta: {:.3f}, ", inDeg(result.theta))
                  << std::format(" thetaPrime: {:.3f}, ", inDeg(thetaPrime))
                  << std::format(" thetaTwoPrime: {:.3f}", inDeg(thetaTwoPrime))
@@ -97,7 +99,9 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   }
 
   if (!converged) {
-    ACTS_WARNING("The fast straw fit did not converge nDoF: "
+    ACTS_WARNING(
+        __func__ << "() - " << __LINE__
+                 << ": The fast straw fit did not converge nDoF: "
                  << fitPars.nDoF << ", "
                  << std::format("-- theta: {:.3f}, ", inDeg(result.theta))
                  << std::format(" thetaPrime: {:.3f}, ", inDeg(thetaPrime))
@@ -116,12 +120,45 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                                secTheta);
 
   result.dY0 *= result.dTheta;
-  ACTS_DEBUG("Fit converged in #"
-             << result.nIter << " iterations with final parameters: "
-             << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),
-                            inDeg(result.dTheta))
-             << std::format("y0: {:.3f}  pm {:.3f}", result.y0, result.dY0));
+  ACTS_DEBUG(
+      __func__ << "() - " << __LINE__ << ": Fit converged in #" << result.nIter
+               << " iterations with final parameters: "
+               << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),
+                              inDeg(result.dTheta))
+               << std::format("y0: {:.3f}  pm {:.3f}", result.y0, result.dY0));
   return result;
+}
+
+std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
+    const FitAuxiliariesWithT0& fitPars) const {
+  /// No degrees of freedom -> no valid parameters
+  if (!fitPars.nDoF) {
+    return std::nullopt;
+  }
+
+  ACTS_INFO(
+      __func__ << "() - " << __LINE__ << ": Estimated "
+               << std::format("T_zzyy: {:.3f}, ", fitPars.T_zzyy)
+               << std::format("T_yz: {:.3f}, ", fitPars.T_yz)
+               << std::format("T_rz: {:.3f}, ", fitPars.T_rz)
+               << std::format("T_ry: {:.3f}, ", fitPars.T_ry)
+               << std::format("centre ( {:.3f}, {:3f}), ", fitPars.centerY,
+                              fitPars.centerZ)
+               << "y0: " << fitPars.fitY0 << ", norm: " << fitPars.covNorm
+               << ", nDoF: " << fitPars.nDoF << "\n"
+               << std::format("T_vz: {:.3f}, ", fitPars.T_vz)
+               << std::format("T_vy: {:.3f}, ", fitPars.T_vy)
+               << std::format("T_az: {:.3f}, ", fitPars.T_az)
+               << std::format("T_ay: {:.3f}, ", fitPars.T_ay)
+               << std::format("R_vr: {:.3f}, ", fitPars.R_vr)
+               << std::format("R_va: {:.3f}, ", fitPars.R_va)
+               << std::format("R_vv: {:.3f}, ", fitPars.R_vv) << " --- "
+               << std::format("y_{{0}}^{{''}}:  {:.3f}, ",
+                              fitPars.fitY0TwoPrime)
+               << std::format("y_{{0}}^{{'}} :  {:.3f}", fitPars.fitY0Prime));
+
+  FitResultT0 result{};
+  return std::nullopt;
 }
 
 }  // namespace Acts::Experimental::detail
