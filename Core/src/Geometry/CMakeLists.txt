@@ -59,4 +59,5 @@ target_sources(
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
+        detail/TrackingGeometryPrintVisitor.cpp
 )
