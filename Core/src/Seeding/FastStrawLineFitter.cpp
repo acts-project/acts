@@ -41,24 +41,27 @@ FastStrawLineFitter::FastStrawLineFitter(const Config& cfg,
 
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     const FitAuxiliaries& fitPars) const {
-  ACTS_INFO("Estimated " << std::format("T_zzyy: {:.3f}, ", fitPars.T_zzyy)
-                         << std::format("T_yz: {:.3f}, ", fitPars.T_yz)
-                         << std::format("T_rz: {:.3f}, ", fitPars.T_rz)
-                         << std::format("T_ry: {:.3f}, ", fitPars.T_ry)
+  ACTS_DEBUG("Estimated " << std::format("T_zzyy: {:.3f}, ", fitPars.T_zzyy)
+                          << std::format("T_yz: {:.3f}, ", fitPars.T_yz)
+                          << std::format("T_rz: {:.3f}, ", fitPars.T_rz)
+                          << std::format("T_ry: {:.3f}, ", fitPars.T_ry)
 
-                         << std::format("centre ( {:.3f}, {:3f}), ",
-                                        fitPars.centerY, fitPars.centerZ)
-                         << ", y0: " << fitPars.fitY0
-                         << ", norm: " << fitPars.covNorm);
+                          << std::format("centre ( {:.3f}, {:3f}), ",
+                                         fitPars.centerY, fitPars.centerZ)
+                          << ", y0: " << fitPars.fitY0
+                          << ", norm: " << fitPars.covNorm);
 
-  const double thetaGuess =
+  double thetaGuess =
       std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
-
-  ACTS_INFO("Start fast fit seed  theta: " << inDeg(thetaGuess));
+  if (thetaGuess < 0) {
+    thetaGuess += std::numbers::pi;
+  }
+  ACTS_DEBUG("Start fast fit seed  theta: " << inDeg(thetaGuess));
   ////
   bool converged{false};
   FitResult result{};
   result.theta = thetaGuess;
+
   result.nDoF = fitPars.nDoF;
   double thetaPrime{0.}, thetaTwoPrime{0.};
   while (!converged && result.nIter++ <= m_cfg.maxIter) {
@@ -73,14 +76,15 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                     2. * fitPars.T_yz * sinTwoTheta + fitPars.T_rz * sinTheta -
                     fitPars.T_ry * cosTheta;
     const double update = thetaPrime / thetaTwoPrime;
-    ACTS_INFO("Fit iteration #"
-              << result.nIter
-              << std::format("-- theta: {:.3f}, ", inDeg(result.theta))
-              << std::format(" thetaPrime: {:.3f}, ", inDeg(thetaPrime))
-              << std::format(" thetaTwoPrime: {:.3f}", inDeg(thetaTwoPrime))
-              << " -- " << std::format("{:.8f}", inDeg(update))
-              << std::format(" --> next theta: {:.3f} ",
-                             inDeg(result.theta - thetaPrime / thetaTwoPrime)));
+    ACTS_VERBOSE("Fit iteration #"
+                 << result.nIter
+                 << std::format("-- theta: {:.3f}, ", inDeg(result.theta))
+                 << std::format(" thetaPrime: {:.3f}, ", inDeg(thetaPrime))
+                 << std::format(" thetaTwoPrime: {:.3f}", inDeg(thetaTwoPrime))
+                 << " -- " << std::format("{:.8f}", inDeg(update))
+                 << std::format(
+                        " --> next theta: {:.3f} ",
+                        inDeg(result.theta - thetaPrime / thetaTwoPrime)));
 
     if (std::abs(update) < m_cfg.precCutOff) {
       converged = true;
@@ -92,21 +96,16 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     ACTS_WARNING("The fast straw fit did not converge");
     return std::nullopt;
   }
-  if (result.theta > std::numbers::pi) {
-    result.theta -= std::numbers::pi;
-  } else if (result.theta < -std::numbers::pi) {
-    result.theta += std::numbers::pi;
-  }
   result.dTheta = std::sqrt(1. / thetaTwoPrime);
   const double tanTheta = std::tan(result.theta);
-  result.y0 = fitPars.centerY - fitPars.centerZ * std::tan(result.theta) +
-              fitPars.fitY0 * Acts::fastHypot(1, tanTheta);
+  result.y0 = fitPars.centerY - fitPars.centerZ * tanTheta +
+              fitPars.fitY0 / std::cos(result.theta);
 
-  ACTS_INFO("Fit converged in #"
-            << result.nIter << " iterations with final parameters: "
-            << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),
-                           inDeg(result.dTheta))
-            << std::format("y0: {:.3f}  pm {:.3f}", result.y0, result.dY0));
+  ACTS_DEBUG("Fit converged in #"
+             << result.nIter << " iterations with final parameters: "
+             << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),
+                            inDeg(result.dTheta))
+             << std::format("y0: {:.3f}  pm {:.3f}", result.y0, result.dY0));
   return result;
 }
 

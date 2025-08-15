@@ -56,8 +56,9 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                  << " - track: " << dist);
     result->chi2 += Acts::pow(dist - strawMeas->driftRadius(), 2) / cov;
   }
-  ACTS_INFO("Overall chi2: " << result->chi2 << ", nDoF: " << result->nDoF
-                             << ", redChi2: " << (result->chi2 / result->nDoF));
+  ACTS_VERBOSE("Overall chi2: " << result->chi2 << ", nDoF: " << result->nDoF
+                                << ", redChi2: "
+                                << (result->chi2 / result->nDoF));
   return result;
 }
 

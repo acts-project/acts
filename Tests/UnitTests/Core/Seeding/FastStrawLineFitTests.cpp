@@ -28,6 +28,7 @@ using RandomEngine = std::mt19937;
 namespace Acts::Test {
 
 constexpr bool debugMode = true;
+constexpr bool print = false;
 class StrawTestPoint;
 using TestStrawCont_t = std::vector<std::unique_ptr<StrawTestPoint>>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
@@ -99,12 +100,13 @@ Line_t generateLine(RandomEngine& engine) {
 
   Line_t line{};
   line.updateParameters(linePars);
-  std::cout << "Generated parameters theta: "
-            << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-            << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
-            << toString(line.position()) << " + " << toString(line.direction())
-            << std::endl;
-
+  if constexpr (print) {
+    std::cout << "Generated parameters theta: "
+              << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
+              << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
+              << toString(line.position()) << " + "
+              << toString(line.direction()) << std::endl;
+  }
   return line;
 }
 
@@ -135,7 +137,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     }
   }
   /// Print the staggering
-  if constexpr (debugMode) {
+  if constexpr (print) {
     std::cout << "##############################################" << std::endl;
     for (std::uint32_t l = 0; l < nTubeLayers; ++l) {
       std::cout << " *** " << (l + 1) << " - " << toString(tubePositions[l])
@@ -151,7 +153,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     auto planeExtpHigh = Acts::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
         stag.z() + tubeRadius);
-    if constexpr (false) {
+    if constexpr (print) {
       std::cout << "extrapolated to plane " << toString(planeExtpLow.position())
                 << " " << toString(planeExtpHigh.position()) << std::endl;
     }
@@ -166,7 +168,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
-      if constexpr (false) {
+      if constexpr (print) {
         std::cout << "Tube position: " << toString(tube) << ", radius: " << rad
                   << std::endl;
       }
@@ -182,9 +184,10 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
           tube, smearedR, calcDriftUncert(smearedR)));
     }
   }
-
-  std::cout << "Track hit in total " << circles.size() << " tubes "
-            << std::endl;
+  if constexpr (print) {
+    std::cout << "Track hit in total " << circles.size() << " tubes "
+              << std::endl;
+  }
   return circles;
 }
 
@@ -373,9 +376,12 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
     const double dist = Acts::detail::LineHelper::signedDistance(
         meas->localPosition(), meas->sensorDirection(), track.position(),
         track.direction());
-    // std::cout<<"calcChi2() - Distance straw:
-    // "<<toString(meas->localPosition()) <<",  r: "<<meas->driftRadius()<<" -
-    // to track: "<<Acts::abs(dist)<<std::endl;
+    if constexpr (print) {
+      std::cout << "calcChi2() - Distance straw: "
+                << toString(meas->localPosition())
+                << ",  r: " << meas->driftRadius()
+                << " - to track: " << Acts::abs(dist) << std::endl;
+    }
     chi2 += Acts::pow(
         (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert(), 2);
   }
@@ -385,14 +391,14 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
 BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
-  constexpr std::uint32_t nTrials = 1000;
+  constexpr std::uint32_t nTrials = 1000000;
   RandomEngine engine{1419};
 
   std::unique_ptr<TFile> outFile{};
   std::unique_ptr<TTree> outTree{};
   double trueY0{0.}, trueTheta{0.}, fitY0{0.}, fitTheta{0.};
   double fitdY0{0.}, fitdTheta{0.}, chi2{0.};
-  std::uint32_t nDoF{0u};
+  std::uint32_t nDoF{0u}, nIter{0u};
   if (debugMode) {
     outFile.reset(TFile::Open("FastStrawLineFitTest.root", "RECREATE"));
     BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
@@ -405,6 +411,7 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     outTree->Branch("errTheta", &fitdTheta);
     outTree->Branch("chi2", &chi2);
     outTree->Branch("nDoF", &nDoF);
+    outTree->Branch("nIter", &nIter);
   }
 
   FastStrawLineFitter::Config cfg{};
@@ -425,9 +432,10 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       rhit.push_back(-meas->driftRadius() * trueDriftSigns.back());
     }
     BOOST_CHECK_LE(chi2, 1.e-12);
-    std::cout << "True drift signs: " << trueDriftSigns << ", chi2: " << chi2
-              << std::endl;
-
+    if constexpr (print) {
+      std::cout << "True drift signs: " << trueDriftSigns << ", chi2: " << chi2
+                << std::endl;
+    }
     auto fitResult = fastFitter.fit(strawPoints, trueDriftSigns);
     if (!fitResult) {
       continue;
@@ -441,17 +449,19 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     trackPars[toUnderlying(Line_t::ParIndex::y0)] = (*fitResult).y0;
     trackPars[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
     track.updateParameters(trackPars);
-    std::cout << "Updated parameters: "
-              << (trackPars[toUnderlying(Line_t::ParIndex::theta)] / 1._degree)
-              << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)]
-              << " -- " << toString(track.position()) << " + "
-              << toString(track.direction()) << std::endl;
+    if constexpr (print) {
+      std::cout << "Updated parameters: "
+                << (trackPars[toUnderlying(Line_t::ParIndex::theta)] /
+                    1._degree)
+                << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)]
+                << " -- " << toString(track.position()) << " + "
+                << toString(track.direction()) << std::endl;
+    }
 
     const double testChi2 = calcChi2(strawPoints, track);
-    std::cout << "testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2
-              << std::endl;
-    if (Acts::abs(testChi2 - (*fitResult).chi2) > 1.e-9) {
-      std::exit(1);
+    if constexpr (print) {
+      std::cout << "testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2
+                << std::endl;
     }
     BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
     if (debugMode) {
@@ -461,6 +471,7 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       fitdY0 = (*fitResult).dY0;
       nDoF = (*fitResult).nDoF;
       chi2 = (*fitResult).chi2;
+      nIter = (*fitResult).nIter;
       outTree->Fill();
     }
 
