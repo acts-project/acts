@@ -59,12 +59,6 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   HomogeneousSurfaceMaterial& operator=(HomogeneousSurfaceMaterial&& hsm) =
       default;
 
-  /// Scale operator
-  /// - it is effectively a thickness scaling
-  ///
-  /// @param factor is the scale factor
-  HomogeneousSurfaceMaterial& scale(double factor) final;
-
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
   /// @note the input parameter is ignored

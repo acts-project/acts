@@ -140,22 +140,6 @@ create(const ProtoAxis& pAxis, IndexedMaterialAccessor&& materialAccessor,
        const std::vector<IndexedMaterialAccessor::grid_value_type>& payload);
 
 /// The resolved functions to reduce compile time template bloat
-/// - GloballyIndexedMaterial 1D
-/// @param pAxis the proto axis
-/// @param materialAccessor the material accessor
-/// @param boundToGridLocal the delegate from bound to grid local frame
-/// @param globalToGridLocal the delegate from global into grid local frame
-/// @param payload the grid payload (material slab / indices)
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-create(const ProtoAxis& pAxis,
-       GloballyIndexedMaterialAccessor&& materialAccessor,
-       GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-       GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-       const std::vector<GloballyIndexedMaterialAccessor::grid_value_type>&
-           payload);
-
-/// The resolved functions to reduce compile time template bloat
 /// - GridMaterial 2D
 /// @param pAxis0 the proto axis in direction 0
 /// @param pAxis1 the proto axis in direction 1
@@ -186,21 +170,4 @@ create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
        const std::vector<std::vector<IndexedMaterialAccessor::grid_value_type>>&
            payload);
 
-/// The resolved functions to reduce compile time template bloat
-/// - GloballyIndexedMaterial 2D
-/// @param pAxis0 the proto axis in direction 0
-/// @param pAxis1 the proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param boundToGridLocal the delegate from bound to grid local frame
-/// @param globalToGridLocal the delegate from global into grid local frame
-/// @param payload the grid payload (material slab / indices)
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-create(const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-       GloballyIndexedMaterialAccessor&& materialAccessor,
-       GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-       GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-       const std::vector<
-           std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
-           payload);
 }  // namespace Acts::GridSurfaceMaterialFactory
