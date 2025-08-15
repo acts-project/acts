@@ -2281,6 +2281,7 @@ def addVertexFitting(
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
+    simultaneousSeeds: Optional[int] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2388,6 +2389,7 @@ def addVertexFitting(
                 useTime=useTime,
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
+                simultaneousSeeds=simultaneousSeeds,
             ),
         )
         s.addAlgorithm(findVertices)
