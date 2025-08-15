@@ -46,6 +46,11 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   /// @return Span of const unique pointers to the navigation policies
   std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
+  /// Visit this policy first, and then all child policies one by one.
+  /// @param visitor The function to call for each policy
+  void visit(const std::function<void(const INavigationPolicy&)>& visitor)
+      const override;
+
  private:
   /// Initialize navigation candidates by calling all contained policies
   /// @param args The navigation arguments

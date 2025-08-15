@@ -56,6 +56,15 @@ class INavigationPolicy {
   /// @param delegate The delegate to connect to
   virtual void connect(NavigationDelegate& delegate) const = 0;
 
+  /// Convenience function to walk over all navigation policies. The default
+  /// implementation just calls this on itself, while the @ref
+  /// MultiNavigationPolicy will call it on all it's children.
+  /// @param visitor The visitor function to call for each policy
+  virtual void visit(
+      const std::function<void(const INavigationPolicy&)>& visitor) const {
+    visitor(*this);
+  }
+
  protected:
   /// Internal helper function for derived classes that conform to the concept
   /// and have a conventional `updateState` method. Mainly used to save some
