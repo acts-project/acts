@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsCenterTest) {
   // radius 2
   std::vector<vec2> hexVertices;
   for (int i = 0; i < 6; ++i) {
-    double angle = i * M_PI / 3.0;  // 60 degrees in radians
+    double angle = i * std::numbers::pi / 3.0;  // 60 degrees in radians
     hexVertices.push_back({2.0 * std::cos(angle), 2.0 * std::sin(angle)});
   }
   polyDyn hexagon(hexVertices);

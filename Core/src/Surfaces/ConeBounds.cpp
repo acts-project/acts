@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
+
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 

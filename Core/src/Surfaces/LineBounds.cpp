@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/LineBounds.hpp"
+
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>

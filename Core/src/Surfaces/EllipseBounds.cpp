@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
+
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"

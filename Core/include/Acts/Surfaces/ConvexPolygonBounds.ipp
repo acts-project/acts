@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
