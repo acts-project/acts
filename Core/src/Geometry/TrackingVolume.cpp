@@ -655,6 +655,10 @@ void TrackingVolume::setNavigationPolicy(
   m_navigationPolicy->connect(m_navigationDelegate);
 }
 
+const INavigationPolicy* TrackingVolume::navigationPolicy() const {
+  return m_navigationPolicy.get();
+}
+
 void TrackingVolume::initializeNavigationCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
