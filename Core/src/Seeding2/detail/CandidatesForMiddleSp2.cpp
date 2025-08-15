@@ -187,7 +187,6 @@ void CandidatesForMiddleSp2::bubbleup(std::vector<Index>& indices, Index n) {
 }
 
 void CandidatesForMiddleSp2::toSortedCandidates(
-    const SpacePointContainer2& spacePoints,
     std::vector<TripletCandidate2>& output) {
   // this will retrieve the entire storage
   // the resulting vector is already sorted from high to low quality
@@ -221,8 +220,8 @@ void CandidatesForMiddleSp2::toSortedCandidates(
     }
 
     // Both have entries, get the minimum
-    if (descendingByQuality(spacePoints, m_storage[m_indicesLow[0]],
-                            m_storage[m_indicesHigh[0]])) {
+    if (m_storage[m_indicesLow[0]].weight >
+        m_storage[m_indicesHigh[0]].weight) {
       output[outIdx--] = m_storage[m_indicesHigh[0]];
       pop(m_indicesHigh, m_nHigh);
     } else {
@@ -232,44 +231,6 @@ void CandidatesForMiddleSp2::toSortedCandidates(
   }  // while loop
 
   clear();
-}
-
-bool CandidatesForMiddleSp2::descendingByQuality(
-    const SpacePointContainer2& spacePoints, const TripletCandidate2& i1,
-    const TripletCandidate2& i2) {
-  if (i1.weight != i2.weight) {
-    return i1.weight > i2.weight;
-  }
-
-  // This is for the case when the weights from different seeds
-  // are same. This makes cpu & cuda results same
-
-  const auto bottomL1 = spacePoints[i1.bottom];
-  const auto middleL1 = spacePoints[i1.middle];
-  const auto topL1 = spacePoints[i1.top];
-
-  const auto bottomL2 = spacePoints[i2.bottom];
-  const auto middleL2 = spacePoints[i2.middle];
-  const auto topL2 = spacePoints[i2.top];
-
-  float seed1_sum = 0.;
-  float seed2_sum = 0.;
-
-  seed1_sum += bottomL1.y() * bottomL1.y() + bottomL1.z() * bottomL1.z();
-  seed1_sum += middleL1.y() * middleL1.y() + middleL1.z() * middleL1.z();
-  seed1_sum += topL1.y() * topL1.y() + topL1.z() * topL1.z();
-
-  seed2_sum += bottomL2.y() * bottomL2.y() + bottomL2.z() * bottomL2.z();
-  seed2_sum += middleL2.y() * middleL2.y() + middleL2.z() * middleL2.z();
-  seed2_sum += topL2.y() * topL2.y() + topL2.z() * topL2.z();
-
-  return seed1_sum > seed2_sum;
-}
-
-bool CandidatesForMiddleSp2::ascendingByQuality(
-    const SpacePointContainer2& spacePoints, const TripletCandidate2& i1,
-    const TripletCandidate2& i2) {
-  return !descendingByQuality(spacePoints, i1, i2);
 }
 
 }  // namespace Acts::Experimental
