@@ -24,6 +24,7 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
@@ -159,7 +160,8 @@ std::vector<Vector3> CylindricalTrackingGeometry::modulePositionsCylinder(
   return mPositions;
 }
 
-std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1(
+    const Logger& /*logger*/) {
   using namespace UnitLiterals;
 
   Logging::Level surfaceLLevel = Logging::INFO;
@@ -277,7 +279,8 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1() {
   return std::make_shared<TrackingGeometry>(detectorVolume);
 }
 
-std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
+    const Logger& logger) {
   using namespace Experimental;
   using namespace UnitLiterals;
   using enum CylinderVolumeBounds::Face;
@@ -369,14 +372,15 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3() {
   });
 
   BlueprintOptions opts;
-  return root.construct(opts, geoContext);
+  return root.construct(opts, geoContext, logger);
 }
 
-std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()() {
+std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::operator()(
+    const Logger& logger) {
   if (gen3) {
-    return buildGen3();
+    return buildGen3(logger);
   } else {
-    return buildGen1();
+    return buildGen1(logger);
   }
 }
 }  // namespace ActsTests
