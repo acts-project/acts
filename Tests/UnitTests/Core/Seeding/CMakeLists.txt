@@ -9,3 +9,7 @@ add_unittest(UtilityFunctions UtilityFunctionsTests.cpp)
 add_unittest(CandidatesForMiddleSp CandidatesForMiddleSpTests.cpp)
 add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)
+target_link_libraries(
+    ActsUnitTestFastStrawLineFitTests
+    PRIVATE ROOT::Tree ROOT::RIO
+)

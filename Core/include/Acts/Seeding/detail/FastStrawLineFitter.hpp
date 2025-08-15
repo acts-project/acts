@@ -50,7 +50,9 @@ class FastStrawLineFitter {
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
     ///@brief Tube position center weighted with inverse covariances
-    Vector centerOfGrav{Vector::Zero()};
+    double centerY{0.};
+
+    double centerZ{0.};
     ///@brief Covariance norm */
     double covNorm{0.};
     ///@brief Expectation value of T_{z}^{2} - T_{y}^{2}
@@ -64,6 +66,8 @@ class FastStrawLineFitter {
     ///@brief Prediced y0 given as the expectation value of the radii
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
+    /// @brief number of degrees of freedom
+    std::uint32_t nDoF{0};
   };
   ///@brief Extension of the auxiliary fit constants needed for the
   ///         seed refinement when T0 is floating
