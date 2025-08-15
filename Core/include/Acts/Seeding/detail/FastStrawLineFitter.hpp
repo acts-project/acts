@@ -27,11 +27,15 @@
 
 namespace Acts::Experimental::detail {
 
+///  @brief The FastStrawLineFitter fits the intercept and angle of a line that's tangent to a set of Composite space points representing straw measurements.
+///         The straw wires of the passed measurements need to be parallel to
+///         achieve a successful fit.
+///
 class FastStrawLineFitter {
  public:
   /// @brief abrivation of the residual indices to fetch the proper covariance
   using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
-  /// @brief Vector3 type
+  /// @brief Vector type
   using Vector = CompSpacePointAuxiliaries::Vector;
   /// @brief Configuration object
   struct Config {

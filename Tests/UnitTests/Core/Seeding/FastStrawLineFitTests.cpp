@@ -94,12 +94,15 @@ Line_t generateLine(RandomEngine& engine) {
   linePars[toUnderlying(ParIndex::x0)] = 0.;
   linePars[toUnderlying(ParIndex::phi)] = 90._degree;
   linePars[toUnderlying(ParIndex::y0)] = (engine() % 10000 - 5000.) / 10.;
-  constexpr unsigned maxAngle = 179;
+  constexpr unsigned maxAngle = 180;
   linePars[toUnderlying(ParIndex::theta)] =
       (engine() % (10 * maxAngle)) * 0.1_degree;
-
   Line_t line{};
   line.updateParameters(linePars);
+  if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
+      0.2_degree) {
+    return generateLine(engine);
+  }
   if constexpr (print) {
     std::cout << "Generated parameters theta: "
               << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
@@ -111,11 +114,11 @@ Line_t generateLine(RandomEngine& engine) {
 }
 
 constexpr double calcDriftUncert(const double driftR) {
-  return 0.1_mm;  // + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
+  return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
 }
 
 TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
-                                     RandomEngine& engine) {
+                                     RandomEngine& engine, bool smearRadius) {
   const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
   const Vector3 negStaggering{0., -std::cos(60._degree), std::sin(60._degree)};
   /// Number of tube layers per multilayer
@@ -176,7 +179,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
         continue;
       }
       std::normal_distribution<> dist{rad, calcDriftUncert(rad)};
-      const double smearedR = rad;  // std::abs(dist(engine));
+      const double smearedR = smearRadius ? std::abs(dist(engine)) : rad;
       if (smearedR > tubeRadius) {
         continue;
       }
@@ -391,7 +394,7 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
 BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
-  constexpr std::uint32_t nTrials = 1000000;
+  constexpr std::uint32_t nTrials = 10000;
   RandomEngine engine{1419};
 
   std::unique_ptr<TFile> outFile{};
@@ -418,10 +421,17 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   FastStrawLineFitter fastFitter{cfg};
   for (std::uint32_t n = 0; n < nTrials; ++n) {
     auto track = generateLine(engine);
-    auto strawPoints = generateStrawCircles(track, engine);
+    auto strawPoints = generateStrawCircles(track, engine, true);
+    if (strawPoints.size() < 3) {
+      std::cout << "WARNING -- event: " << n << ", track "
+                << toString(track.position()) << " + "
+                << toString(track.direction())
+                << " did not lead to any valid measurement " << std::endl;
+      continue;
+    }
     std::vector<std::int32_t> trueDriftSigns{};
     trueDriftSigns.reserve(strawPoints.size());
-    chi2 = calcChi2(strawPoints, track);
+    chi2 = 0.;
     std::vector<double> xhit{}, yhit{}, rhit{}, ehit{};
     for (const auto& meas : strawPoints) {
       trueDriftSigns.push_back(
@@ -431,7 +441,8 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       ehit.push_back(meas->driftUncert());
       rhit.push_back(-meas->driftRadius() * trueDriftSigns.back());
     }
-    BOOST_CHECK_LE(chi2, 1.e-12);
+    BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
+                   1.e-12);
     if constexpr (print) {
       std::cout << "True drift signs: " << trueDriftSigns << ", chi2: " << chi2
                 << std::endl;

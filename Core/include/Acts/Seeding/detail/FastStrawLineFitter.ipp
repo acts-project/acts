@@ -90,8 +90,16 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
     ++auxVars.nDoF;
   }
   if (auxVars.nDoF < 3) {
+    std::stringstream sstr{};
+    for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
+      sstr << " --- " << (sIdx + 1) << ") "
+           << toString(strawMeas->localPosition())
+           << ", r: " << strawMeas->driftRadius()
+           << ", weight: " << invCovs[sIdx] << std::endl;
+    }
     ACTS_WARNING(
-        "At least 3 measurements are required to perform the straw line ift");
+        "At least 3 measurements are required to perform the straw line fit\n"
+        << sstr.str());
     return auxVars;
   }
   /// Reduce the number of degrees of freedom by 2 to account for the two free
