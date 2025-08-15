@@ -928,7 +928,6 @@ def addGridTripletSeeding(
             helixCutTolerance=None,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            maxPtScattering=seedFinderConfigArg.maxPtScattering,
             toleranceParam=None,
             deltaInvHelixDiameter=None,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
