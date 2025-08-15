@@ -46,6 +46,10 @@ class MultiNavigationPolicy final : public INavigationPolicy {
   /// @return Span of const unique pointers to the navigation policies
   std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
+  std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const override;
+
  private:
   /// Initialize navigation candidates by calling all contained policies
   /// @param args The navigation arguments
