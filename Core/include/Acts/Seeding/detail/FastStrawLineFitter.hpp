@@ -37,6 +37,8 @@ class FastStrawLineFitter {
   struct Config {
     /// @brief Number of maximum iterations
     std::uint32_t maxIter{10};
+    /// @brief Cutoff to def
+    double precCutOff{1.e-9};
   };
 
   /// @param logger: New logging object for debugging
@@ -46,11 +48,9 @@ class FastStrawLineFitter {
                                                     Logging::Level::INFO));
 
   ///@brief Auxiliary struct to calculate the fast-fit constants
-  struct SeedFitAuxilliaries {
+  struct FitAuxiliaries {
     ///@brief Tube position center weighted with inverse covariances
     Vector centerOfGrav{Vector::Zero()};
-    ///@brief Vector of inverse covariances */
-    std::vector<double> invCovs{};
     ///@brief Covariance norm */
     double covNorm{0.};
     ///@brief Expectation value of T_{z}^{2} - T_{y}^{2}
@@ -67,10 +67,10 @@ class FastStrawLineFitter {
   };
   ///@brief Extension of the auxiliary fit constants needed for the
   ///         seed refinement when T0 is floating
-  struct SeedFitAuxWithT0 : public SeedFitAuxilliaries {
+  struct FitAuxiliariesWithT0 : public FitAuxiliaries {
     ///@brief Constructor */
-    SeedFitAuxWithT0(SeedFitAuxilliaries&& parent)
-        : SeedFitAuxilliaries{std::move(parent)} {}
+    explicit FitAuxiliariesWithT0(FitAuxiliaries&& parent)
+        : FitAuxiliaries{std::move(parent)} {}
     ///@brief Expectation value of T_{y} * v
     double T_vy{0.};
     ///@brief Expectation value of T_{z} * v
@@ -92,8 +92,12 @@ class FastStrawLineFitter {
   };
 
   struct FitResult {
+    /// @brief
     double theta{0.};
+    double dTheta{0.};
     double y0{0.};
+    double dY0{0.};
+
     double chi2{0.};
     std::uint32_t nDoF{0};
     std::uint32_t nIter{0};
@@ -101,11 +105,15 @@ class FastStrawLineFitter {
 
   /// @brief
   template <CompositeSpacePointContainer StrawCont_t>
-  Acts::Result<FitResult> fit(const StrawCont_t& measurements,
-                              const std::vector<std::int32_t>& signs) const;
+  std::optional<FitResult> fit(const StrawCont_t& measurements,
+                               const std::vector<std::int32_t>& signs) const;
 
  private:
-  // void
+  template <CompositeSpacePointContainer StrawCont_t>
+  FitAuxiliaries fillAuxiliaries(const StrawCont_t& measurements,
+                                 const std::vector<std::int32_t>& signs) const;
+
+  std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
 
   const Config m_cfg{};
   std::unique_ptr<const Acts::Logger> m_logger{};
@@ -114,3 +122,4 @@ class FastStrawLineFitter {
 };
 
 }  // namespace Acts::Experimental::detail
+#include "Acts/Seeding/detail/FastStrawLineFitter.ipp"
