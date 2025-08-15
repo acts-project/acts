@@ -118,6 +118,10 @@ ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
   makeBoundingBox(vertices);
 }
 
+ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
+    const std::vector<Vector2>& vertices)
+    : ConvexPolygonBounds{std::span<const Vector2>{vertices}} {}
+
 bool ConvexPolygonBounds<PolygonDynamic>::inside(
     const Vector2& lposition) const {
   return detail::VerticesHelper::isInsidePolygon(lposition, m_vertices);

@@ -157,6 +157,11 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @param vertices The list of vertices.
   explicit ConvexPolygonBounds(std::span<const Vector2> vertices);
 
+  /// Constructor from a vector of vertices, to facilitate construction.
+  /// This will throw if the vertices do not form a convex polygon.
+  /// @param vertices The list of vertices.
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices);
+
   /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
