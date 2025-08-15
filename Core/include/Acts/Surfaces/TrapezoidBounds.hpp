@@ -103,6 +103,10 @@ class TrapezoidBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For TrapezoidBounds: returns center of symmetry (0,0), accounting for rotation
+  Vector2 center() const final;
+
   /// Return the vertices
   ///
   /// @param ignoredSegments is and ignored parameter used to describe

@@ -63,6 +63,12 @@ class InfiniteBounds : public SurfaceBounds {
     return true;
   }
 
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final {
+    // For infinite bounds, return conceptual center at origin
+    return Vector2::Zero();
+  }
+
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& os) const final {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;

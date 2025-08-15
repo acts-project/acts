@@ -83,6 +83,10 @@ class DiamondBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For DiamondBounds: returns center of symmetry (0,0)
+  Vector2 center() const final;
+
   /// Return the vertices that describe this shape
   ///
   /// @param ignoredSegments is an ignored parameter only used for

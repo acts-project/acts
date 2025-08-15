@@ -38,10 +38,25 @@ std::vector<double> ConvexPolygonBoundsBase::values() const {
   return values;
 }
 
+void ConvexPolygonBoundsBase::calculateCenter(
+    std::span<const Vector2> vertices) {
+  Vector2 sum = Vector2::Zero();
+  for (const auto& vertex : vertices) {
+    sum += vertex;
+  }
+  m_center = sum / static_cast<double>(vertices.size());
+}
+
+Vector2 ConvexPolygonBoundsBase::center() const {
+  return m_center;
+}
+
 ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
     const std::vector<Vector2>& vertices)
     : m_vertices(vertices.begin(), vertices.end()),
-      m_boundingBox(makeBoundingBox(vertices)) {}
+      m_boundingBox(makeBoundingBox(vertices)) {
+  calculateCenter(vertices);
+}
 
 bool ConvexPolygonBounds<PolygonDynamic>::inside(
     const Vector2& lposition) const {

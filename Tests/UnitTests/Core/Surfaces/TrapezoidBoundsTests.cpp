@@ -202,6 +202,23 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedTrapezoidBoundsObject, trapezoidBoundsObject);
 }
 
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsCenter) {
+  // Test unrotated trapezoid
+  TrapezoidBounds trap(minHalfX, maxHalfX, halfY);
+  Vector2 center = trap.center();
+  BOOST_CHECK_EQUAL(center.x(), 0.0);
+  BOOST_CHECK_EQUAL(center.y(), 0.0);
+
+  // Test rotated trapezoid
+  const double rotAngle = 0.3;
+  TrapezoidBounds trapRotated(minHalfX, maxHalfX, halfY, rotAngle);
+  Vector2 centerRotated = trapRotated.center();
+  // For a rotated trapezoid symmetric about origin, centroid should still be at
+  // origin
+  BOOST_CHECK_EQUAL(centerRotated.x(), 0.0);
+  BOOST_CHECK_EQUAL(centerRotated.y(), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

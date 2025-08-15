@@ -81,6 +81,10 @@ class RadialBounds : public DiscBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For RadialBounds: returns ((rMin + rMax)/2, averagePhi) in polar coordinates
+  Vector2 center() const final;
+
   /// Outstream operator
   ///
   /// @param sl is the ostream to be dumped into

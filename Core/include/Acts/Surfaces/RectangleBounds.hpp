@@ -90,6 +90,10 @@ class RectangleBounds : public PlanarBounds {
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For RectangleBounds: returns the geometric center (min + max) / 2
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream for the dump

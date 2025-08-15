@@ -78,6 +78,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
     m_vertices[i] = vertices[i];
   }
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>
@@ -85,6 +86,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
     const vertex_array& vertices) noexcept(false)
     : m_vertices(vertices), m_boundingBox(makeBoundingBox(vertices)) {
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>
@@ -94,8 +96,9 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(const value_array& values) noexcept(
   for (std::size_t i = 0; i < N; i++) {
     m_vertices[i] = Vector2(values[2 * i], values[2 * i + 1]);
   }
-  makeBoundingBox(m_vertices);
+  m_boundingBox = makeBoundingBox(m_vertices);
   checkConsistency();
+  calculateCenter(m_vertices);
 }
 
 template <int N>

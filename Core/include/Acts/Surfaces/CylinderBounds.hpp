@@ -134,6 +134,10 @@ class CylinderBounds : public SurfaceBounds {
   std::vector<Vector3> circleVertices(const Transform3 transform,
                                       unsigned int quarterSegments) const;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For CylinderBounds: returns (averagePhi, 0) in local (rphi, z) coordinates
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 
