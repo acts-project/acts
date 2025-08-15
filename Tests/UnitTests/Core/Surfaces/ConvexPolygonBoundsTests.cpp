@@ -111,6 +111,10 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   vertices = {{0, 0}, {1, 0}, {0.5, 1}};
   poly triangle(vertices);
 
+  // Too few vertices
+  vertices = {{0, 0}, {1, 1}};
+  BOOST_CHECK_THROW(poly{vertices}, std::invalid_argument);
+
   RectangleBounds bb = triangle.boundingBox();
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));

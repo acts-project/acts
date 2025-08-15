@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <ostream>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -108,6 +109,10 @@ void ConvexPolygonBoundsBase::checkConsistency(
 ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
     std::span<const Vector2> vertices)
     : m_vertices(vertices.begin(), vertices.end()) {
+  if (vertices.size() < 3) {
+    throw std::invalid_argument(
+        "ConvexPolygonBounds: At least 3 vertices are required.");
+  }
   checkConsistency(vertices);
   calculateCenter(vertices);
   makeBoundingBox(vertices);
