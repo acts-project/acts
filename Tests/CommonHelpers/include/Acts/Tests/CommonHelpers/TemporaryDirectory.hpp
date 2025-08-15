@@ -14,6 +14,7 @@
 #include <filesystem>
 
 namespace Acts::Test {
+
 class TemporaryDirectory {
  public:
   TemporaryDirectory() {
@@ -34,4 +35,5 @@ class TemporaryDirectory {
  private:
   std::filesystem::path m_dir;
 };
+
 }  // namespace Acts::Test

@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -20,12 +17,10 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 
 #include <functional>
