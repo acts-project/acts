@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 
 #include <cstdint>
@@ -58,6 +59,12 @@ class MuonSpacePoint {
     };
     /// @brief Detector side encoding
     enum class DetSide : std::int8_t { UnDef = 0, A = 1, C = -1 };
+    /// @brief Print the Identifier's stationName to a string
+    static std::string toString(const StationName st);
+    /// @brief Print the Identifier's technologyField to a string
+    static std::string toString(const TechField tech);
+    /// @brief Print the Identifier's detector side to a string
+    static std::string toString(const DetSide side);
     /// @brief Empty default Identifier constructor
     explicit MuonId() = default;
     /// @brief Default copy constructor
@@ -104,6 +111,8 @@ class MuonSpacePoint {
     /// @param measEta: Flag stating whether the space point measures the precision (eta) coordinate
     /// @param measPhi: Flag stating whether the space point measures the non-precsion (phi) coordinate
     void setCoordFlags(bool measEta, bool measPhi);
+    /// @brief prints the Muon identifier to string
+    std::string toString() const;
 
    private:
     TechField m_tech{TechField::UnDef};
@@ -119,10 +128,16 @@ class MuonSpacePoint {
   MuonSpacePoint() = default;
   /// @brief Copy constructor
   MuonSpacePoint(const MuonSpacePoint& other) = default;
-  /// @brief Move constructor */
+  /// @brief Move constructor
   MuonSpacePoint(MuonSpacePoint&& other) = default;
+  /// @brief Copy assignment
+  MuonSpacePoint& operator=(const MuonSpacePoint& other) = default;
+  /// @brief Move assignment
+  MuonSpacePoint& operator=(MuonSpacePoint&& other) = default;
   /// @brief Returns the Identifier of the space point
   const MuonId& id() const { return m_id; }
+  /// @brief Returnt the geometry Identifier of the space point
+  const Acts::GeometryIdentifier& geometryId() const { return m_geoId; }
   /// @brief Returns the local measurement position
   const Acts::Vector3& localPosition() const { return m_pos; }
   /// @brief Returns the local sensor direction
@@ -159,6 +174,8 @@ class MuonSpacePoint {
   void setTime(const double t);
   /// @brief Define the spatial components of the covariance
   void setCovariance(const double covX, const double covY, const double covT);
+  /// @brief Set the geometry identifier
+  void setGeometryId(const Acts::GeometryIdentifier& geoId);
 
  private:
   MuonId m_id{};
@@ -170,6 +187,7 @@ class MuonSpacePoint {
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
   double m_radius{0.};
   std::optional<double> m_time{std::nullopt};
+  Acts::GeometryIdentifier m_geoId{};
 };
 
 static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
@@ -179,18 +197,10 @@ static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
 using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
-/// @brief Print the Identifier's stationName to a string
-std::string to_string(const MuonSpacePoint::MuonId::StationName st);
-/// @brief Print the Identifier's technologyField to a string
-std::string to_string(const MuonSpacePoint::MuonId::TechField tech);
-/// @brief Print the Identifier's detector side to a string
-std::string to_string(const MuonSpacePoint::MuonId::DetSide side);
-
-}  // namespace ActsExamples
-
 /// @brief ostream operator of the Muon space point Identifier
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint::MuonId& id);
 /// @brief osteram operator of the Space point
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint& sp);
+}  // namespace ActsExamples
