@@ -97,6 +97,29 @@ struct TGeoSurfaceConverter {
   static double toRadian(double degree) {
     return detail::radian_sym(degree * UnitConstants::degree);
   }
+
+  /// Compute the angular extent (halfPhi) and center angle (avgPhi),
+  /// handling periodicity and wraparound across 0°. The returned angles are in radians.
+  ///
+  /// The average phi is wrapped into the range [-pi, pi).
+  ///
+  /// @param deg1 Starting angle in degrees
+  /// @param deg2 Ending angle in degrees
+  /// @return pair {halfPhi, avgPhi} in radians
+  static std::pair<double, double> toRadianSpan(double deg1, double deg2) {
+    double phi1 = deg1 * UnitConstants::degree;
+    double phi2 = deg2 * UnitConstants::degree;
+
+    // Proper arc length with wraparound (e.g. 0° to 360° = 2π)
+    double span =
+        Acts::detail::difference_periodic(phi2, phi1, 2 * std::numbers::pi);
+
+    // Compute average phi in [−π, π) (for symmetry in bounds)
+    double avg = Acts::detail::radian_sym(phi1 + 0.5 * span);
+
+    return {span * 0.5, avg};  // halfPhi, avgPhi
+  }
+
 };
 
 }  // namespace Acts
