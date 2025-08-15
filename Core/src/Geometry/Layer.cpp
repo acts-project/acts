@@ -199,10 +199,8 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
     if (SurfaceIntersection intersection =
             surfaceRepresentation()
                 .intersect(gctx, position, direction)
-                .closestForward();
-        intersection.isValid() &&
-        detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                farLimit)) {
+                .closest();
+        intersection.isValid()) {
       lookupPosition = intersection.position();
     }
 
