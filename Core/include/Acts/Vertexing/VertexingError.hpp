@@ -25,6 +25,7 @@ enum class VertexingError {
   NonPositiveVariance,
   MatrixNotPositiveDefinite,
   InvalidInput,
+  CouldNotRemoveTrack,
 };
 
 std::error_code make_error_code(Acts::VertexingError e);

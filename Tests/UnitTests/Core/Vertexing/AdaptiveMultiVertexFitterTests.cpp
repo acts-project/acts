@@ -9,10 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -35,16 +33,11 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <numbers>
 #include <random>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -250,7 +243,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVtxToFit(state, vtxList.at(0), vertexingOptions);
+  std::vector<Vertex*> vtxFitPtr = {&vtxList.at(0)};
+  auto res1 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
   ACTS_DEBUG("Tracks linked to each vertex AFTER fit:");
   int c = 0;
   for (auto& vtx : vtxPtrList) {
@@ -294,7 +288,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   CHECK_CLOSE_ABS(vtxList.at(1).fullPosition(),
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
-  auto res2 = fitter.addVtxToFit(state, vtxList.at(2), vertexingOptions);
+  vtxFitPtr = {&vtxList.at(2)};
+  auto res2 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -425,7 +420,8 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   state.addVertexToMultiMap(vtx);
 
-  auto res = fitter.addVtxToFit(state, vtx, vertexingOptions);
+  std::vector<Vertex*> vtxFitPtr = {&vtx};
+  auto res = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions);
 
   BOOST_CHECK(res.ok());
 
