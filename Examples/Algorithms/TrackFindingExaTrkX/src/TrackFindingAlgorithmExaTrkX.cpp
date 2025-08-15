@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/GraphStoreHook.hpp"
 #include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -92,6 +93,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  ACTS_NVTX_START(data_preparation);
+
   using Clock = std::chrono::high_resolution_clock;
   using Duration = std::chrono::duration<double, std::milli>;
   auto t0 = Clock::now();
@@ -178,6 +181,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
+  ACTS_NVTX_STOP(data_preparation);
   Acts::ExaTrkXTiming timing;
 #ifdef ACTS_EXATRKX_CPUONLY
   Acts::Device device = {Acts::Device::Type::eCPU, 0};
@@ -186,6 +190,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 #endif
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
+  ACTS_NVTX_START(post_processing);
 
   auto t2 = Clock::now();
 
@@ -250,6 +255,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     m_timing.fullTime(Duration(t3 - t0).count());
   }
 
+  ACTS_NVTX_STOP(post_processing);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
