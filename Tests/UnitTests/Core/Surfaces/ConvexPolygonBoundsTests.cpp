@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
   poly<4> original(vertices);
 
   auto valvector = original.values();
-  std::array<double, poly<4>::eSize> values{};
-  std::copy_n(valvector.begin(), poly<4>::eSize, values.begin());
+  std::array<double, poly<4>::size> values{};
+  std::copy_n(valvector.begin(), poly<4>::size, values.begin());
   poly<4> recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
 

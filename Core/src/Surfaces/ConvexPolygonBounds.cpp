@@ -51,11 +51,66 @@ Vector2 ConvexPolygonBoundsBase::center() const {
   return m_center;
 }
 
+const RectangleBounds& ConvexPolygonBoundsBase::boundingBox() const {
+  return m_boundingBox;
+}
+
+void ConvexPolygonBoundsBase::makeBoundingBox(
+    std::span<const Vector2> vertices) {
+  Vector2 vmax, vmin;
+  vmax = vertices[0];
+  vmin = vertices[0];
+
+  for (std::size_t i = 1; i < vertices.size(); i++) {
+    vmax = vmax.cwiseMax(vertices[i]);
+    vmin = vmin.cwiseMin(vertices[i]);
+  }
+
+  m_boundingBox = {vmin, vmax};
+}
+
+void ConvexPolygonBoundsBase::checkConsistency(
+    std::span<const Vector2> vertices) noexcept(false) {
+  const std::size_t N = vertices.size();
+  for (std::size_t i = 0; i < N; i++) {
+    std::size_t j = (i + 1) % N;
+    const Vector2& a = vertices[i];
+    const Vector2& b = vertices[j];
+
+    const Vector2 ab = b - a;
+    const Vector2 normal = Vector2(ab.y(), -ab.x()).normalized();
+
+    bool first = true;
+    bool ref = false;
+    // loop over all other vertices
+    for (std::size_t k = 0; k < N; k++) {
+      if (k == i || k == j) {
+        continue;
+      }
+
+      const Vector2& c = vertices[k];
+      double dot = normal.dot(c - a);
+
+      if (first) {
+        ref = std::signbit(dot);
+        first = false;
+        continue;
+      }
+
+      if (std::signbit(dot) != ref) {
+        throw std::logic_error(
+            "ConvexPolygon: Given vertices do not form convex hull");
+      }
+    }
+  }
+}
+
 ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
-    const std::vector<Vector2>& vertices)
-    : m_vertices(vertices.begin(), vertices.end()),
-      m_boundingBox(makeBoundingBox(vertices)) {
+    std::span<const Vector2> vertices)
+    : m_vertices(vertices.begin(), vertices.end()) {
+  checkConsistency(vertices);
   calculateCenter(vertices);
+  makeBoundingBox(vertices);
 }
 
 bool ConvexPolygonBounds<PolygonDynamic>::inside(
@@ -73,16 +128,6 @@ Vector2 ConvexPolygonBounds<PolygonDynamic>::closestPoint(
 std::vector<Vector2> ConvexPolygonBounds<PolygonDynamic>::vertices(
     unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
-}
-
-const RectangleBounds& ConvexPolygonBounds<PolygonDynamic>::boundingBox()
-    const {
-  return m_boundingBox;
-}
-
-void ConvexPolygonBounds<PolygonDynamic>::checkConsistency() const
-    noexcept(false) {
-  convex_impl(m_vertices);
 }
 
 }  // namespace Acts
