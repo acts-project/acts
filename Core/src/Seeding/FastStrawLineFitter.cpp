@@ -111,7 +111,11 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   const double secTheta = 1. / std::cos(result.theta);
   result.y0 =
       fitPars.centerY - fitPars.centerZ * tanTheta + fitPars.fitY0 * secTheta;
-  result.dY0 = std::sqrt(fitPars.covNorm);
+  result.dY0 = Acts::fastHypot(-fitPars.centerZ * Acts::pow(secTheta, 2) +
+                                   fitPars.fitY0 * secTheta * tanTheta,
+                               secTheta);
+
+  result.dY0 *= result.dTheta;
   ACTS_DEBUG("Fit converged in #"
              << result.nIter << " iterations with final parameters: "
              << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),

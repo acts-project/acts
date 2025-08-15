@@ -194,185 +194,6 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   return circles;
 }
 
-void fitPeterKluit(const std::vector<double>& xhit,  // tube position x
-                   const std::vector<double>& yhit,  // tube position y
-                   const std::vector<double>& rhit,  // (signed) drift radius
-                   const std::vector<double>& ehit,  // error on drift radius
-                   const double guess) {
-  //    compact fitter code
-
-  // weighted mean center of tubes xc, yc simplifies math
-  double phi_t{}, x_t{}, d0_t{};
-  double xc = 0.;
-  double yc = 0.;
-  double wc = 0.;
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1 / ehit[i] / ehit[i];
-    xc += w2 * xhit[i];
-    yc += w2 * yhit[i];
-    wc += w2;
-  }
-  xc = xc / wc;
-  yc = yc / wc;
-
-  std::cout << " center xc " << xc << " yc " << yc << std::endl;
-  double d0_fit = 0.;
-  double term_d0x = 0.;
-  double term_d0y = 0.;
-  double term_xx = 0.;
-  double term_yy = 0.;
-  double term_xy = 0.;
-  //    needed for initial phi guess
-  double term_dxdx = 0.;
-  double term_dxy = 0.;
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1 / ehit[i] / ehit[i];
-    d0_fit += -w2 * rhit[i];
-    term_d0x += w2 * (xhit[i] - xc) * rhit[i];
-    term_d0y += w2 * (yhit[i] - yc) * rhit[i];
-    term_xx += w2 * (xhit[i] - xc) * (xhit[i] - xc);
-    term_yy += w2 * (yhit[i] - yc) * (yhit[i] - yc);
-    term_xy += w2 * (xhit[i] - xc) * (yhit[i] - yc);
-    term_dxdx += w2 * (xhit[i] - rhit[i] - xc) * (xhit[i] - rhit[i] - xc);
-    term_dxy += w2 * (xhit[i] - rhit[i] - xc) * (yhit[i] - yc);
-  }
-
-  d0_fit = d0_fit / wc;
-  //      term_d0x = term_d0x/wc;
-  //      term_d0y = term_d0y/wc;
-  //      term_xx = term_xx/wc;
-  //      term_yy = term_yy/wc;
-  //      term_xy = term_xy/wc;
-  //      term_dxdx = term_dxdx/wc;
-  //      term_dxy = term_dxy/wc;
-
-  //    NOT needed for fit checks math derivative = 0 for truth angle
-
-  //    derivative = 0 = A sin(phi) + B cos(phi) + C sin(2 phi) + D cos(2 phi)
-  //    A = -2*term_d0y B = - 2*term_d0x C = (term_xx-term_yy) D = -2*term_xy
-
-  //    check math derivative = 0 (total = 0) for truth angle
-  double derivative_d0 = -2 * term_d0x * cos(phi_t) - 2 * term_d0y * sin(phi_t);
-  double derivative_sq = (term_xx - term_yy) * sin(2 * phi_t);
-  double derivative_xy = -2 * term_xy * cos(2 * phi_t);
-  double total = derivative_sq + derivative_xy + derivative_d0;
-  //            double d0_hit = sin(phi_t)*xtube_pos - cos(phi_t)*ytube[ilay] -
-  //            d0_t;
-
-  //    move simulated track to xc, yc
-  double d0c_t =
-      x_t * sin(phi_t) - sin(phi_t) * xc + cos(phi_t) * yc;  // yt = 0.;
-
-  std::cout << " xt " << x_t << " d0_t " << d0_t << " cos phi_t " << cos(phi_t)
-            << " sin phi_t " << sin(phi_t) << " d0c_t " << d0c_t << " d0_fit "
-            << d0_fit << std::endl;
-
-  std::cout
-      << std::format(
-             " term_d0x: {:.3f}, term_d0y: {:.3f}, term_xx: {:.3f}, term_yy: "
-             "{:.3f}, term_xy: {:.3f}, term_xx - term_yy: {:.3f} ",
-             term_d0x, term_d0y, term_xx, term_yy, term_xy, term_xx - term_yy)
-      << std::endl;
-  std::cout << " derivative_d0 " << derivative_d0 << " derivative_sq "
-            << derivative_sq << " derivative_xy " << derivative_xy
-            << " derivative total " << total << std::endl;
-
-  //    Needed for fit
-
-  //
-  //    iterate the the contributions from A sin(phi) and B cos(phi) are very
-  //    small
-  //
-  //    use tube position for initial gues of angle
-  double phi_0 = atan2(2 * term_xy, (term_xx - term_yy)) / 2.;
-  //
-  //    use positions and drift radiii (assume phi = pi/2)
-  //    best choice because we need less iterations
-
-  phi_0 = atan2(2 * term_dxy, (term_dxdx - term_yy)) / 2.;
-  phi_0 = guess;
-
-  int niter = 0;
-  double dphiLast = 1.;
-
-  // iterations are needed around the initial guess
-
-  for (int iter = 0; iter < 5; iter++) {
-    double term_cs = -2 * term_d0y * sin(phi_0) - 2 * term_d0x * cos(phi_0);
-    //     check = derivate should be zero
-    double check = -2 * term_d0y * sin(phi_0) - 2 * term_d0x * cos(phi_0) +
-                   (term_xx - term_yy) * sin(2 * phi_0) -
-                   2 * term_xy * cos(2 * phi_0);
-    //     use the derivate of check to calculate corrections dphi
-    double derterm = -2 * term_d0y * cos(phi_0) + 2 * term_d0x * sin(phi_0) +
-                     2 * (term_xx - term_yy) * cos(2 * phi_0) +
-                     2 * 2 * term_xy * sin(2 * phi_0);
-    double dphi = -(check) / derterm;
-    std::cout << "#" << iter << " -- "
-              << std::format(" check zero: {:.3f} ", check / 1._degree)
-              // << " term_cs " << term_cs
-              << std::format(" derterm {:.3f}", derterm / 1._degree) << " dphi "
-              << dphi << std::endl;
-    phi_0 += dphi;
-    if (fabs(dphi) > fabs(dphiLast)) {
-      std::cout << " ALARM BIG dphi " << dphi << " dphiLast " << dphiLast
-                << std::endl;
-      break;
-    }
-    dphiLast = dphi;
-    if (fabs(dphi) < 1e-8)
-      break;
-    niter++;
-
-    std::cout << " dphi " << dphi << " phi_t-phi_0 " << phi_t - phi_0
-              << std::endl;
-  }
-
-  double derterm = -2 * term_d0y * cos(phi_0) + 2 * term_d0x * sin(phi_0) +
-                   2 * (term_xx - term_yy) * cos(2 * phi_0) +
-                   2 * 2 * term_xy * sin(2 * phi_0);
-  double phi_fit = phi_0;
-
-  // chi2 calculation
-  double chi2_fit = 0;
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1 / ehit[i] / ehit[i];
-    double res = d0_fit + rhit[i] - (xhit[i] - xc) * sin(phi_fit) +
-                 (yhit[i] - yc) * cos(phi_fit);
-    chi2_fit += w2 * res * res;
-
-    std::cout << " hit i " << i << " xhit[i] " << xhit[i] << " yhit[i] "
-              << yhit[i] << " rhit[i] " << rhit[i] << " ehit[i] " << ehit[i]
-              << " w2 " << w2 << " residual " << res << std::endl;
-  }
-
-  std::cout << " phi_t " << phi_t << " phi_0 guess " << phi_0 << " phi_t-phi_0 "
-            << phi_t - phi_0 << " phi_fit-phi_t " << phi_fit - phi_t
-            << " niter " << niter << std::endl;
-
-  double error_d0 = 1. / sqrt(wc);
-  double error_phi = 1. / sqrt(term_xy * sin(2 * phi_fit) +
-                               term_yy * sin(phi_fit) * sin(phi_fit) -
-                               term_xx * cos(phi_fit) * cos(phi_fit));
-  // cross check
-  double dx =
-      xhit[0] + rhit[0] * sin(phi_fit) - (xhit[1] + rhit[1] * sin(phi_fit));
-  double dy =
-      yhit[0] - rhit[0] * cos(phi_fit) - (yhit[1] - rhit[1] * cos(phi_fit));
-  double dist_xy = sqrt(dx * dx + dy * dy);
-  double error_phi_check = 0.1 * sqrt(2.) / dist_xy;
-  if (xhit.size() == 2) {
-    std::cout << " dist_xy " << dist_xy << " dx " << dx << " dy " << dy
-              << std::endl;
-    std::cout << " phi_t " << phi_t << " error_d0 " << error_d0 << " error_phi "
-              << error_phi << " error_phi_check " << error_phi_check
-              << std::endl;
-  } else {
-    std::cout << " phi_t " << phi_t << " error_d0 " << error_d0 << " error_phi "
-              << error_phi << std::endl;
-  }
-}
-
 double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
   double chi2{0.};
   for (const auto& meas : measurements) {
@@ -432,14 +253,9 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     std::vector<std::int32_t> trueDriftSigns{};
     trueDriftSigns.reserve(strawPoints.size());
     chi2 = 0.;
-    std::vector<double> xhit{}, yhit{}, rhit{}, ehit{};
     for (const auto& meas : strawPoints) {
       trueDriftSigns.push_back(
           CompSpacePointAuxiliaries::strawSign(track, *meas));
-      xhit.push_back(meas->localPosition().z());
-      yhit.push_back(meas->localPosition().y());
-      ehit.push_back(meas->driftUncert());
-      rhit.push_back(-meas->driftRadius() * trueDriftSigns.back());
     }
     BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
                    1.e-12);
@@ -485,8 +301,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       nIter = (*fitResult).nIter;
       outTree->Fill();
     }
-
-    // fitPeterKluit(xhit, yhit, rhit, ehit, trueTheta);
   }
   if (debugMode) {
     outFile->WriteObject(outTree.get(), outTree->GetName());

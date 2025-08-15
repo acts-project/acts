@@ -45,12 +45,29 @@ class FastStrawLineFitter {
     double precCutOff{1.e-9};
   };
 
-  /// @param logger: New logging object for debugging
   explicit FastStrawLineFitter(const Config& cfg,
                                std::unique_ptr<const Logger> logger =
                                    getDefaultLogger("FastStrawLineFitter",
                                                     Logging::Level::INFO));
 
+  struct FitResult {
+    /// @brief
+    double theta{0.};
+    double dTheta{0.};
+    double y0{0.};
+    double dY0{0.};
+
+    double chi2{0.};
+    std::uint32_t nDoF{0};
+    std::uint32_t nIter{0};
+  };
+
+  /// @brief
+  template <CompositeSpacePointContainer StrawCont_t>
+  std::optional<FitResult> fit(const StrawCont_t& measurements,
+                               const std::vector<std::int32_t>& signs) const;
+
+ private:
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
     ///@brief Tube position center weighted with inverse covariances
@@ -99,24 +116,6 @@ class FastStrawLineFitter {
     double fitY0TwoPrime{0.};
   };
 
-  struct FitResult {
-    /// @brief
-    double theta{0.};
-    double dTheta{0.};
-    double y0{0.};
-    double dY0{0.};
-
-    double chi2{0.};
-    std::uint32_t nDoF{0};
-    std::uint32_t nIter{0};
-  };
-
-  /// @brief
-  template <CompositeSpacePointContainer StrawCont_t>
-  std::optional<FitResult> fit(const StrawCont_t& measurements,
-                               const std::vector<std::int32_t>& signs) const;
-
- private:
   template <CompositeSpacePointContainer StrawCont_t>
   FitAuxiliaries fillAuxiliaries(const StrawCont_t& measurements,
                                  const std::vector<std::int32_t>& signs) const;
