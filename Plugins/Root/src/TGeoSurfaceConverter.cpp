@@ -93,9 +93,12 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
-        if (std::abs(phi2 - phi1) < std::numbers::pi * (1. - s_epsilon)) {
+        double deg1 = tubeSeg->GetPhi1();
+        double deg2 = tubeSeg->GetPhi2();
+        std::tie(halfPhi, avgPhi) = toRadianSpan(deg1, deg2);
+        double span = 2.0 * halfPhi;
+
+        if (span < std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
@@ -103,8 +106,6 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                 "with "
                 "'(X)(y/Y)(*)' axes.");
           }
-          halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
-          avgPhi = 0.5 * (phi1 + phi2);
         }
       }
       bounds = std::make_shared<CylinderBounds>(medR, halfZ, halfPhi, avgPhi);
@@ -252,18 +253,18 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
-        if (std::abs(phi2 - phi1) < 2 * std::numbers::pi * (1. - s_epsilon)) {
+        double deg1 = tubeSeg->GetPhi1();
+        double deg2 = tubeSeg->GetPhi2();
+        std::tie(halfPhi, avgPhi) = toRadianSpan(deg1, deg2);
+        double span = 2.0 * halfPhi;
+
+        if (span < std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
-                "TGeoShape -> CylinderSurface (sectorial): can only be "
-                "converted "
+                "TGeoShape -> DiscSurface (sectorial): can only be converted "
                 "with "
                 "'(X)(y/Y)(*)' axes.");
           }
-          halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
-          avgPhi = 0.5 * (phi1 + phi2);
         }
       }
       bounds = std::make_shared<RadialBounds>(minR, maxR, halfPhi, avgPhi);
