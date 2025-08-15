@@ -97,7 +97,9 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   static constexpr std::size_t nVertices = N;
 
   /// Expose number of parameters as a template parameter
-  static constexpr std::size_t size = 2 * N;
+  /// @note The `eSize` name here emulates the size of the *bound values* in other
+  ///       bounds classes.
+  static constexpr std::size_t eSize = 2 * N;
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
@@ -146,7 +148,9 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// Expose number of vertices given as template parameter.
   constexpr static int nVertices = PolygonDynamic;
   /// Expose number of parameters as a template parameter
-  constexpr static int size = -1;
+  /// @note The `eSize` name here emulates the size of the *bound values* in other
+  ///       bounds classes.
+  constexpr static int eSize = -1;
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.
