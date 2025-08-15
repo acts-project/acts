@@ -80,24 +80,24 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   RectangleBounds m_boundingBox{0, 0};
 };
 
+template <int N>
+concept isValidConvexPolygonSize = requires { requires(N >= 3 || N == -1); };
+
 /// This is the actual implementation of the bounds.
-/// It is templated on the number of vertices, but there is a specialization for
-/// *dynamic* number of vertices, where the underlying storage is then a vector.
+/// It is templated on the number of vertices, but there is a specialization
+/// for *dynamic* number of vertices, where the underlying storage is then a
+/// vector.
 ///
 /// @tparam N Number of vertices
 template <int N>
+  requires isValidConvexPolygonSize<N>
 class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
  public:
   /// Expose number of vertices given as template parameter.
   static constexpr std::size_t nVertices = N;
 
-  /// Type that's used to store the vertices, in this case a fixed size array.
-  using vertex_array = std::array<Vector2, nVertices>;
-
   /// Expose number of parameters as a template parameter
   static constexpr std::size_t size = 2 * N;
-
-  static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
@@ -131,7 +131,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
  private:
-  vertex_array m_vertices{};
+  std::array<Vector2, nVertices> m_vertices{};
 };
 
 /// Tag to trigger specialization of a dynamic polygon
@@ -143,7 +143,9 @@ constexpr int PolygonDynamic = -1;
 template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
+  /// Expose number of vertices given as template parameter.
   constexpr static int nVertices = PolygonDynamic;
+  /// Expose number of parameters as a template parameter
   constexpr static int size = -1;
 
   /// Constructor from a vector of vertices, to facilitate construction.

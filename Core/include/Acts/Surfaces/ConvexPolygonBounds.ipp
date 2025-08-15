@@ -16,6 +16,7 @@
 namespace Acts {
 
 template <int N>
+  requires isValidConvexPolygonSize<N>
 ConvexPolygonBounds<N>::ConvexPolygonBounds(
     std::span<const Vector2> vertices) noexcept(false) {
   throw_assert(vertices.size() == N,
@@ -29,6 +30,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
 }
 
 template <int N>
+  requires isValidConvexPolygonSize<N>
 ConvexPolygonBounds<N>::ConvexPolygonBounds(
     std::span<const double> values) noexcept(false) {
   throw_assert(values.size() == 2 * N,
@@ -42,11 +44,13 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(
 }
 
 template <int N>
+  requires isValidConvexPolygonSize<N>
 bool ConvexPolygonBounds<N>::inside(const Vector2& lposition) const {
   return detail::VerticesHelper::isInsidePolygon(lposition, m_vertices);
 }
 
 template <int N>
+  requires isValidConvexPolygonSize<N>
 Vector2 ConvexPolygonBounds<N>::closestPoint(
     const Vector2& lposition, const SquareMatrix2& metric) const {
   return detail::VerticesHelper::computeClosestPointOnPolygon(
@@ -54,6 +58,7 @@ Vector2 ConvexPolygonBounds<N>::closestPoint(
 }
 
 template <int N>
+  requires isValidConvexPolygonSize<N>
 std::vector<Vector2> ConvexPolygonBounds<N>::vertices(
     unsigned int /*ignoredSegments*/) const {
   return {m_vertices.begin(), m_vertices.end()};
