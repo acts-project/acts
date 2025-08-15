@@ -68,7 +68,7 @@ bool CandidatesForMiddleSp2::push(Container& container, Size nMax,
   m_storage[smallestIndex] =
       TripletCandidate2(spB, spM, spT, weight, zOrigin, isQuality);
   std::ranges::pop_heap(container, comparator);
-  container.back() = {weight, m_storage.size() - 1};
+  container.back() = {weight, smallestIndex};
   std::ranges::push_heap(container, comparator);
 
   return true;
