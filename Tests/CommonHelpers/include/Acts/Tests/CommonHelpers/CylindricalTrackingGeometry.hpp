@@ -16,6 +16,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
 
@@ -97,11 +99,12 @@ struct CylindricalTrackingGeometry {
       const std::pair<int, int>& binningSchema);
 
   // @brief Call operator for the creation method of the tracking geometry
-  std::shared_ptr<TrackingGeometry> operator()();
+  std::shared_ptr<TrackingGeometry> operator()(
+      const Logger& logger = getDummyLogger());
 
  private:
-  std::shared_ptr<TrackingGeometry> buildGen1();
-  std::shared_ptr<TrackingGeometry> buildGen3();
+  std::shared_ptr<TrackingGeometry> buildGen1(const Logger& logger);
+  std::shared_ptr<TrackingGeometry> buildGen3(const Logger& logger);
 };
 
 }  // namespace Acts::Test
