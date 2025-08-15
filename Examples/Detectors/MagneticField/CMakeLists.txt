@@ -13,7 +13,7 @@ target_link_libraries(
     ActsExamplesMagneticField
     # the ROOT libraries should be private, but if we do that then the linker
     # fails with some missing ROOT symbols.
-    PUBLIC Acts::Core Acts::ExamplesFramework ROOT::Core ROOT::Tree
+    PUBLIC Acts::ExamplesFramework ROOT::Core ROOT::Tree
     PRIVATE std::filesystem
 )
 

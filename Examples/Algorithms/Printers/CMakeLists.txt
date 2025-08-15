@@ -10,5 +10,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesPrinters
-    PUBLIC Acts::Core Acts::Fatras Acts::ExamplesFramework
+    PUBLIC Acts::Fatras Acts::ExamplesFramework
 )

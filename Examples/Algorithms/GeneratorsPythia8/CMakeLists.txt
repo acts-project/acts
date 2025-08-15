@@ -9,6 +9,6 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeneratorsPythia8
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesGenerators
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesGenerators
     PRIVATE Pythia8::Pythia8
 )

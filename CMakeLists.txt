@@ -58,6 +58,7 @@ set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track)
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # external library options
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})

@@ -13,6 +13,6 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesVertexing
-    PUBLIC Acts::Core Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework
     PRIVATE Acts::ExamplesTruthTracking
 )
