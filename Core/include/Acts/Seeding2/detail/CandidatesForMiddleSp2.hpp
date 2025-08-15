@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 
 #include <limits>
 #include <vector>
