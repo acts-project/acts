@@ -24,9 +24,16 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
+/// @brief Expresses an angle in degree
+/// @param x: Angle in radians
 constexpr double inDeg(const double x) {
   return x / 1._degree;
 }
+/// @brief Express a time in terms of nanoseconds
+constexpr double inNanoS(const double x) {
+  return x / 1._ns;
+}
+
 }  // namespace
 namespace Acts::Experimental::detail {
 
@@ -39,6 +46,17 @@ FastStrawLineFitter::FastStrawLineFitter(const Config& cfg,
                                          std::unique_ptr<const Logger> logger)
     : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
+inline void FastStrawLineFitter::calcAngularDerivatives(
+    const TrigonomHelper& angles, const FitAuxiliaries& fitPars,
+    double& thetaPrime, double& thetaTwoPrime) const {
+  thetaPrime = 0.5 * fitPars.T_zzyy * angles.sinTwoTheta -
+               fitPars.T_yz * angles.cosTwoTheta -
+               fitPars.T_rz * angles.cosTheta - fitPars.T_ry * angles.sinTheta;
+  thetaTwoPrime = fitPars.T_zzyy * angles.cosTwoTheta +
+                  2. * fitPars.T_yz * angles.sinTwoTheta +
+                  fitPars.T_rz * angles.sinTheta -
+                  fitPars.T_ry * angles.cosTheta;
+}
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     const FitAuxiliaries& fitPars) const {
   /// No degrees of freedom -> no valid parameters
@@ -69,18 +87,11 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
 
   result.nDoF = fitPars.nDoF;
   double thetaPrime{0.}, thetaTwoPrime{0.};
+
   while ((converged == false) && result.nIter <= m_cfg.maxIter) {
     ++result.nIter;
-    const double cosTheta = std::cos(result.theta);
-    const double sinTheta = std::sin(result.theta);
-    const double cosTwoTheta = std::cos(2. * result.theta);
-    const double sinTwoTheta = std::sin(2. * result.theta);
-    thetaPrime = 0.5 * fitPars.T_zzyy * sinTwoTheta -
-                 fitPars.T_yz * cosTwoTheta - fitPars.T_rz * cosTheta -
-                 fitPars.T_ry * sinTheta;
-    thetaTwoPrime = fitPars.T_zzyy * cosTwoTheta +
-                    2. * fitPars.T_yz * sinTwoTheta + fitPars.T_rz * sinTheta -
-                    fitPars.T_ry * cosTheta;
+    const TrigonomHelper angles{result.theta};
+    calcAngularDerivatives(angles, fitPars, thetaPrime, thetaTwoPrime);
     const double update = thetaPrime / thetaTwoPrime;
     ACTS_VERBOSE(
         __func__ << "() - " << __LINE__ << ": Fit iteration #" << result.nIter
@@ -120,7 +131,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                                secTheta);
 
   result.dY0 *= result.dTheta;
-  ACTS_DEBUG(
+  ACTS_INFO(
       __func__ << "() - " << __LINE__ << ": Fit converged in #" << result.nIter
                << " iterations with final parameters: "
                << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(result.theta),
@@ -135,6 +146,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   if (!fitPars.nDoF) {
     return std::nullopt;
   }
+  auto noT0Result = fit(static_cast<const FitAuxiliaries&>(fitPars));
 
   ACTS_INFO(
       __func__ << "() - " << __LINE__ << ": Estimated "
@@ -164,27 +176,26 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   Vector2 grad{Vector2::Zero()};
   Vector2 pars{Vector2::Zero()};
 
+  pars[0] = std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
+  if (pars[0] < 0) {
+    pars[0] += std::numbers::pi;
+  }
+  pars[1] = 82._ns;
   bool converged{false};
   while (converged == false && result.nIter <= m_cfg.maxIter) {
     ++result.nIter;
-    const double cosTheta = std::cos(pars[0]);
-    const double sinTheta = std::sin(pars[0]);
-    const double cos2Theta = std::cos(2. * pars[0]);
-    const double sin2Theta = std::sin(2. * pars[0]);
-    /// d^{2}chi^{2} / d^{2}theta
-    cov(0, 0) = fitPars.T_zzyy * cos2Theta + 2. * fitPars.T_yz * sin2Theta +
-                fitPars.T_rz * sinTheta - fitPars.T_ry * cosTheta;
+    const TrigonomHelper angles{pars[0]};
+    calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
 
-    cov(1, 0) = cov(0, 1) = fitPars.T_vz * cosTheta + fitPars.T_vy * sinTheta;
+    cov(1, 0) = cov(0, 1) =
+        fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
     cov(1, 1) = -fitPars.fitY0Prime * fitPars.fitY0Prime -
                 fitPars.fitY0Prime * fitPars.fitY0TwoPrime -
-                fitPars.T_az * sinTheta - fitPars.T_ay * cosTheta +
-                fitPars.R_vv + fitPars.R_va;
+                fitPars.T_az * angles.sinTheta -
+                fitPars.T_ay * angles.cosTheta + fitPars.R_vv + fitPars.R_va;
 
-    grad[0] = 0.5 * fitPars.T_zzyy * sin2Theta - fitPars.T_yz * cos2Theta -
-              fitPars.T_rz * cosTheta - fitPars.T_ry * sinTheta;
     grad[1] = fitPars.fitY0 * fitPars.fitY0Prime - fitPars.R_vr +
-              fitPars.T_vz * sinTheta - fitPars.T_vy * cosTheta;
+              fitPars.T_vz * angles.sinTheta - fitPars.T_vy * angles.cosTheta;
 
     const Vector2 update = cov.inverse() * grad;
     if (update.norm() < m_cfg.precCutOff) {
@@ -192,12 +203,13 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
       break;
     }
     ACTS_INFO(__func__ << "() - " << __LINE__ << " Iteration: " << result.nIter
-                       << ", theta: " << inDeg(pars[0]) << ", time: " << pars[1]
-                       << " gradient: (" << inDeg(grad[0]) << ", " << grad[1]
+                       << ", theta: " << inDeg(pars[0])
+                       << ", time: " << inNanoS(pars[1]) << " gradient: ("
+                       << inDeg(grad[0]) << ", " << inNanoS(grad[1])
                        << "), covariance:" << std::endl
                        << toString(cov) << std::endl
-                       << " update: (" << inDeg(update[0]) << ", " << update[1]
-                       << ").");
+                       << " update: (" << inDeg(update[0]) << ", "
+                       << inNanoS(update[1]) << ").");
     pars -= update;
   }
   return std::nullopt;

@@ -140,10 +140,42 @@ class FastStrawLineFitter {
     ///@brief Second derivative of the ftted Y0
     double fitY0TwoPrime{0.};
   };
-
+  /// @brief Small Helper struct to calculate sin & cos of theta & 2 theta
+  struct TrigonomHelper {
+    TrigonomHelper(const double theta)
+        : cosTheta{std::cos(theta)},
+          sinTheta{std::sin(theta)},
+          cosTwoTheta{std::cos(2. * theta)},
+          sinTwoTheta{std::sin(2. * theta)} {}
+    double cosTheta{0.};
+    double sinTheta{0.};
+    double cosTwoTheta{0.};
+    double sinTwoTheta{0.};
+  };
+  /// @brief Calculate the pure angular derivatives of the chi2 w.r.t theta
+  /// @param angles: Wrapper object to pass sin & cos of theta
+  /// @param fitPars: Constants of the current fit configuration
+  /// @param thetaPrime: Mutable reference to which the first derivative is written
+  /// @param thetaTwoPrime: Mutable reference to which the second derivative is written
+  void calcAngularDerivatives(const TrigonomHelper& angles,
+                              const FitAuxiliaries& fitPars, double& thetaPrime,
+                              double& thetaTwoPrime) const;
+  /// @brief Calculate the fit constants for a set of straw circles
+  /// @param measurements: List of straw measurements
+  /// @param signs: List of left/right signs to be annotated with each straw circle
   template <CompositeSpacePointContainer StrawCont_t>
   FitAuxiliaries fillAuxiliaries(const StrawCont_t& measurements,
                                  const std::vector<std::int32_t>& signs) const;
+  /// @brief Evaluate the chi2 after the fit has converged.
+  /// @param measurements: List of straw measurements that have been used in the fit
+  /// @param result: Mutable reference to the FitResult object. The object is used
+  ///                to fetch the fit parameters and to store the chi2 result
+  template <CompositeSpacePointContainer StrawCont_t>
+  void calcPostFitChi2(const StrawCont_t& measurements,
+                       FitResult& result) const;
+  /// @brief Fit the
+  std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
+
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
@@ -152,12 +184,6 @@ class FastStrawLineFitter {
       const CalibrationContext& ctx, const Calibrator_t& calibrator,
       const StrawCont_t& measurements,
       const std::vector<std::int32_t>& signs) const;
-
-  template <CompositeSpacePointContainer StrawCont_t>
-  void calcPostFitChi2(const StrawCont_t& measurements,
-                       FitResult& result) const;
-
-  std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
 
   std::optional<FitResultT0> fit(const FitAuxiliariesWithT0& fitPars) const;
 
