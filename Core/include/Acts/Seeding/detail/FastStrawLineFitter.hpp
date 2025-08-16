@@ -93,6 +93,13 @@ class FastStrawLineFitter {
  private:
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
+    /// @brief Printer method
+    virtual void print(std::ostream& ostr) const;
+    friend std::ostream& operator<<(std::ostream& ostr,
+                                    const FitAuxiliaries& x) {
+      x.print(ostr);
+      return ostr;
+    }
     ///@brief Tube position center - y weighted with inverse covariances
     double centerY{0.};
     ///@brief Tube position center - z weighted with inverse covariances
@@ -121,6 +128,7 @@ class FastStrawLineFitter {
     ///@brief Constructor */
     explicit FitAuxiliariesWithT0(FitAuxiliaries&& parent)
         : FitAuxiliaries{std::move(parent)} {}
+    void print(std::ostream& ostr) const override;
     ///@brief Expectation value of T_{y} * v
     double T_vy{0.};
     ///@brief Expectation value of T_{z} * v
