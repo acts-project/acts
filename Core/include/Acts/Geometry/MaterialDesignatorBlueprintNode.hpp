@@ -86,8 +86,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
       const DirectedProtoAxis& loc1);
 
-  /// Configure the designator with a cuboid face and corresponding binning
-  /// information.
+  /// Configure the designator with a cylinder face and a homogeneous surface
+  /// material.
   /// @param face The face of the cylinder to configure
   /// @param material The material to use
   /// @return The material designator node
