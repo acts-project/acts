@@ -8,11 +8,6 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must always be first
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
