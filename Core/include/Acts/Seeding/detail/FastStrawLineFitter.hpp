@@ -82,7 +82,7 @@ class FastStrawLineFitter {
                                const std::vector<std::int32_t>& signs) const;
 
   template <CompositeSpacePointContainer StrawCont_t,
-            CompositeSpacePointCalibrator<
+            CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
                 Calibrator_t>
   std::optional<FitResultT0> fit(const Acts::CalibrationContext& ctx,
@@ -91,6 +91,10 @@ class FastStrawLineFitter {
                                  const std::vector<std::int32_t>& signs) const;
 
  private:
+  /// @brief Index of the drift circle covariance inside the straw
+  ///        space points covariance array
+  static constexpr auto s_covIdx = toUnderlying(ResidualIdx::bending);
+
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
     /// @brief Printer method
@@ -125,7 +129,7 @@ class FastStrawLineFitter {
   ///@brief Extension of the auxiliary fit constants needed for the
   ///         seed refinement when T0 is floating
   struct FitAuxiliariesWithT0 : public FitAuxiliaries {
-    ///@brief Constructor */
+    ///@brief Constructor
     explicit FitAuxiliariesWithT0(FitAuxiliaries&& parent)
         : FitAuxiliaries{std::move(parent)} {}
     void print(std::ostream& ostr) const override;
@@ -181,19 +185,21 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   void calcPostFitChi2(const StrawCont_t& measurements,
                        FitResult& result) const;
+  /// @brief Calculate the starting parameters on theta from the fit constants
+  static double startTheta(const FitAuxiliaries& fitPars);
+
   /// @brief Fit the
   std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
 
   template <CompositeSpacePointContainer StrawCont_t,
-            CompositeSpacePointCalibrator<
+            CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
                 Calibrator_t>
-  FitAuxiliariesWithT0 fillAuxiliaries(
-      const CalibrationContext& ctx, const Calibrator_t& calibrator,
-      const StrawCont_t& measurements,
-      const std::vector<std::int32_t>& signs) const;
-
-  std::optional<FitResultT0> fit(const FitAuxiliariesWithT0& fitPars) const;
+  FitAuxiliariesWithT0 fillAuxiliaries(const CalibrationContext& ctx,
+                                       const Calibrator_t& calibrator,
+                                       const StrawCont_t& measurements,
+                                       const std::vector<std::int32_t>& signs,
+                                       const double t0) const;
 
   const Config m_cfg{};
   std::unique_ptr<const Acts::Logger> m_logger{};

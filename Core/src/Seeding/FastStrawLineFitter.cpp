@@ -79,6 +79,11 @@ void FastStrawLineFitter::calcAngularDerivatives(const TrigonomHelper& angles,
                   fitPars.T_rz * angles.sinTheta -
                   fitPars.T_ry * angles.cosTheta;
 }
+double FastStrawLineFitter::startTheta(const FitAuxiliaries& fitPars) {
+  double thetaGuess =
+      std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
+  return thetaGuess + (thetaGuess < 0 ? std::numbers::pi : 0.);
+}
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     const FitAuxiliaries& fitPars) const {
   /// No degrees of freedom -> no valid parameters
@@ -88,11 +93,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Input fit parameters "
                       << fitPars);
 
-  double thetaGuess =
-      std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
-  if (thetaGuess < 0) {
-    thetaGuess += std::numbers::pi;
-  }
+  const double thetaGuess = startTheta(fitPars);
   ACTS_DEBUG(__func__ << "() - " << __LINE__
                       << ": Start fast fit seed  theta: " << inDeg(thetaGuess));
   ////
@@ -154,7 +155,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
                << std::format("y0: {:.3f}  pm {:.3f}", result.y0, result.dY0));
   return result;
 }
-
+#ifdef STONJEK
 std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     const FitAuxiliariesWithT0& fitPars) const {
   /// No degrees of freedom -> no valid parameters
@@ -173,10 +174,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   Vector2 grad{Vector2::Zero()};
   Vector2 pars{Vector2::Zero()};
 
-  pars[0] = std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
-  if (pars[0] < 0) {
-    pars[0] += std::numbers::pi;
-  }
+  pars[0] = startTheta(fitPars);
   pars[1] = 82._ns;
   bool converged{false};
   while (converged == false && result.nIter <= m_cfg.maxIter) {
@@ -211,5 +209,5 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
   return std::nullopt;
 }
-
+#endif
 }  // namespace Acts::Experimental::detail

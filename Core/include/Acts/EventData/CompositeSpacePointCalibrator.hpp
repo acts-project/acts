@@ -23,19 +23,23 @@ namespace Acts::Experimental {
 /// @brief Interface concept to calibrate CompositeSpacePoints
 
 template <typename Calibrator_t, typename SpacePoint_t>
-concept CompositeSpacePointCalibrator =
+concept CompositeSpacePointFastCalibrator =
     CompositeSpacePoint<SpacePoint_t> &&
     requires(const Calibrator_t calibrator, const Acts::CalibrationContext& ctx,
-             const SpacePoint_t& spacePoint) {
+             const SpacePoint_t& spacePoint, const double t0) {
       /// @brief Returns the drift velocity of the straw measurement's radius - time relation
       ///        which is defined as the first derivative of the relation.
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
-      { calibrator.driftVelocity(ctx, spacePoint) } -> std::same_as<double>;
+      { calibrator.driftVelocity(ctx, spacePoint, t0) } -> std::same_as<double>;
       /// @brief Returns the drift acceleration of the straw measurement's radius - time relation
       ///        which is defined as the second derivative of the relation
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
-      { calibrator.driftAcceleration(ctx, spacePoint) } -> std::same_as<double>;
+      {
+        calibrator.driftAcceleration(ctx, spacePoint, t0)
+      } -> std::same_as<double>;
+
+      { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
 }  // namespace Acts::Experimental

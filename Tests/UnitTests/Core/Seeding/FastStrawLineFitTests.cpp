@@ -73,8 +73,8 @@ class StrawTestPoint {
   double driftUncert() const {
     return std::sqrt(m_cov[toUnderlying(ResidualIdx::bending)]);
   }
-  /// @brief Dummy return not used in test
-  double time() const { return 0.; }
+  /// @brief Time of record
+  double time() const { return m_drifT; }
   /// @brief All measurements are straws
   bool isStraw() const { return true; }
   /// @brief Dummy return not used in test
@@ -87,6 +87,7 @@ class StrawTestPoint {
     m_driftR = Acts::abs(r);
     m_cov[toUnderlying(ResidualIdx::bending)] = Acts::pow(uncertR, 2);
   }
+  void setTimeRecord(const double t) { m_drifT = t; }
 
  private:
   Vector3 m_pos{Vector3::Zero()};
@@ -95,39 +96,45 @@ class StrawTestPoint {
   Vector3 m_planeNorm{Vector3::UnitZ()};
   double m_driftR{0.};
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
+  double m_drifT{0.};
 };
 static_assert(CompositeSpacePoint<StrawTestPoint>);
 
 class StrawTestCalibrator {
  public:
-  static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
-                              const StrawTestPoint& straw) {
-    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
-    const double t = driftTime(straw.driftRadius());
-    return A / (2. * std::sqrt(t * A));
-  }
-  static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
-                                  const StrawTestPoint& straw) {
-    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
-    const double t = driftTime(straw.driftRadius());
-
-    return A / (2. * driftRadius(t * A));
-  }
+  /// @brief Choose the coefficient to arrive at a drift time of 750 ns
+  ///        for 15 mm
+  static constexpr double CoeffRtoT = 750._ns * Acts::pow(15._mm, -2);
+  static constexpr double CoeffTtoR = 1. / CoeffRtoT;
 
   static constexpr double calcDriftUncert(const double driftR) {
     return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
   }
   static constexpr double driftTime(const double r) {
-    constexpr double A = 750._ns * Acts::pow(15._mm, -2);
-    return A * Acts::pow(r, 2);
+    return CoeffRtoT * Acts::pow(r, 2);
   }
-  static double driftRadius(const double t) {
-    constexpr double A = 1. / (750._ns * Acts::pow(15._mm, -2));
-    return std::sqrt(t * A);
+  static double driftRadius(const double t) { return std::sqrt(t * CoeffTtoR); }
+
+  static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
+                            const StrawTestPoint& straw, const double t0) {
+    const double t = straw.time() - t0;
+    return driftRadius(t);
+  }
+  static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
+                              const StrawTestPoint& straw, const double t0) {
+    const double t = straw.time() - t0;
+    return CoeffTtoR / (2. * driftRadius(t));
+  }
+  static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
+                                  const StrawTestPoint& straw,
+                                  const double t0) {
+    const double t = straw.time() - t0;
+
+    return -Acts::square(CoeffTtoR) / (4. * Acts::pow(driftRadius(t), 3));
   }
 };
 static_assert(
-    CompositeSpacePointCalibrator<StrawTestCalibrator, StrawTestPoint>);
+    CompositeSpacePointFastCalibrator<StrawTestCalibrator, StrawTestPoint>);
 
 /// @brief Generate a random straight track with a flat distribution in theta & y0
 Line_t generateLine(RandomEngine& engine) {
@@ -776,6 +783,7 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
       const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
       BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
                         meas->driftRadius(), 1.e-12);
+      meas->setTimeRecord(dTime + timeOffSet);
       const double updatedR =
           StrawTestCalibrator::driftRadius(dTime + timeOffSet);
       std::cout << __func__ << "() - " << __LINE__
