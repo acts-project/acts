@@ -36,7 +36,7 @@ static inline bool itkFastTrackingCuts(
   static float rMin = 45;
   static float cotThetaMax = 1.5;
 
-  if (isBottomCandidate && other.r() < rMin &&
+  if (isBottomCandidate && other.zr()[1] < rMin &&
       (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
     return false;
   }
@@ -161,12 +161,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints(
       Acts::Experimental::SpacePointColumns::SourceLinks |
-      Acts::Experimental::SpacePointColumns::X |
-      Acts::Experimental::SpacePointColumns::Y |
-      Acts::Experimental::SpacePointColumns::Z |
-      Acts::Experimental::SpacePointColumns::R |
-      Acts::Experimental::SpacePointColumns::VarianceR |
-      Acts::Experimental::SpacePointColumns::VarianceZ);
+      Acts::Experimental::SpacePointColumns::XY |
+      Acts::Experimental::SpacePointColumns::ZR |
+      Acts::Experimental::SpacePointColumns::VarianceZ |
+      Acts::Experimental::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::Experimental::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
@@ -178,12 +176,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       auto newSp = coreSpacePoints.createSpacePoint();
       newSp.assignSourceLinks(
           std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
-      newSp.x() = sp.x();
-      newSp.y() = sp.y();
-      newSp.z() = sp.z();
-      newSp.r() = sp.r();
-      newSp.varianceR() = sp.varianceR();
+      newSp.xy() = Eigen::Vector2f{sp.x(), sp.y()};
+      newSp.zr() = Eigen::Vector2f{sp.z(), sp.r()};
       newSp.varianceZ() = sp.varianceZ();
+      newSp.varianceR() = sp.varianceR();
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
@@ -201,8 +197,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       }
       auto first = coreSpacePoints[range.first];
       auto last = coreSpacePoints[range.second - 1];
-      minRange = std::min(first.r(), minRange);
-      maxRange = std::max(last.r(), maxRange);
+      minRange = std::min(first.zr()[1], minRange);
+      maxRange = std::max(last.zr()[1], maxRange);
     }
     return {minRange, maxRange};
   }();
@@ -351,7 +347,7 @@ GridTripletSeedingAlgorithm::retrieveRadiusRangeForMiddle(
   }
 
   // get zBin position of the middle SP
-  auto pVal = std::ranges::lower_bound(m_cfg.zBinEdges, spM.z());
+  auto pVal = std::ranges::lower_bound(m_cfg.zBinEdges, spM.zr()[0]);
   std::size_t zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
   // protects against zM at the limit of zBinEdges
   zBin == 0 ? zBin : --zBin;

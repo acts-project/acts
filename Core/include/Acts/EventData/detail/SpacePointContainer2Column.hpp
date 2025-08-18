@@ -48,8 +48,8 @@ class ColumnHolder final : public ColumnHolderBase {
   using ConstProxy = ConstSpacePointColumnProxy<Value>;
 
   ColumnHolder() = default;
-  explicit ColumnHolder(Value defaultValue)
-      : m_default(std::move(defaultValue)) {}
+  ColumnHolder(Value defaultValue, std::size_t chunkSize)
+      : m_default(std::move(defaultValue)), m_chunkSize(chunkSize) {}
 
   MutableProxy proxy(SpacePointContainer2 &container) {
     return MutableProxy(container, m_data);
@@ -62,14 +62,23 @@ class ColumnHolder final : public ColumnHolderBase {
     return std::make_unique<detail::sp::ColumnHolder<T>>(*this);
   }
 
-  std::size_t size() const override { return m_data.size(); }
-  void reserve(std::size_t size) override { m_data.reserve(size); }
+  std::size_t size() const override { return m_data.size() / m_chunkSize; }
+  void reserve(std::size_t size) override {
+    m_data.reserve(size * m_chunkSize);
+  }
   void clear() override { m_data.clear(); }
-  void resize(std::size_t size) override { m_data.resize(size, m_default); }
-  void emplace_back() override { m_data.emplace_back(m_default); }
+  void resize(std::size_t size) override {
+    m_data.resize(size * m_chunkSize, m_default);
+  }
+  void emplace_back() override {
+    for (std::size_t i = 0; i < m_chunkSize; ++i) {
+      m_data.emplace_back(m_default);
+    }
+  }
 
  private:
   Value m_default{};
+  std::size_t m_chunkSize{1};
   Container m_data;
 };
 

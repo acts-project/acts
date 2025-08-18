@@ -188,6 +188,21 @@ class SpacePointProxy2 {
   {
     return m_container->copyFromIndex(m_index);
   }
+  Eigen::Map<Eigen::Vector2f> xy() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xy(m_index);
+  }
+  Eigen::Map<Eigen::Vector2f> zr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->zr(m_index);
+  }
+  Eigen::Map<Eigen::Vector4f> xyzr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyzr(m_index);
+  }
 
   /// Mutable access to an extra column of data for the space point.
   /// @param column The extra column proxy to access.
@@ -250,6 +265,15 @@ class SpacePointProxy2 {
   /// @return A const reference to the copy from index of the space point.
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
+  }
+  Eigen::Map<const Eigen::Vector2f> xy() const noexcept {
+    return m_container->xy(m_index);
+  }
+  Eigen::Map<const Eigen::Vector2f> zr() const noexcept {
+    return m_container->zr(m_index);
+  }
+  Eigen::Map<const Eigen::Vector4f> xyzr() const noexcept {
+    return m_container->xyzr(m_index);
   }
 
   /// Const access to an extra column of data for the space point.

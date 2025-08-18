@@ -46,10 +46,10 @@ class Impl final : public DoubletSeedFinder {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
-    const float xM = middleSp.x();
-    const float yM = middleSp.y();
-    const float zM = middleSp.z();
-    const float rM = middleSp.r();
+    const float xM = middleSp.xy()[0];
+    const float yM = middleSp.xy()[1];
+    const float zM = middleSp.zr()[0];
+    const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
 
@@ -80,12 +80,12 @@ class Impl final : public DoubletSeedFinder {
       for (ConstSpacePointProxy2 otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.r() <= m_cfg.deltaRMax) {
+          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
             break;
           }
         } else {
           // if r-distance is too small, try next SP in bin
-          if (otherSp.r() - rM >= m_cfg.deltaRMin) {
+          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
             break;
           }
         }
@@ -345,10 +345,10 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
 
 MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
     const ConstSpacePointProxy2& spM) {
-  const float rM = spM.r();
+  const float rM = spM.zr()[1];
   const float uIP = -1 / rM;
-  const float cosPhiM = -spM.x() * uIP;
-  const float sinPhiM = -spM.y() * uIP;
+  const float cosPhiM = -spM.xy()[0] * uIP;
+  const float sinPhiM = -spM.xy()[1] * uIP;
   const float uIP2 = uIP * uIP;
 
   return {uIP, uIP2, cosPhiM, sinPhiM};

@@ -59,9 +59,12 @@ enum class SpacePointColumns : std::uint32_t {
   StripCenterDistance = 1 << 11,  ///< Distance to the strip center
   TopStripCenter = 1 << 12,       ///< Center of the top strip
   CopyFromIndex = 1 << 13,        ///< Copy from index
+  XY = 1 << 14,                   ///< X and Y coordinates
+  ZR = 1 << 15,                   ///< Z and R coordinates
+  XYZR = 1 << 16,                 ///< X, Y, Z, and R coordinates
 
   /// Default set of columns
-  Default = SourceLinks | X | Y | Z,
+  Default = SourceLinks | XY | ZR,
   /// All strip-related columns
   Strip =
       TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
@@ -527,6 +530,33 @@ class SpacePointContainer2 {
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
     return m_copyFromIndexColumn->proxy(*this)[index];
   }
+  /// Mutable access to the xy coordinates of the space point at the given
+  /// index.
+  /// @param index The index of the space point.
+  /// @return A mutable reference to the xy coordinates of the space point.
+  Eigen::Map<Eigen::Vector2f> xy(Index index) noexcept {
+    assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
+    assert(index < m_xyColumn->size() && "Index out of bounds");
+    return Eigen::Map<Eigen::Vector2f>(&m_xyColumn->proxy(*this)[index * 2]);
+  }
+  /// Mutable access to the zr coordinates of the space point at the given
+  /// index.
+  /// @param index The index of the space point.
+  /// @return A mutable reference to the zr coordinates of the space point.
+  Eigen::Map<Eigen::Vector2f> zr(Index index) noexcept {
+    assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
+    assert(index < m_zrColumn->size() && "Index out of bounds");
+    return Eigen::Map<Eigen::Vector2f>(&m_zrColumn->proxy(*this)[index * 2]);
+  }
+  /// Mutable access to the xyzr coordinates of the space point at the given
+  /// index.
+  /// @param index The index of the space point.
+  /// @return A mutable reference to the xyzr coordinates of the space point.
+  Eigen::Map<Eigen::Vector4f> xyzr(Index index) noexcept {
+    assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
+    assert(index < m_xyzrColumn->size() && "Index out of bounds");
+    return Eigen::Map<Eigen::Vector4f>(&m_xyzrColumn->proxy(*this)[index * 4]);
+  }
 
   /// Const access to the source links at the given index.
   /// @param index The index of the space point.
@@ -662,6 +692,34 @@ class SpacePointContainer2 {
            "Column 'copyFromIndex' does not exist");
     assert(index < m_copyFromIndexColumn->size() && "Index out of bounds");
     return m_copyFromIndexColumn->proxy(*this)[index];
+  }
+  /// Const access to the xy coordinates of the space point at the given index.
+  /// @param index The index of the space point.
+  /// @return A const reference to the xy coordinates of the space point.
+  Eigen::Map<const Eigen::Vector2f> xy(Index index) const noexcept {
+    assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
+    assert(index < m_xyColumn->size() && "Index out of bounds");
+    return Eigen::Map<const Eigen::Vector2f>(
+        &m_xyColumn->proxy(*this)[index * 2]);
+  }
+  /// Const access to the zr coordinates of the space point at the given index.
+  /// @param index The index of the space point.
+  /// @return A const reference to the zr coordinates of the space point.
+  Eigen::Map<const Eigen::Vector2f> zr(Index index) const noexcept {
+    assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
+    assert(index < m_zrColumn->size() && "Index out of bounds");
+    return Eigen::Map<const Eigen::Vector2f>(
+        &m_zrColumn->proxy(*this)[index * 2]);
+  }
+  /// Const access to the xyzr coordinates of the space point at the given
+  /// index.
+  /// @param index The index of the space point.
+  /// @return A const reference to the xyzr coordinates of the space point.
+  Eigen::Map<const Eigen::Vector4f> xyzr(Index index) const noexcept {
+    assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
+    assert(index < m_xyzrColumn->size() && "Index out of bounds");
+    return Eigen::Map<const Eigen::Vector4f>(
+        &m_xyzrColumn->proxy(*this)[index * 4]);
   }
 
   /// Resolves the index to the actual index in the container.
@@ -848,18 +906,23 @@ class SpacePointContainer2 {
   // copy information
   std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
+  std::optional<ColumnHolder<float>> m_xyColumn;
+  std::optional<ColumnHolder<float>> m_zrColumn;
+  std::optional<ColumnHolder<float>> m_xyzrColumn;
+
   static auto knownColumnMaks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
                       VarianceZ, VarianceR, TopStripVector, BottomStripVector,
-                      StripCenterDistance, TopStripCenter, CopyFromIndex);
+                      StripCenterDistance, TopStripCenter, CopyFromIndex, XY,
+                      ZR, XYZR);
   }
 
   static auto knownColumnNames() noexcept {
     return std::tuple("sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r",
                       "phi", "time", "varianceZ", "varianceR", "topStripVector",
                       "bottomStripVector", "stripCenterDistance",
-                      "topStripCenter", "copyFromIndex");
+                      "topStripCenter", "copyFromIndex", "xy", "zr", "xyzr");
   }
 
   static auto knownColumnDefaults() noexcept {
@@ -867,24 +930,29 @@ class SpacePointContainer2 {
                       float{0}, float{0}, float{0}, float{NoTime}, float{0},
                       float{0}, Eigen::Vector3f{0, 0, 0},
                       Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
-                      Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0});
+                      Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0}, float{0},
+                      float{0}, float{0});
+  }
+
+  static auto knownColumnChunkSizes() noexcept {
+    return std::tuple(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4);
   }
 
   auto knownColumns() & noexcept {
-    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
-                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
-                    m_timeColumn, m_varianceZColumn, m_varianceRColumn,
-                    m_topStripVectorColumn, m_bottomStripVectorColumn,
-                    m_stripCenterDistanceColumn, m_topStripCenterColumn,
-                    m_copyFromIndexColumn);
+    return std::tie(
+        m_sourceLinkOffsetColumn, m_sourceLinkCountColumn, m_xColumn, m_yColumn,
+        m_zColumn, m_rColumn, m_phiColumn, m_timeColumn, m_varianceZColumn,
+        m_varianceRColumn, m_topStripVectorColumn, m_bottomStripVectorColumn,
+        m_stripCenterDistanceColumn, m_topStripCenterColumn,
+        m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzrColumn);
   }
   auto knownColumns() const & noexcept {
-    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
-                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
-                    m_timeColumn, m_varianceZColumn, m_varianceRColumn,
-                    m_topStripVectorColumn, m_bottomStripVectorColumn,
-                    m_stripCenterDistanceColumn, m_topStripCenterColumn,
-                    m_copyFromIndexColumn);
+    return std::tie(
+        m_sourceLinkOffsetColumn, m_sourceLinkCountColumn, m_xColumn, m_yColumn,
+        m_zColumn, m_rColumn, m_phiColumn, m_timeColumn, m_varianceZColumn,
+        m_varianceRColumn, m_topStripVectorColumn, m_bottomStripVectorColumn,
+        m_stripCenterDistanceColumn, m_topStripCenterColumn,
+        m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzrColumn);
   }
   auto knownColumns() && noexcept {
     return std::tuple(
@@ -894,7 +962,8 @@ class SpacePointContainer2 {
         std::move(m_varianceZColumn), std::move(m_varianceRColumn),
         std::move(m_topStripVectorColumn), std::move(m_bottomStripVectorColumn),
         std::move(m_stripCenterDistanceColumn),
-        std::move(m_topStripCenterColumn), std::move(m_copyFromIndexColumn));
+        std::move(m_topStripCenterColumn), std::move(m_copyFromIndexColumn),
+        std::move(m_xyColumn), std::move(m_zrColumn), std::move(m_xyzrColumn));
   }
 
   void copyColumns(const SpacePointContainer2 &other);
