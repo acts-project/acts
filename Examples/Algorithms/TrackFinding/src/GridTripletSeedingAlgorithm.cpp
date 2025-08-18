@@ -176,10 +176,12 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       auto newSp = coreSpacePoints.createSpacePoint();
       newSp.assignSourceLinks(
           std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
-      newSp.xy() = Eigen::Vector2f{sp.x(), sp.y()};
-      newSp.zr() = Eigen::Vector2f{sp.z(), sp.r()};
-      newSp.varianceZ() = sp.varianceZ();
-      newSp.varianceR() = sp.varianceR();
+      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
+                                        static_cast<float>(sp.y())};
+      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
+                                        static_cast<float>(sp.r())};
+      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
+      newSp.varianceR() = static_cast<float>(sp.varianceR());
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);

@@ -149,24 +149,22 @@ void SpacePointContainer2::assignSourceLinks(
 void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
   using enum SpacePointColumns;
 
-  const auto createColumn = [&]<typename T>(
-                                SpacePointColumns mask, std::string_view name,
-                                T defaultValue, std::size_t chunkSize,
-                                std::optional<ColumnHolder<T>> &column) {
-    if (ACTS_CHECK_BIT(columns, mask) && !column.has_value()) {
-      column = ColumnHolder<T>(std::move(defaultValue), chunkSize);
-      column->resize(size());
-      m_namedColumns.try_emplace(std::string(name),
-                                 std::pair{&column.value(), nullptr});
-      m_knownColumns = m_knownColumns | mask;
-    }
-  };
+  const auto createColumn =
+      [&]<typename T>(SpacePointColumns mask, std::string_view name,
+                      T defaultValue, std::optional<ColumnHolder<T>> &column) {
+        if (ACTS_CHECK_BIT(columns, mask) && !column.has_value()) {
+          column = ColumnHolder<T>(std::move(defaultValue));
+          column->resize(size());
+          m_namedColumns.try_emplace(std::string(name),
+                                     std::pair{&column.value(), nullptr});
+          m_knownColumns = m_knownColumns | mask;
+        }
+      };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     ((createColumn(
-         std::get<Is>(knownColumnMaks()), std::get<Is>(knownColumnNames()),
-         std::get<Is>(knownColumnDefaults()),
-         std::get<Is>(knownColumnChunkSizes()), std::get<Is>(knownColumns()))),
+         std::get<Is>(knownColumnMasks()), std::get<Is>(knownColumnNames()),
+         std::get<Is>(knownColumnDefaults()), std::get<Is>(knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
 }
@@ -185,7 +183,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
   };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-    ((dropColumn(std::get<Is>(knownColumnMaks()),
+    ((dropColumn(std::get<Is>(knownColumnMasks()),
                  std::get<Is>(knownColumnNames()),
                  std::get<Is>(knownColumns()))),
      ...);

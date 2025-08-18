@@ -534,28 +534,28 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the xy coordinates of the space point.
-  Eigen::Map<Eigen::Vector2f> xy(Index index) noexcept {
+  std::array<float, 2> & xy(Index index) noexcept {
     assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
     assert(index < m_xyColumn->size() && "Index out of bounds");
-    return Eigen::Map<Eigen::Vector2f>(&m_xyColumn->proxy(*this)[index * 2]);
+    return m_xyColumn->proxy(*this)[index];
   }
   /// Mutable access to the zr coordinates of the space point at the given
   /// index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the zr coordinates of the space point.
-  Eigen::Map<Eigen::Vector2f> zr(Index index) noexcept {
+  std::array<float, 2> & zr(Index index) noexcept {
     assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
     assert(index < m_zrColumn->size() && "Index out of bounds");
-    return Eigen::Map<Eigen::Vector2f>(&m_zrColumn->proxy(*this)[index * 2]);
+    return m_zrColumn->proxy(*this)[index];
   }
   /// Mutable access to the xyzr coordinates of the space point at the given
   /// index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the xyzr coordinates of the space point.
-  Eigen::Map<Eigen::Vector4f> xyzr(Index index) noexcept {
+  std::array<float, 4> & xyzr(Index index) noexcept {
     assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
     assert(index < m_xyzrColumn->size() && "Index out of bounds");
-    return Eigen::Map<Eigen::Vector4f>(&m_xyzrColumn->proxy(*this)[index * 4]);
+    return m_xyzrColumn->proxy(*this)[index];
   }
 
   /// Const access to the source links at the given index.
@@ -696,30 +696,27 @@ class SpacePointContainer2 {
   /// Const access to the xy coordinates of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the xy coordinates of the space point.
-  Eigen::Map<const Eigen::Vector2f> xy(Index index) const noexcept {
+  const std::array<float, 2>& xy(Index index) const noexcept {
     assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
     assert(index < m_xyColumn->size() && "Index out of bounds");
-    return Eigen::Map<const Eigen::Vector2f>(
-        &m_xyColumn->proxy(*this)[index * 2]);
+    return m_xyColumn->proxy(*this)[index];
   }
   /// Const access to the zr coordinates of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the zr coordinates of the space point.
-  Eigen::Map<const Eigen::Vector2f> zr(Index index) const noexcept {
+  const std::array<float, 2>& zr(Index index) const noexcept {
     assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
     assert(index < m_zrColumn->size() && "Index out of bounds");
-    return Eigen::Map<const Eigen::Vector2f>(
-        &m_zrColumn->proxy(*this)[index * 2]);
+    return m_zrColumn->proxy(*this)[index];
   }
   /// Const access to the xyzr coordinates of the space point at the given
   /// index.
   /// @param index The index of the space point.
   /// @return A const reference to the xyzr coordinates of the space point.
-  Eigen::Map<const Eigen::Vector4f> xyzr(Index index) const noexcept {
+  const std::array<float, 4>& xyzr(Index index) const noexcept {
     assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
     assert(index < m_xyzrColumn->size() && "Index out of bounds");
-    return Eigen::Map<const Eigen::Vector4f>(
-        &m_xyzrColumn->proxy(*this)[index * 4]);
+    return m_xyzrColumn->proxy(*this)[index];
   }
 
   /// Resolves the index to the actual index in the container.
@@ -906,11 +903,11 @@ class SpacePointContainer2 {
   // copy information
   std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
-  std::optional<ColumnHolder<float>> m_xyColumn;
-  std::optional<ColumnHolder<float>> m_zrColumn;
-  std::optional<ColumnHolder<float>> m_xyzrColumn;
+  std::optional<ColumnHolder<std::array<float, 2>>> m_xyColumn;
+  std::optional<ColumnHolder<std::array<float, 2>>> m_zrColumn;
+  std::optional<ColumnHolder<std::array<float, 4>>> m_xyzrColumn;
 
-  static auto knownColumnMaks() noexcept {
+  static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
                       VarianceZ, VarianceR, TopStripVector, BottomStripVector,
@@ -926,16 +923,12 @@ class SpacePointContainer2 {
   }
 
   static auto knownColumnDefaults() noexcept {
-    return std::tuple(SpacePointIndex2{0}, std::uint8_t{0}, float{0}, float{0},
-                      float{0}, float{0}, float{0}, float{NoTime}, float{0},
-                      float{0}, Eigen::Vector3f{0, 0, 0},
-                      Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
-                      Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0}, float{0},
-                      float{0}, float{0});
-  }
-
-  static auto knownColumnChunkSizes() noexcept {
-    return std::tuple(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4);
+    return std::tuple(
+        SpacePointIndex2{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
+        float{0}, float{0}, float{NoTime}, float{0}, float{0},
+        Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
+        Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0},
+        std::array<float, 2>{}, std::array<float, 2>{}, std::array<float, 4>{});
   }
 
   auto knownColumns() & noexcept {

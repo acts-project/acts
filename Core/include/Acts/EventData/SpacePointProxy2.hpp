@@ -188,17 +188,17 @@ class SpacePointProxy2 {
   {
     return m_container->copyFromIndex(m_index);
   }
-  Eigen::Map<Eigen::Vector2f> xy() const noexcept
+  std::array<float, 2> &xy() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xy(m_index);
   }
-  Eigen::Map<Eigen::Vector2f> zr() const noexcept
+  std::array<float, 2> &zr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->zr(m_index);
   }
-  Eigen::Map<Eigen::Vector4f> xyzr() const noexcept
+  std::array<float, 4> &xyzr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xyzr(m_index);
@@ -266,13 +266,13 @@ class SpacePointProxy2 {
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
   }
-  Eigen::Map<const Eigen::Vector2f> xy() const noexcept {
+  const std::array<float, 2> &xy() const noexcept {
     return m_container->xy(m_index);
   }
-  Eigen::Map<const Eigen::Vector2f> zr() const noexcept {
+  const std::array<float, 2> &zr() const noexcept {
     return m_container->zr(m_index);
   }
-  Eigen::Map<const Eigen::Vector4f> xyzr() const noexcept {
+  const std::array<float, 4> &xyzr() const noexcept {
     return m_container->xyzr(m_index);
   }
 
