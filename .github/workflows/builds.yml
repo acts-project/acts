@@ -30,7 +30,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -130,7 +130,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -169,7 +169,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -261,7 +261,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -336,7 +336,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -414,12 +414,12 @@ jobs:
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           path: acts
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: eic/EICrecon
           path: EICrecon
