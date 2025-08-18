@@ -22,6 +22,7 @@
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -29,9 +30,9 @@
 
 namespace Acts::Experimental::detail {
 
-///  @brief The FastStrawLineFitter fits the intercept and angle of a line that's tangent to a set of Composite space points representing straw measurements.
-///         The straw wires of the passed measurements need to be parallel to
-///         achieve a successful fit.
+///  @brief The FastStrawLineFitter fits the intercept and angle of a line that's tangent to a set of composite space points
+///         representing straw measurements.The straw wires of the passed
+///         measurements need to be parallel to achieve a successful fit.
 ///
 class FastStrawLineFitter {
  public:
@@ -53,6 +54,7 @@ class FastStrawLineFitter {
                                                     Logging::Level::INFO));
 
   struct FitResult {
+    virtual ~FitResult() = default;
     /// @brief Printer method
     virtual void print(std::ostream& ostr) const;
     /// @brief Ostream operator
@@ -105,6 +107,10 @@ class FastStrawLineFitter {
 
   ///@brief Auxiliary struct to calculate the fast-fit constants
   struct FitAuxiliaries {
+    /// @brief Default destructor
+    virtual ~FitAuxiliaries() = default;
+    /// @brief move constructor
+    FitAuxiliaries(FitAuxiliaries&& other) = default;
     /// @brief Printer method
     virtual void print(std::ostream& ostr) const;
     /// @brief Ostream operator
@@ -157,13 +163,14 @@ class FastStrawLineFitter {
     ///@brief Expectation value of r * a
     double R_va{0.};
     ///@brief First derivative of the fitted Y0
-    double fitY0Prime{0.};
+    double R_v{0.};
     ///@brief Second derivative of the ftted Y0
-    double fitY0TwoPrime{0.};
+    double R_a{0.};
   };
   /// @brief Small Helper struct to calculate sin & cos of theta & 2 theta
   struct TrigonomHelper {
-    TrigonomHelper(const double theta)
+    /// @brief Constructor using theta
+    explicit TrigonomHelper(const double theta)
         : cosTheta{std::cos(theta)},
           sinTheta{std::sin(theta)},
           cosTwoTheta{std::cos(2. * theta)},
@@ -194,11 +201,50 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   void calcPostFitChi2(const StrawCont_t& measurements,
                        FitResult& result) const;
+
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointFastCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  void calcPostFitChi2(const Acts::CalibrationContext& ctx,
+                       const StrawCont_t& measurements,
+                       const Calibrator_t& calibrator,
+                       FitResultT0& result) const;
+
+  /// @brief
+  template <CompositeSpacePoint Point_t>
+  double chi2Term(const double cosTheta, const double sinTheta, const double y0,
+                  const Point_t& strawMeas,
+                  std::optional<double> r = std::nullopt) const;
+  /// @brief Fit the track inclanation angle and calculate the intercept
+  ///        afterwards
+  /// @param fitPars: Constants of the current measurement configuration
+  std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
   /// @brief Calculate the starting parameters on theta from the fit constants
   static double startTheta(const FitAuxiliaries& fitPars);
-
-  /// @brief Fit the
-  std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
+  /// @brief Calculate the time gradient of the chi2 w.r.t theta
+  /// @param angles: Wrapper object to pass sin & cos of theta
+  /// @param pars: Fit constants of the current fit configuration
+  static double calcTimeGrad(const TrigonomHelper& angles,
+                             const FitAuxiliariesWithT0& pars);
+  /// @brief Fill the y0 and the uncertainties on theta and y0 in the result
+  /// @param fitPars: Fit constants from the straw measurements
+  /// @param thetaTwoPrime: Second derivative of the chi2 w.r.t theta
+  /// @param result: Mutable reference to the FitResult object. The updated parameter are written
+  ///                to this object
+  void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
+                      FitResult& result) const;
+  /// @brief Enumeration to describe the outcome of the fit iteration
+  enum class UpdateStatus {
+    Converged,  ///< The fit converged
+    Exceeded,   ////< Maximum number of iterations exceeded
+    GoodStep,   ///< The fit did not converge yet
+  };
+  /// @param Update the straw circle parameters for a fit with ts0 & theta
+  /// @param fitPars: Fit constants from the straw measurements
+  /// @param fitResult: Mutable reference to the FitResult object. The updated parameter are written to this object if the step was successful
+  UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
+                               FitResultT0& fitResult) const;
 
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<

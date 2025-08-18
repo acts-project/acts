@@ -21,6 +21,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <format>
 namespace Acts::Experimental::detail {
 
 template <CompositeSpacePointContainer StrawCont_t>
@@ -50,26 +51,56 @@ void FastStrawLineFitter::calcPostFitChi2(const StrawCont_t& measurements,
   const double sinTheta{std::sin(result.theta)};
   result.chi2 = 0.;
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
-    if (!strawMeas->isStraw()) {
-      continue;
-    }
-    const double cov = strawMeas->covariance()[s_covIdx];
-    if (cov < std::numeric_limits<double>::epsilon()) {
-      continue;
-    }
-    const Vector& pos = strawMeas->localPosition();
-    const double y = pos.dot(strawMeas->toNextSensor());
-    const double z = pos.dot(strawMeas->planeNormal());
-    const double dist = Acts::abs((y - result.y0) * cosTheta - z * sinTheta);
-    ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ":  Distance straw (" << y
-                          << ", " << z << "), r: " << strawMeas->driftRadius()
-                          << " - track: " << dist);
-    result.chi2 += Acts::pow(dist - strawMeas->driftRadius(), 2) / cov;
+    result.chi2 += chi2Term(cosTheta, sinTheta, result.y0, *strawMeas);
   }
-  ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": Overall chi2: "
-                        << result.chi2 << ", nDoF: " << result.nDoF
-                        << ", redChi2: " << (result.chi2 / result.nDoF));
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "
+                      << result.chi2 << ", nDoF: " << result.nDoF
+                      << ", redChi2: " << (result.chi2 / result.nDoF));
 }
+
+template <CompositeSpacePoint Point_t>
+double FastStrawLineFitter::chi2Term(const double cosTheta,
+                                     const double sinTheta, const double y0,
+                                     const Point_t& strawMeas,
+                                     std::optional<double> r) const {
+  if (!strawMeas.isStraw()) {
+    return 0.;
+  }
+  const double cov = strawMeas.covariance()[s_covIdx];
+  if (cov < std::numeric_limits<double>::epsilon()) {
+    return 0.;
+  }
+  const Vector& pos = strawMeas.localPosition();
+  const double y = pos.dot(strawMeas.toNextSensor());
+  const double z = pos.dot(strawMeas.planeNormal());
+  const double dist = Acts::abs((y - y0) * cosTheta - z * sinTheta);
+  ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": Distance straw (" << y
+                        << ", " << z
+                        << "), r: " << r.value_or(strawMeas.driftRadius())
+                        << " - track: " << dist);
+  return Acts::pow(dist - r.value_or(strawMeas.driftRadius()), 2) / cov;
+}
+
+template <CompositeSpacePointContainer StrawCont_t,
+          CompositeSpacePointFastCalibrator<
+              Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+              Calibrator_t>
+void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
+                                          const StrawCont_t& measurements,
+                                          const Calibrator_t& calibrator,
+                                          FitResultT0& result) const {
+  const double cosTheta{std::cos(result.theta)};
+  const double sinTheta{std::sin(result.theta)};
+  result.chi2 = 0.;
+  for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
+    result.chi2 += chi2Term(cosTheta, sinTheta, result.y0, *strawMeas,
+                            calibrator.driftRadius(ctx, *strawMeas, result.t0));
+  }
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "
+                      << result.chi2 << ", nDoF: " << result.nDoF
+                      << ", redChi2: " << (result.chi2 / result.nDoF));
+}
+
 template <CompositeSpacePointContainer StrawCont_t>
 FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
     const StrawCont_t& measurements,
@@ -162,54 +193,36 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     return std::nullopt;
   }
 
-  Vector2 pars{Vector2::Zero()};
-
-  pars[1] = 82._ns;
-  ACTS_INFO("Haeh \n" << fillAuxiliaries(measurements, signs));
-  auto fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, pars[1]);
-  // pars[0] = startTheta(fitPars);
-  pars[0] = 45._degree;
-
   FitResultT0 result{};
+  Range1D<double> tRange{std::numeric_limits<double>::max(),
+                         -std::numeric_limits<double>::max()};
+  for (const auto& strawMeas : measurements) {
+    if (!strawMeas->isStraw()) {
+      ACTS_WARNING(__func__ << "() - " << __LINE__
+                            << ": The measurement is not a straw");
+      continue;
+    }
+    tRange.expand(strawMeas->time(), strawMeas->time());
+  }
+
+  FitAuxiliariesWithT0 fitPars{
+      fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
+  result.t0 = 0.5 * (tRange.min() + tRange.max());
+  result.theta = startTheta(fitPars);
   result.nDoF = fitPars.nDoF;
+  ACTS_DEBUG(__func__ << "() - " << __LINE__
+                      << ": Initial fit parameters: " << result);
+  UpdateStatus iterStatus{UpdateStatus::GoodStep};
 
-  ActsSquareMatrix<2> cov{ActsSquareMatrix<2>::Zero()};
-  Vector2 grad{Vector2::Zero()};
-  bool converged{false};
-  while (converged == false && result.nIter <= m_cfg.maxIter) {
-    ++result.nIter;
-    const TrigonomHelper angles{pars[0]};
-    calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
-
-    cov(1, 0) = cov(0, 1) =
-        fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
-    cov(1, 1) = -fitPars.fitY0Prime * fitPars.fitY0Prime -
-                fitPars.fitY0Prime * fitPars.fitY0TwoPrime -
-                fitPars.T_az * angles.sinTheta -
-                fitPars.T_ay * angles.cosTheta + fitPars.R_vv + fitPars.R_va;
-
-    grad[1] = fitPars.fitY0 * fitPars.fitY0Prime - fitPars.R_vr +
-              fitPars.T_vz * angles.sinTheta - fitPars.T_vy * angles.cosTheta;
-
-    const Vector2 update = cov.inverse() * grad;
-    ACTS_INFO(__func__ << "() - " << __LINE__ << " intermediate result "
-                       << result << " gradient: (" << (grad[0]) << ", "
-                       << (grad[1]) << "), covariance:" << std::endl
-                       << toString(cov) << std::endl
-                       << " update: (" << (update[0]) << ", " << (update[1])
-                       << ").");
-    if (update.norm() < m_cfg.precCutOff) {
-      converged = true;
-      break;
+  while ((iterStatus = updateIteration(fitPars, result)) !=
+         UpdateStatus::Exceeded) {
+    if (iterStatus == UpdateStatus::Converged) {
+      calcPostFitChi2(ctx, measurements, calibrator, result);
+      return result;
     }
 
-    pars -= update;
-    result.t0 = pars[1];
-    result.theta = pars[0];
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
-    calcPostFitChi2(measurements, result);
   }
-  // calcPostFitChi2(measurements, *result);
   return std::nullopt;
 }
 
@@ -249,8 +262,8 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
                           << ") r: " << r << ", v: " << v << ", a: " << a);
     auxVars.fitY0 += sInvCov * r;
-    auxVars.fitY0Prime += sInvCov * v;
-    auxVars.fitY0TwoPrime += sInvCov * a;
+    auxVars.R_v += sInvCov * v;
+    auxVars.R_a += sInvCov * a;
 
     auxVars.T_rz += sInvCov * z * r;
     auxVars.T_ry += sInvCov * y * r;
@@ -259,14 +272,14 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     auxVars.T_vz += sInvCov * v * z;
     auxVars.R_vr += invCov * r * v;
 
-    auxVars.T_ay += sInvCov * a * y;
-    auxVars.T_az += sInvCov * a * z;
-    auxVars.R_vv += sInvCov * v * v;
-    auxVars.R_va += sInvCov * v * a;
+    auxVars.T_ay -= sInvCov * a * y;
+    auxVars.T_az -= sInvCov * a * z;
+    auxVars.R_vv += invCov * v * v;
+    auxVars.R_va -= sInvCov * v * a;
   }
   auxVars.fitY0 *= auxVars.covNorm;
-  ACTS_INFO(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"
-                     << auxVars);
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"
+                      << auxVars);
   return auxVars;
 }
 

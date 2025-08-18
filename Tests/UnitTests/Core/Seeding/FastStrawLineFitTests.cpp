@@ -26,12 +26,18 @@ using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using RandomEngine = std::mt19937;
 
-constexpr std::uint32_t nTrials = 10000;
+constexpr std::uint32_t nTrials = 1;
 
 namespace Acts::Test {
 
 constexpr bool debugMode = true;
 constexpr bool print = false;
+
+#define PRINT_DEBUG_MSG(MSG)                                                  \
+  if constexpr (print) {                                                      \
+    std::cout << __func__ << "() - " << __LINE__ << ": " << MSG << std::endl; \
+  }
+
 class StrawTestPoint;
 using TestStrawCont_t = std::vector<std::unique_ptr<StrawTestPoint>>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
@@ -48,6 +54,10 @@ std::ostream& operator<<(std::ostream& ostr, const std::vector<T>& v) {
   }
   ostr << "]";
   return ostr;
+}
+
+constexpr double inNanoS(const double x) {
+  return x / 1._ns;
 }
 
 class StrawTestPoint {
@@ -107,28 +117,34 @@ class StrawTestCalibrator {
   static constexpr double CoeffRtoT = 1.;  // 750._ns * Acts::pow(15._mm, -2);
   static constexpr double CoeffTtoR = 1. / CoeffRtoT;
 
-  static constexpr double calcDriftUncert(const double driftR) {
+  static double calcDriftUncert(const double driftR) {
     return 1._mm;
     return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
   }
-  static constexpr double driftTime(const double r) {
+  static double driftTime(const double r) {
+    return CoeffRtoT * Acts::pow(r, 1);
     return CoeffRtoT * Acts::pow(r, 2);
   }
-  static double driftRadius(const double t) { return std::sqrt(t * CoeffTtoR); }
+  static double driftRadius(const double t) {
+    return t * CoeffTtoR;
+    return std::sqrt(t * CoeffTtoR);
+  }
 
   static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
                             const StrawTestPoint& straw, const double t0) {
-    const double t = Acts::abs(straw.time() - t0);
+    const double t = straw.time() - t0;
     return driftRadius(t);
   }
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const StrawTestPoint& straw, const double t0) {
-    const double t = Acts::abs(straw.time() - t0);
+    const double t = straw.time() - t0;
+    return CoeffTtoR;
     return CoeffTtoR / (2. * driftRadius(t));
   }
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const StrawTestPoint& straw,
                                   const double t0) {
+    return 0.;
     const double t = Acts::abs(straw.time() - t0);
 
     return -Acts::square(CoeffTtoR) / (4. * Acts::pow(driftRadius(t), 3));
@@ -138,6 +154,9 @@ static_assert(
     CompositeSpacePointFastCalibrator<StrawTestCalibrator, StrawTestPoint>);
 
 /// @brief Generate a random straight track with a flat distribution in theta & y0
+///        Range in theta is [0, 180] degrees in steps of 0.1 excluding the
+///        vicinity around 90 degrees.
+///          In y0, the generated range is [-500, 500] mm
 Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
@@ -147,25 +166,29 @@ Line_t generateLine(RandomEngine& engine) {
   constexpr unsigned maxAngle = 180;
   linePars[toUnderlying(ParIndex::theta)] =
       (engine() % (10 * maxAngle)) * 0.1_degree;
-
-  linePars[toUnderlying(ParIndex::theta)] = 45._degree;
   Line_t line{};
   line.updateParameters(linePars);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       0.2_degree) {
     return generateLine(engine);
   }
-  if constexpr (true || print) {
-    std::cout << __func__ << "() - " << __LINE__
-              << ": Generated parameters theta: "
-              << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-              << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
-              << toString(line.position()) << " + "
-              << toString(line.direction()) << std::endl;
-  }
+  PRINT_DEBUG_MSG("Generated parameters theta: "
+                  << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
+                  << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
+                  << toString(line.position()) << " + "
+                  << toString(line.direction()));
   return line;
 }
-
+/// @brief Extrapolate the straight line track through the straw layers to
+///        evaluate which tubes were crossed by the track. The straw layers are
+///        staggered in the z-direction and each layer expands in y. To
+///        estimate, which tubes were crossed, the track is extrapolated to the
+///        z-plane below & above the straw wires. Optionally, the true
+///        drift-radius can be smeared assuming a Gaussian with a drift-radius
+///        dependent uncertainty.
+/// @param trajLine: The track to extrapolate
+/// @param engine: Random number generator to smear the drift radius
+/// @param smearRadius: If true, the drift radius is smeared with a Gaussian
 TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
                                      RandomEngine& engine, bool smearRadius) {
   const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
@@ -174,12 +197,14 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   constexpr std::uint32_t nLayersPerMl = 8;
   /// Number of overall tubelayers
   constexpr std::uint32_t nTubeLayers = nLayersPerMl * 2;
+  /// Radius of each straw
   constexpr double tubeRadius = 15._mm;
+  /// Distance between the first <nLayersPerMl> layers and the second pack
   constexpr double tubeLayerDist = 1.2_m;
 
   std::array<Vector3, nTubeLayers> tubePositions{
       filledArray<Vector3, nTubeLayers>(Vector3{0., tubeRadius, tubeRadius})};
-
+  /// Fill the positions of the reference tubes 1
   for (std::uint32_t l = 1; l < nTubeLayers; ++l) {
     const Vector3& layStag{l % 2 == 1 ? posStaggering : negStaggering};
     tubePositions[l] = tubePositions[l - 1] + 2. * tubeRadius * layStag;
@@ -189,19 +214,16 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     }
   }
   /// Print the staggering
-  if constexpr (print) {
-    std::cout << __func__ << "() - " << __LINE__
-              << ": ##############################################"
-              << std::endl;
-    for (std::uint32_t l = 0; l < nTubeLayers; ++l) {
-      std::cout << __func__ << "() - " << __LINE__ << ":  *** " << (l + 1)
-                << " - " << toString(tubePositions[l]) << std::endl;
-    }
-    std::cout << __func__ << "() - " << __LINE__
-              << ": ##############################################"
-              << std::endl;
+  PRINT_DEBUG_MSG("##############################################");
+
+  for (std::uint32_t l = 0; l < nTubeLayers; ++l) {
+    PRINT_DEBUG_MSG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
   }
+  PRINT_DEBUG_MSG("##############################################");
+
   TestStrawCont_t circles{};
+  /// Extrapolate the track to the z-planes of the tubes and determine which
+  /// tubes were actually hit
   for (const auto& stag : tubePositions) {
     auto planeExtpLow = Acts::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
@@ -209,27 +231,28 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     auto planeExtpHigh = Acts::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
         stag.z() + tubeRadius);
-    if constexpr (print) {
-      std::cout << __func__ << "() - " << __LINE__ << ": extrapolated to plane "
-                << toString(planeExtpLow.position()) << " "
-                << toString(planeExtpHigh.position()) << std::endl;
-    }
+
+    PRINT_DEBUG_MSG("Extrapolated to plane "
+                    << toString(planeExtpLow.position()) << " "
+                    << toString(planeExtpHigh.position()));
+
     const auto dToFirstLow = static_cast<std::int32_t>(std::ceil(
         (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
     const auto dToFirstHigh = static_cast<std::int32_t>(std::ceil(
         (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
-
+    /// Does the track go from left to right or right to left?
     const std::int32_t dT = dToFirstHigh > dToFirstLow ? 1 : -1;
+    /// Loop over the candidate tubes and check each one whether the track
+    /// actually crossed them. Then generate the circle and optionally smear the
+    /// radius
     for (std::int32_t tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT;
          tN += dT) {
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
-      if constexpr (print) {
-        std::cout << __func__ << "() - " << __LINE__
-                  << ": Tube position: " << toString(tube)
-                  << ", radius: " << rad << std::endl;
-      }
+      PRINT_DEBUG_MSG("Tube position: " << toString(tube)
+                                        << ", radius: " << rad);
+
       if (std::abs(rad) > tubeRadius) {
         continue;
       }
@@ -243,435 +266,32 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
           tube, smearedR, StrawTestCalibrator::calcDriftUncert(smearedR)));
     }
   }
-  if constexpr (print) {
-    std::cout << __func__ << "() - " << __LINE__ << ": Track hit in total "
-              << circles.size() << " tubes " << std::endl;
-  }
+  PRINT_DEBUG_MSG("Track hit in total " << circles.size() << " tubes ");
   return circles;
 }
-
+/// @brief Calculate the overall chi2 of the measurements to the track
+/// @param measurements: List of candidate straw measurements
+/// @param track: Straight line track
 double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
   double chi2{0.};
   for (const auto& meas : measurements) {
     const double dist = Acts::detail::LineHelper::signedDistance(
         meas->localPosition(), meas->sensorDirection(), track.position(),
         track.direction());
-    if constexpr (print) {
-      std::cout << __func__ << "() - " << __LINE__
-                << ": calcChi2() - Distance straw: "
-                << toString(meas->localPosition())
-                << ",  r: " << meas->driftRadius()
-                << " - to track: " << Acts::abs(dist) << std::endl;
-    }
+    PRINT_DEBUG_MSG("Distance straw: " << toString(meas->localPosition())
+                                       << ",  r: " << meas->driftRadius()
+                                       << " - to track: " << Acts::abs(dist));
+
     chi2 += Acts::pow(
         (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert(), 2);
   }
   return chi2;
 }
 
-void fitPeterKluit(
-    const std::vector<double>& xhit,    // tube position x
-    const std::vector<double>& yhit,    // tube position y
-    const std::vector<double>& rhit,    // (signed) drift radius
-    const std::vector<double>& ehit,    // error on drift radius
-    const std::vector<int>& signhit,    // sign of drift radius
-    const std::vector<double>& vhit,    // drift velocity (at this drift radius)
-    const std::vector<double>& thit) {  // drift time )
-
-  //    compact fitter code
-
-  // weighted mean center of tubes xc, yc simplifies math
-
-  //   double t_min = 1e6;
-  //   double t_max = -1e6;
-  //
-  //   for (unsigned int i = 0; i < xhit.size(); i++) {
-  //     t_min = std::min(t_min, thit[i]);
-  //     t_max = std::max(t_max, thit[i]);
-  //   }
-  // one could shift the t0 does that radii are within 0 and max tube radius
-  //      double t0_shift = 0.
-  //      if(t_min<tdrift_min) {
-  //        t0_shift = t_min- tdrift_min;
-  //        t_max = t_max - t0_shift;
-  //        t_min = t_min - t0_shift;
-  //      }
-  //      if(t_max>tdrift_max) {
-  //        t0_shift = t_max - tdrift_max;
-  //        t_max = t_max - t0_shift;
-  //        t_min = t_min - t0_shift;
-  //      }
-
-  // one can put a loose constraint on the time from the radii
-
-  // double t0_fit_range = (tdrift_max - t_max - (tdrift_min - t_min)) / 2.;
-  // double t0_fit_mean = -(tdrift_max - t_max + (tdrift_min - t_min)) / 2.;
-  // double range_max = tdrift_max - (t_max + t0_fit_mean);
-  // double range_min = (t_min + t0_fit_mean) - tdrift_min;
-  // t0_fit_range = (range_max + range_min) / 2.;
-  //      if(ievt<100) std::cout<<__func__<<"() - "<<__LINE__<<":  t_min " <<
-  //      t_min - t0_fit_mean << " t_max " << t_max - t0_fit_mean << " range_max
-  //      " << range_max << " range_min " << range_min << std::endl;
-  // << " t0_fit_mean " << t0_fit_mean << " t0_fit_range "<< t0_fit_range <<
-  // std::endl;
-
-  //  double errorRaw = 10 + (t0_fit_range) / sqrt(2 * 3.);
-  //   shift raw estimate
-  // t0_fit_mean = t0_fit_mean + errorRaw;
-
-  // scale error to keep chi2 contribution below 0.1
-  //    if(fabs(sums)!=6) errorRaw = 2*errorRaw;
-#ifdef PUTIN
-  double t0_update = 0.;
-  bool updateTime = false;
-  if (updateTime)
-    t0_update = -125.;
-  //      if(updateTime)  t0_update = t0_fit_mean;
-  if (updateTime) {
-    //        t0_update = t0_fit_mean;
-    for (unsigned int i = 0; i < xhit.size(); i++) {
-      double thit_t = thit[i] - t0_update;
-      thit[i] = thit_t;
-      ;
-      double rhit_shifted = RfromT(thit_t);
-      if (signhit[i] < 0) {
-        rhit[i] = -rhit_shifted;
-      } else {
-        rhit[i] = rhit_shifted;
-      }
-      double velocity = VfromT(thit_t);
-      vhit[i] = (velocity);
-      // error n drift radius
-      double error_d0 = 0.1;
-      if (parabolicRT) {
-        error_d0 = 0.080 * 2 * velocity * tdrift_max / tube_radius;
-      }
-      ehit[i] = error_d0;
-      std::cout << __func__ << "() - " << __LINE__ << ":  ilay " << i
-                << " d0_hit " << rhit[i] << std::endl;
-    }
-    t0_fit_mean -= t0_update;
-  }
-#endif
-  double xc{0.}, yc{0.}, wc{0.};
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1. / ehit[i] / ehit[i];
-    xc += w2 * xhit[i];
-    yc += w2 * yhit[i];
-    wc += w2;
-  }
-  xc = xc / wc;
-  yc = yc / wc;
-  // one could shift the t0 does that radii are within 0 and max tube radius
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  center xc " << xc
-            << " yc " << yc << std::endl;
-  double d0_fit0{0.}, d0_sum{0.}, term_xt{0.}, term_yt{0.}, term_d0x{0.},
-      term_d0y{0.}, term_xx{0.}, term_yy{0.}, term_xy{0.};
-  //    needed for initial phi guess
-  double term_dxdx = 0.;
-  double term_dxy = 0.;
-  //    needed for t0 fit
-  double at0 = 0.;
-  double b0t0 = 0.;
-  double b1t0 = 0.;
-  double b2t0 = 0.;
-  double b3t0 = 0.;
-  // sum of signs
-  double sums = 0.;
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1 / ehit[i] / ehit[i];
-    std::cout << ehit[i] << ", " << rhit[i] << ", " << xhit[i] << ", "
-              << yhit[i] << ", " << vhit[i] << ", " << signhit[i] << std::endl;
-
-    d0_fit0 += -w2 * rhit[i];
-    d0_sum += w2 * rhit[i];
-    term_d0x += w2 * (xhit[i] - xc) * rhit[i];
-    term_d0y += w2 * (yhit[i] - yc) * rhit[i];
-    term_xt += w2 * (xhit[i] - xc) * signhit[i] * vhit[i];
-    term_yt += w2 * (yhit[i] - yc) * signhit[i] * vhit[i];
-    term_xx += w2 * (xhit[i] - xc) * (xhit[i] - xc);
-    term_yy += w2 * (yhit[i] - yc) * (yhit[i] - yc);
-    term_xy += w2 * (xhit[i] - xc) * (yhit[i] - yc);
-    term_dxdx += w2 * (xhit[i] - rhit[i] - xc) * (xhit[i] - rhit[i] - xc);
-    term_dxy += w2 * (xhit[i] - rhit[i] - xc) * (yhit[i] - yc);
-    at0 += w2 * vhit[i] * vhit[i];
-    b0t0 += w2 * signhit[i] * vhit[i];
-    b1t0 += w2 * signhit[i] * rhit[i] * vhit[i];
-    b2t0 += -w2 * signhit[i] * (xhit[i] - xc) * vhit[i];
-    b3t0 += w2 * signhit[i] * (yhit[i] - yc) * vhit[i];
-    sums += signhit[i];
-  }
-  d0_fit0 = d0_fit0 / wc;
-
-  std::cout << std::format("d0_fit0: {:.3f}", d0_fit0)
-            << std::format(", d0_sum: {:.3f}", d0_sum)
-            << std::format(", term_xt: {:.3f}", term_xt)
-            << std::format(", term_yt: {:.3f}", term_yt)
-            << std::format(", term_d0x: {:.3f}", term_d0x)
-            << std::format(", term_d0y: {:.3f}", term_d0y)
-            << std::format(", term_xx -term__yy: {:.3f}", term_xx - term_yy)
-            << std::format(", term_xy: {:.3f}", term_xy)
-            << std::format(", at0: {:.3f}", at0)
-            << std::format(", b0t0: {:.3f}", b0t0)
-            << std::format(", b1t0: {:.3f}", b1t0)
-            << std::format(", b2t0: {:.3f}", b2t0)
-            << std::format(", b3t0: {:.3f}", b3t0) << std::endl;
-
-  //
-  // // t0 constraint from drift times
-  // double att0 = 1. / errorRaw / errorRaw;  // term linear in t0_t
-  // double b1tt0 = -(t0_fit_mean - t0_update) / errorRaw / errorRaw;  //
-  // constant
-
-  //    add constraint to the terms
-  // at0 += att0;
-  // b1t0 += b1tt0;
-
-  // put truth constraint
-  //      double error_t0_constraint = 2.;
-  //      att0 = 1./error_t0_constraint/error_t0_constraint;
-  //      b1tt0 = (t0_t-t0_update)/error_t0_constraint/error_t0_constraint;
-  // no constraint
-  //      att0 = 0.;
-  //      b1tt0 = 0.;
-
-  //    move simulated track to xc, yc
-  // double d0c_t =
-  //    x_t * sin(phi_t) - sin(phi_t) * xc + cos(phi_t) * yc;  // yt = 0.;
-  //
-  //    checks math derivative = 0 for truth angle
-
-  //    derivative = 0 = A sin(phi) + B cos(phi) + C sin(2 phi) + D cos(2 phi)
-  //    A = -2*term_d0y B = - 2*term_d0x C = (term_xx-term_yy) D = -2*term_xy
-
-  //    check math derivative = 0 (total = 0) for truth angle
-  // double derivative_d0 = -2 * term_d0x * cos(phi_t) - 2 * term_d0y *
-  // sin(phi_t); double derivative_sq = (term_xx - term_yy) * sin(2 * phi_t);
-  // double derivative_xy = -2 * term_xy * cos(2 * phi_t);
-  // double total = derivative_sq + derivative_xy + derivative_d0;
-
-  //   determine phi angle
-
-  //  double phi_0 = atan2(2 * term_dxy, (term_dxdx - term_yy)) / 2.;
-  //  if (phi_0 < 0)
-  //    phi_0 += pi;
-  //  int niter = 0;
-  //  double dphiLast = 1.;
-  //
-  //   iterations are needed around the initial phi guess
-#ifdef TRUMP
-  for (int iter = 0; iter < 5; iter++) {
-    double term_cs = -2 * term_d0y * sin(phi_0) - 2 * term_d0x * cos(phi_0);
-    //     check = derivate should be zero
-    double check = -2 * term_d0y * sin(phi_0) - 2 * term_d0x * cos(phi_0) +
-                   (term_xx - term_yy) * sin(2 * phi_0) -
-                   2 * term_xy * cos(2 * phi_0);
-    //     use the derivate of check to calculate corrections dphi
-    double derterm = -2 * term_d0y * cos(phi_0) + 2 * term_d0x * sin(phi_0) +
-                     2 * (term_xx - term_yy) * cos(2 * phi_0) +
-                     2 * 2 * term_xy * sin(2 * phi_0);
-    double dphi = -(check) / derterm;
-
-    std::cout << __func__ << "() - " << __LINE__ << ":  check zero " << check
-              << " term_cs " << term_cs << " derterm " << derterm << " dphi "
-              << dphi << std::endl;
-    phi_0 += dphi;
-    if (fabs(dphi) > fabs(dphiLast)) {
-      std::cout << __func__ << "() - " << __LINE__ << ":  ALARM BIG dphi "
-                << dphi << " dphiLast " << dphiLast << std::endl;
-      break;
-    }
-    dphiLast = dphi;
-    if (fabs(dphi) < 1e-6)
-      break;
-    niter++;
-
-    std::cout << __func__ << "() - " << __LINE__ << ":  niter " << niter
-              << " dphi " << dphi << " phi_t-phi_0 " << phi_t - phi_0
-              << std::endl;
-  }
-
-  //  for the t0 fit and d0 fit we have for truth
-
-  double checkt0 =
-      -at0 * t0_t + b0t0 * d0c_t + b1t0 + b2t0 * sin(phi_t) + b3t0 * cos(phi_t);
-  double checkd0 = b0t0 * t0_t - wc * d0c_t - d0_sum;
-
-  //
-  //   Matrix  notation At0*t0_t  + Bt0*d0c_t   = Et0
-  //                    Ct0*t0_t  + Dt0*d0c_t   = Ft0
-  //
-  //   One should eliminate d0c_t to extract the time t0_t;
-  //
-  double phi_guess = phi_t;
-
-  double At0 = at0;
-  double Bt0 = -b0t0;
-  double Et0 = b1t0 + b2t0 * sin(phi_guess) + b3t0 * cos(phi_guess);
-  double Ct0 = -b0t0;
-  double Dt0 = wc;
-  double Ft0 = -d0_sum;
-
-  //    std::cout<<__func__<<"() - "<<__LINE__<<":  Eq 1: At0*t0_t+ Bt0*d0c_t -
-  //    Et0 " << At0*t0_t+ Bt0*d0c_t
-  //    - Et0 << std::endl; std::cout<<__func__<<"() - "<<__LINE__<<":  Eq 2:
-  //    Ct0*t0_t+ Dt0*d0c_t - Ft0 " << Ct0*t0_t+ Dt0*d0c_t-Ft0 << std::endl;
-  double Det = At0 * Dt0 - Bt0 * Ct0;
-  double t0_f = 0.;
-  double d0_f = 0.;
-  double er_t0 = 0.;
-  double er_d0 = 0.;
-  if (Det != 0) {
-    t0_f = (Dt0 * Et0 - Bt0 * Ft0) / Det;
-    d0_f = (-Ct0 * Et0 + At0 * Ft0) / Det;
-    er_t0 = 1. / sqrt((At0 - Bt0 * Bt0 / Dt0));
-    er_d0 = 1. / sqrt((Dt0 - Ct0 * Ct0 / At0));
-  }
-
-  // if abs(sums) = xhit.size() all hits are on the same side and t0 is ill
-  // determined
-  //
-  double simple_error_d0 = 1. / sqrt(wc);
-
-  std::cout << __func__ << "() - " << __LINE__ << ": Det " << Det << " t0_f "
-            << t0_f << " t0_t " << t0_t << " d0_f " << d0_f << " d0c_t "
-            << d0c_t << std::endl;
-  if (er_t0 < 1)
-    std::cout << __func__ << "() - " << __LINE__ << ":  At0 " << At0 << " Bt0 "
-              << Bt0 << " Ct0 " << Ct0 << " Dt0 " << Dt0 << " er_t0 " << er_t0
-              << " er_d0 " << er_d0 << " simple_error_d0 " << simple_error_d0
-              << std::endl;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  event " << ievt << " xt "
-            << x_t << " d0_t " << d0_t << " cos phi_t " << cos(phi_t)
-            << " sin phi_t " << sin(phi_t) << " d0c_t " << d0c_t << " d0_fit0 "
-            << d0_fit0 << std::endl;
-  //      if(abs(sums) == xhit.size()&&debug)
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  sum signs " << sums
-            << " hits " << xhit.size() << " check t0 minimum " << checkt0
-            << " checkd0 " << checkd0 << " at0 " << at0 << " b0t0 " << b0t0
-            << " b2t0 " << b2t0 << " b3t0 " << b3t0 << " t0_f " << t0_f
-            << std::endl;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  term_d0x " << term_d0x
-            << " term_d0y " << term_d0y << " term_xx " << term_xx << " term_yy "
-            << term_yy << " term_xy " << term_xy << std::endl;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  derivative_d0 "
-            << derivative_d0 << " derivative_sq " << derivative_sq
-            << " derivative_xy " << derivative_xy << " derivative total "
-            << total << std::endl;
-
-  //
-  //    these corrections terms are zero if t0 is not fitted
-  //
-  //      double check   = -2*term_d0y*sin(phi_t) - 2*term_d0x*cos(phi_t) +
-  //      (term_xx-term_yy)*sin(2*phi_t) - 2*term_xy*cos(2*phi_t); double add_t0
-  //      = (2*term_yt*sin(phi_t) + 2*term_xt*cos(phi_t))*(t0_t-t0_update);
-  //      if(debug) std::cout<<__func__<<"() - "<<__LINE__<<":  check " << check
-  //      << " add term t0 " << add_t0
-  //      << " total " << check+add_t0 << std::endl;
-
-  // from truth theory
-
-  //      term_d0x -= term_xt*(t0_t-t0_update);
-  //      term_d0y -= term_yt*(t0_t-t0_update);
-  term_d0x -= term_xt * t0_f;
-  term_d0y -= term_yt * t0_f;
-
-  //  recalculate phi after estimated t0
-  for (int iter = 0; iter < 5; iter++) {
-    double check = -2 * term_d0y * sin(phi_0) - 2 * term_d0x * cos(phi_0) +
-                   (term_xx - term_yy) * sin(2 * phi_0) -
-                   2 * term_xy * cos(2 * phi_0);
-    //     use the derivate of check to calculate corrections dphi
-    double derterm = -2 * term_d0y * cos(phi_0) + 2 * term_d0x * sin(phi_0) +
-                     2 * (term_xx - term_yy) * cos(2 * phi_0) +
-                     2 * 2 * term_xy * sin(2 * phi_0);
-    double dphi = -(check) / derterm;
-    phi_0 += dphi;
-    niter++;
-    if (fabs(dphi) < 1e-8)
-      break;
-  }
-  //       if(debug) std::cout<<__func__<<"() - "<<__LINE__<<":  check zero " <<
-  //       check <<  " term_cs " << term_cs << " derterm " << derterm << " dphi
-  //       " << dphi << std::endl;
-
-  // shift back the t0
-  double t0_fit = t0_f;
-  double phi_fit = phi_0;
-  double d0_fit = d0_f;
-
-  // chi2 calculation
-  double chi2_fit = 0;
-  for (unsigned int i = 0; i < xhit.size(); i++) {
-    double w2 = 1 / ehit[i] / ehit[i];
-    double res = d0_fit + rhit[i] - signhit[i] * vhit[i] * t0_fit -
-                 (xhit[i] - xc) * sin(phi_fit) + (yhit[i] - yc) * cos(phi_fit);
-    chi2_fit += w2 * res * res;
-
-    std::cout << __func__ << "() - " << __LINE__ << ":  hit i " << i
-              << " xhit[i] " << xhit[i] << " yhit[i] " << yhit[i] << " rhit[i] "
-              << rhit[i] << " ehit[i] " << ehit[i]
-              << " signhit[i]*vhit[i]*t0_fit " << signhit[i] * vhit[i] * t0_fit
-              << " w2 " << w2 << " residual " << res << std::endl;
-  }
-  // Errors
-  double error_d0 = 1. / sqrt(wc);
-  double error_phi = 1. / sqrt(term_xy * sin(2 * phi_fit) +
-                               term_yy * sin(phi_fit) * sin(phi_fit) -
-                               term_xx * cos(phi_fit) * cos(phi_fit));
-  // cross check errors
-  double dx =
-      xhit[0] + rhit[0] * sin(phi_fit) - (xhit[1] + rhit[1] * sin(phi_fit));
-  double dy =
-      yhit[0] - rhit[0] * cos(phi_fit) - (yhit[1] - rhit[1] * cos(phi_fit));
-  double dist_xy = sqrt(dx * dx + dy * dy);
-  double error_phi_check = 0.1 * sqrt(2.) / dist_xy;
-  if (xhit.size() == 2) {
-    //        std::cout<<__func__<<"() - "<<__LINE__<<":  dist_xy " << dist_xy
-    //        << " dx " << dx << " dy " << dy << std::endl;
-    //        std::cout<<__func__<<"() - "<<__LINE__<<":  phi_t " << phi_t << "
-    //        error_d0 "
-    //        << error_d0 << " error_phi " << error_phi << " error_phi_check "
-    //        << error_phi_check << std::endl;
-  } else {
-    //       if(debug) std::cout<<__func__<<"() - "<<__LINE__<<":  phi_t " <<
-    //       phi_t << " error_d0 " << error_d0 << " error_phi " << error_phi <<
-    //       std::endl;
-  }
-
-  //    note that the t0 could be updated
-
-  double t0_fit_total = t0_fit + t0_update;
-
-  if (chi2_fit > 1 && abs(sums) != xhit.size())
-    debug = true;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  sums " << sums
-            << " d0 fit " << d0_fit << " d0c_t " << d0c_t << " t0_fit_total "
-            << t0_fit_total << " t0_t " << t0_t << " chi2 " << chi2_fit
-            << std::endl;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  phi_t " << phi_t
-            << " phi_0 guess " << phi_0 << " phi_t-phi_0 " << phi_t - phi_0
-            << " phi_fit-phi_t " << phi_fit - phi_t << " niter " << niter
-            << " t0_fit_total -t0_t " << t0_fit_total - t0_t << std::endl;
-
-  std::cout << __func__ << "() - " << __LINE__ << ":  t0_fit " << t0_fit
-            << " t0_update " << t0_update << std::endl;
-  debug = false;
-#endif
-}
-
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1419};
-  return;
 
   std::unique_ptr<TFile> outFile{};
   std::unique_ptr<TTree> outTree{};
@@ -706,19 +326,14 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
                 << " did not lead to any valid measurement " << std::endl;
       continue;
     }
-    std::vector<std::int32_t> trueDriftSigns{};
-    trueDriftSigns.reserve(strawPoints.size());
-    for (const auto& meas : strawPoints) {
-      trueDriftSigns.push_back(
-          CompSpacePointAuxiliaries::strawSign(track, *meas));
-    }
+    const std::vector<std::int32_t> trueDriftSigns =
+        CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
+
     BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
                    1.e-12);
-    if constexpr (print) {
-      std::cout << __func__ << "() - " << __LINE__
-                << ": True drift signs: " << trueDriftSigns
-                << ", chi2: " << chi2 << std::endl;
-    }
+    PRINT_DEBUG_MSG("True drift signs: " << trueDriftSigns
+                                         << ", chi2: " << chi2);
+
     auto fitResult = fastFitter.fit(strawPoints, trueDriftSigns);
     if (!fitResult) {
       continue;
@@ -732,20 +347,15 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     trackPars[toUnderlying(Line_t::ParIndex::y0)] = (*fitResult).y0;
     trackPars[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
     track.updateParameters(trackPars);
-    if constexpr (print) {
-      std::cout << __func__ << "() - " << __LINE__ << ": Updated parameters: "
-                << (trackPars[toUnderlying(Line_t::ParIndex::theta)] /
-                    1._degree)
-                << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)]
-                << " -- " << toString(track.position()) << " + "
-                << toString(track.direction()) << std::endl;
-    }
+    PRINT_DEBUG_MSG(
+        "Updated parameters: "
+        << (trackPars[toUnderlying(Line_t::ParIndex::theta)] / 1._degree)
+        << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)] << " -- "
+        << toString(track.position()) << " + " << toString(track.direction()));
 
     const double testChi2 = calcChi2(strawPoints, track);
-    if constexpr (print) {
-      std::cout << __func__ << "() - " << __LINE__ << ": testChi2: " << testChi2
-                << ", fit:" << (*fitResult).chi2 << std::endl;
-    }
+    PRINT_DEBUG_MSG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
+
     BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
     if (debugMode) {
       fitTheta = (*fitResult).theta;
@@ -767,19 +377,46 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 BOOST_AUTO_TEST_CASE(LineFitWithT0) {
   RandomEngine engine{47110};
 
+  std::unique_ptr<TFile> outFile{};
+  std::unique_ptr<TTree> outTree{};
+  double trueY0{0.}, trueTheta{0.}, trueT0{0.};
+  double fitY0{0.}, fitTheta{0.}, fitT0{0.};
+  double fitdY0{0.}, fitdTheta{0.}, fitDT0{0.};
+  double chi2{0.}, meanSign{0.};
+  std::uint32_t nDoF{0u}, nIter{0u};
+  if (debugMode) {
+    outFile.reset(TFile::Open("FastStrawLineFitTestT0.root", "RECREATE"));
+    BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+    outTree = std::make_unique<TTree>("FastFitTreeT0", "FastFitTree");
+    outTree->Branch("trueY0", &trueY0);
+    outTree->Branch("trueTheta", &trueTheta);
+    outTree->Branch("trueT0", &trueT0);
+    outTree->Branch("fitY0", &fitY0);
+    outTree->Branch("fitTheta", &fitTheta);
+    outTree->Branch("fitT0", &fitT0);
+
+    outTree->Branch("errY0", &fitdY0);
+    outTree->Branch("errTheta", &fitdTheta);
+    outTree->Branch("errT0", &fitDT0);
+
+    outTree->Branch("chi2", &chi2);
+    outTree->Branch("nDoF", &nDoF);
+    outTree->Branch("nIter", &nIter);
+  }
+
   FastStrawLineFitter::Config cfg{};
-  cfg.maxIter = 5;
+  cfg.maxIter = 500;
   FastStrawLineFitter fastFitter{cfg};
   StrawTestCalibrator calibrator{};
   Acts::CalibrationContext cctx{};
   for (std::uint32_t n = 0; n < nTrials; ++n) {
     auto track = generateLine(engine);
-    // const double timeOffSet = 5._ns + (engine() % 100) * 1._ns;
-    double timeOffSet = 81._ns;
-    std::cout << __func__ << "() - " << __LINE__
-              << " Generated time offset: " << (timeOffSet / 1._ns) << " [ns] "
-              << std::endl;
-    auto strawPoints = generateStrawCircles(track, engine, false);
+    const double timeOffSet = 50._ns - (engine() % 100) * 1._ns;
+
+    PRINT_DEBUG_MSG("Generated time offset: " << inNanoS(timeOffSet)
+                                              << " [ns]");
+    auto strawPoints = generateStrawCircles(track, engine, true);
+
     if (strawPoints.size() < 4) {
       std::cout << __func__ << "() - " << __LINE__
                 << ": WARNING -- event: " << n << ", track "
@@ -788,28 +425,14 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
                 << " did not lead to any valid measurement " << std::endl;
       continue;
     }
+    BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
+                   1.e-12);
+
     /// Fold-in the general offset
-    std::vector<std::int32_t> trueDriftSigns{};
-    trueDriftSigns.reserve(strawPoints.size());
+    const std::vector<std::int32_t> trueDriftSigns =
+        CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
 
-    std::vector<double> xhit{}, yhit{}, rhit{}, ehit{}, vhit{}, thit{};
-
-    //  const std::vector<int>& signhit{},
-
-    for (auto& meas : strawPoints) {
-      trueDriftSigns.push_back(
-          CompSpacePointAuxiliaries::strawSign(track, *meas));
-
-      xhit.push_back(meas->localPosition().z());
-      yhit.push_back(meas->localPosition().y());
-      rhit.push_back(meas->driftRadius() * trueDriftSigns.back());
-      ehit.push_back(meas->driftUncert());
-      thit.push_back(StrawTestCalibrator::driftTime(rhit.back()));
-      vhit.push_back(
-          StrawTestCalibrator::driftVelocity(cctx, *meas, thit.back()));
-    }
-    fitPeterKluit(xhit, yhit, rhit, ehit, trueDriftSigns, vhit, thit);
-    auto simpleFit = fastFitter.fit(strawPoints, trueDriftSigns);
+    PRINT_DEBUG_MSG("Straw signs: " << trueDriftSigns);
 
     for (auto& meas : strawPoints) {
       const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
@@ -822,12 +445,11 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
       meas->setTimeRecord(dTime + timeOffSet);
       BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
                         calibrator.driftRadius(cctx, *meas, timeOffSet), 1.e-6);
-      if (false)
-        std::cout << __func__ << "() - " << __LINE__
-                  << ": Update drift radius of tube "
-                  << toString(meas->localPosition()) << " from "
-                  << meas->driftRadius() << " to " << updatedR
-                  << ", dTime: " << (dTime / 1._ns) << std::endl;
+
+      PRINT_DEBUG_MSG("Update drift radius of tube "
+                      << toString(meas->localPosition()) << " from "
+                      << meas->driftRadius() << " to " << updatedR
+                      << ", dTime: " << inNanoS(dTime));
       meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
       /// Calculate the numerical derivatives
       constexpr double h = 1.e-8_ns;
@@ -840,12 +462,37 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
     }
 
     auto result = fastFitter.fit(cctx, calibrator, strawPoints, trueDriftSigns);
-    /// Bail out
-    break;
 
     if (!result) {
       continue;
     }
+    auto linePars = track.parameters();
+    if (debugMode) {
+      /// True parameters
+      trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
+      trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+      trueT0 = inNanoS(timeOffSet);
+      /// Fit parameters
+      fitY0 = (*result).y0;
+      fitTheta = (*result).theta;
+      fitT0 = inNanoS((*result).t0);
+      fitdY0 = (*result).dY0;
+      fitdTheta = (*result).dTheta;
+      fitDT0 = inNanoS((*result).dT0);
+      nDoF = (*result).nDoF;
+      chi2 = (*result).chi2;
+      nIter = (*result).nIter;
+      meanSign = {0.};
+      std::ranges::for_each(
+          trueDriftSigns,
+          [&meanSign](const std::int32_t sign) { meanSign += sign; });
+      meanSign /= static_cast<double>(trueDriftSigns.size());
+      outTree->Fill();
+    }
+  }
+  if (debugMode) {
+    outFile->WriteObject(outTree.get(), outTree->GetName());
+    outTree.reset();
   }
 }
 
