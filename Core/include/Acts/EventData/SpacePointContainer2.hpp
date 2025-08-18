@@ -273,6 +273,18 @@ class SpacePointContainer2 {
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
   }
+  MutableSpacePointColumnProxy<std::array<float, 2>> xyColumn() noexcept {
+    assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
+    return m_xyColumn->proxy(*this);
+  }
+  MutableSpacePointColumnProxy<std::array<float, 2>> zrColumn() noexcept {
+    assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
+    return m_zrColumn->proxy(*this);
+  }
+  MutableSpacePointColumnProxy<std::array<float, 4>> xyzrColumn() noexcept {
+    assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
+    return m_xyzrColumn->proxy(*this);
+  }
 
   /// Returns a const proxy to the x coordinate column.
   /// @return A const proxy to the r coordinate column.
@@ -363,6 +375,18 @@ class SpacePointContainer2 {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
+  }
+  ConstSpacePointColumnProxy<std::array<float, 2>> xyColumn() const noexcept {
+    assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
+    return m_xyColumn->proxy(*this);
+  }
+  ConstSpacePointColumnProxy<std::array<float, 2>> zrColumn() const noexcept {
+    assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
+    return m_zrColumn->proxy(*this);
+  }
+  ConstSpacePointColumnProxy<std::array<float, 4>> xyzrColumn() const noexcept {
+    assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
+    return m_xyzrColumn->proxy(*this);
   }
 
   /// Returns a mutable proxy to the space point at the given index.

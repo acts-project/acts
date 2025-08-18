@@ -156,7 +156,7 @@ class Impl final : public TripletSeedFinder {
 
       float dU = lt.U - Ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
@@ -276,7 +276,7 @@ class Impl final : public TripletSeedFinder {
 
       // protects against division by 0
       float dU = lt.U - Ub;
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
@@ -382,7 +382,7 @@ class Impl final : public TripletSeedFinder {
 
       dU = ut - ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       float A = (vt - vb) / dU;
