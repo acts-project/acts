@@ -136,7 +136,7 @@ inline float &SpacePointContainer2::variantVarianceR(Index index) noexcept {
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantX(Index index) const noexcept {
+inline const float &SpacePointContainer2::variantX(Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::X)) {
     return this->x(index);
   } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
@@ -153,7 +153,7 @@ inline float SpacePointContainer2::variantX(Index index) const noexcept {
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantY(Index index) const noexcept {
+inline const float &SpacePointContainer2::variantY(Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Y)) {
     return this->y(index);
   } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
@@ -170,7 +170,7 @@ inline float SpacePointContainer2::variantY(Index index) const noexcept {
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantZ(Index index) const noexcept {
+inline const float &SpacePointContainer2::variantZ(Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Z)) {
     return this->z(index);
   } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
@@ -187,7 +187,7 @@ inline float SpacePointContainer2::variantZ(Index index) const noexcept {
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantR(Index index) const noexcept {
+inline const float &SpacePointContainer2::variantR(Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::R)) {
     return this->r(index);
   } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
@@ -202,7 +202,7 @@ inline float SpacePointContainer2::variantR(Index index) const noexcept {
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantVarianceZ(
+inline const float &SpacePointContainer2::variantVarianceZ(
     Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZ)) {
     return this->varianceZ(index);
@@ -216,7 +216,7 @@ inline float SpacePointContainer2::variantVarianceZ(
 }
 
 template <SpacePointColumns Columns>
-inline float SpacePointContainer2::variantVarianceR(
+inline const float &SpacePointContainer2::variantVarianceR(
     Index index) const noexcept {
   if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceR)) {
     return this->varianceR(index);
