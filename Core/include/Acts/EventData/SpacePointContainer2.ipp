@@ -43,15 +43,15 @@ inline ConstSpacePointProxy2 SpacePointContainer2::operator[](
   return ConstProxy(*this, index);
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantX(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::X)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::X)) {
     return this->x(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XY)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
     return this->xy(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[0];
   } else {
     static_assert(
@@ -60,15 +60,15 @@ inline float &SpacePointContainer2::variantX(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantY(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::Y)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Y)) {
     return this->y(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XY)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
     return this->xy(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[1];
   } else {
     static_assert(
@@ -77,15 +77,15 @@ inline float &SpacePointContainer2::variantY(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantZ(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::Z)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Z)) {
     return this->z(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::ZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
     return this->zr(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[2];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[2];
   } else {
     static_assert(
@@ -94,13 +94,13 @@ inline float &SpacePointContainer2::variantZ(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantR(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::R)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::R)) {
     return this->r(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::ZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
     return this->zr(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[3];
   } else {
     static_assert(
@@ -109,11 +109,11 @@ inline float &SpacePointContainer2::variantR(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantVarianceZ(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZ)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZ)) {
     return this->varianceZ(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZR)) {
     return this->varianceZR(index)[0];
   } else {
     static_assert(false,
@@ -122,11 +122,11 @@ inline float &SpacePointContainer2::variantVarianceZ(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float &SpacePointContainer2::variantVarianceR(Index index) noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceR)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceR)) {
     return this->varianceR(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZR)) {
     return this->varianceZR(index)[1];
   } else {
     static_assert(false,
@@ -135,15 +135,15 @@ inline float &SpacePointContainer2::variantVarianceR(Index index) noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantX(Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::X)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::X)) {
     return this->x(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XY)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
     return this->xy(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[0];
   } else {
     static_assert(
@@ -152,15 +152,15 @@ inline float SpacePointContainer2::variantX(Index index) const noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantY(Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::Y)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Y)) {
     return this->y(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XY)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XY)) {
     return this->xy(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[1];
   } else {
     static_assert(
@@ -169,15 +169,15 @@ inline float SpacePointContainer2::variantY(Index index) const noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantZ(Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::Z)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::Z)) {
     return this->z(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::ZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
     return this->zr(index)[0];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZ)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZ)) {
     return this->xyz(index)[2];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[2];
   } else {
     static_assert(
@@ -186,13 +186,13 @@ inline float SpacePointContainer2::variantZ(Index index) const noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantR(Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::R)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::R)) {
     return this->r(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::ZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::ZR)) {
     return this->zr(index)[1];
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::XYZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::XYZR)) {
     return this->xyzr(index)[3];
   } else {
     static_assert(
@@ -201,12 +201,12 @@ inline float SpacePointContainer2::variantR(Index index) const noexcept {
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantVarianceZ(
     Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZ)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZ)) {
     return this->varianceZ(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZR)) {
     return this->varianceZR(index)[0];
   } else {
     static_assert(false,
@@ -215,12 +215,12 @@ inline float SpacePointContainer2::variantVarianceZ(
   }
 }
 
-template <SpacePointColumns column>
+template <SpacePointColumns Columns>
 inline float SpacePointContainer2::variantVarianceR(
     Index index) const noexcept {
-  if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceR)) {
+  if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceR)) {
     return this->varianceR(index);
-  } else if constexpr (ACTS_CHECK_BIT(column, SpacePointColumns::VarianceZR)) {
+  } else if constexpr (ACTS_CHECK_BIT(Columns, SpacePointColumns::VarianceZR)) {
     return this->varianceZR(index)[1];
   } else {
     static_assert(false,

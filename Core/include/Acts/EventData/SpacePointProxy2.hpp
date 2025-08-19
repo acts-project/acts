@@ -292,54 +292,66 @@ class SpacePointProxy2 {
     return m_container->resolvedIndex(m_index);
   }
 
-  template <SpacePointColumns column>
-  float &variantX() noexcept {
-    return m_container->variantX(m_index);
+  template <SpacePointColumns Columns>
+  float &variantX() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantX<Columns>(m_index);
   }
-  template <SpacePointColumns column>
-  float &variantY() noexcept {
-    return m_container->variantY(m_index);
+  template <SpacePointColumns Columns>
+  float &variantY() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantY<Columns>(m_index);
   }
-  template <SpacePointColumns column>
-  float &variantZ() noexcept {
-    return m_container->variantZ(m_index);
+  template <SpacePointColumns Columns>
+  float &variantZ() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantZ<Columns>(m_index);
   }
-  template <SpacePointColumns column>
-  float &variantR() noexcept {
-    return m_container->variantR(m_index);
+  template <SpacePointColumns Columns>
+  float &variantR() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantR<Columns>(m_index);
   }
-  template <SpacePointColumns column>
-  float &variantVarianceZ() noexcept {
-    return m_container->variantVarianceZ(m_index);
+  template <SpacePointColumns Columns>
+  float &variantVarianceZ() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantVarianceZ<Columns>(m_index);
   }
-  template <SpacePointColumns column>
-  float &variantVarianceR() noexcept {
-    return m_container->variantVarianceR(m_index);
+  template <SpacePointColumns Columns>
+  float &variantVarianceR() noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->template variantVarianceR<Columns>(m_index);
   }
 
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantX() const noexcept {
-    return m_container->variantX(m_index);
+    return m_container->template variantX<Columns>(m_index);
   }
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantY() const noexcept {
-    return m_container->variantY(m_index);
+    return m_container->template variantY<Columns>(m_index);
   }
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantZ() const noexcept {
-    return m_container->variantZ(m_index);
+    return m_container->template variantZ<Columns>(m_index);
   }
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantR() const noexcept {
-    return m_container->variantR(m_index);
+    return m_container->template variantR<Columns>(m_index);
   }
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantVarianceZ() const noexcept {
-    return m_container->variantVarianceZ(m_index);
+    return m_container->template variantVarianceZ<Columns>(m_index);
   }
-  template <SpacePointColumns column>
+  template <SpacePointColumns Columns>
   float variantVarianceR() const noexcept {
-    return m_container->variantVarianceR(m_index);
+    return m_container->template variantVarianceR<Columns>(m_index);
   }
 
  private:

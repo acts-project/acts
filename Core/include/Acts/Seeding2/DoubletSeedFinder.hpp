@@ -153,14 +153,30 @@ struct MiddleSpInfo {
 class DoubletSeedFinder {
  public:
   struct Config {
+    static constexpr SpacePointColumns kIndividualColumns =
+        SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z |
+        SpacePointColumns::R | SpacePointColumns::VarianceR |
+        SpacePointColumns::VarianceZ;
+    static constexpr SpacePointColumns kPairedColumns =
+        SpacePointColumns::XY | SpacePointColumns::ZR |
+        SpacePointColumns::VarianceZR;
+    static constexpr SpacePointColumns kCombinedColumns =
+        SpacePointColumns::XYZR | SpacePointColumns::VarianceZR;
+
+    /// Column layout of the space point container
+    SpacePointColumns columnLayout = kIndividualColumns;
+
+    /// Whether the input space points are sorted by radius
+    bool spacePointsSortedByRadius = false;
+
     /// Direction of the doublet candidate space points. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.
     Direction candidateDirection = Direction::Forward();
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * Acts::UnitConstants::mm;
+    float deltaRMin = 5 * UnitConstants::mm;
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * Acts::UnitConstants::mm;
+    float deltaRMax = 270 * UnitConstants::mm;
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
@@ -198,9 +214,6 @@ class DoubletSeedFinder {
                   const ConstSpacePointProxy2& /*other*/, float /*cotTheta*/,
                   bool /*isBottomCandidate*/)>
         experimentCuts;
-
-    /// Whether the input space points are sorted by radius
-    bool spacePointsSortedByRadius = false;
   };
 
   struct DerivedConfig : public Config {

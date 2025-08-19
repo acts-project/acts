@@ -163,8 +163,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       Acts::Experimental::SpacePointColumns::SourceLinks |
       Acts::Experimental::SpacePointColumns::XY |
       Acts::Experimental::SpacePointColumns::ZR |
-      Acts::Experimental::SpacePointColumns::VarianceZ |
-      Acts::Experimental::SpacePointColumns::VarianceR);
+      Acts::Experimental::SpacePointColumns::VarianceZR);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::Experimental::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
@@ -206,6 +205,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }();
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  bottomDoubletFinderConfig.columnLayout =
+      Acts::Experimental::DoubletSeedFinder::Config::kPairedColumns;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
                                             ? m_cfg.deltaRMin
@@ -225,7 +227,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   auto bottomDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
@@ -242,6 +243,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
+  tripletFinderConfig.columnLayout =
+      Acts::Experimental::TripletSeedFinder::Config::kPairedColumns;
+  tripletFinderConfig.useStripInfo = false;
+  tripletFinderConfig.sortedByCotTheta = true;
   tripletFinderConfig.minPt = m_cfg.minPt;
   tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
   tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
@@ -249,8 +254,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletFinderConfig.impactMax = m_cfg.impactMax;
   tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
-  tripletFinderConfig.useStripInfo = false;
-  tripletFinderConfig.sortedByCotTheta = true;
   auto tripletFinder = Acts::Experimental::TripletSeedFinder::create(
       Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
                                                            m_cfg.bFieldInZ));
