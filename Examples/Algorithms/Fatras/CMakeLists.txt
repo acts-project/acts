@@ -5,9 +5,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesFatras
-    PUBLIC
-        Acts::Core
-        Acts::Fatras
-        Acts::ExamplesFramework
-        Acts::ExamplesMagneticField
+    PUBLIC Acts::Fatras Acts::ExamplesFramework Acts::ExamplesMagneticField
 )

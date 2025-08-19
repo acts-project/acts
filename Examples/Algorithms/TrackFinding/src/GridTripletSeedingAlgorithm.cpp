@@ -121,9 +121,8 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
       m_cfg.centralSeedConfirmationRange;
   m_filterConfig.forwardSeedConfirmationRange =
       m_cfg.forwardSeedConfirmationRange;
-  m_filterConfig.maxSeedsPerSpMConf = std::numeric_limits<std::uint32_t>::max();
-  m_filterConfig.maxQualitySeedsPerSpMConf =
-      std::numeric_limits<std::uint32_t>::max();
+  m_filterConfig.maxSeedsPerSpMConf = m_cfg.maxSeedsPerSpMConf;
+  m_filterConfig.maxQualitySeedsPerSpMConf = m_cfg.maxQualitySeedsPerSpMConf;
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 

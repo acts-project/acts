@@ -15,7 +15,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
-        Acts::Core
         Acts::PluginRoot
         Acts::PluginJson
         Acts::ExamplesFramework
