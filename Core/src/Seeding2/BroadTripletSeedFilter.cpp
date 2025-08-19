@@ -251,8 +251,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
            deltaSeedConf == 0)) {
         continue;
       }
-      bool seedRangeCuts = spB.zr()[1] < seedConfRange.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
+      bool seedRangeCuts =
+          spB.zr()[1] < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts && deltaSeedConf == 0 &&
           impact > seedConfRange.minImpactSeedConf) {
         continue;
