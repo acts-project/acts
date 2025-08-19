@@ -91,8 +91,11 @@ std::unique_ptr<TBox> drawBox(const double cX, const double cY, const double wX,
 constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
 }
+
 }  // namespace
+
 namespace ActsExamples {
+
 MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
                                                  Logging::Level lvl)
     : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {}
