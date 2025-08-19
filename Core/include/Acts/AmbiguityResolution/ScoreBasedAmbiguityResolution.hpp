@@ -260,6 +260,8 @@ class ScoreBasedAmbiguityResolution {
       source_link_equality_t sourceLinkEquality,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
           {}) const;
+  void saveScoreMonitor(const std::vector<ScoreMonitor>& scoreMonitor,
+                        const std::string& monitorFile) const;
 
  private:
   Config m_cfg;

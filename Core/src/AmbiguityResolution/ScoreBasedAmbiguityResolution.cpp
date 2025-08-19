@@ -8,6 +8,9 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
+#include "TFile.h"
+#include "TTree.h"
+
 bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
     const double& eta) const {
@@ -23,54 +26,58 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
           trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin] ||
           trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }
+
 void Acts::ScoreBasedAmbiguityResolution::saveScoreMonitor(
-  const std::vector<ScoreMonitor>& scoreMonitor,
-  const std::string& monitorFilePath) const {
-std::string headers;
-headers = "ptScore,";
-for (std::size_t i = 0; i < scoreMonitor[0].detectorHitScore.size(); i++) {
-  headers += "detectorHitScore" + std::to_string(i) + ",";
-}
-for (std::size_t i = 0; i < scoreMonitor[0].detectorHoleScore.size(); i++) {
-  headers += "detectorHoleScore" + std::to_string(i) + ",";
-}
-for (std::size_t i = 0; i < scoreMonitor[0].detectorOutlierScore.size();
-     i++) {
-  headers += "detectorOutlierScore" + std::to_string(i) + ",";
-}
-for (std::size_t i = 0; i < scoreMonitor[0].detectorOtherScore.size(); i++) {
-  headers += "detectorOtherScore" + std::to_string(i) + ",";
-}
-headers += "chi2Score,";
-for (std::size_t i = 0; i < scoreMonitor[0].optionalScore.size(); i++) {
-  headers += "optionalScore" + std::to_string(i) + ",";
-}
-headers += "totalScore\n";
+    const std::vector<ScoreMonitor>& scoreMonitor,
+    const std::string& monitorFilePath) const {
+  // Open ROOT file for writing
+  TFile* file = TFile::Open(monitorFilePath.c_str(), "RECREATE");
+  if (!file || file->IsZombie()) {
+    throw std::runtime_error("Could not create ROOT file: " + monitorFilePath);
+  }
 
-std::ofstream monitorFile;
-monitorFile.open(monitorFilePath, std::ios::app);
-monitorFile << headers;
+  // Create a TTree
+  TTree* tree = new TTree("ScoreMonitorTree", "Score Monitor Data");
 
-for (const auto& monitor : scoreMonitor) {
-  monitorFile << monitor.ptScore << ",";
-  for (const auto& score : monitor.detectorHitScore) {
-    monitorFile << score << ",";
-  }
-  for (const auto& score : monitor.detectorHoleScore) {
-    monitorFile << score << ",";
-  }
-  for (const auto& score : monitor.detectorOutlierScore) {
-    monitorFile << score << ",";
-  }
-  for (const auto& score : monitor.detectorOtherScore) {
-    monitorFile << score << ",";
-  }
-  monitorFile << monitor.chi2Score << ",";
-  for (const auto& score : monitor.optionalScore) {
-    monitorFile << score << ",";
-  }
-  monitorFile << monitor.totalScore << "\n";
-}
+  // Variables for branches
+  std::size_t ptScore;
+  std::size_t chi2Score;
+  std::size_t totalScore;
 
-monitorFile.close();
+  std::vector<std::size_t> detectorHitScore;
+  std::vector<std::size_t> detectorHoleScore;
+  std::vector<std::size_t> detectorOutlierScore;
+  std::vector<std::size_t> detectorOtherScore;
+  std::vector<std::size_t> optionalScore;
+
+  // Create branches
+  tree->Branch("ptScore", &ptScore);
+  tree->Branch("chi2Score", &chi2Score);
+  tree->Branch("totalScore", &totalScore);
+
+  tree->Branch("detectorHitScore", &detectorHitScore);
+  tree->Branch("detectorHoleScore", &detectorHoleScore);
+  tree->Branch("detectorOutlierScore", &detectorOutlierScore);
+  tree->Branch("detectorOtherScore", &detectorOtherScore);
+  tree->Branch("optionalScore", &optionalScore);
+
+  // Fill the tree
+  for (const auto& monitor : scoreMonitor) {
+    ptScore = monitor.ptScore;
+    chi2Score = monitor.chi2Score;
+    totalScore = monitor.totalScore;
+
+    detectorHitScore = monitor.detectorHitScore;
+    detectorHoleScore = monitor.detectorHoleScore;
+    detectorOutlierScore = monitor.detectorOutlierScore;
+    detectorOtherScore = monitor.detectorOtherScore;
+    optionalScore = monitor.optionalScore;
+
+    tree->Fill();
+  }
+
+  // Write tree to file
+  file->Write();
+  file->Close();
+  delete file;
 }
