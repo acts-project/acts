@@ -78,9 +78,9 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    const float rM = spM.r();
-    const float varianceRM = spM.varianceR();
+    const float rM = spM.zr()[1];
     const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
 
     float cotThetaB = bottomDoublet.cotTheta();
     float erB = bottomDoublet.er();
@@ -152,7 +152,7 @@ class Impl final : public TripletSeedFinder {
 
       float dU = topDoublet.u() - Ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
@@ -224,11 +224,11 @@ class Impl final : public TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    float rM = spM.r();
-    float cosPhiM = spM.x() / rM;
-    float sinPhiM = spM.y() / rM;
-    float varianceRM = spM.varianceR();
+    float rM = spM.zr()[1];
+    float cosPhiM = spM.xy()[0] / rM;
+    float sinPhiM = spM.xy()[1] / rM;
     float varianceZM = spM.varianceZ();
+    float varianceRM = spM.varianceR();
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
