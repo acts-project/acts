@@ -132,6 +132,7 @@
                 "CMAKE_CUDA_FLAGS": "-w",
                 "CMAKE_CUDA_ARCHITECTURES": "86",
                 "TORCH_CUDA_ARCH_LIST": "8.6",
+                "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
