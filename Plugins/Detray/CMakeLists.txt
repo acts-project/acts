@@ -6,6 +6,7 @@ acts_add_library(
     src/DetrayGeometryConverter.cpp
     src/DetrayMaterialConverter.cpp
     src/DetraySurfaceGridsConverter.cpp
+    src/DetrayPayloadConverter.cpp
     ACTS_INCLUDE_FOLDER include/Acts
 )
 
@@ -27,5 +28,6 @@ target_link_libraries(
         detray::io
         detray::detectors
         detray::test_utils
+        detray::svgtools
         vecmem::core
 )

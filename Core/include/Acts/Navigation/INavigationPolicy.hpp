@@ -8,15 +8,21 @@
 
 #pragma once
 
+#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
+#include <functional>
 #include <type_traits>
 
 namespace Acts {
 
 class TrackingVolume;
 class INavigationPolicy;
+class Surface;
+
+/// Function type for looking up surface indices in detray conversion
+using SurfaceLookupFunction = std::function<std::size_t(const Surface*)>;
 
 /// Concept for a navigation policy
 /// This exists so `updateState` can be a non-virtual method and we still have a
@@ -55,6 +61,10 @@ class INavigationPolicy {
   /// registered with the delegate.
   /// @param delegate The delegate to connect to
   virtual void connect(NavigationDelegate& delegate) const = 0;
+
+  virtual std::unique_ptr<DetraySurfaceGrid> toDetrayPayload(
+      const SurfaceLookupFunction& surfaceLookup,
+      const Logger& logger) const = 0;
 
  protected:
   /// Internal helper function for derived classes that conform to the concept
