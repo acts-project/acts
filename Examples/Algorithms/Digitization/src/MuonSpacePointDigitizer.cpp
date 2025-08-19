@@ -185,7 +185,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
 
-    /// Convert the hit trajectory into local coordinates
+    // Convert the hit trajectory into local coordinates
     const Vector3 locPos = surfLocToGlob.inverse() * hit.position();
     const Vector3 locDir = surfLocToGlob.inverse().linear() * hit.direction();
 
