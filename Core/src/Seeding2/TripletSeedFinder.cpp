@@ -67,8 +67,7 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
   return true;
 }
 
-template <SpacePointColumns columnLayout, bool useStripInfo,
-          bool sortedInCotTheta>
+template <bool useStripInfo, bool sortedInCotTheta>
 class Impl final : public TripletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -80,9 +79,9 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    const float rM = spM.variantR<columnLayout>();
-    const float varianceZM = spM.variantVarianceZ<columnLayout>();
-    const float varianceRM = spM.variantVarianceR<columnLayout>();
+    const float rM = spM.zr()[1];
+    const float varianceZM = spM.varianceZR()[0];
+    const float varianceRM = spM.varianceZR()[1];
 
     const LinCircle& lb = bottomDoublet.linCircle();
 
@@ -229,11 +228,11 @@ class Impl final : public TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    float rM = spM.variantR<columnLayout>();
-    float cosPhiM = spM.variantX<columnLayout>() / rM;
-    float sinPhiM = spM.variantY<columnLayout>() / rM;
-    float varianceZM = spM.variantVarianceZ<columnLayout>();
-    float varianceRM = spM.variantVarianceR<columnLayout>();
+    float rM = spM.zr()[1];
+    float cosPhiM = spM.xy()[0] / rM;
+    float sinPhiM = spM.xy()[1] / rM;
+    float varianceZM = spM.varianceZR()[0];
+    float varianceRM = spM.varianceZR()[1];
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
@@ -518,27 +517,21 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
   using BooleanOptions =
       boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
 
-  using ColumnLayoutOptions = boost::mp11::mp_list<
-      std::integral_constant<SpacePointColumns, Config::kIndividualColumns>,
-      std::integral_constant<SpacePointColumns, Config::kPairedColumns>,
-      std::integral_constant<SpacePointColumns, Config::kCombinedColumns>>;
   using UseStripInfoOptions = BooleanOptions;
   using SortedInCotThetaOptions = BooleanOptions;
 
   using TripletOptions =
-      boost::mp11::mp_product<boost::mp11::mp_list, ColumnLayoutOptions,
-                              UseStripInfoOptions, SortedInCotThetaOptions>;
+      boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
+                              SortedInCotThetaOptions>;
 
   std::unique_ptr<TripletSeedFinder> result;
   boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
     using OptionType = decltype(option);
 
-    using ColumnLayout = boost::mp11::mp_at_c<OptionType, 0>;
-    using UseStripInfo = boost::mp11::mp_at_c<OptionType, 1>;
-    using SortedInCotTheta = boost::mp11::mp_at_c<OptionType, 2>;
+    using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
+    using SortedInCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
 
-    if (config.columnLayout != ColumnLayout::value ||
-        config.useStripInfo != UseStripInfo::value ||
+    if (config.useStripInfo != UseStripInfo::value ||
         config.sortedByCotTheta != SortedInCotTheta::value) {
       return;  // skip if the configuration does not match
     }
@@ -551,8 +544,9 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<Impl<ColumnLayout::value, UseStripInfo::value,
-                                   SortedInCotTheta::value>>(config);
+    result =
+        std::make_unique<Impl<UseStripInfo::value, SortedInCotTheta::value>>(
+            config);
   });
   if (result == nullptr) {
     throw std::runtime_error(

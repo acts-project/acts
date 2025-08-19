@@ -153,19 +153,6 @@ struct MiddleSpInfo {
 class DoubletSeedFinder {
  public:
   struct Config {
-    static constexpr SpacePointColumns kIndividualColumns =
-        SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z |
-        SpacePointColumns::R | SpacePointColumns::VarianceR |
-        SpacePointColumns::VarianceZ;
-    static constexpr SpacePointColumns kPairedColumns =
-        SpacePointColumns::XY | SpacePointColumns::ZR |
-        SpacePointColumns::VarianceZR;
-    static constexpr SpacePointColumns kCombinedColumns =
-        SpacePointColumns::XYZR | SpacePointColumns::VarianceZR;
-
-    /// Column layout of the space point container
-    SpacePointColumns columnLayout = kIndividualColumns;
-
     /// Whether the input space points are sorted by radius
     bool spacePointsSortedByRadius = false;
 

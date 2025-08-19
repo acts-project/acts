@@ -206,8 +206,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }();
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
-  bottomDoubletFinderConfig.columnLayout =
-      Acts::Experimental::DoubletSeedFinder::Config::kPairedColumns;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
@@ -244,8 +242,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
-  tripletFinderConfig.columnLayout =
-      Acts::Experimental::TripletSeedFinder::Config::kPairedColumns;
   tripletFinderConfig.useStripInfo = false;
   tripletFinderConfig.sortedByCotTheta = true;
   tripletFinderConfig.minPt = m_cfg.minPt;

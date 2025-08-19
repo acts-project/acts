@@ -304,68 +304,6 @@ class SpacePointProxy2 {
     return m_container->resolvedIndex(m_index);
   }
 
-  template <SpacePointColumns Columns>
-  float &variantX() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantX<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float &variantY() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantY<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float &variantZ() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantZ<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float &variantR() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantR<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float &variantVarianceZ() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantVarianceZ<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float &variantVarianceR() noexcept
-    requires(!ReadOnly)
-  {
-    return m_container->template variantVarianceR<Columns>(m_index);
-  }
-
-  template <SpacePointColumns Columns>
-  float variantX() const noexcept {
-    return m_container->template variantX<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float variantY() const noexcept {
-    return m_container->template variantY<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float variantZ() const noexcept {
-    return m_container->template variantZ<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float variantR() const noexcept {
-    return m_container->template variantR<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float variantVarianceZ() const noexcept {
-    return m_container->template variantVarianceZ<Columns>(m_index);
-  }
-  template <SpacePointColumns Columns>
-  float variantVarianceR() const noexcept {
-    return m_container->template variantVarianceR<Columns>(m_index);
-  }
-
  private:
   Container *m_container{};
   Index m_index{};

@@ -87,19 +87,6 @@ class TripletTopCandidates {
 class TripletSeedFinder {
  public:
   struct Config {
-    static constexpr SpacePointColumns kIndividualColumns =
-        SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z |
-        SpacePointColumns::R | SpacePointColumns::VarianceR |
-        SpacePointColumns::VarianceZ;
-    static constexpr SpacePointColumns kPairedColumns =
-        SpacePointColumns::XY | SpacePointColumns::ZR |
-        SpacePointColumns::VarianceZR;
-    static constexpr SpacePointColumns kCombinedColumns =
-        SpacePointColumns::XYZR | SpacePointColumns::VarianceZR;
-
-    /// Column layout of the space point container
-    SpacePointColumns columnLayout = kIndividualColumns;
-
     /// Delegates for accessors to detailed information on double measurement
     /// that produced the space point. This is mainly referring to space points
     /// produced when combining measurement from strips on back-to-back modules.

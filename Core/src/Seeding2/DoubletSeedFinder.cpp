@@ -21,8 +21,8 @@ namespace Acts::Experimental {
 
 namespace {
 
-template <SpacePointColumns columnLayout, bool isBottomCandidate,
-          bool interactionPointCut, bool sortedByR, bool experimentCuts>
+template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
+          bool experimentCuts>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -47,12 +47,12 @@ class Impl final : public DoubletSeedFinder {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
-    const float xM = middleSp.variantX<columnLayout>();
-    const float yM = middleSp.variantY<columnLayout>();
-    const float zM = middleSp.variantZ<columnLayout>();
-    const float rM = middleSp.variantR<columnLayout>();
-    const float varianceZM = middleSp.variantVarianceZ<columnLayout>();
-    const float varianceRM = middleSp.variantVarianceR<columnLayout>();
+    const float xM = middleSp.xy()[0];
+    const float yM = middleSp.xy()[1];
+    const float zM = middleSp.zr()[0];
+    const float rM = middleSp.zr()[1];
+    const float varianceZM = middleSp.varianceZR()[0];
+    const float varianceRM = middleSp.varianceZR()[1];
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -97,12 +97,12 @@ class Impl final : public DoubletSeedFinder {
     }
 
     for (ConstSpacePointProxy2 otherSp : candidateSps) {
-      const float xO = otherSp.variantX<columnLayout>();
-      const float yO = otherSp.variantY<columnLayout>();
-      const float zO = otherSp.variantZ<columnLayout>();
-      const float rO = otherSp.variantR<columnLayout>();
-      const float varianceZO = middleSp.variantVarianceZ<columnLayout>();
-      const float varianceRO = middleSp.variantVarianceR<columnLayout>();
+      const float xO = otherSp.xy()[0];
+      const float yO = otherSp.xy()[1];
+      const float zO = otherSp.zr()[0];
+      const float rO = otherSp.zr()[1];
+      const float varianceZO = middleSp.varianceZR()[0];
+      const float varianceRO = middleSp.varianceZR()[1];
 
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
@@ -288,44 +288,32 @@ class Impl final : public DoubletSeedFinder {
 
 std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     const DerivedConfig& config) {
-  if (config.columnLayout != Config::kIndividualColumns &&
-      config.columnLayout != Config::kPairedColumns &&
-      config.columnLayout != Config::kCombinedColumns) {
-    throw std::runtime_error(
-        "DoubletSeedFinder: Invalid column layout configuration");
-  }
-
   using BooleanOptions =
       boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
 
-  using ColumnLayoutOptions = boost::mp11::mp_list<
-      std::integral_constant<SpacePointColumns, Config::kIndividualColumns>,
-      std::integral_constant<SpacePointColumns, Config::kPairedColumns>,
-      std::integral_constant<SpacePointColumns, Config::kCombinedColumns>>;
   using IsBottomCandidateOptions = BooleanOptions;
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
 
-  using DoubletOptions = boost::mp11::mp_product<
-      boost::mp11::mp_list, ColumnLayoutOptions, IsBottomCandidateOptions,
-      InteractionPointCutOptions, SortedByROptions, ExperimentCutsOptions>;
+  using DoubletOptions =
+      boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
+                              InteractionPointCutOptions, SortedByROptions,
+                              ExperimentCutsOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
     using OptionType = decltype(option);
 
-    using ColumnLayout = boost::mp11::mp_at_c<OptionType, 0>;
-    using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 1>;
-    using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 2>;
-    using SortedByR = boost::mp11::mp_at_c<OptionType, 3>;
-    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 4>;
+    using IsBottomCandidate = boost::mp11::mp_at_c<OptionType, 0>;
+    using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
+    using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
+    using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
 
-    if (config.columnLayout != ColumnLayout::value ||
-        configIsBottomCandidate != IsBottomCandidate::value ||
+    if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
         config.experimentCuts.connected() != ExperimentCuts::value) {
@@ -340,10 +328,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result =
-        std::make_unique<Impl<ColumnLayout::value, IsBottomCandidate::value,
-                              InteractionPointCut::value, SortedByR::value,
-                              ExperimentCuts::value>>(config);
+    result = std::make_unique<
+        Impl<IsBottomCandidate::value, InteractionPointCut::value,
+             SortedByR::value, ExperimentCuts::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(

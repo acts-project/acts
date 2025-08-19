@@ -832,32 +832,6 @@ class SpacePointContainer2 {
     return index;
   }
 
-  template <SpacePointColumns Columns>
-  float &variantX(Index index) noexcept;
-  template <SpacePointColumns Columns>
-  float &variantY(Index index) noexcept;
-  template <SpacePointColumns Columns>
-  float &variantZ(Index index) noexcept;
-  template <SpacePointColumns Columns>
-  float &variantR(Index index) noexcept;
-  template <SpacePointColumns Columns>
-  float &variantVarianceZ(Index index) noexcept;
-  template <SpacePointColumns Columns>
-  float &variantVarianceR(Index index) noexcept;
-
-  template <SpacePointColumns Columns>
-  const float &variantX(Index index) const noexcept;
-  template <SpacePointColumns Columns>
-  const float &variantY(Index index) const noexcept;
-  template <SpacePointColumns Columns>
-  const float &variantZ(Index index) const noexcept;
-  template <SpacePointColumns Columns>
-  const float &variantR(Index index) const noexcept;
-  template <SpacePointColumns Columns>
-  const float &variantVarianceZ(Index index) const noexcept;
-  template <SpacePointColumns Columns>
-  const float &variantVarianceR(Index index) const noexcept;
-
   template <bool read_only>
   using Iterator =
       ContainerIterator<SpacePointContainer2,
