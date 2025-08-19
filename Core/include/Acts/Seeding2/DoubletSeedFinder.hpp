@@ -11,10 +11,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -33,36 +31,24 @@ class DoubletsForMiddleSp {
   void clear() {
     m_spacePoints.clear();
     m_cotTheta.clear();
-    m_iDeltaR.clear();
-    m_Er.clear();
-    m_U.clear();
-    m_V.clear();
-    m_x.clear();
-    m_y.clear();
+    m_er_iDeltaR.clear();
+    m_uv.clear();
+    m_xy.clear();
   }
 
   void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
-                    float Er, float U, float V, float x, float y) {
-    m_spacePoints.emplace_back(sp);
-    m_cotTheta.emplace_back(cotTheta);
-    m_iDeltaR.emplace_back(iDeltaR);
-    m_Er.emplace_back(Er);
-    m_U.emplace_back(U);
-    m_V.emplace_back(V);
-    m_x.emplace_back(x);
-    m_y.emplace_back(y);
+                    float er, float u, float v, float x, float y) {
+    m_spacePoints.push_back(sp);
+    m_cotTheta.push_back(cotTheta);
+    m_er_iDeltaR.push_back({er, iDeltaR});
+    m_uv.push_back({u, v});
+    m_xy.push_back({x, y});
   }
 
   const std::vector<SpacePointIndex2>& spacePoints() const {
     return m_spacePoints;
   }
   const std::vector<float>& cotTheta() const { return m_cotTheta; }
-  const std::vector<float>& iDeltaR() const { return m_iDeltaR; }
-  const std::vector<float>& Er() const { return m_Er; }
-  const std::vector<float>& U() const { return m_U; }
-  const std::vector<float>& V() const { return m_V; }
-  const std::vector<float>& x() const { return m_x; }
-  const std::vector<float>& y() const { return m_y; }
 
   struct IndexAndCotTheta {
     Index index{};
@@ -96,12 +82,12 @@ class DoubletsForMiddleSp {
     }
 
     float cotTheta() const { return m_container->m_cotTheta[m_index]; }
-    float iDeltaR() const { return m_container->m_iDeltaR[m_index]; }
-    float Er() const { return m_container->m_Er[m_index]; }
-    float U() const { return m_container->m_U[m_index]; }
-    float V() const { return m_container->m_V[m_index]; }
-    float x() const { return m_container->m_x[m_index]; }
-    float y() const { return m_container->m_y[m_index]; }
+    float er() const { return m_container->m_er_iDeltaR[m_index][0]; }
+    float iDeltaR() const { return m_container->m_er_iDeltaR[m_index][1]; }
+    float u() const { return m_container->m_uv[m_index][0]; }
+    float v() const { return m_container->m_uv[m_index][1]; }
+    float x() const { return m_container->m_xy[m_index][0]; }
+    float y() const { return m_container->m_xy[m_index][1]; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
@@ -173,12 +159,9 @@ class DoubletsForMiddleSp {
 
   // parameters required to calculate a circle with linear equation
   std::vector<float> m_cotTheta;
-  std::vector<float> m_iDeltaR;
-  std::vector<float> m_Er;
-  std::vector<float> m_U;
-  std::vector<float> m_V;
-  std::vector<float> m_x;
-  std::vector<float> m_y;
+  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<std::array<float, 2>> m_uv;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 struct MiddleSpInfo {

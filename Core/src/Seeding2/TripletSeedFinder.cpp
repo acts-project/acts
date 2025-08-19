@@ -83,10 +83,10 @@ class Impl final : public TripletSeedFinder {
     const float varianceZM = spM.varianceZ();
 
     float cotThetaB = bottomDoublet.cotTheta();
-    float Vb = bottomDoublet.V();
-    float Ub = bottomDoublet.U();
-    float ErB = bottomDoublet.Er();
+    float erB = bottomDoublet.er();
     float iDeltaRB = bottomDoublet.iDeltaR();
+    float Ub = bottomDoublet.u();
+    float Vb = bottomDoublet.v();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = 1 + cotThetaB * cotThetaB;
@@ -120,7 +120,7 @@ class Impl final : public TripletSeedFinder {
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.Er() + ErB +
+      float error2 = topDoublet.er() + erB +
                      2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
                          topDoublet.iDeltaR();
 
@@ -150,14 +150,14 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float dU = topDoublet.U() - Ub;
+      float dU = topDoublet.u() - Ub;
       // protects against division by 0
       if (dU == 0.) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (topDoublet.V() - Vb) / dU;
+      float A = (topDoublet.v() - Vb) / dU;
       float S2 = 1 + A * A;
       float B = Vb - A * Ub;
       float B2 = B * B;
@@ -203,14 +203,14 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float Im = std::abs((A - B * rM) * rM);
-      if (Im > m_cfg.impactMax) {
+      float im = std::abs((A - B * rM) * rM);
+      if (im > m_cfg.impactMax) {
         continue;
       }
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), Im);
+      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), im);
     }  // loop on tops
 
     if constexpr (sortedInCotTheta) {
@@ -238,10 +238,10 @@ class Impl final : public TripletSeedFinder {
         spacePoints[bottomDoublet.spacePointIndex()];
 
     float cotThetaB = bottomDoublet.cotTheta();
-    float Vb = bottomDoublet.V();
-    float Ub = bottomDoublet.U();
-    float ErB = bottomDoublet.Er();
+    float erB = bottomDoublet.er();
     float iDeltaRB = bottomDoublet.iDeltaR();
+    float Vb = bottomDoublet.v();
+    float Ub = bottomDoublet.u();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = 1 + cotThetaB * cotThetaB;
@@ -268,13 +268,13 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
       // protects against division by 0
-      float dU = topDoublet.U() - Ub;
-      if (dU == 0.) {
+      float dU = topDoublet.u() - Ub;
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A0 = (topDoublet.V() - Vb) / dU;
+      float A0 = (topDoublet.v() - Vb) / dU;
 
       float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
@@ -340,7 +340,7 @@ class Impl final : public TripletSeedFinder {
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.Er() + ErB +
+      float error2 = topDoublet.er() + erB +
                      2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
                          topDoublet.iDeltaR();
 
@@ -375,7 +375,7 @@ class Impl final : public TripletSeedFinder {
 
       dU = ut - ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       float A = (vt - vb) / dU;
