@@ -79,7 +79,7 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    const float rM = spM.zr()[1];
+    const float rM = spM.xyzr()[3];
     const float varianceRM = spM.varianceR();
     const float varianceZM = spM.varianceZ();
 
@@ -228,9 +228,9 @@ class Impl final : public TripletSeedFinder {
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    float rM = spM.zr()[1];
-    float cosPhiM = spM.xy()[0] / rM;
-    float sinPhiM = spM.xy()[1] / rM;
+    float rM = spM.xyzr()[3];
+    float cosPhiM = spM.xyzr()[0] / rM;
+    float sinPhiM = spM.xyzr()[1] / rM;
     float varianceRM = spM.varianceR();
     float varianceZM = spM.varianceZ();
 

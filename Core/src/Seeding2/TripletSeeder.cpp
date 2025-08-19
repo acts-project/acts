@@ -159,14 +159,14 @@ void TripletSeeder::createSeedsFromGroups(
     // search. This requires at least one middle space point to be present which
     // is already checked above.
     const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
-    const float firstMiddleSpR = firstMiddleSp.zr()[1];
+    const float firstMiddleSpR = firstMiddleSp.xyzr()[3];
 
     for (auto& bottomSpGroup : bottomSpGroups) {
       // Find the first bottom space point that is within the deltaRMax of the
       // first middle space point.
       auto low = std::ranges::lower_bound(
           bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          [&](const ConstSpacePointProxy2& sp) { return sp.xyzr()[3]; });
       bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
     }
 
@@ -175,13 +175,13 @@ void TripletSeeder::createSeedsFromGroups(
       // first middle space point.
       auto low = std::ranges::lower_bound(
           topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
-          [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
+          [&](const ConstSpacePointProxy2& sp) { return sp.xyzr()[3]; });
       topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
     }
   }
 
   for (ConstSpacePointProxy2 spM : middleSpGroup) {
-    const float rM = spM.zr()[1];
+    const float rM = spM.xyzr()[3];
 
     if (spacePointsSortedByRadius) {
       // check if spM is outside our radial region of interest

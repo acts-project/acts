@@ -46,10 +46,10 @@ class Impl final : public DoubletSeedFinder {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
 
-    const float xM = middleSp.xy()[0];
-    const float yM = middleSp.xy()[1];
-    const float zM = middleSp.zr()[0];
-    const float rM = middleSp.zr()[1];
+    const float xM = middleSp.xyzr()[0];
+    const float yM = middleSp.xyzr()[1];
+    const float zM = middleSp.xyzr()[2];
+    const float rM = middleSp.xyzr()[3];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
 
@@ -80,12 +80,12 @@ class Impl final : public DoubletSeedFinder {
       for (ConstSpacePointProxy2 otherSp : candidateSps) {
         if constexpr (isBottomCandidate) {
           // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
+          if (rM - otherSp.xyzr()[3] <= m_cfg.deltaRMax) {
             break;
           }
         } else {
           // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
+          if (otherSp.xyzr()[3] - rM >= m_cfg.deltaRMin) {
             break;
           }
         }
@@ -96,14 +96,14 @@ class Impl final : public DoubletSeedFinder {
     }
 
     const SpacePointContainer2& container = candidateSps.container();
-    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] :
-         candidateSps.zip(container.xyColumn(), container.zrColumn(),
+    for (auto [indexO, xyzrO, varianceZO, varianceRO] :
+         candidateSps.zip(container.xyzrColumn(),
                           container.varianceZColumn(),
                           container.varianceRColumn())) {
-      float xO = xyO[0];
-      float yO = xyO[1];
-      float zO = zrO[0];
-      float rO = zrO[1];
+      float xO = xyzrO[0];
+      float yO = xyzrO[1];
+      float zO = xyzrO[2];
+      float rO = xyzrO[3];
 
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
@@ -349,10 +349,10 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
 
 MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
     const ConstSpacePointProxy2& spM) {
-  const float rM = spM.zr()[1];
+  const float rM = spM.xyzr()[3];
   const float uIP = -1 / rM;
-  const float cosPhiM = -spM.xy()[0] * uIP;
-  const float sinPhiM = -spM.xy()[1] * uIP;
+  const float cosPhiM = -spM.xyzr()[0] * uIP;
+  const float sinPhiM = -spM.xyzr()[1] * uIP;
   const float uIP2 = uIP * uIP;
 
   return {uIP, uIP2, cosPhiM, sinPhiM};
