@@ -19,6 +19,7 @@
 
 namespace Acts::Experimental {
 
+enum class SpacePointColumns : std::uint32_t;
 class SpacePointContainer2;
 template <typename T, bool read_only>
 class SpacePointColumnProxy;
@@ -289,6 +290,56 @@ class SpacePointProxy2 {
   /// @return The resolved index of the space point.
   SpacePointIndex2 resolvedIndex() const noexcept {
     return m_container->resolvedIndex(m_index);
+  }
+
+  template <SpacePointColumns column>
+  float &variantX() noexcept {
+    return m_container->variantX(m_index);
+  }
+  template <SpacePointColumns column>
+  float &variantY() noexcept {
+    return m_container->variantY(m_index);
+  }
+  template <SpacePointColumns column>
+  float &variantZ() noexcept {
+    return m_container->variantZ(m_index);
+  }
+  template <SpacePointColumns column>
+  float &variantR() noexcept {
+    return m_container->variantR(m_index);
+  }
+  template <SpacePointColumns column>
+  float &variantVarianceZ() noexcept {
+    return m_container->variantVarianceZ(m_index);
+  }
+  template <SpacePointColumns column>
+  float &variantVarianceR() noexcept {
+    return m_container->variantVarianceR(m_index);
+  }
+
+  template <SpacePointColumns column>
+  float variantX() const noexcept {
+    return m_container->variantX(m_index);
+  }
+  template <SpacePointColumns column>
+  float variantY() const noexcept {
+    return m_container->variantY(m_index);
+  }
+  template <SpacePointColumns column>
+  float variantZ() const noexcept {
+    return m_container->variantZ(m_index);
+  }
+  template <SpacePointColumns column>
+  float variantR() const noexcept {
+    return m_container->variantR(m_index);
+  }
+  template <SpacePointColumns column>
+  float variantVarianceZ() const noexcept {
+    return m_container->variantVarianceZ(m_index);
+  }
+  template <SpacePointColumns column>
+  float variantVarianceR() const noexcept {
+    return m_container->variantVarianceR(m_index);
   }
 
  private:
