@@ -19,7 +19,6 @@
 
 namespace Acts::Experimental {
 
-enum class SpacePointColumns : std::uint32_t;
 class SpacePointContainer2;
 template <typename T, bool read_only>
 class SpacePointColumnProxy;
@@ -189,22 +188,22 @@ class SpacePointProxy2 {
   {
     return m_container->copyFromIndex(m_index);
   }
-  inline std::array<float, 2> &xy() const noexcept
+  std::array<float, 2> &xy() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xy(m_index);
   }
-  inline std::array<float, 2> &zr() const noexcept
+  std::array<float, 2> &zr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->zr(m_index);
   }
-  inline std::array<float, 4> &xyzr() const noexcept
+  std::array<float, 4> &xyzr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xyzr(m_index);
   }
-  inline std::array<float, 2> &varianceZR() const noexcept
+  std::array<float, 2> &varianceZR() const noexcept
     requires(!ReadOnly)
   {
     return m_container->varianceZR(m_index);
@@ -225,32 +224,28 @@ class SpacePointProxy2 {
   }
   /// Const access to the x coordinate of the space point.
   /// @return The x coordinate of the space point.
-  const float &x() const noexcept { return m_container->x(m_index); }
+  float x() const noexcept { return m_container->x(m_index); }
   /// Const access to the y coordinate of the space point.
   /// @return The y coordinate of the space point.
-  const float &y() const noexcept { return m_container->y(m_index); }
+  float y() const noexcept { return m_container->y(m_index); }
   /// Const access to the z coordinate of the space point.
   /// @return The z coordinate of the space point.
-  const float &z() const noexcept { return m_container->z(m_index); }
+  float z() const noexcept { return m_container->z(m_index); }
   /// Const access to the r coordinate of the space point.
   /// @return The r coordinate of the space point.
-  const float &r() const noexcept { return m_container->r(m_index); }
+  float r() const noexcept { return m_container->r(m_index); }
   /// Const access to the phi coordinate of the space point.
   /// @return The phi coordinate of the space point.
-  const float &phi() const noexcept { return m_container->phi(m_index); }
+  float phi() const noexcept { return m_container->phi(m_index); }
   /// Const access to the time information of the space point.
   /// @return An optional containing the time information of the space point, or
-  const float &time() const noexcept { return m_container->time(m_index); }
+  float time() const noexcept { return m_container->time(m_index); }
   /// Const access to the variance in Z direction of the space point.
   /// @return The variance in Z direction of the space point.
-  const float &varianceZ() const noexcept {
-    return m_container->varianceZ(m_index);
-  }
+  float varianceZ() const noexcept { return m_container->varianceZ(m_index); }
   /// Const access to the variance in R direction of the space point.
   /// @return The variance in R direction of the space point.
-  const float &varianceR() const noexcept {
-    return m_container->varianceR(m_index);
-  }
+  float varianceR() const noexcept { return m_container->varianceR(m_index); }
   /// Const access to the top strip vector of the space point.
   /// @return A const reference to the top strip vector of the space point.
   const Eigen::Vector3f &topStripVector() const noexcept {
@@ -276,16 +271,16 @@ class SpacePointProxy2 {
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
   }
-  inline const std::array<float, 2> &xy() const noexcept {
+  const std::array<float, 2> &xy() const noexcept {
     return m_container->xy(m_index);
   }
-  inline const std::array<float, 2> &zr() const noexcept {
+  const std::array<float, 2> &zr() const noexcept {
     return m_container->zr(m_index);
   }
-  inline const std::array<float, 4> &xyzr() const noexcept {
+  const std::array<float, 4> &xyzr() const noexcept {
     return m_container->xyzr(m_index);
   }
-  inline const std::array<float, 2> &varianceZR() const noexcept {
+  const std::array<float, 2> &varianceZR() const noexcept {
     return m_container->varianceZR(m_index);
   }
 

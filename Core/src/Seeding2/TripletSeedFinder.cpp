@@ -80,8 +80,8 @@ class Impl final : public TripletSeedFinder {
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
-    const float varianceZM = spM.varianceZR()[0];
-    const float varianceRM = spM.varianceZR()[1];
+    const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
 
     const LinCircle& lb = bottomDoublet.linCircle();
 
@@ -231,8 +231,8 @@ class Impl final : public TripletSeedFinder {
     float rM = spM.zr()[1];
     float cosPhiM = spM.xy()[0] / rM;
     float sinPhiM = spM.xy()[1] / rM;
-    float varianceZM = spM.varianceZR()[0];
-    float varianceRM = spM.varianceZR()[1];
+    float varianceZM = spM.varianceZ();
+    float varianceRM = spM.varianceR();
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +

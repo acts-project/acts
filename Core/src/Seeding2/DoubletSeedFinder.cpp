@@ -12,7 +12,6 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <stdexcept>
-#include <type_traits>
 
 #include <boost/mp11.hpp>
 #include <boost/mp11/algorithm.hpp>
@@ -51,8 +50,8 @@ class Impl final : public DoubletSeedFinder {
     const float yM = middleSp.xy()[1];
     const float zM = middleSp.zr()[0];
     const float rM = middleSp.zr()[1];
-    const float varianceZM = middleSp.varianceZR()[0];
-    const float varianceRM = middleSp.varianceZR()[1];
+    const float varianceZM = middleSp.varianceZ();
+    const float varianceRM = middleSp.varianceR();
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -96,13 +95,14 @@ class Impl final : public DoubletSeedFinder {
       candidateSps = candidateSps.subrange(offset);
     }
 
-    for (ConstSpacePointProxy2 otherSp : candidateSps) {
-      const float xO = otherSp.xy()[0];
-      const float yO = otherSp.xy()[1];
-      const float zO = otherSp.zr()[0];
-      const float rO = otherSp.zr()[1];
-      const float varianceZO = middleSp.varianceZR()[0];
-      const float varianceRO = middleSp.varianceZR()[1];
+    const SpacePointContainer2& container = candidateSps.container();
+    for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
+             container.xyColumn(), container.zrColumn(),
+             container.varianceZColumn(), container.varianceRColumn())) {
+      float xO = xyO[0];
+      float yO = xyO[1];
+      float zO = zrO[0];
+      float rO = zrO[1];
 
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
@@ -188,8 +188,7 @@ class Impl final : public DoubletSeedFinder {
 
         // fill output vectors
         compatibleDoublets.emplace_back(
-            otherSp.index(),
-            {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+            indexO, {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
         continue;
       }
 
@@ -248,7 +247,7 @@ class Impl final : public DoubletSeedFinder {
 
       // discard doublets based on experiment specific cuts
       if constexpr (experimentCuts) {
-        if (!m_cfg.experimentCuts(middleSp, otherSp, cotTheta,
+        if (!m_cfg.experimentCuts(middleSp, container[indexO], cotTheta,
                                   isBottomCandidate)) {
           continue;
         }
@@ -259,8 +258,7 @@ class Impl final : public DoubletSeedFinder {
 
       // fill output vectors
       compatibleDoublets.emplace_back(
-          otherSp.index(),
-          {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
+          indexO, {cotTheta, iDeltaR, er, uT, vT, xNewFrame, yNewFrame});
     }
   }
 
