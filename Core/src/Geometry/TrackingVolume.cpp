@@ -50,9 +50,7 @@ TrackingVolume::TrackingVolume(
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
 
-  DelegateChainBuilder{m_navigationDelegate}
-      .add<&INavigationPolicy::noopInitializeCandidates>()
-      .store(m_navigationDelegate);
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)

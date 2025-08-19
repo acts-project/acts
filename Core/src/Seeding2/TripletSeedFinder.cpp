@@ -9,7 +9,6 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -25,10 +24,9 @@ namespace {
 
 /// Check the compatibility of strip space point coordinates in xyz assuming
 /// the Bottom-Middle direction with the strip measurement details
-static bool stripCoordinateCheck(float tolerance,
-                                 const ConstSpacePointProxy2& sp,
-                                 const Eigen::Vector3f& spacePointPosition,
-                                 Eigen::Vector3f& outputCoordinates) {
+bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
+                          const Eigen::Vector3f& spacePointPosition,
+                          Eigen::Vector3f& outputCoordinates) {
   const Eigen::Vector3f& topStripVector = sp.topStripVector();
   const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
   const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
@@ -111,6 +109,7 @@ class Impl final : public TripletSeedFinder {
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
+      SpacePointIndex2 spT = topDoublet.spacePointIndex();
       float cotThetaT = topDoublet.cotTheta();
 
       // use geometric average
@@ -211,8 +210,7 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
-                                        B / std::sqrt(S2), Im);
+      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), Im);
     }  // loop on tops
 
     if constexpr (sortedInCotTheta) {
