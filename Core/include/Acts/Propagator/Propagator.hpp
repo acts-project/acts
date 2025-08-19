@@ -8,11 +8,6 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must be the first include.
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"

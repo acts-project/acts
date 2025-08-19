@@ -26,7 +26,9 @@ class DoubletsForMiddleSp {
   using IndexSubset = std::span<const Index>;
 
   [[nodiscard]] bool empty() const { return m_spacePoints.empty(); }
-  [[nodiscard]] Index size() const { return m_spacePoints.size(); }
+  [[nodiscard]] Index size() const {
+    return static_cast<Index>(m_spacePoints.size());
+  }
 
   void clear() {
     m_spacePoints.clear();
