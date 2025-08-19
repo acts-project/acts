@@ -657,7 +657,7 @@ class SpacePointContainer2 {
   /// Const access to the x coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the x coordinate of the space point.
-  const float &x(Index index) const noexcept {
+  float x(Index index) const noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     assert(index < m_xColumn->size() && "Index out of bounds");
     return m_xColumn->proxy(*this)[index];
@@ -665,7 +665,7 @@ class SpacePointContainer2 {
   /// Const access to the y coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the y coordinate of the space point.
-  const float &y(Index index) const noexcept {
+  float y(Index index) const noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     assert(index < m_yColumn->size() && "Index out of bounds");
     return m_yColumn->proxy(*this)[index];
@@ -673,7 +673,7 @@ class SpacePointContainer2 {
   /// Const access to the z coordinate of the space point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the z coordinate of the space point.
-  const float &z(Index index) const noexcept {
+  float z(Index index) const noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     assert(index < m_zColumn->size() && "Index out of bounds");
     return m_zColumn->proxy(*this)[index];
@@ -682,7 +682,7 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A const reference to the r coordinate of the space point.
-  const float &r(Index index) const noexcept {
+  float r(Index index) const noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     assert(index < m_rColumn->size() && "Index out of bounds");
     return m_rColumn->proxy(*this)[index];
@@ -691,7 +691,7 @@ class SpacePointContainer2 {
   /// index.
   /// @param index The index of the space point.
   /// @return A const reference to the phi coordinate of the space point.
-  const float &phi(Index index) const noexcept {
+  float phi(Index index) const noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     assert(index < m_phiColumn->size() && "Index out of bounds");
     return m_phiColumn->proxy(*this)[index];
@@ -700,7 +700,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the time information of the space point.
-  const float &time(Index index) const noexcept {
+  float time(Index index) const noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     assert(index < m_timeColumn->size() && "Index out of bounds");
     return m_timeColumn->proxy(*this)[index];
@@ -709,7 +709,7 @@ class SpacePointContainer2 {
   /// the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the variance in Z direction of the space point.
-  const float &varianceZ(Index index) const noexcept {
+  float varianceZ(Index index) const noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     assert(index < m_varianceZColumn->size() && "Index out of bounds");
@@ -719,7 +719,7 @@ class SpacePointContainer2 {
   /// point at the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the variance in R direction of the space point.
-  const float &varianceR(Index index) const noexcept {
+  float varianceR(Index index) const noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     assert(index < m_varianceRColumn->size() && "Index out of bounds");
