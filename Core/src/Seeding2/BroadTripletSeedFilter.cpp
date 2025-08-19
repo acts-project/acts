@@ -117,7 +117,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   if (tripletTopCandidates.size() < minCompatibleTopSPs) {
     return;
   }
-  float zOrigin = spM.z() - spM.r() * bottomLink.linCircle().cotTheta;
+  float zOrigin = spM.z() - spM.r() * bottomLink.cotTheta();
 
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
