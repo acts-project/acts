@@ -151,6 +151,30 @@ class ScoreBasedAmbiguityResolution {
     std::vector<OptionalHitSelection> hitSelections = {};
   };
 
+  struct ScoreMonitor {
+    std::size_t ptScore = 0;
+    std::vector<std::size_t> detectorHitScore;
+    std::vector<std::size_t> detectorHoleScore;
+    std::vector<std::size_t> detectorOutlierScore;
+    std::vector<std::size_t> detectorOtherScore;
+    std::size_t chi2Score = 0;
+
+    std::vector<std::size_t> optionalScore;
+
+    std::size_t totalScore = 0;
+
+    void setZero() {
+      ptScore = 0;
+      detectorHitScore.clear();
+      detectorHoleScore.clear();
+      detectorOutlierScore.clear();
+      detectorOtherScore.clear();
+      chi2Score = 0;
+      optionalScore.clear();
+      totalScore = 0;
+    }
+  };
+
   explicit ScoreBasedAmbiguityResolution(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
