@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp>
-#include <Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp>
+#include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
+#include <Acts/Plugins/Gnn/detail/JunctionRemoval.hpp>
 
 #include <algorithm>
 #include <numeric>

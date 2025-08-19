@@ -121,7 +121,7 @@
         },
         {
             "name": "gitlab-ci-exatrkx",
-            "displayName": "GitLab-CI ExaTrkX",
+            "displayName": "GitLab-CI Gnn",
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",

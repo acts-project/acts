@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
 
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
+#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
 
 #ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>

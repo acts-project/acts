@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/ModuleMapUtils.cuh"
+#include "Acts/Plugins/Gnn/ModuleMapCuda.hpp"
+#include "Acts/Plugins/Gnn/detail/CudaUtils.cuh"
+#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "Acts/Plugins/Gnn/detail/ModuleMapUtils.cuh"
 
 #include <CUDA_graph_creator>
 #include <CUDA_module_map_doublet>

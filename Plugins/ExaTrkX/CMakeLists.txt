@@ -1,7 +1,7 @@
 acts_add_library(
-    PluginExaTrkX
+    PluginGnn
     SHARED
-    src/ExaTrkXPipeline.cpp
+    src/GnnPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
@@ -10,38 +10,38 @@ acts_add_library(
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
     target_compile_definitions(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
     )
 
     target_link_libraries(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
     )
-    target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
+    target_sources(ActsPluginGnn PRIVATE src/ModuleMapCuda.cu)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
-    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
+    target_sources(ActsPluginGnn PRIVATE src/OnnxEdgeClassifier.cpp)
+    target_link_libraries(ActsPluginGnn PRIVATE onnxruntime::onnxruntime)
     target_compile_definitions(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC ACTS_EXATRKX_ONNX_BACKEND
     )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
     target_sources(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PRIVATE
             src/TorchEdgeClassifier.cpp
             src/TorchMetricLearning.cpp
@@ -53,35 +53,35 @@ if(ACTS_EXATRKX_ENABLE_TENSORRT)
     find_package(TensorRT REQUIRED)
     message(STATUS "Found TensorRT ${TensorRT_VERSION}")
     target_link_libraries(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC trt::nvinfer trt::nvinfer_plugin
     )
-    target_sources(ActsPluginExaTrkX PRIVATE src/TensorRTEdgeClassifier.cpp)
+    target_sources(ActsPluginGnn PRIVATE src/TensorRTEdgeClassifier.cpp)
     target_compile_definitions(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC ACTS_EXATRKX_WITH_TENSORRT
     )
 endif()
 
 target_include_directories(
-    ActsPluginExaTrkX
+    ActsPluginGnn
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginExaTrkX PUBLIC Acts::Core Boost::boost)
+target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
-target_link_libraries(ActsPluginExaTrkX PRIVATE std::filesystem)
+target_link_libraries(ActsPluginGnn PRIVATE std::filesystem)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
+    target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
     set_target_properties(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
     )
     target_compile_options(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:-g
             --generate-line-info
@@ -89,20 +89,20 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
             --extended-lambda>
     )
     target_compile_definitions(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::cudart)
+    target_link_libraries(ActsPluginGnn PUBLIC CUDA::cudart)
 else()
-    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
     target_compile_definitions(
-        ActsPluginExaTrkX
+        ActsPluginGnn
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
-    target_link_libraries(ActsPluginExaTrkX PRIVATE ${TORCH_LIBRARIES} frnn)
+    target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(
@@ -111,11 +111,11 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         )
     else()
         target_link_libraries(
-            ActsPluginExaTrkX
+            ActsPluginGnn
             PRIVATE TorchScatter::TorchScatter
         )
         # Should not discard TorchScatter even if its not needed at this point
         # since we need the scatter_max operation in the torch script later
-        target_link_options(ActsPluginExaTrkX PUBLIC "-Wl,-no-as-needed")
+        target_link_options(ActsPluginGnn PUBLIC "-Wl,-no-as-needed")
     endif()
 endif()

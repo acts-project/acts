@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/GraphStoreHook.hpp"
-#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/Gnn/GraphStoreHook.hpp"
+#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -30,8 +30,8 @@ using namespace Acts::UnitLiterals;
 
 namespace {
 
-struct LoopHook : public Acts::ExaTrkXHook {
-  std::vector<Acts::ExaTrkXHook*> hooks;
+struct LoopHook : public Acts::GnnHook {
+  std::vector<Acts::GnnHook*> hooks;
 
   void operator()(const Acts::PipelineTensors& tensors,
                   const Acts::ExecutionContext& ctx) const override {
@@ -43,7 +43,7 @@ struct LoopHook : public Acts::ExaTrkXHook {
 
 }  // namespace
 
-ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
+ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)),
@@ -90,7 +90,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 /// Allow access to features with nice names
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using Clock = std::chrono::high_resolution_clock;
   using Duration = std::chrono::duration<double, std::milli>;
@@ -178,7 +178,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
-  Acts::ExaTrkXTiming timing;
+  Acts::GnnTiming timing;
 #ifdef ACTS_EXATRKX_CPUONLY
   Acts::Device device = {Acts::Device::Type::eCPU, 0};
 #else
@@ -253,7 +253,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
+ActsExamples::ProcessCode TrackFindingAlgorithmGnn::finalize() {
   namespace ba = boost::accumulators;
 
   auto print = [](const auto& t) {
@@ -263,7 +263,7 @@ ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
     return ss.str();
   };
 
-  ACTS_INFO("Exa.TrkX timing info");
+  ACTS_INFO("GNN timing info");
   ACTS_INFO("- preprocessing:  " << print(m_timing.preprocessingTime));
   ACTS_INFO("- graph building: " << print(m_timing.graphBuildingTime));
   // clang-format off

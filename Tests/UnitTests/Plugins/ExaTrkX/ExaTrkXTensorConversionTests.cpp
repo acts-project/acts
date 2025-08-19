@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
 
 #include <iostream>
 

@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/ExaTrkX/Tensor.hpp>
+#include <Acts/Plugins/Gnn/Tensor.hpp>
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
 #include <cuda_runtime_api.h>

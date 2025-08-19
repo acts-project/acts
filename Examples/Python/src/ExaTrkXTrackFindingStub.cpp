@@ -11,7 +11,7 @@ struct Context;
 }  // namespace Acts::Python
 
 namespace Acts::Python {
-void addExaTrkXTrackFinding(Context& /*ctx*/) {
+void addGnnTrackFinding(Context& /*ctx*/) {
   // dummy function
 }
 }  // namespace Acts::Python

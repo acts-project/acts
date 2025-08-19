@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
+#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
 
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 

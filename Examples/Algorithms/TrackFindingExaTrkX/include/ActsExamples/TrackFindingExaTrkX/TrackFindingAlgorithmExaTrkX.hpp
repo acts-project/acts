@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
-#include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
+#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
@@ -20,7 +20,7 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
+#include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 
 #include <mutex>
 #include <string>
@@ -31,7 +31,7 @@
 
 namespace ActsExamples {
 
-class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
+class TrackFindingAlgorithmGnn final : public IAlgorithm {
  public:
   enum class NodeFeature {
     // SP features
@@ -129,9 +129,9 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithmExaTrkX(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingAlgorithmGnn(Config cfg, Acts::Logging::Level lvl);
 
-  ~TrackFindingAlgorithmExaTrkX() override = default;
+  ~TrackFindingAlgorithmGnn() override = default;
 
   /// Framework execute method of the track finding algorithm
   ///
@@ -148,7 +148,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  Acts::ExaTrkXPipeline m_pipeline;
+  Acts::GnnPipeline m_pipeline;
   mutable std::mutex m_mutex;
 
   using Accumulator = boost::accumulators::accumulator_set<

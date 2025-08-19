@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
     const SimSpacePointContainer &spacepoints, const ClusterContainer *clusters,
-    const std::vector<TrackFindingAlgorithmExaTrkX::NodeFeature> &nodeFeatures,
+    const std::vector<TrackFindingAlgorithmGnn::NodeFeature> &nodeFeatures,
     const std::vector<float> &featureScales);
 
 }

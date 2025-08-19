@@ -200,11 +200,11 @@ list(APPEND py_files examples/hepmc3.py)
 if(ACTS_BUILD_EXAMPLES_EXATRKX)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC Acts::ExamplesTrackFindingExaTrkX
+        PUBLIC Acts::ExamplesTrackFindingGnn
     )
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFinding.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFindingStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_EDM4HEP)

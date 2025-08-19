@@ -15,7 +15,7 @@ namespace ActsExamples {
 
 std::vector<float> createFeatures(
     const SimSpacePointContainer& spacepoints, const ClusterContainer* clusters,
-    const std::vector<TrackFindingAlgorithmExaTrkX::NodeFeature>& nodeFeatures,
+    const std::vector<TrackFindingAlgorithmGnn::NodeFeature>& nodeFeatures,
     const std::vector<float>& featureScales) {
   using namespace ActsExamples;
 
@@ -44,7 +44,7 @@ std::vector<float> createFeatures(
     // I would prefer to use a std::span or boost::span here once available
     float* f = features.data() + isp * nodeFeatures.size();
 
-    using NF = TrackFindingAlgorithmExaTrkX::NodeFeature;
+    using NF = TrackFindingAlgorithmGnn::NodeFeature;
 
     using namespace Acts::VectorHelpers;
     using namespace Acts::AngleHelpers;

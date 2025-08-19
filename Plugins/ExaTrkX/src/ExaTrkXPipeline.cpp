@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
 
 namespace {
 struct CudaStreamGuard {
@@ -27,7 +27,7 @@ struct CudaStreamGuard {
 
 namespace Acts {
 
-ExaTrkXPipeline::ExaTrkXPipeline(
+GnnPipeline::GnnPipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
     std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
     std::shared_ptr<TrackBuildingBase> trackBuilder,
@@ -48,10 +48,10 @@ ExaTrkXPipeline::ExaTrkXPipeline(
   }
 }
 
-std::vector<std::vector<int>> ExaTrkXPipeline::run(
+std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
     std::vector<int> &spacepointIDs, Acts::Device device,
-    const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
+    const GnnHook &hook, GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_EXATRKX_WITH_CUDA

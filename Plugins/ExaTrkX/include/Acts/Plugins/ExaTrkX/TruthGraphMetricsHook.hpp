@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
+#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
+#include "Acts/Plugins/Gnn/detail/CantorEdge.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-class TruthGraphMetricsHook : public ExaTrkXHook {
+class TruthGraphMetricsHook : public GnnHook {
   std::unique_ptr<const Logger> m_logger;
   std::vector<detail::CantorEdge<std::int64_t>> m_truthGraphCantor;
 

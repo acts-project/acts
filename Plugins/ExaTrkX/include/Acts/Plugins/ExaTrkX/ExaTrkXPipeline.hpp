@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-struct ExaTrkXTiming {
+struct GnnTiming {
   using Duration = std::chrono::duration<float, std::milli>;
 
   Duration graphBuildingTime = Duration{0.f};
@@ -27,16 +27,16 @@ struct ExaTrkXTiming {
   Duration trackBuildingTime = Duration{0.f};
 };
 
-class ExaTrkXHook {
+class GnnHook {
  public:
-  virtual ~ExaTrkXHook() = default;
+  virtual ~GnnHook() = default;
   virtual void operator()(const PipelineTensors & /*tensors*/,
                           const ExecutionContext & /*execCtx*/) const {};
 };
 
-class ExaTrkXPipeline {
+class GnnPipeline {
  public:
-  ExaTrkXPipeline(
+  GnnPipeline(
       std::shared_ptr<GraphConstructionBase> graphConstructor,
       std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
       std::shared_ptr<TrackBuildingBase> trackBuilder,
@@ -46,8 +46,8 @@ class ExaTrkXPipeline {
                                     const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacepointIDs,
                                     Acts::Device device,
-                                    const ExaTrkXHook &hook = {},
-                                    ExaTrkXTiming *timing = nullptr) const;
+                                    const GnnHook &hook = {},
+                                    GnnTiming *timing = nullptr) const;
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

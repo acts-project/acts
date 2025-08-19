@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/Tensor.hpp"
+#include "Acts/Plugins/Gnn/Tensor.hpp"
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
 #endif
 
 #include <cstring>

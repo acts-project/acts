@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
-#include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
-#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
-#include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/TruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/Gnn/BoostTrackBuilding.hpp"
+#include "Acts/Plugins/Gnn/CudaTrackBuilding.hpp"
+#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
+#include "Acts/Plugins/Gnn/ModuleMapCuda.hpp"
+#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
+#include "Acts/Plugins/Gnn/TensorRTEdgeClassifier.hpp"
+#include "Acts/Plugins/Gnn/TorchEdgeClassifier.hpp"
+#include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
+#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
+#include "ActsExamples/TrackFindingGnn/PrototracksToParameters.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 
 #include <memory>
 
@@ -56,7 +56,7 @@ using namespace py::literals;
 
 namespace Acts::Python {
 
-void addExaTrkXTrackFinding(Context &ctx) {
+void addGnnTrackFinding(Context &ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
@@ -114,45 +114,45 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
   {
     auto nodeFeatureEnum =
-        py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
-            .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
-            .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
-            .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
-            .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
-            .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
-            .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
+        py::enum_<TrackFindingAlgorithmGnn::NodeFeature>(mex, "NodeFeature")
+            .value("R", TrackFindingAlgorithmGnn::NodeFeature::eR)
+            .value("Phi", TrackFindingAlgorithmGnn::NodeFeature::ePhi)
+            .value("Z", TrackFindingAlgorithmGnn::NodeFeature::eZ)
+            .value("X", TrackFindingAlgorithmGnn::NodeFeature::eX)
+            .value("Y", TrackFindingAlgorithmGnn::NodeFeature::eY)
+            .value("Eta", TrackFindingAlgorithmGnn::NodeFeature::eEta)
             .value("ClusterX",
-                   TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc0)
+                   TrackFindingAlgorithmGnn::NodeFeature::eClusterLoc0)
             .value("ClusterY",
-                   TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc1)
+                   TrackFindingAlgorithmGnn::NodeFeature::eClusterLoc1)
             .value("CellCount",
-                   TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
+                   TrackFindingAlgorithmGnn::NodeFeature::eCellCount)
             .value("ChargeSum",
-                   TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum);
+                   TrackFindingAlgorithmGnn::NodeFeature::eChargeSum);
 
     // clang-format off
 #define ADD_FEATURE_ENUMS(n) \
   nodeFeatureEnum \
-    .value("Cluster" #n "X", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##X) \
-    .value("Cluster" #n "Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Y) \
-    .value("Cluster" #n "Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Z) \
-    .value("Cluster" #n "R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##R) \
-    .value("Cluster" #n "Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Phi) \
-    .value("Cluster" #n "Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Eta) \
-    .value("CellCount" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount##n) \
-    .value("ChargeSum" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum##n) \
-    .value("LocEta" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocEta##n) \
-    .value("LocPhi" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocPhi##n) \
-    .value("LocDir0" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir0##n) \
-    .value("LocDir1" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir1##n) \
-    .value("LocDir2" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir2##n) \
-    .value("LengthDir0" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir0##n) \
-    .value("LengthDir1" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir1##n) \
-    .value("LengthDir2" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir2##n) \
-    .value("GlobEta" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobEta##n) \
-    .value("GlobPhi" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobPhi##n) \
-    .value("EtaAngle" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eEtaAngle##n) \
-    .value("PhiAngle" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::ePhiAngle##n)
+    .value("Cluster" #n "X", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##X) \
+    .value("Cluster" #n "Y", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##Y) \
+    .value("Cluster" #n "Z", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##Z) \
+    .value("Cluster" #n "R", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##R) \
+    .value("Cluster" #n "Phi", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##Phi) \
+    .value("Cluster" #n "Eta", TrackFindingAlgorithmGnn::NodeFeature::eCluster##n##Eta) \
+    .value("CellCount" #n, TrackFindingAlgorithmGnn::NodeFeature::eCellCount##n) \
+    .value("ChargeSum" #n, TrackFindingAlgorithmGnn::NodeFeature::eChargeSum##n) \
+    .value("LocEta" #n, TrackFindingAlgorithmGnn::NodeFeature::eLocEta##n) \
+    .value("LocPhi" #n, TrackFindingAlgorithmGnn::NodeFeature::eLocPhi##n) \
+    .value("LocDir0" #n, TrackFindingAlgorithmGnn::NodeFeature::eLocDir0##n) \
+    .value("LocDir1" #n, TrackFindingAlgorithmGnn::NodeFeature::eLocDir1##n) \
+    .value("LocDir2" #n, TrackFindingAlgorithmGnn::NodeFeature::eLocDir2##n) \
+    .value("LengthDir0" #n, TrackFindingAlgorithmGnn::NodeFeature::eLengthDir0##n) \
+    .value("LengthDir1" #n, TrackFindingAlgorithmGnn::NodeFeature::eLengthDir1##n) \
+    .value("LengthDir2" #n, TrackFindingAlgorithmGnn::NodeFeature::eLengthDir2##n) \
+    .value("GlobEta" #n, TrackFindingAlgorithmGnn::NodeFeature::eGlobEta##n) \
+    .value("GlobPhi" #n, TrackFindingAlgorithmGnn::NodeFeature::eGlobPhi##n) \
+    .value("EtaAngle" #n, TrackFindingAlgorithmGnn::NodeFeature::eEtaAngle##n) \
+    .value("PhiAngle" #n, TrackFindingAlgorithmGnn::NodeFeature::ePhiAngle##n)
     // clang-format on
 
     ADD_FEATURE_ENUMS(1);
@@ -162,22 +162,22 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
+      ActsExamples::TrackFindingAlgorithmGnn, mex,
+      "TrackFindingAlgorithmGnn", inputSpacePoints, inputClusters,
       inputTruthGraph, outputProtoTracks, outputGraph, graphConstructor,
       edgeClassifiers, trackBuilder, nodeFeatures, featureScales,
       minMeasurementsPerTrack, geometryIdMap);
 
   {
     auto cls =
-        py::class_<Acts::ExaTrkXHook, std::shared_ptr<Acts::ExaTrkXHook>>(
-            mex, "ExaTrkXHook");
+        py::class_<Acts::GnnHook, std::shared_ptr<Acts::GnnHook>>(
+            mex, "GnnHook");
   }
 
   {
     using Class = Acts::TruthGraphMetricsHook;
 
-    auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
+    auto cls = py::class_<Class, Acts::GnnHook, std::shared_ptr<Class>>(
                    mex, "TruthGraphMetricsHook")
                    .def(py::init([](const std::vector<std::int64_t> &g,
                                     Logging::Level lvl) {
@@ -194,10 +194,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 
   {
-    using Class = Acts::ExaTrkXPipeline;
+    using Class = Acts::GnnPipeline;
 
     auto cls =
-        py::class_<Class, std::shared_ptr<Class>>(mex, "ExaTrkXPipeline")
+        py::class_<Class, std::shared_ptr<Class>>(mex, "GnnPipeline")
             .def(py::init(
                      [](std::shared_ptr<GraphConstructionBase> g,
                         std::vector<std::shared_ptr<EdgeClassificationBase>> e,
@@ -208,10 +208,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
                      }),
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
-            .def("run", &ExaTrkXPipeline::run, py::arg("features"),
+            .def("run", &GnnPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
                  py::arg("device") = Acts::Device::Cuda(0),
-                 py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("hook") = Acts::GnnHook{},
                  py::arg("timing") = nullptr);
   }
 

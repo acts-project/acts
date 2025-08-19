@@ -23,7 +23,7 @@
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class CsvExaTrkXGraphReader final : public IReader {
+class CsvGnnGraphReader final : public IReader {
  public:
   struct Config {
     /// Where to read input files from.
@@ -38,7 +38,7 @@ class CsvExaTrkXGraphReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  CsvExaTrkXGraphReader(const Config& config, Acts::Logging::Level level);
+  CsvGnnGraphReader(const Config& config, Acts::Logging::Level level);
 
   /// Return the available events range.
   std::pair<std::size_t, std::size_t> availableEvents() const override;
@@ -47,7 +47,7 @@ class CsvExaTrkXGraphReader final : public IReader {
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
 
   /// Return the name of the component
-  std::string name() const override { return "CsvExaTrkXGraphReader"; }
+  std::string name() const override { return "CsvGnnGraphReader"; }
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
+#include "Acts/Plugins/Gnn/detail/CantorEdge.hpp"
+#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
 
 #include <algorithm>
 #include <cassert>

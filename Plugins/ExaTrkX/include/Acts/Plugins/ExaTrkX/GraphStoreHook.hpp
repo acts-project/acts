@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
 
 namespace Acts {
 
-class GraphStoreHook : public ExaTrkXHook {
+class GraphStoreHook : public GnnHook {
  public:
   using Graph = std::pair<std::vector<std::int64_t>, std::vector<float>>;
 

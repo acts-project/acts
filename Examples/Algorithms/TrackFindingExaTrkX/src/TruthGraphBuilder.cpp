@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <Acts/Definitions/Units.hpp>
-#include <ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp>
+#include <ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp>
 
 #include <algorithm>
 

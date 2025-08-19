@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
+#include "ActsExamples/Io/Csv/CsvGnnGraphReader.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -29,12 +29,12 @@
 
 namespace ActsExamples {
 
-CsvExaTrkXGraphReader::CsvExaTrkXGraphReader(const Config& config,
+CsvGnnGraphReader::CsvGnnGraphReader(const Config& config,
                                              Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
-      m_logger(Acts::getDefaultLogger("CsvExaTrkXGraphReader", level)) {
+      m_logger(Acts::getDefaultLogger("CsvGnnGraphReader", level)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
@@ -42,12 +42,12 @@ CsvExaTrkXGraphReader::CsvExaTrkXGraphReader(const Config& config,
   m_outputGraph.initialize(m_cfg.outputGraph);
 }
 
-std::pair<std::size_t, std::size_t> CsvExaTrkXGraphReader::availableEvents()
+std::pair<std::size_t, std::size_t> CsvGnnGraphReader::availableEvents()
     const {
   return m_eventsRange;
 }
 
-ProcessCode CsvExaTrkXGraphReader::read(const AlgorithmContext& ctx) {
+ProcessCode CsvGnnGraphReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",

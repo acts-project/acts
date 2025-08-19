@@ -30,7 +30,7 @@ bf8cb1c 2022-06-21 11:26 -0400 Joe Osborn                 │ o {fork/main} refa
 4a21df3 2022-06-14 18:32 +0200 Paul Gessinger             │ o fix: Add another compat fix for clang+libstdc++ (#1269)
 93c608d 2022-06-14 16:35 +0200 Paul Gessinger             │ o ci: Retry nodeps build if it fails the first time (#1283)
 9920a81 2022-06-14 14:53 +0200 Paul Gessinger             │ o ci: Reduce ccache limit to 150MB (#1270)
-baa4222 2022-06-14 10:16 +0200 Benjamin Huth              │ o fix: Add missing dependency in Exa.TrkX plugin (#1276)
+baa4222 2022-06-14 10:16 +0200 Benjamin Huth              │ o fix: Add missing dependency in GNN plugin (#1276)
 adf079e 2022-06-08 12:47 +0000 github-actions[bot]        o │ <v19.2.0> Bump to version v19.2.0
 4ee53fd 2022-06-08 14:46 +0200 Paul Gessinger             M─│─┐ Merge branch main into releases
 f9a0979 2022-06-08 09:35 +0200 Noemi Calace               │ o─┘ feat: Allow passing seed quality to seeds (#1268)

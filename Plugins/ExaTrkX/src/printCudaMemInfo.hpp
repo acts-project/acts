@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp>
+#include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #ifndef ACTS_EXATRKX_CPUONLY

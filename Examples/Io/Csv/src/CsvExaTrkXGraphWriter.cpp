@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvGnnGraphWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
@@ -21,13 +21,13 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvExaTrkXGraphWriter::CsvExaTrkXGraphWriter(
-    const ActsExamples::CsvExaTrkXGraphWriter::Config& config,
+ActsExamples::CsvGnnGraphWriter::CsvGnnGraphWriter(
+    const ActsExamples::CsvGnnGraphWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputGraph, "CsvExaTrkXGraphWriter", level),
+    : WriterT(config.inputGraph, "CsvGnnGraphWriter", level),
       m_cfg(config) {}
 
-ActsExamples::ProcessCode ActsExamples::CsvExaTrkXGraphWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::CsvGnnGraphWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx, const Graph& graph) {
   assert(graph.weights.empty() ||
          (graph.edges.size() / 2 == graph.weights.size()));

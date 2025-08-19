@@ -1223,7 +1223,7 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
-@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
+@pytest.mark.skipif(not exatrkxEnabled, reason="Gnn environment not set up")
 def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")

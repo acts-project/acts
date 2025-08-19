@@ -1,6 +1,6 @@
-# Exa.TrkX Plugin
+# GNN Plugin
 
-This plugin contains a track finding module based on Graph Neural Networks (GNNs) which is developed by the [Exa.TrkX](https://exatrkx.github.io/) team. More background information can be found in the [documentation](https://acts.readthedocs.io/en/latest/plugins/exatrkx.html).
+This plugin contains a track finding module based on Graph Neural Networks (GNNs) which is developed by the [GNN](https://exatrkx.github.io/) team. More background information can be found in the [documentation](https://acts.readthedocs.io/en/latest/plugins/exatrkx.html).
 
 ## Building
 
@@ -35,9 +35,9 @@ There were experienced problems with recent GCC 11 versions and CUDA 11.6. A doc
 The Examples of this plugin provide a python-script using the python-bindings to demonstrate the use of the track finding module. The script can be found here:
 
 ```bash
-./Examples/Scripts/Python/ExaTrkX.py          # tries to run torch
-./Examples/Scripts/Python/ExaTrkX.py onnx     # tries to run onnx
-./Examples/Scripts/Python/ExaTrkX.py torch    # tries to run torch
+./Examples/Scripts/Python/Gnn.py          # tries to run torch
+./Examples/Scripts/Python/Gnn.py onnx     # tries to run onnx
+./Examples/Scripts/Python/Gnn.py torch    # tries to run torch
 ```
 
 In order that python can find the `acts.examples` module, set up your `PYTHONPATH` with `source <build>/python/setup.sh`.

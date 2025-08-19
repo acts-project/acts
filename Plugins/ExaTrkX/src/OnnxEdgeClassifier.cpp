@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
+#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
 
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
@@ -76,7 +76,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
       throw std::runtime_error("Invalid log level");
   }
 
-  m_env = std::make_unique<Ort::Env>(onnxLevel, "ExaTrkX - edge classifier");
+  m_env = std::make_unique<Ort::Env>(onnxLevel, "Gnn - edge classifier");
 
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>

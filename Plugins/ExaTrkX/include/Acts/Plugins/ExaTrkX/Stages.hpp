@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Acts/Plugins/ExaTrkX/Tensor.hpp>
+#include <Acts/Plugins/Gnn/Tensor.hpp>
 
 #include <cstdint>
 #include <exception>

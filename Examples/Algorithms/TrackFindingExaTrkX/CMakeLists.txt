@@ -1,7 +1,7 @@
 acts_add_library(
-    ExamplesTrackFindingExaTrkX
+    ExamplesTrackFindingGnn
     SHARED
-    src/TrackFindingAlgorithmExaTrkX.cpp
+    src/TrackFindingAlgorithmGnn.cpp
     src/PrototracksToParameters.cpp
     src/TrackFindingFromPrototrackAlgorithm.cpp
     src/TruthGraphBuilder.cpp
@@ -9,14 +9,14 @@ acts_add_library(
 )
 
 target_include_directories(
-    ActsExamplesTrackFindingExaTrkX
+    ActsExamplesTrackFindingGnn
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-    ActsExamplesTrackFindingExaTrkX
+    ActsExamplesTrackFindingGnn
     PUBLIC
-        Acts::PluginExaTrkX
+        Acts::PluginGnn
         Acts::ExamplesFramework
         Acts::ExamplesTrackFinding
 )

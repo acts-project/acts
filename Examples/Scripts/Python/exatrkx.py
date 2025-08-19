@@ -6,7 +6,7 @@ import sys
 
 import acts.examples
 import acts
-from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
+from acts.examples.reconstruction import addGnn, GnnBackend
 from acts import UnitConstants as u
 
 from digitization import runDigitization
@@ -35,7 +35,7 @@ def runGNNTrackFinding(
         s=s,
     )
 
-    addExaTrkX(
+    addGnn(
         s,
         trackingGeometry,
         geometrySelection,
@@ -49,12 +49,12 @@ def runGNNTrackFinding(
 
 if "__main__" == __name__:
 
-    backend = ExaTrkXBackend.Torch
+    backend = GnnBackend.Torch
 
     if "onnx" in sys.argv:
-        backend = ExaTrkXBackend.Onnx
+        backend = GnnBackend.Onnx
     if "torch" in sys.argv:
-        backend = ExaTrkXBackend.Torch
+        backend = GnnBackend.Torch
 
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -69,7 +69,7 @@ if "__main__" == __name__:
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
-    if backend == ExaTrkXBackend.Torch:
+    if backend == GnnBackend.Torch:
         modelDir = Path.cwd() / "torchscript_models"
         assert (modelDir / "embed.pt").exists()
         assert (modelDir / "filter.pt").exists()

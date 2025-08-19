@@ -91,7 +91,7 @@ except ImportError:
 exatrkxEnabled = shutil.which("nvidia-smi") is not None
 if exatrkxEnabled:
     try:
-        from acts.examples import TrackFindingAlgorithmExaTrkX
+        from acts.examples import TrackFindingAlgorithmGnn
     except ImportError:
         exatrkxEnabled = False
 

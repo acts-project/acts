@@ -21,7 +21,7 @@
 namespace ActsExamples {
 struct AlgorithmContext;
 
-class CsvExaTrkXGraphWriter final : public WriterT<Graph> {
+class CsvGnnGraphWriter final : public WriterT<Graph> {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.
@@ -36,7 +36,7 @@ class CsvExaTrkXGraphWriter final : public WriterT<Graph> {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  CsvExaTrkXGraphWriter(const Config& config, Acts::Logging::Level level);
+  CsvGnnGraphWriter(const Config& config, Acts::Logging::Level level);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

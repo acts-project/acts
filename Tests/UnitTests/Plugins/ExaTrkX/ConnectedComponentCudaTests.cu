@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh>
+#include <Acts/Plugins/Gnn/detail/ConnectedComponents.cuh>
 
 #include <filesystem>
 #include <fstream>
