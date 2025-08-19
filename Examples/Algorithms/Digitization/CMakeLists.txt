@@ -13,9 +13,10 @@ target_include_directories(
     ActsExamplesDigitization
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesDigitization
-    PUBLIC Acts::Core Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework
     PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 

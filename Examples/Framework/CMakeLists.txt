@@ -40,7 +40,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesFramework
     PUBLIC
-        Acts::Core
         Acts::Fatras
         Acts::PluginFpeMonitoring
         Boost::boost

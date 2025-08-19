@@ -17,7 +17,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <memory>
 #include <random>
 #include <vector>
 
