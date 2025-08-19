@@ -6,6 +6,7 @@ add_library(
     SHARED
     src/DataDirectory.cpp
     src/CylindricalDetector.cpp
+    src/CylindricalTrackingGeometry.cpp
 )
 
 add_library(Acts::TestsCommonHelpers ALIAS ActsTestsCommonHelpers)

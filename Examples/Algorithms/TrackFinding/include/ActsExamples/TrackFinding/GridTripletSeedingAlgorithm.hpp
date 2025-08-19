@@ -198,12 +198,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float seedWeightIncrement = 0;
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
-    /// Use deltaR between top and middle SP instead of top radius to search for
-    /// compatible SPs
-    bool useDeltaRinsteadOfTopRadius = false;
-
-    // Seeding parameters used for quality seed confirmation
-
     /// Enable quality seed confirmation, this is different than default seeding
     /// confirmation because it can also be defined for different (r, z) regions
     /// of the detector (e.g. forward or central region) by
@@ -215,6 +209,21 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     Acts::SeedConfirmationRangeConfig centralSeedConfirmationRange;
     /// Contains parameters for forward seed confirmation
     Acts::SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
+    /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
+    /// Seeds that are not confirmed as "high-quality" are only selected if no
+    /// other "high-quality" seed has been found for that inner-middle doublet
+    /// Maximum number of normal seeds (not classified as "high-quality" seeds)
+    /// in seed confirmation
+    std::uint32_t maxSeedsPerSpMConf = 5;
+    /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
+    /// in seed confirmation. If the limit is reached we check if there is a
+    /// normal quality seed to be replaced
+    std::uint32_t maxQualitySeedsPerSpMConf = 5;
+
+    /// Use deltaR between top and middle SP instead of top radius to search for
+    /// compatible SPs
+    bool useDeltaRinsteadOfTopRadius = false;
 
     // other
 

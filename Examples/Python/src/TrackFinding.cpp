@@ -166,9 +166,10 @@ void addTrackFinding(Context& ctx) {
       helixCutTolerance, sigmaScattering, radLengthPerSeed, maxPtScattering,
       toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
       impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
-      seedWeightIncrement, numSeedIncrement, useDeltaRinsteadOfTopRadius,
-      seedConfirmation, centralSeedConfirmationRange,
-      forwardSeedConfirmationRange, useExtraCuts);
+      seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+      useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,

@@ -13,7 +13,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorTelescope
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
