@@ -40,7 +40,9 @@ using namespace Acts;
 using namespace detail::LineHelper;
 using namespace PlanarHelper;
 using namespace UnitLiterals;
+
 namespace {
+
 /// @brief Quanitze the hit position to a strip
 /// @param x: Actual traversing of the particle
 /// @param pitch: Pitch between two strips
