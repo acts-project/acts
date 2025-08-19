@@ -12,7 +12,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoObj
-    PUBLIC Acts::Core Acts::ExamplesFramework Threads::Threads
+    PUBLIC Acts::ExamplesFramework Threads::Threads
 )
 
 acts_compile_headers(ExamplesIoObj GLOB "include/**/*.hpp")

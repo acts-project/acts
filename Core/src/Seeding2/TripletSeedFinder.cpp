@@ -9,7 +9,6 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -83,13 +82,11 @@ class Impl final : public TripletSeedFinder {
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
 
-    const LinCircle& lb = bottomDoublet.linCircle();
-
-    float cotThetaB = lb.cotTheta;
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
+    float cotThetaB = bottomDoublet.cotTheta();
+    float erB = bottomDoublet.er();
+    float iDeltaRB = bottomDoublet.iDeltaR();
+    float Ub = bottomDoublet.u();
+    float Vb = bottomDoublet.v();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = 1 + cotThetaB * cotThetaB;
@@ -113,8 +110,7 @@ class Impl final : public TripletSeedFinder {
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
       SpacePointIndex2 spT = topDoublet.spacePointIndex();
-      const LinCircle& lt = topDoublet.linCircle();
-      float cotThetaT = lt.cotTheta;
+      float cotThetaT = topDoublet.cotTheta();
 
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
@@ -124,9 +120,9 @@ class Impl final : public TripletSeedFinder {
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 =
-          lt.Er + ErB +
-          2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB * lt.iDeltaR;
+      float error2 = topDoublet.er() + erB +
+                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                         topDoublet.iDeltaR();
 
       float deltaCotTheta = cotThetaB - cotThetaT;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -154,14 +150,14 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float dU = lt.U - Ub;
+      float dU = topDoublet.u() - Ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (lt.V - Vb) / dU;
+      float A = (topDoublet.v() - Vb) / dU;
       float S2 = 1 + A * A;
       float B = Vb - A * Ub;
       float B2 = B * B;
@@ -207,14 +203,14 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float Im = std::abs((A - B * rM) * rM);
-      if (Im > m_cfg.impactMax) {
+      float im = std::abs((A - B * rM) * rM);
+      if (im > m_cfg.impactMax) {
         continue;
       }
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), Im);
+      tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), im);
     }  // loop on tops
 
     if constexpr (sortedInCotTheta) {
@@ -240,13 +236,12 @@ class Impl final : public TripletSeedFinder {
 
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
-    const LinCircle& lb = bottomDoublet.linCircle();
 
-    float cotThetaB = lb.cotTheta;
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
+    float cotThetaB = bottomDoublet.cotTheta();
+    float erB = bottomDoublet.er();
+    float iDeltaRB = bottomDoublet.iDeltaR();
+    float Vb = bottomDoublet.v();
+    float Ub = bottomDoublet.u();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = 1 + cotThetaB * cotThetaB;
@@ -272,16 +267,14 @@ class Impl final : public TripletSeedFinder {
     for (auto topDoublet : topDoublets) {
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      const LinCircle& lt = topDoublet.linCircle();
-
       // protects against division by 0
-      float dU = lt.U - Ub;
+      float dU = topDoublet.u() - Ub;
       if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A0 = (lt.V - Vb) / dU;
+      float A0 = (topDoublet.v() - Vb) / dU;
 
       float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
@@ -300,8 +293,8 @@ class Impl final : public TripletSeedFinder {
 
       // coordinate transformation and checks for bottom spacepoint
       float B0 = 2 * (Vb - A0 * Ub);
-      float Cb = 1 - B0 * lb.y;
-      float Sb = A0 + B0 * lb.x;
+      float Cb = 1 - B0 * bottomDoublet.y();
+      float Sb = A0 + B0 * bottomDoublet.x();
       Eigen::Vector3f positionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
@@ -314,8 +307,8 @@ class Impl final : public TripletSeedFinder {
       }
 
       // coordinate transformation and checks for top spacepoint
-      float Ct = 1 - B0 * lt.y;
-      float St = A0 + B0 * lt.x;
+      float Ct = 1 - B0 * topDoublet.y();
+      float St = A0 + B0 * topDoublet.x();
       Eigen::Vector3f positionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
@@ -347,9 +340,9 @@ class Impl final : public TripletSeedFinder {
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 =
-          lt.Er + ErB +
-          2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB * lt.iDeltaR;
+      float error2 = topDoublet.er() + erB +
+                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                         topDoublet.iDeltaR();
 
       float deltaCotTheta = cotThetaB - cotThetaT;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;

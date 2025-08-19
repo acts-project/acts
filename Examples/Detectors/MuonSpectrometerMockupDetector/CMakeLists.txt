@@ -3,7 +3,7 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
 
     target_link_libraries(
         ActsExamplesMuonSpectrometerMockupDetector
-        PUBLIC Acts::Core Acts::ExamplesFramework
+        PUBLIC Acts::ExamplesFramework
     )
     target_include_directories(
         ActsExamplesMuonSpectrometerMockupDetector

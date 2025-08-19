@@ -21,7 +21,6 @@ target_include_directories(
 target_link_libraries(
     ActsPluginDetray
     PUBLIC
-        Acts::Core
         Acts::PluginJson
         detray::core
         detray::core_array
