@@ -18,6 +18,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
+
 namespace ActsExamples {
 
 std::ostream& operator<<(std::ostream& ostr,

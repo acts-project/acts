@@ -10,7 +10,9 @@
 
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
+
 namespace ActsExamples {
+
 using TechField = MuonSpacePoint::MuonId::TechField;
 
 MuonSpacePointCalibrator::MuonSpacePointCalibrator(
