@@ -204,6 +204,11 @@ class SpacePointProxy2 {
   {
     return m_container->xyzr(m_index);
   }
+  std::array<float, 2> &varianceZR() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->varianceZR(m_index);
+  }
 
   /// Mutable access to an extra column of data for the space point.
   /// @param column The extra column proxy to access.
@@ -275,6 +280,9 @@ class SpacePointProxy2 {
   }
   const std::array<float, 4> &xyzr() const noexcept {
     return m_container->xyzr(m_index);
+  }
+  const std::array<float, 2> &varianceZR() const noexcept {
+    return m_container->varianceZR(m_index);
   }
 
   /// Const access to an extra column of data for the space point.

@@ -179,8 +179,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
-      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
-      newSp.varianceR() = static_cast<float>(sp.varianceR());
+      newSp.varianceZR() =
+          std::array<float, 2>{static_cast<float>(sp.varianceZ()),
+                               static_cast<float>(sp.varianceR())};
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
