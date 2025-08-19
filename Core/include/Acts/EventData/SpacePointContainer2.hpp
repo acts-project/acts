@@ -59,11 +59,13 @@ enum class SpacePointColumns : std::uint32_t {
   StripCenterDistance = 1 << 11,  ///< Distance to the strip center
   TopStripCenter = 1 << 12,       ///< Center of the top strip
   CopyFromIndex = 1 << 13,        ///< Copy from index
-  XY = 1 << 14,                   ///< X and Y coordinates
-  ZR = 1 << 15,                   ///< Z and R coordinates
-  XYZ = 1 << 16,                  ///< X, Y, and Z coordinates
-  XYZR = 1 << 17,                 ///< X, Y, Z, and R coordinates
-  VarianceZR = 1 << 18,           ///< Variance in Z and R directions
+
+  // packed columns for performance reasons
+  XY = 1 << 14,          ///< X and Y coordinates
+  ZR = 1 << 15,          ///< Z and R coordinates
+  XYZ = 1 << 16,         ///< X, Y, and Z coordinates
+  XYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
+  VarianceZR = 1 << 18,  ///< Variance in Z and R directions
 
   /// All strip-related columns
   Strip =
