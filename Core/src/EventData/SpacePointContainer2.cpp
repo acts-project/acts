@@ -125,6 +125,16 @@ void SpacePointContainer2::clear() noexcept {
   }
 }
 
+MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
+  ++m_size;
+
+  for (const auto &[name, column] : m_namedColumns) {
+    column.first->emplace_back();
+  }
+
+  return MutableProxy(*this, size() - 1);
+}
+
 void SpacePointContainer2::assignSourceLinks(
     Index index, std::span<const SourceLink> sourceLinks) {
   if (index >= size()) {
