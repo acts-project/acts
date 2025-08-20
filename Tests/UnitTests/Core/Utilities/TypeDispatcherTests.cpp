@@ -75,6 +75,20 @@ BOOST_AUTO_TEST_CASE(RegisterAndCallFunctions) {
   BOOST_CHECK_EQUAL(dispatcher(objB, "test_"), "test_B:3.140000");
 }
 
+BOOST_AUTO_TEST_CASE(AutoDetectedFunctionRegistration) {
+  TypeDispatcher<BaseClass, std::string(const std::string&)> dispatcher;
+  
+  // Auto-detection: no need for explicit template parameters!
+  dispatcher.registerFunction(processA);  // Type auto-detected as DerivedA
+  dispatcher.registerFunction(processB);  // Type auto-detected as DerivedB
+
+  DerivedA objA;
+  DerivedB objB;
+
+  BOOST_CHECK_EQUAL(dispatcher(objA, "auto_"), "auto_A:42");
+  BOOST_CHECK_EQUAL(dispatcher(objB, "auto_"), "auto_B:3.140000");
+}
+
 BOOST_AUTO_TEST_CASE(HasFunctionCheck) {
   TypeDispatcher<BaseClass, std::string(const std::string&)> dispatcher;
   dispatcher.registerFunction<DerivedA>(processA);

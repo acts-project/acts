@@ -36,9 +36,8 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   using function_signature = ReturnType(const BaseType&, Args...);
   using function_type = std::function<function_signature>;
 
-  /// Register a free function for a specific derived type
-  /// @tparam DerivedType The derived type to associate the function with
-  /// @param func The function to register
+  /// Register a free function with auto-detected derived type (no template parameter needed!)
+  /// @param func The function pointer - derived type is auto-detected from the first parameter
   template <typename DerivedType>
     requires std::is_base_of_v<BaseType, DerivedType>
   void registerFunction(ReturnType (*func)(const DerivedType&, Args...)) {
