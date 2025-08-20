@@ -160,6 +160,7 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
 ///   int  getCellRow(const Cell&),
 ///   int  getCellColumn(const Cell&)
 ///
+/// @param [in] data collection of quantities for clusterization
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
 template <typename CellCollection, std::size_t GridDim = 2,
