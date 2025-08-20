@@ -11,9 +11,11 @@
 #include <boost/core/demangle.hpp>
 #include <format>
 #include <functional>
+#include <type_traits>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
 namespace Acts {
 
@@ -76,23 +78,52 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   /// @param args Additional arguments to pass to the function
   /// @return The return value from the registered function
   ReturnType operator()(const BaseType& obj, Args... args) const {
-    std::type_index typeIdx(typeid(obj));
+    std::vector<std::type_index> compatibleTypes;
     
-    auto it = m_functions.find(typeIdx);
-    if (it == m_functions.end()) {
-      throw std::runtime_error(std::format("No function registered for type: {}", 
-                                           boost::core::demangle(typeIdx.name())));
+    // Find all registered functions that can handle this object type
+    for (const auto& [registeredTypeIdx, checker] : m_castCheckers) {
+      if (checker(obj)) {
+        compatibleTypes.push_back(registeredTypeIdx);
+      }
     }
     
-    return it->second(obj, std::forward<Args>(args)...);
+    if (compatibleTypes.empty()) {
+      throw std::runtime_error(std::format("No function registered for type: {}", 
+                                           boost::core::demangle(typeid(obj).name())));
+    }
+    
+    if (compatibleTypes.size() > 1) {
+      std::string typeNames;
+      for (size_t i = 0; i < compatibleTypes.size(); ++i) {
+        if (i > 0) typeNames += ", ";
+        typeNames += boost::core::demangle(compatibleTypes[i].name());
+      }
+      throw std::runtime_error(std::format(
+          "Ambiguous dispatch for type {}: multiple functions can handle it: {}",
+          boost::core::demangle(typeid(obj).name()), typeNames));
+    }
+    
+    // Exactly one compatible function found
+    auto funcIt = m_functions.find(compatibleTypes[0]);
+    if (funcIt != m_functions.end()) {
+      return funcIt->second(obj, std::forward<Args>(args)...);
+    }
+    
+    // This should never happen if our data structures are consistent
+    throw std::runtime_error("Internal error: function not found for compatible type");
   }
 
   /// Check if a function is registered for the given object's type
   /// @param obj The object to check
   /// @return true if a function is registered, false otherwise
   bool hasFunction(const BaseType& obj) const {
-    std::type_index typeIdx(typeid(obj));
-    return m_functions.find(typeIdx) != m_functions.end();
+    // Find all registered functions that can handle this object type
+    for (const auto& [registeredTypeIdx, checker] : m_castCheckers) {
+      if (checker(obj)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Check if a function is registered for the given type
@@ -108,6 +139,7 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   /// Clear all registered functions
   void clear() {
     m_functions.clear();
+    m_castCheckers.clear();
   }
 
   /// Get the number of registered functions
@@ -124,6 +156,31 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   void registerFunctionImpl(FuncType&& func) {
     std::type_index typeIdx(typeid(DerivedType));
     
+    // Check if this exact type is already registered
+    if (m_functions.find(typeIdx) != m_functions.end()) {
+      throw std::runtime_error(std::format(
+          "Function already registered for type: {}", 
+          boost::core::demangle(typeIdx.name())));
+    }
+    
+    // Try to detect conflicts with existing registrations if the type is default constructible
+    if constexpr (std::is_default_constructible_v<DerivedType>) {
+      DerivedType tempObj{};
+      for (const auto& [existingTypeIdx, checker] : m_castCheckers) {
+        if (checker(tempObj)) {
+          throw std::runtime_error(std::format(
+              "Registration conflict: type {} would be handled by existing function registered for type: {}",
+              boost::core::demangle(typeIdx.name()),
+              boost::core::demangle(existingTypeIdx.name())));
+        }
+      }
+    }
+    
+    // Store a cast checker that tests if dynamic_cast<DerivedType*> will work
+    m_castCheckers[typeIdx] = [](const BaseType& obj) -> bool {
+      return dynamic_cast<const DerivedType*>(&obj) != nullptr;
+    };
+    
     // Wrap the function in a lambda that performs the dynamic cast
     m_functions[typeIdx] = [func = std::forward<FuncType>(func)](
         const BaseType& base, Args... args) -> ReturnType {
@@ -135,7 +192,10 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
     };
   }
 
+  using CastChecker = std::function<bool(const BaseType&)>;
+  
   std::unordered_map<std::type_index, function_type> m_functions;
+  std::unordered_map<std::type_index, CastChecker> m_castCheckers;
 };
 
 }  // namespace Acts
