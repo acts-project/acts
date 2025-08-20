@@ -261,7 +261,7 @@ class ScoreBasedAmbiguityResolution {
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
           {}) const;
 
-  std::vector<ScoreMonitor> scoreMonitor() const ;
+  std::vector<ScoreMonitor> getScoreMonitor() const ;
 
  private:
   Config m_cfg;

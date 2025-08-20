@@ -11,6 +11,7 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
+#include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -124,6 +125,13 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     auto srcProxy = tracks.getTrack(iTrack);
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();
+  }
+
+  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor = m_ambi.getScoreMonitor();
+  if (!scoreMonitor.empty()) {
+    Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile);
+  } else {
+    ACTS_ERROR("No score monitor data available to save.");
   }
 
   ActsExamples::ConstTrackContainer outputTracks{
