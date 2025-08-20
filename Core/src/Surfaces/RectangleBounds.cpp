@@ -74,6 +74,10 @@ const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
 }
 
+Vector2 RectangleBounds::center() const {
+  return 0.5 * (m_min + m_max);
+}
+
 std::ostream& RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

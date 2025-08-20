@@ -78,6 +78,14 @@ std::vector<Vector2> RadialBounds::vertices(unsigned int lseg) const {
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
 
+Vector2 RadialBounds::center() const {
+  // For radial bounds in polar coordinates (r, phi),
+  // centroid is at the middle radius and average phi
+  double rCentroid = 0.5 * (get(eMinR) + get(eMaxR));
+  double phiCentroid = get(eAveragePhi);
+  return Vector2(rCentroid, phiCentroid);
+}
+
 std::ostream& RadialBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

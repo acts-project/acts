@@ -154,6 +154,23 @@ BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedConeBounds, originalConeBounds);
 }
 
+BOOST_AUTO_TEST_CASE(ConeBoundsCenter) {
+  // Test cone bounds centroid
+  ConeBounds cone(alpha, zMin, zMax, halfPhi, averagePhi);
+  Vector2 center = cone.center();
+
+  double expectedZ = 0.5 * (zMin + zMax);
+  BOOST_CHECK_EQUAL(center.x(), averagePhi);
+  BOOST_CHECK_EQUAL(center.y(), expectedZ);
+
+  // Test with different averagePhi
+  const double avgPhiOffset = std::numbers::pi / 6.;
+  ConeBounds coneOffset(alpha, zMin, zMax, halfPhi, avgPhiOffset);
+  Vector2 centerOffset = coneOffset.center();
+  BOOST_CHECK_EQUAL(centerOffset.x(), avgPhiOffset);
+  BOOST_CHECK_EQUAL(centerOffset.y(), expectedZ);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
