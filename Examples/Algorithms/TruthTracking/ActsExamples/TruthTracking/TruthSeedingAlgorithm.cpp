@@ -145,16 +145,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         continue;
       }
 
-      const auto simHitIdxIt = measurementSimHitsMap.nth(simHitMapIt->second);
-
-      if (simHitIdxIt == measurementSimHitsMap.end()) {
-        ACTS_WARNING("No sim hit found for index " << simHitMapIt->second);
-        continue;
-      }
-
-      const auto simHitIt = simHits.nth(simHitIdxIt->second);
+      const auto simHitIt = simHits.nth(simHitMapIt->second);
       if (simHitIt == simHits.end()) {
-        ACTS_WARNING("No sim hit found for index " << simHitIdxIt->second);
+        ACTS_WARNING("No sim hit found for index " << simHitMapIt->second);
         continue;
       }
 
@@ -189,13 +182,10 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       const auto simHitMapIt = measurementSimHitsMap.find(measurementIndex);
       std::optional<double> time;
       if (simHitMapIt == measurementSimHitsMap.end()) {
-        const auto simHitIdxIt = measurementSimHitsMap.nth(simHitMapIt->second);
-        if (simHitIdxIt == measurementSimHitsMap.end()) {
-          const auto simHitIt = simHits.nth(simHitIdxIt->second);
-          if (simHitIt == simHits.end()) {
-            const auto& simHit = *simHitIt;
-            time = simHit.time();
-          }
+        const auto simHitIt = simHits.nth(simHitMapIt->second);
+        if (simHitIt == simHits.end()) {
+          const auto& simHit = *simHitIt;
+          time = simHit.time();
         }
       }
 
