@@ -29,7 +29,7 @@ class CsvGnnGraphWriter final : public WriterT<Graph> {
     /// Where to place output files
     std::string outputDir;
     /// Output filename stem.
-    std::string outputStem = "exatrkx-graph";
+    std::string outputStem = "gnn-graph";
   };
 
   /// Construct the cluster writer.

@@ -120,7 +120,7 @@
             }
         },
         {
-            "name": "gitlab-ci-exatrkx",
+            "name": "gitlab-ci-gnn",
             "displayName": "GitLab-CI Gnn",
             "generator": "Ninja",
             "cacheVariables": {
@@ -137,10 +137,10 @@
                 "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
-                "ACTS_EXATRKX_ENABLE_TORCH": "ON",
-                "ACTS_EXATRKX_ENABLE_ONNX": "ON",
-                "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-                "ACTS_EXATRKX_ENABLE_MODULEMAP": "ON",
+                "ACTS_GNN_ENABLE_TORCH": "ON",
+                "ACTS_GNN_ENABLE_ONNX": "ON",
+                "ACTS_GNN_ENABLE_CUDA": "ON",
+                "ACTS_GNN_ENABLE_MODULEMAP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
             }
@@ -155,10 +155,10 @@
                 "CMAKE_CUDA_ARCHITECTURES": "86",
                 "TORCH_CUDA_ARCH_LIST": "8.6",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
-                "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
-                "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON",
-                "ACTS_EXATRKX_ENABLE_MODULEMAP": "OFF"
+                "ACTS_GNN_ENABLE_TORCH": "OFF",
+                "ACTS_GNN_ENABLE_CUDA": "ON",
+                "ACTS_GNN_ENABLE_TENSORRT": "ON",
+                "ACTS_GNN_ENABLE_MODULEMAP": "OFF"
             }
         }
     ]

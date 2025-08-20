@@ -30,7 +30,7 @@
 namespace ActsExamples {
 
 CsvGnnGraphReader::CsvGnnGraphReader(const Config& config,
-                                             Acts::Logging::Level level)
+                                     Acts::Logging::Level level)
     : m_cfg(config),
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
@@ -42,8 +42,7 @@ CsvGnnGraphReader::CsvGnnGraphReader(const Config& config,
   m_outputGraph.initialize(m_cfg.outputGraph);
 }
 
-std::pair<std::size_t, std::size_t> CsvGnnGraphReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t> CsvGnnGraphReader::availableEvents() const {
   return m_eventsRange;
 }
 

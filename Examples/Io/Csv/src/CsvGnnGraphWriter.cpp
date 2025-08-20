@@ -24,8 +24,7 @@
 ActsExamples::CsvGnnGraphWriter::CsvGnnGraphWriter(
     const ActsExamples::CsvGnnGraphWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputGraph, "CsvGnnGraphWriter", level),
-      m_cfg(config) {}
+    : WriterT(config.inputGraph, "CsvGnnGraphWriter", level), m_cfg(config) {}
 
 ActsExamples::ProcessCode ActsExamples::CsvGnnGraphWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx, const Graph& graph) {

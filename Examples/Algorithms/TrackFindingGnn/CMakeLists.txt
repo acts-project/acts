@@ -15,8 +15,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFindingGnn
-    PUBLIC
-        Acts::PluginGnn
-        Acts::ExamplesFramework
-        Acts::ExamplesTrackFinding
+    PUBLIC Acts::PluginGnn Acts::ExamplesFramework Acts::ExamplesTrackFinding
 )

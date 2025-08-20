@@ -88,12 +88,12 @@ except ImportError:
     hashingSeedingEnabled = False
 
 
-exatrkxEnabled = shutil.which("nvidia-smi") is not None
-if exatrkxEnabled:
+gnnEnabled = shutil.which("nvidia-smi") is not None
+if gnnEnabled:
     try:
         from acts.examples import TrackFindingAlgorithmGnn
     except ImportError:
-        exatrkxEnabled = False
+        gnnEnabled = False
 
 try:
     import podio

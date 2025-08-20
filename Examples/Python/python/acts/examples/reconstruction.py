@@ -2000,7 +2000,7 @@ def addGnn(
     findingAlg = acts.examples.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
         inputSpacePoints="spacepoints",
-        outputProtoTracks="exatrkx_prototracks",
+        outputProtoTracks="gnn_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -2022,8 +2022,8 @@ def addGnn(
         inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="exatrkx_track_particle_matching",
-        outputParticleTrackMatching="exatrkx_particle_track_matching",
+        outputTrackParticleMatching="gnn_track_particle_matching",
+        outputParticleTrackMatching="gnn_particle_track_matching",
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)

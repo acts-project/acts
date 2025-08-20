@@ -162,16 +162,14 @@ void addGnnTrackFinding(Context &ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingAlgorithmGnn, mex,
-      "TrackFindingAlgorithmGnn", inputSpacePoints, inputClusters,
-      inputTruthGraph, outputProtoTracks, outputGraph, graphConstructor,
-      edgeClassifiers, trackBuilder, nodeFeatures, featureScales,
-      minMeasurementsPerTrack, geometryIdMap);
+      ActsExamples::TrackFindingAlgorithmGnn, mex, "TrackFindingAlgorithmGnn",
+      inputSpacePoints, inputClusters, inputTruthGraph, outputProtoTracks,
+      outputGraph, graphConstructor, edgeClassifiers, trackBuilder,
+      nodeFeatures, featureScales, minMeasurementsPerTrack, geometryIdMap);
 
   {
-    auto cls =
-        py::class_<Acts::GnnHook, std::shared_ptr<Acts::GnnHook>>(
-            mex, "GnnHook");
+    auto cls = py::class_<Acts::GnnHook, std::shared_ptr<Acts::GnnHook>>(
+        mex, "GnnHook");
   }
 
   {

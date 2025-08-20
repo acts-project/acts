@@ -1,7 +1,7 @@
-(exatrkxplugin)=
+(gnnplugin)=
 # GNN plugin
 
-This plugin contains a track finding module based on the Graph Neural Network (GNN) workflow which is developed within the GNN4ITk team in ATLAS, resembling closely the structure of the training framework [acorn](https://gitlab.cern.ch/gnn4itkteam/acorn). Build instructions and dependencies can be found in the [README](https://github.com/acts-project/acts/blob/main/Plugins/Gnn/README.md) of the plugin.
+This plugin contains a track finding module based on the Graph Neural Network (GNN) workflow which is developed within the GNN4ITk team in ATLAS, resembling closely the structure of the training framework [acorn](https://gitlab.cern.ch/gnn4itkteam/acorn). Build instructions and dependencies can be found in the README of the plugin.
 
 ## Stages
 
@@ -32,7 +32,7 @@ Graph construction: Metric learning
 The codebase is currently under refactoring, the documentation will be updated once the code has stabilized.
 :::
 
-See [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/exatrkx.py) for the corresponding python example.
+See [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/gnn.py) for the corresponding python example.
 
 ## Resources
 

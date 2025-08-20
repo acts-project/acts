@@ -50,8 +50,8 @@ GnnPipeline::GnnPipeline(
 
 std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
-    std::vector<int> &spacepointIDs, Acts::Device device,
-    const GnnHook &hook, GnnTiming *timing) const {
+    std::vector<int> &spacepointIDs, Acts::Device device, const GnnHook &hook,
+    GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
 #ifdef ACTS_EXATRKX_WITH_CUDA
