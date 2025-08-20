@@ -152,16 +152,20 @@ class ScoreBasedAmbiguityResolution {
   };
 
   struct ScoreMonitor {
-    std::size_t ptScore = 0;
-    std::vector<std::size_t> detectorHitScore;
-    std::vector<std::size_t> detectorHoleScore;
-    std::vector<std::size_t> detectorOutlierScore;
-    std::vector<std::size_t> detectorOtherScore;
-    std::size_t chi2Score = 0;
+    double pT = 0.0;
+    double eta = 0.0;
+    double phi = 0.0;
 
-    std::vector<std::size_t> optionalScore;
+    double ptScore = 0;
+    std::vector<double> detectorHitScore;
+    std::vector<double> detectorHoleScore;
+    std::vector<double> detectorOutlierScore;
+    std::vector<double> detectorOtherScore;
+    double chi2Score = 0;
 
-    std::size_t totalScore = 0;
+    std::vector<double> optionalScore;
+
+    double totalScore = 0;
 
     void setZero() {
       ptScore = 0;
@@ -261,7 +265,7 @@ class ScoreBasedAmbiguityResolution {
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
           {}) const;
 
-  std::vector<ScoreMonitor> getScoreMonitor() const ;
+  std::vector<ScoreMonitor> getScoreMonitor() const;
 
  private:
   Config m_cfg;

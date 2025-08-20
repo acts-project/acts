@@ -2,14 +2,16 @@
 #include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
+
 #include <TFile.h>
 #include <TTree.h>
 
 void Acts::saveScoreMonitor(
-    const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>& scoreMonitor,
+    const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>&
+        scoreMonitor,
     const std::string& monitorFilePath) {
   // Open ROOT file for writing
-  TFile* file = TFile::Open(monitorFilePath.c_str(), "RECREATE");
+  TFile* file = TFile::Open(monitorFilePath.c_str(), "UPDATE");
   if (!file || file->IsZombie()) {
     throw std::runtime_error("Could not create ROOT file: " + monitorFilePath);
   }
@@ -18,17 +20,25 @@ void Acts::saveScoreMonitor(
   TTree* tree = new TTree("ScoreMonitorTree", "Score Monitor Data");
 
   // Variables for branches
-  std::size_t ptScore;
-  std::size_t chi2Score;
-  std::size_t totalScore;
+  double pT = 0.0;
+  double eta = 0.0;
+  double phi = 0.0;
 
-  std::vector<std::size_t> detectorHitScore;
-  std::vector<std::size_t> detectorHoleScore;
-  std::vector<std::size_t> detectorOutlierScore;
-  std::vector<std::size_t> detectorOtherScore;
-  std::vector<std::size_t> optionalScore;
+  double ptScore = 0;
+  std::vector<double> detectorHitScore;
+  std::vector<double> detectorHoleScore;
+  std::vector<double> detectorOutlierScore;
+  std::vector<double> detectorOtherScore;
+  double chi2Score = 0;
+
+  std::vector<double> optionalScore;
+
+  double totalScore = 0;
 
   // Create branches
+  tree->Branch("pT", &pT);
+  tree->Branch("eta", &eta);
+  tree->Branch("phi", &phi);
   tree->Branch("ptScore", &ptScore);
   tree->Branch("chi2Score", &chi2Score);
   tree->Branch("totalScore", &totalScore);
@@ -41,6 +51,11 @@ void Acts::saveScoreMonitor(
 
   // Fill the tree
   for (const auto& monitor : scoreMonitor) {
+
+    pT = monitor.pT;
+    eta = monitor.eta;
+    phi = monitor.phi;
+
     ptScore = monitor.ptScore;
     chi2Score = monitor.chi2Score;
     totalScore = monitor.totalScore;
