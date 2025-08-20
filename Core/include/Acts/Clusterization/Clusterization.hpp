@@ -191,6 +191,9 @@ template <typename CellCollection, typename ClusterCollection,
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect&& connect = Connect());
 
+/// @brief createClusters
+/// Alternative convenience function which runs both labelClusters and
+/// createClusters.
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =
