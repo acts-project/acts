@@ -41,48 +41,50 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   using function_signature = return_t(const base_t&, args_t...);
   using function_type = std::function<function_signature>;
 
-  /// Register a free function with auto-detected derived type (no template
-  /// parameter needed!)
-  /// @param func The function pointer - derived type is auto-detected from the first parameter
+  /// Register a free function with explicit derived type
+  /// @tparam derived_t The derived type to associate the function with
+  /// @param func The function pointer
   template <typename derived_t>
     requires std::is_base_of_v<base_t, derived_t>
   void registerFunction(return_t (*func)(const derived_t&, args_t...)) {
-    registerFunctionImpl<derived_t>(
-        [func](const derived_t& derived, args_t... args) -> return_t {
-          return func(derived, std::forward<args_t>(args)...);
-        });
+    std::type_index typeIdx(typeid(derived_t));
+    
+    // Check if this exact type is already registered
+    if (m_functions.find(typeIdx) != m_functions.end()) {
+      throw std::runtime_error(
+          std::format("Function already registered for type: {}",
+                      boost::core::demangle(typeIdx.name())));
+    }
+    
+    // Try to detect conflicts with existing registrations if the type is
+    // default constructible
+    if constexpr (std::is_default_constructible_v<derived_t>) {
+      derived_t tempObj{};
+      for (const auto& [existingTypeIdx, checker] : m_castCheckers) {
+        if (checker(tempObj)) {
+          throw std::runtime_error(
+              std::format("Registration conflict: type {} would be handled by "
+                          "existing function registered for type: {}",
+                          boost::core::demangle(typeIdx.name()),
+                          boost::core::demangle(existingTypeIdx.name())));
+        }
+      }
+    }
+    
+    // Store a cast checker that tests if dynamic_cast<derived_t*> will work
+    m_castCheckers[typeIdx] = [](const base_t& obj) -> bool {
+      return dynamic_cast<const derived_t*>(&obj) != nullptr;
+    };
+    
+    // Wrap the function in a lambda that performs the dynamic cast
+    m_functions[typeIdx] = [func](const base_t& base, args_t... args) -> return_t {
+      const auto* derived = dynamic_cast<const derived_t*>(&base);
+      if (derived == nullptr) {
+        throw std::bad_cast();
+      }
+      return func(*derived, std::forward<args_t>(args)...);
+    };
   }
-
-  /// Register a function object or lambda for a specific derived type (by
-  /// rvalue)
-  /// @tparam derived_t The derived type to associate the function with
-  /// @tparam function_t The function object type
-  /// @param func The function object to register (must be rvalue to indicate ownership transfer)
-  template <typename derived_t, typename function_t>
-    requires std::is_base_of_v<base_t, derived_t>
-  void registerFunction(function_t&& func) {
-    registerFunctionImpl<derived_t>(std::move(func));
-  }
-
-  /// Register a std::function for a specific derived type (by rvalue only)
-  /// @tparam derived_t The derived type to associate the function with
-  /// @param func The std::function to register (must be rvalue to indicate ownership transfer)
-  template <typename derived_t>
-    requires std::is_base_of_v<base_t, derived_t>
-  void registerFunction(
-      std::function<return_t(const derived_t&, args_t...)>&& func) {
-    registerFunctionImpl<derived_t>(std::move(func));
-  }
-
-  /// Explicitly deleted overload for lvalue std::function to enforce
-  /// rvalue-only registration. Without this, lvalue std::functions would match
-  /// the universal reference overload above, which would copy the function
-  /// instead of moving it, defeating our ownership semantics. This provides a
-  /// clear compilation error with a helpful message instead.
-  template <typename derived_t>
-  void registerFunction(
-      const std::function<return_t(const derived_t&, args_t...)>& func) =
-      delete;
 
   /// Call the registered function for the given object's type
   /// @param obj The object to dispatch on
@@ -162,52 +164,6 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   std::size_t size() const { return m_functions.size(); }
 
  private:
-  /// Internal helper method that centralizes function registration logic
-  /// @tparam derived_t The derived type to associate the function with
-  /// @tparam function_t The function type (deduced)
-  /// @param func The function to register
-  template <typename derived_t, typename function_t>
-  void registerFunctionImpl(function_t&& func) {
-    std::type_index typeIdx(typeid(derived_t));
-
-    // Check if this exact type is already registered
-    if (m_functions.find(typeIdx) != m_functions.end()) {
-      throw std::runtime_error(
-          std::format("Function already registered for type: {}",
-                      boost::core::demangle(typeIdx.name())));
-    }
-
-    // Try to detect conflicts with existing registrations if the type is
-    // default constructible
-    if constexpr (std::is_default_constructible_v<derived_t>) {
-      derived_t tempObj{};
-      for (const auto& [existingTypeIdx, checker] : m_castCheckers) {
-        if (checker(tempObj)) {
-          throw std::runtime_error(
-              std::format("Registration conflict: type {} would be handled by "
-                          "existing function registered for type: {}",
-                          boost::core::demangle(typeIdx.name()),
-                          boost::core::demangle(existingTypeIdx.name())));
-        }
-      }
-    }
-
-    // Store a cast checker that tests if dynamic_cast<derived_t*> will work
-    m_castCheckers[typeIdx] = [](const base_t& obj) -> bool {
-      return dynamic_cast<const derived_t*>(&obj) != nullptr;
-    };
-
-    // Wrap the function in a lambda that performs the dynamic cast
-    m_functions[typeIdx] = [func = std::forward<function_t>(func)](
-                               const base_t& base,
-                               args_t... args) -> return_t {
-      const auto* derived = dynamic_cast<const derived_t*>(&base);
-      if (derived == nullptr) {
-        throw std::bad_cast();
-      }
-      return func(*derived, std::forward<args_t>(args)...);
-    };
-  }
 
   using cast_checker_type = std::function<bool(const base_t&)>;
 
