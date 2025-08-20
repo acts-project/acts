@@ -102,7 +102,7 @@ clang_tidy:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - large
 
@@ -139,7 +139,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - large
 
@@ -183,7 +183,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
 
@@ -208,7 +208,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
 
