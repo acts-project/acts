@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Clusterization/Clusterization.hpp"
+
 #include <algorithm>
 #include <array>
 #include <ranges>
@@ -83,9 +85,9 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
                                     Connect&& connect) {
   Connections<GridDim> seen;
 
-  for (std::size_t i(0ul); i < idx; ++i) {
-    std::size_t idx_2 = idx - i - 1;
-    ConnectResult cr = connect(cells[idx], cells[idx_2]);
+  for (std::size_t i = 0; i < idx; ++i) {
+    std::size_t idx2 = idx - i - 1;
+    ConnectResult cr = connect(cells[idx], cells[idx2]);
 
     if (cr == ConnectResult::eNoConnStop) {
       break;
@@ -94,7 +96,7 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
       continue;
     }
     if (cr == ConnectResult::eConn) {
-      seen.buf[seen.nconn] = labels[idx_2];
+      seen.buf[seen.nconn] = labels[idx2];
       seen.nconn += 1;
       if (seen.nconn == seen.buf.size()) {
         break;
@@ -119,12 +121,12 @@ void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
   // Accumulate clusters into the output collection
   std::size_t previousSize = outv.size();
   outv.resize(previousSize + data.nClusters.size());
-  for (std::size_t i(0); i < data.nClusters.size(); ++i) {
+  for (std::size_t i = 0; i < data.nClusters.size(); ++i) {
     Acts::Ccl::internal::reserve(outv[previousSize + i], data.nClusters[i]);
   }
 
   // Fill clusters with cells
-  for (std::size_t i(0); i < cells.size(); ++i) {
+  for (std::size_t i = 0; i < cells.size(); ++i) {
     Label label = data.labels[i] - 1;
     Cluster& cl = outv[previousSize + label];
     clusterAddCell(cl, cells[i]);
@@ -133,7 +135,7 @@ void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
   // Due to previous merging, we may have now clusters with
   // no cells. We need to remove them
   std::size_t invalidClusters = 0ul;
-  for (std::size_t i(0); i < data.nClusters.size(); ++i) {
+  for (std::size_t i = 0; i < data.nClusters.size(); ++i) {
     std::size_t idx = data.nClusters.size() - i - 1;
     if (data.nClusters[idx] != 0) {
       continue;

@@ -153,20 +153,6 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
   ~DefaultConnect() override = default;
 };
 
-/// @brief mergeClusters
-///
-/// Merge a set of cells previously labeled (for instance with `labelClusters`)
-/// into actual clusters. The Cluster type must have the following function
-/// defined:
-///   void clusterAddCell(Cluster&, const Cell&)
-///
-/// @return nothing
-template <typename CellCollection, typename ClusterCollection>
-  requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
-                                    typename ClusterCollection::value_type>)
-void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
-                   const CellCollection& cells, ClusterCollection& outv);
-
 /// @brief labelClusters
 ///
 /// In-place connected component labelling using the Hoshen-Kopelman algorithm.
@@ -181,6 +167,20 @@ template <typename CellCollection, std::size_t GridDim = 2,
               DefaultConnect<typename CellCollection::value_type, GridDim>>
 void labelClusters(Acts::Ccl::internal::ClusteringData& data,
                    CellCollection& cells, Connect&& connect = Connect());
+
+/// @brief mergeClusters
+///
+/// Merge a set of cells previously labeled (for instance with `labelClusters`)
+/// into actual clusters. The Cluster type must have the following function
+/// defined:
+///   void clusterAddCell(Cluster&, const Cell&)
+///
+/// @return nothing
+template <typename CellCollection, typename ClusterCollection>
+  requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
+                                    typename ClusterCollection::value_type>)
+void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
+                   const CellCollection& cells, ClusterCollection& outv);
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
@@ -203,4 +203,4 @@ void createClusters(Acts::Ccl::internal::ClusteringData& data,
 
 }  // namespace Acts::Ccl
 
-#include "Clusterization.ipp"
+#include "Acts/Clusterization/Clusterization.ipp"
