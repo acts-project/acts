@@ -178,9 +178,8 @@ class ScoreBasedAmbiguityResolution {
   explicit ScoreBasedAmbiguityResolution(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("ScoreBasedAmbiguityResolution", Logging::INFO),
-      const std::string& monitorFilePath = "scoreMonitor.root")
-      : m_cfg{cfg}, m_logger{std::move(logger)}, m_monitorFilePath{monitorFilePath} {}
+          getDefaultLogger("ScoreBasedAmbiguityResolution", Logging::INFO))
+      : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Compute the initial state of the tracks.
   ///
@@ -261,7 +260,8 @@ class ScoreBasedAmbiguityResolution {
       source_link_equality_t sourceLinkEquality,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
           {}) const;
-  void saveScoreMonitor(const std::vector<ScoreMonitor>& scoreMonitor) const;
+
+  std::vector<ScoreMonitor> scoreMonitor() const ;
 
  private:
   Config m_cfg;
@@ -269,8 +269,7 @@ class ScoreBasedAmbiguityResolution {
   /// Logging instance
   std::unique_ptr<const Logger> m_logger = nullptr;
 
-  /// Default path for the score monitor file
-  std::string m_monitorFilePath = "scoreMonitor.root";
+  mutable std::vector<ScoreMonitor> m_scoreMonitor;
 
   /// Private access to logging instance
   const Logger& logger() const;

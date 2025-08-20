@@ -270,7 +270,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                     << "  New score now: " << score);
 
-    monitor.ptScore = score;                                
+    monitor.ptScore = score;
 
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -290,7 +290,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
                                  << " hits: " << detector.factorHits[nHits]
                                  << "  New score now: " << score);
 
-      monitor.detectorHitScore.push_back(score);                           
+      monitor.detectorHitScore.push_back(score);
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
@@ -336,7 +336,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
   }  // end of loop over tracks
 
-  saveScoreMonitor(scoreMonitor);
+  m_scoreMonitor = scoreMonitor;
 
   return trackScore;
 }
