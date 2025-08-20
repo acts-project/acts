@@ -188,8 +188,7 @@ template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
-ClusterCollection createClusters(Acts::Ccl::internal::ClusteringData& data,
-                                 CellCollection& cells,
+ClusterCollection createClusters(CellCollection& cells,
                                  Connect&& connect = Connect());
 
 template <typename CellCollection, typename ClusterCollection,

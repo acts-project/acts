@@ -246,9 +246,9 @@ void labelClusters(Acts::Ccl::internal::ClusteringData& data,
 
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
-ClusterCollection createClusters(Acts::Ccl::internal::ClusteringData& data,
-                                 CellCollection& cells, Connect&& connect) {
+ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
   ClusterCollection clusters;
+  Acts::Ccl::internal::ClusteringData data;
   Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim,
                             Connect>(data, cells, clusters,
                                      std::forward<Connect>(connect));
