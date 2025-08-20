@@ -26,48 +26,52 @@ namespace Acts {
 /// derived types of a base class. When invoked with a base class reference,
 /// it will look up and call the appropriate registered function.
 ///
-/// @tparam BaseType The base class type that will be the first parameter
-/// @tparam Signature The function signature (e.g., ReturnType(Args...))
-template <typename BaseType, typename Signature>
+/// @tparam base_t The base class type that will be the first parameter
+/// @tparam signature_t The function signature (e.g., return_t(Args...))
+template <typename base_t, typename signature_t>
 class TypeDispatcher;
 
-template <typename BaseType, typename ReturnType, typename... Args>
-class TypeDispatcher<BaseType, ReturnType(Args...)> {
+template <typename base_t, typename return_t, typename... args_t>
+class TypeDispatcher<base_t, return_t(args_t...)> {
  public:
-  using function_signature = ReturnType(const BaseType&, Args...);
+  // Type aliases for frequently used template parameters
+  using base_type = base_t;
+  using return_type = return_t;
+
+  using function_signature = return_t(const base_t&, args_t...);
   using function_type = std::function<function_signature>;
 
   /// Register a free function with auto-detected derived type (no template
   /// parameter needed!)
   /// @param func The function pointer - derived type is auto-detected from the first parameter
-  template <typename DerivedType>
-    requires std::is_base_of_v<BaseType, DerivedType>
-  void registerFunction(ReturnType (*func)(const DerivedType&, Args...)) {
-    registerFunctionImpl<DerivedType>(
-        [func](const DerivedType& derived, Args... args) -> ReturnType {
-          return func(derived, std::forward<Args>(args)...);
+  template <typename derived_t>
+    requires std::is_base_of_v<base_t, derived_t>
+  void registerFunction(return_t (*func)(const derived_t&, args_t...)) {
+    registerFunctionImpl<derived_t>(
+        [func](const derived_t& derived, args_t... args) -> return_t {
+          return func(derived, std::forward<args_t>(args)...);
         });
   }
 
   /// Register a function object or lambda for a specific derived type (by
   /// rvalue)
-  /// @tparam DerivedType The derived type to associate the function with
-  /// @tparam FuncType The function object type
+  /// @tparam derived_t The derived type to associate the function with
+  /// @tparam function_t The function object type
   /// @param func The function object to register (must be rvalue to indicate ownership transfer)
-  template <typename DerivedType, typename FuncType>
-    requires std::is_base_of_v<BaseType, DerivedType>
-  void registerFunction(FuncType&& func) {
-    registerFunctionImpl<DerivedType>(std::move(func));
+  template <typename derived_t, typename function_t>
+    requires std::is_base_of_v<base_t, derived_t>
+  void registerFunction(function_t&& func) {
+    registerFunctionImpl<derived_t>(std::move(func));
   }
 
   /// Register a std::function for a specific derived type (by rvalue only)
-  /// @tparam DerivedType The derived type to associate the function with
+  /// @tparam derived_t The derived type to associate the function with
   /// @param func The std::function to register (must be rvalue to indicate ownership transfer)
-  template <typename DerivedType>
-    requires std::is_base_of_v<BaseType, DerivedType>
+  template <typename derived_t>
+    requires std::is_base_of_v<base_t, derived_t>
   void registerFunction(
-      std::function<ReturnType(const DerivedType&, Args...)>&& func) {
-    registerFunctionImpl<DerivedType>(std::move(func));
+      std::function<return_t(const derived_t&, args_t...)>&& func) {
+    registerFunctionImpl<derived_t>(std::move(func));
   }
 
   /// Explicitly deleted overload for lvalue std::function to enforce
@@ -75,16 +79,16 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   /// the universal reference overload above, which would copy the function
   /// instead of moving it, defeating our ownership semantics. This provides a
   /// clear compilation error with a helpful message instead.
-  template <typename DerivedType>
+  template <typename derived_t>
   void registerFunction(
-      const std::function<ReturnType(const DerivedType&, Args...)>& func) =
+      const std::function<return_t(const derived_t&, args_t...)>& func) =
       delete;
 
   /// Call the registered function for the given object's type
   /// @param obj The object to dispatch on
   /// @param args Additional arguments to pass to the function
   /// @return The return value from the registered function
-  ReturnType operator()(const BaseType& obj, Args... args) const {
+  return_t operator()(const base_t& obj, args_t... args) const {
     std::vector<std::type_index> compatibleTypes;
 
     // Find all registered functions that can handle this object type
@@ -117,7 +121,7 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
     // Exactly one compatible function found
     auto funcIt = m_functions.find(compatibleTypes[0]);
     if (funcIt != m_functions.end()) {
-      return funcIt->second(obj, std::forward<Args>(args)...);
+      return funcIt->second(obj, std::forward<args_t>(args)...);
     }
 
     // This should never happen if our data structures are consistent
@@ -128,7 +132,7 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   /// Check if a function is registered for the given object's type
   /// @param obj The object to check
   /// @return true if a function is registered, false otherwise
-  bool hasFunction(const BaseType& obj) const {
+  bool hasFunction(const base_t& obj) const {
     // Find all registered functions that can handle this object type
     for (const auto& [registeredTypeIdx, checker] : m_castCheckers) {
       if (checker(obj)) {
@@ -139,12 +143,12 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
   }
 
   /// Check if a function is registered for the given type
-  /// @tparam DerivedType The type to check
+  /// @tparam derived_t The type to check
   /// @return true if a function is registered, false otherwise
-  template <typename DerivedType>
-    requires std::is_base_of_v<BaseType, DerivedType>
+  template <typename derived_t>
+    requires std::is_base_of_v<base_t, derived_t>
   bool hasFunction() const {
-    std::type_index typeIdx(typeid(DerivedType));
+    std::type_index typeIdx(typeid(derived_t));
     return m_functions.find(typeIdx) != m_functions.end();
   }
 
@@ -159,12 +163,12 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
 
  private:
   /// Internal helper method that centralizes function registration logic
-  /// @tparam DerivedType The derived type to associate the function with
-  /// @tparam FuncType The function type (deduced)
+  /// @tparam derived_t The derived type to associate the function with
+  /// @tparam function_t The function type (deduced)
   /// @param func The function to register
-  template <typename DerivedType, typename FuncType>
-  void registerFunctionImpl(FuncType&& func) {
-    std::type_index typeIdx(typeid(DerivedType));
+  template <typename derived_t, typename function_t>
+  void registerFunctionImpl(function_t&& func) {
+    std::type_index typeIdx(typeid(derived_t));
 
     // Check if this exact type is already registered
     if (m_functions.find(typeIdx) != m_functions.end()) {
@@ -175,8 +179,8 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
 
     // Try to detect conflicts with existing registrations if the type is
     // default constructible
-    if constexpr (std::is_default_constructible_v<DerivedType>) {
-      DerivedType tempObj{};
+    if constexpr (std::is_default_constructible_v<derived_t>) {
+      derived_t tempObj{};
       for (const auto& [existingTypeIdx, checker] : m_castCheckers) {
         if (checker(tempObj)) {
           throw std::runtime_error(
@@ -188,27 +192,27 @@ class TypeDispatcher<BaseType, ReturnType(Args...)> {
       }
     }
 
-    // Store a cast checker that tests if dynamic_cast<DerivedType*> will work
-    m_castCheckers[typeIdx] = [](const BaseType& obj) -> bool {
-      return dynamic_cast<const DerivedType*>(&obj) != nullptr;
+    // Store a cast checker that tests if dynamic_cast<derived_t*> will work
+    m_castCheckers[typeIdx] = [](const base_t& obj) -> bool {
+      return dynamic_cast<const derived_t*>(&obj) != nullptr;
     };
 
     // Wrap the function in a lambda that performs the dynamic cast
-    m_functions[typeIdx] = [func = std::forward<FuncType>(func)](
-                               const BaseType& base,
-                               Args... args) -> ReturnType {
-      const auto* derived = dynamic_cast<const DerivedType*>(&base);
+    m_functions[typeIdx] = [func = std::forward<function_t>(func)](
+                               const base_t& base,
+                               args_t... args) -> return_t {
+      const auto* derived = dynamic_cast<const derived_t*>(&base);
       if (derived == nullptr) {
         throw std::bad_cast();
       }
-      return func(*derived, std::forward<Args>(args)...);
+      return func(*derived, std::forward<args_t>(args)...);
     };
   }
 
-  using CastChecker = std::function<bool(const BaseType&)>;
+  using cast_checker_type = std::function<bool(const base_t&)>;
 
   std::unordered_map<std::type_index, function_type> m_functions;
-  std::unordered_map<std::type_index, CastChecker> m_castCheckers;
+  std::unordered_map<std::type_index, cast_checker_type> m_castCheckers;
 };
 
 }  // namespace Acts

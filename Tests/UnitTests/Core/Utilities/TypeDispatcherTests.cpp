@@ -190,8 +190,7 @@ BOOST_AUTO_TEST_CASE(MultipleArguments) {
 
   multiArgDispatcher.registerFunction<DerivedA>(
       [](const DerivedA& obj, int i, double d, const std::string& s) {
-        return "A:" + std::to_string(obj.getValue()) + ":" + std::to_string(i) +
-               ":" + std::to_string(d) + ":" + s;
+        return std::format("A:{}:{}:{:.6f}:{}", obj.getValue(), i, d, s);
       });
 
   DerivedA objA;
@@ -362,7 +361,9 @@ BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
     int value;
 
    public:
-    explicit NonDefaultConstructible(int v) : value(v) {}
+    explicit NonDefaultConstructible(int v) : value(v) {
+      static_cast<void>(value);
+    }
     std::string getType() const override { return "NonDefaultConstructible"; }
   };
 
