@@ -55,8 +55,9 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                State& state, Cache& cache,
                                                const Logger& logger)
     : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {
-  state.candidatesCollector = CandidatesForMiddleSp2(
-      config.maxSeedsPerSpMConf, config.maxQualitySeedsPerSpMConf);
+  state.candidatesCollector =
+      CandidatesForMiddleSp2(this->config().maxSeedsPerSpMConf,
+                             this->config().maxQualitySeedsPerSpMConf);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
@@ -70,14 +71,14 @@ bool BroadTripletSeedFilter::sufficientTopDoublets(
 
   // check if middle SP is in the central or forward region
   const bool isForwardRegion =
-      spM.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
-      spM.z() < config().centralSeedConfirmationRange.zMinSeedConf;
+      spM.zr()[0] > config().centralSeedConfirmationRange.zMaxSeedConf ||
+      spM.zr()[0] < config().centralSeedConfirmationRange.zMinSeedConf;
   SeedConfirmationRangeConfig seedConfRange =
       isForwardRegion ? config().forwardSeedConfirmationRange
                       : config().centralSeedConfirmationRange;
   // set the minimum number of top SP depending on whether the middle SP is
   // in the central or forward region
-  std::size_t nTopSeedConf = spM.r() > seedConfRange.rMaxSeedConf
+  std::size_t nTopSeedConf = spM.zr()[1] > seedConfRange.rMaxSeedConf
                                  ? seedConfRange.nTopForLargeR
                                  : seedConfRange.nTopForSmallR;
   // set max bottom radius for seed confirmation
@@ -105,7 +106,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   // middle bottom pair if seedConfirmation is false we always ask for at
   // least one compatible top to trigger the filter
   std::size_t minCompatibleTopSPs = 2;
-  if (!config().seedConfirmation || spB.r() > state().rMaxSeedConf) {
+  if (!config().seedConfirmation || spB.zr()[1] > state().rMaxSeedConf) {
     minCompatibleTopSPs = 1;
   }
   if (config().seedConfirmation &&
@@ -116,7 +117,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   if (tripletTopCandidates.size() < minCompatibleTopSPs) {
     return;
   }
-  float zOrigin = spM.z() - spM.r() * bottomLink.linCircle().cotTheta;
+  float zOrigin = spM.zr()[0] - spM.zr()[1] * bottomLink.cotTheta();
 
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -124,13 +125,13 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
   if (config().seedConfirmation) {
     // check if bottom SP is in the central or forward region
     const bool isForwardRegion =
-        spB.z() > config().centralSeedConfirmationRange.zMaxSeedConf ||
-        spB.z() < config().centralSeedConfirmationRange.zMinSeedConf;
+        spB.zr()[0] > config().centralSeedConfirmationRange.zMaxSeedConf ||
+        spB.zr()[0] < config().centralSeedConfirmationRange.zMinSeedConf;
     seedConfRange = isForwardRegion ? config().forwardSeedConfirmationRange
                                     : config().centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
-    nTopSeedConf = spB.r() > seedConfRange.rMaxSeedConf
+    nTopSeedConf = spB.zr()[1] > seedConfRange.rMaxSeedConf
                        ? seedConfRange.nTopForLargeR
                        : seedConfRange.nTopForSmallR;
   }
@@ -152,9 +153,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) {
     if (config().useDeltaRinsteadOfTopRadius) {
-      return fastHypot(spT.r() - spM.r(), spT.z() - spM.z());
+      return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
-    return spT.r();
+    return spT.zr()[1];
   };
 
   std::size_t beginCompTopIndex = 0;
@@ -250,8 +251,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
            deltaSeedConf == 0)) {
         continue;
       }
-      bool seedRangeCuts = spB.r() < seedConfRange.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
+      bool seedRangeCuts =
+          spB.zr()[1] < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts && deltaSeedConf == 0 &&
           impact > seedConfRange.minImpactSeedConf) {
         continue;
@@ -316,8 +318,7 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
       state().candidatesCollector.nHighQualityCandidates();
 
   cache().sortedCandidates.clear();
-  state().candidatesCollector.toSortedCandidates(spacePoints,
-                                                 cache().sortedCandidates);
+  state().candidatesCollector.toSortedCandidates(cache().sortedCandidates);
   std::span<TripletCandidate2> sortedCandidates = cache().sortedCandidates;
 
   if (config().experimentCuts != nullptr) {

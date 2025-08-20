@@ -48,7 +48,6 @@ set_target_properties(
 target_link_libraries(
     ActsPythonBindings
     PUBLIC
-        Acts::Core
         Acts::PythonUtilities
         Acts::ExamplesFramework
         Acts::ExamplesGeometry

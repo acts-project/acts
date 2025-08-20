@@ -36,7 +36,7 @@ static inline bool itkFastTrackingCuts(
   static float rMin = 45;
   static float cotThetaMax = 1.5;
 
-  if (isBottomCandidate && other.r() < rMin &&
+  if (isBottomCandidate && other.zr()[1] < rMin &&
       (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
     return false;
   }
@@ -121,9 +121,8 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
       m_cfg.centralSeedConfirmationRange;
   m_filterConfig.forwardSeedConfirmationRange =
       m_cfg.forwardSeedConfirmationRange;
-  m_filterConfig.maxSeedsPerSpMConf = std::numeric_limits<std::uint32_t>::max();
-  m_filterConfig.maxQualitySeedsPerSpMConf =
-      std::numeric_limits<std::uint32_t>::max();
+  m_filterConfig.maxSeedsPerSpMConf = m_cfg.maxSeedsPerSpMConf;
+  m_filterConfig.maxQualitySeedsPerSpMConf = m_cfg.maxQualitySeedsPerSpMConf;
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
@@ -162,12 +161,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
 
   Acts::Experimental::SpacePointContainer2 coreSpacePoints(
       Acts::Experimental::SpacePointColumns::SourceLinks |
-      Acts::Experimental::SpacePointColumns::X |
-      Acts::Experimental::SpacePointColumns::Y |
-      Acts::Experimental::SpacePointColumns::Z |
-      Acts::Experimental::SpacePointColumns::R |
-      Acts::Experimental::SpacePointColumns::VarianceR |
-      Acts::Experimental::SpacePointColumns::VarianceZ);
+      Acts::Experimental::SpacePointColumns::XY |
+      Acts::Experimental::SpacePointColumns::ZR |
+      Acts::Experimental::SpacePointColumns::VarianceZ |
+      Acts::Experimental::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::Experimental::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
@@ -179,12 +176,12 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       auto newSp = coreSpacePoints.createSpacePoint();
       newSp.assignSourceLinks(
           std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
-      newSp.x() = sp.x();
-      newSp.y() = sp.y();
-      newSp.z() = sp.z();
-      newSp.r() = sp.r();
-      newSp.varianceR() = sp.varianceR();
-      newSp.varianceZ() = sp.varianceZ();
+      newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
+                                        static_cast<float>(sp.y())};
+      newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
+                                        static_cast<float>(sp.r())};
+      newSp.varianceZ() = static_cast<float>(sp.varianceZ());
+      newSp.varianceR() = static_cast<float>(sp.varianceR());
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
@@ -202,13 +199,14 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       }
       auto first = coreSpacePoints[range.first];
       auto last = coreSpacePoints[range.second - 1];
-      minRange = std::min(first.r(), minRange);
-      maxRange = std::max(last.r(), maxRange);
+      minRange = std::min(first.zr()[1], minRange);
+      maxRange = std::max(last.zr()[1], maxRange);
     }
     return {minRange, maxRange};
   }();
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
                                             ? m_cfg.deltaRMin
@@ -228,7 +226,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   if (m_cfg.useExtraCuts) {
     bottomDoubletFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
-  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   auto bottomDoubletFinder = Acts::Experimental::DoubletSeedFinder::create(
       Acts::Experimental::DoubletSeedFinder::DerivedConfig(
           bottomDoubletFinderConfig, m_cfg.bFieldInZ));
@@ -245,6 +242,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
           topDoubletFinderConfig, m_cfg.bFieldInZ));
 
   Acts::Experimental::TripletSeedFinder::Config tripletFinderConfig;
+  tripletFinderConfig.useStripInfo = false;
+  tripletFinderConfig.sortedByCotTheta = true;
   tripletFinderConfig.minPt = m_cfg.minPt;
   tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
   tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
@@ -252,8 +251,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletFinderConfig.impactMax = m_cfg.impactMax;
   tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
-  tripletFinderConfig.useStripInfo = false;
-  tripletFinderConfig.sortedByCotTheta = true;
   auto tripletFinder = Acts::Experimental::TripletSeedFinder::create(
       Acts::Experimental::TripletSeedFinder::DerivedConfig(tripletFinderConfig,
                                                            m_cfg.bFieldInZ));
@@ -352,7 +349,7 @@ GridTripletSeedingAlgorithm::retrieveRadiusRangeForMiddle(
   }
 
   // get zBin position of the middle SP
-  auto pVal = std::ranges::lower_bound(m_cfg.zBinEdges, spM.z());
+  auto pVal = std::ranges::lower_bound(m_cfg.zBinEdges, spM.zr()[0]);
   std::size_t zBin = std::distance(m_cfg.zBinEdges.begin(), pVal);
   // protects against zM at the limit of zBinEdges
   zBin == 0 ? zBin : --zBin;

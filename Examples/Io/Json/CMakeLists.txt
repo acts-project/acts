@@ -13,7 +13,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoJson
     PUBLIC
-        Acts::Core
         Acts::PluginJson
         Acts::ExamplesDigitization
         Acts::ExamplesFramework
