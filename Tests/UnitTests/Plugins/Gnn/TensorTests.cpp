@@ -10,7 +10,7 @@
 
 #include <Acts/Plugins/Gnn/Tensor.hpp>
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
 #include <cuda_runtime_api.h>
 #endif
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(tensor_edge_limit_cpu) {
   testEdgeLimit(execContextCpu);
 }
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
 
 const Acts::ExecutionContext execContextCuda{Acts::Device::Cuda(0),
                                              cudaStreamLegacy};

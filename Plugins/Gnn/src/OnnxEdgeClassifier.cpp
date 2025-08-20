@@ -83,7 +83,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
   ACTS_INFO("Try to add ONNX execution provider for CUDA");
   OrtCUDAProviderOptions cuda_options;
   cuda_options.device_id = 0;

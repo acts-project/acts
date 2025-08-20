@@ -85,7 +85,7 @@ option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
-option(ACTS_BUILD_PLUGIN_EXATRKX "Build the GNN plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
 option(ACTS_GNN_ENABLE_CUDA "Enable CUDA for the gnn plugin" OFF)
@@ -105,7 +105,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the GNN example code" OFF)
+option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
@@ -155,7 +155,7 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
-    ACTS_BUILD_EXAMPLES_EXATRKX
+    ACTS_BUILD_EXAMPLES_GNN
     OR
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
@@ -187,7 +187,7 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
-set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
@@ -417,7 +417,7 @@ if(ACTS_BUILD_ANALYSIS_APPS)
     )
     check_root_compatibility()
 endif()
-if(ACTS_BUILD_PLUGIN_EXATRKX)
+if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_GNN_ENABLE_CUDA)
         find_package(CUDAToolkit REQUIRED)
         enable_cuda()

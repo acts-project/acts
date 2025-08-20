@@ -11,14 +11,14 @@
 #include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
 #include <cuda_runtime_api.h>
 #endif
 
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
   if (logger.level() == Acts::Logging::VERBOSE) {
     constexpr float kb = 1024;
     constexpr float mb = kb * kb;

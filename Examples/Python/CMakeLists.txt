@@ -197,7 +197,7 @@ target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
 list(APPEND py_files examples/hepmc3.py)
 
-if(ACTS_BUILD_EXAMPLES_EXATRKX)
+if(ACTS_BUILD_EXAMPLES_GNN)
     target_link_libraries(
         ActsPythonBindings
         PUBLIC Acts::ExamplesTrackFindingGnn

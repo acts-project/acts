@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/Gnn/Tensor.hpp"
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
 #include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
 #endif
 
@@ -30,7 +30,7 @@ TensorPtr createTensorMemory(std::size_t nbytes,
     return TensorPtr(ptr,
                      [](void *p) { delete[] static_cast<std::byte *>(p); });
   } else {
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
     assert(execContext.stream.has_value());
     auto stream = *execContext.stream;
     void *ptr{};
@@ -50,7 +50,7 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
   if (devFrom.isCpu() && to.device.isCpu()) {
     std::memcpy(clone.get(), ptr.get(), nbytes);
   } else {
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
     assert(to.stream.has_value());
     if (devFrom.isCuda() && to.device.isCuda()) {
       ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
@@ -80,7 +80,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
 
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   if (tensor.device().type == Acts::Device::Type::eCUDA) {
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
     return Acts::detail::cudaSigmoid(tensor, stream.value());
 #else
     throw std::runtime_error(
@@ -104,7 +104,7 @@ std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
   ExecutionContext execContext{scores.device(), stream};
 
   if (scores.device().type == Acts::Device::Type::eCUDA) {
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaApplyScoreCut(scores, edgeIndex, cut, stream.value());
 #else
     throw std::runtime_error(
@@ -189,7 +189,7 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
                 newEdgeFeatureTensor->data());
     }
   } else {
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
     ExecutionContext gpuCtx{edgeIndex.device(), stream};
 
     newEdgeIndexTensor = Tensor<std::int64_t>::Create({2, maxEdges}, gpuCtx);

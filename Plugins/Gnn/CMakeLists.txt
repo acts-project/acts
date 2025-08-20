@@ -10,7 +10,7 @@ acts_add_library(
 )
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_WITH_CUDA)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
     target_sources(
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
@@ -18,7 +18,7 @@ if(ACTS_GNN_ENABLE_CUDA)
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_WITH_MODULEMAP)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_MODULEMAP)
 
     target_link_libraries(
         ActsPluginGnn
@@ -30,7 +30,7 @@ endif()
 if(ACTS_GNN_ENABLE_ONNX)
     target_sources(ActsPluginGnn PRIVATE src/OnnxEdgeClassifier.cpp)
     target_link_libraries(ActsPluginGnn PRIVATE onnxruntime::onnxruntime)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_ONNX_BACKEND)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_ONNX_BACKEND)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
@@ -48,7 +48,7 @@ if(ACTS_GNN_ENABLE_TENSORRT)
     message(STATUS "Found TensorRT ${TensorRT_VERSION}")
     target_link_libraries(ActsPluginGnn PUBLIC trt::nvinfer trt::nvinfer_plugin)
     target_sources(ActsPluginGnn PRIVATE src/TensorRTEdgeClassifier.cpp)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_WITH_TENSORRT)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_TENSORRT)
 endif()
 
 target_include_directories(
@@ -82,11 +82,11 @@ if(ACTS_GNN_ENABLE_CUDA)
     )
     target_link_libraries(ActsPluginGnn PUBLIC CUDA::cudart)
 else()
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_CPUONLY)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_EXATRKX_TORCH_BACKEND)
+    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_TORCH_BACKEND)
     target_link_libraries(ActsPluginGnn PRIVATE ${TORCH_LIBRARIES} frnn)
     find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)

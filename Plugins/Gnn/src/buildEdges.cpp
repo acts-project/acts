@@ -19,7 +19,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <grid/counting_sort.h>
@@ -65,7 +65,7 @@ torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
 torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
                                            float rVal, int kVal,
                                            bool flipDirections) {
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
   const auto device = embedFeatures.device();
 
   const std::int64_t numSpacepoints = embedFeatures.size(0);
@@ -265,7 +265,7 @@ torch::Tensor Acts::detail::buildEdgesKDTree(torch::Tensor &embedFeatures,
 
 torch::Tensor Acts::detail::buildEdges(torch::Tensor &embedFeatures, float rVal,
                                        int kVal, bool flipDirections) {
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
   if (torch::cuda::is_available()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);
   } else {

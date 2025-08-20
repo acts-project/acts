@@ -13,7 +13,7 @@
 
 #include <chrono>
 
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
@@ -48,7 +48,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifndef ACTS_GNN_CPUONLY
   if (!torch::cuda::is_available()) {
     ACTS_INFO("CUDA not available, falling back to CPU");
   }
@@ -82,7 +82,7 @@ PipelineTensors TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
-#ifdef ACTS_EXATRKX_CPUONLY
+#ifdef ACTS_GNN_CPUONLY
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;

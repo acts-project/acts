@@ -179,7 +179,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
 
   // Run the pipeline
   Acts::GnnTiming timing;
-#ifdef ACTS_EXATRKX_CPUONLY
+#ifdef ACTS_GNN_CPUONLY
   Acts::Device device = {Acts::Device::Type::eCPU, 0};
 #else
   Acts::Device device = {Acts::Device::Type::eCUDA, 0};

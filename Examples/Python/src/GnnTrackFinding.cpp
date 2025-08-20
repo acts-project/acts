@@ -74,7 +74,7 @@ void addGnnTrackFinding(Context &ctx) {
 
   ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex);
 
-#ifdef ACTS_EXATRKX_TORCH_BACKEND
+#ifdef ACTS_GNN_TORCH_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, mex,
                                 modelPath, selectedFeatures, embeddingDim, rVal,
                                 knnVal, deviceID);
@@ -84,23 +84,23 @@ void addGnnTrackFinding(Context &ctx) {
                                 undirected, deviceID, useEdgeFeatures);
 #endif
 
-#ifdef ACTS_EXATRKX_WITH_TENSORRT
+#ifdef ACTS_GNN_WITH_TENSORRT
   ACTS_PYTHON_DECLARE_GNN_STAGE(TensorRTEdgeClassifier, EdgeClassificationBase,
                                 mex, modelPath, selectedFeatures, cut,
                                 numExecutionContexts);
 #endif
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
   ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, mex,
                                 useOneBlockImplementation, doJunctionRemoval);
 #endif
 
-#ifdef ACTS_EXATRKX_ONNX_BACKEND
+#ifdef ACTS_GNN_ONNX_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, mex,
                                 modelPath, cut);
 #endif
 
-#ifdef ACTS_EXATRKX_WITH_MODULEMAP
+#ifdef ACTS_GNN_WITH_MODULEMAP
   ACTS_PYTHON_DECLARE_GNN_STAGE(
       ModuleMapCuda, GraphConstructionBase, mex, moduleMapPath, rScale,
       phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);

@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
 #include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
 
 namespace {
@@ -54,7 +54,7 @@ std::vector<std::vector<int>> GnnPipeline::run(
     GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
-#ifdef ACTS_EXATRKX_WITH_CUDA
+#ifdef ACTS_GNN_WITH_CUDA
   std::optional<CudaStreamGuard> streamGuard;
   if (ctx.device.type == Acts::Device::Type::eCUDA) {
     streamGuard.emplace();
