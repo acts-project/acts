@@ -10,6 +10,74 @@
 
 #include <memory>
 #include <vector>
+#include <boost/pending/disjoint_sets.hpp>
+
+namespace Acts::Ccl {
+  using Label = int;
+  constexpr Label NO_LABEL = 0;
+}
+
+namespace Acts::Ccl::internal {
+  // Simple wrapper around boost::disjoint_sets. In theory, could use
+  // boost::vector_property_map and use boost::disjoint_sets without
+  // wrapping, but it's way slower
+  class DisjointSets {
+    static constexpr std::size_t defaultSize = 128;
+  public:
+    explicit DisjointSets(std::size_t initial_size = defaultSize)
+      : m_size(initial_size),
+        m_rank(m_size),
+        m_parent(m_size),
+        m_ds(&m_rank[0], &m_parent[0]) {}
+    
+    Acts::Ccl::Label makeSet() {
+      // Empirically, m_size = 128 seems to be good default. If we
+      // exceed this, take a performance hit and do the right thing.
+      while (m_globalId >= m_size) {
+        m_size *= 2;
+        m_rank.resize(m_size);
+        m_parent.resize(m_size);
+        m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+                                                                &m_parent[0]);
+      }
+      m_ds.make_set(m_globalId);
+      return static_cast<Acts::Ccl::Label>(m_globalId++);
+    }
+    
+    void unionSet(std::size_t x, std::size_t y) { m_ds.union_set(x, y); }
+    Acts::Ccl::Label findSet(std::size_t x) { return static_cast<Acts::Ccl::Label>(m_ds.find_set(x)); }
+
+    void clear() {
+      m_size = defaultSize;
+      m_rank.clear();
+      m_parent.clear();
+      m_rank.resize(m_size);
+      m_parent.resize(m_size);
+      m_globalId = 1;
+      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+							      &m_parent[0]);
+    }
+    
+  private:
+    std::size_t m_globalId = 1;
+    std::size_t m_size {128};
+    std::vector<std::size_t> m_rank;
+    std::vector<std::size_t> m_parent;
+    boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
+  };
+  
+  struct ClusteringData {
+    void clear() {
+      labels.clear();
+      nClusters.clear();
+      ds.clear();
+    }
+
+    std::vector<Acts::Ccl::Label> labels {};
+    std::vector<std::size_t> nClusters {};
+    Acts::Ccl::internal::DisjointSets ds {};
+  };
+}
 
 namespace Acts::Ccl {
 
@@ -32,9 +100,6 @@ template <typename Cluster>
 concept CanReserve = requires(Cluster cluster, std::size_t n) {
   { clusterReserve(cluster, n) } -> std::same_as<void>;
 };
-
-using Label = int;
-constexpr Label NO_LABEL = 0;
 
 // When looking for a cell connected to a reference cluster, the code
 // always loops backward, starting from the reference cell. Since
@@ -84,22 +149,6 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
   ~DefaultConnect() override = default;
 };
 
-/// @brief labelClusters
-///
-/// In-place connected component labelling using the Hoshen-Kopelman algorithm.
-/// The `Cell` type must have the following functions defined:
-///   int  getCellRow(const Cell&),
-///   int  getCellColumn(const Cell&)
-///   int& getCellLabel(Cell&)
-///
-/// @param [in] cells the cell collection to be labeled
-/// @param [in] connect the connection type (see DefaultConnect)
-template <typename CellCollection, std::size_t GridDim = 2,
-          typename Connect =
-              DefaultConnect<typename CellCollection::value_type, GridDim>>
-std::vector<std::size_t> labelClusters(CellCollection& cells,
-                                       Connect&& connect = Connect());
-
 /// @brief mergeClusters
 ///
 /// Merge a set of cells previously labeled (for instance with `labelClusters`)
@@ -108,10 +157,29 @@ std::vector<std::size_t> labelClusters(CellCollection& cells,
 ///   void clusterAddCell(Cluster&, const Cell&)
 ///
 /// @return nothing
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim>
-  requires(GridDim == 1 || GridDim == 2)
-ClusterCollection mergeClusters(CellCollection& /*cells*/);
+template <typename CellCollection, typename ClusterCollection>
+requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
+         typename ClusterCollection::value_type>)
+void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
+                   const CellCollection& cells,
+                   ClusterCollection& outv);
+  
+/// @brief labelClusters
+///
+/// In-place connected component labelling using the Hoshen-Kopelman algorithm.
+/// The `Cell` type must have the following functions defined:
+///   int  getCellRow(const Cell&),
+///   int  getCellColumn(const Cell&)
+///
+/// @param [in] cells the cell collection to be labeled
+/// @param [in] connect the connection type (see DefaultConnect)
+template <typename CellCollection, std::size_t GridDim = 2,
+          typename Connect =
+              DefaultConnect<typename CellCollection::value_type, GridDim>>
+void labelClusters(Acts::Ccl::internal::ClusteringData& data,
+		   CellCollection& cells,
+		   Connect&& connect = Connect());
+
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
@@ -119,9 +187,20 @@ template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
-ClusterCollection createClusters(CellCollection& cells,
+ClusterCollection createClusters(Acts::Ccl::internal::ClusteringData& data,
+                                 CellCollection& cells,
                                  Connect&& connect = Connect());
 
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim = 2,
+          typename Connect =
+              DefaultConnect<typename CellCollection::value_type, GridDim>>
+requires(GridDim == 1 || GridDim == 2)
+void createClusters(Acts::Ccl::internal::ClusteringData& data,
+                    CellCollection& cells,
+                    ClusterCollection& clusters,
+                    Connect&& connect = Connect());
+  
 }  // namespace Acts::Ccl
 
-#include "Acts/Clusterization/Clusterization.ipp"
+#include "Clusterization.ipp"
