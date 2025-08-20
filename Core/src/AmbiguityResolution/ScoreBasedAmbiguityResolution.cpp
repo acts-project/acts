@@ -28,12 +28,11 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
 }
 
 void Acts::ScoreBasedAmbiguityResolution::saveScoreMonitor(
-    const std::vector<ScoreMonitor>& scoreMonitor,
-    const std::string& monitorFilePath) const {
+    const std::vector<ScoreMonitor>& scoreMonitor) const {
   // Open ROOT file for writing
-  TFile* file = TFile::Open(monitorFilePath.c_str(), "RECREATE");
+  TFile* file = TFile::Open(m_monitorFilePath.c_str(), "RECREATE");
   if (!file || file->IsZombie()) {
-    throw std::runtime_error("Could not create ROOT file: " + monitorFilePath);
+    throw std::runtime_error("Could not create ROOT file: " + m_monitorFilePath);
   }
 
   // Create a TTree
@@ -62,7 +61,7 @@ void Acts::ScoreBasedAmbiguityResolution::saveScoreMonitor(
   tree->Branch("optionalScore", &optionalScore);
 
   // Fill the tree
-  for (const auto& monitor : scoreMonitor) {
+  for (const ScoreMonitor& monitor : scoreMonitor) {
     ptScore = monitor.ptScore;
     chi2Score = monitor.chi2Score;
     totalScore = monitor.totalScore;

@@ -336,7 +336,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
   }  // end of loop over tracks
 
-  saveScoreMonitor(scoreMonitor, "scoreMonitor.root");
+  saveScoreMonitor(scoreMonitor);
 
   return trackScore;
 }
