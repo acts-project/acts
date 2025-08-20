@@ -183,10 +183,30 @@ class SpacePointProxy2 {
   }
   /// Mutable access to the copy from index of the space point.
   /// @return A mutable reference to the copy from index of the space point.
-  std::size_t &copyFromIndex() const noexcept
+  SpacePointIndex2 &copyFromIndex() const noexcept
     requires(!ReadOnly)
   {
     return m_container->copyFromIndex(m_index);
+  }
+  std::array<float, 2> &xy() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xy(m_index);
+  }
+  std::array<float, 2> &zr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->zr(m_index);
+  }
+  std::array<float, 4> &xyzr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyzr(m_index);
+  }
+  std::array<float, 2> &varianceZR() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->varianceZR(m_index);
   }
 
   /// Mutable access to an extra column of data for the space point.
@@ -248,8 +268,20 @@ class SpacePointProxy2 {
   }
   /// Const access to the copy from index of the space point.
   /// @return A const reference to the copy from index of the space point.
-  std::size_t copyFromIndex() const noexcept {
+  SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
+  }
+  const std::array<float, 2> &xy() const noexcept {
+    return m_container->xy(m_index);
+  }
+  const std::array<float, 2> &zr() const noexcept {
+    return m_container->zr(m_index);
+  }
+  const std::array<float, 4> &xyzr() const noexcept {
+    return m_container->xyzr(m_index);
+  }
+  const std::array<float, 2> &varianceZR() const noexcept {
+    return m_container->varianceZR(m_index);
   }
 
   /// Const access to an extra column of data for the space point.
@@ -258,6 +290,13 @@ class SpacePointProxy2 {
   template <typename T>
   const T &extra(const ConstSpacePointColumnProxy<T> &column) const noexcept {
     return column[m_index];
+  }
+
+  /// Returns the resolved index of the space point.
+  /// This resolves the index if the space point was copied from another index.
+  /// @return The resolved index of the space point.
+  SpacePointIndex2 resolvedIndex() const noexcept {
+    return m_container->resolvedIndex(m_index);
   }
 
  private:

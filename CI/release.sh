@@ -18,7 +18,9 @@ function run() {
 
 export run
 
-version=$(git cliff --bumped-version)
+if [ -z "${version:-}" ]; then
+  version=$(git cliff --bumped-version)
+fi
 echo "Bumped version will be: $version"
 
 zenodo=$(cat .zenodo.json)
@@ -48,6 +50,10 @@ run git cliff --tag "$version" --latest --unreleased -o release.md
 
 RELEASE_TARGET=${RELEASE_TARGET:-$(git rev-parse HEAD)}
 
+repo_name=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+
+run curl "https://github.com/${repo_name}/archive/${RELEASE_TARGET}.tar.gz" -L -o "acts-${version}.tar.gz"
+
 set +e
 ! gh release view "$version" > /dev/null 2>&1
 release_exists=$?
@@ -66,3 +72,6 @@ else
     --target $RELEASE_TARGET \
     --draft
 fi
+
+run gh release upload "${version}" "acts-${version}.tar.gz" \
+  --clobber

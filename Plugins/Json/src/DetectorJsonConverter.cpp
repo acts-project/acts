@@ -23,7 +23,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
-#include <ctime>
+#include <chrono>
+#include <format>
 #include <map>
 #include <memory>
 #include <set>
@@ -33,9 +34,8 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
   // Get the time stamp
-  std::time_t tt = 0;
-  std::time(&tt);
-  auto ti = std::localtime(&tt);
+  auto now = std::chrono::system_clock::now();
+  std::string dateString = std::format("{:%Y-%m-%d %H:%M:%S}", now);
 
   nlohmann::json jDetector;
 
@@ -82,9 +82,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   nlohmann::json jHeader;
   jHeader["detector"] = detector.name();
   jHeader["type"] = "acts";
-  char buffer[100];
-  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", ti);
-  jHeader["date"] = std::string(buffer);
+  jHeader["date"] = dateString;
   jHeader["surface_count"] = nSurfaces;
   jHeader["portal_count"] = portals.size();
   jHeader["volume_count"] = detector.volumes().size();
@@ -97,17 +95,14 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
   // Get the time stamp
-  std::time_t tt = 0;
-  std::time(&tt);
-  auto ti = std::localtime(&tt);
+  auto now = std::chrono::system_clock::now();
+  std::string dateString = std::format("{:%Y-%m-%d %H:%M:%S}", now);
 
   nlohmann::json jFile;
 
   nlohmann::json jCommonHeader;
   jCommonHeader["detector"] = detector.name();
-  char buffer[100];
-  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", ti);
-  jCommonHeader["date"] = std::string(buffer);
+  jCommonHeader["date"] = dateString;
   jCommonHeader["version"] = "detray - 0.44.0";
   jCommonHeader["tag"] = "geometry";
 

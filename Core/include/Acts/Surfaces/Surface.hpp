@@ -151,7 +151,7 @@ class Surface : public virtual GeometryObject,
   /// (d) then transform comparison
   ///
   /// @param other source surface for the comparison
-  virtual bool operator==(const Surface& other) const;
+  bool operator==(const Surface& other) const;
 
  public:
   /// Return method for the Surface type to avoid dynamic casts
