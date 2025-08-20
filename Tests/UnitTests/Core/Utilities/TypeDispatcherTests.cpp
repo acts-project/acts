@@ -312,22 +312,42 @@ BOOST_AUTO_TEST_CASE(InheritanceTreeHandling) {
 }
 
 BOOST_AUTO_TEST_CASE(RegistrationTimeConflictDetection) {
-  TypeDispatcher<BaseClass, std::string()> dispatcher;
+  // Helper functions for testing auto-detection
+  auto funcA = [](const DerivedA&) { return std::string("A function"); };
+  auto funcAA = [](const DerivedAA&) { return std::string("AA function"); };
+  auto funcB = [](const DerivedB&) { return std::string("B function"); };
 
-  // Register for DerivedA
-  dispatcher.registerFunction<DerivedA>(
-      [](const DerivedA&) { return std::string("A function"); });
+  // Test with explicit template parameters
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
 
-  // This should throw because DerivedAA is default constructible and would be
-  // handled by DerivedA
-  BOOST_CHECK_THROW(
-      dispatcher.registerFunction<DerivedAA>(
-          [](const DerivedAA&) { return std::string("AA function"); }),
-      std::runtime_error);
+    // Register for DerivedA
+    dispatcher.registerFunction<DerivedA>(funcA);
 
-  // But registering for a different branch should work fine
-  BOOST_CHECK_NO_THROW(dispatcher.registerFunction<DerivedB>(
-      [](const DerivedB&) { return std::string("B function"); }));
+    // This should throw because DerivedAA is default constructible and would be
+    // handled by DerivedA
+    BOOST_CHECK_THROW(dispatcher.registerFunction<DerivedAA>(funcAA), std::runtime_error);
+
+    // But registering for a different branch should work fine
+    BOOST_CHECK_NO_THROW(dispatcher.registerFunction<DerivedB>(funcB));
+  }
+
+  // Test with auto-detected types using function pointers
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
+
+    // Register for DerivedA using auto-detection
+    std::string (*ptrA)(const DerivedA&) = [](const DerivedA&) { return std::string("A function"); };
+    dispatcher.registerFunction(ptrA);  // DerivedA auto-detected
+
+    // This should throw for the same reason - auto-detection doesn't change conflict logic
+    std::string (*ptrAA)(const DerivedAA&) = [](const DerivedAA&) { return std::string("AA function"); };
+    BOOST_CHECK_THROW(dispatcher.registerFunction(ptrAA), std::runtime_error);
+
+    // Different branch should still work fine with auto-detection
+    std::string (*ptrB)(const DerivedB&) = [](const DerivedB&) { return std::string("B function"); };
+    BOOST_CHECK_NO_THROW(dispatcher.registerFunction(ptrB));
+  }
 }
 
 BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
@@ -346,42 +366,100 @@ BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
     std::string getType() const override { return "DerivedFromNonDefault"; }
   };
 
-  TypeDispatcher<BaseClass, std::string()> dispatcher;
+  // Test with explicit template parameters
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
 
-  // Register for non-default-constructible type
-  dispatcher.registerFunction<NonDefaultConstructible>(
-      [](const NonDefaultConstructible&) {
-        return std::string("Non-default function");
-      });
+    // Register for non-default-constructible type
+    dispatcher.registerFunction<NonDefaultConstructible>(
+        [](const NonDefaultConstructible&) {
+          return std::string("Non-default function");
+        });
 
-  // Since DerivedFromNonDefault is not default constructible, we can't detect
-  // the conflict at registration time
-  BOOST_CHECK_NO_THROW(dispatcher.registerFunction<DerivedFromNonDefault>(
-      [](const DerivedFromNonDefault&) {
-        return std::string("Derived function");
-      }));
+    // Since DerivedFromNonDefault is not default constructible, we can't detect
+    // the conflict at registration time
+    BOOST_CHECK_NO_THROW(dispatcher.registerFunction<DerivedFromNonDefault>(
+        [](const DerivedFromNonDefault&) {
+          return std::string("Derived function");
+        }));
 
-  // But calling with a DerivedFromNonDefault object should detect the ambiguity
-  // at runtime
-  DerivedFromNonDefault obj(42);
-  BOOST_CHECK_THROW(dispatcher(obj), std::runtime_error);
+    // But calling with a DerivedFromNonDefault object should detect the ambiguity
+    // at runtime
+    DerivedFromNonDefault obj(42);
+    BOOST_CHECK_THROW(dispatcher(obj), std::runtime_error);
+  }
+
+  // Test with auto-detected types (should behave the same)
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
+
+    // Register using auto-detection for non-default-constructible type
+    std::string (*ptrBase)(const NonDefaultConstructible&) = 
+        [](const NonDefaultConstructible&) { return std::string("Non-default function"); };
+    dispatcher.registerFunction(ptrBase);  // NonDefaultConstructible auto-detected
+
+    // Since DerivedFromNonDefault is not default constructible, registration succeeds
+    std::string (*ptrDerived)(const DerivedFromNonDefault&) = 
+        [](const DerivedFromNonDefault&) { return std::string("Derived function"); };
+    BOOST_CHECK_NO_THROW(dispatcher.registerFunction(ptrDerived));  // DerivedFromNonDefault auto-detected
+
+    // But calling should still detect the runtime ambiguity
+    DerivedFromNonDefault obj(42);
+    BOOST_CHECK_THROW(dispatcher(obj), std::runtime_error);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(DuplicateRegistrationPrevention) {
-  TypeDispatcher<BaseClass, std::string()> dispatcher;
+  // Test with explicit template parameters
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
 
-  // First registration should work
-  dispatcher.registerFunction<DerivedA>(
-      [](const DerivedA&) { return std::string("first"); });
+    // First registration should work
+    dispatcher.registerFunction<DerivedA>(
+        [](const DerivedA&) { return std::string("first"); });
 
-  // Second registration for the same type should throw
-  BOOST_CHECK_THROW(dispatcher.registerFunction<DerivedA>(
-                        [](const DerivedA&) { return std::string("second"); }),
-                    std::runtime_error);
+    // Second registration for the same type should throw
+    BOOST_CHECK_THROW(dispatcher.registerFunction<DerivedA>(
+                          [](const DerivedA&) { return std::string("second"); }),
+                      std::runtime_error);
 
-  // Original registration should still work
-  DerivedA objA;
-  BOOST_CHECK_EQUAL(dispatcher(objA), "first");
+    // Original registration should still work
+    DerivedA objA;
+    BOOST_CHECK_EQUAL(dispatcher(objA), "first");
+  }
+
+  // Test with auto-detected types
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
+
+    // First registration using auto-detection should work
+    std::string (*ptr1)(const DerivedA&) = [](const DerivedA&) { return std::string("first"); };
+    dispatcher.registerFunction(ptr1);  // DerivedA auto-detected
+
+    // Second registration for same auto-detected type should throw
+    std::string (*ptr2)(const DerivedA&) = [](const DerivedA&) { return std::string("second"); };
+    BOOST_CHECK_THROW(dispatcher.registerFunction(ptr2), std::runtime_error);
+
+    // Original registration should still work
+    DerivedA objA;
+    BOOST_CHECK_EQUAL(dispatcher(objA), "first");
+  }
+
+  // Test mixing explicit and auto-detected (should also conflict)
+  {
+    TypeDispatcher<BaseClass, std::string()> dispatcher;
+
+    // Register with explicit template
+    dispatcher.registerFunction<DerivedA>(
+        [](const DerivedA&) { return std::string("explicit"); });
+
+    // Try to register same type with auto-detection - should throw
+    std::string (*ptr)(const DerivedA&) = [](const DerivedA&) { return std::string("auto"); };
+    BOOST_CHECK_THROW(dispatcher.registerFunction(ptr), std::runtime_error);
+
+    DerivedA objA;
+    BOOST_CHECK_EQUAL(dispatcher(objA), "explicit");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
