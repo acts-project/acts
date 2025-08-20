@@ -218,6 +218,7 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
         return SquareMatrix2::Identity();
       }
       std::vector<double> values() const final { return {}; }
+      Vector2 center() const final { return Vector2::Zero(); }
       bool inside(const Vector2& /*lposition*/) const final { return false; }
       Vector2 closestPoint(const Vector2& lposition,
                            const SquareMatrix2& /*metric*/) const final {
@@ -251,6 +252,7 @@ BOOST_AUTO_TEST_CASE(DetrayMaskConversionErrors) {
         return SquareMatrix2::Identity();
       }
       std::vector<double> values() const final { return {}; }
+      Vector2 center() const final { return Vector2::Zero(); }
       bool inside(const Vector2& /*lposition*/) const final { return false; }
       Vector2 closestPoint(const Vector2& lposition,
                            const SquareMatrix2& /*metric*/) const final {
