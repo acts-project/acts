@@ -178,6 +178,9 @@ struct MiddleSpInfo {
 class DoubletSeedFinder {
  public:
   struct Config {
+    /// Whether the input space points are sorted by radius
+    bool spacePointsSortedByRadius = false;
+
     /// Direction of the doublet candidate space points. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.
     Direction candidateDirection = Direction::Forward();
@@ -223,9 +226,6 @@ class DoubletSeedFinder {
                   const ConstSpacePointProxy2& /*other*/, float /*cotTheta*/,
                   bool /*isBottomCandidate*/)>
         experimentCuts;
-
-    /// Whether the input space points are sorted by radius
-    bool spacePointsSortedByRadius = false;
   };
 
   struct DerivedConfig : public Config {
