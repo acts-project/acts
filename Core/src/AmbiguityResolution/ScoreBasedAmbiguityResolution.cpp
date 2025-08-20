@@ -8,8 +8,6 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
-#include "TFile.h"
-#include "TTree.h"
 
 bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
