@@ -105,19 +105,17 @@ Connections<GridDim> getConnections(std::size_t idx, std::vector<Cell>& cells,
   return seen;
 }
 
-}  // namespace Acts::Ccl::internal 
-
+}  // namespace Acts::Ccl::internal
 
 namespace Acts::Ccl {
-  
+
 template <typename CellCollection, typename ClusterCollection>
   requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
                                     typename ClusterCollection::value_type>)
 void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
-                   const CellCollection& cells,
-                   ClusterCollection& outv) {
+                   const CellCollection& cells, ClusterCollection& outv) {
   using Cluster = typename ClusterCollection::value_type;
-  
+
   // Accumulate clusters into the output collection
   std::size_t previousSize = outv.size();
   outv.resize(previousSize + data.nClusters.size());
@@ -143,7 +141,8 @@ void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
     // we have an invalid cluster.
     // move them all to the back so that we can remove
     // them later
-    std::swap(outv[previousSize + idx], outv[outv.size() - invalidClusters - 1]);
+    std::swap(outv[previousSize + idx],
+              outv[outv.size() - invalidClusters - 1]);
     ++invalidClusters;
   }
   outv.resize(outv.size() - invalidClusters);
@@ -205,8 +204,7 @@ void recordEquivalences(const internal::Connections<GridDim> seen,
 
 template <typename CellCollection, std::size_t GridDim, typename Connect>
 void labelClusters(Acts::Ccl::internal::ClusteringData& data,
-		   CellCollection& cells,
-		   Connect&& connect) {
+                   CellCollection& cells, Connect&& connect) {
   using Cell = typename CellCollection::value_type;
 
   data.labels.resize(cells.size(), NO_LABEL);
@@ -242,39 +240,34 @@ void labelClusters(Acts::Ccl::internal::ClusteringData& data,
   for (const Label label : data.labels) {
     ++data.nClusters[label - 1];
   }
-
 }
 
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
 ClusterCollection createClusters(Acts::Ccl::internal::ClusteringData& data,
-				 CellCollection& cells, Connect&& connect) {
+                                 CellCollection& cells, Connect&& connect) {
   ClusterCollection clusters;
-  Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim, Connect>(data,
-                                                                                 cells,
-                                                                                 clusters,
-                                                                                 std::forward<Connect>(connect));
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim,
+                            Connect>(data, cells, clusters,
+                                     std::forward<Connect>(connect));
   return clusters;
 }
 
 template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim, typename Connect>
-requires(GridDim == 1 || GridDim == 2)
+  requires(GridDim == 1 || GridDim == 2)
 void createClusters(Acts::Ccl::internal::ClusteringData& data,
-                    CellCollection& cells,
-                    ClusterCollection& clusters,
+                    CellCollection& cells, ClusterCollection& clusters,
                     Connect&& connect) {
   if (cells.empty()) {
     return;
   }
   data.clear();
 
-  Acts::Ccl::labelClusters<CellCollection, GridDim, Connect>(data,
-                                                             cells,
-                                                             std::forward<Connect>(connect));
-  Acts::Ccl::mergeClusters<CellCollection, ClusterCollection>(data,
-                                                              cells,
+  Acts::Ccl::labelClusters<CellCollection, GridDim, Connect>(
+      data, cells, std::forward<Connect>(connect));
+  Acts::Ccl::mergeClusters<CellCollection, ClusterCollection>(data, cells,
                                                               clusters);
 }
-  
+
 }  // namespace Acts::Ccl
