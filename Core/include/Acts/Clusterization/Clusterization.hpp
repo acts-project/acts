@@ -18,16 +18,15 @@ using Label = int;
 constexpr Label NO_LABEL = 0;
 }  // namespace Acts::Ccl
 
-namespace Acts::Ccl::internal {
+namespace Acts::Ccl {
 // Simple wrapper around boost::disjoint_sets. In theory, could use
 // boost::vector_property_map and use boost::disjoint_sets without
 // wrapping, but it's way slower
 class DisjointSets {
-  static constexpr std::size_t defaultSize = 128;
-
  public:
-  explicit DisjointSets(std::size_t initial_size = defaultSize)
-      : m_size(initial_size),
+  explicit DisjointSets(std::size_t initial_size = 128)
+      : m_defaultSize(initial_size),
+        m_size(initial_size),
         m_rank(m_size),
         m_parent(m_size),
         m_ds(&m_rank[0], &m_parent[0]) {}
@@ -52,7 +51,7 @@ class DisjointSets {
   }
 
   void clear() {
-    m_size = defaultSize;
+    m_size = m_defaultSize;
     m_rank.clear();
     m_parent.clear();
     m_rank.resize(m_size);
@@ -63,8 +62,9 @@ class DisjointSets {
   }
 
  private:
+  std::size_t m_defaultSize{128};
   std::size_t m_globalId = 1;
-  std::size_t m_size{128};
+  std::size_t m_size{m_defaultSize};
   std::vector<std::size_t> m_rank;
   std::vector<std::size_t> m_parent;
   boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
@@ -79,11 +79,8 @@ struct ClusteringData {
 
   std::vector<Acts::Ccl::Label> labels{};
   std::vector<std::size_t> nClusters{};
-  Acts::Ccl::internal::DisjointSets ds{};
+  Acts::Ccl::DisjointSets ds{};
 };
-}  // namespace Acts::Ccl::internal
-
-namespace Acts::Ccl {
 
 template <typename Cell>
 concept HasRetrievableColumnInfo = requires(Cell cell) {
@@ -166,8 +163,8 @@ struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
 template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
-void labelClusters(Acts::Ccl::internal::ClusteringData& data,
-                   CellCollection& cells, Connect&& connect = Connect());
+void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
+                   Connect&& connect = Connect());
 
 /// @brief mergeClusters
 ///
@@ -180,8 +177,8 @@ void labelClusters(Acts::Ccl::internal::ClusteringData& data,
 template <typename CellCollection, typename ClusterCollection>
   requires(Acts::Ccl::CanAcceptCell<typename CellCollection::value_type,
                                     typename ClusterCollection::value_type>)
-void mergeClusters(Acts::Ccl::internal::ClusteringData& data,
-                   const CellCollection& cells, ClusterCollection& outv);
+void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
+                   ClusterCollection& outv);
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
@@ -200,9 +197,8 @@ template <typename CellCollection, typename ClusterCollection,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
   requires(GridDim == 1 || GridDim == 2)
-void createClusters(Acts::Ccl::internal::ClusteringData& data,
-                    CellCollection& cells, ClusterCollection& clusters,
-                    Connect&& connect = Connect());
+void createClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
+                    ClusterCollection& clusters, Connect&& connect = Connect());
 
 }  // namespace Acts::Ccl
 
