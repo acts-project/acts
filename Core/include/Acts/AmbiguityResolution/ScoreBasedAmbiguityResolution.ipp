@@ -161,13 +161,17 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
       score += trackFeatures.nHits * detector.hitsScoreWeight;
-      monitor.detectorHitScore.push_back(trackFeatures.nHits * detector.hitsScoreWeight);
+      monitor.detectorHitScore.push_back(trackFeatures.nHits *
+                                         detector.hitsScoreWeight);
       score += trackFeatures.nHoles * detector.holesScoreWeight;
-      monitor.detectorHoleScore.push_back(trackFeatures.nHoles * detector.holesScoreWeight);
+      monitor.detectorHoleScore.push_back(trackFeatures.nHoles *
+                                          detector.holesScoreWeight);
       score += trackFeatures.nOutliers * detector.outliersScoreWeight;
-      monitor.detectorOutlierScore.push_back(trackFeatures.nOutliers * detector.outliersScoreWeight);
+      monitor.detectorOutlierScore.push_back(trackFeatures.nOutliers *
+                                             detector.outliersScoreWeight);
       score += trackFeatures.nSharedHits * detector.otherScoreWeight;
-      monitor.detectorOtherScore.push_back(trackFeatures.nSharedHits * detector.otherScoreWeight);
+      monitor.detectorOtherScore.push_back(trackFeatures.nSharedHits *
+                                           detector.otherScoreWeight);
     }
 
     // Adding scores based on optional weights
@@ -235,7 +239,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     monitor.pT = pT;
     monitor.eta = eta;
     monitor.phi = phi;
-
 
     // cuts on optional cuts
     for (const auto& cutFunction : optionals.cuts) {

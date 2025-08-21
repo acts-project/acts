@@ -8,7 +8,6 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
-
 bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
     const double& eta) const {
@@ -25,6 +24,7 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
           trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }
 
-std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> Acts::ScoreBasedAmbiguityResolution::getScoreMonitor() const {
+std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>
+Acts::ScoreBasedAmbiguityResolution::getScoreMonitor() const {
   return m_scoreMonitor;
 }
