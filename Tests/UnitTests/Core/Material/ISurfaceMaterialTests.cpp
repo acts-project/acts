@@ -40,10 +40,6 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   };
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
-
-  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override {
-    throw DetrayNotAvailableException();
-  }
 };
 
 BOOST_AUTO_TEST_SUITE(MaterialSuite)

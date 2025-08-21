@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <sstream>
@@ -120,8 +119,6 @@ class ISurfaceMaterial {
   /// @param sl Output stream to write to
   /// @return Reference to the output stream for chaining
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
-
-  virtual std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const = 0;
 
   /// @brief output into a string
   ///

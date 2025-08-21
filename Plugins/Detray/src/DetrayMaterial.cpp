@@ -6,16 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+//
+
 #include "Acts/Geometry/DetrayExceptions.hpp"
+#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <numbers>
-
-#include <detray/io/frontend/payloads.hpp>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -103,15 +108,16 @@ detray::io::axis_payload convertBinningData(const BinningData& bData) {
 }
 }  // namespace
 
-std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
-    const {
+std::unique_ptr<DetraySurfaceMaterial>
+DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+    const BinnedSurfaceMaterial& material) {
   using enum AxisDirection;
   // BinUtility modifications
   bool swapped = false;
   // Get the bin utility (make a copy as we may modify it)
   // Detray expects 2-dimensional grid, currently supported are
   // x-y, r-phi, phi-z
-  BinUtility bUtility = binUtility();
+  BinUtility bUtility = material.binUtility();
   // Turn the bin value into a 2D grid
   if (bUtility.dimensions() == 1u) {
     if (bUtility.binningData()[0u].binvalue == AxisX) {
@@ -181,7 +187,7 @@ std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
   }
 
   // Convert the material slabs from the material matrix
-  auto materialMatrix = fullMaterial();
+  auto materialMatrix = material.fullMaterial();
   for (std::size_t ib1 = 0; ib1 < materialMatrix.size(); ++ib1) {
     for (std::size_t ib0 = 0; ib0 < materialMatrix[0u].size(); ++ib0) {
       // Translate into a local bin
@@ -199,29 +205,29 @@ std::unique_ptr<DetraySurfaceMaterial> BinnedSurfaceMaterial::toDetrayPayload()
   return std::make_unique<DetraySurfaceMaterial>(materialGrid);
 }
 
-template <>
 std::unique_ptr<DetraySurfaceMaterial>
-ProtoSurfaceMaterialT<Acts::BinUtility>::toDetrayPayload() const {
-  // Does not apply to detray
-  return nullptr;
-}
-
-template <>
-std::unique_ptr<DetraySurfaceMaterial>
-ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>::toDetrayPayload() const {
-  // Does not apply to detray
-  return nullptr;
-}
-
-std::unique_ptr<DetraySurfaceMaterial>
-detail::IGridSurfaceMaterialBase::toDetrayPayload() const {
+DetrayPayloadConverter::convertGridSurfaceMaterial(
+    const detail::IGridSurfaceMaterialBase& /*material*/) {
   throw DetrayUnsupportedMaterialException("detail::IGridSurfaceMaterialBase");
 }
 
 std::unique_ptr<DetraySurfaceMaterial>
-HomogeneousSurfaceMaterial::toDetrayPayload() const {
+DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
+    const HomogeneousSurfaceMaterial& material) {
   return std::make_unique<DetraySurfaceMaterial>(
-      convertMaterialSlab(materialSlab()));
+      convertMaterialSlab(material.materialSlab()));
+}
+
+std::unique_ptr<DetraySurfaceMaterial>
+DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
+    const ProtoSurfaceMaterialT<Acts::BinUtility>& /*material*/) {
+  return nullptr;
+}
+
+std::unique_ptr<DetraySurfaceMaterial>
+DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
+    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/) {
+  return nullptr;
 }
 
 }  // namespace Acts

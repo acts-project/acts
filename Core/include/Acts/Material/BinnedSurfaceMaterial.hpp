@@ -110,8 +110,6 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
-  std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const override;
-
  private:
   /// The helper for the bin finding
   BinUtility m_binUtility;

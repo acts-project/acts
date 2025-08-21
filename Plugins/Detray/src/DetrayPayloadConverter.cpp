@@ -579,7 +579,8 @@ DetrayPayloadConverter::convertMaterial(
       continue;
     }
 
-    auto detrayMaterial = surface.surfaceMaterial()->toDetrayPayload();
+    std::unique_ptr<DetraySurfaceMaterial> detrayMaterial =
+        m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial());
 
     if (detrayMaterial == nullptr) {
       continue;
@@ -604,7 +605,8 @@ DetrayPayloadConverter::convertMaterial(
       continue;
     }
 
-    auto detrayMaterial = surfaceMaterial->toDetrayPayload();
+    std::unique_ptr<DetraySurfaceMaterial> detrayMaterial =
+        m_cfg.convertSurfaceMaterial(*surfaceMaterial);
 
     // Portal surface material reports it does not apply to detray, skip
     if (detrayMaterial == nullptr) {
