@@ -9,7 +9,8 @@
 void Acts::saveScoreMonitor(
     const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>&
         scoreMonitor,
-    const std::string& monitorFilePath) {
+    const std::string& monitorFilePath,
+    const std::vector<std::string>& detectorNames) {
   // Open ROOT file for writing
   TFile* file = TFile::Open(monitorFilePath.c_str(), "UPDATE");
   if (!file || file->IsZombie()) {
@@ -32,6 +33,7 @@ void Acts::saveScoreMonitor(
   double chi2Score = 0;
 
   std::vector<double> optionalScore;
+  std::vector<std::string> detectorNamesroot(detectorNames);
 
   double totalScore = 0;
 
@@ -48,10 +50,10 @@ void Acts::saveScoreMonitor(
   tree->Branch("detectorOutlierScore", &detectorOutlierScore);
   tree->Branch("detectorOtherScore", &detectorOtherScore);
   tree->Branch("optionalScore", &optionalScore);
+  tree->Branch("detectorNames", &detectorNamesroot);
 
   // Fill the tree
   for (const auto& monitor : scoreMonitor) {
-
     pT = monitor.pT;
     eta = monitor.eta;
     phi = monitor.phi;
@@ -65,6 +67,7 @@ void Acts::saveScoreMonitor(
     detectorOutlierScore = monitor.detectorOutlierScore;
     detectorOtherScore = monitor.detectorOtherScore;
     optionalScore = monitor.optionalScore;
+    detectorNamesroot = detectorNames;
 
     tree->Fill();
   }
