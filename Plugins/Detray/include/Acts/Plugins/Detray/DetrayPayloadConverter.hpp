@@ -10,8 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetrayFwd.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Plugins/Detray/DetrayNavigationConverter.hpp"
+#include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
+#include "Acts/Navigation/MultiNavigationPolicy.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
 
@@ -31,6 +35,28 @@ class MaterialSlab;
 class ISurfaceMaterial;
 
 class DetrayPayloadConverter {
+  static std::unique_ptr<DetraySurfaceGrid> convertSurfaceArray(
+      const SurfaceArrayNavigationPolicy& policy,
+      const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
+
+  static std::unique_ptr<DetraySurfaceGrid> convertTryAllNavigationPolicy(
+      const TryAllNavigationPolicy& policy,
+      const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
+
+  static std::unique_ptr<DetraySurfaceGrid> convertCylinderNavigationPolicy(
+      const CylinderNavigationPolicy& policy,
+      const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
+
+  static std::unique_ptr<DetraySurfaceGrid> convertMultiLayerNavigationPolicy(
+      const Experimental::MultiLayerNavigationPolicy& policy,
+      const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
+
+  // This is a noop, the payload converter will actually traverse the children
+  // via `visit`.
+  static std::unique_ptr<DetraySurfaceGrid> convertMultiNavigationPolicy(
+      const MultiNavigationPolicy& policy,
+      const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
+
  public:
   struct Config {
     enum class SensitiveStrategy {
@@ -50,7 +76,10 @@ class DetrayPayloadConverter {
                    std::unique_ptr<DetraySurfaceGrid>(
                        const SurfaceLookupFunction& surfaceLookup,
                        const Logger& logger)>
-        convertNavigationPolicy{convertSurfaceArrayToDetray};
+        convertNavigationPolicy{
+            convertSurfaceArray, convertTryAllNavigationPolicy,
+            convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
+            convertMultiNavigationPolicy};
   };
 
   static detray::io::transform_payload convertTransform(
