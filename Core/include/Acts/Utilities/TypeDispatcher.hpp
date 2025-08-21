@@ -37,16 +37,32 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   // Type aliases for frequently used template parameters
   using base_type = base_t;
   using return_type = return_t;
+  using self_type = TypeDispatcher<base_type, return_type(args_t...)>;
 
   using function_signature = return_t(const base_t&, args_t...);
   using function_type = std::function<function_signature>;
+
+  /// Default constructor
+  TypeDispatcher() = default;
+
+  /// Constructor that registers multiple function pointers with auto-detected
+  /// types
+  /// @param funcs Function pointers - derived types are auto-detected from their first parameters
+  template <typename... derived_types_t>
+  explicit TypeDispatcher(return_t (*... funcs)(const derived_types_t&,
+                                                args_t...))
+    requires(std::is_base_of_v<base_t, derived_types_t> && ...)
+  {
+    (registerFunction(funcs),
+     ...);  // Fold expression to register each function
+  }
 
   /// Register a free function with explicit derived type
   /// @tparam derived_t The derived type to associate the function with
   /// @param func The function pointer
   template <typename derived_t>
     requires std::is_base_of_v<base_t, derived_t>
-  void registerFunction(return_t (*func)(const derived_t&, args_t...)) {
+  self_type& registerFunction(return_t (*func)(const derived_t&, args_t...)) {
     std::type_index typeIdx(typeid(derived_t));
 
     // Check if this exact type is already registered
@@ -85,6 +101,8 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
       }
       return func(*derived, std::forward<args_t>(args)...);
     };
+
+    return *this;
   }
 
   /// Call the registered function for the given object's type

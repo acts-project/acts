@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/TypeDispatcher.hpp"
 
-#include <functional>
 #include <memory>
 #include <string>
 
@@ -191,7 +190,7 @@ BOOST_AUTO_TEST_CASE(VoidReturnType) {
 }
 
 // Test function for error message testing
-std::string processErrorTest(const DerivedA&) {
+std::string processErrorTest(const DerivedA& /*arg*/) {
   return std::string("A");
 }
 
@@ -400,7 +399,61 @@ BOOST_AUTO_TEST_CASE(DuplicateRegistrationPrevention) {
     DerivedA objA;
     BOOST_CHECK_EQUAL(dispatcher(objA), "first");
   }
+}
 
+BOOST_AUTO_TEST_CASE(ConstructorWithMultipleFunctionPointers) {
+  // Test constructor with multiple function pointers - types auto-detected!
+  TypeDispatcher<BaseClass, std::string(const std::string&)> dispatcher(
+      processA, processB);
+
+  DerivedA objA;
+  DerivedB objB;
+  DerivedC objC;
+
+  // Both functions should be registered and working
+  BOOST_CHECK_EQUAL(dispatcher(objA, "ctor_"), "ctor_A:42");
+  BOOST_CHECK_EQUAL(dispatcher(objB, "ctor_"), "ctor_B:3.140000");
+
+  // Unregistered type should throw
+  BOOST_CHECK_THROW(dispatcher(objC, "ctor_"), std::runtime_error);
+
+  // Verify both functions are registered
+  BOOST_CHECK(dispatcher.hasFunction<DerivedA>());
+  BOOST_CHECK(dispatcher.hasFunction<DerivedB>());
+  BOOST_CHECK(!dispatcher.hasFunction<DerivedC>());
+  BOOST_CHECK_EQUAL(dispatcher.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(ConstructorWithSingleFunction) {
+  // Test constructor with just one function pointer
+  TypeDispatcher<BaseClass, std::string(const std::string&)> dispatcher(
+      processA);
+
+  DerivedA objA;
+  DerivedB objB;
+
+  BOOST_CHECK_EQUAL(dispatcher(objA, "single_"), "single_A:42");
+  BOOST_CHECK_THROW(dispatcher(objB, "single_"), std::runtime_error);
+  BOOST_CHECK_EQUAL(dispatcher.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(ConstructorWithDifferentSignatures) {
+  // Test constructor with functions that have different signatures
+  int (*funcInt)(const DerivedA&) = [](const DerivedA& obj) {
+    return obj.getValue();
+  };
+  int (*funcIntB)(const DerivedB&) = [](const DerivedB& obj) {
+    return static_cast<int>(obj.getValue());
+  };
+
+  TypeDispatcher<BaseClass, int()> intDispatcher(funcInt, funcIntB);
+
+  DerivedA objA;
+  DerivedB objB;
+
+  BOOST_CHECK_EQUAL(intDispatcher(objA), 42);
+  BOOST_CHECK_EQUAL(intDispatcher(objB), 3);  // 3.14 truncated to int
+  BOOST_CHECK_EQUAL(intDispatcher.size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
