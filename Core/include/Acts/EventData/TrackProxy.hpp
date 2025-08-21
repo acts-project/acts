@@ -595,24 +595,38 @@ class TrackProxy {
   /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
   template <TrackProxyConcept track_proxy_t>
-  void copyFrom(const track_proxy_t& other, bool copyTrackStates = true)
+  [[deprecated(
+      "copyFrom() with copyTrackStates == false is deprecated, use "
+      "copyFromWithoutStates()")]]
+  void copyFrom(const track_proxy_t& other, bool copyTrackStates)
     requires(!ReadOnly)
   {
-    // @TODO: Add constraint on which track proxies are allowed,
-    // this is only implicit right now
-
     if (copyTrackStates) {
-      // append track states (cheap), but they're in the wrong order
-      for (const auto& srcTrackState : other.trackStatesReversed()) {
-        auto destTrackState = appendTrackState(srcTrackState.getMask());
-        destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
-                                true);
-      }
+      return copyFrom(other);
+    }
+  }
 
-      // reverse using standard linked list reversal algorithm
-      reverseTrackStates();
+  template <TrackProxyConcept track_proxy_t>
+  void copyFrom(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
+    copyFromWithoutStates(other);
+
+    // append track states (cheap), but they're in the wrong order
+    for (const auto& srcTrackState : other.trackStatesReversed()) {
+      auto destTrackState = appendTrackState(srcTrackState.getMask());
+      destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
+                              true);
     }
 
+    // reverse using standard linked list reversal algorithm
+    reverseTrackStates();
+  }
+
+  template <TrackProxyConcept track_proxy_t>
+  void copyFromWithoutStates(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
     setParticleHypothesis(other.particleHypothesis());
 
     if (other.hasReferenceSurface()) {
@@ -632,24 +646,35 @@ class TrackProxy {
 
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
+
+    tipIndex() = kInvalid;
+    stemIndex() = kInvalid;
   }
 
   /// Creates  a *shallow copy* of the track. Track states are not copied, but
   /// the resulting track points at the same track states as the original.
   /// @note Only available if the track proxy is not read-only
+  [[deprecated("Use copyFromShallow() instead")]]
   TrackProxy shallowCopy()
     requires(!ReadOnly)
   {
-    auto ts = container().makeTrack();
-    ts.copyFrom(*this, false);
-    ts.tipIndex() = tipIndex();
-    ts.stemIndex() = stemIndex();
-    return ts;
+    auto t = container().makeTrack();
+    t.copyFromShallow(*this);
+    return t;
+  }
+
+  template <TrackProxyConcept track_proxy_t>
+  void copyFromShallow(const track_proxy_t& other)
+    requires(!ReadOnly)
+  {
+    copyFromWithoutStates(other);
+    tipIndex() = other.tipIndex();
+    stemIndex() = other.stemIndex();
   }
 
   /// Reverse the ordering of track states for this track
-  /// Afterwards, the previous endpoint of the track state sequence will be the
-  /// "innermost" track state
+  /// Afterwards, the previous endpoint of the track state sequence will be
+  /// the "innermost" track state
   /// @note Only available if the track proxy is not read-only
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!

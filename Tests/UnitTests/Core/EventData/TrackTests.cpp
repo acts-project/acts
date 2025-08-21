@@ -486,7 +486,8 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   auto ts3 = t.appendTrackState();
   ts3.predicted().setRandom();
 
-  auto t2 = t.shallowCopy();
+  auto t2 = tc.makeTrack();
+  t2.copyFromShallow(t);
 
   BOOST_CHECK_NE(t.index(), t2.index());
   BOOST_CHECK_EQUAL(t.nTrackStates(), t2.nTrackStates());
