@@ -39,6 +39,7 @@ class MaterialSlab;
 class ISurfaceMaterial;
 
 class DetrayPayloadConverter {
+ public:
   static std::unique_ptr<DetraySurfaceMaterial>
   convertHomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& material);
 
@@ -78,7 +79,6 @@ class DetrayPayloadConverter {
       const MultiNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
- public:
   struct Config {
     enum class SensitiveStrategy {
       /// Checks if the sensitive component of the surface is set to check if
