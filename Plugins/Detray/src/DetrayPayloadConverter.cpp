@@ -810,8 +810,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
               "Multiple detray-compatible navigation policies"};
         }
 
-        detrayGrid = m_cfg.convertNavigationPolicy.invokeWithFallback(
-            nullptr, policy, surfaceLookupFn, logger());
+        detrayGrid =
+            m_cfg.convertNavigationPolicy(policy, surfaceLookupFn, logger());
       });
 
       if (detrayGrid != nullptr) {

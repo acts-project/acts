@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+//
 #include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -26,25 +28,6 @@
 #include <detray/io/frontend/payloads.hpp>
 
 namespace Acts {
-
-// std::unique_ptr<DetraySurfaceGrid> MultiNavigationPolicy::toDetrayPayload(
-//     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) const {
-//   // Only ONE of the child policies should return a non-nullptr payload
-//   for (const auto& policy : m_policyPtrs) {
-//     auto payload = policy->toDetrayPayload(surfaceLookup, logger);
-//     if (payload) {
-//       return payload;
-//     }
-//   }
-//   return nullptr;
-// }
-
-// std::unique_ptr<DetraySurfaceGrid>
-// Experimental::MultiLayerNavigationPolicy::toDetrayPayload(
-//     const SurfaceLookupFunction& /*surfaceLookup*/,
-//     const Logger& /*logger*/) const {
-//   return nullptr;
-// }
 
 namespace {
 
@@ -115,7 +98,7 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 
 }  // namespace
 
-std::unique_ptr<DetraySurfaceGrid> convertSurfaceArrayToDetray(
+std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const SurfaceArrayNavigationPolicy& policy,
     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
   const auto* gridLookup =
@@ -294,22 +277,20 @@ std::unique_ptr<DetraySurfaceGrid> convertSurfaceArrayToDetray(
   return gridPayload;
 }
 
-// std::unique_ptr<DetraySurfaceGrid> TryAllNavigationPolicy::toDetrayPayload(
-//     const SurfaceLookupFunction& /*surfaceLookup*/,
-//     const Logger& logger) const {
-//   ACTS_DEBUG(
-//       "TryAllNavigationPolicy does not implement explicit detray
-//       conversion");
-//   return nullptr;
-// }
-//
-// std::unique_ptr<DetraySurfaceGrid> CylinderNavigationPolicy::toDetrayPayload(
-//     const SurfaceLookupFunction& /*surfaceLookup*/,
-//     const Logger& logger) const {
-//   ACTS_DEBUG(
-//       "CylinderNavigationPolicy does not implement explicit detray
-//       conversion");
-//   return nullptr;
-// }
+#define NOOP_CONVERTER_IMPL_FULL(type, name)                                  \
+  std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convert##name(   \
+      const type& /*policy*/, const SurfaceLookupFunction& /*surfaceLookup*/, \
+      const Logger& logger) {                                                 \
+    ACTS_DEBUG(#name << " does not implement explicit detray conversion");    \
+    return nullptr;                                                           \
+  }
+
+#define NOOP_CONVERTER_IMPL(type) NOOP_CONVERTER_IMPL_FULL(type, type)
+
+NOOP_CONVERTER_IMPL(TryAllNavigationPolicy)
+NOOP_CONVERTER_IMPL(MultiNavigationPolicy)
+NOOP_CONVERTER_IMPL(CylinderNavigationPolicy)
+NOOP_CONVERTER_IMPL_FULL(Experimental::MultiLayerNavigationPolicy,
+                         MultiLayerNavigationPolicy)
 
 }  // namespace Acts
