@@ -131,9 +131,6 @@ BOOST_AUTO_TEST_CASE(UnregisteredTypeThrows) {
   BOOST_CHECK_THROW(dispatcher(objC, "test_"), std::runtime_error);
 }
 
-
-
-
 BOOST_AUTO_TEST_CASE(ClearAndSize) {
   TypeDispatcher<BaseClass, std::string(const std::string&)> dispatcher;
   dispatcher.registerFunction(processA);  // Auto-detected as DerivedA
@@ -161,7 +158,8 @@ BOOST_AUTO_TEST_CASE(PolymorphicDispatch) {
 }
 
 // Test function for multiple arguments
-std::string processMultiArg(const DerivedA& obj, int i, double d, const std::string& s) {
+std::string processMultiArg(const DerivedA& obj, int i, double d,
+                            const std::string& s) {
   return std::format("A:{}:{}:{:.6f}:{}", obj.getValue(), i, d, s);
 }
 
@@ -282,8 +280,12 @@ BOOST_AUTO_TEST_CASE(InheritanceTreeHandling) {
     BOOST_CHECK_THROW(dispatcher(objC), std::runtime_error);
   }
 
-  auto handleABranch = [](const DerivedA&) -> std::string { return "A branch"; };
-  auto handleCBranch = [](const DerivedC&) -> std::string { return "C branch"; };
+  auto handleABranch = [](const DerivedA&) -> std::string {
+    return "A branch";
+  };
+  auto handleCBranch = [](const DerivedC&) -> std::string {
+    return "C branch";
+  };
   std::string (*funcABranch)(const DerivedA&) = handleABranch;
   std::string (*funcCBranch)(const DerivedC&) = handleCBranch;
 
@@ -309,7 +311,7 @@ BOOST_AUTO_TEST_CASE(RegistrationTimeConflictDetection) {
   auto lambdaA = [](const DerivedA&) { return std::string("A function"); };
   auto lambdaAA = [](const DerivedAA&) { return std::string("AA function"); };
   auto lambdaB = [](const DerivedB&) { return std::string("B function"); };
-  
+
   std::string (*funcA)(const DerivedA&) = lambdaA;
   std::string (*funcAA)(const DerivedAA&) = lambdaAA;
   std::string (*funcB)(const DerivedB&) = lambdaB;
@@ -328,7 +330,6 @@ BOOST_AUTO_TEST_CASE(RegistrationTimeConflictDetection) {
     // But registering for a different branch should work fine
     BOOST_CHECK_NO_THROW(dispatcher.registerFunction(funcB));
   }
-
 }
 
 BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
@@ -356,7 +357,8 @@ BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
   auto lambdaDerived = [](const DerivedFromNonDefault&) {
     return std::string("Derived function");
   };
-  std::string (*funcNonDefault)(const NonDefaultConstructible&) = lambdaNonDefault;
+  std::string (*funcNonDefault)(const NonDefaultConstructible&) =
+      lambdaNonDefault;
   std::string (*funcDerived)(const DerivedFromNonDefault&) = lambdaDerived;
 
   // Test with auto-detected types using function pointers
@@ -375,7 +377,6 @@ BOOST_AUTO_TEST_CASE(NonDefaultConstructibleTypes) {
     DerivedFromNonDefault obj(42);
     BOOST_CHECK_THROW(dispatcher(obj), std::runtime_error);
   }
-
 }
 
 BOOST_AUTO_TEST_CASE(DuplicateRegistrationPrevention) {

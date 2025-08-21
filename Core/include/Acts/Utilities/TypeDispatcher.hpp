@@ -48,14 +48,14 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     requires std::is_base_of_v<base_t, derived_t>
   void registerFunction(return_t (*func)(const derived_t&, args_t...)) {
     std::type_index typeIdx(typeid(derived_t));
-    
+
     // Check if this exact type is already registered
     if (m_functions.find(typeIdx) != m_functions.end()) {
       throw std::runtime_error(
           std::format("Function already registered for type: {}",
                       boost::core::demangle(typeIdx.name())));
     }
-    
+
     // Try to detect conflicts with existing registrations if the type is
     // default constructible
     if constexpr (std::is_default_constructible_v<derived_t>) {
@@ -70,14 +70,15 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
         }
       }
     }
-    
+
     // Store a cast checker that tests if dynamic_cast<derived_t*> will work
     m_castCheckers[typeIdx] = [](const base_t& obj) -> bool {
       return dynamic_cast<const derived_t*>(&obj) != nullptr;
     };
-    
+
     // Wrap the function in a lambda that performs the dynamic cast
-    m_functions[typeIdx] = [func](const base_t& base, args_t... args) -> return_t {
+    m_functions[typeIdx] = [func](const base_t& base,
+                                  args_t... args) -> return_t {
       const auto* derived = dynamic_cast<const derived_t*>(&base);
       if (derived == nullptr) {
         throw std::bad_cast();
@@ -164,7 +165,6 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   std::size_t size() const { return m_functions.size(); }
 
  private:
-
   using cast_checker_type = std::function<bool(const base_t&)>;
 
   std::unordered_map<std::type_index, function_type> m_functions;
