@@ -89,7 +89,8 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
 
     // Store a cast checker that tests if dynamic_cast<derived_t*> will work
     m_castCheckers[typeIdx] = [](const base_t& obj) -> bool {
-      return dynamic_cast<const derived_t*>(&obj) != nullptr;
+      const auto* derived = dynamic_cast<const derived_t*>(&obj);
+      return derived != nullptr;
     };
 
     // Wrap the function in a lambda that performs the dynamic cast
