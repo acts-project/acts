@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <sstream>
@@ -115,8 +114,6 @@ class ISurfaceMaterial {
 
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
-
-  virtual std::unique_ptr<DetraySurfaceMaterial> toDetrayPayload() const = 0;
 
   /// @brief output into a string
   ///
