@@ -1238,8 +1238,8 @@ def test_gnn(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
 
     # Extract both models, since we currently don't have a working implementation
     # of metric learning with ONNX and we need to use torch here
-    onnx_url = "https://acts.web.cern.ch/ci/gnn/onnx_models_v01.tar"
-    torch_url = "https://acts.web.cern.ch/ci/gnn/torchscript_models_v01.tar"
+    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
 
     for url in [onnx_url, torch_url]:
         tarfile_name = tmp_path / "models.tar"
