@@ -557,7 +557,26 @@ class TrackProxy {
 
   /// @anchor track_proxy_track_state_manipulation
   /// @name TrackProxy track state manipulation
-  /// Methods that manipulate the track states of a track represented by @c TrackProxy.
+  /// Methods that manipulate the track states of a track represented by @c
+  /// TrackProxy.
+  ///
+  /// **Copy Methods Overview:**
+  ///
+  /// Three main copy methods are available with different behaviors:
+  /// - @c copyFrom(): Deep copy including all track states (creates new track
+  ///                 states)
+  /// - @c copyFromWithoutStates(): Copy only track properties, invalidate
+  ///                               track state indices
+  /// - @c copyFromShallow(): Shallow copy sharing the same track states (copy
+  ///                         indices only)
+  ///
+  /// Choose based on your needs:
+  /// - Use @c copyFrom() for independent track copies with separate track
+  ///   states
+  /// - Use @c copyFromWithoutStates() to update track metadata without
+  ///   affecting trajectories
+  /// - Use @c copyFromShallow() for lightweight copies when track states can
+  ///   be shared
   /// @{
 
   /// Forward connect a track.
@@ -606,6 +625,36 @@ class TrackProxy {
     }
   }
 
+  /// Create a complete deep copy of another track, including all track states.
+  /// This creates new track states in the destination trajectory and copies
+  /// all data from the source track states. The track state sequence order
+  /// is preserved.
+  ///
+  /// **Implementation details:**
+  /// - Track states are initially copied in reversed order for efficiency
+  /// - The track state links are then updated using reverseTrackStates()
+  /// - As a consequence, the resulting track is forward-linked
+  ///
+  /// **What gets copied:**
+  /// - All track-level properties (parameters, covariance, particle hypothesis,
+  ///   etc.)
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, chi2, etc.)
+  /// - All dynamic track columns
+  /// - Complete sequence of track states with all their data
+  /// - All dynamic track state columns
+  ///
+  /// **Result:**
+  /// - The destination track will have newly created track states
+  /// - tipIndex() and stemIndex() will point to the new track states
+  /// - Track state indices will be different from the source
+  /// - All track state data will be identical to the source
+  /// - The track will be forward-linked (stemIndex() will be valid)
+  ///
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to copy from
   template <TrackProxyConcept track_proxy_t>
   void copyFrom(const track_proxy_t& other)
     requires(!ReadOnly)
@@ -623,6 +672,33 @@ class TrackProxy {
     reverseTrackStates();
   }
 
+  /// Copy track-level properties from another track, but not the track states.
+  /// This copies all track metadata and properties but leaves the track state
+  /// sequence unchanged. Useful when you want to copy track properties to an
+  /// existing track that may already have track states.
+  ///
+  /// **What gets copied:**
+  /// - Track parameters at reference surface
+  /// - Covariance matrix at reference surface
+  /// - Particle hypothesis
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits, chi2,
+  /// nDoF)
+  /// - All dynamic track columns
+  ///
+  /// **What does NOT get copied:**
+  /// - Track states (existing track states remain unchanged)
+  /// - tipIndex() and stemIndex() (track state linking is preserved)
+  ///
+  /// **Result:**
+  /// - The destination track keeps its existing track state sequence
+  /// - All track-level properties are updated to match the source
+  /// - Track state tip and stem indices will be set to kInvalid
+  ///
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to copy properties from
   template <TrackProxyConcept track_proxy_t>
   void copyFromWithoutStates(const track_proxy_t& other)
     requires(!ReadOnly)
@@ -663,6 +739,41 @@ class TrackProxy {
     return t;
   }
 
+  /// Create a shallow copy from another track, sharing the same track states.
+  /// This copies all track-level properties and makes the destination track
+  /// point to the same track state sequence as the source. The track states
+  /// themselves are not duplicated - both tracks will reference the same
+  /// track state objects in memory.
+  ///
+  /// **What gets copied:**
+  /// - All track-level properties (parameters, covariance, particle hypothesis,
+  /// etc.)
+  /// - Reference surface (shared pointer is copied)
+  /// - Track summary data (nMeasurements, nHoles, chi2, etc.)
+  /// - All dynamic track columns
+  /// - tipIndex() and stemIndex() (track state linking information)
+  ///
+  /// **What gets shared (not duplicated):**
+  /// - Track states (both tracks reference the same track state objects)
+  ///
+  /// **Result:**
+  /// - The destination track will have the same nTrackStates() as the source
+  /// - Both tracks will iterate over the same track state sequence
+  /// - Modifications to track states will be visible in both tracks
+  /// - Track state indices will be identical between tracks
+  /// - The destination track will have a different track index than the source
+  ///
+  /// @warning Modifying track states through either track will affect both tracks
+  ///          since they share the same track state objects
+  /// @warning It is the user's responsibility to ensure that the tip and stem
+  ///          indices from the source track are valid in the destination
+  ///          track's track state container. No validation is performed -
+  ///          invalid indices will lead to undefined behavior when accessing
+  ///          track states
+  /// @note Only available if the track proxy is not read-only
+  /// @note Both track containers must have compatible dynamic columns
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The source track proxy to create a shallow copy from
   template <TrackProxyConcept track_proxy_t>
   void copyFromShallow(const track_proxy_t& other)
     requires(!ReadOnly)
