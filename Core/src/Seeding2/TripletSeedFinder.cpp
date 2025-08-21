@@ -297,7 +297,7 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
           zPositionMiddle};
 
-      std::array<float, 3> rMTransf;
+      std::array<float, 3> rMTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spM, positionMiddle,
                                 rMTransf)) {
         continue;
@@ -314,7 +314,7 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spB =
           spacePoints[bottomDoublet.spacePointIndex()];
-      std::array<float, 3> rBTransf;
+      std::array<float, 3> rBTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spB, positionBottom,
                                 rBTransf)) {
         continue;
@@ -330,7 +330,7 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      std::array<float, 3> rTTransf;
+      std::array<float, 3> rTTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spT, positionTop,
                                 rTTransf)) {
         continue;
