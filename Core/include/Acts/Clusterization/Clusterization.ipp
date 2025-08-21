@@ -10,8 +10,6 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 
-#include "Acts/Utilities/Enumerate.hpp"
-
 #include <algorithm>
 #include <array>
 #include <ranges>
@@ -124,10 +122,10 @@ void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
   }
 
   // Fill clusters with cells
-  for (const auto& [i, cell] : enumerate(cells)) {
+  for (std::size_t i = 0; i < cells.size(); ++i) {
     Label label = data.labels[i] - 1;
     Cluster& cl = outv[previousSize + label];
-    clusterAddCell(cl, cell);
+    clusterAddCell(cl, cells[i]);
   }
 
   // Due to previous merging, we may have now clusters with
