@@ -69,6 +69,10 @@ class Surface : public virtual GeometryObject,
     Other = 7
   };
 
+  friend std::ostream& operator<<(std::ostream& os, SurfaceType type) {
+    return os << s_surfaceTypeNames[static_cast<std::size_t>(type)];
+  }
+
   /// Helper strings for screen output
   static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
 
