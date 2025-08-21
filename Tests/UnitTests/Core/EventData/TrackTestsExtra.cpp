@@ -621,4 +621,186 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
 }
 
+BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  // Create source track with track states and set unique data
+  auto sourceTrack = tc.makeTrack();
+
+  // Set track-level properties
+  sourceTrack.nMeasurements() = 15;
+  sourceTrack.nHoles() = 3;
+  sourceTrack.nOutliers() = 2;
+  sourceTrack.chi2() = 42.5f;
+  sourceTrack.nDoF() = 10;
+
+  // Create track states with distinctive predicted parameters
+  auto ts1 = sourceTrack.appendTrackState();
+  ts1.predicted() = BoundVector::Ones() * 1.0;
+
+  auto ts2 = sourceTrack.appendTrackState();
+  ts2.predicted() = BoundVector::Ones() * 2.0;
+
+  auto ts3 = sourceTrack.appendTrackState();
+  ts3.predicted() = BoundVector::Ones() * 3.0;
+
+  // Verify source track setup
+  BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
+
+  // Create destination track and perform deep copy
+  auto destTrack = tc.makeTrack();
+  destTrack.copyFrom(sourceTrack);
+
+  // Verify track-level properties were copied
+  BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 15);
+  BOOST_CHECK_EQUAL(destTrack.nHoles(), 3);
+  BOOST_CHECK_EQUAL(destTrack.nOutliers(), 2);
+  BOOST_CHECK_EQUAL(destTrack.chi2(), 42.5f);
+  BOOST_CHECK_EQUAL(destTrack.nDoF(), 10);
+
+  // Verify track state structure
+  BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 3);
+  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+
+  // Verify track is forward-linked (can iterate forward)
+  BOOST_CHECK(destTrack.innermostTrackState().has_value());
+
+  // Verify track state data was copied correctly (order preserved)
+  std::vector<BoundVector> sourceParams;
+  for (const auto& ts : sourceTrack.trackStatesReversed()) {
+    sourceParams.insert(sourceParams.begin(), ts.predicted());
+  }
+
+  std::vector<BoundVector> destParams;
+  for (const auto& ts : destTrack.trackStatesReversed()) {
+    destParams.insert(destParams.begin(), ts.predicted());
+  }
+
+  BOOST_REQUIRE_EQUAL(sourceParams.size(), destParams.size());
+  for (std::size_t i = 0; i < sourceParams.size(); ++i) {
+    BOOST_CHECK_EQUAL(sourceParams[i], destParams[i]);
+  }
+
+  // Verify track states have different indices (new track states were created)
+  std::vector<IndexType> sourceIndices;
+  for (const auto& ts : sourceTrack.trackStatesReversed()) {
+    sourceIndices.push_back(ts.index());
+  }
+
+  std::vector<IndexType> destIndices;
+  for (const auto& ts : destTrack.trackStatesReversed()) {
+    destIndices.push_back(ts.index());
+  }
+
+  BOOST_REQUIRE_EQUAL(sourceIndices.size(), destIndices.size());
+  for (std::size_t i = 0; i < sourceIndices.size(); ++i) {
+    BOOST_CHECK_NE(sourceIndices[i], destIndices[i]);
+  }
+
+  // Verify forward iteration works (result of forward-linking)
+  std::vector<BoundVector> forwardParams;
+  for (const auto& ts : destTrack.trackStates()) {
+    forwardParams.push_back(ts.predicted());
+  }
+
+  // Forward iteration should give same parameters in same order
+  BOOST_REQUIRE_EQUAL(destParams.size(), forwardParams.size());
+  for (std::size_t i = 0; i < destParams.size(); ++i) {
+    BOOST_CHECK_EQUAL(destParams[i], forwardParams[i]);
+  }
+
+  // Verify tracks are independent (modifying dest doesn't affect source)
+  destTrack.nMeasurements() = 99;
+  BOOST_CHECK_EQUAL(sourceTrack.nMeasurements(), 15);
+  BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 99);
+}
+
+BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  // Create source track with track states and properties
+  auto sourceTrack = tc.makeTrack();
+  sourceTrack.nMeasurements() = 25;
+  sourceTrack.chi2() = 78.9f;
+
+  auto ts1 = sourceTrack.appendTrackState();
+  ts1.predicted() = BoundVector::Ones() * 5.0;
+  auto ts2 = sourceTrack.appendTrackState();
+  ts2.predicted() = BoundVector::Ones() * 10.0;
+
+  BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 2);
+
+  // Test deprecated copyFrom with copyTrackStates = true
+  auto destTrack1 = tc.makeTrack();
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+  destTrack1.copyFrom(sourceTrack, true);  // Should do full deep copy
+
+#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
+
+  // Verify it worked like the non-boolean copyFrom
+  BOOST_CHECK_EQUAL(destTrack1.nMeasurements(), 25);
+  BOOST_CHECK_EQUAL(destTrack1.chi2(), 78.9f);
+  BOOST_CHECK_EQUAL(destTrack1.nTrackStates(), 2);
+  BOOST_CHECK_NE(destTrack1.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack1.stemIndex(), MultiTrajectoryTraits::kInvalid);
+
+  // Verify track states were copied (different indices, same data)
+  std::vector<BoundVector> sourceParams, destParams;
+  for (const auto& ts : sourceTrack.trackStatesReversed()) {
+    sourceParams.insert(sourceParams.begin(), ts.predicted());
+  }
+  for (const auto& ts : destTrack1.trackStatesReversed()) {
+    destParams.insert(destParams.begin(), ts.predicted());
+  }
+
+  BOOST_REQUIRE_EQUAL(sourceParams.size(), destParams.size());
+  for (std::size_t i = 0; i < sourceParams.size(); ++i) {
+    BOOST_CHECK_EQUAL(sourceParams[i], destParams[i]);
+  }
+
+  // Test deprecated copyFrom with copyTrackStates = false
+  auto destTrack2 = tc.makeTrack();
+  destTrack2.appendTrackState();  // Add some initial track states
+  destTrack2.appendTrackState();
+  destTrack2.linkForward();
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+  destTrack2.copyFrom(sourceTrack,
+                      false);  // Should behave like copyFromWithoutStates
+
+#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
+
+  // The deprecated method with false should behave like copyFromWithoutStates:
+  // - Copy track properties
+  // - Invalidate tip and stem indices
+  // - Leave existing track states in container but inaccessible
+
+  // Track properties should be copied
+  BOOST_CHECK_EQUAL(destTrack2.nMeasurements(), 25);
+  BOOST_CHECK_EQUAL(destTrack2.chi2(), 78.9f);
+
+  // Tip and stem indices should be invalidated
+  BOOST_CHECK_EQUAL(destTrack2.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack2.stemIndex(), MultiTrajectoryTraits::kInvalid);
+
+  // nTrackStates should return 0 due to invalid indices
+  BOOST_CHECK_EQUAL(destTrack2.nTrackStates(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
