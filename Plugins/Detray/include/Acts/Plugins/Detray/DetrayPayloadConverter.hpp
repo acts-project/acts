@@ -10,6 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetrayFwd.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -35,6 +39,23 @@ class MaterialSlab;
 class ISurfaceMaterial;
 
 class DetrayPayloadConverter {
+  static std::unique_ptr<DetraySurfaceMaterial>
+  convertHomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& material);
+
+  static std::unique_ptr<DetraySurfaceMaterial> convertGridSurfaceMaterial(
+      const detail::IGridSurfaceMaterialBase& material);
+
+  static std::unique_ptr<DetraySurfaceMaterial> convertBinnedSurfaceMaterial(
+      const BinnedSurfaceMaterial& material);
+
+  static std::unique_ptr<DetraySurfaceMaterial>
+  convertProtoSurfaceMaterialBinUtility(
+      const ProtoSurfaceMaterialT<Acts::BinUtility>& material);
+
+  static std::unique_ptr<DetraySurfaceMaterial>
+  convertProtoSurfaceMaterialProtoAxes(
+      const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& material);
+
   static std::unique_ptr<DetraySurfaceGrid> convertSurfaceArray(
       const SurfaceArrayNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
@@ -80,6 +101,12 @@ class DetrayPayloadConverter {
             convertSurfaceArray, convertTryAllNavigationPolicy,
             convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
             convertMultiNavigationPolicy};
+
+    TypeDispatcher<ISurfaceMaterial, std::unique_ptr<DetraySurfaceMaterial>()>
+        convertSurfaceMaterial{
+            convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
+            convertGridSurfaceMaterial, convertProtoSurfaceMaterialProtoAxes,
+            convertProtoSurfaceMaterialBinUtility};
   };
 
   static detray::io::transform_payload convertTransform(
