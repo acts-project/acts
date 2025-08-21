@@ -19,6 +19,6 @@ void saveScoreMonitor(
     const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>&
         scoreMonitor,
     const std::string& monitorFile,
-    const std::vector<std::string>& detectorNames = {} );
+    const std::vector<std::string>& detectorNames = {});
 
 }

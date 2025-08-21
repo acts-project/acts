@@ -32,9 +32,9 @@ void addAmbiguityResolution(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm, mex,
-      "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile, monitorFile,
-      outputTracks, minScore, minScoreSharedTracks, maxShared, minUnshared,
-      maxSharedTracksPerMeasurement, useAmbiguityScoring);
+      "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile,
+      monitorFile, outputTracks, minScore, minScoreSharedTracks, maxShared,
+      minUnshared, maxSharedTracksPerMeasurement, useAmbiguityScoring);
 }
 
 }  // namespace Acts::Python
