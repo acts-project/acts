@@ -17,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 
+#include <format>
 #include <fstream>
 #include <memory>
 #include <vector>
