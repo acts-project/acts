@@ -567,4 +567,58 @@ BOOST_AUTO_TEST_CASE(ProxyAccessorConstexprConstruction) {
                 "ProxyAccessor should be constructible at compile time");
 }
 
+BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  // Create source track with track states
+  auto sourceTrack = tc.makeTrack();
+  sourceTrack.appendTrackState();
+  sourceTrack.appendTrackState();
+  sourceTrack.appendTrackState();
+  sourceTrack.linkForward();
+
+  // Verify source track has valid indices
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(sourceTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
+
+  // Set some track properties
+  sourceTrack.nMeasurements() = 42;
+  sourceTrack.nHoles() = 5;
+  sourceTrack.chi2() = 123.45f;
+
+  // Create destination track that also has track states initially
+  auto destTrack = tc.makeTrack();
+  destTrack.appendTrackState();
+  destTrack.appendTrackState();
+  destTrack.linkForward();
+
+  // Verify destination has valid indices before copy
+  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 2);
+
+  // Copy without states
+  destTrack.copyFromWithoutStates(sourceTrack);
+
+  // Verify that tip and stem indices are now invalid
+  BOOST_CHECK_EQUAL(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+
+  // Verify that track properties were copied
+  BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 42);
+  BOOST_CHECK_EQUAL(destTrack.nHoles(), 5);
+  BOOST_CHECK_EQUAL(destTrack.chi2(), 123.45f);
+
+  // Verify that nTrackStates returns 0 since indices are invalid
+  BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 0);
+
+  // Verify that the original track states are still in the container
+  // but not accessible through the destination track
+  BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
