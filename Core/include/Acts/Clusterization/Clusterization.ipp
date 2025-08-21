@@ -122,6 +122,8 @@ void mergeClusters(Acts::Ccl::ClusteringData& data, const CellCollection& cells,
   }
 
   // Fill clusters with cells
+  // We are not using enumerate, since that is less optimal than
+  // this loop
   for (std::size_t i = 0; i < cells.size(); ++i) {
     Label label = data.labels[i] - 1;
     Cluster& cl = outv[previousSize + label];
