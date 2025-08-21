@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
+
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -17,7 +19,6 @@
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <sstream>
