@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(MaterialSlabTest) {
                                        Acts::Logging::INFO);
 
   HomogeneousSurfaceMaterial slab(materialSlab12345);
-  auto detrayMaterial = slab.toDetrayPayload();
+  auto detrayMaterial =
+      DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(slab);
 
   // Convert the material slab
   detray::io::material_slab_payload payload =
@@ -104,7 +105,10 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
   volume->addSurface(surface);
 
   // Convert material
-  auto detrayMaterial = std::move(*surfaceMaterial->toDetrayPayload());
+
+  auto detrayMaterial =
+      *DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
+          *surfaceMaterial);
 
   auto* slabPayload =
       std::get_if<detray::io::material_slab_payload>(&detrayMaterial);
@@ -131,10 +135,10 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
 
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-unpackGrid(const Acts::DetraySurfaceMaterial* material) {
+unpackGrid(const Acts::DetraySurfaceMaterial& material) {
   if (auto* grid = std::get_if<detray::io::grid_payload<
           detray::io::material_slab_payload, detray::io::material_id>>(
-          material)) {
+          &material)) {
     return *grid;
   }
   BOOST_FAIL("Not a grid payload");
@@ -155,7 +159,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -215,7 +221,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -279,7 +287,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -331,7 +341,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
       binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   // - we fake 2D always for detray to minimize the number of containers
@@ -376,7 +388,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -410,7 +424,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -454,7 +470,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
-      payload = unpackGrid(binnedMaterial.toDetrayPayload().get());
+      payload =
+          unpackGrid(*DetrayPayloadConverter::convertBinnedSurfaceMaterial(
+              binnedMaterial));
 
   // Check the payload
   BOOST_CHECK_EQUAL(payload.axes.size(), 2u);
@@ -483,7 +501,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
       Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
                                   0., Acts::MappingType::Default);
 
-  BOOST_CHECK_THROW(binnedMaterial.toDetrayPayload(), std::invalid_argument);
+  BOOST_CHECK_THROW(
+      DetrayPayloadConverter::convertBinnedSurfaceMaterial(binnedMaterial),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
