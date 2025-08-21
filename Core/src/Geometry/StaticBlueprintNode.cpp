@@ -111,7 +111,11 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
   if (m_navigationPolicyFactory) {
     policyFactory = m_navigationPolicyFactory.get();
   }
-  m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
+
+  if (!m_volume->navigationPolicy()) {
+    m_volume->setNavigationPolicy(
+        policyFactory->build(gctx, *m_volume, logger));
+  }
 
   parent.addVolume(std::move(m_volume));
 }
