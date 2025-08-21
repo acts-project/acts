@@ -1,7 +1,7 @@
 (gnnplugin)=
 # GNN plugin
 
-This plugin contains a track finding module based on the Graph Neural Network (GNN) workflow which is developed within the GNN4ITk team in ATLAS, resembling closely the structure of the training framework [acorn](https://gitlab.cern.ch/gnn4itkteam/acorn). Build instructions and dependencies can be found in the README of the plugin.
+This plugin contains a track finding module based on the Graph Neural Network (GNN) workflow which is developed within the GNN4ITk team in ATLAS, resembling closely the structure of the training framework [acorn](https://gitlab.cern.ch/gnn4itkteam/acorn). Previously, the plugin was had the name Exa.TrkX plugin, named after the Exa.TrkX project. Build instructions and dependencies can be found in the README of the plugin.
 
 ## Stages
 
