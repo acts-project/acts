@@ -32,8 +32,6 @@ Graph construction: Metric learning
 The codebase is currently under refactoring, the documentation will be updated once the code has stabilized.
 :::
 
-See [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/gnn.py) for the corresponding python example.
-
 ## Resources
 
 * Talk by *Daniel Murnane* at the [Connecting the Dots 2020](https://indico.cern.ch/event/831165/contributions/3717124/attachments/2024241/3385587/GNNs_for_Track_Finding.pdf)
