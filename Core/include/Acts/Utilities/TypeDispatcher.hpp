@@ -128,7 +128,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
 
     if (compatibleTypes.size() > 1) {
       std::string typeNames;
-      for (size_t i = 0; i < compatibleTypes.size(); ++i) {
+      for (std::size_t i = 0; i < compatibleTypes.size(); ++i) {
         if (i > 0) {
           typeNames += ", ";
         }
