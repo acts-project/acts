@@ -47,7 +47,6 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
 
   /// Constructor that registers multiple function pointers with auto-detected
   /// types
-  /// @param funcs Function pointers - derived types are auto-detected from their first parameters
   template <typename... derived_types_t>
   explicit TypeDispatcher(return_t (*... funcs)(const derived_types_t&,
                                                 args_t...))
