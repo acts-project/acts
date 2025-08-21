@@ -622,6 +622,8 @@ class TrackProxy {
   {
     if (copyTrackStates) {
       return copyFrom(other);
+    } else {
+      return copyFromWithoutStates(other);
     }
   }
 
