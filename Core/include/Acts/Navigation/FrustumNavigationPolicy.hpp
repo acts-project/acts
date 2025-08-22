@@ -39,10 +39,10 @@ namespace Acts::Experimental {
 					const Config& config)
 			: m_volume(volume) {
 				ACTS_VERBOSE("Constructing FrustumNavigationPolicy for volume " << m_volume.volumeName());
-				const std::vector<BoundingBox*> prims;
+				std::vector<BoundingBox*> prims;
 				m_boxes.push_back(std::make_unique<BoundingBox>(m_volume.boundingBox()));
 				prims.push_back(m_boxes.back().get());
-				for(auto & vol : m_volume.volumes) {
+				for(auto & vol : m_volume.volumes()) {
 					m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox()));
 					prims.push_back(m_boxes.back().get());
 				}

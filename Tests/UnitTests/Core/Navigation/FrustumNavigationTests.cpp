@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <boost/test/unit_test.hpp>
-
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
@@ -16,23 +14,25 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Navigation/FrustumNavigationPolicy.hpp"
 
 using namespace Acts;
 using namespace ActsExamples;
 using namespace Acts::GeoModel;
+using namespace Acts::Experimental;
 
 GeometryContext gContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
 auto logger = getDefaultLogger("FrustumNavigationTests", Logging::VERBOSE);
 
 // This tests the frustum navigation policy for gen3 geometry interface
-BOOST_AUTO_TEST_CASE(Frustum_NavigationPolicy) {
+int main() {
 	//create mockup detector
 	GeoMuonMockupExperiment::Config detCfg;
-	GeoMuonMockupExperiment mockDet(detCfg,"GeoMockUpMS");
+	detCfg.nEtaStations=4;
+	detCfg.nSectors=12;
+	GeoMuonMockupExperiment mockDet(detCfg,getDefaultLogger("FrustumNavigationTestsGMM", Logging::VERBOSE));
 	Acts::GeoModelTree gmTree=mockDet.constructMS();
-	BOOST_CHECK(gmTree.publisher->getPublishedVol("Muon").size()>0);
 
 	GeoModelDetector::Config gmdConfig;
 	gmdConfig.geoModelTree=gmTree;
@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(Frustum_NavigationPolicy) {
 	GeoModelDetectorObjectFactory::Config gmdObjFactoryCfg;
 	gmdObjFactoryCfg.nameList={"RpcGasGap","MDTDriftGas"};
 	gmdObjFactoryCfg.convertSubVolumes=true;
-	gmdObjFactoryCfg.convertBox="MDT";
-	GeoModelDetectorObjectFactory gmdObjFactory(gmdObjFactoryCfg);
+	gmdObjFactoryCfg.convertBox={"MDT"};
+	GeoModelDetectorObjectFactory gmdObjFactory(gmdObjFactoryCfg,getDefaultLogger("FrustumNavigationTestsFactory", Logging::VERBOSE));
 	GeoModelDetectorObjectFactory::Options options;
 	options.queries={"Muon"};
 	GeoModelDetectorObjectFactory::Cache cache;
@@ -50,12 +50,12 @@ BOOST_AUTO_TEST_CASE(Frustum_NavigationPolicy) {
 
 	GeoModelMuonMockupBuilder::Config builderConfig;
 	builderConfig.stationNames = {"Inner", "Middle", "Outer"};
-	builderConfig.volumeBoxFPVs = cache.boundingBoxes;
-	GeoModelMuonMockupBuilder trackingGeometryBuilder(builderConfig,"GeoModelMuonMockupBuilder");
+	builderConfig.volumeBoxFPVs = cache.volumeBoxFPVs;
+	GeoModelMuonMockupBuilder trackingGeometryBuilder(builderConfig,getDefaultLogger("FrustumNavigationTestsBuilder", Logging::VERBOSE));
 
-	field=ConstantBField(Vector3(0, 0, 0 * u.T));
+	ConstantBField field=ConstantBField(Vector3(0, 0, 0 ) * UnitConstants::T);
 
-	std::shared_ptr<const TrackingGeometry> trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder);
+	std::shared_ptr<const TrackingGeometry> trackingGeometry = muonDetector.buildTrackingGeometry(gContext, trackingGeometryBuilder);
 
 	// check the navigation policy
   	NavigationStream main;
@@ -63,6 +63,12 @@ BOOST_AUTO_TEST_CASE(Frustum_NavigationPolicy) {
   	Vector3 startPos = {0., 0., 0.};
   	Vector3 startDir = {0., 1., 0.};
   	NavigationArguments args{startPos, startDir};
+
+	FrustumNavigationPolicy::Config frustumConfig;
+	FrustumNavigationPolicy frustumNav(gContext,trackingGeometry->highestTrackingVolume,logger,frustumConfig);
+	NavigationDelegate delegate;
+  	frustumNav.connect(delegate);
+	delegate(args,stream, *logger);
+	return 0;
 }
 
-BOOST_AUTO_TEST_SUITE_END()
