@@ -154,7 +154,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     std::cout << "Residual: " << toString(resCalc.residual())
               << ", line distance: " << lineDist << std::endl;
     ///
-    BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::bending],
+    BOOST_CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::bending)],
                       lineDist - testPoint.driftRadius(), 1.e-12);
   } else {
     std::cout << "Test residual w.r.t strip space point -- position: "
@@ -174,12 +174,12 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
               << ", <delta, n> =" << delta.dot(n) << std::endl;
 
     Acts::ActsSquareMatrix<3> coordTrf{Acts::ActsSquareMatrix<3>::Zero()};
-    coordTrf.col(ResidualIdx::bending) = testPoint.measuresLoc1()
-                                             ? testPoint.toNextSensor()
-                                             : testPoint.sensorDirection();
-    coordTrf.col(ResidualIdx::nonBending) = testPoint.measuresLoc1()
-                                                ? testPoint.sensorDirection()
-                                                : testPoint.toNextSensor();
+    coordTrf.col(toUnderlying(ResidualIdx::bending)) =
+        testPoint.measuresLoc1() ? testPoint.toNextSensor()
+                                 : testPoint.sensorDirection();
+    coordTrf.col(toUnderlying(ResidualIdx::nonBending)) =
+        testPoint.measuresLoc1() ? testPoint.sensorDirection()
+                                 : testPoint.toNextSensor();
     coordTrf.col(2) = n;
     std::cout << "Coordinate trf: \n" << coordTrf << std::endl;
 
@@ -187,21 +187,25 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     std::cout << "Transformed delta: " << toString(trfDelta) << std::endl;
 
     if (testPoint.measuresLoc1()) {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::bending],
-                        resCalc.residual()[ResidualIdx::bending], 1.e-10);
+      BOOST_CHECK_CLOSE(trfDelta[toUnderlying(ResidualIdx::bending)],
+                        resCalc.residual()[toUnderlying(ResidualIdx::bending)],
+                        1.e-10);
     } else {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::bending] *
+      BOOST_CHECK_CLOSE(trfDelta[toUnderlying(ResidualIdx::bending)] *
                             static_cast<double>(resCfg.calcAlongStrip),
-                        resCalc.residual()[ResidualIdx::bending], 1.e-10);
+                        resCalc.residual()[toUnderlying(ResidualIdx::bending)],
+                        1.e-10);
     }
 
     if (testPoint.measuresLoc0()) {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::nonBending],
-                        resCalc.residual()[ResidualIdx::nonBending], 1.e-10);
+      BOOST_CHECK_CLOSE(
+          trfDelta[toUnderlying(ResidualIdx::nonBending)],
+          resCalc.residual()[toUnderlying(ResidualIdx::nonBending)], 1.e-10);
     } else {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::nonBending] *
-                            static_cast<double>(resCfg.calcAlongStrip),
-                        resCalc.residual()[ResidualIdx::nonBending], 1.e-10);
+      BOOST_CHECK_CLOSE(
+          trfDelta[toUnderlying(ResidualIdx::nonBending)] *
+              static_cast<double>(resCfg.calcAlongStrip),
+          resCalc.residual()[toUnderlying(ResidualIdx::nonBending)], 1.e-10);
     }
   }
 
@@ -306,12 +310,13 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   const double ToF =
       (locToGlob * planeIsect).norm() / Acts::PhysicalConstants::c + timeT0;
 
-  BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::time], sp.time() - ToF,
-                    1.e-10);
+  BOOST_CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::time)],
+                    sp.time() - ToF, 1.e-10);
   std::cout << "Time of flight: " << ToF << ", measured time : " << sp.time()
             << " --> residual: " << (sp.time() - ToF)
-            << " vs. from calculator: " << resCalc.residual()[ResidualIdx::time]
-            << "." << std::endl;
+            << " vs. from calculator: "
+            << resCalc.residual()[toUnderlying(ResidualIdx::time)] << "."
+            << std::endl;
   constexpr double h = 5.e-9;
   constexpr double tolerance = 1.e-3;
 

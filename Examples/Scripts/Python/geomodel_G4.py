@@ -156,21 +156,32 @@ def main():
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
-        gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.INFO
+        gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
-    runGeant4(
+    algSequence = runGeant4(
         detector=detector,
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.outDir,
         volumeMappings=gmFactoryConfig.nameList,
         events=args.nEvents,
-    ).run()
+    )
 
-    # runPropagation(trackingGeometry, field, args.outDir).run()
+    from acts.examples import MuonSpacePointDigitizer
+
+    digiAlg = MuonSpacePointDigitizer(
+        randomNumbers=acts.examples.RandomNumbers(),
+        trackingGeometry=trackingGeometry,
+        dumpVisualization=True,
+        digitizeTime=True,
+        level=logLevel,
+    )
+    algSequence.addAlgorithm(digiAlg)
+
+    algSequence.run()
 
     wb = WhiteBoard(acts.logging.INFO)
 
