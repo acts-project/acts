@@ -33,10 +33,8 @@ namespace Acts::Test {
 constexpr bool debugMode = true;
 constexpr bool print = false;
 
-#define PRINT_DEBUG_MSG(MSG)                                                  \
-  if constexpr (print) {                                                      \
-    std::cout << __func__ << "() - " << __LINE__ << ": " << MSG << std::endl; \
-  }
+ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests",
+                                   Logging::Level::INFO));
 
 class StrawTestPoint;
 using TestStrawCont_t = std::vector<std::unique_ptr<StrawTestPoint>>;
@@ -162,11 +160,11 @@ Line_t generateLine(RandomEngine& engine) {
       0.2_degree) {
     return generateLine(engine);
   }
-  PRINT_DEBUG_MSG("Generated parameters theta: "
-                  << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-                  << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
-                  << toString(line.position()) << " + "
-                  << toString(line.direction()));
+  ACTS_DEBUG("Generated parameters theta: "
+             << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
+             << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
+             << toString(line.position()) << " + "
+             << toString(line.direction()));
   return line;
 }
 /// @brief Extrapolate the straight line track through the straw layers to
@@ -204,12 +202,12 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     }
   }
   /// Print the staggering
-  PRINT_DEBUG_MSG("##############################################");
+  ACTS_DEBUG("##############################################");
 
   for (std::uint32_t l = 0; l < nTubeLayers; ++l) {
-    PRINT_DEBUG_MSG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
+    ACTS_DEBUG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
   }
-  PRINT_DEBUG_MSG("##############################################");
+  ACTS_DEBUG("##############################################");
 
   TestStrawCont_t circles{};
   /// Extrapolate the track to the z-planes of the tubes and determine which
@@ -222,9 +220,9 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
         stag.z() + tubeRadius);
 
-    PRINT_DEBUG_MSG("Extrapolated to plane "
-                    << toString(planeExtpLow.position()) << " "
-                    << toString(planeExtpHigh.position()));
+    ACTS_DEBUG("Extrapolated to plane " << toString(planeExtpLow.position())
+                                        << " "
+                                        << toString(planeExtpHigh.position()));
 
     const auto dToFirstLow = static_cast<std::int32_t>(std::ceil(
         (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
@@ -240,8 +238,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
-      PRINT_DEBUG_MSG("Tube position: " << toString(tube)
-                                        << ", radius: " << rad);
+      ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
 
       if (std::abs(rad) > tubeRadius) {
         continue;
@@ -256,7 +253,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
           tube, smearedR, StrawTestCalibrator::calcDriftUncert(smearedR)));
     }
   }
-  PRINT_DEBUG_MSG("Track hit in total " << circles.size() << " tubes ");
+  ACTS_DEBUG("Track hit in total " << circles.size() << " tubes ");
   return circles;
 }
 /// @brief Calculate the overall chi2 of the measurements to the track
@@ -268,9 +265,9 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
     const double dist = Acts::detail::LineHelper::signedDistance(
         meas->localPosition(), meas->sensorDirection(), track.position(),
         track.direction());
-    PRINT_DEBUG_MSG("Distance straw: " << toString(meas->localPosition())
-                                       << ",  r: " << meas->driftRadius()
-                                       << " - to track: " << Acts::abs(dist));
+    ACTS_DEBUG("Distance straw: " << toString(meas->localPosition())
+                                  << ",  r: " << meas->driftRadius()
+                                  << " - to track: " << Acts::abs(dist));
 
     chi2 += Acts::pow(
         (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert(), 2);
@@ -326,8 +323,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
                    1.e-12);
-    PRINT_DEBUG_MSG("True drift signs: " << trueDriftSigns
-                                         << ", chi2: " << chi2);
+    ACTS_DEBUG("True drift signs: " << trueDriftSigns << ", chi2: " << chi2);
 
     auto fitResult = fastFitter.fit(strawPoints, trueDriftSigns);
     if (!fitResult) {
@@ -342,14 +338,14 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     trackPars[toUnderlying(Line_t::ParIndex::y0)] = (*fitResult).y0;
     trackPars[toUnderlying(Line_t::ParIndex::phi)] = 90._degree;
     track.updateParameters(trackPars);
-    PRINT_DEBUG_MSG(
-        "Updated parameters: "
-        << (trackPars[toUnderlying(Line_t::ParIndex::theta)] / 1._degree)
-        << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)] << " -- "
-        << toString(track.position()) << " + " << toString(track.direction()));
+    ACTS_DEBUG("Updated parameters: "
+               << (trackPars[toUnderlying(Line_t::ParIndex::theta)] / 1._degree)
+               << ", y0: " << trackPars[toUnderlying(Line_t::ParIndex::y0)]
+               << " -- " << toString(track.position()) << " + "
+               << toString(track.direction()));
 
     const double testChi2 = calcChi2(strawPoints, track);
-    PRINT_DEBUG_MSG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
+    ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
     BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
     if (debugMode) {
