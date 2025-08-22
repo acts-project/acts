@@ -6,6 +6,10 @@ acts_add_library(
     ExamplesFramework
     SHARED
     src/EventData/MuonSpacePoint.cpp
+<<<<<<< HEAD
+=======
+    src/EventData/MuonSPLayerSplitter.cpp
+>>>>>>> ec461e195 (Introduce straw segment seeder module)
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
