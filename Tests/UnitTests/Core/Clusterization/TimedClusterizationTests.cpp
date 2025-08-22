@@ -78,9 +78,10 @@ BOOST_AUTO_TEST_CASE(TimedGrid_1D_withtime) {
   expectedResults.push_back({7ul, 8ul});
   expectedResults.push_back({4ul, 5ul});
 
-  ClusterCollection clusters =
-      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 1>(
-          cells, Acts::Ccl::TimedConnect<Cell, 1>(0.5));
+  Acts::Ccl::ClusteringData data;
+  ClusterCollection clusters;
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, 1>(
+      data, cells, clusters, Acts::Ccl::TimedConnect<Cell, 1>(0.5));
 
   BOOST_CHECK_EQUAL(5ul, clusters.size());
 
