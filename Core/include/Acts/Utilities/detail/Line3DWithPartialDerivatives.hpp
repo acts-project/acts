@@ -34,14 +34,33 @@ class Line3DWithPartialDerivatives {
     phi = 3,
     nPars = 4
   };
-  static constexpr std::uint8_t s_nPars =
-      static_cast<std::uint8_t>(ParIndex::nPars);
+  static constexpr auto s_nPars = static_cast<std::size_t>(ParIndex::nPars);
   /// @brief Abrivation of the parameter vector type
   using ParamVector = std::array<T, s_nPars>;
+  /// @brief default constructor
+  Line3DWithPartialDerivatives() = default;
+  /// @brief Default copy constructor
+  Line3DWithPartialDerivatives(const Line3DWithPartialDerivatives& other) =
+      default;
+  /// @brief Default move constructor
+  Line3DWithPartialDerivatives(Line3DWithPartialDerivatives&& other) = default;
+  /// @brief Default assignment operator
+  Line3DWithPartialDerivatives& operator=(
+      const Line3DWithPartialDerivatives& other) = default;
+  /// @brief Default move assignemt operator
+  Line3DWithPartialDerivatives& operator=(
+      Line3DWithPartialDerivatives&& other) = default;
+  /// @brief Constructor taking a parameter array which is at least as big as the ParamVector
+  ///        The first 4 indices are interpreted as the corresponding line
+  ///        parameters
+  template <std::size_t N>
+  Line3DWithPartialDerivatives(const std::array<T, N>& initPars);
 
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
-  void updateParameters(const ParamVector& newPars);
+  template <std::size_t N>
+  void updateParameters(const std::array<T, N>& newPars)
+    requires(N >= s_nPars);
   /// @brief Returns a point on the line
   const Vector& position() const;
   /// @brief Returns the direction of the line

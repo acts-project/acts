@@ -28,8 +28,18 @@ Line3DWithPartialDerivatives<T>::parameters() const {
 }
 
 template <std::floating_point T>
+template <std::size_t N>
+Line3DWithPartialDerivatives<T>::Line3DWithPartialDerivatives(
+    const std::array<T, N>& initPars) {
+  updateParameters(initPars);
+}
+
+template <std::floating_point T>
+template <std::size_t N>
 void Line3DWithPartialDerivatives<T>::updateParameters(
-    const ParamVector& newPars) {
+    const std::array<T, N>& newPars)
+  requires(N >= s_nPars)
+{
   m_pos[Acts::eX] = newPars[toUnderlying(ParIndex::x0)];
   m_pos[Acts::eY] = newPars[toUnderlying(ParIndex::y0)];
 

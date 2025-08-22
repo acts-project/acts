@@ -134,8 +134,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
   std::cout << "\n\n\nResidual test - Test line: " << toString(line.position())
             << ", " << toString(line.direction()) << std::endl;
@@ -210,11 +209,9 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   constexpr double tolerance = 1.e-3;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
-    lineParsUp[static_cast<std::size_t>(par)] += h;
-    lineParsDn[static_cast<std::size_t>(par)] -= h;
-    Line_t lineUp{}, lineDn{};
-    lineUp.updateParameters(lineParsUp);
-    lineDn.updateParameters(lineParsDn);
+    lineParsUp[toUnderlying(par)] += h;
+    lineParsDn[toUnderlying(par)] -= h;
+    Line_t lineUp{lineParsUp}, lineDn{lineParsDn};
 
     CompSpacePointAuxiliaries resCalcUp{
         resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
@@ -292,8 +289,7 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   resCfg.calcAlongStrip = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta,
                       ParIdx::t0};
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
   std::cout << "\n\n\nResidual test for line: " << toString(line.position())
             << ", " << toString(line.direction()) << " with t0: " << timeT0
@@ -329,8 +325,8 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
 
     if (partial != ParIdx::t0) {
-      lineParsUp[static_cast<std::size_t>(partial)] += h;
-      lineParsDn[static_cast<std::size_t>(partial)] -= h;
+      lineParsUp[toUnderlying(partial)] += h;
+      lineParsDn[toUnderlying(partial)] -= h;
       lineUp.updateParameters(lineParsUp);
       lineDn.updateParameters(lineParsDn);
       resCalcUp.updateFullResidual(lineUp, timeT0, sp);
@@ -383,8 +379,7 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                             const std::string& calcName, const Pars_t& linePars,
                             const Vector& pos, const Vector& dir,
                             const double t0) {
-    Line_t line{};
-    line.updateParameters(linePars);
+    Line_t line{linePars};
     std::cout << "Calculate residual w.r.t. " << toString(line.position())
               << ", " << toString(line.direction()) << std::endl;
     auto isectP = lineIntersect(pos, dir, line.position(), line.direction());
@@ -427,8 +422,8 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       Pars_t lineParsUp{linePars}, lineParsDn{linePars};
       double t0Up{t0}, t0Dn{t0};
       if (partial != ParIdx::t0) {
-        lineParsUp[static_cast<std::size_t>(partial)] += h;
-        lineParsDn[static_cast<std::size_t>(partial)] -= h;
+        lineParsUp[toUnderlying(partial)] += h;
+        lineParsDn[toUnderlying(partial)] -= h;
       } else {
         t0Up += h;
         t0Dn -= h;
@@ -463,16 +458,16 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     }
   };
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 90._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
-  linePars[static_cast<std::size_t>(ParIdx::x0)] = 0._cm;
-  linePars[static_cast<std::size_t>(ParIdx::y0)] = -105_cm;
+  linePars[toUnderlying(ParIdx::phi)] = 90._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::x0)] = 0._cm;
+  linePars[toUnderlying(ParIdx::y0)] = -105_cm;
 
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
                      10._ns);
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
                      Vector{1., 1., 0.}.normalized(), 10._ns);
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
                      10._ns);
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
@@ -497,8 +492,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   using Pars_t = Line_t::ParamVector;
   using ParIdx = Line_t::ParIndex;
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 60._degree;
 
   // Generate the first test measurement
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
@@ -511,8 +506,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 60._degree;
 
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm});
@@ -520,8 +515,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 30._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 30._degree;
 
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm});
@@ -540,8 +535,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
 
   testResidual(linePars,
                TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
@@ -570,8 +565,8 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
 
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
 
   Acts::Transform3 locToGlob{Acts::Transform3::Identity()};
 
@@ -622,10 +617,10 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 75_degree;
-  linePars[static_cast<std::size_t>(ParIdx::x0)] = 10._cm;
-  linePars[static_cast<std::size_t>(ParIdx::y0)] = -10_cm;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 75_degree;
+  linePars[toUnderlying(ParIdx::x0)] = 10._cm;
+  linePars[toUnderlying(ParIdx::y0)] = -10_cm;
 
   Config_t resCfg{};
   resCfg.useHessian = true;
@@ -633,8 +628,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
   const TestSpacePoint strip{
       line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
@@ -660,7 +654,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   for (const auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
 
-    const auto dIdx = static_cast<std::size_t>(par);
+    const auto dIdx = toUnderlying(par);
     double t0Up{t0}, t0Dn{t0};
     if (par != ParIdx::t0) {
       lineParsUp[dIdx] += h;
@@ -691,7 +685,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       if (par2 > par) {
         break;
       }
-      const auto dIdx2 = static_cast<std::size_t>(par2);
+      const auto dIdx2 = toUnderlying(par2);
       const double anaHess = chi2.hessian(dIdx, dIdx2);
       const double numHess =
           (chi2Up.gradient[dIdx2] - chi2Dn.gradient[dIdx2]) / (2. * h);
@@ -709,10 +703,10 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   RandomEngine rndEngine{23568};
   const std::size_t nStrips = 8;
   const std::size_t nEvents = 100;
-  constexpr auto x0_idx = static_cast<std::size_t>(ParIdx::x0);
-  constexpr auto y0_idx = static_cast<std::size_t>(ParIdx::y0);
-  constexpr auto phi_idx = static_cast<std::size_t>(ParIdx::phi);
-  constexpr auto theta_idx = static_cast<std::size_t>(ParIdx::theta);
+  constexpr auto x0_idx = toUnderlying(ParIdx::x0);
+  constexpr auto y0_idx = toUnderlying(ParIdx::y0);
+  constexpr auto phi_idx = toUnderlying(ParIdx::phi);
+  constexpr auto theta_idx = toUnderlying(ParIdx::theta);
 
   const std::array<Vector3, nStrips> stripDirections = {
       Vector3::UnitX(),
@@ -731,13 +725,13 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   std::array<Vector3, nStrips> intersections{};
 
   // pseudo track initialization
-  Line_t line{};
+
   Pars_t linePars{};
   linePars[x0_idx] = 0. * 1_mm;
   linePars[y0_idx] = 0. * 1_mm;
   linePars[phi_idx] = 0. * 1_degree;
   linePars[theta_idx] = 0. * 1_degree;
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
   for (std::size_t i = 0; i < nEvents; i++) {
     std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
