@@ -310,11 +310,10 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     auto track = generateLine(engine);
     auto strawPoints = generateStrawCircles(track, engine, true);
     if (strawPoints.size() < 3) {
-      std::cout << __func__ << "() - " << __LINE__
-                << ": WARNING -- event: " << n << ", track "
-                << toString(track.position()) << " + "
-                << toString(track.direction())
-                << " did not lead to any valid measurement " << std::endl;
+      ACTS_WARNING(__func__ << "() - " << __LINE__ << ": -- event: " << n
+                            << ", track " << toString(track.position()) << " + "
+                            << toString(track.direction())
+                            << " did not lead to any valid measurement ");
       continue;
     }
     const std::vector<std::int32_t> trueDriftSigns =
