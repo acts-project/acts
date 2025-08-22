@@ -27,9 +27,9 @@ namespace {
 bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
                           const std::array<float, 3>& spacePointPosition,
                           std::array<float, 3>& outputCoordinates) {
-  const Eigen::Vector3f& topStripVector = sp.topStripVector();
-  const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
-  const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
+  const std::array<float, 3>& topStripVector = sp.topStripVector();
+  const std::array<float, 3>& bottomStripVector = sp.bottomStripVector();
+  const std::array<float, 3>& stripCenterDistance = sp.stripCenterDistance();
 
   // cross product between top strip vector and spacePointPosition
   std::array<float, 3> d1 = {topStripVector[1] * spacePointPosition[2] -
@@ -70,7 +70,7 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
   // if arrive here spacePointPosition is compatible with strip directions and
   // detector elements
 
-  const Eigen::Vector3f& topStripCenter = sp.topStripCenter();
+  const std::array<float, 3>& topStripCenter = sp.topStripCenter();
 
   // spacePointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
