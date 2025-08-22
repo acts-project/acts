@@ -486,7 +486,8 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
-                    if( trackState.typeFlags().test(TrackStateFlag::MeasurementFlag) ) {
+                    if (trackState.typeFlags().test(
+                            TrackStateFlag::MeasurementFlag)) {
                       trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
                     }
                   }
