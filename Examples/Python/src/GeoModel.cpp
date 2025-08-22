@@ -14,6 +14,7 @@
 // clang-format on
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
+#include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -28,7 +29,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelMuonMockupBuilder.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
 #include <string>
 
@@ -47,6 +50,11 @@ void addGeoModel(Context& ctx) {
 
   auto gm = m.def_submodule("geomodel");
 
+  py::class_<GeoModelTree::FpvConstLink>(gm, "GeoModelTree::FpvConstLink")
+      .def(py::init<>())
+      .def("get", &GeoModelTree::FpvConstLink::get,
+           py::return_value_policy::reference);
+
   py::class_<Acts::GeoModelTree>(gm, "GeoModelTree").def(py::init<>());
 
   gm.def("readFromDb", &Acts::GeoModelReader::readFromDb);
@@ -62,18 +70,45 @@ void addGeoModel(Context& ctx) {
       });
 
   {
-    auto f =
-        py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
-                   std::shared_ptr<ActsExamples::GeoModelDetector>>(
-            gm, "GeoModelDetector")
-            .def(py::init<const ActsExamples::GeoModelDetector::Config&>());
+    auto f = py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
+                        std::shared_ptr<ActsExamples::GeoModelDetector>>(
+                 gm, "GeoModelDetector")
+                 .def(py::init<const ActsExamples::GeoModelDetector::Config&>())
+                 .def("buildTrackingGeometry",
+                      &ActsExamples::GeoModelDetector::buildTrackingGeometry);
 
     auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, path, logLevel);
+    ACTS_PYTHON_STRUCT(c, geoModelTree, logLevel, path);
 
     // patch the constructor
     patchKwargsConstructor(c);
+  }
+  {
+    // GeomodelMuonMockupBuilder
+    py::class_<Acts::ITrackingGeometryBuilder,
+               std::shared_ptr<Acts::ITrackingGeometryBuilder>>(
+        gm, "ITrackingGeometryBuilder");
+    auto gmMuonBuilder =
+        py::class_<ActsExamples::GeoModelMuonMockupBuilder,
+                   Acts::ITrackingGeometryBuilder,
+                   std::shared_ptr<ActsExamples::GeoModelMuonMockupBuilder>>(
+            gm, "GeoModelMuonMockupBuilder")
+            .def(py::init([](const ActsExamples::GeoModelMuonMockupBuilder::
+                                 Config& config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<ActsExamples::GeoModelMuonMockupBuilder>(
+                  config, getDefaultLogger(name, level));
+            }))
+            .def("trackingGeometry",
+                 &ActsExamples::GeoModelMuonMockupBuilder::trackingGeometry);
+    auto gmMuonConfig =
+        py::class_<ActsExamples::GeoModelMuonMockupBuilder::Config>(
+            gmMuonBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(gmMuonConfig, volumeBoxFPVs, stationNames,
+                       volumeBoundFactory);
   }
 
   // Shape converters
@@ -125,7 +160,37 @@ void addGeoModel(Context& ctx) {
         .def("toSensitiveSurface", &Acts::GeoShiftConverter::toSensitiveSurface)
         .def("toPassiveSurface", &Acts::GeoShiftConverter::toPassiveSurface);
   }
-
+  {
+    // GeoMuonMockupExperiment
+    auto f =
+        py::class_<ActsExamples::GeoMuonMockupExperiment,
+                   std::shared_ptr<ActsExamples::GeoMuonMockupExperiment>>(
+            gm, "GeoMuonMockupExperiment")
+            .def(py::init(
+                [](const ActsExamples::GeoMuonMockupExperiment::Config& config,
+                   const std::string& name, Acts::Logging::Level level) {
+                  return std::make_shared<
+                      ActsExamples::GeoMuonMockupExperiment>(
+                      config, getDefaultLogger(name, level));
+                }))
+            .def("constructMS",
+                 &ActsExamples::GeoMuonMockupExperiment::constructMS);
+    auto c =
+        py::class_<ActsExamples::GeoMuonMockupExperiment::Config>(f, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c,
+                       /// General properties
+                       dumpTree, dbName,
+                       /// Mdt properties
+                       innerTubeRadius, tubeWallThickness, nTubeLayers, nTubes,
+                       mdtFoamThickness, multiLayerSeparation,
+                       /// Rpc properties
+                       nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
+                       /// Station properties
+                       barrelRadii, nSectors, nEtaStations, stationDistInZ,
+                       stationDistInR, endCapWheelLowR, bigWheelDistZ,
+                       buildEndcaps);
+  }
   // Volume factory
   {
     auto a =
@@ -154,6 +219,12 @@ void addGeoModel(Context& ctx) {
             "materialList",
             &Acts::GeoModelDetectorObjectFactory::Config::materialList);
 
+    auto convVol =
+        py::class_<Acts::GeoModelDetectorObjectFactory::ConvertedGeoVol>(
+            a, "ConvertedGeoVol");
+
+    ACTS_PYTHON_STRUCT(convVol, volume, gen2Volume, fullPhysVol, name,
+                       surfaces);
     py::class_<Acts::GeoModelDetectorObjectFactory::Cache>(a, "Cache")
         .def(py::init<>())
         .def_readwrite(
@@ -161,7 +232,7 @@ void addGeoModel(Context& ctx) {
             &Acts::GeoModelDetectorObjectFactory::Cache::sensitiveSurfaces)
         .def_readwrite(
             "boundingBoxes",
-            &Acts::GeoModelDetectorObjectFactory::Cache::boundingBoxes);
+            &Acts::GeoModelDetectorObjectFactory::Cache::volumeBoxFPVs);
 
     py::class_<Acts::GeoModelDetectorObjectFactory::Options>(a, "Options")
         .def(py::init<>())

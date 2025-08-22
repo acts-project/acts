@@ -36,7 +36,6 @@
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
 #include <tuple>
 #include <vector>
 
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
                     1e-6);  // need more tests..
-    BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
+    BOOST_CHECK_EQUAL(&sfIntersection.surface(), &line);
   }
 
   // isOnSurface

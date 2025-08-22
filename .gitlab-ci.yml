@@ -4,10 +4,12 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-04-20
+  SPACK_VERSION: v1.0.0
+  SPACK_REPO_VERSION: v2025.07.0
+
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v9.0.0
+  DEPENDENCY_TAG: v13.0.0
 
 .ccache_base:
   cache:
@@ -23,7 +25,7 @@ variables:
    - key:
        files:
          - CI/dependencies/setup_spack.sh
-       prefix: spack_${SPACK_VERSION}
+       prefix: spack_${SPACK_VERSION}_${SPACK_REPO_VERSION}
      paths:
       - spack
       - .spack
@@ -41,7 +43,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
   tags:
     - large
   artifacts:
@@ -98,9 +100,9 @@ clang_tidy:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx_cpu:
+build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - large
 
@@ -124,9 +126,9 @@ build_exatrkx_cpu:
     # Here we only do a minimal build without examples to save resources
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-      -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
+      --preset=gitlab-ci-gnn
+      -DACTS_GNN_ENABLE_CUDA=OFF
+      -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
     - cmake --build build -- -j6
@@ -135,9 +137,9 @@ build_exatrkx_cpu:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx:
+build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - large
 
@@ -155,14 +157,6 @@ build_exatrkx:
     expire_in: 6 hours
 
   script:
-    # For now, we need to build boost to get the dependencies for the libraries
-    - curl --silent https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2 --output boost_1_87_0.tar.bz2
-    - tar --bzip2 -xf boost_1_87_0.tar.bz2
-    - cd boost_1_87_0
-    - ./bootstrap.sh --prefix=${CI_PROJECT_DIR}/boost-install --with-libraries=regex,graph,program_options,test
-    - ./b2 install
-    - cd ..
-    - rm -rf boost_1_87_0*
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - echo $PATH
@@ -176,8 +170,7 @@ build_exatrkx:
     - mkdir build
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-      -DBoost_DIR=${CI_PROJECT_DIR}/boost-install/lib/cmake/Boost-1.87.0
+      --preset=gitlab-ci-gnn
 
     - ccache -z
     - cmake --build build -- -j6
@@ -186,11 +179,11 @@ build_exatrkx:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_unittests:
+test_gnn_unittests:
   stage: test
   needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+    - build_gnn
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
 
@@ -206,16 +199,16 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval)"
+    - ctest --test-dir build -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_python:
+test_gnn_python:
   stage: test
   needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:74
+    - build_gnn
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
 
@@ -246,7 +239,7 @@ test_exatrkx_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:74
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:80
 
   cache:
     - !reference [.spack_cache, cache]
@@ -275,7 +268,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
 
   cache:
    - !reference [.ccache_base, cache]
@@ -340,7 +333,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
   needs: [build_linux_ubuntu]
 
   cache:
@@ -363,7 +356,7 @@ linux_test_examples:
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rfExw -k "not exatrkx" -v
+    - pytest -rfExw -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -371,7 +364,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
 
   artifacts:
     when: always
@@ -473,19 +466,12 @@ linux_physmon:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-linux_ubuntu_2204:
-  extends: .linux_ubuntu_extra
-  variables:
-    CXX: g++
-    CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:74
-
 linux_ubuntu_2404_clang19:
   extends: .linux_ubuntu_extra
   variables:
     CXX: clang++-19
     CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:74
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
 
 
 ######################
@@ -493,7 +479,7 @@ linux_ubuntu_2404_clang19:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:74
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:80
   stage: build
   tags:
     - cvmfs
@@ -545,18 +531,6 @@ linux_ubuntu_2404_clang19:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_105:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "105"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - gcc13
-          - clang16
 
 lcg_106a:
   extends: .lcg_base_job
@@ -568,8 +542,6 @@ lcg_106a:
     matrix:
       - OS: [alma9]
         COMPILER:
-          - gcc13
-          - gcc14
           - clang16
 
 lcg_107:
@@ -583,5 +555,28 @@ lcg_107:
       - OS: [alma9]
         COMPILER:
           - gcc13
+
+lcg_107a:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107a"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
           - gcc14
+
+lcg_108:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "108"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc15
           - clang19

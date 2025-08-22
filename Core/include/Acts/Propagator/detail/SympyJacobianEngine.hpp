@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
@@ -49,6 +46,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const FreeVector& freeParameters,
                                    const BoundToFreeMatrix& boundToFreeJacobian,
                                    const FreeMatrix& freeTransportJacobian,
+                                   FreeToBoundMatrix& freeToBoundJacobian,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
 
@@ -74,6 +72,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 void boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian);
 

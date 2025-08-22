@@ -10,6 +10,8 @@
 
 #include "Acts/Clusterization/TimedClusterization.hpp"
 
+#include <algorithm>
+
 namespace Acts::Test {
 
 // Define objects
@@ -39,10 +41,6 @@ static inline int getCellRow(const Cell& cell) {
 
 static inline int getCellColumn(const Cell& cell) {
   return cell.column;
-}
-
-static inline int& getCellLabel(Cell& cell) {
-  return cell.label;
 }
 
 static inline double getCellTime(const Cell& cell) {
@@ -89,7 +87,7 @@ BOOST_AUTO_TEST_CASE(TimedGrid_1D_withtime) {
   for (std::size_t i(0); i < clusters.size(); ++i) {
     std::vector<Identifier>& timedIds = clusters[i].ids;
     const std::vector<Identifier>& expected = expectedResults[i];
-    std::sort(timedIds.begin(), timedIds.end());
+    std::ranges::sort(timedIds);
     BOOST_CHECK_EQUAL(timedIds.size(), expected.size());
 
     for (std::size_t j(0); j < timedIds.size(); ++j) {
@@ -147,8 +145,8 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
     BOOST_CHECK_EQUAL(timedIds.size(), sizes[i]);
     BOOST_CHECK_EQUAL(timedIds.size(), expected.size());
 
-    std::sort(timedIds.begin(), timedIds.end());
-    std::sort(defaultIds.begin(), defaultIds.end());
+    std::ranges::sort(timedIds);
+    std::ranges::sort(defaultIds);
     for (std::size_t j(0); j < timedIds.size(); ++j) {
       BOOST_CHECK_EQUAL(timedIds[j], defaultIds[j]);
       BOOST_CHECK_EQUAL(timedIds[j], expected[j]);
@@ -201,7 +199,7 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_withtime) {
   for (std::size_t i(0); i < clusters.size(); ++i) {
     std::vector<Identifier>& timedIds = clusters[i].ids;
     BOOST_CHECK_EQUAL(timedIds.size(), sizes[i]);
-    std::sort(timedIds.begin(), timedIds.end());
+    std::ranges::sort(timedIds);
 
     const std::vector<Identifier>& expected = expectedResults[i];
     BOOST_CHECK_EQUAL(timedIds.size(), expected.size());

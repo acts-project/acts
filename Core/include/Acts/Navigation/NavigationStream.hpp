@@ -53,15 +53,14 @@ class NavigationStream {
   /// - a BoundaryTolerance : the boundary tolerance used for the intersection
   struct Candidate {
     /// The intersection
-    ObjectIntersection<Surface> intersection =
-        ObjectIntersection<Surface>::invalid();
+    SurfaceIntersection intersection = SurfaceIntersection::invalid();
     /// The portal
     const Acts::Experimental::Portal* gen2Portal = nullptr;
     const Portal* portal = nullptr;
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
     /// Convenience access to surface
-    const Surface& surface() const { return *intersection.object(); }
+    const Surface& surface() const { return intersection.surface(); }
     /// Cinvencience access to the path length
     double pathLength() const { return intersection.pathLength(); }
 
@@ -73,8 +72,8 @@ class NavigationStream {
     /// @return true if aCandidate is closer to the origin
     constexpr static bool pathLengthOrder(const Candidate& aCandidate,
                                           const Candidate& bCandidate) {
-      return ObjectIntersection<Surface>::pathLengthOrder(
-          aCandidate.intersection, bCandidate.intersection);
+      return SurfaceIntersection::pathLengthOrder(aCandidate.intersection,
+                                                  bCandidate.intersection);
     }
   };
 
@@ -170,6 +169,8 @@ class NavigationStream {
   bool update(const GeometryContext& gctx,
               const NavigationStream::QueryPoint& queryPoint,
               double onSurfaceTolerance = s_onSurfaceTolerance);
+
+  void reset();
 
  private:
   /// The candidates of this navigation stream
