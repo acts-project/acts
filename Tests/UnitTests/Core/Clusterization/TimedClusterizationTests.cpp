@@ -122,17 +122,19 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
   expectedResults.push_back({1ul, 2ul});
   expectedResults.push_back({6ul});
 
-  ClusterCollection clusters =
-      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
-          cells,
-          Acts::Ccl::TimedConnect<Cell, 2>(std::numeric_limits<double>::max()));
+  Acts::Ccl::ClusteringData data;
+  ClusterCollection clusters;
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters,
+      Acts::Ccl::TimedConnect<Cell, 2>(std::numeric_limits<double>::max()));
 
   BOOST_CHECK_EQUAL(4ul, clusters.size());
 
   // Compare against default connect (only space)
-  ClusterCollection defaultClusters =
-      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
-          cells, Acts::Ccl::DefaultConnect<Cell, 2>());
+  data.clear();
+  ClusterCollection defaultClusters;
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, defaultClusters, Acts::Ccl::DefaultConnect<Cell, 2>());
 
   BOOST_CHECK_EQUAL(4ul, defaultClusters.size());
   BOOST_CHECK_EQUAL(defaultClusters.size(), expectedResults.size());
@@ -190,9 +192,10 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_withtime) {
   expectedResults.push_back({1ul, 2ul});
   expectedResults.push_back({6ul});
 
-  ClusterCollection clusters =
-      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
-          cells, Acts::Ccl::TimedConnect<Cell, 2>(0.5));
+  Acts::Ccl::ClusteringData data;
+  ClusterCollection clusters;
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters, Acts::Ccl::TimedConnect<Cell, 2>(0.5));
 
   BOOST_CHECK_EQUAL(6ul, clusters.size());
 
@@ -240,9 +243,10 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_noTollerance) {
   expectedResults.push_back({2ul});
   expectedResults.push_back({6ul});
 
-  ClusterCollection clusters =
-      Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
-          cells, Acts::Ccl::TimedConnect<Cell, 2>(0.));
+  Acts::Ccl::ClusteringData data;
+  ClusterCollection clusters;
+  Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
+      data, cells, clusters, Acts::Ccl::TimedConnect<Cell, 2>(0.));
 
   BOOST_CHECK_EQUAL(7ul, clusters.size());
 
