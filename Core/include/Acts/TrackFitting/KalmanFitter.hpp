@@ -481,14 +481,14 @@ class KalmanFitter {
             result.fittedStates->applyBackwards(
                 result.lastMeasurementIndex, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
-                  if (trackState.typeFlags().test(
-                          TrackStateFlag::MeasurementFlag) &&
-                      !rangeContainsValue(result.passedAgainSurfaces,
+                  if (!rangeContainsValue(result.passedAgainSurfaces,
                                           fSurface)) {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
-                    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    if( trackState.typeFlags().test(TrackStateFlag::MeasurementFlag) ) {
+                      trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    }
                   }
                 });
           }

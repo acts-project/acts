@@ -357,12 +357,12 @@ struct GaussianSumFitter {
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
       for (auto& [w, p, cov] : fwdGsfResult.lastMeasurementComponents) {
         inflatedParamVector.emplace_back(
-            w, p, cov.value() * options.reverseFilteringCovarianceScaling);
+            w, p, cov * options.reverseFilteringCovarianceScaling);
       }
 
       MultiComponentBoundTrackParameters inflatedParams(
           fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
-          std::move(inflatedParamVector), params.particleHypothesis());
+          std::move(inflatedParamVector), sParameters.particleHypothesis());
 
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
                                                    MultiStepperSurfaceReached>(
