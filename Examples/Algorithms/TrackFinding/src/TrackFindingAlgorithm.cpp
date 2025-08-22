@@ -554,7 +554,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           auto secondRootBranch = tracksTemp.makeTrack();
-          secondRootBranch.copyFromWithoutStates(trackCandidate);
+          secondRootBranch.copyFromShallow(trackCandidate);
           auto secondResult =
               (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
                                   tracksTemp, secondRootBranch);
@@ -573,7 +573,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // TODO a lightweight copy without copying all the track state
               //      components might be a solution
               auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFromWithoutStates(secondTrack);
+              secondTrackCopy.copyFrom(secondTrack);
 
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
@@ -583,7 +583,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
-              trackCandidate.copyFromWithoutStates(secondTrackCopy);
+              trackCandidate.copyFromShallow(secondTrackCopy);
 
               // finalize the track candidate
 
