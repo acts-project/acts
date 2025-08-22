@@ -20,6 +20,10 @@ template <typename T>
 constexpr T abs(const T n) {
   if constexpr (std::is_signed_v<T>) {
     if (n < 0) {
+      // Let's try to avoid UB
+      if (n == std::numeric_limits<T>::lowest()) {
+        return std::numeric_limits<T>::max();
+      }
       return -n;
     }
   }
@@ -29,17 +33,10 @@ constexpr T abs(const T n) {
 /// @brief Calculates the ordinary power of the number x.
 /// @param x: Number to take the power from
 /// @param p: Power to take
-template <typename T, std::integral P>
+template <typename T, std::unsigned_integral P>
 constexpr T pow(T x, P p) {
   constexpr T one = 1;
-  if constexpr (std::is_signed_v<P>) {
-    if (p < 0 && abs(x) > std::numeric_limits<T>::epsilon()) {
-      x = one / x;
-      p = -p;
-    }
-  }
-  using unsigned_p = std::make_unsigned_t<P>;
-  return p == 0 ? one : x * pow(x, static_cast<unsigned_p>(p) - 1);
+  return p == 0 ? one : x * pow(x, p - 1);
 }
 
 /// @brief Returns the square of the passed number

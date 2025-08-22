@@ -715,7 +715,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
            return m_projDirLenPartial[pIdx1] * m_wireProject * m_invProjDirLenSq * m_gradCloseApproach[pIdx2]
                   + hitMinSeg.dot(m_gradProjDir[pIdx1]) * m_invProjDirLen * line.gradient(static_cast<LineIndex>(pIdx2))
                   + 0.5 * m_invProjDirLenSq *  m_projDirLenPartial[pIdx1] * m_projDirLenPartial[pIdx2] *
-                   travDist*( 1. + Acts::pow(m_wireProject* m_invProjDirLen, 2)) * line.direction();
+                   travDist*( 1. + Acts::pow(m_wireProject* m_invProjDirLen, 2u)) * line.direction();
         };
 
         const Vector& lHessian = line.hessian(static_cast<LineIndex>(partial1),
