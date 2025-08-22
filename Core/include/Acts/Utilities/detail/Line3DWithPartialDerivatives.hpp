@@ -54,7 +54,7 @@ class Line3DWithPartialDerivatives {
   ///        The first 4 indices are interpreted as the corresponding line
   ///        parameters
   template <std::size_t N>
-  Line3DWithPartialDerivatives(const std::array<T, N>& initPars);
+  explicit Line3DWithPartialDerivatives(const std::array<T, N>& initPars);
 
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
