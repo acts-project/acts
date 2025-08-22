@@ -59,7 +59,7 @@ class FastStrawLineFitter {
   /// @brief Configuration object
   struct Config {
     /// @brief Number of maximum iterations
-    std::uint32_t maxIter{10};
+    std::size_t maxIter{10};
     /// @brief Cutoff to def
     double precCutOff{1.e-9};
   };
@@ -92,9 +92,9 @@ class FastStrawLineFitter {
     /// @brief Evaluated chi2 postfit
     double chi2{0.};
     /// @brief Number of degrees of freedom
-    std::uint32_t nDoF{0};
+    std::size_t nDoF{0};
     /// @brief Number of iterations to converge
-    std::uint32_t nIter{0};
+    std::size_t nIter{0};
   };
 
   /// @brief Brief fit a straight line to a set of straw measurements and return
@@ -149,7 +149,7 @@ class FastStrawLineFitter {
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
     /// @brief number of degrees of freedom
-    std::uint32_t nDoF{0};
+    std::size_t nDoF{0};
   };
   /// @brief Small Helper struct to calculate sin & cos of theta & 2 theta
   struct TrigonomHelper {
