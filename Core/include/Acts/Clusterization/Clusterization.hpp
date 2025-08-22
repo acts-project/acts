@@ -186,6 +186,7 @@ template <typename CellCollection, typename ClusterCollection,
           std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
+[[deprecated]]
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect&& connect = Connect());
 
