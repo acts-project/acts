@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
               << ", y: " << pars[p_y0]
               << ", theta: " << (pars[p_theta] / 1_degree)
               << ", phi: " << (pars[p_phi] / 1_degree) << std::endl;
-    Line_t segLine{makeTrack(rndEngine)};
+    Line_t segLine{pars};
 
     BOOST_CHECK_LE((segLine.gradient(ParIndices::x0) - Vector3::UnitX()).norm(),
                    tolerance);
