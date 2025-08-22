@@ -31,7 +31,6 @@ constexpr std::uint32_t nTrials = 1;
 namespace Acts::Test {
 
 constexpr bool debugMode = true;
-constexpr bool print = false;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests",
                                    Logging::Level::INFO));
