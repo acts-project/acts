@@ -59,19 +59,22 @@ class CompSpacePointAuxiliaries {
   using LineIndex = Line_t::ParIndex;
   using Vector = Line_t::Vector;
   enum class FitParIndex : std::uint8_t {
-    x0 = static_cast<std::uint8_t>(LineIndex::x0),
-    y0 = static_cast<std::uint8_t>(LineIndex::y0),
-    theta = static_cast<std::uint8_t>(LineIndex::theta),
-    phi = static_cast<std::uint8_t>(LineIndex::phi),
+    x0 = toUnderlying(LineIndex::x0),
+    y0 = toUnderlying(LineIndex::y0),
+    theta = toUnderlying(LineIndex::theta),
+    phi = toUnderlying(LineIndex::phi),
     t0 = 4,  // time offset
     nPars = 5
   };
-  static constexpr std::uint8_t s_nPars =
-      static_cast<std::uint8_t>(FitParIndex::nPars);
+  static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Prints a fit parameter as string
   static std::string parName(const FitParIndex idx);
   /// @brief Assignment of the residual components.
-  enum ResidualIdx : std::uint8_t { nonBending = 0, bending = 1, time = 2 };
+  enum class ResidualIdx : std::uint8_t {
+    nonBending = 0,
+    bending = 1,
+    time = 2
+  };
   /// @brief Configuration object of the residual calculator
   struct Config {
     /// @brief Transform to place the composite station frame inside the
