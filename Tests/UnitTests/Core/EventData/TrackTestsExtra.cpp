@@ -14,10 +14,10 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
-#include <filesystem>
 #include <numeric>
 
 using namespace Acts;
@@ -738,15 +738,12 @@ BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
   // Test deprecated copyFrom with copyTrackStates = true
   auto destTrack1 = tc.makeTrack();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  ACTS_DIAGNOSTIC_PUSH()
+  ACTS_DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
 
   destTrack1.copyFrom(sourceTrack, true);  // Should do full deep copy
 
-#pragma clang diagnostic pop
-#pragma GCC diagnostic pop
+  ACTS_DIAGNOSTIC_POP()
 
   // Verify it worked like the non-boolean copyFrom
   BOOST_CHECK_EQUAL(destTrack1.nMeasurements(), 25);
@@ -775,16 +772,13 @@ BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
   destTrack2.appendTrackState();
   destTrack2.linkForward();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  ACTS_DIAGNOSTIC_PUSH()
+  ACTS_DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
 
   destTrack2.copyFrom(sourceTrack,
                       false);  // Should behave like copyFromWithoutStates
 
-#pragma clang diagnostic pop
-#pragma GCC diagnostic pop
+  ACTS_DIAGNOSTIC_POP()
 
   // The deprecated method with false should behave like copyFromWithoutStates:
   // - Copy track properties
