@@ -40,26 +40,28 @@ class Line3DWithPartialDerivatives {
   /// @brief default constructor
   Line3DWithPartialDerivatives() = default;
   /// @brief Default copy constructor
-  Line3DWithPartialDerivatives(const Line3DWithPartialDerivatives& other) =
-      default;
+  Line3DWithPartialDerivatives(
+      const Line3DWithPartialDerivatives& other) noexcept = default;
   /// @brief Default move constructor
-  Line3DWithPartialDerivatives(Line3DWithPartialDerivatives&& other) = default;
+  Line3DWithPartialDerivatives(Line3DWithPartialDerivatives&& other) noexcept =
+      default;
   /// @brief Default assignment operator
   Line3DWithPartialDerivatives& operator=(
-      const Line3DWithPartialDerivatives& other) = default;
+      const Line3DWithPartialDerivatives& other) noexcept = default;
   /// @brief Default move assignemt operator
   Line3DWithPartialDerivatives& operator=(
-      Line3DWithPartialDerivatives&& other) = default;
+      Line3DWithPartialDerivatives&& other) noexcept = default;
   /// @brief Constructor taking a parameter array which is at least as big as the ParamVector
   ///        The first 4 indices are interpreted as the corresponding line
   ///        parameters
   template <std::size_t N>
-  explicit Line3DWithPartialDerivatives(const std::array<T, N>& initPars);
+  explicit Line3DWithPartialDerivatives(
+      const std::array<T, N>& initPars) noexcept;
 
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
   template <std::size_t N>
-  void updateParameters(const std::array<T, N>& newPars)
+  void updateParameters(const std::array<T, N>& newPars) noexcept
     requires(N >= s_nPars);
   /// @brief Returns a point on the line
   const Vector& position() const;
