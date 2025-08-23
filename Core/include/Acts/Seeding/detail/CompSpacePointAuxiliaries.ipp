@@ -29,7 +29,7 @@ int CompSpacePointAuxiliaries::strawSign(const Vector& pos, const Vector& dir,
     return 0;
   }
   const double dist = Acts::detail::LineHelper::signedDistance(
-      pos, dir, , strawSp.localPosition(), strawSp.sensorDirection());
+      pos, dir, strawSp.localPosition(), strawSp.sensorDirection());
   return dist > 0. ? 1 : -1;
 }
 template <CompositeSpacePointContainer StrawCont_t>
@@ -40,6 +40,7 @@ std::vector<int> CompSpacePointAuxiliaries::strawSigns(
 template <CompositeSpacePointContainer StrawCont_t>
 std::vector<int> CompSpacePointAuxiliaries::strawSigns(
     const Vector& pos, const Vector& dir, const StrawCont_t& measurements) {
+  std::vector<int> signs{};
   signs.reserve(measurements.size());
   for (const auto& strawSp : measurements) {
     signs.push_back(strawSign(pos, dir, *strawSp));
