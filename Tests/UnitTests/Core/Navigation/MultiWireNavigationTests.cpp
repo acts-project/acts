@@ -169,6 +169,9 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   Vector3 startDir = {0., 1., 0.};
   NavigationArguments args{startPos, startDir};
 
+  auto navFactory = mwBuilder.createNavigationPolicyFactory();
+  volume->setNavigationPolicy(navFactory->build(tContext, *volume, *logger));
+
   volume->initializeNavigationCandidates(args, stream, *logger);
 
   // we expect 18 candidates (12 surfaces + 6 portals)
