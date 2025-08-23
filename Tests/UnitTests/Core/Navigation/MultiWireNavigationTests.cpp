@@ -150,8 +150,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 
   // Build the volume
   MultiWireVolumeBuilder mwBuilder(mwCfg);
-  std::unique_ptr<Acts::TrackingVolume> volume =
-      mwBuilder.buildVolume(tContext);
+  std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
 
   // Check the volume
   // we do not except any children volumes

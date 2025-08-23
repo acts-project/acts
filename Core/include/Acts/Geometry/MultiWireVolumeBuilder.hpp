@@ -48,8 +48,7 @@ class MultiWireVolumeBuilder {
 
   /// @brief Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume
-  std::unique_ptr<Acts::TrackingVolume> buildVolume(
-      const Acts::GeometryContext& gctx) const;
+  std::unique_ptr<Acts::TrackingVolume> buildVolume() const;
 
   /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
   /// or attached to a blueprint node

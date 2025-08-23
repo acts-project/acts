@@ -28,8 +28,7 @@ MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   }
 }
 
-std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
-    const GeometryContext& gctx) const {
+std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   // Create the tracking volume
 
   ACTS_VERBOSE("Building a tracking volume with name "
