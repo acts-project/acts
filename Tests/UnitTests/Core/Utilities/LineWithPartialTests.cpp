@@ -76,6 +76,16 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
                    tolerance);
     BOOST_CHECK_LE((segLine.gradient(ParIndices::y0) - Vector3::UnitY()).norm(),
                    tolerance);
+    /// check that the returned parameters correspond to the parsed one
+    const ParamVector parsFromL = segLine.parameters();
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::y0)],
+                      pars[toUnderlying(ParIndices::y0)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::x0)],
+                      pars[toUnderlying(ParIndices::x0)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::theta)],
+                      pars[toUnderlying(ParIndices::theta)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::phi)],
+                      pars[toUnderlying(ParIndices::phi)], tolerance);
 
     for (const auto param : {ParIndices::theta, ParIndices::phi}) {
       ParamVector parsUp{pars}, parsDn{pars};
