@@ -10,7 +10,7 @@
 #include "Acts/Seeding/StrawChamberLineSeeder.hpp"
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
+#include "Acts/Utilities/detail/CompSpacePointAuxiliaries.hpp"
 
 #include <array>
 
@@ -57,42 +57,6 @@ class StrawChamberSegmentLineFitter {
     // RangeArray ranges{defaultRanges()};
   };
 
-  /** @brief Helper struct carrying the space for all auxiliary variables
-   *         needed to calculate the residual from wire measurements */
-  struct ResidualAuxillaries {
-    static constexpr unsigned nLinePars = LineWithPartials::nPars;
-    /** @brief projection of the segment direction onto the wire planes */
-    Vector3 projDir{Vector3::Zero()};
-    /** @brief Partial derivatives of the dir projection w.r.t. line parameters */
-    std::array<Vector3, nLinePars> partProjDir{
-        filledArray<Vector3, nLinePars>(Vector3::Zero())};
-    /** @brief Partial derivatives of the dir projection lengths w.r.t line parameters */
-    std::array<double, nLinePars> partWirePlaneProj{
-        filledArray<double, nLinePars>(0.)};
-    /** @brief projection of the segment direction along the wire */
-    double projIntoWirePlane{0.};
-    /** @brief Length squared of the projected direction */
-    double projDirLenSq{0.};
-    /** @brief inverse squared of the unnormalized dir projection */
-    double invProjLenSq{0.};
-    /** @brief inverse of the unormalized dir projection */
-    double invProjLen{0.};
-  };
-  /** @brief Helper struct carrying the residual with its derivatives */
-  struct ResidualWithPartials : public ResidualAuxillaries {
-    /** @brief Number of parameters */
-    static constexpr unsigned nPars{6};
-    /** @brief Vector carrying the residual */
-    Vector3 residual{Vector3::Zero()};
-    /** @brief First order derivatives */
-    std::array<Vector3, nPars> gradient{
-        filledArray<Vector3, nPars>(Vector3::Zero())};
-    /** @brief Second order derivatives */
-    std::array<Vector3, sumUpToN(nPars)> hessian{
-        filledArray<Vector3, sumUpToN(nPars)>(Vector3::Zero())};
-    /** @brief Flag whether the the residuals w.r.t phi shall be evaluated */
-    bool evalPhiPars{true};
-  };
 
  private:
   const Config m_cfg{};
