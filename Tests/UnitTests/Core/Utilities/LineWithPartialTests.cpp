@@ -35,10 +35,16 @@ ParamVector makeTrack(RandomEngine& rndEngine) {
       static_cast<double>(rndEngine() % 1000) - 500;  // Random x0 in [-50, 50]
   pars[p_y0] =
       static_cast<double>(rndEngine() % 1000) - 500;  // Random y0 in [-50, 50]
-  pars[p_theta] = static_cast<double>(rndEngine() % 180) *
-                  1_degree;  // Random theta in [0, 180)
-  pars[p_phi] = static_cast<double>(rndEngine() % 360) *
-                1_degree;  // Random phi in [-180, 180)
+  pars[p_theta] = static_cast<double>(rndEngine() % 1800) *
+                  0.1_degree;  // Random theta in (0, 180)
+  pars[p_phi] = static_cast<double>(rndEngine() % 3600) * 0.1_degree -
+                180_degree;  // Random phi in [-180, 180)
+
+  if (std::min(Acts::abs(pars[p_theta]),
+               Acts::abs(pars[p_theta] - 180._degree)) <
+      std::numeric_limits<double>::epsilon()) {
+    return makeTrack(rndEngine);
+  }
   return pars;
 }
 
@@ -78,14 +84,10 @@ BOOST_AUTO_TEST_CASE(lineGradientTest) {
                    tolerance);
     /// check that the returned parameters correspond to the parsed one
     const ParamVector parsFromL = segLine.parameters();
-    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::y0)],
-                      pars[toUnderlying(ParIndices::y0)], tolerance);
-    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::x0)],
-                      pars[toUnderlying(ParIndices::x0)], tolerance);
-    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::theta)],
-                      pars[toUnderlying(ParIndices::theta)], tolerance);
-    BOOST_CHECK_CLOSE(parsFromL[toUnderlying(ParIndices::phi)],
-                      pars[toUnderlying(ParIndices::phi)], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[p_x0], pars[p_x0], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[p_y0], pars[p_y0], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[p_theta], pars[p_theta], tolerance);
+    BOOST_CHECK_CLOSE(parsFromL[p_phi], pars[p_phi], tolerance);
 
     for (const auto param : {ParIndices::theta, ParIndices::phi}) {
       ParamVector parsUp{pars}, parsDn{pars};
