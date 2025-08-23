@@ -19,25 +19,33 @@ namespace Acts::Experimental::detail {
 template <CompositeSpacePoint Point_t>
 int CompSpacePointAuxiliaries::strawSign(const Line_t& line,
                                          const Point_t& strawSp) {
+  return strawSign(line.position(), line.direction(), strawSp);
+}
+
+template <CompositeSpacePoint Point_t>
+int CompSpacePointAuxiliaries::strawSign(const Vector& pos, const Vector& dir,
+                                         const Point_t& strawSp) {
   if (!strawSp.isStraw()) {
     return 0;
   }
   const double dist = Acts::detail::LineHelper::signedDistance(
-      line.position(), line.direction(), strawSp.localPosition(),
-      strawSp.sensorDirection());
+      pos, dir, , strawSp.localPosition(), strawSp.sensorDirection());
   return dist > 0. ? 1 : -1;
 }
 template <CompositeSpacePointContainer StrawCont_t>
 std::vector<int> CompSpacePointAuxiliaries::strawSigns(
     const Line_t& line, const StrawCont_t& measurements) {
-  std::vector<int> signs;
+  return strawSigns(line.position(), line.direction(), measurements);
+}
+template <CompositeSpacePointContainer StrawCont_t>
+std::vector<int> CompSpacePointAuxiliaries::strawSigns(
+    const Vector& pos, const Vector& dir, const StrawCont_t& measurements) {
   signs.reserve(measurements.size());
   for (const auto& strawSp : measurements) {
-    signs.push_back(strawSign(line, *strawSp));
+    signs.push_back(strawSign(pos, dir, *strawSp));
   }
   return signs;
 }
-
 template <CompositeSpacePoint Point_t>
 void CompSpacePointAuxiliaries::updateSpatialResidual(
     const Line_t& line, const Point_t& spacePoint) {
