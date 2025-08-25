@@ -121,12 +121,6 @@ void patchKwargsConstructor(T& c) {
                  py::arg("config"), py::arg("level"))                       \
             .def_property_readonly("config", &Writer::config);              \
                                                                             \
-    constexpr bool has_write_method =                                       \
-        Acts::Concepts::has_write_method<Writer>;                           \
-                                                                            \
-    if constexpr (has_write_method) {                                       \
-      w.def("write", &Writer::write);                                       \
-    }                                                                       \
     auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)
