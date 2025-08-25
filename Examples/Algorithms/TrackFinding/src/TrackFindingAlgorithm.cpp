@@ -583,7 +583,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
-              trackCandidate.copyFromShallow(secondTrackCopy);
+              // Retain tip and stem index of the first track
+              auto tipIndex = trackCandidate.tipIndex();
+              auto stemIndex = trackCandidate.stemIndex();
+              trackCandidate.copyFromWithoutStates(secondTrackCopy);
+              trackCandidate.tipIndex() = tipIndex;
+              trackCandidate.stemIndex() = stemIndex;
 
               // finalize the track candidate
 
