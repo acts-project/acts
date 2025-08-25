@@ -145,10 +145,10 @@ Line_t generateLine(RandomEngine& engine) {
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::x0)] = 0.;
   linePars[toUnderlying(ParIndex::phi)] = 90._degree;
-  linePars[toUnderlying(ParIndex::y0)] = (engine() % 10000 - 5000.) / 10.;
-  constexpr unsigned maxAngle = 180;
+  linePars[toUnderlying(ParIndex::y0)] =
+      std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      (engine() % (10 * maxAngle)) * 0.1_degree;
+      std::uniform_real_distribution{0.1_degree, 179.9_degree}(engine);
   Line_t line{};
   line.updateParameters(linePars);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
