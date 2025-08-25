@@ -81,11 +81,6 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Destructor
   ~BinnedSurfaceMaterial() override = default;
 
-  /// Scale operation
-  ///
-  /// @param factor is the scale factor for the full material
-  BinnedSurfaceMaterial& scale(double factor) final;
-
   /// Return the BinUtility
   const BinUtility& binUtility() const;
 

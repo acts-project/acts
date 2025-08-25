@@ -21,8 +21,6 @@ namespace Acts::Test {
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
 
-  ISurfaceMaterial& scale(double /*factor*/) override { return *this; };
-
   const MaterialSlab& materialSlab(const Vector2& /*lp*/) const override {
     return m_fullMaterial;
   }
