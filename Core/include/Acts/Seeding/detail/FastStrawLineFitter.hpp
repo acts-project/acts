@@ -23,7 +23,7 @@ namespace Acts::Experimental::detail {
 ///         The space points  passed to the fitter need to be all straw space
 ///         points and their straw wires need to be approximately parallel to
 ///         each other. Under this assumption, each straw measurements can be
-///         projected onto the plane which is pependicular to its straw wire and
+///         projected onto the plane which is perpendicular to its straw wire and
 ///         the residual to the k-th straw is written as
 ///
 ///                 R_{k} = T_{z,k} * sin \theta - (T_{y,k} -  y_{0})* cos \theta - sign_{k} * r_{k}
@@ -73,7 +73,7 @@ class FastStrawLineFitter {
       x.print(ostr);
       return ostr;
     }
-    /// @brief Fitted inclanation angle
+    /// @brief Fitted inclination angle
     double theta{0.};
     /// @brief Uncertainty on the fitted angle
     double dTheta{0.};
@@ -98,7 +98,7 @@ class FastStrawLineFitter {
   ///               length as the list of measurements.
   template <CompositeSpacePointContainer StrawCont_t>
   std::optional<FitResult> fit(const StrawCont_t& measurements,
-                               const std::vector<std::int32_t>& signs) const;
+                               const std::vector<int>& signs) const;
 
  private:
   /// @brief Index of the drift circle covariance inside the straw
@@ -169,7 +169,7 @@ class FastStrawLineFitter {
   /// @param signs: List of left/right signs to be annotated with each straw circle
   template <CompositeSpacePointContainer StrawCont_t>
   FitAuxiliaries fillAuxiliaries(const StrawCont_t& measurements,
-                                 const std::vector<std::int32_t>& signs) const;
+                                 const std::vector<int>& signs) const;
   /// @brief Evaluate the chi2 after the fit has converged.
   /// @param measurements: List of straw measurements that have been used in the fit
   /// @param result: Mutable reference to the FitResult object. The object is used
@@ -186,7 +186,7 @@ class FastStrawLineFitter {
   double chi2Term(const TrigonomHelper& angle, const double y0,
                   const Point_t& strawMeas,
                   std::optional<double> r = std::nullopt) const;
-  /// @brief Fit the track inclanation angle and calculate the intercept
+  /// @brief Fit the track inclination angle and calculate the intercept
   ///        afterwards
   /// @param fitPars: Constants of the current measurement configuration
   std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;

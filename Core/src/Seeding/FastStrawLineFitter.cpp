@@ -1,11 +1,3 @@
-// This file is part of the ACTS project.
-//
-// Copyright (C) 2016 CERN for the benefit of the ACTS project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 #include "Acts/Seeding/detail/FastStrawLineFitter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
@@ -81,7 +73,7 @@ void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
   const double secTheta = 1. / std::cos(result.theta);
   result.y0 =
       fitPars.centerY - fitPars.centerZ * tanTheta + fitPars.fitY0 * secTheta;
-  result.dY0 = Acts::fastHypot(-fitPars.centerZ * Acts::pow(secTheta, 2) +
+  result.dY0 = Acts::fastHypot(-fitPars.centerZ * Acts::square(secTheta) +
                                    fitPars.fitY0 * secTheta * tanTheta,
                                secTheta);
 

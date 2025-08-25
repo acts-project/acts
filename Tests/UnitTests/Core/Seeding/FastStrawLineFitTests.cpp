@@ -26,7 +26,7 @@ using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using RandomEngine = std::mt19937;
 
-constexpr std::uint32_t nTrials = 1;
+constexpr std::size_t nTrials = 1;
 
 namespace Acts::Test {
 
@@ -53,16 +53,12 @@ std::ostream& operator<<(std::ostream& ostr, const std::vector<T>& v) {
   return ostr;
 }
 
-constexpr double inNanoS(const double x) {
-  return x / 1._ns;
-}
-
 class StrawTestPoint {
  public:
   StrawTestPoint(const Vector3& pos, const double driftR,
                  const double driftRUncert)
       : m_pos{pos}, m_driftR{Acts::abs(driftR)} {
-    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::pow(driftRUncert, 2);
+    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(driftRUncert);
   }
   /// @brief Straw tube's direction
   const Vector3& localPosition() const { return m_pos; }
@@ -92,7 +88,7 @@ class StrawTestPoint {
   bool measuresLoc1() const { return false; }
   void setRadius(const double r, const double uncertR) {
     m_driftR = Acts::abs(r);
-    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::pow(uncertR, 2);
+    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(uncertR);
   }
   void setTimeRecord(const double t) { m_drifT = t; }
 
@@ -118,7 +114,7 @@ class StrawTestCalibrator {
     return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
   }
   static double driftTime(const double r) {
-    return CoeffRtoT * Acts::pow(r, 2);
+    return CoeffRtoT * Acts::square(r);
   }
   static double driftRadius(const double t) {
     return std::sqrt(Acts::abs(t) * CoeffTtoR);
@@ -181,9 +177,9 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
   const Vector3 negStaggering{0., -std::cos(60._degree), std::sin(60._degree)};
   /// Number of tube layers per multilayer
-  constexpr std::uint32_t nLayersPerMl = 8;
+  constexpr std::size_t nLayersPerMl = 8;
   /// Number of overall tubelayers
-  constexpr std::uint32_t nTubeLayers = nLayersPerMl * 2;
+  constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
   /// Radius of each straw
   constexpr double tubeRadius = 15._mm;
   /// Distance between the first <nLayersPerMl> layers and the second pack
@@ -192,7 +188,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   std::array<Vector3, nTubeLayers> tubePositions{
       filledArray<Vector3, nTubeLayers>(Vector3{0., tubeRadius, tubeRadius})};
   /// Fill the positions of the reference tubes 1
-  for (std::uint32_t l = 1; l < nTubeLayers; ++l) {
+  for (std::size_t l = 1; l < nTubeLayers; ++l) {
     const Vector3& layStag{l % 2 == 1 ? posStaggering : negStaggering};
     tubePositions[l] = tubePositions[l - 1] + 2. * tubeRadius * layStag;
 
@@ -203,7 +199,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   /// Print the staggering
   ACTS_DEBUG("##############################################");
 
-  for (std::uint32_t l = 0; l < nTubeLayers; ++l) {
+  for (std::size_t l = 0; l < nTubeLayers; ++l) {
     ACTS_DEBUG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
   }
   ACTS_DEBUG("##############################################");
@@ -223,16 +219,16 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
                                         << " "
                                         << toString(planeExtpHigh.position()));
 
-    const auto dToFirstLow = static_cast<std::int32_t>(std::ceil(
+    const auto dToFirstLow = static_cast<int>(std::ceil(
         (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
-    const auto dToFirstHigh = static_cast<std::int32_t>(std::ceil(
+    const auto dToFirstHigh = static_cast<int>(std::ceil(
         (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
     /// Does the track go from left to right or right to left?
-    const std::int32_t dT = dToFirstHigh > dToFirstLow ? 1 : -1;
+    const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
     /// Loop over the candidate tubes and check each one whether the track
     /// actually crossed them. Then generate the circle and optionally smear the
     /// radius
-    for (std::int32_t tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT;
+    for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT;
          tN += dT) {
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
@@ -268,8 +264,8 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
                                   << ",  r: " << meas->driftRadius()
                                   << " - to track: " << Acts::abs(dist));
 
-    chi2 += Acts::pow(
-        (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert(), 2);
+    chi2 += Acts::square(
+        (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert());
   }
   return chi2;
 }
@@ -288,7 +284,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   double fitdY0{0.};
   double fitdTheta{0.};
   double chi2{0.};
-  std::uint32_t nDoF{0u}, nIter{0u};
+  std::size_t nDoF{0u};
+  std::size_t nIter{0u};
   if (debugMode) {
     outFile.reset(TFile::Open("FastStrawLineFitTest.root", "RECREATE"));
     BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
@@ -306,7 +303,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   FastStrawLineFitter::Config cfg{};
   FastStrawLineFitter fastFitter{cfg};
-  for (std::uint32_t n = 0; n < nTrials; ++n) {
+  for (std::size_t n = 0; n < nTrials; ++n) {
     auto track = generateLine(engine);
     auto strawPoints = generateStrawCircles(track, engine, true);
     if (strawPoints.size() < 3) {
