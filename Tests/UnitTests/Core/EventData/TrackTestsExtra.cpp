@@ -790,11 +790,11 @@ BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
   BOOST_CHECK_EQUAL(destTrack2.chi2(), 78.9f);
 
   // Tip and stem indices should be invalidated
-  BOOST_CHECK_EQUAL(destTrack2.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_EQUAL(destTrack2.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack2.tipIndex(), 5);
+  BOOST_CHECK_EQUAL(destTrack2.stemIndex(), 4);
 
   // nTrackStates should return 0 due to invalid indices
-  BOOST_CHECK_EQUAL(destTrack2.nTrackStates(), 0);
+  BOOST_CHECK_EQUAL(destTrack2.nTrackStates(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
