@@ -554,7 +554,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           auto secondRootBranch = tracksTemp.makeTrack();
-          secondRootBranch.copyFromShallow(trackCandidate);
+          secondRootBranch.copyFromWithoutStates(trackCandidate);
           auto secondResult =
               (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
                                   tracksTemp, secondRootBranch);
