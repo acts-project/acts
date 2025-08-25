@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       makeDirectionFromPhiTheta(0_degree, 90_degree),
       makeDirectionFromPhiTheta(90._degree, 0._degree),
       15._ns,
-      {std::pow(5._cm, 2), std::pow(10._cm, 2), std::pow(1._ns, 2)}};
+      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}};
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
 
@@ -653,7 +653,9 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   std::cout << "Calculated chi2: " << chi2.chi2 << std::endl;
   std::cout << "Gradient: " << toString(chi2.gradient) << std::endl;
   std::cout << "Hessian: \n" << chi2.hessian << std::endl;
-
+  BOOST_CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(
+                        line, resCfg.localToGlobal, t0, strip),
+                    chi2.chi2, 1.e-7);
   constexpr double h = 1.e-7;
   constexpr double tolerance = 1.e-3;
   for (const auto par : resCfg.parsToUse) {
@@ -702,6 +704,31 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       BOOST_CHECK_LE(std::abs(anaHess - numHess), tolerance);
     }
   }
+
+  const TestSpacePoint straw{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
+      Vector3::UnitX(),
+      5._cm,
+      false,
+      {0., Acts::pow(10._mm, 2), 0.}};
+  chi2.reset();
+  resCalc.updateFullResidual(line, t0, straw);
+  resCalc.updateChiSq(chi2, straw.covariance());
+  BOOST_CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(line, straw), chi2.chi2,
+                    1.e-7);
+
+  const TestSpacePoint straw1{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()) +
+          4._cm * Vector::UnitX(),
+      Vector3::UnitX(),
+      5._cm,
+      true,
+      {Acts::pow(0.5_cm, 2), Acts::pow(10._mm, 2), 0.}};
+  chi2.reset();
+  resCalc.updateFullResidual(line, t0, straw1);
+  resCalc.updateChiSq(chi2, straw1.covariance());
+  BOOST_CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(line, straw1),
+                    chi2.chi2, 1.e-7);
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
