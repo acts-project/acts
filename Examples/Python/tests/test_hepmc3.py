@@ -394,7 +394,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression, format):
         HepMC3Writer,
     )
 
-    from pythia8 import addPythia8
+    from acts.examples.simulation import addPythia8
 
     s = Sequencer(numThreads=1, events=3)
 
@@ -829,7 +829,7 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
 
         # NO smearing in hs and pu
         for arr in (hs, pu):
-            vx, vy, vz = numpy.unstack(arr)
+            vx, vy, vz = arr
             std = numpy.std(vx)
             assert std < 1 * u.um
             std = numpy.std(vy)
@@ -839,7 +839,7 @@ def test_hepmc3_reader_multiple_files(tmp_path, rng):
 
         # Configured smearing in combined
         # Checked values are a bit lower than configured smearing due to limited stats
-        vx, vy, vz = numpy.unstack(combined)
+        vx, vy, vz = combined
         std = numpy.std(vx)
         assert std > 40 * u.um
         std = numpy.std(vy)
