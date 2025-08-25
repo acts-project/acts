@@ -31,14 +31,13 @@ CompSpacePointAuxiliaries::Vector CompSpacePointAuxiliaries::extrapolateToPlane(
   return planeIsect.position();
 }
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(const Line_t& line,
-                                            const SpacePoint_t& hit) {
-  return chiSqTerm(line.position(), line.direction(), hit);
+double CompSpacePointAuxiliaries::chi2Term(const Line_t& line,
+                                           const SpacePoint_t& hit) {
+  return chi2Term(line.position(), line.direction(), hit);
 }
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(const Vector& pos,
-                                            const Vector& dir,
-                                            const SpacePoint_t& hit) {
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const SpacePoint_t& hit) {
   double chiSq{0.};
   using namespace Acts::detail::LineHelper;
   constexpr auto bendIdx = toUnderlying(ResidualIdx::bending);
@@ -85,19 +84,18 @@ double CompSpacePointAuxiliaries::chiSqTerm(const Vector& pos,
   return chiSq;
 }
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(
+double CompSpacePointAuxiliaries::chi2Term(
     const Line_t& line, const Acts::Transform3& localToGlobal, const double t0,
     const SpacePoint_t& hit) {
-  return chiSqTerm(line.position(), line.direction(), localToGlobal, t0, hit);
+  return chi2Term(line.position(), line.direction(), localToGlobal, t0, hit);
 }
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(const Vector& pos,
-                                            const Vector& dir,
-                                            const Transform3& localToGlobal,
-                                            const double t0,
-                                            const SpacePoint_t& hit) {
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const Transform3& localToGlobal,
+                                           const double t0,
+                                           const SpacePoint_t& hit) {
   using namespace Acts::UnitLiterals;
-  return chiSqTerm(
+  return chi2Term(
       pos, dir,
       t0 + (localToGlobal * extrapolateToPlane(pos, dir, hit)).norm() /
                PhysicalConstants::c,
@@ -105,15 +103,15 @@ double CompSpacePointAuxiliaries::chiSqTerm(const Vector& pos,
 }
 
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(const Line_t& line, const double t0,
-                                            const SpacePoint_t& hit) {
-  return chiSqTerm(line.position(), line.direction(), t0, hit);
+double CompSpacePointAuxiliaries::chi2Term(const Line_t& line, const double t0,
+                                           const SpacePoint_t& hit) {
+  return chi2Term(line.position(), line.direction(), t0, hit);
 }
 template <CompositeSpacePoint SpacePoint_t>
-double CompSpacePointAuxiliaries::chiSqTerm(const Vector& pos,
-                                            const Vector& dir, const double t0,
-                                            const SpacePoint_t& hit) {
-  double chiSq = chiSqTerm(pos, dir, hit);
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const double t0,
+                                           const SpacePoint_t& hit) {
+  double chiSq = chi2Term(pos, dir, hit);
   if (!hit.hasTime() || hit.isStraw()) {
     return chiSq;
   }

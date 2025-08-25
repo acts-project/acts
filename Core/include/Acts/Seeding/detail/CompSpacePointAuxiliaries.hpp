@@ -189,23 +189,23 @@ class CompSpacePointAuxiliaries {
   /// @param line: Reference to the line of interest
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Line_t& line, const SpacePoint_t& hit);
+  static double chi2Term(const Line_t& line, const SpacePoint_t& hit);
   /// @brief Calculates the spatial chiSq term of a composite space point to a line parameterized
   ///         by a position & direction vector
   /// @param pos: Point on the line
   /// @param dir: Direction of the line
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Vector& pos, const Vector& dir,
-                          const SpacePoint_t& hit);
+  static double chi2Term(const Vector& pos, const Vector& dir,
+                         const SpacePoint_t& hit);
   /// @brief Calculates the chiSq term of a composite space point to a line taking into account
   ///        the time offset t0
   /// @param line: Reference to the line of interest
   /// @param t0: Time off set evaluated at the measurement's plane
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Line_t& line, const double t0,
-                          const SpacePoint_t& hit);
+  static double chi2Term(const Line_t& line, const double t0,
+                         const SpacePoint_t& hit);
   /// @brief Calculates the chiSq term of a composite space point to a line taking into account
   ///        the time offset t0
   /// @param pos: Point on the line
@@ -213,8 +213,8 @@ class CompSpacePointAuxiliaries {
   /// @param t0: Time off set evaluated at the measurement's plane
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Vector& pos, const Vector& dir, const double t0,
-                          const SpacePoint_t& hit);
+  static double chi2Term(const Vector& pos, const Vector& dir, const double t0,
+                         const SpacePoint_t& hit);
   ///  @brief Calculates the chiSq term of a composite space point taking into account
   ///        the time offset t0 & the time of arrival of the particle assuming
   ///        the speed of light
@@ -222,9 +222,9 @@ class CompSpacePointAuxiliaries {
   /// @param t0: Time off set evaluated at the measurement's plane
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Line_t& line,
-                          const Acts::Transform3& localToGlobal,
-                          const double t0, const SpacePoint_t& hit);
+  static double chi2Term(const Line_t& line,
+                         const Acts::Transform3& localToGlobal, const double t0,
+                         const SpacePoint_t& hit);
   ///  @brief Calculates the chiSq term of a composite space point taking into account
   ///        the time offset t0 & the time of arrival of the particle assuming
   ///        the speed of light
@@ -233,9 +233,9 @@ class CompSpacePointAuxiliaries {
   /// @param t0: Time off set evaluated at the measurement's plane
   /// @param hit: Reference to the hit of interest
   template <CompositeSpacePoint SpacePoint_t>
-  static double chiSqTerm(const Vector& pos, const Vector& dir,
-                          const Acts::Transform3& localToGlobal,
-                          const double t0, const SpacePoint_t& hit);
+  static double chi2Term(const Vector& pos, const Vector& dir,
+                         const Acts::Transform3& localToGlobal, const double t0,
+                         const SpacePoint_t& hit);
   /// @brief Calculate whether the track passed on the left (-1) or the right (1) side
   ///        of the straw wire. Returns 0 for strips
   /// @param line: Reference to the
