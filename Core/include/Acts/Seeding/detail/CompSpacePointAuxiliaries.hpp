@@ -238,10 +238,31 @@ class CompSpacePointAuxiliaries {
                          const SpacePoint_t& hit);
   /// @brief Calculate whether the track passed on the left (-1) or the right (1) side
   ///        of the straw wire. Returns 0 for strips
-  /// @param line: Reference to the
+  /// @param line: Reference to the line of interest
   /// @param strawSp: Straw measurement of interest
   template <CompositeSpacePoint Point_t>
   static int strawSign(const Line_t& line, const Point_t& strawSp);
+  /// @brief Calculate whether a generic line is on the left (-1) or right (1) side
+  ///         of the straw wire. Return 0 for strip
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param strawSp: Straw measurement of interest
+  template <CompositeSpacePoint Point_t>
+  static int strawSign(const Vector& pos, const Vector& dir,
+                       const Point_t& strawSp);
+  /// @brief Calculate the straw signs for a set of measurements
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param measurements: List of straw measurements to calculate the signs for
+  template <CompositeSpacePointContainer StrawCont_t>
+  static std::vector<int> strawSigns(const Line_t& line,
+                                     const StrawCont_t& measurements);
+  /// @brief Calculate the straw signs for a set of measurements
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param measurements: List of straw measurements to calculate the signs for
+  template <CompositeSpacePointContainer StrawCont_t>
+  static std::vector<int> strawSigns(const Vector& pos, const Vector& dir,
+                                     const StrawCont_t& measurements);
 
  private:
   /// @brief Reference to the logging object
