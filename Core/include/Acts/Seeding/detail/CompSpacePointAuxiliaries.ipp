@@ -121,8 +121,8 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
 }
 
 template <CompositeSpacePoint Point_t>
-int CompSpacePointAuxiliaries::strawSign(const Line_t& line,
-                                         const Point_t& strawSp) {
+std::int32_t CompSpacePointAuxiliaries::strawSign(const Line_t& line,
+                                                  const Point_t& strawSp) {
   if (!strawSp.isStraw()) {
     return 0;
   }
@@ -130,6 +130,16 @@ int CompSpacePointAuxiliaries::strawSign(const Line_t& line,
       line.position(), line.direction(), strawSp.localPosition(),
       strawSp.sensorDirection());
   return dist > 0. ? 1 : -1;
+}
+template <CompositeSpacePointContainer StrawCont_t>
+std::vector<std::int32_t> CompSpacePointAuxiliaries::strawSigns(
+    const Line_t& line, const StrawCont_t& measurements) {
+  std::vector<std::int32_t> signs;
+  signs.reserve(measurements.size());
+  for (const auto& strawSp : measurements) {
+    signs.push_back(strawSign(line, *strawSp));
+  }
+  return signs;
 }
 
 template <CompositeSpacePoint Point_t>

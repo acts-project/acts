@@ -241,7 +241,13 @@ class CompSpacePointAuxiliaries {
   /// @param line: Reference to the
   /// @param strawSp: Straw measurement of interest
   template <CompositeSpacePoint Point_t>
-  static int strawSign(const Line_t& line, const Point_t& strawSp);
+  static std::int32_t strawSign(const Line_t& line, const Point_t& strawSp);
+  /// @brief Calculate the straw signs for a set of measurements
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param measurements: List of straw measurements to calculate the signs for
+  template <CompositeSpacePointContainer StrawCont_t>
+  static std::vector<std::int32_t> strawSigns(const Line_t& line,
+                                              const StrawCont_t& measurements);
 
  private:
   /// @brief Reference to the logging object
