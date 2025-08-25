@@ -12,9 +12,113 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::Experimental::detail {
+
+template <CompositeSpacePoint SpacePoint_t>
+CompSpacePointAuxiliaries::Vector CompSpacePointAuxiliaries::extrapolateToPlane(
+    const Line_t& line, const SpacePoint_t& hit) {
+  return extrapolateToPlane(line.position(), line.direction(), hit);
+}
+template <CompositeSpacePoint SpacePoint_t>
+CompSpacePointAuxiliaries::Vector CompSpacePointAuxiliaries::extrapolateToPlane(
+    const Vector& pos, const Vector& dir, const SpacePoint_t& hit) {
+  using namespace Acts::PlanarHelper;
+  const auto planeIsect =
+      intersectPlane(pos, dir, hit.planeNormal(), hit.localPosition());
+  return planeIsect.position();
+}
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(const Line_t& line,
+                                           const SpacePoint_t& hit) {
+  return chi2Term(line.position(), line.direction(), hit);
+}
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const SpacePoint_t& hit) {
+  double chiSq{0.};
+  using namespace Acts::detail::LineHelper;
+  constexpr auto bendIdx = toUnderlying(ResidualIdx::bending);
+  constexpr auto nonBendIdx = toUnderlying(ResidualIdx::nonBending);
+  if (hit.isStraw()) {
+    if (hit.covariance()[nonBendIdx] > std::numeric_limits<double>::epsilon()) {
+      auto closePointOnStraw =
+          lineIntersect(pos, dir, hit.localPosition(), hit.sensorDirection());
+      chiSq += Acts::square(closePointOnStraw.pathLength()) /
+               hit.covariance()[nonBendIdx];
+    }
+    const double dist = Acts::abs(
+        signedDistance(pos, dir, hit.localPosition(), hit.sensorDirection()));
+    chiSq += Acts::square(dist - hit.driftRadius()) / hit.covariance()[bendIdx];
+  } else {
+    const Vector distOnPlane =
+        (extrapolateToPlane(pos, dir, hit) - hit.localPosition());
+    const Vector& b1{hit.toNextSensor()};
+    const Vector& b2{hit.sensorDirection()};
+    Vector2 dist{distOnPlane.dot(b1), distOnPlane.dot(b2)};
+    if (hit.measuresLoc0() && hit.measuresLoc1()) {
+      /// Check whether the two vectors are orthogonal
+      constexpr double tolerance = 1.e-8;
+      const double stripAngle = b1.dot(b2);
+      if (stripAngle < tolerance) {
+        const double invDist = 1. / (1. - square(stripAngle));
+        ActsSquareMatrix<2> stereoDecomp{invDist *
+                                         ActsSquareMatrix<2>::Identity()};
+        stereoDecomp(1, 0) = stereoDecomp(0, 1) = stripAngle * invDist;
+        dist = stereoDecomp * dist;
+      }
+      chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx] +
+              Acts::square(dist[1]) / hit.covariance()[nonBendIdx];
+    } else if (hit.measuresLoc0()) {
+      chiSq = Acts::square(dist[0]) / hit.covariance()[nonBendIdx];
+    } else {
+      chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx];
+      if (hit.covariance()[nonBendIdx] >
+          std::numeric_limits<double>::epsilon()) {
+        chiSq += square(dist[1]) / hit.covariance()[nonBendIdx];
+      }
+    }
+  }
+  return chiSq;
+}
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(
+    const Line_t& line, const Acts::Transform3& localToGlobal, const double t0,
+    const SpacePoint_t& hit) {
+  return chi2Term(line.position(), line.direction(), localToGlobal, t0, hit);
+}
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const Transform3& localToGlobal,
+                                           const double t0,
+                                           const SpacePoint_t& hit) {
+  using namespace Acts::UnitLiterals;
+  return chi2Term(
+      pos, dir,
+      t0 + (localToGlobal * extrapolateToPlane(pos, dir, hit)).norm() /
+               PhysicalConstants::c,
+      hit);
+}
+
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(const Line_t& line, const double t0,
+                                           const SpacePoint_t& hit) {
+  return chi2Term(line.position(), line.direction(), t0, hit);
+}
+template <CompositeSpacePoint SpacePoint_t>
+double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
+                                           const double t0,
+                                           const SpacePoint_t& hit) {
+  double chiSq = chi2Term(pos, dir, hit);
+  if (!hit.hasTime() || hit.isStraw()) {
+    return chiSq;
+  }
+  chiSq += Acts::square(hit.time() - t0) /
+           hit.covariance()[toUnderlying(ResidualIdx::time)];
+  return chiSq;
+}
 
 template <CompositeSpacePoint Point_t>
 int CompSpacePointAuxiliaries::strawSign(const Line_t& line,
