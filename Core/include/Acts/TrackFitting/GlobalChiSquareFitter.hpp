@@ -96,10 +96,10 @@ struct Gx2FitterExtensions {
 
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
-    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
-    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
-    outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
-    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
+    calibrator.template connect<&Acts::detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&Acts::detail::voidFitterUpdater<traj_t>>();
+    outlierFinder.template connect<&Acts::detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&Acts::detail::voidSurfaceAccessor>();
   }
 };
 
@@ -818,8 +818,8 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                           stepper);
+          Acts::detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                                 stepper);
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid = interaction.evaluateMaterialSlab(
               state, navigator, MaterialUpdateStage::FullUpdate);
