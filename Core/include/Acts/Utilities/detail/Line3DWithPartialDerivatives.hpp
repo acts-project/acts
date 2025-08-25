@@ -28,9 +28,9 @@ class Line3DWithPartialDerivatives {
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
   enum class ParIndex : std::uint8_t {
-    y0 = 0,     // y-axis intercept at z=0
+    y0 = 0,     /// y-axis intercept at z=0
     theta = 1,  /// polar angle w.r.t the z-axis
-    x0 = 2,     // x-axis intercept at z=0
+    x0 = 2,     /// x-axis intercept at z=0
     phi = 3,    /// Azimuthal angle in the x-y plane
     nPars = 4,  /// Number of line parameters
   };
