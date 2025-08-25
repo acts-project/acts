@@ -71,7 +71,8 @@ if(ACTS_GNN_ENABLE_CUDA)
     target_compile_options(
         ActsPluginGnn
         PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:-g
+            $<$<COMPILE_LANGUAGE:CUDA>:
+            --dopt=on
             --generate-line-info
             --expt-relaxed-constexpr
             --extended-lambda>
