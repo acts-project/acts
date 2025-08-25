@@ -621,9 +621,15 @@ class TrackProxy {
     requires(!ReadOnly)
   {
     if (copyTrackStates) {
-      return copyFrom(other);
+      copyFrom(other);
     } else {
-      return copyFromWithoutStates(other);
+      // Emulate previous behavior
+      auto prevTipIndex = tipIndex();
+      auto prevStemIndex = stemIndex();
+      copyFromWithoutStates(other);
+      // Reset to previous values
+      tipIndex() = prevTipIndex;
+      stemIndex() = prevStemIndex;
     }
   }
 
