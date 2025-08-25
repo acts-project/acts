@@ -731,22 +731,18 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
 
   // pseudo track initialization
 
-  Pars_t linePars{};
-  linePars[x0_idx] = 0. * 1_mm;
-  linePars[y0_idx] = 0. * 1_mm;
-  linePars[phi_idx] = 0. * 1_degree;
-  linePars[theta_idx] = 0. * 1_degree;
-  Line_t line{linePars};
-
   for (std::size_t i = 0; i < nEvents; i++) {
     std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
               << std::endl;
     // update pseudo track parameters with random values
-    linePars[x0_idx] = rndEngine() % 1000 - 500.;
-    linePars[y0_idx] = rndEngine() % 1000 - 500.;
-    linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
-    linePars[theta_idx] = (rndEngine() % 90) * 1_degree;
-    line.updateParameters(linePars);
+    Pars_t linePars{};
+    linePars[x0_idx] = std::uniform_real_distribution{-500., 500.}(rndEngine);
+    linePars[y0_idx] = std::uniform_real_distribution{-500., 500.}(rndEngine);
+    linePars[phi_idx] =
+        std::uniform_real_distribution{0.1_degree, 179.9_degree}(rndEngine);
+    linePars[theta_idx] =
+        std::uniform_real_distribution{-180_degree, 180_degree}(rndEngine);
+    Line_t line{linePars};
 
     Vector3 muonPos = line.position();
     Vector3 muonDir = line.direction();
