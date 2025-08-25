@@ -227,7 +227,9 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
-    ClusterC newCls = Ccl::createClusters<CellC, ClusterC>(cells);
+    Acts::Ccl::ClusteringData data;
+    ClusterC newCls;
+    Ccl::createClusters<CellC, ClusterC>(data, cells, newCls);
 
     for (Cluster& cl : newCls) {
       hash(cl);
