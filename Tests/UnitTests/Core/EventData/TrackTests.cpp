@@ -21,6 +21,7 @@
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
@@ -470,6 +471,14 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = tc.makeTrack();
 
+  auto perigee =
+      Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
+
+  t.parameters().setRandom();
+  t.covariance().setRandom();
+  t.particleHypothesis() = Acts::ParticleHypothesis::pion();
+  t.setReferenceSurface(perigee);
+
   auto ts1 = t.appendTrackState();
   ts1.predicted().setRandom();
   auto ts2 = t.appendTrackState();
@@ -477,10 +486,19 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   auto ts3 = t.appendTrackState();
   ts3.predicted().setRandom();
 
-  auto t2 = t.shallowCopy();
+  auto t2 = tc.makeTrack();
+  t2.copyFromShallow(t);
 
   BOOST_CHECK_NE(t.index(), t2.index());
   BOOST_CHECK_EQUAL(t.nTrackStates(), t2.nTrackStates());
+
+  BOOST_CHECK_EQUAL(t.particleHypothesis(), t2.particleHypothesis());
+  BOOST_CHECK_EQUAL(t.parameters(), t2.parameters());
+  BOOST_CHECK_EQUAL(t.covariance(), t2.covariance());
+
+  BOOST_CHECK_EQUAL(t.referenceSurface().getSharedPtr(),
+                    t2.referenceSurface().getSharedPtr());
+  BOOST_CHECK_EQUAL(t.tipIndex(), t2.tipIndex());
 
   std::vector<decltype(tc)::TrackStateProxy> trackStates;
   for (const auto& ts : t.trackStatesReversed()) {
