@@ -228,8 +228,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
     /// Loop over the candidate tubes and check each one whether the track
     /// actually crossed them. Then generate the circle and optionally smear the
     /// radius
-    for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT;
-         tN += dT) {
+    for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
@@ -264,8 +263,8 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
                                   << ",  r: " << meas->driftRadius()
                                   << " - to track: " << Acts::abs(dist));
 
-    chi2 += Acts::square(
-        (Acts::abs(dist) - meas->driftRadius()) / meas->driftUncert());
+    chi2 += Acts::square((Acts::abs(dist) - meas->driftRadius()) /
+                         meas->driftUncert());
   }
   return chi2;
 }

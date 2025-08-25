@@ -1,7 +1,16 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #include "Acts/Seeding/detail/FastStrawLineFitter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <format>
 
@@ -63,7 +72,7 @@ inline void FastStrawLineFitter::calcAngularDerivatives(
 double FastStrawLineFitter::startTheta(const FitAuxiliaries& fitPars) {
   double thetaGuess =
       std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
-  return thetaGuess + (thetaGuess < 0 ? std::numbers::pi : 0.);
+  return Acts::detail::wrap_periodic(thetaGuess, 0., std::numbers::pi);
 }
 void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
                                          const double thetaTwoPrime,

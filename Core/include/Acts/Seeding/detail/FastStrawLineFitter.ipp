@@ -18,8 +18,7 @@ namespace Acts::Experimental::detail {
 
 template <CompositeSpacePointContainer StrawCont_t>
 std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
-    const StrawCont_t& measurements,
-    const std::vector<int>& signs) const {
+    const StrawCont_t& measurements, const std::vector<int>& signs) const {
   if (measurements.size() != signs.size()) {
     ACTS_WARNING(
         __func__ << "() - " << __LINE__
@@ -73,8 +72,7 @@ double FastStrawLineFitter::chi2Term(const TrigonomHelper& angle,
 
 template <CompositeSpacePointContainer StrawCont_t>
 FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
-    const StrawCont_t& measurements,
-    const std::vector<int>& signs) const {
+    const StrawCont_t& measurements, const std::vector<int>& signs) const {
   FitAuxiliaries auxVars{};
   auxVars.invCovs.resize(signs.size(), -1.);
   Vector centerOfGravity{Vector::Zero()};

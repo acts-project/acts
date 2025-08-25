@@ -23,8 +23,8 @@ namespace Acts::Experimental::detail {
 ///         The space points  passed to the fitter need to be all straw space
 ///         points and their straw wires need to be approximately parallel to
 ///         each other. Under this assumption, each straw measurements can be
-///         projected onto the plane which is perpendicular to its straw wire and
-///         the residual to the k-th straw is written as
+///         projected onto the plane which is perpendicular to its straw wire
+///         and the residual to the k-th straw is written as
 ///
 ///                 R_{k} = T_{z,k} * sin \theta - (T_{y,k} -  y_{0})* cos \theta - sign_{k} * r_{k}
 ///
