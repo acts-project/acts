@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -174,9 +176,21 @@ struct RootMeasurementWriter::DigitizationTree {
   void fillGlobalMeasurement(const Acts::GeometryContext& gctx,
                              const Acts::Surface& surface,
                              const ConstVariableBoundMeasurementProxy& m) {
-    // passing invalid direction but we expect this to be a regular surface
-    Acts::Vector3 global = surface.localToGlobal(
-        gctx, m.fullParameters().head<2>(), Acts::Vector3::Zero());
+    // we need a regular surface to perform the local to global transformation
+    // without direction input. the direction could be obtained from truth
+    // information but we can leave it out here.
+    const Acts::RegularSurface* regularSurface =
+        dynamic_cast<const Acts::RegularSurface*>(&surface);
+    if (regularSurface == nullptr) {
+      throw std::invalid_argument("Expected a regular surface");
+    }
+    Acts::Vector2 local = m.fullParameters().head<2>();
+    if (!m.subspaceHelper().contains(Acts::eBoundLoc0)) {
+      local[Acts::eBoundLoc0] = surface.bounds().center()[0];
+    } else if (!m.subspaceHelper().contains(Acts::eBoundLoc1)) {
+      local[Acts::eBoundLoc1] = surface.bounds().center()[1];
+    }
+    Acts::Vector3 global = regularSurface->localToGlobal(gctx, local);
     recGx = global[Acts::ePos0];
     recGy = global[Acts::ePos1];
     recGz = global[Acts::ePos2];
