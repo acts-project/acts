@@ -193,6 +193,9 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
               fitPars.T_ay * angles.cosTheta + fitPars.R_vv + fitPars.R_va;
 
   const auto invCov = cov.inverse();
+  if (invCov(1, 1) < 0) {
+    return UpdateStatus::Exceeded;
+  }
   const Vector2 update = invCov * grad;
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
