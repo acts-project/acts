@@ -21,7 +21,7 @@ class TripletTopCandidates {
  public:
   using Index = std::uint32_t;
 
-  Index size() const { return m_topSpacePoints.size(); }
+  Index size() const { return static_cast<Index>(m_topSpacePoints.size()); }
 
   void reserve(Index size) {
     m_topSpacePoints.reserve(size);
@@ -70,7 +70,7 @@ class TripletTopCandidates {
     Index m_index{};
   };
 
-  Proxy operator[](std::size_t index) const { return Proxy(this, index); }
+  Proxy operator[](Index index) const { return Proxy(this, index); }
 
   using const_iterator =
       ContainerIterator<TripletTopCandidates, Proxy, Index, true>;
@@ -87,6 +87,15 @@ class TripletTopCandidates {
 class TripletSeedFinder {
  public:
   struct Config {
+    /// Delegates for accessors to detailed information on double measurement
+    /// that produced the space point. This is mainly referring to space points
+    /// produced when combining measurement from strips on back-to-back modules.
+    /// Enables setting of the following delegates.
+    bool useStripInfo = false;
+
+    /// Whether the input doublets are sorted by cotTheta
+    bool sortedByCotTheta = true;
+
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
@@ -112,15 +121,6 @@ class TripletSeedFinder {
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
-
-    /// Delegates for accessors to detailed information on double measurement
-    /// that produced the space point. This is mainly referring to space points
-    /// produced when combining measurement from strips on back-to-back modules.
-    /// Enables setting of the following delegates.
-    bool useStripInfo = false;
-
-    /// Whether the input doublets are sorted by cotTheta
-    bool sortedByCotTheta = true;
   };
 
   struct DerivedConfig : public Config {

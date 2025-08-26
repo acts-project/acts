@@ -193,7 +193,7 @@ void CylindricalSpacePointGrid2::sortBinsByR(
   for (std::size_t i = 0; i < grid().size(); ++i) {
     BinType& bin = grid().at(i);
     std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
-      return spacePoints[spIndex].r();
+      return spacePoints[spIndex].zr()[1];
     });
   }
 
@@ -211,8 +211,8 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
     }
     auto first = spacePoints[bin.front()];
     auto last = spacePoints[bin.back()];
-    minRange = std::min(first.r(), minRange);
-    maxRange = std::max(last.r(), maxRange);
+    minRange = std::min(first.zr()[1], minRange);
+    maxRange = std::max(last.zr()[1], maxRange);
   }
   return {minRange, maxRange};
 }
