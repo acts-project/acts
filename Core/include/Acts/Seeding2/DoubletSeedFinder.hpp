@@ -11,12 +11,17 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <cstdint>
 #include <vector>
 
 namespace Acts::Experimental {
 
+/// Container for doublets found by the doublet seed finder.
+///
+/// This implementation uses partial AoS/SoA depending on the access pattern in
+/// the doublet finding process.
 class DoubletsForMiddleSp {
  public:
   using Index = std::uint32_t;
@@ -93,6 +98,8 @@ class DoubletsForMiddleSp {
     const DoubletsForMiddleSp* m_container{};
     Index m_index{};
   };
+  /// Same as `Proxy` but also contains `cotTheta`. This is useful after sorting
+  /// doublets by `cotTheta` to avoid indirect access.
   class Proxy2 : public Proxy {
    public:
     Proxy2(const DoubletsForMiddleSp* container,
@@ -175,8 +182,18 @@ struct MiddleSpInfo {
   float sinPhiM{};
 };
 
+/// Interface and a collection of standard implementations for a doublet seed
+/// finder. Given a starting space point and a collection of candidates, it
+/// finds all doublets that satisfy the selection criteria. For the standard
+/// implementations the criteria are given by interaction point cuts.
+///
+/// @note The standard implementations rely on virtual function dispatch which
+/// did not turn out to affect the performance after measurement.
 class DoubletSeedFinder {
  public:
+  /// Collection of configuration parameters for the doublet seed finder. This
+  /// includes doublet cuts, steering switches, and assumptions about the space
+  /// points.
   struct Config {
     /// Whether the input space points are sorted by radius
     bool spacePointsSortedByRadius = false;
@@ -221,13 +238,16 @@ class DoubletSeedFinder {
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
 
+    using ExperimentCuts =
+        Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
+                      const ConstSpacePointProxy2& /*other*/,
+                      float /*cotTheta*/, bool /*isBottomCandidate*/)>;
+
     /// Delegate to apply experiment specific cuts during doublet finding
-    Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
-                  const ConstSpacePointProxy2& /*other*/, float /*cotTheta*/,
-                  bool /*isBottomCandidate*/)>
-        experimentCuts;
+    ExperimentCuts experimentCuts;
   };
 
+  /// Derived configuration for the doublet seed finder using a magnetic field.
   struct DerivedConfig : public Config {
     DerivedConfig(const Config& config, float bFieldInZ);
 
@@ -235,12 +255,16 @@ class DoubletSeedFinder {
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 
+  /// Computes additional quantities from the middle space point which can be
+  /// reused during doublet finding.
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
+  /// Creates a new doublet seed finder instance given the configuration.
   static std::unique_ptr<DoubletSeedFinder> create(const DerivedConfig& config);
 
   virtual ~DoubletSeedFinder() = default;
 
+  /// Returns the configuration of the doublet seed finder.
   virtual const DerivedConfig& config() const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
