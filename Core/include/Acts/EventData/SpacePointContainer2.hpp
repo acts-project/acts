@@ -30,8 +30,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <Eigen/Core>
-
 namespace Acts::Experimental {
 
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
@@ -237,7 +235,7 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the top strip vector column.
   /// @return A mutable proxy to the top strip vector column.
-  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  MutableSpacePointColumnProxy<std::array<float, 3>>
   topStripVectorColumn() noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
@@ -245,7 +243,7 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the bottom strip vector column.
   /// @return A mutable proxy to the bottom strip vector column.
-  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  MutableSpacePointColumnProxy<std::array<float, 3>>
   bottomStripVectorColumn() noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
@@ -253,7 +251,7 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the strip center distance column.
   /// @return A mutable proxy to the strip center distance column.
-  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  MutableSpacePointColumnProxy<std::array<float, 3>>
   stripCenterDistanceColumn() noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
@@ -261,7 +259,7 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the top strip center column.
   /// @return A mutable proxy to the top strip center column.
-  MutableSpacePointColumnProxy<Eigen::Vector3f>
+  MutableSpacePointColumnProxy<std::array<float, 3>>
   topStripCenterColumn() noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
@@ -360,7 +358,7 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the top strip vector column.
   /// @return A const proxy to the top strip vector column.
-  ConstSpacePointColumnProxy<Eigen::Vector3f> topStripVectorColumn()
+  ConstSpacePointColumnProxy<std::array<float, 3>> topStripVectorColumn()
       const noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
@@ -368,7 +366,7 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the bottom strip vector column.
   /// @return A const proxy to the bottom strip vector column.
-  ConstSpacePointColumnProxy<Eigen::Vector3f> bottomStripVectorColumn()
+  ConstSpacePointColumnProxy<std::array<float, 3>> bottomStripVectorColumn()
       const noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
@@ -376,7 +374,7 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the strip center distance column.
   /// @return A const proxy to the strip center distance column.
-  ConstSpacePointColumnProxy<Eigen::Vector3f> stripCenterDistanceColumn()
+  ConstSpacePointColumnProxy<std::array<float, 3>> stripCenterDistanceColumn()
       const noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
@@ -384,7 +382,7 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the top strip center column.
   /// @return A const proxy to the top strip center column.
-  ConstSpacePointColumnProxy<Eigen::Vector3f> topStripCenterColumn()
+  ConstSpacePointColumnProxy<std::array<float, 3>> topStripCenterColumn()
       const noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
@@ -549,7 +547,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the top strip vector of the space point.
-  Eigen::Vector3f &topStripVector(Index index) noexcept {
+  std::array<float, 3> &topStripVector(Index index) noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     assert(index < m_topStripVectorColumn->size() && "Index out of bounds");
@@ -559,7 +557,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the bottom strip vector of the space point.
-  Eigen::Vector3f &bottomStripVector(Index index) noexcept {
+  std::array<float, 3> &bottomStripVector(Index index) noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     assert(index < m_bottomStripVectorColumn->size() && "Index out of bounds");
@@ -569,7 +567,7 @@ class SpacePointContainer2 {
   /// the given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the strip center distance of the space point.
-  Eigen::Vector3f &stripCenterDistance(Index index) noexcept {
+  std::array<float, 3> &stripCenterDistance(Index index) noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
     assert(index < m_stripCenterDistanceColumn->size() &&
@@ -580,7 +578,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A mutable reference to the top strip center of the space point.
-  Eigen::Vector3f &topStripCenter(Index index) noexcept {
+  std::array<float, 3> &topStripCenter(Index index) noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     assert(index < m_topStripCenterColumn->size() && "Index out of bounds");
@@ -731,7 +729,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the top strip vector of the space point.
-  const Eigen::Vector3f &topStripVector(Index index) const noexcept {
+  const std::array<float, 3> &topStripVector(Index index) const noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     assert(index < m_topStripVectorColumn->size() && "Index out of bounds");
@@ -741,7 +739,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the bottom strip vector of the space point.
-  const Eigen::Vector3f &bottomStripVector(Index index) const noexcept {
+  const std::array<float, 3> &bottomStripVector(Index index) const noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     assert(index < m_bottomStripVectorColumn->size() && "Index out of bounds");
@@ -751,7 +749,7 @@ class SpacePointContainer2 {
   /// the given index.
   /// @param index The index of the space point.
   /// @return A const reference to the strip center distance of the space point.
-  const Eigen::Vector3f &stripCenterDistance(Index index) const noexcept {
+  const std::array<float, 3> &stripCenterDistance(Index index) const noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
     assert(index < m_stripCenterDistanceColumn->size() &&
@@ -762,7 +760,7 @@ class SpacePointContainer2 {
   /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the top strip center of the space point.
-  const Eigen::Vector3f &topStripCenter(Index index) const noexcept {
+  const std::array<float, 3> &topStripCenter(Index index) const noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     assert(index < m_topStripCenterColumn->size() && "Index out of bounds");
@@ -999,10 +997,10 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<float>> m_varianceZColumn;
   std::optional<ColumnHolder<float>> m_varianceRColumn;
   // strip information
-  std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripVectorColumn;
-  std::optional<ColumnHolder<Eigen::Vector3f>> m_bottomStripVectorColumn;
-  std::optional<ColumnHolder<Eigen::Vector3f>> m_stripCenterDistanceColumn;
-  std::optional<ColumnHolder<Eigen::Vector3f>> m_topStripCenterColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_topStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_bottomStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_stripCenterDistanceColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_topStripCenterColumn;
   // copy information
   std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
@@ -1032,11 +1030,11 @@ class SpacePointContainer2 {
     return std::tuple(
         SpacePointIndex2{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
         float{0}, float{0}, float{NoTime}, float{0}, float{0},
-        Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0},
-        Eigen::Vector3f{0, 0, 0}, Eigen::Vector3f{0, 0, 0}, SpacePointIndex2{0},
-        std::array<float, 2>{0, 0}, std::array<float, 2>{0, 0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 4>{0, 0, 0, 0},
-        std::array<float, 2>{0, 0});
+        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
+        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
+        SpacePointIndex2{0}, std::array<float, 2>{0, 0},
+        std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
+        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
   }
 
   auto knownColumns() & noexcept {
