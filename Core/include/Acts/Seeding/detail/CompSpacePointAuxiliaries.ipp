@@ -62,11 +62,11 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
       /// Check whether the two vectors are orthogonal
       constexpr double tolerance = 1.e-8;
       const double stripAngle = b1.dot(b2);
-      if (stripAngle < tolerance) {
+      if (stripAngle > tolerance) {
         const double invDist = 1. / (1. - square(stripAngle));
         ActsSquareMatrix<2> stereoDecomp{invDist *
                                          ActsSquareMatrix<2>::Identity()};
-        stereoDecomp(1, 0) = stereoDecomp(0, 1) = stripAngle * invDist;
+        stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
         dist = stereoDecomp * dist;
       }
       chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx] +
