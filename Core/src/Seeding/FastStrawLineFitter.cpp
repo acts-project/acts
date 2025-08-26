@@ -48,16 +48,16 @@ void FastStrawLineFitter::FitAuxiliaries::print(std::ostream& ostr) const {
 }
 void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
     std::ostream& ostr) const {
+  ostr << std::format("R_vr: {:.3f}, ", R_vr);
+  ostr << std::format("R_va: {:.3f}, ", R_va);
+  ostr << std::format("R_vv: {:.3f}, ", R_vv);
+  ostr << std::format("R_a: {:.3f}, ", R_a);
+  ostr << std::format("R_v: {:.3f}, ", R_v);
+  ostr << std::format("T_vz: {:.3f}, ", T_vz);
+  ostr << std::format("T_vy: {:.3f}, ", T_vy);
+  ostr << std::format("T_az: {:.3f}, ", T_az);
+  ostr << std::format("T_ay: {:.3f}, ", T_ay);
   FitAuxiliaries::print(ostr);
-  ostr << ", " << std::format("T_vz: {:.3f}, ", T_vz)
-       << std::format("T_vy: {:.3f}, ", T_vy)
-       << std::format("T_az: {:.3f}, ", T_az)
-       << std::format("T_ay: {:.3f}, ", T_ay)
-       << std::format("R_vr: {:.3f}, ", R_vr)
-       << std::format("R_va: {:.3f}, ", R_va)
-       << std::format("R_vv: {:.3f}, ", R_vv) << " --- "
-       << std::format("y_{{0}}^{{''}}:  {:.3f}, ", R_a)
-       << std::format("y_{{0}}^{{'}} :  {:.3f}", R_v);
 }
 
 void FastStrawLineFitter::FitResult::print(std::ostream& ostr) const {
@@ -183,33 +183,48 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   grad[1] = calcTimeGrad(angles, fitPars);
   if (grad.norm() < m_cfg.precCutOff) {
     completeResult(fitPars, cov(0, 0), fitResult);
+    ACTS_INFO(__func__ << "() - " << __LINE__
+                       << " Fit converged: " << fitResult);
     return UpdateStatus::Converged;
   }
   cov(1, 0) = cov(0, 1) =
       fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
 
-  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm -
-              fitPars.fitY0 * fitPars.R_a - fitPars.T_az * angles.sinTheta -
-              fitPars.T_ay * angles.cosTheta + fitPars.R_vv + fitPars.R_va;
-
+  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm +
+              fitPars.R_vv
+              ///
+              + fitPars.fitY0 * fitPars.R_a + fitPars.R_va - 
+              (fitPars.T_az * angles.sinTheta -
+              fitPars.T_ay * angles.cosTheta );
+  ACTS_INFO("-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv: "
+          <<(-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv)
+          <<", fitPars.fitY0 * fitPars.R_a: "<<(fitPars.fitY0 * fitPars.R_a)
+          <<", fitPars.R_va: "<<fitPars.R_va<<
+          ", (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta )"
+           <<(fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta ));
   const auto invCov = cov.inverse();
   if (invCov(1, 1) < 0) {
+    ACTS_WARNING("Invalid covariance\n"
+                 << cov << ", determinant: " << cov.determinant() << ", "
+                 << fitPars);
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = invCov * grad;
 
-  ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
-                        << fitResult << "\n"
-                        << std::format("gradient: ({:.3f}, {:.3f})",
-                                       inDeg(grad[0]), inNanoS(grad[1]))
-                        << ", covariance:" << std::endl
-                        << toString(cov) << std::endl
-                        << cov.determinant()
-                        << std::format(" update: ({:.3f}, {:.3f}).",
-                                       inDeg(update[0]), inNanoS(update[1])));
+  ACTS_INFO(__func__ << "() - " << __LINE__ << " intermediate result "
+                     << fitResult << "\n"
+                     << std::format("gradient: ({:.3f}, {:.3f})",
+                                    inDeg(grad[0]), inNanoS(grad[1]))
+                     << ", covariance:" << std::endl
+                     << toString(cov) << std::endl
+                     << cov.determinant()
+                     << std::format(" update: ({:.3f}, {:.3f}).",
+                                    inDeg(update[0]), inNanoS(update[1])));
 
   if (update.norm() < m_cfg.precCutOff) {
     completeResult(fitPars, cov(0, 0), fitResult);
+    ACTS_INFO(__func__ << "() - " << __LINE__
+                       << " Fit converged: " << fitResult);
     return UpdateStatus::Converged;
   }
   fitResult.t0 -= update[1];

@@ -200,18 +200,33 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
   result.theta = startTheta(fitPars);
+  result.theta = 20._degree;
   result.nDoF = fitPars.nDoF;
-  ACTS_DEBUG(__func__ << "() - " << __LINE__
-                      << ": Initial fit parameters: " << result);
+  ACTS_INFO(__func__ << "() - " << __LINE__
+                     << ": Initial fit parameters: " << result);
   UpdateStatus iterStatus{UpdateStatus::GoodStep};
+  constexpr double h = 1.e-8;
+  
+     TrigonomHelper theta{result.theta};
+    FitAuxiliariesWithT0 fitParsUp =
+        fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0 + h);
+    FitAuxiliariesWithT0 fitParsDn =
+        fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0 - h);
+    ACTS_INFO(
+        "Froehlicher koehler ueberall "
+        << ((calcTimeGrad(theta, fitParsUp) - calcTimeGrad(theta, fitParsDn)) /
+            (2. * h)));
+            updateIteration(fitPars, result);
+      throw std::runtime_error("abc");
 
+  
   while ((iterStatus = updateIteration(fitPars, result)) !=
-         UpdateStatus::Exceeded) {
+             UpdateStatus::Exceeded 
+         ) {
     if (iterStatus == UpdateStatus::Converged) {
       calcPostFitChi2(ctx, measurements, calibrator, result);
       return result;
     }
-
     fitPars = fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0);
   }
   return std::nullopt;
@@ -261,12 +276,13 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
 
     auxVars.T_vy += sInvCov * v * y;
     auxVars.T_vz += sInvCov * v * z;
-    auxVars.R_vr += invCov * r * v;
 
-    auxVars.T_ay -= sInvCov * a * y;
-    auxVars.T_az -= sInvCov * a * z;
+    auxVars.R_vr += invCov * r * v;
     auxVars.R_vv += invCov * v * v;
-    auxVars.R_va -= sInvCov * v * a;
+
+    auxVars.T_ay += sInvCov * a * y;
+    auxVars.T_az += sInvCov * a * z;
+    auxVars.R_va += invCov * v * a;
   }
   auxVars.fitY0 *= auxVars.covNorm;
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << " Fit constants calculated \n"
