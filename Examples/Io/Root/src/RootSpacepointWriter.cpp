@@ -129,8 +129,8 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     m_y = sp.y() / Acts::UnitConstants::mm;
     m_z = sp.z() / Acts::UnitConstants::mm;
     m_r = sp.r() / Acts::UnitConstants::mm;
-    m_t = sp.t().value_or(std::numeric_limits<double>::quiet_NaN()) /
-          Acts::UnitConstants::ns;
+    m_t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
+                 : std::numeric_limits<double>::quiet_NaN();
     // write sp dimensions
     m_var_r = sp.varianceR() / Acts::UnitConstants::mm;
     m_var_z = sp.varianceZ() / Acts::UnitConstants::mm;
