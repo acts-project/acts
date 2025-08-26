@@ -14,7 +14,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDetectorGeoModel
     PUBLIC
-        Acts::Core
         Acts::ExamplesFramework
         Acts::PluginGeoModel
         Acts::ExamplesDetectorsCommon

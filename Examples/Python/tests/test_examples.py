@@ -18,7 +18,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
-    exatrkxEnabled,
+    gnnEnabled,
     onnxEnabled,
     hashingSeedingEnabled,
     AssertCollectionExistsAlg,
@@ -1223,8 +1223,8 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
-@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
-def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+@pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
+def test_gnn(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     if backend == "onnx" and hardware == "cpu":
         pytest.skip("Combination of ONNX and CPU not yet supported")
 
@@ -1255,7 +1255,7 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
         / "Examples"
         / "Scripts"
         / "Python"
-        / "exatrkx.py"
+        / "gnn.py"
     )
     assert script.exists()
     env = os.environ.copy()

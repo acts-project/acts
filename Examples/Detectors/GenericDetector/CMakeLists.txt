@@ -18,5 +18,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorGeneric
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
+    PUBLIC Acts::ExamplesDetectorsCommon
 )
