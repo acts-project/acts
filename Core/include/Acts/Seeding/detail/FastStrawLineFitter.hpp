@@ -10,9 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
+#include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <vector>
@@ -89,6 +92,15 @@ class FastStrawLineFitter {
     std::size_t nIter{0};
   };
 
+  /// @brief Expansion of the FitResult to also return information
+  ///        on the fitted time offset t0
+  struct FitResultT0 : public FitResult {
+    void print(std::ostream& ostr) const override;
+    /// @brief Fitted time offset t0
+    double t0{0.};
+    /// @brief Uncertainty on the time offset
+    double dT0{0.};
+  };
   /// @brief Brief fit a straight line to a set of straw measurements and return
   ///        the theta angle & the intercept as well as the associated
   ///        uncertainties.
@@ -99,6 +111,17 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
+
+  /// @brief Fit a straight line with time
+
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointFastCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  std::optional<FitResultT0> fit(const Acts::CalibrationContext& ctx,
+                                 const Calibrator_t& calibrator,
+                                 const StrawCont_t& measurements,
+                                 const std::vector<int>& signs) const;
 
  private:
   /// @brief Index of the drift circle covariance inside the straw
@@ -143,6 +166,32 @@ class FastStrawLineFitter {
     /// @brief number of degrees of freedom
     std::size_t nDoF{0};
   };
+  ///@brief Extension of the auxiliary fit constants needed for the
+  ///         seed refinement when T0 is floating
+  struct FitAuxiliariesWithT0 : public FitAuxiliaries {
+    ///@brief Constructor
+    explicit FitAuxiliariesWithT0(FitAuxiliaries&& parent)
+        : FitAuxiliaries{std::move(parent)} {}
+    void print(std::ostream& ostr) const override;
+    ///@brief Expectation value of T_{y} * v
+    double T_vy{0.};
+    ///@brief Expectation value of T_{z} * v
+    double T_vz{0.};
+    ///@brief Expectation value of T_{y} * a
+    double T_ay{0.};
+    ///@brief Expectation value of T_{z} * a
+    double T_az{0.};
+    ///@brief Expectation value of r * v
+    double R_vr{0.};
+    ///@brief Expectation value of v * v
+    double R_vv{0.};
+    ///@brief Expectation value of r * a
+    double R_va{0.};
+    ///@brief First derivative of the fitted Y0
+    double R_v{0.};
+    ///@brief Second derivative of the ftted Y0
+    double R_a{0.};
+  };
   /// @brief Small Helper struct to calculate sin & cos of theta & 2 theta
   struct TrigonomHelper {
     /// @brief Constructor passing the theta angle
@@ -177,6 +226,15 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   void calcPostFitChi2(const StrawCont_t& measurements,
                        FitResult& result) const;
+
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointFastCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  void calcPostFitChi2(const Acts::CalibrationContext& ctx,
+                       const StrawCont_t& measurements,
+                       const Calibrator_t& calibrator,
+                       FitResultT0& result) const;
   /// @brief Calculate the chi2 term from a straw measurement given the known theta, y0
   /// @param angle: Helper struct caching the cosTheta & sinTheta
   /// @param y0: Intercept of the fitted line
@@ -186,12 +244,17 @@ class FastStrawLineFitter {
   double chi2Term(const TrigonomHelper& angle, const double y0,
                   const Point_t& strawMeas,
                   std::optional<double> r = std::nullopt) const;
-  /// @brief Fit the track inclination angle and calculate the intercept
+  /// @brief Fit the track inclanation angle and calculate the intercept
   ///        afterwards
   /// @param fitPars: Constants of the current measurement configuration
   std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
   /// @brief Calculate the starting parameters on theta from the fit constants
   static double startTheta(const FitAuxiliaries& fitPars);
+  /// @brief Calculate the time gradient of the chi2 w.r.t theta
+  /// @param angles: Wrapper object to pass sin & cos of theta
+  /// @param pars: Fit constants of the current fit configuration
+  static double calcTimeGrad(const TrigonomHelper& angles,
+                             const FitAuxiliariesWithT0& pars);
   /// @brief Fill the y0 and the uncertainties on theta and y0 in the result
   /// @param fitPars: Fit constants from the straw measurements
   /// @param thetaTwoPrime: Second derivative of the chi2 w.r.t theta
@@ -199,6 +262,27 @@ class FastStrawLineFitter {
   ///                to this object
   void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
                       FitResult& result) const;
+  /// @brief Enumeration to describe the outcome of the fit iteration
+  enum class UpdateStatus {
+    Converged,  ///< The fit converged
+    Exceeded,   ////< Maximum number of iterations exceeded
+    GoodStep,   ///< The fit did not converge yet
+  };
+  /// @param Update the straw circle parameters for a fit with ts0 & theta
+  /// @param fitPars: Fit constants from the straw measurements
+  /// @param fitResult: Mutable reference to the FitResult object. The updated parameter are written to this object if the step was successful
+  UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
+                               FitResultT0& fitResult) const;
+
+  template <CompositeSpacePointContainer StrawCont_t,
+            CompositeSpacePointFastCalibrator<
+                Acts::RemovePointer_t<typename StrawCont_t::value_type>>
+                Calibrator_t>
+  FitAuxiliariesWithT0 fillAuxiliaries(const CalibrationContext& ctx,
+                                       const Calibrator_t& calibrator,
+                                       const StrawCont_t& measurements,
+                                       const std::vector<std::int32_t>& signs,
+                                       const double t0) const;
 
   const Config m_cfg{};
   std::unique_ptr<const Acts::Logger> m_logger{};
