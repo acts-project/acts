@@ -86,13 +86,13 @@ ProcessCode SeedingOrthogonalAlgorithm::execute(
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
       spContainer(spConfig, spOptions, container);
 
-  ACTS_INFO("About to process " << spContainer.size() << " space points ...");
+  ACTS_DEBUG("About to process " << spContainer.size() << " space points ...");
 
   std::vector<Acts::Seed<proxy_type>> seeds =
       m_finder->createSeeds(m_cfg.seedFinderOptions, spContainer);
 
-  ACTS_INFO("Created " << seeds.size() << " track seeds from "
-                       << spacePoints.size() << " space points");
+  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
+                        << spacePoints.size() << " space points");
 
   // need to convert here from seed of proxies to seed of sps
   SimSeedContainer seedsToAdd;
