@@ -35,6 +35,8 @@ using Pars_t = Line_t::ParamVector;
 
 constexpr auto logLvl = Logging::Level::INFO;
 
+ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
+
 namespace Acts::Test {
 class TestSpacePoint {
  public:
@@ -113,6 +115,29 @@ class TestSpacePoint {
   double time() const { return m_time.value_or(0.); }
   const std::array<double, 3>& covariance() const { return m_cov; }
 
+  friend std::ostream& operator<<(std::ostream& ostr,
+                                  const TestSpacePoint& sp) {
+    ostr << (sp.isStraw() ? "straw" : "strip") << " space point @ "
+         << toString(sp.localPosition());
+    if (sp.isStraw()) {
+      ostr << " wire direction: " << toString(sp.sensorDirection())
+           << ", drift Radius: " << sp.driftRadius();
+    } else {
+      ostr << ", sensor/toNext/normal: " << toString(sp.sensorDirection())
+           << "/" << toString(sp.toNextSensor()) << "/"
+           << toString(sp.planeNormal());
+    }
+    if (sp.hasTime()) {
+      ostr << ", time: " << sp.time();
+    }
+    ostr << ", non-bending: " << (sp.measuresLoc0() ? "yay" : "nay");
+    ostr << ", bending: " << (sp.measuresLoc1() ? "yay" : "nay");
+    const auto& cov = sp.covariance();
+    ostr << ", covariance: (" << cov[0] << ", " << cov[1] << ", " << cov[2]
+         << "), ";
+    return ostr;
+  }
+
  private:
   Vector3 m_pos{Vector3::Zero()};
   Vector3 m_dir{Vector3::Zero()};
@@ -134,75 +159,75 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
-  std::cout << "\n\n\nResidual test - Test line: " << toString(line.position())
-            << ", " << toString(line.direction()) << std::endl;
+  ACTS_INFO(__func__ << "() - " << __LINE__
+                     << ": Residual test w.r.t. test line: "
+                     << toString(line.position()) << ", "
+                     << toString(line.direction()));
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
   resCalc.updateSpatialResidual(line, testPoint);
+  ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
+                     << testPoint);
   if (testPoint.isStraw()) {
     const double lineDist =
         signedDistance(testPoint.localPosition(), testPoint.sensorDirection(),
                        line.position(), line.direction());
-    std::cout << "Test residual w.r.t. sp with position: "
-              << toString(testPoint.localPosition())
-              << ", orientation: " << toString(testPoint.sensorDirection())
-              << ", r: " << testPoint.driftRadius() << std::endl;
 
-    std::cout << "Residual: " << toString(resCalc.residual())
-              << ", line distance: " << lineDist << std::endl;
+    ACTS_INFO(__func__ << "() - " << __LINE__
+                       << ": Residual: " << toString(resCalc.residual())
+                       << ", line distance: " << lineDist);
     ///
-    BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::bending],
+    BOOST_CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::bending)],
                       lineDist - testPoint.driftRadius(), 1.e-12);
   } else {
-    std::cout << "Test residual w.r.t strip space point -- position: "
-              << toString(testPoint.localPosition())
-              << ", normal: " << toString(testPoint.planeNormal())
-              << ", strip: " << toString(testPoint.sensorDirection())
-              << ", to-next: " << toString(testPoint.toNextSensor())
-              << std::endl;
     const Vector3& n{testPoint.planeNormal()};
     const Vector3 planeIsect = intersectPlane(line.position(), line.direction(),
                                               n, testPoint.localPosition())
                                    .position();
     const Vector3 delta = (planeIsect - testPoint.localPosition());
 
-    std::cout << "Residual: " << toString(resCalc.residual())
-              << ", delta: " << toString(delta)
-              << ", <delta, n> =" << delta.dot(n) << std::endl;
+    ACTS_INFO(__func__ << "() - " << __LINE__
+                       << ": Residual: " << toString(resCalc.residual())
+                       << ", delta: " << toString(delta)
+                       << ", <delta, n> =" << delta.dot(n));
 
     Acts::ActsSquareMatrix<3> coordTrf{Acts::ActsSquareMatrix<3>::Zero()};
-    coordTrf.col(ResidualIdx::bending) = testPoint.measuresLoc1()
-                                             ? testPoint.toNextSensor()
-                                             : testPoint.sensorDirection();
-    coordTrf.col(ResidualIdx::nonBending) = testPoint.measuresLoc1()
-                                                ? testPoint.sensorDirection()
-                                                : testPoint.toNextSensor();
+    coordTrf.col(toUnderlying(ResidualIdx::bending)) =
+        testPoint.measuresLoc1() ? testPoint.toNextSensor()
+                                 : testPoint.sensorDirection();
+    coordTrf.col(toUnderlying(ResidualIdx::nonBending)) =
+        testPoint.measuresLoc1() ? testPoint.sensorDirection()
+                                 : testPoint.toNextSensor();
     coordTrf.col(2) = n;
-    std::cout << "Coordinate trf: \n" << coordTrf << std::endl;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Coordinate trf: \n"
+                        << coordTrf);
 
     const Vector3 trfDelta = coordTrf.inverse() * delta;
-    std::cout << "Transformed delta: " << toString(trfDelta) << std::endl;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << ": Transformed delta: " << toString(trfDelta));
 
     if (testPoint.measuresLoc1()) {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::bending],
-                        resCalc.residual()[ResidualIdx::bending], 1.e-10);
+      BOOST_CHECK_CLOSE(trfDelta[toUnderlying(ResidualIdx::bending)],
+                        resCalc.residual()[toUnderlying(ResidualIdx::bending)],
+                        1.e-10);
     } else {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::bending] *
+      BOOST_CHECK_CLOSE(trfDelta[toUnderlying(ResidualIdx::bending)] *
                             static_cast<double>(resCfg.calcAlongStrip),
-                        resCalc.residual()[ResidualIdx::bending], 1.e-10);
+                        resCalc.residual()[toUnderlying(ResidualIdx::bending)],
+                        1.e-10);
     }
-
     if (testPoint.measuresLoc0()) {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::nonBending],
-                        resCalc.residual()[ResidualIdx::nonBending], 1.e-10);
+      BOOST_CHECK_CLOSE(
+          trfDelta[toUnderlying(ResidualIdx::nonBending)],
+          resCalc.residual()[toUnderlying(ResidualIdx::nonBending)], 1.e-10);
     } else {
-      BOOST_CHECK_CLOSE(trfDelta[ResidualIdx::nonBending] *
-                            static_cast<double>(resCfg.calcAlongStrip),
-                        resCalc.residual()[ResidualIdx::nonBending], 1.e-10);
+      BOOST_CHECK_CLOSE(
+          trfDelta[toUnderlying(ResidualIdx::nonBending)] *
+              static_cast<double>(resCfg.calcAlongStrip),
+          resCalc.residual()[toUnderlying(ResidualIdx::nonBending)], 1.e-10);
     }
   }
 
@@ -210,11 +235,9 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   constexpr double tolerance = 1.e-3;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
-    lineParsUp[static_cast<std::size_t>(par)] += h;
-    lineParsDn[static_cast<std::size_t>(par)] -= h;
-    Line_t lineUp{}, lineDn{};
-    lineUp.updateParameters(lineParsUp);
-    lineDn.updateParameters(lineParsDn);
+    lineParsUp[toUnderlying(par)] += h;
+    lineParsDn[toUnderlying(par)] -= h;
+    Line_t lineUp{lineParsUp}, lineDn{lineParsDn};
 
     CompSpacePointAuxiliaries resCalcUp{
         resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
@@ -227,9 +250,10 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
 
-    std::cout << "Derivative test: " << CompSpacePointAuxiliaries::parName(par)
-              << ", derivative: " << toString(resCalc.gradient(par))
-              << ",  numerical: " << toString(numDeriv) << std::endl;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Derivative test: "
+                        << CompSpacePointAuxiliaries::parName(par)
+                        << ", derivative: " << toString(resCalc.gradient(par))
+                        << ",  numerical: " << toString(numDeriv));
     BOOST_CHECK_LE((numDeriv - resCalc.gradient(par)).norm() /
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
@@ -238,10 +262,11 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
       const Vector numDeriv1{
           (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
       const Vector& analyticDeriv = resCalc.hessian(par, par1);
-      std::cout << "Second deriv (" << CompSpacePointAuxiliaries::parName(par)
-                << ", " << CompSpacePointAuxiliaries::parName(par1)
-                << ") -- numerical: " << toString(numDeriv1)
-                << ", analytic: " << toString(analyticDeriv) << std::endl;
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                          << CompSpacePointAuxiliaries::parName(par) << ", "
+                          << CompSpacePointAuxiliaries::parName(par1)
+                          << ") -- numerical: " << toString(numDeriv1)
+                          << ", analytic: " << toString(analyticDeriv));
       BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
     }
   }
@@ -253,8 +278,9 @@ void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
   const SquareMatrix2 bMatrix =
       CombinatorialSeedSolver::betaMatrix(spacePoints);
   if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
-    std::cout << "Beta Matrix has zero determinant -skip the combination"
-              << std::endl;
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Beta Matrix \n"
+                          << bMatrix
+                          << "\nhas zero determinant - skip the combination");
     return;
   }
   const std::array<double, 4> distsAlongStrip =
@@ -262,10 +288,12 @@ void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
   const auto [seedPos, seedDir] =
       CombinatorialSeedSolver::seedSolution(spacePoints, distsAlongStrip);
 
-  std::cout << " Reconstructed position " << toString(seedPos)
-            << " and direction " << toString(seedDir) << std::endl;
-  std::cout << " Truth position " << toString(truthPosZ0)
-            << " and truth direction " << toString(truthDir) << std::endl;
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Reconstructed position "
+                      << toString(seedPos) << " and direction "
+                      << toString(seedDir));
+  ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Truth position "
+                      << toString(truthPosZ0) << " and truth direction "
+                      << toString(truthDir));
 
   // check the distances along the strips if they are the same
   for (std::size_t i = 0; i < truthDistances.size(); i++) {
@@ -292,12 +320,12 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   resCfg.calcAlongStrip = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta,
                       ParIdx::t0};
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
-  std::cout << "\n\n\nResidual test for line: " << toString(line.position())
-            << ", " << toString(line.direction()) << " with t0: " << timeT0
-            << "." << std::endl;
+  ACTS_INFO(__func__ << "() - " << __LINE__ << ": Residual test for line: "
+                     << toString(line.position()) << ", "
+                     << toString(line.direction()) << " with t0: " << timeT0
+                     << ".");
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("timeRes", logLvl)};
@@ -310,12 +338,13 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   const double ToF =
       (locToGlob * planeIsect).norm() / Acts::PhysicalConstants::c + timeT0;
 
-  BOOST_CHECK_CLOSE(resCalc.residual()[ResidualIdx::time], sp.time() - ToF,
-                    1.e-10);
-  std::cout << "Time of flight: " << ToF << ", measured time : " << sp.time()
-            << " --> residual: " << (sp.time() - ToF)
-            << " vs. from calculator: " << resCalc.residual()[ResidualIdx::time]
-            << "." << std::endl;
+  BOOST_CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::time)],
+                    sp.time() - ToF, 1.e-10);
+  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Time of flight: " << ToF
+                      << ", measured time : " << sp.time() << " --> residual: "
+                      << (sp.time() - ToF) << " vs. from calculator: "
+                      << resCalc.residual()[toUnderlying(ResidualIdx::time)]
+                      << ".");
   constexpr double h = 5.e-9;
   constexpr double tolerance = 1.e-3;
 
@@ -329,8 +358,8 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
 
     if (partial != ParIdx::t0) {
-      lineParsUp[static_cast<std::size_t>(partial)] += h;
-      lineParsDn[static_cast<std::size_t>(partial)] -= h;
+      lineParsUp[toUnderlying(partial)] += h;
+      lineParsDn[toUnderlying(partial)] -= h;
       lineUp.updateParameters(lineParsUp);
       lineDn.updateParameters(lineParsDn);
       resCalcUp.updateFullResidual(lineUp, timeT0, sp);
@@ -343,10 +372,11 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
 
-    std::cout << "Derivative test: "
-              << CompSpacePointAuxiliaries::parName(partial)
-              << ", derivative: " << toString(resCalc.gradient(partial))
-              << ",  numerical: " << toString(numDeriv) << std::endl;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Derivative test: "
+                        << CompSpacePointAuxiliaries::parName(partial)
+                        << ", derivative: "
+                        << toString(resCalc.gradient(partial))
+                        << ",  numerical: " << toString(numDeriv));
     BOOST_CHECK_LE((numDeriv - resCalc.gradient(partial)).norm() /
                        std::max(numDeriv.norm(), 1.),
                    tolerance);
@@ -355,11 +385,11 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
           (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
           (2. * h)};
       const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
-      std::cout << "Second deriv ("
-                << CompSpacePointAuxiliaries::parName(partial) << ", "
-                << CompSpacePointAuxiliaries::parName(partial2)
-                << ") -- numerical: " << toString(numDeriv1)
-                << ", analytic: " << toString(analyticDeriv) << std::endl;
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                          << CompSpacePointAuxiliaries::parName(partial) << ", "
+                          << CompSpacePointAuxiliaries::parName(partial2)
+                          << ") -- numerical: " << toString(numDeriv1)
+                          << ", analytic: " << toString(analyticDeriv));
       BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
     }
   }
@@ -367,7 +397,7 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
 BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   using namespace Acts::detail::LineHelper;
 
-  std::cout << "\n\n\n\nCalibration straw point test " << std::endl;
+  ACTS_INFO("Calibration straw point test ");
 
   constexpr double recordedT = 15._ns;
   constexpr std::array<double, 3> rtCoeffs{0., 75. / 1_ns,
@@ -383,10 +413,10 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                             const std::string& calcName, const Pars_t& linePars,
                             const Vector& pos, const Vector& dir,
                             const double t0) {
-    Line_t line{};
-    line.updateParameters(linePars);
-    std::cout << "Calculate residual w.r.t. " << toString(line.position())
-              << ", " << toString(line.direction()) << std::endl;
+    Line_t line{linePars};
+    ACTS_INFO(__func__ << "() " << __LINE__ << ": Calculate residual w.r.t. "
+                       << toString(line.position()) << ", "
+                       << toString(line.direction()));
     auto isectP = lineIntersect(pos, dir, line.position(), line.direction());
 
     const double driftT = recordedT -
@@ -397,11 +427,12 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     const double driftR = polynomialSum(driftT, rtCoeffs);
     const double driftV = derivativeSum<1>(driftT, rtCoeffs);
     const double driftA = derivativeSum<2>(driftT, rtCoeffs);
-    std::cout << "Create new space point @ " << toString(pos) << ", "
-              << toString(dir) << ", using t0: " << t0 / 1._ns
-              << " --> drfitT: " << driftT / 1._ns << " --> driftR: " << driftR
-              << ", driftV: " << driftV << ", "
-              << "driftA: " << driftA << std::endl;
+    ACTS_INFO(__func__ << "() " << __LINE__ << ": Create new space point @ "
+                       << toString(pos) << ", " << toString(dir)
+                       << ", using t0: " << t0 / 1._ns << " --> drfitT: "
+                       << driftT / 1._ns << " --> driftR: " << driftR
+                       << ", driftV: " << driftV << ", "
+                       << "driftA: " << driftA);
 
     CompSpacePointAuxiliaries resCalc{resCfg,
                                       Acts::getDefaultLogger(calcName, logLvl)};
@@ -415,11 +446,12 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                                 const Pars_t& linePars, const Vector& wPos,
                                 const Vector& wDir, const double t0) {
     auto resCalc = makeCalculator("strawT0Res", linePars, wPos, wDir, t0);
-    std::cout << "Residual: " << toString(resCalc.residual()) << std::endl;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << ": Residual: " << toString(resCalc.residual()));
     for (const auto partial : resCfg.parsToUse) {
-      std::cout << " *** partial: "
-                << CompSpacePointAuxiliaries::parName(partial) << " "
-                << toString(resCalc.gradient(partial)) << std::endl;
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": *** partial: "
+                          << CompSpacePointAuxiliaries::parName(partial) << " "
+                          << toString(resCalc.gradient(partial)));
     }
     constexpr double h = 1.e-7;
     constexpr double tolerance = 1.e-3;
@@ -427,8 +459,8 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       Pars_t lineParsUp{linePars}, lineParsDn{linePars};
       double t0Up{t0}, t0Dn{t0};
       if (partial != ParIdx::t0) {
-        lineParsUp[static_cast<std::size_t>(partial)] += h;
-        lineParsDn[static_cast<std::size_t>(partial)] -= h;
+        lineParsUp[toUnderlying(partial)] += h;
+        lineParsDn[toUnderlying(partial)] -= h;
       } else {
         t0Up += h;
         t0Dn -= h;
@@ -440,11 +472,12 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
 
       const Vector numDeriv =
           (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
-      std::cout << "\nPartial " << CompSpacePointAuxiliaries::parName(partial)
-                << " --  numerical: " << toString(numDeriv)
-                << ", analytical: " << toString(resCalc.gradient(partial))
-                << "\n"
-                << std::endl;
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Partial "
+                          << CompSpacePointAuxiliaries::parName(partial)
+                          << " --  numerical: " << toString(numDeriv)
+                          << ", analytical: "
+                          << toString(resCalc.gradient(partial)));
+
       BOOST_CHECK_LE((numDeriv - resCalc.gradient(partial)).norm() /
                          std::max(numDeriv.norm(), 1.),
                      tolerance);
@@ -453,26 +486,27 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
             (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
             (2. * h)};
         const Vector& analyticDeriv = resCalc.hessian(partial, partial2);
-        std::cout << "Second deriv ("
-                  << CompSpacePointAuxiliaries::parName(partial) << ", "
-                  << CompSpacePointAuxiliaries::parName(partial2)
-                  << ") -- numerical: " << toString(numDeriv1)
-                  << ", analytic: " << toString(analyticDeriv) << std::endl;
+        ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                            << CompSpacePointAuxiliaries::parName(partial)
+                            << ", "
+                            << CompSpacePointAuxiliaries::parName(partial2)
+                            << ") -- numerical: " << toString(numDeriv1)
+                            << ", analytic: " << toString(analyticDeriv));
         BOOST_CHECK_LE((numDeriv1 - analyticDeriv).norm(), tolerance);
       }
     }
   };
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 90._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
-  linePars[static_cast<std::size_t>(ParIdx::x0)] = 0._cm;
-  linePars[static_cast<std::size_t>(ParIdx::y0)] = -105_cm;
+  linePars[toUnderlying(ParIdx::phi)] = 90._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::x0)] = 0._cm;
+  linePars[toUnderlying(ParIdx::y0)] = -105_cm;
 
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
                      10._ns);
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
                      Vector{1., 1., 0.}.normalized(), 10._ns);
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
                      10._ns);
   testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
@@ -497,8 +531,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   using Pars_t = Line_t::ParamVector;
   using ParIdx = Line_t::ParIndex;
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 60._degree;
 
   // Generate the first test measurement
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
@@ -511,8 +545,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 60._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 60._degree;
 
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm});
@@ -520,8 +554,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm, true});
 
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 30._degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 30._degree;
 
   testResidual(linePars, TestSpacePoint{Vector{100._cm, 50._cm, 30._cm},
                                         Vector::UnitX(), 10._cm});
@@ -540,8 +574,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
 
 BOOST_AUTO_TEST_CASE(StripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
 
   testResidual(linePars,
                TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
@@ -570,8 +604,8 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
 
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 60._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
 
   Acts::Transform3 locToGlob{Acts::Transform3::Identity()};
 
@@ -622,10 +656,10 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   Pars_t linePars{};
-  linePars[static_cast<std::size_t>(ParIdx::phi)] = 30._degree;
-  linePars[static_cast<std::size_t>(ParIdx::theta)] = 75_degree;
-  linePars[static_cast<std::size_t>(ParIdx::x0)] = 10._cm;
-  linePars[static_cast<std::size_t>(ParIdx::y0)] = -10_cm;
+  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
+  linePars[toUnderlying(ParIdx::theta)] = 75_degree;
+  linePars[toUnderlying(ParIdx::x0)] = 10._cm;
+  linePars[toUnderlying(ParIdx::y0)] = -10_cm;
 
   Config_t resCfg{};
   resCfg.useHessian = true;
@@ -633,86 +667,124 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  Line_t line{};
-  line.updateParameters(linePars);
+  Line_t line{linePars};
 
-  const TestSpacePoint strip{
-      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
-      makeDirectionFromPhiTheta(0_degree, 90_degree),
-      makeDirectionFromPhiTheta(90._degree, 0._degree),
-      15._ns,
-      {std::pow(5._cm, 2), std::pow(10._cm, 2), std::pow(1._ns, 2)}};
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
 
   const double t0{1._ns};
-  resCalc.updateFullResidual(line, t0, strip);
 
-  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
-  ChiSq_t chi2{};
-  resCalc.updateChiSq(chi2, strip.covariance());
-  std::cout << "Calculated chi2: " << chi2.chi2 << std::endl;
-  std::cout << "Gradient: " << toString(chi2.gradient) << std::endl;
-  std::cout << "Hessian: \n" << chi2.hessian << std::endl;
+  auto testChi2 = [&line, &t0, &resCalc,
+                   &resCfg](const TestSpacePoint& testMe) {
+    using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+    ChiSq_t chi2{};
+    ACTS_INFO(__func__ << "() " << __LINE__ << ": Test space point " << testMe);
 
-  constexpr double h = 1.e-7;
-  constexpr double tolerance = 1.e-3;
-  for (const auto par : resCfg.parsToUse) {
-    Pars_t lineParsUp{linePars}, lineParsDn{linePars};
+    resCalc.updateFullResidual(line, t0, testMe);
 
-    const auto dIdx = static_cast<std::size_t>(par);
-    double t0Up{t0}, t0Dn{t0};
-    if (par != ParIdx::t0) {
-      lineParsUp[dIdx] += h;
-      lineParsDn[dIdx] -= h;
-    } else {
-      t0Up += h;
-      t0Dn -= h;
-    }
-    ChiSq_t chi2Up{}, chi2Dn{};
-    /// Calculate the updated chi2
-    line.updateParameters(lineParsUp);
-    resCalc.updateFullResidual(line, t0Up, strip);
-    resCalc.updateChiSq(chi2Up, strip.covariance());
+    resCalc.updateChiSq(chi2, testMe.covariance());
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << ": Calculated chi2: " << chi2.chi2 << ", Gradient: "
+                        << toString(chi2.gradient) << ", Hessian: \n"
+                        << chi2.hessian);
+    BOOST_CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(
+                          line, resCfg.localToGlobal, t0, testMe),
+                      chi2.chi2, 1.e-7);
 
-    line.updateParameters(lineParsDn);
-    resCalc.updateFullResidual(line, t0Dn, strip);
-    resCalc.updateChiSq(chi2Dn, strip.covariance());
+    constexpr double h = 1.e-7;
+    constexpr double tolerance = 1.e-3;
+    for (const auto par : resCfg.parsToUse) {
+      Pars_t lineParsUp{line.parameters()};
+      Pars_t lineParsDn{line.parameters()};
 
-    const double anaDeriv = chi2.gradient[dIdx];
-    const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);
-
-    std::cout << "\nPartial " << CompSpacePointAuxiliaries::parName(par)
-              << " --  numerical: " << numDeriv << ", analytical: " << anaDeriv
-              << std::endl;
-    BOOST_CHECK_LE(std::abs(numDeriv - anaDeriv) / std::max(numDeriv, 1.),
-                   tolerance);
-    for (const auto par2 : resCfg.parsToUse) {
-      if (par2 > par) {
-        break;
+      const auto dIdx = toUnderlying(par);
+      double t0Up{t0}, t0Dn{t0};
+      if (par != ParIdx::t0) {
+        lineParsUp[dIdx] += h;
+        lineParsDn[dIdx] -= h;
+      } else {
+        t0Up += h;
+        t0Dn -= h;
       }
-      const auto dIdx2 = static_cast<std::size_t>(par2);
-      const double anaHess = chi2.hessian(dIdx, dIdx2);
-      const double numHess =
-          (chi2Up.gradient[dIdx2] - chi2Dn.gradient[dIdx2]) / (2. * h);
+      ChiSq_t chi2Up{}, chi2Dn{};
+      /// Calculate the updated chi2
+      line.updateParameters(lineParsUp);
+      resCalc.updateFullResidual(line, t0Up, testMe);
+      resCalc.updateChiSq(chi2Up, testMe.covariance());
 
-      std::cout << "Second deriv (" << CompSpacePointAuxiliaries::parName(par)
-                << ", " << CompSpacePointAuxiliaries::parName(par2)
-                << ") -- numerical: " << numHess << ", analytic: " << anaHess
-                << std::endl;
-      BOOST_CHECK_LE(std::abs(anaHess - numHess), tolerance);
+      line.updateParameters(lineParsDn);
+      resCalc.updateFullResidual(line, t0Dn, testMe);
+      resCalc.updateChiSq(chi2Dn, testMe.covariance());
+
+      const double anaDeriv = chi2.gradient[dIdx];
+      const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);
+
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Partial "
+                          << CompSpacePointAuxiliaries::parName(par)
+                          << " --  numerical: " << numDeriv
+                          << ", analytical: " << anaDeriv);
+      BOOST_CHECK_LE(std::abs(numDeriv - anaDeriv) / std::max(numDeriv, 1.),
+                     tolerance);
+      for (const auto par2 : resCfg.parsToUse) {
+        if (par2 > par) {
+          break;
+        }
+        const auto dIdx2 = toUnderlying(par2);
+        const double anaHess = chi2.hessian(dIdx, dIdx2);
+        const double numHess =
+            (chi2Up.gradient[dIdx2] - chi2Dn.gradient[dIdx2]) / (2. * h);
+
+        ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                            << CompSpacePointAuxiliaries::parName(par) << ", "
+                            << CompSpacePointAuxiliaries::parName(par2)
+                            << ") -- numerical: " << numHess
+                            << ", analytic: " << anaHess);
+        BOOST_CHECK_LE(std::abs(anaHess - numHess), tolerance);
+      }
     }
-  }
+  };
+
+  /// Test orthogonal strips
+  testChi2(TestSpacePoint{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
+      makeDirectionFromPhiTheta(0_degree, 90._degree),
+      makeDirectionFromPhiTheta(90._degree, 0._degree),
+      15._ns,
+      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+
+  /// Test strips with stereo
+  testChi2(TestSpacePoint{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
+      makeDirectionFromPhiTheta(0_degree, 45._degree),
+      makeDirectionFromPhiTheta(60._degree, 0._degree),
+      15._ns,
+      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+  //// Test ordinary straws
+  testChi2(TestSpacePoint{
+      line.point(20._cm) + 5._cm * line.direction().cross(Vector::UnitX()),
+      Vector3::UnitX(),
+      5._cm,
+      false,
+      {0., Acts::pow(10._mm, 2), 0.}});
+
+  /// Test straws with information on the position along the tube
+  testChi2(TestSpacePoint{line.point(20._cm) +
+                              5._cm * line.direction().cross(Vector::UnitX()) +
+                              4._cm * Vector::UnitX(),
+                          Vector3::UnitX(),
+                          5._cm,
+                          true,
+                          {Acts::pow(0.5_cm, 2), Acts::pow(10._mm, 2), 0.}});
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   RandomEngine rndEngine{23568};
   const std::size_t nStrips = 8;
   const std::size_t nEvents = 100;
-  constexpr auto x0_idx = static_cast<std::size_t>(ParIdx::x0);
-  constexpr auto y0_idx = static_cast<std::size_t>(ParIdx::y0);
-  constexpr auto phi_idx = static_cast<std::size_t>(ParIdx::phi);
-  constexpr auto theta_idx = static_cast<std::size_t>(ParIdx::theta);
+  constexpr auto x0_idx = toUnderlying(ParIdx::x0);
+  constexpr auto y0_idx = toUnderlying(ParIdx::y0);
+  constexpr auto phi_idx = toUnderlying(ParIdx::phi);
+  constexpr auto theta_idx = toUnderlying(ParIdx::theta);
 
   const std::array<Vector3, nStrips> stripDirections = {
       Vector3::UnitX(),
@@ -731,29 +803,26 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   std::array<Vector3, nStrips> intersections{};
 
   // pseudo track initialization
-  Line_t line{};
-  Pars_t linePars{};
-  linePars[x0_idx] = 0. * 1_mm;
-  linePars[y0_idx] = 0. * 1_mm;
-  linePars[phi_idx] = 0. * 1_degree;
-  linePars[theta_idx] = 0. * 1_degree;
-  line.updateParameters(linePars);
 
-  for (std::size_t i = 0; i < nEvents; i++) {
-    std::cout << "\n\n\nCombinatorial Seed test - Processing Event: " << i
-              << std::endl;
+  for (std::size_t i = 0; i < nEvents; ++i) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Combinatorial Seed test - Processing Event: "
+                          << i);
     // update pseudo track parameters with random values
-    linePars[x0_idx] = rndEngine() % 1000 - 500.;
-    linePars[y0_idx] = rndEngine() % 1000 - 500.;
-    linePars[phi_idx] = (rndEngine() % 90) * 1_degree;
-    linePars[theta_idx] = (rndEngine() % 90) * 1_degree;
-    line.updateParameters(linePars);
+    Pars_t linePars{};
+    linePars[x0_idx] = std::uniform_real_distribution{-500., 500.}(rndEngine);
+    linePars[y0_idx] = std::uniform_real_distribution{-500., 500.}(rndEngine);
+    linePars[phi_idx] =
+        std::uniform_real_distribution{0.1_degree, 179.9_degree}(rndEngine);
+    linePars[theta_idx] =
+        std::uniform_real_distribution{-180_degree, 180_degree}(rndEngine);
+    Line_t line{linePars};
 
     Vector3 muonPos = line.position();
     Vector3 muonDir = line.direction();
 
     std::array<std::shared_ptr<TestSpacePoint>, nStrips> spacePoints{};
-    for (std::size_t layer = 0; layer < nStrips; layer++) {
+    for (std::size_t layer = 0; layer < nStrips; ++layer) {
       auto intersection = PlanarHelper::intersectPlane(
           muonPos, muonDir, Vector3::UnitZ(), distancesZ[layer]);
       intersections[layer] = intersection.position();

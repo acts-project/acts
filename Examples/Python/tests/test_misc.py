@@ -17,7 +17,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
-    exatrkxEnabled,
+    gnnEnabled,
     onnxEnabled,
     AssertCollectionExistsAlg,
     failure_threshold,
