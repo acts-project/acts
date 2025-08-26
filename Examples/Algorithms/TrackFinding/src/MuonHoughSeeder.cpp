@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <format>
 #include <stdexcept>
 
 #include "TBox.h"
@@ -261,10 +262,11 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
   TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
                          plane.nBinsX(), axis.xMin, axis.xMax, plane.nBinsY(),
                          axis.yMin, axis.yMax);
-  houghHistoForPlot.SetTitle(Form("Station %s, side %s, sector %2d",
-                                  to_string(bucketId.msStation()).c_str(),
-                                  to_string(bucketId.side()).c_str(),
-                                  bucketId.sector()));
+  houghHistoForPlot.SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
+                                         MuonId::toString(bucketId.msStation()),
+                                         MuonId::toString(bucketId.side()),
+                                         bucketId.sector())
+                                 .c_str());
 
   /** Copy the plane content into the histogram */
   for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
