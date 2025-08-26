@@ -45,6 +45,18 @@ namespace Acts::Experimental::detail {
 ///         the tubes to fit. They are documented in
 ///         https://gitlab.cern.ch/atlas-nextgen/work-package-2.5/analyticalsegment
 ///
+///         In general, the primary source of the straw drift radius is a record
+///         of the time-of-arrival of an electronics signal which is then
+///         translated using a r-t relation which is assumed to be twice
+///         differentiable. Just because a particle might arrive a bit later,
+///         the drift radius then becomes a function of a generic time offset,
+///         t_{0}:
+///
+///                       r(t) = r(t_{time of record} - t_{0})
+///
+///         The \chi^{2} then becomes a function of the two parameters (\theta, t_{0})
+///         which need to be minimized by varying these two parameters.
+
 class FastStrawLineFitter {
  public:
   /// @brief abrivation of the residual indices to fetch the proper covariance
@@ -304,7 +316,7 @@ class FastStrawLineFitter {
   FitAuxiliariesWithT0 fillAuxiliaries(const CalibrationContext& ctx,
                                        const Calibrator_t& calibrator,
                                        const StrawCont_t& measurements,
-                                       const std::vector<std::int32_t>& signs,
+                                       const std::vector<int>& signs,
                                        const double t0) const;
 
   const Config m_cfg{};
