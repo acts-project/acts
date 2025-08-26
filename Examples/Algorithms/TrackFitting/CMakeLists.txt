@@ -14,7 +14,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesTrackFitting
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesMagneticField
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesMagneticField
 )
 
 acts_compile_headers(ExamplesTrackFitting GLOB "include/**/*.hpp")

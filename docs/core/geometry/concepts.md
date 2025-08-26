@@ -74,9 +74,6 @@ Not complete yet
 :::{doxygenclass} Acts::INavigationPolicy
 :::
 
-:::{doxygenclass} Acts::MultiNavigationPolicyBase
-:::
-
 :::{doxygenclass} Acts::MultiNavigationPolicy
 :::
 

@@ -9,7 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Framework/BufferedReader.hpp"
-#include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
+#include "ActsExamples/Io/Csv/CsvGnnGraphReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSegmentReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSpacePointReader.hpp"
@@ -64,8 +64,8 @@ void addInput(Context& ctx) {
                              "CsvTrackParameterReader", inputDir, inputStem,
                              outputTrackParameters, beamspot);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvExaTrkXGraphReader, mex,
-                             "CsvExaTrkXGraphReader", inputDir, inputStem,
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvGnnGraphReader, mex,
+                             "CsvGnnGraphReader", inputDir, inputStem,
                              outputGraph);
 
   py::class_<ActsExamples::ITrackParamsLookupReader,
