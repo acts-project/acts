@@ -53,6 +53,10 @@ std::ostream& operator<<(std::ostream& ostr, const std::vector<T>& v) {
   return ostr;
 }
 
+constexpr double inNanoS(const double x) {
+  return x / 1._ns;
+}
+
 class StrawTestPoint {
  public:
   StrawTestPoint(const Vector3& pos, const double driftR,
@@ -135,6 +139,8 @@ class StrawTestCalibrator {
            (4. * Acts::pow(driftRadius(straw.time() - t0), 3));
   }
 };
+static_assert(
+    CompositeSpacePointFastCalibrator<StrawTestCalibrator, StrawTestPoint>);
 
 /// @brief Generate a random straight track with a flat distribution in theta & y0
 ///        Range in theta is [0, 180] degrees in steps of 0.1 excluding the
@@ -350,6 +356,128 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       nDoF = (*fitResult).nDoF;
       chi2 = (*fitResult).chi2;
       nIter = (*fitResult).nIter;
+      outTree->Fill();
+    }
+  }
+  if (debugMode) {
+    outFile->WriteObject(outTree.get(), outTree->GetName());
+    outTree.reset();
+  }
+}
+
+BOOST_AUTO_TEST_CASE(LineFitWithT0) {
+  RandomEngine engine{47110};
+
+  std::unique_ptr<TFile> outFile{};
+  std::unique_ptr<TTree> outTree{};
+  double trueY0{0.}, trueTheta{0.}, trueT0{0.};
+  double fitY0{0.}, fitTheta{0.}, fitT0{0.};
+  double fitdY0{0.}, fitdTheta{0.}, fitDT0{0.};
+  double chi2{0.}, meanSign{0.};
+  std::uint32_t nDoF{0u}, nIter{0u};
+  if (debugMode) {
+    outFile.reset(TFile::Open("FastStrawLineFitTestT0.root", "RECREATE"));
+    BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+    outTree = std::make_unique<TTree>("FastFitTreeT0", "FastFitTree");
+    outTree->Branch("trueY0", &trueY0);
+    outTree->Branch("trueTheta", &trueTheta);
+    outTree->Branch("trueT0", &trueT0);
+    outTree->Branch("fitY0", &fitY0);
+    outTree->Branch("fitTheta", &fitTheta);
+    outTree->Branch("fitT0", &fitT0);
+
+    outTree->Branch("errY0", &fitdY0);
+    outTree->Branch("errTheta", &fitdTheta);
+    outTree->Branch("errT0", &fitDT0);
+
+    outTree->Branch("chi2", &chi2);
+    outTree->Branch("nDoF", &nDoF);
+    outTree->Branch("nIter", &nIter);
+  }
+
+  FastStrawLineFitter::Config cfg{};
+  cfg.maxIter = 500;
+  FastStrawLineFitter fastFitter{cfg};
+  StrawTestCalibrator calibrator{};
+  Acts::CalibrationContext cctx{};
+  for (std::uint32_t n = 0; n < nTrials; ++n) {
+    auto track = generateLine(engine);
+    const double timeOffSet = 50._ns - (engine() % 100) * 1._ns;
+
+    PRINT_DEBUG_MSG("Generated time offset: " << inNanoS(timeOffSet)
+                                              << " [ns]");
+    auto strawPoints = generateStrawCircles(track, engine, true);
+
+    if (strawPoints.size() < 4) {
+      std::cout << __func__ << "() - " << __LINE__
+                << ": WARNING -- event: " << n << ", track "
+                << toString(track.position()) << " + "
+                << toString(track.direction())
+                << " did not lead to any valid measurement " << std::endl;
+      continue;
+    }
+    BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
+                   1.e-12);
+
+    /// Fold-in the general offset
+    const std::vector<std::int32_t> trueDriftSigns =
+        CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
+
+    PRINT_DEBUG_MSG("Straw signs: " << trueDriftSigns);
+
+    for (auto& meas : strawPoints) {
+      const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
+      BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
+                        meas->driftRadius(), 1.e-12);
+
+      const double updatedR =
+          StrawTestCalibrator::driftRadius(dTime + timeOffSet);
+
+      meas->setTimeRecord(dTime + timeOffSet);
+      BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
+                        calibrator.driftRadius(cctx, *meas, timeOffSet), 1.e-6);
+
+      PRINT_DEBUG_MSG("Update drift radius of tube "
+                      << toString(meas->localPosition()) << " from "
+                      << meas->driftRadius() << " to " << updatedR
+                      << ", dTime: " << inNanoS(dTime));
+      meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
+      /// Calculate the numerical derivatives
+      constexpr double h = 1.e-8_ns;
+      const double numV =
+          -(calibrator.driftRadius(cctx, *meas, timeOffSet + h) -
+            calibrator.driftRadius(cctx, *meas, timeOffSet - h)) /
+          (2. * h);
+      BOOST_CHECK_CLOSE(numV, calibrator.driftVelocity(cctx, *meas, timeOffSet),
+                        1.e-3);
+    }
+
+    auto result = fastFitter.fit(cctx, calibrator, strawPoints, trueDriftSigns);
+
+    if (!result) {
+      continue;
+    }
+    auto linePars = track.parameters();
+    if (debugMode) {
+      /// True parameters
+      trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
+      trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+      trueT0 = inNanoS(timeOffSet);
+      /// Fit parameters
+      fitY0 = (*result).y0;
+      fitTheta = (*result).theta;
+      fitT0 = inNanoS((*result).t0);
+      fitdY0 = (*result).dY0;
+      fitdTheta = (*result).dTheta;
+      fitDT0 = inNanoS((*result).dT0);
+      nDoF = (*result).nDoF;
+      chi2 = (*result).chi2;
+      nIter = (*result).nIter;
+      meanSign = {0.};
+      std::ranges::for_each(
+          trueDriftSigns,
+          [&meanSign](const std::int32_t sign) { meanSign += sign; });
+      meanSign /= static_cast<double>(trueDriftSigns.size());
       outTree->Fill();
     }
   }
