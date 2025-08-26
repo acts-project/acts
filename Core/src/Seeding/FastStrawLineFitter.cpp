@@ -22,6 +22,10 @@ namespace {
 constexpr double inDeg(const double x) {
   return x / 1._degree;
 }
+/// @brief Express a time in terms of nanoseconds
+constexpr double inNanoS(const double x) {
+  return x / 1._ns;
+}
 std::string printThetaStep(const double theta, const double thetaPrime,
                            const double thetaTwoPrime) {
   return std::format(
@@ -42,11 +46,29 @@ void FastStrawLineFitter::FitAuxiliaries::print(std::ostream& ostr) const {
        << std::format("y0: {:.3f}", fitY0)
        << std::format(", norm: {:.3f}", covNorm) << ", nDoF: " << nDoF;
 }
+void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
+    std::ostream& ostr) const {
+  FitAuxiliaries::print(ostr);
+  ostr << ", " << std::format("T_vz: {:.3f}, ", T_vz)
+       << std::format("T_vy: {:.3f}, ", T_vy)
+       << std::format("T_az: {:.3f}, ", T_az)
+       << std::format("T_ay: {:.3f}, ", T_ay)
+       << std::format("R_vr: {:.3f}, ", R_vr)
+       << std::format("R_va: {:.3f}, ", R_va)
+       << std::format("R_vv: {:.3f}, ", R_vv) << " --- "
+       << std::format("y_{{0}}^{{''}}:  {:.3f}, ", R_a)
+       << std::format("y_{{0}}^{{'}} :  {:.3f}", R_v);
+}
+
 void FastStrawLineFitter::FitResult::print(std::ostream& ostr) const {
   ostr << "# iteration: " << nIter << ", nDoF: " << nDoF << ", chi2: " << chi2
        << ", chi2 / nDoF: " << (chi2 / static_cast<double>(nDoF)) << ",\n";
   ostr << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(theta), inDeg(dTheta))
        << std::format("y0: {:.3f}  pm {:.3f}", y0, dY0);
+}
+void FastStrawLineFitter::FitResultT0::print(std::ostream& ostr) const {
+  FitResult::print(ostr);
+  ostr << std::format(", t0: {:.3f} pm {:.3f}", inNanoS(t0), inNanoS(dT0));
 }
 
 using Vector = FastStrawLineFitter::Vector;
@@ -74,6 +96,12 @@ double FastStrawLineFitter::startTheta(const FitAuxiliaries& fitPars) {
       std::atan2(2. * (fitPars.T_yz - fitPars.T_ry), fitPars.T_zzyy) / 2.;
   return Acts::detail::wrap_periodic(thetaGuess, 0., std::numbers::pi);
 }
+double FastStrawLineFitter::calcTimeGrad(const TrigonomHelper& angles,
+                                         const FitAuxiliariesWithT0& pars) {
+  return pars.fitY0 * pars.R_v - pars.R_vr + pars.T_vz * angles.sinTheta -
+         pars.T_vy * angles.cosTheta;
+}
+
 void FastStrawLineFitter::completeResult(const FitAuxiliaries& fitPars,
                                          const double thetaTwoPrime,
                                          FitResult& result) const {
@@ -135,4 +163,57 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   return std::nullopt;
 }
 
+FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
+    const FitAuxiliariesWithT0& fitPars, FitResultT0& fitResult) const {
+  ++fitResult.nIter;
+  if (fitResult.nIter > m_cfg.maxIter) {
+    ACTS_WARNING(__func__ << "() - " << __LINE__
+                          << ": The fast straw fit did not converge " << fitPars
+                          << "\n"
+                          << fitResult);
+    return UpdateStatus::Exceeded;
+  }
+
+  ActsSquareMatrix<2> cov{ActsSquareMatrix<2>::Zero()};
+  Vector2 grad{Vector2::Zero()};
+
+  const TrigonomHelper angles{fitResult.theta};
+
+  calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
+  grad[1] = calcTimeGrad(angles, fitPars);
+  if (grad.norm() < m_cfg.precCutOff) {
+    completeResult(fitPars, cov(0, 0), fitResult);
+    return UpdateStatus::Converged;
+  }
+  cov(1, 0) = cov(0, 1) =
+      fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
+
+  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm -
+              fitPars.fitY0 * fitPars.R_a - fitPars.T_az * angles.sinTheta -
+              fitPars.T_ay * angles.cosTheta + fitPars.R_vv + fitPars.R_va;
+
+  const auto invCov = cov.inverse();
+  const Vector2 update = invCov * grad;
+
+  ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
+                        << fitResult << "\n"
+                        << std::format("gradient: ({:.3f}, {:.3f})",
+                                       inDeg(grad[0]), inNanoS(grad[1]))
+                        << ", covariance:" << std::endl
+                        << toString(cov) << std::endl
+                        << cov.determinant()
+                        << std::format(" update: ({:.3f}, {:.3f}).",
+                                       inDeg(update[0]), inNanoS(update[1])));
+
+  if (update.norm() < m_cfg.precCutOff) {
+    completeResult(fitPars, cov(0, 0), fitResult);
+    return UpdateStatus::Converged;
+  }
+  fitResult.t0 -= update[1];
+  fitResult.theta -= update[0];
+  fitResult.dT0 = std::sqrt(1. / cov(1, 1));
+  completeResult(fitPars, cov(0, 0), fitResult);
+
+  return UpdateStatus::GoodStep;
+}
 }  // namespace Acts::Experimental::detail
