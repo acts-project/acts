@@ -78,11 +78,10 @@ void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
                                           const StrawCont_t& measurements,
                                           const Calibrator_t& calibrator,
                                           FitResultT0& result) const {
-  const double cosTheta{std::cos(result.theta)};
-  const double sinTheta{std::sin(result.theta)};
+  const TrigonomHelper angles{result.theta};
   result.chi2 = 0.;
-  for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
-    result.chi2 += chi2Term(cosTheta, sinTheta, result.y0, *strawMeas,
+  for (const auto& strawMeas : measurements) {
+    result.chi2 += chi2Term(angles, result.y0, *strawMeas,
                             calibrator.driftRadius(ctx, *strawMeas, result.t0));
   }
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "

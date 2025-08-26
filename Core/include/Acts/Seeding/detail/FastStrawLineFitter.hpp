@@ -136,6 +136,8 @@ class FastStrawLineFitter {
     FitAuxiliaries() = default;
     /// @brief move constructor
     FitAuxiliaries(FitAuxiliaries&& other) = default;
+    /// @brief Move assignment
+    FitAuxiliaries& operator=(FitAuxiliaries&& other) = default;
     /// @brief Printer method
     virtual void print(std::ostream& ostr) const;
     /// @brief Ostream operator
@@ -172,6 +174,9 @@ class FastStrawLineFitter {
     ///@brief Constructor
     explicit FitAuxiliariesWithT0(FitAuxiliaries&& parent)
         : FitAuxiliaries{std::move(parent)} {}
+    FitAuxiliariesWithT0(FitAuxiliariesWithT0&& other) = default;
+
+    FitAuxiliariesWithT0& operator=(FitAuxiliariesWithT0&& other) = default;
     void print(std::ostream& ostr) const override;
     ///@brief Expectation value of T_{y} * v
     double T_vy{0.};
@@ -270,7 +275,9 @@ class FastStrawLineFitter {
   };
   /// @param Update the straw circle parameters for a fit with ts0 & theta
   /// @param fitPars: Fit constants from the straw measurements
-  /// @param fitResult: Mutable reference to the FitResult object. The updated parameter are written to this object if the step was successful
+  /// @param fitResult: Mutable reference to the FitResult object.
+  ///                   The updated parameter are written to this object if the
+  ///                   step was successful
   UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
                                FitResultT0& fitResult) const;
 

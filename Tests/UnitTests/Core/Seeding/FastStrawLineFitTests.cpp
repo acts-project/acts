@@ -404,8 +404,7 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
     auto track = generateLine(engine);
     const double timeOffSet = 50._ns - (engine() % 100) * 1._ns;
 
-    PRINT_DEBUG_MSG("Generated time offset: " << inNanoS(timeOffSet)
-                                              << " [ns]");
+    ACTS_DEBUG("Generated time offset: " << inNanoS(timeOffSet) << " [ns]");
     auto strawPoints = generateStrawCircles(track, engine, true);
 
     if (strawPoints.size() < 4) {
@@ -423,7 +422,7 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
     const std::vector<std::int32_t> trueDriftSigns =
         CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
 
-    PRINT_DEBUG_MSG("Straw signs: " << trueDriftSigns);
+    ACTS_DEBUG("Straw signs: " << trueDriftSigns);
 
     for (auto& meas : strawPoints) {
       const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
@@ -437,10 +436,10 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
       BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
                         calibrator.driftRadius(cctx, *meas, timeOffSet), 1.e-6);
 
-      PRINT_DEBUG_MSG("Update drift radius of tube "
-                      << toString(meas->localPosition()) << " from "
-                      << meas->driftRadius() << " to " << updatedR
-                      << ", dTime: " << inNanoS(dTime));
+      ACTS_DEBUG("Update drift radius of tube "
+                 << toString(meas->localPosition()) << " from "
+                 << meas->driftRadius() << " to " << updatedR
+                 << ", dTime: " << inNanoS(dTime));
       meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
       /// Calculate the numerical derivatives
       constexpr double h = 1.e-8_ns;
