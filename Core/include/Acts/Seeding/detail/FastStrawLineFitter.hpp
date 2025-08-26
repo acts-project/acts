@@ -244,7 +244,7 @@ class FastStrawLineFitter {
   double chi2Term(const TrigonomHelper& angle, const double y0,
                   const Point_t& strawMeas,
                   std::optional<double> r = std::nullopt) const;
-  /// @brief Fit the track inclanation angle and calculate the intercept
+  /// @brief Fit the track inclination angle and calculate the intercept
   ///        afterwards
   /// @param fitPars: Constants of the current measurement configuration
   std::optional<FitResult> fit(const FitAuxiliaries& fitPars) const;
