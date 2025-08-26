@@ -101,7 +101,7 @@ class FastStrawLineFitter {
     /// @brief Uncertainty on the time offset
     double dT0{0.};
   };
-  /// @brief Brief fit a straight line to a set of straw measurements and return
+  /// @brief Fit a straight line to a set of straw measurements and return
   ///        the theta angle & the intercept as well as the associated
   ///        uncertainties.
   /// @param measuremments: Collection of straw measurements to fit
@@ -112,16 +112,27 @@ class FastStrawLineFitter {
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
 
-  /// @brief Fit a straight line with time
-
+  /// @brief Fit a straight line to a set of straw measurements taking the
+  ///        time offset into account. The floating t0 parameter shrinks /
+  ///        blows-up the drift radii of each straw measurement
+  /// @param ctx: Reference to the experiment specific calibration context to
+  ///             calculate the updated straw drift radius, velocity &
+  ///             acceleration
+  /// @param calibrator: Reference to the straw calibrator estimating the drift radius, velocity
+  ///                    & acceleration.
+  /// @param measuremments: Collection of straw measurements to fit
+  /// @param signs: Convention of whether the straw-line shall be left or right
+  ///               of a particular straw measurements. Needs to have the same
+  ///               length as the list of measurements.
+  /// @param startT0: Optional start estimate on the t0 parameter.
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
                 Calibrator_t>
-  std::optional<FitResultT0> fit(const Acts::CalibrationContext& ctx,
-                                 const Calibrator_t& calibrator,
-                                 const StrawCont_t& measurements,
-                                 const std::vector<int>& signs) const;
+  std::optional<FitResultT0> fit(
+      const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
+      const StrawCont_t& measurements, const std::vector<int>& signs,
+      std::optional<double> startT0 = std::nullopt) const;
 
  private:
   /// @brief Index of the drift circle covariance inside the straw
@@ -165,7 +176,7 @@ class FastStrawLineFitter {
     ///@brief Prediced y0 given as the expectation value of the radii
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
-    /// @brief number of degrees of freedom
+    /// @brief Number of degrees of freedom
     std::size_t nDoF{0};
   };
   ///@brief Extension of the auxiliary fit constants needed for the
@@ -231,7 +242,12 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   void calcPostFitChi2(const StrawCont_t& measurements,
                        FitResult& result) const;
-
+  /// @brief Evaluate the chi2 after the fit with t0 has converged
+  /// @param measurements: List of straw measurements
+  /// @param calibrator: Reference to the calibrator used to retrieve an updated
+  ///                    drift radius taking the fitted t0 into account
+  /// @param result: Mutable reference to the FitResult object. The object is used
+  ///                to fetch the fit parameters and to store the chi2 result
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>

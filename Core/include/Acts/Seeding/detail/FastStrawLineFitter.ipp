@@ -170,8 +170,8 @@ template <CompositeSpacePointContainer StrawCont_t,
               Calibrator_t>
 std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
-    const StrawCont_t& measurements,
-    const std::vector<std::int32_t>& signs) const {
+    const StrawCont_t& measurements, const std::vector<int>& signs,
+    std::optional<double> startT0) const {
   using namespace Acts::UnitLiterals;
   if (measurements.size() != signs.size()) {
     ACTS_WARNING(
@@ -181,20 +181,24 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
 
   FitResultT0 result{};
-  Range1D<double> tRange{std::numeric_limits<double>::max(),
-                         -std::numeric_limits<double>::max()};
-  for (const auto& strawMeas : measurements) {
-    if (!strawMeas->isStraw()) {
-      ACTS_WARNING(__func__ << "() - " << __LINE__
-                            << ": The measurement is not a straw");
-      continue;
+  if (startT0) {
+    result.t0 = (*startT0);
+  } else {
+    Range1D<double> tRange{std::numeric_limits<double>::max(),
+                           -std::numeric_limits<double>::max()};
+    for (const auto& strawMeas : measurements) {
+      if (!strawMeas->isStraw()) {
+        ACTS_WARNING(__func__ << "() - " << __LINE__
+                              << ": The measurement is not a straw");
+        continue;
+      }
+      tRange.expand(strawMeas->time(), strawMeas->time());
     }
-    tRange.expand(strawMeas->time(), strawMeas->time());
+    result.t0 = 0.5 * (tRange.min() + tRange.max());
   }
 
   FitAuxiliariesWithT0 fitPars{
       fillAuxiliaries(ctx, calibrator, measurements, signs, result.t0)};
-  result.t0 = 0.5 * (tRange.min() + tRange.max());
   result.theta = startTheta(fitPars);
   result.nDoF = fitPars.nDoF;
   ACTS_DEBUG(__func__ << "() - " << __LINE__
@@ -219,7 +223,7 @@ template <CompositeSpacePointContainer StrawCont_t,
               Calibrator_t>
 FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     const CalibrationContext& ctx, const Calibrator_t& calibrator,
-    const StrawCont_t& measurements, const std::vector<std::int32_t>& signs,
+    const StrawCont_t& measurements, const std::vector<int>& signs,
     const double t0) const {
   FitAuxiliariesWithT0 auxVars{fillAuxiliaries(measurements, signs)};
   if (auxVars.nDoF <= 1) {
