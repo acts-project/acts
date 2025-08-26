@@ -43,9 +43,8 @@ class ITripletSeedCuts {
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
-  /// @return vector of seed candidates that pass the cut
   virtual void cutPerMiddleSp(
-      std::span<TripletCandidate2> seedCandidates) const = 0;
+      std::span<TripletCandidate2>& seedCandidates) const = 0;
 };
 
 }  // namespace Acts::Experimental

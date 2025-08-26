@@ -25,14 +25,10 @@ MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   if (m_config.mlSurfaces.empty()) {
     throw std::invalid_argument(
         "MultiWireStructureBuilder: No surfaces are given");
-  } else if (m_config.binning.size() != 2u) {
-    throw ::std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid binning provided");
   }
 }
 
-std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
-    const GeometryContext& gctx) const {
+std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   // Create the tracking volume
 
   ACTS_VERBOSE("Building a tracking volume with name "
@@ -59,6 +55,15 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
     trackingVolume->addSurface(surface);
   }
 
+  return trackingVolume;
+}
+
+std::unique_ptr<Acts::NavigationPolicyFactory>
+MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
+  if (m_config.binning.size() != 2u) {
+    throw ::std::invalid_argument(
+        "MultiWireStructureBuilder: Invalid binning provided");
+  }
   auto [protoAxisA, expansionA] = m_config.binning.at(0);
   auto [protoAxisB, expansionB] = m_config.binning.at(1);
 
@@ -88,33 +93,21 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume(
       std::move(grid),
       {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()});
 
-  // Use TryAll Navigation Policy for the portals and acceleration structure
-  // with indexed surfaces for the sensitives
-
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
   tryAllConfig.sensitives = false;
 
-  TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume, *m_logger,
-                                      tryAllConfig);
-
-  // Configure the navigation policy with the binning for the grid for the
-  // sensitive surfaces
-
   MultiLayerNavigationPolicy::Config navConfig;
   navConfig.binExpansion = {expansionA, expansionB};
 
+  // Create the navigation policy factory
   std::unique_ptr<NavigationPolicyFactory> factory =
-      NavigationPolicyFactory::make()
+      NavigationPolicyFactory{}
           .add<TryAllNavigationPolicy>(tryAllConfig)
           .add<MultiLayerNavigationPolicy>(navConfig, indexedGrid)
           .asUniquePtr();
 
-  auto policyBase = factory->build(gctx, *trackingVolume, *m_logger);
-
-  trackingVolume->setNavigationPolicy(std::move(policyBase));
-
-  return trackingVolume;
+  return factory;
 }
 
 }  // namespace Acts::Experimental

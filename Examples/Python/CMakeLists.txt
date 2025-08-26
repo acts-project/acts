@@ -48,7 +48,6 @@ set_target_properties(
 target_link_libraries(
     ActsPythonBindings
     PUBLIC
-        Acts::Core
         Acts::PythonUtilities
         Acts::ExamplesFramework
         Acts::ExamplesGeometry
@@ -198,14 +197,14 @@ target_link_libraries(ActsPythonBindings PUBLIC Acts::ExamplesIoHepMC3)
 target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
 list(APPEND py_files examples/hepmc3.py)
 
-if(ACTS_BUILD_EXAMPLES_EXATRKX)
+if(ACTS_BUILD_EXAMPLES_GNN)
     target_link_libraries(
         ActsPythonBindings
-        PUBLIC Acts::ExamplesTrackFindingExaTrkX
+        PUBLIC Acts::ExamplesTrackFindingGnn
     )
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFinding.cpp)
 else()
-    target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+    target_sources(ActsPythonBindings PRIVATE src/GnnTrackFindingStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_EDM4HEP)

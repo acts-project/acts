@@ -15,8 +15,6 @@
 #include <cassert>
 #include <span>
 
-#include <Eigen/Core>
-
 namespace Acts::Experimental {
 
 class SpacePointContainer2;
@@ -155,28 +153,28 @@ class SpacePointProxy2 {
   }
   /// Mutable access to the top strip vector of the space point.
   /// @return A mutable reference to the top strip vector of the space point.
-  Eigen::Vector3f &topStripVector() const noexcept
+  std::array<float, 3> &topStripVector() const noexcept
     requires(!ReadOnly)
   {
     return m_container->topStripVector(m_index);
   }
   /// Mutable access to the bottom strip vector of the space point.
   /// @return A mutable reference to the bottom strip vector of the space point.
-  Eigen::Vector3f &bottomStripVector() const noexcept
+  std::array<float, 3> &bottomStripVector() const noexcept
     requires(!ReadOnly)
   {
     return m_container->bottomStripVector(m_index);
   }
   /// Mutable access to the strip center distance of the space point.
   /// @return A mutable reference to the strip center distance of the space point.
-  Eigen::Vector3f &stripCenterDistance() const noexcept
+  std::array<float, 3> &stripCenterDistance() const noexcept
     requires(!ReadOnly)
   {
     return m_container->stripCenterDistance(m_index);
   }
   /// Mutable access to the top strip center of the space point.
   /// @return A mutable reference to the top strip center of the space point.
-  Eigen::Vector3f &topStripCenter() const noexcept
+  std::array<float, 3> &topStripCenter() const noexcept
     requires(!ReadOnly)
   {
     return m_container->topStripCenter(m_index);
@@ -187,6 +185,26 @@ class SpacePointProxy2 {
     requires(!ReadOnly)
   {
     return m_container->copyFromIndex(m_index);
+  }
+  std::array<float, 2> &xy() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xy(m_index);
+  }
+  std::array<float, 2> &zr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->zr(m_index);
+  }
+  std::array<float, 4> &xyzr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyzr(m_index);
+  }
+  std::array<float, 2> &varianceZR() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->varianceZR(m_index);
   }
 
   /// Mutable access to an extra column of data for the space point.
@@ -228,28 +246,40 @@ class SpacePointProxy2 {
   float varianceR() const noexcept { return m_container->varianceR(m_index); }
   /// Const access to the top strip vector of the space point.
   /// @return A const reference to the top strip vector of the space point.
-  const Eigen::Vector3f &topStripVector() const noexcept {
+  const std::array<float, 3> &topStripVector() const noexcept {
     return m_container->topStripVector(m_index);
   }
   /// Const access to the bottom strip vector of the space point.
   /// @return A const reference to the bottom strip vector of the space point.
-  const Eigen::Vector3f &bottomStripVector() const noexcept {
+  const std::array<float, 3> &bottomStripVector() const noexcept {
     return m_container->bottomStripVector(m_index);
   }
   /// Const access to the strip center distance of the space point.
   /// @return A const reference to the strip center distance of the space point.
-  const Eigen::Vector3f &stripCenterDistance() const noexcept {
+  const std::array<float, 3> &stripCenterDistance() const noexcept {
     return m_container->stripCenterDistance(m_index);
   }
   /// Const access to the top strip center of the space point.
   /// @return A const reference to the top strip center of the space point.
-  const Eigen::Vector3f &topStripCenter() const noexcept {
+  const std::array<float, 3> &topStripCenter() const noexcept {
     return m_container->topStripCenter(m_index);
   }
   /// Const access to the copy from index of the space point.
   /// @return A const reference to the copy from index of the space point.
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
+  }
+  const std::array<float, 2> &xy() const noexcept {
+    return m_container->xy(m_index);
+  }
+  const std::array<float, 2> &zr() const noexcept {
+    return m_container->zr(m_index);
+  }
+  const std::array<float, 4> &xyzr() const noexcept {
+    return m_container->xyzr(m_index);
+  }
+  const std::array<float, 2> &varianceZR() const noexcept {
+    return m_container->varianceZR(m_index);
   }
 
   /// Const access to an extra column of data for the space point.
