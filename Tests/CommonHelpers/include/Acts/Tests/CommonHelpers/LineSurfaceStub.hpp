@@ -10,33 +10,29 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 
-#include <limits>
-
 namespace Acts::Test {
 
 class LineSurfaceStub : public LineSurface {
  public:
   LineSurfaceStub() = delete;
-  //
+
   LineSurfaceStub(const Transform3& htrans, double radius, double halfz)
       : GeometryObject(), LineSurface(htrans, radius, halfz) { /* nop */ }
-  //
+
   explicit LineSurfaceStub(const Transform3& htrans,
                            std::shared_ptr<const LineBounds> lbounds = nullptr)
       : GeometryObject(), LineSurface(htrans, std::move(lbounds)) { /*nop */ }
-  //
+
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                   const DetectorElementBase& detelement)
       : GeometryObject(),
         LineSurface(std::move(lbounds), detelement) { /* nop */ }
 
-  //
   LineSurfaceStub(const LineSurfaceStub& ls)
       : GeometryObject(), LineSurface(ls) { /* nop */ }
 
   LineSurfaceStub& operator=(const LineSurfaceStub& ls) = default;
 
-  //
   LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,
                   const Transform3& t)
       : GeometryObject(), LineSurface(gctx, ls, t) { /* nop */ }
@@ -60,4 +56,5 @@ class LineSurfaceStub : public LineSurface {
     return Polyhedron({}, {}, {});
   }
 };
+
 }  // namespace Acts::Test
