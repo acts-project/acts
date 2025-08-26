@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -20,6 +17,7 @@
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
+#include "Acts/Propagator/detail/MaterialEffectsAccumulator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
 namespace Acts {
@@ -38,6 +36,9 @@ class SympyStepper {
   };
 
   struct Options : public StepperPlainOptions {
+    bool doDense = true;
+    double maxXOverX0Step = 1;
+
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
@@ -107,6 +108,8 @@ class SympyStepper {
 
     /// Statistics of the stepper
     StepperStatistics statistics;
+
+    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field

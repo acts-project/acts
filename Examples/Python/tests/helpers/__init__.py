@@ -30,6 +30,13 @@ except ImportError:
             "ROOT likely built without/with incompatible PyROOT. Skipping tests that need ROOT"
         )
 
+try:
+    import acts
+
+    geomodelEnabled = hasattr(acts, "geomodel")
+except ImportError:
+    geomodelEnabled = False
+
 dd4hepEnabled = "DD4hep_DIR" in os.environ
 if dd4hepEnabled:
     try:
@@ -81,12 +88,12 @@ except ImportError:
     hashingSeedingEnabled = False
 
 
-exatrkxEnabled = shutil.which("nvidia-smi") is not None
-if exatrkxEnabled:
+gnnEnabled = shutil.which("nvidia-smi") is not None
+if gnnEnabled:
     try:
-        from acts.examples import TrackFindingAlgorithmExaTrkX
+        from acts.examples import TrackFindingAlgorithmGnn
     except ImportError:
-        exatrkxEnabled = False
+        gnnEnabled = False
 
 try:
     import podio
@@ -97,7 +104,7 @@ except ModuleNotFoundError:
 except ImportError:
     podioEnabled = False
 
-isCI = os.environ.get("CI", "false") == "true"
+isCI = os.environ.get("CI") is not None
 
 if isCI:
     for k, v in dict(locals()).items():

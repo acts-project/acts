@@ -123,7 +123,7 @@ struct RootMeasurementWriter::DigitizationTree {
     clear();
   }
 
-  /// Convenience function to register idenfication
+  /// Convenience function to register identification
   ///
   /// @param eventNr The event number
   /// @param geoID The geometry identifier of the measurement

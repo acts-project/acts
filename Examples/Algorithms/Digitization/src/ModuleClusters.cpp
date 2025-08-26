@@ -83,10 +83,6 @@ int getCellColumn(const ActsExamples::ModuleValue& mval) {
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int& getCellLabel(ActsExamples::ModuleValue& mval) {
-  return mval.label;
-}
-
 void clusterAddCell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
   cl.push_back(ce);
 }

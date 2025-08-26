@@ -37,6 +37,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
+void addAlignment(Context& ctx);
 void addGeometry(Context& ctx);
 void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
@@ -52,6 +53,7 @@ void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
+void addTruthJet(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
 void addUtilities(Context& ctx);
@@ -67,7 +69,7 @@ void addTGeo(Context& ctx);
 void addJson(Context& ctx);
 void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
-void addExaTrkXTrackFinding(Context& ctx);
+void addGnnTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
@@ -114,6 +116,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addPropagation(ctx);
   addNavigation(ctx);
+  addAlignment(ctx);
   addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
@@ -127,6 +130,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTruthTracking(ctx);
   addTrackFitting(ctx);
   addTrackFinding(ctx);
+  addTruthJet(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addUtilities(ctx);
@@ -138,7 +142,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTGeo(ctx);
   addDetray(ctx);
   addHepMC3(ctx);
-  addExaTrkXTrackFinding(ctx);
+  addGnnTrackFinding(ctx);
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);

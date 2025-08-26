@@ -86,7 +86,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
     /// @param objects are the ones copied into the internal store
     explicit ObjectStore(std::vector<internal_type> objects)
         : internal(std::move(objects)) {
-      external = unpack_shared_const_vector(internal);
+      external = unpackConstSmartPointers(internal);
     }
 
     ObjectStore() = default;
@@ -586,8 +586,8 @@ struct IndexedSurfacesExtractor {
     // The extracted surfaces
     std::vector<const Surface*> eSurfaces;
     eSurfaces.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
+    std::ranges::for_each(
+        indices, [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
     return eSurfaces;
   }
 };
@@ -634,8 +634,8 @@ struct IndexedSubVolumesExtractor {
     // The extracted volumes
     std::vector<const DetectorVolume*> eVolumes;
     eVolumes.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eVolumes.push_back(volumes[i]); });
+    std::ranges::for_each(
+        indices, [&](const auto& i) { eVolumes.push_back(volumes[i]); });
     return eVolumes;
   }
 };

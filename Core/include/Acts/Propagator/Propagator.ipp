@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Propagator/Propagator.hpp"
+
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -13,7 +17,6 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <concepts>
@@ -52,8 +55,16 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
           ConstrainedStep::Type::Navigator, logger());
-      if (preStepSurfaceStatus == IntersectionStatus::reachable ||
-          preStepSurfaceStatus == IntersectionStatus::onSurface) {
+      if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
+        // This indicates a geometry overlap which is not handled by the
+        // navigator, so we skip this target.
+        // This can also happen in a well-behaved geometry with external
+        // surfaces.
+        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
+                     << nextTarget.surface->geometryId());
+        continue;
+      }
+      if (preStepSurfaceStatus == IntersectionStatus::reachable) {
         return nextTarget;
       }
     }

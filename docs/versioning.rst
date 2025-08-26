@@ -8,25 +8,26 @@ new major version. The `Conventional Commits
 requests to track the type of changes that have been merged and ensure that the
 version number is increased correctly.
 
-Since ACTS is still under active development not all visible symbols are
-automatically considered part of the public API and as such fall under the
-Semantic Versioning rules. The subset of symbols that are currently part of the
-public API is outlined below.
+Since ACTS is still under active development, we create **major** versions
+that break the API relatively frequently. We try to limit breaking changes to about
+once a month.
 
 Public API
 ----------
 
-At the moment only the following modules of the core library in the ``Core``
-directory contribute to the public API.
+The API surface of ACTS is very large. Everything at the top-level in the ``Acts``-namespace is considered public.
 
-- ``EventData``
-- ``MagneticField``
-- ``Propagator``
-- ``Surfaces``
-- ``Vertexing``
+.. note::
+    If a private symbol, e.g. in the `Acts::detail` or `Acts::Experimental` namespaces,
+    is part of an otherwise public API, this should be **considered a bug**, which we
+    would appreciate being reported as an issue.
 
-Within these modules, only symbols defined directly in the ``Acts`` namespace
-must be considered as public.
+There are a number of optional components in the ``Plugins/`` folder, only some of which are considered part of the public API:
+
+- DD4hep
+- Json
+- Root
+- FpeMonitoring
 
 Private API
 -----------
@@ -34,10 +35,9 @@ Private API
 The following components are not part of the public API but are expected to
 become part of it at a later stage:
 
-- All modules of the core library that are not explicitly listed as part of
-  the public API.
-- All plugins in the ``Plugins`` directory.
+- All plugins in the ``Plugins`` directory which are not listed under *Public API*.
 - The Fatras library in the ``Fatras`` directory.
+- The Alignment library in the ``Alignment`` directory.
 
 The following components will never become part of the public API:
 

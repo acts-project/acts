@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -93,6 +90,7 @@ class StraightLineStepper {
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accummulated path length state
     double pathAccumulated = 0.;

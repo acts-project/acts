@@ -12,7 +12,7 @@
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -107,11 +107,14 @@ class SeedingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
+  static inline bool itkFastTrackingCuts(const SpacePointProxy_t& /*middle*/,
+                                         const SpacePointProxy_t& other,
+                                         float cotTheta,
+                                         bool isBottomCandidate) {
     static float rMin = 45.;
     static float cotThetaMax = 1.5;
 
-    if (bottomRadius < rMin &&
+    if (isBottomCandidate && other.radius() < rMin &&
         (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
       return false;
     }

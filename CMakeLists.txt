@@ -58,6 +58,7 @@ set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track)
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # external library options
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
@@ -76,24 +77,23 @@ option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGra
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
-option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
+option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
-option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
-option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
-option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
-option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
-option(ACTS_EXATRKX_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
-option(ACTS_EXATRKX_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
+option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
+option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
+option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
+option(ACTS_GNN_ENABLE_CUDA "Enable CUDA for the gnn plugin" OFF)
+option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
+option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
-option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
-option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # fatras related options
@@ -105,7 +105,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
+option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
@@ -144,81 +144,55 @@ include(ActsOptionHelpers)
 
 # any examples component activates the general examples option
 set_option_if(
-  ACTS_BUILD_EXAMPLES
-  ACTS_BUILD_EXAMPLES_DD4HEP
-  OR ACTS_BUILD_EXAMPLES_EDM4HEP
-  OR ACTS_BUILD_EXAMPLES_GEANT4
-  OR ACTS_BUILD_EXAMPLES_HASHING
-  OR ACTS_BUILD_EXAMPLES_PYTHIA8
-  OR ACTS_BUILD_EXAMPLES_EXATRKX
-  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+    ACTS_BUILD_EXAMPLES
+    ACTS_BUILD_EXAMPLES_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_EDM4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_GEANT4
+    OR
+    ACTS_BUILD_EXAMPLES_HASHING
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHIA8
+    OR
+    ACTS_BUILD_EXAMPLES_GNN
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
 
 set_option_if(
-  ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR
-  ACTS_BUILD_EXAMPLES_EDM4HEP
+    ACTS_BUILD_PLUGIN_DD4HEP
+    ACTS_BUILD_EXAMPLES_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES_EDM4HEP
+)
+set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_PLUGIN_PODIO ACTS_BUILD_EXAMPLES_PODIO)
+set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
+set_option_if(
+    ACTS_BUILD_PLUGIN_ROOT
+    ACTS_BUILD_PLUGIN_DD4HEP
+    OR
+    ACTS_BUILD_EXAMPLES
 )
 set_option_if(
-  ACTS_BUILD_PLUGIN_EDM4HEP
-  ACTS_BUILD_EXAMPLES_EDM4HEP
+    ACTS_BUILD_PLUGIN_IDENTIFICATION
+    ACTS_BUILD_PLUGIN_ROOT
+    OR
+    ACTS_BUILD_PLUGIN_PODIO
+    OR
+    ACTS_BUILD_EXAMPLES
 )
-set_option_if(
-  ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EXAMPLES_EDM4HEP
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_PODIO
-  ACTS_BUILD_EXAMPLES_PODIO
-)
-set_option_if(
-    ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_TGEO
-  ACTS_BUILD_PLUGIN_DD4HEP OR
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_TGEO OR
-  ACTS_BUILD_PLUGIN_PODIO OR
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_FATRAS
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_EXATRKX
-  ACTS_BUILD_EXAMPLES_EXATRKX
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_FPEMON
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_JSON
-  ACTS_BUILD_PLUGIN_TRACCC
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_ACTSVG
-  ACTS_BUILD_PLUGIN_TRACCC
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_HASHING
-  ACTS_BUILD_EXAMPLES_HASHING
-)
-set_option_if(
-  ACTS_EXATRKX_ENABLE_CUDA
-  ACTS_EXATRKX_ENABLE_MODULEMAP
-)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
+set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
+set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -269,27 +243,29 @@ endif()
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.56)
-set(_acts_boost_version 1.71.0)
-set(_acts_dd4hep_version 1.21)
+set(_acts_boost_version 1.77.0) # first version with C++20 support
+set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.7)
+set(_acts_edm4hep_version 0.10.5)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
-set(_acts_podio_fallback_version 0.16) # if not found, will try this one
+set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
-set(_acts_hepmc3_version 3.2.1)
+set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.10.5)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_root_version 6.20)
+set(_acts_geomodel_version 6.8.0)
+set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
-set(_acts_pythia8_version 8.309)
+set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.89.0)
-set(_acts_traccc_version 0.20.0)
-set(_acts_covfie_version 0.12.1)
-set(_acts_vecmem_version 1.14.0)
-set(_acts_algebraplugins_version 0.26.2)
+set(_acts_detray_version 0.101.0)
+set(_acts_traccc_version 0.22.0)
+set(_acts_covfie_version 0.13.0)
+set(_acts_vecmem_version 1.17.0)
+set(_acts_algebraplugins_version 0.27.0)
 set(_acts_annoy_version 1.17.3)
+set(_acts_fastjet_version 3.4.1)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -382,9 +358,6 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
         add_subdirectory(thirdparty/actsvg)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_CUDA)
-    enable_cuda()
-endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     # Explicitly find python so we can more easily override the version
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
@@ -403,6 +376,9 @@ if(ACTS_BUILD_PLUGIN_JSON)
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
 endif()
+if(ACTS_BUILD_PLUGIN_FASTJET)
+    find_package(FastJet ${_acts_fastjet_version} REQUIRED)
+endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
     if(NOT GeoModelCore_FOUND)
@@ -412,18 +388,16 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
         )
     endif()
 
-    set(_gm_ver_min 6.3.0)
-
-    if(GeoModelCore_VERSION VERSION_LESS _gm_ver_min)
+    if(GeoModelCore_VERSION VERSION_LESS _acts_geomodel_version)
         message(
             FATAL_ERROR
-            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_gm_ver_min} or newer."
+            "GeoModel version ${GeoModelCore_VERSION} is insufficient. Please install GeoModel version ${_acts_geomodel_version} or newer."
         )
     endif()
     # find other GeoModel components of EXACT same version
     find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
-if(ACTS_BUILD_PLUGIN_TGEO)
+if(ACTS_BUILD_PLUGIN_ROOT)
     find_package(
         ROOT
         ${_acts_root_version}
@@ -443,17 +417,19 @@ if(ACTS_BUILD_ANALYSIS_APPS)
     )
     check_root_compatibility()
 endif()
-if(ACTS_BUILD_PLUGIN_EXATRKX)
-    find_package(Torch REQUIRED)
-    if(ACTS_EXATRKX_ENABLE_CUDA)
+if(ACTS_BUILD_PLUGIN_GNN)
+    if(ACTS_GNN_ENABLE_CUDA)
         find_package(CUDAToolkit REQUIRED)
         enable_cuda()
-        add_subdirectory(thirdparty/FRNN)
-        message(STATUS "Build Exa.TrkX plugin with CUDA")
+        message(STATUS "Build GNN plugin with CUDA")
     else()
-        message(STATUS "Build Exa.TrkX plugin for CPU only")
+        message(STATUS "Build GNN plugin for CPU only")
     endif()
-    if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+    if(ACTS_GNN_ENABLE_TORCH)
+        find_package(Torch REQUIRED)
+        add_subdirectory(thirdparty/FRNN)
+    endif()
+    if(ACTS_GNN_ENABLE_MODULEMAP)
         if(ACTS_USE_SYSTEM_MODULEMAPGRAPH)
             find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
         else()
@@ -461,8 +437,8 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
         endif()
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
-    find_package(onnxruntime ${_acts_onnxruntime_version} REQUIRED)
+if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_GNN_ENABLE_ONNX)
+    find_package(onnxruntime ${_acts_onnxruntime_version} MODULE REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
     find_package(podio ${_acts_podio_version} CONFIG)
@@ -483,6 +459,16 @@ if(ACTS_BUILD_PLUGIN_GEANT4)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
+    if(ACTS_SETUP_VECMEM)
+        if(ACTS_USE_SYSTEM_VECMEM)
+            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        else()
+            add_subdirectory(thirdparty/vecmem)
+            # Make the "VecMem language code" available for the whole project.
+            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
+        endif()
+    endif()
+
     if(ACTS_SETUP_ALGEBRAPLUGINS)
         if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
             find_package(
@@ -500,16 +486,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
         else()
             add_subdirectory(thirdparty/detray)
-        endif()
-    endif()
-
-    if(ACTS_SETUP_VECMEM)
-        if(ACTS_USE_SYSTEM_VECMEM)
-            find_package(vecmem ${_acts_vecmem_version} REQUIRED)
-        else()
-            add_subdirectory(thirdparty/vecmem)
-            # Make the "VecMem language code" available for the whole project.
-            include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
         endif()
     endif()
 

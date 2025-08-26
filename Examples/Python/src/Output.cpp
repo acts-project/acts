@@ -11,7 +11,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvGnnGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
@@ -163,9 +163,8 @@ void addOutput(Context& ctx) {
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackParameterWriter, mex,
-                             "CsvTrackParameterWriter", inputTrackParameters,
-                             inputTracks, outputDir, outputStem,
-                             outputPrecision);
+                             "CsvTrackParameterWriter", inputTracks, outputDir,
+                             outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvProtoTrackWriter, mex,
                              "CsvProtoTrackWriter", inputSpacepoints,
@@ -186,8 +185,8 @@ void addOutput(Context& ctx) {
     register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, false>(w);
   }
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvExaTrkXGraphWriter, mex,
-                             "CsvExaTrkXGraphWriter", inputGraph, outputDir,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvGnnGraphWriter, mex,
+                             "CsvGnnGraphWriter", inputGraph, outputDir,
                              outputStem);
 
   py::class_<IMaterialWriter, std::shared_ptr<IMaterialWriter>>(

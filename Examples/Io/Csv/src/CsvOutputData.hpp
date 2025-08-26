@@ -67,36 +67,36 @@ struct SimHitData {
 
 // Write out muon simhits before digitization
 struct MuonSegmentData {
-  /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
   int sectorId{0};
-  /** @brief  Position in the global coordinate system */
+  /// @brief Position in the global coordinate system
   float globalPositionX{0.f};
   float globalPositionY{0.f};
   float globalPositionZ{0.f};
-  /** @brief Segment direction in the global coordinate system */
+  /// @brief Segment direction in the global coordinate system
   float globalDirectionX{0.f};
   float globalDirectionY{0.f};
   float globalDirectionZ{0.f};
-  /** @brief Position in the local coordinate system */
+  /// @brief Position in the local coordinate system
   float localPositionX{0.f};
   float localPositionY{0.f};
   float localPositionZ{0.f};
-  /** @brief Segment direction in the local coordinate system  */
+  /// @brief Segment direction in the local coordinate system
   float localDirectionX{0.f};
   float localDirectionY{0.f};
   float localDirectionZ{0.f};
-  /** @brief Segment time & associated error */
+  /// @brief Segment time & associated error
   float time{0.f};
   float timeError{0.f};
-  /** @brief segment chi2 & number of degrees of freedom */
+  /// @brief segment chi2 & number of degrees of freedom
   float chiSquared{0.f};
   unsigned nDoF{0u};
 
-  /** @brief how many precision hits are on the segment (Straw tubes or Mm) */
+  /// @brief how many precision hits are on the segment (Straw tubes or Mm)
   unsigned precisionHits{0u};
-  /** @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc) */
+  /// @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc)
   unsigned phiLayers{0u};
-  /** @brief  Complementary hits in the bending direction (Rpc / Tgc) */
+  /// @brief  Complementary hits in the bending direction (Rpc / Tgc)
   unsigned trigEtaLayers{0u};
   DFE_NAMEDTUPLE(MuonSegmentData, sectorId, globalPositionX, globalPositionY,
                  globalPositionZ, globalDirectionX, globalDirectionY,
@@ -107,43 +107,44 @@ struct MuonSegmentData {
 };
 
 struct MuonSpacePointData {
-  /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
   int sectorId{0};
-  /** @brief Number of the associated bucket inside the container. A change of bucket Id
-   *         pushes the space point into a new bucket container */
+  /// @brief Number of the associated bucket inside the container. A change of bucket Id
+  ///         pushes the space point into a new bucket container
   int bucketId{0};
-  /** @brief Local position of the space point measurement */
+  /// @brief Local position of the space point measurement
   float locPositionX{0.f};
   float locPositionY{0.f};
   float locPositionZ{0.f};
-  /** @brief Direction of the sensor line */
+  /// @brief Direction of the sensor line
   float locSensorDirX{0.f};
   float locSensorDirY{0.f};
   float locSensorDirZ{0.f};
-  /** @brief Direction of the vector normal to the plane */
-  float locPlaneNormX{0.f};
-  float locPlaneNormY{0.f};
-  float locPlaneNormZ{0.f};
-  /** @brief Measurement covariance entries in the local x-y plane */
-  float covXX{0.f};
-  float covXY{0.f};
-  float covYX{0.f};
-  float covYY{0.f};
-  /** @brief Drift radius */
+  /// @brief Direction vector normal pointing to the next sensor
+  float locToNextSensorX{0.f};
+  float locToNextSensorY{0.f};
+  float locToNextSensorZ{0.f};
+  /// @brief Measurement covariance entries in the local x-y plane
+  float covX{0.f};
+  float covY{0.f};
+  float covT{0.f};
+  /// @brief Drift radius
   float driftR{0.f};
-  /** @brief Associated gasGap type */
+  //// @brief Associated gasGap type
   unsigned short gasGap{0u};
-  /** @brief Primary measurement channel */
+  /// @brief Primary measurement channel
   unsigned short primaryCh{0u};
-  /** @brief Flag toggling whether the measurement is a precision one */
+  /// @brief Flag toggling whether the measurement is a precision one
   bool measuresEta{false};
-  /** @brief Flag togglign whether the measurement is a non-precision one */
+  /// @brief Flag toggling whether the measurement is a non-precision one
   bool measuresPhi{false};
+  /// @brief Flag toggling whether the measurement provides a time coordinate
+  bool measuresTime{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
                  locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
-                 locSensorDirZ, locPlaneNormX, locPlaneNormY, locPlaneNormZ,
-                 covXX, covXY, covYX, covYY, driftR, gasGap, primaryCh,
-                 measuresEta, measuresPhi);
+                 locSensorDirZ, locToNextSensorX, locToNextSensorY,
+                 locToNextSensorZ, covX, covY, covT, driftR, gasGap, primaryCh,
+                 measuresEta, measuresPhi, measuresTime);
 };
 
 struct TruthHitData {
@@ -265,7 +266,7 @@ struct SurfaceData {
   float rot_xu = 0, rot_xv = 0, rot_xw = 0;
   float rot_yu = 0, rot_yv = 0, rot_yw = 0;
   float rot_zu = 0, rot_zv = 0, rot_zw = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the surface bounds object, determines the parameters filled
   int bounds_type = 0;
   float bound_param0 = -1.f;
   float bound_param1 = -1.f;
@@ -292,7 +293,7 @@ struct LayerVolumeData {
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
   std::uint32_t volume_id = 0, layer_id = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the volume object, determines the parameters filled
   int volume_type = 0;
   float min_v0 = -1.f;
   float max_v0 = -1.f;
@@ -364,6 +365,7 @@ struct SpacepointData {
 };
 
 struct TrackParameterData {
+  std::size_t trackId;
   double d0;
   double z0;
   double phi;
@@ -378,12 +380,12 @@ struct TrackParameterData {
   double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
   double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
 
-  DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
-                 var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
-                 cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop,
-                 cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
-                 cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
-                 cov_qopphi, cov_qoptheta);
+  DFE_NAMEDTUPLE(TrackParameterData, trackId, d0, z0, phi, theta, qop, var_d0,
+                 var_z0, var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
+                 cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
+                 cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop,
+                 cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop,
+                 cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta);
 };
 
 struct ProtoTrackData {

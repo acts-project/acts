@@ -13,13 +13,17 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -107,10 +111,10 @@ auto tGeometry = cGeometry();
 const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
-Acts::Logging::Level logLevel = Acts::Logging::INFO;
+Logging::Level logLevel = Logging::INFO;
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
 
   // position and direction vector
   Vector3 position = Vector3::Zero();
@@ -119,10 +123,17 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   ACTS_INFO("(1) Test for inactivity");
   ACTS_INFO("    a) Run without anything present");
   {
+    auto bounds = std::make_shared<CylinderVolumeBounds>(10, 20, 20);
+    auto tvol = std::make_shared<TrackingVolume>(Transform3::Identity(), bounds,
+                                                 "Undefined");
+
+    auto tgeo = std::make_shared<TrackingGeometry>(tvol);
+
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
+    navCfg.trackingGeometry = tgeo;
     Navigator navigator{navCfg};
 
     Navigator::Options options(tgContext);
@@ -233,7 +244,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
 
   // create a navigator
   Navigator::Config navCfg;
@@ -277,7 +288,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navLayerIndex.value(), 0);
   // Check the target is correct
-  BOOST_CHECK_EQUAL(target.surface, state.navLayer().first.object());
+  BOOST_CHECK_EQUAL(target.surface, &state.navLayer().first.surface());
   // Intersect the target
   auto targetIntersection =
       target.surface->intersect(tgContext, position, direction)
@@ -437,6 +448,200 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   BOOST_CHECK(target.isNone());
 
   ACTS_INFO("<<< Test 1w >>> step to boundary at  " << toString(position));
+}
+
+inline std::tuple<std::shared_ptr<const TrackingGeometry>,
+                  std::vector<const Surface*>>
+createDenseTelescope(const GeometryContext& geoCtx) {
+  using namespace Acts;
+  using namespace UnitLiterals;
+
+  CuboidVolumeBuilder::Config conf;
+  conf.position = {0., 0., 0.};
+  conf.length = {2_m, 2_m, 2_m};
+
+  {
+    CuboidVolumeBuilder::SurfaceConfig surfaceTop;
+    surfaceTop.position = {0, 0.5_m, 0.5_m};
+    surfaceTop.rBounds = std::make_shared<RectangleBounds>(0.8_m, 0.2_m);
+
+    CuboidVolumeBuilder::SurfaceConfig surfaceBottom;
+    surfaceBottom.position = {0, -0.5_m, 0.5_m};
+    surfaceBottom.rBounds = std::make_shared<RectangleBounds>(0.8_m, 0.2_m);
+
+    CuboidVolumeBuilder::LayerConfig layer;
+    layer.surfaceCfg.push_back(surfaceTop);
+    layer.surfaceCfg.push_back(surfaceBottom);
+
+    CuboidVolumeBuilder::VolumeConfig start;
+    start.position = {0, 0, 0};
+    start.length = {1.9_m, 1.9_m, 1.9_m};
+    start.name = "start";
+    start.layerCfg.push_back(layer);
+
+    conf.volumeCfg.push_back(start);
+  }
+
+  CuboidVolumeBuilder cvb(conf);
+
+  TrackingGeometryBuilder::Config tgbCfg;
+  tgbCfg.trackingVolumeBuilders.push_back(
+      [=](const auto& context, const auto& inner, const auto&) {
+        return cvb.trackingVolume(context, inner, nullptr);
+      });
+  auto detector = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
+
+  std::vector<const Surface*> surfaces;
+  detector->visitSurfaces(
+      [&](const Surface* surface) { surfaces.push_back(surface); });
+
+  return {std::move(detector), std::move(surfaces)};
+}
+
+BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+
+  auto [detector, surfaces] = createDenseTelescope(tgContext);
+  BOOST_CHECK_EQUAL(surfaces.size(), 2ul);
+  const Surface& surfaceTop = *surfaces.at(0);
+  const Surface& surfaceBottom = *surfaces.at(1);
+  CHECK_CLOSE_ABS(surfaceTop.center(tgContext).y(), 0.5_m, 1e-6);
+  CHECK_CLOSE_ABS(surfaceBottom.center(tgContext).y(), -0.5_m, 1e-6);
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry = detector;
+  navCfg.resolveSensitive = true;
+  navCfg.resolveMaterial = true;
+  navCfg.resolvePassive = false;
+  Navigator navigator(navCfg, logger().clone("Navigator"));
+
+  // check if we find no sensitive target starting from the middle without
+  // external surfaces
+  {
+    ACTS_INFO("Test 1: start in the middle without external surfaces");
+
+    Navigator::Options options(tgContext);
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = Vector3::Zero();
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK_NE(target.surface, surfaces.at(0));
+    BOOST_CHECK_NE(target.surface, surfaces.at(1));
+  }
+
+  // check if we find a target starting from the top without external surfaces
+  {
+    ACTS_INFO("Test 2: start from top without external surfaces");
+
+    Navigator::Options options(tgContext);
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = {0, 0.5_m, 0};
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK(!target.isNone());
+    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+  }
+
+  // check if we find a target starting from the bottom without external
+  // surfaces
+  {
+    ACTS_INFO("Test 2: start from bottom without external surfaces");
+
+    Navigator::Options options(tgContext);
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = {0, -0.5_m, 0};
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK(!target.isNone());
+    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+  }
+
+  // check if we find the top surface starting from the middle with external
+  // surfaces
+  {
+    ACTS_INFO("Test 3: start in the middle with external surfaces");
+
+    Navigator::Options options(tgContext);
+    options.insertExternalSurface(surfaceTop.geometryId());
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = {0, 0, 0};
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK(!target.isNone());
+    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+  }
+
+  // check if we find the bottom surface starting from the top with external
+  // surfaces
+  {
+    ACTS_INFO("Test 4: start from top with external surfaces");
+
+    Navigator::Options options(tgContext);
+    options.insertExternalSurface(surfaceBottom.geometryId());
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = {0, 0.5_m, 0};
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK(!target.isNone());
+    BOOST_CHECK_EQUAL(target.surface, &surfaceBottom);
+  }
+
+  // check if we find the top surface starting from the bottom with external
+  // surfaces
+  {
+    ACTS_INFO("Test 5: start from bottom with external surfaces");
+
+    Navigator::Options options(tgContext);
+    options.insertExternalSurface(surfaceTop.geometryId());
+    Navigator::State state = navigator.makeState(options);
+
+    Vector3 position = {0, -0.5_m, 0};
+    Vector3 direction = Vector3::UnitZ();
+
+    Result<void> result =
+        navigator.initialize(state, position, direction, Direction::Forward());
+    BOOST_CHECK(result.ok());
+
+    NavigationTarget target = navigator.nextTarget(state, position, direction);
+
+    BOOST_CHECK(!target.isNone());
+    BOOST_CHECK_EQUAL(target.surface, &surfaceTop);
+  }
 }
 
 }  // namespace Acts::Test

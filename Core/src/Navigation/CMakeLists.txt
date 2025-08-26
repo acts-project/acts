@@ -4,4 +4,7 @@ target_sources(
         NavigationStream.cpp
         TryAllNavigationPolicy.cpp
         SurfaceArrayNavigationPolicy.cpp
+        CylinderNavigationPolicy.cpp
+        MultiLayerNavigationPolicy.cpp
+        MultiNavigationPolicy.cpp
 )

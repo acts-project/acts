@@ -10,7 +10,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
+    "Default GridTriplet TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -272,9 +272,10 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
+    stripGeoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
-    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.GridTriplet,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
     initialSigmaQoverPt: Optional[float] = None,
@@ -286,6 +287,9 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
+    adaptiveHoughTransformConfig: Optional[
+        acts.examples.AdaptiveHoughTransformSeeder.Config
+    ] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -312,6 +316,8 @@ def addSeeding(
     field : magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
+    stripGeoSelectionConfigFile : Path|str, path, None
+        Json file for space point geometry selection in strips. Needed for SpacePoint making.
     seedingAlgorithm : SeedingAlgorithm, Default
         seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
     trackSmearingSigmas : TrackSmearingSigmas(loc0, loc0PtA, loc0PtB, loc1, loc1PtA, loc1PtB, time, phi, theta, ptRel)
@@ -377,7 +383,11 @@ def addSeeding(
         )
     else:
         spacePoints = addSpacePointsMaking(
-            s, trackingGeometry, geoSelectionConfigFile, logLevel
+            s,
+            trackingGeometry,
+            geoSelectionConfigFile,
+            stripGeoSelectionConfigFile,
+            logLevel,
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
@@ -392,6 +402,18 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             seeds = addStandardSeeding(
+                s,
+                spacePoints,
+                seedingAlgorithmConfigArg,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                spacePointGridConfigArg,
+                logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.GridTriplet:
+            logger.info("Using grid triplet seeding")
+            seeds = addGridTripletSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -419,6 +441,24 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
+        elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
+            logger.info("Using Adaptive Hough Transform seeding")
+            adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
+            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
+            adaptiveHoughTransformConfig.outputSeeds = "seeds"
+            adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
+            adaptiveHoughTransformConfig.threshold = 4
+            adaptiveHoughTransformConfig.noiseThreshold = 12
+            adaptiveHoughTransformConfig.phiMinBinSize = 3.14 / (2.0 * 257.0)
+            adaptiveHoughTransformConfig.qOverPtMinBinSize = 1.1 / (2.0 * 257.0)
+            adaptiveHoughTransformConfig.qOverPtMin = 1.1
+            adaptiveHoughTransformConfig.doSecondPhase = True
+            adaptiveHoughTransformConfig.zMinBinSize = 1 * u.mm
+            adaptiveHoughTransformConfig.cotThetaMinBinSize = 0.1
+            adaptiveHoughTransformConfig.deduplicate = True
+            seeds = addAdaptiveHoughTransformSeeding(
+                s, adaptiveHoughTransformConfig, logLevel=logLevel
+            )
         elif seedingAlgorithm == SeedingAlgorithm.Gbts:
             logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
@@ -637,6 +677,7 @@ def addSpacePointsMaking(
     sequence: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geoSelectionConfigFile: Union[Path, str],
+    stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
 ):
     """adds space points making
@@ -650,6 +691,11 @@ def addSpacePointsMaking(
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
+        ),
+        stripGeometrySelection=(
+            acts.examples.readJsonGeometryList(str(stripGeoSelectionConfigFile))
+            if stripGeoSelectionConfigFile
+            else []
         ),
     )
     sequence.addAlgorithm(spAlg)
@@ -805,6 +851,101 @@ def addStandardSeeding(
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
+    )
+    sequence.addAlgorithm(seedingAlg)
+
+    return seedingAlg.config.outputSeeds
+
+
+def addGridTripletSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    spacePointGridConfigArg: SpacePointGridConfigArg,
+    logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
+):
+    """adds triplet seeding
+    For parameters description see addSeeding
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    seedingAlg = acts.examples.GridTripletSeedingAlgorithm(
+        level=logLevel,
+        inputSpacePoints=spacePoints,
+        outputSeeds=outputSeeds,
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            minPt=seedFinderConfigArg.minPt,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            impactMax=seedFinderConfigArg.impactMax,
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            deltaRMinTop=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRTopSP[0] is None
+                else seedFinderConfigArg.deltaRTopSP[0]
+            ),
+            deltaRMaxTop=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRTopSP[1] is None
+                else seedFinderConfigArg.deltaRTopSP[1]
+            ),
+            deltaRMinBottom=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRBottomSP[0] is None
+                else seedFinderConfigArg.deltaRBottomSP[0]
+            ),
+            deltaRMaxBottom=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRBottomSP[1] is None
+                else seedFinderConfigArg.deltaRBottomSP[1]
+            ),
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            phiMin=spacePointGridConfigArg.phi[0],
+            phiMax=spacePointGridConfigArg.phi[1],
+            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
+            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            rMinMiddle=None,
+            rMaxMiddle=None,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaZMin=None,
+            deltaZMax=None,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            helixCutTolerance=None,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            maxPtScattering=seedFinderConfigArg.maxPtScattering,
+            toleranceParam=None,
+            deltaInvHelixDiameter=None,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+        ),
     )
     sequence.addAlgorithm(seedingAlg)
 
@@ -1104,6 +1245,23 @@ def addHoughTransformSeeding(
     sequence.addAlgorithm(ht)
     # potentially HT can be extended to also produce seeds, but it is not implemented yet
     # configuration option (outputSeeds) exists
+    return ht.config.outputSeeds
+
+
+def addAdaptiveHoughTransformSeeding(
+    sequence: acts.examples.Sequencer,
+    config: acts.examples.AdaptiveHoughTransformSeeder.Config,
+    logLevel: acts.logging.Level = None,
+):
+    """
+    Configures AdaptiveHoughTransform (AHT) for seeding, instead of extra proxy config objects it takes
+    directly the AHT example algorithm config.
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    ht = acts.examples.AdaptiveHoughTransformSeeder(config=config, level=logLevel)
+    sequence.addAlgorithm(ht)
+    # potentially HT can be extended to also produce proto-tracks, but it is not implemented yet
+    # configuration option (outputSeeds) exists and is used
     return ht.config.outputSeeds
 
 
@@ -1730,6 +1888,14 @@ def addTrackWriters(
             )
             s.addWriter(csvWriter)
 
+            trackParameterWriter = acts.examples.CsvTrackParameterWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                outputDir=str(outputDirCsv),
+                outputStem=str(f"track_parameters_{name}"),
+            )
+            s.addWriter(trackParameterWriter)
+
 
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
@@ -1760,16 +1926,16 @@ def addTrackSelection(
     return trackSelector
 
 
-ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
+GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 
-def addExaTrkX(
+def addGnn(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geometrySelection: Union[Path, str],
     modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-    backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
+    backend: Optional[GnnBackend] = GnnBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1806,7 +1972,7 @@ def addExaTrkX(
         "cut": 0.5,
     }
 
-    if backend == ExaTrkXBackend.Torch:
+    if backend == GnnBackend.Torch:
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
@@ -1819,7 +1985,7 @@ def addExaTrkX(
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-    elif backend == ExaTrkXBackend.Onnx:
+    elif backend == GnnBackend.Onnx:
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
@@ -1831,10 +1997,10 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
 
-    findingAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
+    findingAlg = acts.examples.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
         inputSpacePoints="spacepoints",
-        outputProtoTracks="exatrkx_prototracks",
+        outputProtoTracks="gnn_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -1856,8 +2022,8 @@ def addExaTrkX(
         inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="exatrkx_track_particle_matching",
-        outputParticleTrackMatching="exatrkx_particle_track_matching",
+        outputTrackParticleMatching="gnn_track_particle_matching",
+        outputParticleTrackMatching="gnn_particle_track_matching",
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)

@@ -68,9 +68,9 @@ class NoFieldIntersectionFinder {
     // Intersect the surfaces
     for (auto& surface : m_surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(
-          geoCtx, position, direction,
-          BoundaryTolerance::AbsoluteCartesian(m_tol, m_tol));
+      auto sMultiIntersection =
+          surface->intersect(geoCtx, position, direction,
+                             BoundaryTolerance::AbsoluteEuclidean(m_tol));
 
       // Take the closest
       auto closestForward = sMultiIntersection.closestForward();
@@ -79,7 +79,7 @@ class NoFieldIntersectionFinder {
       if (closestForward.status() == IntersectionStatus::reachable &&
           closestForward.pathLength() > 0.0) {
         sIntersections.push_back(
-            {closestForward.object()->geometryId(),
+            {closestForward.surface().geometryId(),
              surface
                  ->globalToLocal(geoCtx, closestForward.position(),
                                  Vector3{0, 1, 0})

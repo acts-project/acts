@@ -124,10 +124,9 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   const Vector2 unitPhi{1., 0.};
   const Vector2 withinBevelMin{0.5, -20.012};
   const Vector2 outsideBevelMin{0.5, -40.};
-  const BoundaryTolerance tolerance =
-      BoundaryTolerance::AbsoluteBound(0.1, 0.1);
+  const BoundaryTolerance tolerance = BoundaryTolerance::AbsoluteEuclidean(0.1);
   const BoundaryTolerance lessTolerance =
-      BoundaryTolerance::AbsoluteBound(0.01, 0.01);
+      BoundaryTolerance::AbsoluteEuclidean(0.01);
 
   BOOST_CHECK(cylinderBoundsObject.inside(atPiBy2, tolerance));
   BOOST_CHECK(!cylinderBoundsSegment.inside(unitPhi, tolerance));
@@ -182,6 +181,22 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedCylinderBounds.get(CylinderBounds::eR),
                     cylinderBoundsObject.get(CylinderBounds::eR));
   BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderBoundsCenter) {
+  const double radius = 5.0;
+  const double halfZ = 10.0;
+
+  // Test full cylinder
+  CylinderBounds fullCylinder(radius, halfZ);
+  Vector2 center = fullCylinder.center();
+  CHECK_CLOSE_ABS(center, Vector2(0., 0.), 1e-6);
+
+  // Test cylinder with average phi offset
+  const double averagePhi = std::numbers::pi / 4.;
+  CylinderBounds offsetCylinder(radius, halfZ, std::numbers::pi, averagePhi);
+  Vector2 centerOffset = offsetCylinder.center();
+  CHECK_CLOSE_ABS(centerOffset, Vector2(averagePhi, 0.), 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -91,7 +91,7 @@ class SurfaceStub : public RegularSurface {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     IntersectionStatus::reachable);
     return SurfaceMultiIntersection(
-        {stubIntersection, Intersection3D::invalid()}, this);
+        {stubIntersection, Intersection3D::invalid()}, *this);
   }
 
   /// Return properly formatted class name

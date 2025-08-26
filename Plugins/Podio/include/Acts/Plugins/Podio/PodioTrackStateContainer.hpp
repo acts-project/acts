@@ -731,7 +731,7 @@ static_assert(MutableMultiTrajectoryBackend<MutablePodioTrackStateContainer>,
               "MutablePodioTrackStateContainer does not fulfill "
               "TrackStateContainerBackend");
 
-ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
+inline ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
     const MutablePodioTrackStateContainer& other)
     : m_helper{other.m_helper},
       m_collection{other.m_collection.get()},
