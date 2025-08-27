@@ -301,14 +301,23 @@ class FastStrawLineFitter {
     Exceeded,   ////< Maximum number of iterations exceeded
     GoodStep,   ///< The fit did not converge yet
   };
-  /// @param Update the straw circle parameters for a fit with ts0 & theta
+  /// @brief Update the straw circle parameters for a fit with ts0 & theta
   /// @param fitPars: Fit constants from the straw measurements
   /// @param fitResult: Mutable reference to the FitResult object.
   ///                   The updated parameter are written to this object if the
   ///                   step was successful
   UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
                                FitResultT0& fitResult) const;
-
+  ///  @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
+  /// @param ctx: Reference to the experiment specific calibration context to
+  ///             calculate the updated straw drift radius, velocity &
+  ///             acceleration
+  /// @param calibrator: Reference to the straw calibrator estimating the drift radius, velocity
+  ///                    & acceleration.
+  /// @param measuremments: Collection of straw measurements to fit
+  /// @param measurements: List of straw measurements
+  /// @param signs: List of left/right signs to be annotated with each straw circle
+  /// @param t0: Current estimate on the time offset
   template <CompositeSpacePointContainer StrawCont_t,
             CompositeSpacePointFastCalibrator<
                 Acts::RemovePointer_t<typename StrawCont_t::value_type>>
