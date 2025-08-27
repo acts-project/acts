@@ -78,10 +78,8 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   Vector2 startPoint{
       VectorHelpers::cast(startPosition, m_indexedGrid.casts[0]),
       VectorHelpers::cast(startPosition, m_indexedGrid.casts[1])};
-  Vector2 startDir {
-    VectorHelpers::cast(unitDir, m_indexedGrid.casts[0]),
-        VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])
-  }
+  Vector2 startDir{VectorHelpers::cast(unitDir, m_indexedGrid.casts[0]),
+                   VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])};
 
   for (std::size_t i = 0; i < maxYIndex; i++) {
     auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
