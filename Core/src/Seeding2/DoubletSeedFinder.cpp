@@ -56,9 +56,6 @@ class Impl final : public DoubletSeedFinder {
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
 
-    float deltaR = 0.;
-    float deltaZ = 0.;
-
     const auto outsideRangeCheck = [](const float value, const float min,
                                       const float max) {
       // intentionally using `|` after profiling. faster due to better branch
@@ -99,11 +96,12 @@ class Impl final : public DoubletSeedFinder {
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
-      float xO = xyO[0];
-      float yO = xyO[1];
-      float zO = zrO[0];
-      float rO = zrO[1];
+      const float xO = xyO[0];
+      const float yO = xyO[1];
+      const float zO = zrO[0];
+      const float rO = zrO[1];
 
+      float deltaR = 0;
       if constexpr (isBottomCandidate) {
         deltaR = rM - rO;
 
@@ -130,6 +128,7 @@ class Impl final : public DoubletSeedFinder {
         }
       }
 
+      float deltaZ = 0;
       if constexpr (isBottomCandidate) {
         deltaZ = zM - zO;
       } else {

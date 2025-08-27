@@ -32,32 +32,35 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
   const std::array<float, 3>& stripCenterDistance = sp.stripCenterDistance();
 
   // cross product between top strip vector and spacePointPosition
-  std::array<float, 3> d1 = {topStripVector[1] * spacePointPosition[2] -
-                                 topStripVector[2] * spacePointPosition[1],
-                             topStripVector[2] * spacePointPosition[0] -
-                                 topStripVector[0] * spacePointPosition[2],
-                             topStripVector[0] * spacePointPosition[1] -
-                                 topStripVector[1] * spacePointPosition[0]};
+  const std::array<float, 3> d1 = {
+      topStripVector[1] * spacePointPosition[2] -
+          topStripVector[2] * spacePointPosition[1],
+      topStripVector[2] * spacePointPosition[0] -
+          topStripVector[0] * spacePointPosition[2],
+      topStripVector[0] * spacePointPosition[1] -
+          topStripVector[1] * spacePointPosition[0]};
 
   // scalar product between bottom strip vector and d1
-  float bd1 = bottomStripVector[0] * d1[0] + bottomStripVector[1] * d1[1] +
-              bottomStripVector[2] * d1[2];
+  const float bd1 = bottomStripVector[0] * d1[0] +
+                    bottomStripVector[1] * d1[1] + bottomStripVector[2] * d1[2];
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
-  float s1 = stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
-             stripCenterDistance[2] * d1[2];
+  const float s1 = stripCenterDistance[0] * d1[0] +
+                   stripCenterDistance[1] * d1[1] +
+                   stripCenterDistance[2] * d1[2];
   if (std::abs(s1) > std::abs(bd1) * tolerance) {
     return false;
   }
 
   // cross product between bottom strip vector and spacePointPosition
-  std::array<float, 3> d0 = {bottomStripVector[1] * spacePointPosition[2] -
-                                 bottomStripVector[2] * spacePointPosition[1],
-                             bottomStripVector[2] * spacePointPosition[0] -
-                                 bottomStripVector[0] * spacePointPosition[2],
-                             bottomStripVector[0] * spacePointPosition[1] -
-                                 bottomStripVector[1] * spacePointPosition[0]};
+  const std::array<float, 3> d0 = {
+      bottomStripVector[1] * spacePointPosition[2] -
+          bottomStripVector[2] * spacePointPosition[1],
+      bottomStripVector[2] * spacePointPosition[0] -
+          bottomStripVector[0] * spacePointPosition[2],
+      bottomStripVector[0] * spacePointPosition[1] -
+          bottomStripVector[1] * spacePointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
   // spacePointPosition is inside the top detector element
@@ -101,15 +104,15 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    float cotThetaB = bottomDoublet.cotTheta();
-    float erB = bottomDoublet.er();
-    float iDeltaRB = bottomDoublet.iDeltaR();
-    float Ub = bottomDoublet.u();
-    float Vb = bottomDoublet.v();
+    const float cotThetaB = bottomDoublet.cotTheta();
+    const float erB = bottomDoublet.er();
+    const float iDeltaRB = bottomDoublet.iDeltaR();
+    const float Ub = bottomDoublet.u();
+    const float Vb = bottomDoublet.v();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
-    float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
+    const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -119,29 +122,26 @@ class Impl final : public TripletSeedFinder {
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
+    const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
-      SpacePointIndex2 spT = topDoublet.spacePointIndex();
-      float cotThetaT = topDoublet.cotTheta();
+      const SpacePointIndex2 spT = topDoublet.spacePointIndex();
+      const float cotThetaT = topDoublet.cotTheta();
 
       // use geometric average
-      float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if (cotThetaAvg2 <= 0) {
-        continue;
-      }
+      const float cotThetaAvg2 = cotThetaB * cotThetaT;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.er() + erB +
-                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                         topDoublet.iDeltaR();
+      const float error2 = topDoublet.er() + erB +
+                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
+                               iDeltaRB * topDoublet.iDeltaR();
 
-      float deltaCotTheta = cotThetaB - cotThetaT;
-      float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+      const float deltaCotTheta = cotThetaB - cotThetaT;
+      const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -166,17 +166,17 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float dU = topDoublet.u() - Ub;
+      const float dU = topDoublet.u() - Ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (topDoublet.v() - Vb) / dU;
-      float S2 = 1 + A * A;
-      float B = Vb - A * Ub;
-      float B2 = B * B;
+      const float A = (topDoublet.v() - Vb) / dU;
+      const float S2 = 1 + A * A;
+      const float B = Vb - A * Ub;
+      const float B2 = B * B;
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -187,10 +187,10 @@ class Impl final : public TripletSeedFinder {
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
-      float iHelixDiameter2 = B2 / S2;
+      const float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+      const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
         if constexpr (sortedByCotTheta) {
@@ -205,7 +205,7 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float im = std::abs((A - B * rM) * rM);
+      const float im = std::abs((A - B * rM) * rM);
       if (im > m_cfg.impactMax) {
         continue;
       }
@@ -238,14 +238,14 @@ class Impl final : public TripletSeedFinder {
                                  topDoublets.size());
 
     float cotThetaB = bottomDoublet.cotTheta();
-    float erB = bottomDoublet.er();
-    float iDeltaRB = bottomDoublet.iDeltaR();
-    float Vb = bottomDoublet.v();
-    float Ub = bottomDoublet.u();
+    const float erB = bottomDoublet.er();
+    const float iDeltaRB = bottomDoublet.iDeltaR();
+    const float Vb = bottomDoublet.v();
+    const float Ub = bottomDoublet.u();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
-    float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
+    const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -255,15 +255,15 @@ class Impl final : public TripletSeedFinder {
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
+    const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
-    float sinTheta = 1 / std::sqrt(iSinTheta2);
-    float cosTheta = cotThetaB * sinTheta;
+    const float sinTheta = 1 / std::sqrt(iSinTheta2);
+    const float cosTheta = cotThetaB * sinTheta;
 
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
-    std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
-                                                sinPhiM * sinTheta};
+    const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
+                                                      sinPhiM * sinTheta};
 
     for (auto topDoublet : topDoublets) {
       // protects against division by 0
@@ -273,13 +273,13 @@ class Impl final : public TripletSeedFinder {
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A0 = (topDoublet.v() - Vb) / dU;
+      const float A0 = (topDoublet.v() - Vb) / dU;
 
-      float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // position of Middle SP converted from UV to XY assuming cotTheta
       // evaluated from the Bottom and Middle SPs double
-      std::array<float, 3> positionMiddle = {
+      const std::array<float, 3> positionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
           zPositionMiddle};
@@ -291,10 +291,10 @@ class Impl final : public TripletSeedFinder {
       }
 
       // coordinate transformation and checks for bottom spacepoint
-      float B0 = 2 * (Vb - A0 * Ub);
-      float Cb = 1 - B0 * bottomDoublet.y();
-      float Sb = A0 + B0 * bottomDoublet.x();
-      std::array<float, 3> positionBottom = {
+      const float B0 = 2 * (Vb - A0 * Ub);
+      const float Cb = 1 - B0 * bottomDoublet.y();
+      const float Sb = A0 + B0 * bottomDoublet.x();
+      const std::array<float, 3> positionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
@@ -308,9 +308,9 @@ class Impl final : public TripletSeedFinder {
       }
 
       // coordinate transformation and checks for top spacepoint
-      float Ct = 1 - B0 * topDoublet.y();
-      float St = A0 + B0 * topDoublet.x();
-      std::array<float, 3> positionTop = {
+      const float Ct = 1 - B0 * topDoublet.y();
+      const float St = A0 + B0 * topDoublet.x();
+      const std::array<float, 3> positionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zPositionMiddle};
@@ -324,31 +324,31 @@ class Impl final : public TripletSeedFinder {
       }
 
       // bottom and top coordinates in the spM reference frame
-      float xB = rBTransf[0] - rMTransf[0];
-      float yB = rBTransf[1] - rMTransf[1];
-      float zB = rBTransf[2] - rMTransf[2];
-      float xT = rTTransf[0] - rMTransf[0];
-      float yT = rTTransf[1] - rMTransf[1];
-      float zT = rTTransf[2] - rMTransf[2];
+      const float xB = rBTransf[0] - rMTransf[0];
+      const float yB = rBTransf[1] - rMTransf[1];
+      const float zB = rBTransf[2] - rMTransf[2];
+      const float xT = rTTransf[0] - rMTransf[0];
+      const float yT = rTTransf[1] - rMTransf[1];
+      const float zT = rTTransf[2] - rMTransf[2];
 
-      float iDeltaRB2 = 1 / (xB * xB + yB * yB);
-      float iDeltaRT2 = 1 / (xT * xT + yT * yT);
+      const float iDeltaRB2 = 1 / (xB * xB + yB * yB);
+      const float iDeltaRT2 = 1 / (xT * xT + yT * yT);
 
       cotThetaB = -zB * std::sqrt(iDeltaRB2);
-      float cotThetaT = zT * std::sqrt(iDeltaRT2);
+      const float cotThetaT = zT * std::sqrt(iDeltaRT2);
 
       // use arithmetic average
-      float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
-      float cotThetaAvg2 = averageCotTheta * averageCotTheta;
+      const float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
+      const float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.er() + erB +
-                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                         topDoublet.iDeltaR();
+      const float error2 = topDoublet.er() + erB +
+                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
+                               iDeltaRB * topDoublet.iDeltaR();
 
-      float deltaCotTheta = cotThetaB - cotThetaT;
-      float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+      const float deltaCotTheta = cotThetaB - cotThetaT;
+      const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -365,26 +365,26 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float rMxy =
+      const float rMxy =
           std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
-      float irMxy = 1 / rMxy;
-      float Ax = rMTransf[0] * irMxy;
-      float Ay = rMTransf[1] * irMxy;
+      const float irMxy = 1 / rMxy;
+      const float Ax = rMTransf[0] * irMxy;
+      const float Ay = rMTransf[1] * irMxy;
 
-      float ub = (xB * Ax + yB * Ay) * iDeltaRB2;
-      float vb = (yB * Ax - xB * Ay) * iDeltaRB2;
-      float ut = (xT * Ax + yT * Ay) * iDeltaRT2;
-      float vt = (yT * Ax - xT * Ay) * iDeltaRT2;
+      const float ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+      const float vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+      const float ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+      const float vt = (yT * Ax - xT * Ay) * iDeltaRT2;
 
       dU = ut - ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
-      float A = (vt - vb) / dU;
-      float S2 = 1 + A * A;
-      float B = vb - A * ub;
-      float B2 = B * B;
+      const float A = (vt - vb) / dU;
+      const float S2 = 1 + A * A;
+      const float B = vb - A * ub;
+      const float B2 = B * B;
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -395,10 +395,10 @@ class Impl final : public TripletSeedFinder {
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
-      float iHelixDiameter2 = B2 / S2;
+      const float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+      const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
         continue;
@@ -407,7 +407,7 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float im = std::abs((A - B * rMxy) * rMxy);
+      const float im = std::abs((A - B * rMxy) * rMxy);
       if (im > m_cfg.impactMax) {
         continue;
       }

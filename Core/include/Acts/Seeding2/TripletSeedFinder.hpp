@@ -17,6 +17,10 @@
 
 namespace Acts::Experimental {
 
+/// Container for triplet candidates found by the triplet seed finder.
+///
+/// This implementation uses partial AoS/SoA depending on the access pattern in
+/// the triplet finding process.
 class TripletTopCandidates {
  public:
   using Index = std::uint32_t;
@@ -84,13 +88,21 @@ class TripletTopCandidates {
   std::vector<float> m_impactParameters;
 };
 
+/// Interface and a collection of standard implementations for a triplet seed
+/// finder.
+///
+/// @note The standard implementations rely on virtual function dispatch which
+/// did not turn out to affect the performance after measurement.
 class TripletSeedFinder {
  public:
+  /// Collection of configuration parameters for the triplet seed finder. This
+  /// includes triplet cuts, steering switches, and assumptions about the space
+  /// points.
   struct Config {
-    /// Delegates for accessors to detailed information on double measurement
-    /// that produced the space point. This is mainly referring to space points
-    /// produced when combining measurement from strips on back-to-back modules.
-    /// Enables setting of the following delegates.
+    /// Delegates for accessors to detailed information on double strip
+    /// measurement that produced the space point. This is mainly referring to
+    /// space points produced when combining measurement from strips on
+    /// back-to-back modules. Enables setting of the following delegates.
     bool useStripInfo = false;
 
     /// Whether the input doublets are sorted by cotTheta
@@ -121,6 +133,7 @@ class TripletSeedFinder {
     float toleranceParam = 1.1 * UnitConstants::mm;
   };
 
+  /// Derived configuration for the triplet seed finder using a magnetic field.
   struct DerivedConfig : public Config {
     DerivedConfig(const Config& config, float bFieldInZ);
 
@@ -132,10 +145,12 @@ class TripletSeedFinder {
     float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
   };
 
+  /// Creates a new triplet seed finder instance given the configuration.
   static std::unique_ptr<TripletSeedFinder> create(const DerivedConfig& config);
 
   virtual ~TripletSeedFinder() = default;
 
+  /// Returns the configuration of the triplet seed finder.
   virtual const DerivedConfig& config() const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
