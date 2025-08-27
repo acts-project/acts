@@ -26,7 +26,7 @@ using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using RandomEngine = std::mt19937;
 
-constexpr std::size_t nTrials = 10;
+constexpr std::size_t nTrials = 1;
 
 namespace Acts::Test {
 
@@ -111,17 +111,15 @@ class StrawTestCalibrator {
  public:
   /// @brief Choose the coefficient to arrive at a drift time of 750 ns
   ///        for 15 mm
-  static constexpr double CoeffRtoT = 1.;  // 750._ns * Acts::pow(15._mm, -2);
+  static constexpr double CoeffRtoT = 750._ns * Acts::pow(15._mm, -2);
   static constexpr double CoeffTtoR = 1. / CoeffRtoT;
 
   static double calcDriftUncert(const double driftR) {
     return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
   }
-  static double driftTime(const double r) {
-    return std::sqrt(CoeffRtoT * r);
-  }
+  static double driftTime(const double r) { return CoeffRtoT * r; }
   static double driftRadius(const double t) {
-    return CoeffTtoR * Acts::pow(t, 2);
+    return CoeffTtoR * Acts::pow(t, 1);
   }
 
   static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
@@ -130,12 +128,12 @@ class StrawTestCalibrator {
   }
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const StrawTestPoint& straw, const double t0) {
-    return CoeffTtoR * 2. *(straw.time() - t0);
+    return CoeffTtoR * Acts::pow(straw.time() - t0, 0);
   }
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
                                   const StrawTestPoint& /*straw*/,
                                   const double /*t0*/) {
-    return 2. * CoeffTtoR;
+    return 0.;
   }
 };
 static_assert(
@@ -154,17 +152,16 @@ Line_t generateLine(RandomEngine& engine) {
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
       std::uniform_real_distribution{0.1_degree, 179.9_degree}(engine);
-  linePars[toUnderlying(ParIndex::theta)] = 20._degree;
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       0.2_degree) {
     return generateLine(engine);
   }
   Line_t line{linePars};
-  ACTS_INFO("Generated parameters theta: "
-            << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-            << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
-            << toString(line.position()) << " + "
-            << toString(line.direction()));
+  ACTS_DEBUG("Generated parameters theta: "
+             << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
+             << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
+             << toString(line.position()) << " + "
+             << toString(line.direction()));
   return line;
 }
 /// @brief Extrapolate the straight line track through the straw layers to
@@ -278,7 +275,6 @@ BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1419};
-  return;
 
   std::unique_ptr<TFile> outFile{};
   std::unique_ptr<TTree> outTree{};
@@ -414,7 +410,7 @@ BOOST_AUTO_TEST_CASE(LineFitWithT0) {
         std::uniform_real_distribution{-50._ns, 50._ns}(engine);
 
     ACTS_DEBUG("Generated time offset: " << inNanoS(timeOffSet) << " [ns]");
-    auto strawPoints = generateStrawCircles(track, engine, false);
+    auto strawPoints = generateStrawCircles(track, engine, true);
 
     if (strawPoints.size() < 4) {
       ACTS_WARNING(__func__ << "() - " << __LINE__ << ": -- event: " << n

@@ -183,8 +183,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   grad[1] = calcTimeGrad(angles, fitPars);
   if (grad.norm() < m_cfg.precCutOff) {
     completeResult(fitPars, cov(0, 0), fitResult);
-    ACTS_INFO(__func__ << "() - " << __LINE__
-                       << " Fit converged: " << fitResult);
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
+                        << fitResult);
     return UpdateStatus::Converged;
   }
   cov(1, 0) = cov(0, 1) =
@@ -193,15 +193,17 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm +
               fitPars.R_vv
               ///
-              + fitPars.fitY0 * fitPars.R_a + fitPars.R_va - 
-              (fitPars.T_az * angles.sinTheta -
-              fitPars.T_ay * angles.cosTheta );
-  ACTS_INFO("-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv: "
-          <<(-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv)
-          <<", fitPars.fitY0 * fitPars.R_a: "<<(fitPars.fitY0 * fitPars.R_a)
-          <<", fitPars.R_va: "<<fitPars.R_va<<
-          ", (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta )"
-           <<(fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta ));
+              + fitPars.fitY0 * fitPars.R_a + fitPars.R_va -
+              (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
+  ACTS_VERBOSE(
+      __func__
+      << "() - " << __LINE__
+      << ": -fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv: "
+      << (-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv)
+      << ", fitPars.fitY0 * fitPars.R_a: " << (fitPars.fitY0 * fitPars.R_a)
+      << ", fitPars.R_va: " << fitPars.R_va
+      << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
+      << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
   const auto invCov = cov.inverse();
   if (invCov(1, 1) < 0) {
     ACTS_WARNING("Invalid covariance\n"
@@ -211,20 +213,20 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
   const Vector2 update = invCov * grad;
 
-  ACTS_INFO(__func__ << "() - " << __LINE__ << " intermediate result "
-                     << fitResult << "\n"
-                     << std::format("gradient: ({:.3f}, {:.3f})",
-                                    inDeg(grad[0]), inNanoS(grad[1]))
-                     << ", covariance:" << std::endl
-                     << toString(cov) << std::endl
-                     << cov.determinant()
-                     << std::format(" update: ({:.3f}, {:.3f}).",
-                                    inDeg(update[0]), inNanoS(update[1])));
+  ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
+                        << fitResult << "\n"
+                        << std::format("gradient: ({:.3f}, {:.3f})",
+                                       inDeg(grad[0]), inNanoS(grad[1]))
+                        << ", covariance:" << std::endl
+                        << toString(cov) << std::endl
+                        << cov.determinant()
+                        << std::format(" update: ({:.3f}, {:.3f}).",
+                                       inDeg(update[0]), inNanoS(update[1])));
 
   if (update.norm() < m_cfg.precCutOff) {
     completeResult(fitPars, cov(0, 0), fitResult);
-    ACTS_INFO(__func__ << "() - " << __LINE__
-                       << " Fit converged: " << fitResult);
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
+                        << fitResult);
     return UpdateStatus::Converged;
   }
   fitResult.t0 -= update[1];
