@@ -19,8 +19,12 @@
 
 namespace Acts::Experimental {
 
+/// Full triplet seeder which depends on a doublet and triplet seed finder, and
+/// a triplet seed filter.
 class TripletSeeder {
  public:
+  /// Cache for storing intermediate results during triplet seeding to avoid
+  /// reallocation.
   struct Cache {
     DoubletsForMiddleSp bottomDoublets;
     DoubletsForMiddleSp topDoublets;

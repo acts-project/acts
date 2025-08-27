@@ -15,6 +15,10 @@
 
 namespace Acts::Experimental {
 
+/// Interface for triplet seed filtering.
+///
+/// The filter is expected to be stateful and maintain internal information
+/// across calls.
 class ITripletSeedFilter {
  public:
   virtual ~ITripletSeedFilter() = default;
