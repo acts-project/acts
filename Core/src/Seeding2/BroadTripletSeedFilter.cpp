@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/ITripletSeedCuts.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
