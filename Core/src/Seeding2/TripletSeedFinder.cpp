@@ -133,9 +133,6 @@ class Impl final : public TripletSeedFinder {
 
       // use geometric average
       const float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if (cotThetaAvg2 <= 0) {
-        continue;
-      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
