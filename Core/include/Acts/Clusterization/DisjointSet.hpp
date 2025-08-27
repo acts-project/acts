@@ -8,22 +8,19 @@
 
 #pragma once
 
-
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace Acts::Ccl {
 using Label = std::size_t;
 constexpr Label NO_LABEL = 0;
 }  // namespace Acts::Ccl
 
-
 namespace Acts::Ccl {
 class DisjointSets {
-public:
+ public:
   explicit DisjointSets(std::size_t initial_size = 128)
-    : m_defaultCapacity(initial_size),
-      m_nextId(1) {
+      : m_defaultCapacity(initial_size), m_nextId(1) {
     // index 0 is a dummy so that id == index
     m_parent.reserve(m_defaultCapacity + 1);
     m_rank.reserve(m_defaultCapacity + 1);
@@ -31,7 +28,7 @@ public:
     m_rank.push_back(0);
   }
   ~DisjointSets() = default;
-  
+
   DisjointSets(const DisjointSets&) = default;
   DisjointSets& operator=(const DisjointSets&) = default;
 
@@ -56,7 +53,8 @@ public:
   inline void unionSet(std::size_t x, std::size_t y) noexcept {
     std::size_t rootX = findRoot(x);
     std::size_t rootY = findRoot(y);
-    if (rootX == rootY) return;
+    if (rootX == rootY)
+      return;
 
     const std::size_t rankRootX = m_rank[rootX];
     const std::size_t rankRootY = m_rank[rootY];
@@ -81,22 +79,24 @@ public:
     m_rank.resize(1);
   }
 
-private:
+ private:
   inline std::size_t findRoot(std::size_t x) noexcept {
-    assert(x > 0 && x < m_parent.size());
+    assert(x < m_parent.size());
     while (true) {
       std::size_t parent = m_parent[x];
-      if (parent == x) return x;
+      if (parent == x)
+        return x;
       // also check the grand-parent
       std::size_t grandparent = m_parent[parent];
       // halve path so that next search is faster
       m_parent[x] = grandparent;
       x = grandparent;
-      if (x == m_parent[x]) return x;
+      if (x == m_parent[x])
+        return x;
     }
   }
 
-private:
+ private:
   std::size_t m_defaultCapacity{128};
   std::size_t m_nextId{1};
   std::vector<std::size_t> m_parent{};
@@ -104,4 +104,3 @@ private:
 };
 
 }  // namespace Acts::Ccl
-
