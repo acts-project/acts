@@ -10,11 +10,6 @@
 
 
 #include <vector>
-#include <boost/pending/disjoint_sets.hpp>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <new>
 #include <utility>
 
 namespace Acts::Ccl {
