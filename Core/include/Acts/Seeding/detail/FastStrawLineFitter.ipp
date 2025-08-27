@@ -182,8 +182,8 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   }
 
   FitResultT0 result{};
-  if (startT0) {
-    result.t0 = (*startT0);
+  if (startT0.has_value()) {
+    result.t0 = startT0.value_or(0.);
   } else {
     Range1D<double> tRange{std::numeric_limits<double>::max(),
                            -std::numeric_limits<double>::max()};
