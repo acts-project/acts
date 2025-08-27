@@ -71,29 +71,8 @@ measurementConstituents(const DigitizedParameters& dParams) {
 /// Function that computes a global position for a measurement.
 /// For 1D measurements, the center of the module is used for the missing
 /// dimension.
-inline Acts::Vector3 measurementGlobalPosition(
+Acts::Vector3 measurementGlobalPosition(
     const DigitizedParameters& digitizedParameters,
-    const Acts::Surface& surface, const Acts::GeometryContext& gctx) {
-  // we need a regular surface to perform the local to global transformation
-  // without direction input. the direction could be obtained from truth
-  // information but we can leave it out here.
-  const Acts::RegularSurface* regularSurface =
-      dynamic_cast<const Acts::RegularSurface*>(&surface);
-  if (regularSurface == nullptr) {
-    throw std::invalid_argument("Expected a regular surface");
-  }
-
-  Acts::Vector2 locPos = Acts::Vector2::Zero();
-  for (auto i = 0ul; i < digitizedParameters.indices.size(); ++i) {
-    auto idx = digitizedParameters.indices.at(i);
-    if (idx == Acts::eBoundLoc0 || idx == Acts::eBoundLoc1) {
-      locPos[idx] = digitizedParameters.values.at(i);
-    } else {
-      locPos[idx] = regularSurface->bounds().center()[idx];
-    }
-  }
-
-  return regularSurface->localToGlobal(gctx, locPos);
-}
+    const Acts::Surface& surface, const Acts::GeometryContext& gctx);
 
 }  // namespace ActsExamples

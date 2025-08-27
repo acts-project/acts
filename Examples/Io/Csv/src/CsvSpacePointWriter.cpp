@@ -62,8 +62,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::writeT(
     spData.x = sp.x() / Acts::UnitConstants::mm;
     spData.y = sp.y() / Acts::UnitConstants::mm;
     spData.z = sp.z() / Acts::UnitConstants::mm;
-    spData.t = sp.t().value_or(std::numeric_limits<double>::quiet_NaN()) /
-               Acts::UnitConstants::ns;
+    spData.t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
+                      : std::numeric_limits<double>::quiet_NaN();
     spData.var_r = sp.varianceR() / Acts::UnitConstants::mm;
     spData.var_z = sp.varianceZ() / Acts::UnitConstants::mm;
     writerSP.append(spData);
