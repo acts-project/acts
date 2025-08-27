@@ -48,15 +48,24 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::writeT(
 
   SpacepointData spData{};
   for (const auto& sp : spacepoints) {
-    const auto slink = sp.sourceLinks()[0].get<IndexSourceLink>();
-
-    spData.measurement_id = slink.index();
-    spData.geometry_id = slink.geometryId().value();
-    spData.x = sp.x();
-    spData.y = sp.y();
-    spData.z = sp.z();
-    spData.var_r = sp.varianceR();
-    spData.var_z = sp.varianceZ();
+    const auto slink1 = sp.sourceLinks()[0].get<IndexSourceLink>();
+    spData.measurement_id_1 = slink1.index();
+    spData.geometry_id_1 = slink1.geometryId().value();
+    if (sp.sourceLinks().size() == 2) {
+      const auto slink2 = sp.sourceLinks()[1].get<IndexSourceLink>();
+      spData.measurement_id_2 = slink2.index();
+      spData.geometry_id_2 = slink2.geometryId().value();
+    } else {
+      spData.measurement_id_2 = std::numeric_limits<std::uint64_t>::max();
+      spData.geometry_id_2 = 0;  // invalid geoid
+    }
+    spData.x = sp.x() / Acts::UnitConstants::mm;
+    spData.y = sp.y() / Acts::UnitConstants::mm;
+    spData.z = sp.z() / Acts::UnitConstants::mm;
+    spData.t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
+                      : std::numeric_limits<double>::quiet_NaN();
+    spData.var_r = sp.varianceR() / Acts::UnitConstants::mm;
+    spData.var_z = sp.varianceZ() / Acts::UnitConstants::mm;
     writerSP.append(spData);
   }
   return ActsExamples::ProcessCode::SUCCESS;

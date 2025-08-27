@@ -60,6 +60,7 @@ ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
   m_outputTree->Branch("y", &m_y);
   m_outputTree->Branch("z", &m_z);
   m_outputTree->Branch("r", &m_r);
+  m_outputTree->Branch("t", &m_t);
   m_outputTree->Branch("var_r", &m_var_r);
   m_outputTree->Branch("var_z", &m_var_z);
   if (m_inputMeasurementParticlesMap.isInitialized()) {
@@ -103,7 +104,7 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     m_geometryId1 = sl1.geometryId().value();
     if (sp.sourceLinks().size() == 2) {
       const auto& sl2 = sp.sourceLinks().at(1).get<IndexSourceLink>();
-      m_measurementId2 = sl1.index();
+      m_measurementId2 = sl2.index();
       m_geometryId2 = sl2.geometryId().value();
     }
     // A spacepoint is fake if the measurements have no common particle
@@ -128,6 +129,8 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     m_y = sp.y() / Acts::UnitConstants::mm;
     m_z = sp.z() / Acts::UnitConstants::mm;
     m_r = sp.r() / Acts::UnitConstants::mm;
+    m_t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
+                 : std::numeric_limits<double>::quiet_NaN();
     // write sp dimensions
     m_var_r = sp.varianceR() / Acts::UnitConstants::mm;
     m_var_z = sp.varianceZ() / Acts::UnitConstants::mm;

@@ -92,6 +92,7 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   float m_y = std::numeric_limits<float>::infinity();
   float m_z = std::numeric_limits<float>::infinity();
   float m_r = std::numeric_limits<float>::infinity();
+  float m_t = std::numeric_limits<float>::infinity();
   // Global space point position uncertainties
   float m_var_r = std::numeric_limits<float>::infinity();
   float m_var_z = std::numeric_limits<float>::infinity();

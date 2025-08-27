@@ -284,6 +284,9 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
+
+              dParameters.cluster.globalPosition = measurementGlobalPosition(
+                  dParameters, *surfacePtr, ctx.geoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
               for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
