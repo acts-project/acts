@@ -14,7 +14,7 @@
 
 namespace Acts::Ccl {
 using Label = std::size_t;
-constexpr Label NO_LABEL = 0;
+static constexpr Label NO_LABEL = 0;
 }  // namespace Acts::Ccl
 
 namespace Acts::Ccl {
@@ -28,24 +28,17 @@ class DisjointSets {
     m_parent.push_back(0);
     m_rank.push_back(0);
   }
-  ~DisjointSets() = default;
-
-  DisjointSets(const DisjointSets&) = default;
-  DisjointSets& operator=(const DisjointSets&) = default;
-
-  DisjointSets(DisjointSets&&) noexcept = default;
-  DisjointSets& operator=(DisjointSets&&) noexcept = default;
 
   inline Acts::Ccl::Label makeSet() {
-    // If we have reach the maximum extend the capacity if the vectors
-    // and avoid the zero-filling from a resize
+    // If we have reach the maximum extend the capacity, forcing a x2 factor
     if (m_parent.size() == m_parent.capacity()) {
       const std::size_t newCap = m_parent.capacity() * 2;
       m_parent.reserve(newCap);
       m_rank.reserve(newCap);
     }
 
-    const std::size_t id = m_nextId++;
+    const std::size_t id = m_nextId;
+    ++m_nextId;
     m_parent.push_back(id);
     m_rank.push_back(0);
     return id;
@@ -54,8 +47,9 @@ class DisjointSets {
   inline void unionSet(std::size_t x, std::size_t y) noexcept {
     std::size_t rootX = findRoot(x);
     std::size_t rootY = findRoot(y);
-    if (rootX == rootY)
+    if (rootX == rootY) {
       return;
+    }
 
     const std::size_t rankRootX = m_rank[rootX];
     const std::size_t rankRootY = m_rank[rootY];
@@ -85,23 +79,25 @@ class DisjointSets {
     assert(x < m_parent.size());
     while (true) {
       std::size_t parent = m_parent[x];
-      if (parent == x)
+      if (parent == x) {
         return x;
+      }
       // also check the grand-parent
       std::size_t grandparent = m_parent[parent];
       // halve path so that next search is faster
       m_parent[x] = grandparent;
       x = grandparent;
-      if (x == m_parent[x])
+      if (x == m_parent[x]) {
         return x;
+      }
     }
   }
 
  private:
   std::size_t m_defaultCapacity{128};
   std::size_t m_nextId{1};
-  std::vector<std::size_t> m_parent{};
-  std::vector<std::size_t> m_rank{};
+  std::vector<std::size_t> m_parent;
+  std::vector<std::size_t> m_rank;
 };
 
 }  // namespace Acts::Ccl
