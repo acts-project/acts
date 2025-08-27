@@ -75,7 +75,7 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   Vector3 unitDir = direction.normalized();
 
   // cast the starting position and direction to the correct axis
-  Vectro2 startPoint{
+  Vector2 startPoint{
       VectorHelpers::cast(startPosition, m_indexedGrid.casts[0]),
       VectorHelpers::cast(startPosition, m_indexedGrid.casts[1])};
   Vector2 startDir {
