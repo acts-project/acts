@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/ITripletSeedCuts.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -178,24 +177,24 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < cache().topSpIndexVec.size();
          variableCompTopIndex++) {
-      std::size_t compatibletopSpIndex =
+      std::size_t compatibleTopSpIndex =
           cache().topSpIndexVec[variableCompTopIndex];
-      if (compatibletopSpIndex == topSpIndex) {
+      if (compatibleTopSpIndex == topSpIndex) {
         continue;
       }
       auto otherSpT = spacePoints[tripletTopCandidates
-                                      .topSpacePoints()[compatibletopSpIndex]];
+                                      .topSpacePoints()[compatibleTopSpIndex]];
 
       float otherTopR = getTopR(otherSpT);
 
       // curvature difference within limits?
-      if (tripletTopCandidates.curvatures()[compatibletopSpIndex] <
+      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] <
           lowerLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         beginCompTopIndex = variableCompTopIndex + 1;
         continue;
       }
-      if (tripletTopCandidates.curvatures()[compatibletopSpIndex] >
+      if (tripletTopCandidates.curvatures()[compatibleTopSpIndex] >
           upperLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
         break;
