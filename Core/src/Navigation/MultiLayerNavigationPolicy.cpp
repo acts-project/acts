@@ -8,6 +8,8 @@
 
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
+#include "Acts/Utilities/GridAccessHelpers.hpp"
+
 namespace Acts::Experimental {
 
 MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
@@ -38,7 +40,7 @@ void MultiLayerNavigationPolicy::initializeCandidates(
                << m_volume.volumeName());
   const Transform3& itransform = m_volume.itransform();
   const Vector3 locPosition = itransform * args.position;
-  const Vector3 locDirection = itransform * args.direction;
+  const Vector3 locDirection = itransform.linear() * args.direction;
 
   std::vector<Vector2> path = generatePath(locPosition, locDirection);
 
@@ -47,13 +49,15 @@ void MultiLayerNavigationPolicy::initializeCandidates(
   surfCandidates.reserve(surfaces.size());
 
   for (const auto& pos : path) {
-    std::vector<std::size_t> indices = m_indexedGrid.grid.atPosition(pos);
-
+    // Local access
+    std::vector<std::size_t> fAccessor = {0u, 1u};
+    const auto& indices = m_indexedGrid.grid.atPosition(
+        GridAccessHelpers::accessLocal<GridType>(pos, fAccessor));
     std::ranges::transform(indices, std::back_inserter(surfCandidates),
                            [&](const auto& i) { return &surfaces[i]; });
   }
 
-  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
+  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported "
                << surfCandidates.size() << " candidates");
 
   // fill the navigation stream with the container
@@ -70,14 +74,21 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   auto maxYIndex = m_indexedGrid.grid.numLocalBins()[1];
   Vector3 unitDir = direction.normalized();
 
+  // cast the starting position and direction to the correct axis
+  Vectro2 startPoint{
+      VectorHelpers::cast(startPosition, m_indexedGrid.casts[0]),
+      VectorHelpers::cast(startPosition, m_indexedGrid.casts[1])};
+  Vector2 startDir {
+    VectorHelpers::cast(unitDir, m_indexedGrid.casts[0]),
+        VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])
+  }
+
   for (std::size_t i = 0; i < maxYIndex; i++) {
     auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
     auto v2 = m_indexedGrid.grid.upperRightBinEdge({maxXIndex, i + 1});
 
     auto intersection = Acts::detail::IntersectionHelper2D::intersectSegment(
-        Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]),
-        startPosition.template block<2, 1>(0, 0),
-        unitDir.template block<2, 1>(0, 0));
+        Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]), startPoint, startDir);
     if (!intersection.isValid()) {
       continue;
     }
