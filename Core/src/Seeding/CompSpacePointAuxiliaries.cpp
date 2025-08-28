@@ -87,7 +87,18 @@ void CompSpacePointAuxiliaries::updateChiSq(
     }
   }
 }
-
+void CompSpacePointAuxiliaries::symmetrizeHessian(
+    ChiSqWithDerivatives& chiSqObj) const {
+  for (const auto partial1 : m_cfg.parsToUse) {
+    for (const auto partial2 : m_cfg.parsToUse) {
+      if (partial2 >= partial1) {
+        break;
+      }
+      chiSqObj.hessian(toUnderlying(partial2), toUnderlying(partial1)) =
+          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+    }
+  }
+}
 const Vector& CompSpacePointAuxiliaries::residual() const {
   return m_residual;
 }
