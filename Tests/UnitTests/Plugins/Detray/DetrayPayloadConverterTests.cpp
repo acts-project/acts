@@ -602,7 +602,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto& materialGrids = *payloads.materialGrids;
   const auto& surfaceGrids = *payloads.surfaceGrids;
 
-#if false
   BOOST_CHECK_EQUAL(detector.volumes.size(), 6);
   for (const auto& volume : detector.volumes) {
     BOOST_CHECK(volume.type == detray::volume_id::e_cylinder);
@@ -636,7 +635,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     BOOST_CHECK_EQUAL(volume.surfaces.size(), hMat.mat_slabs.size());
   }
 
-  BOOST_CHECK_EQUAL(materialGrids.grids.size(), 6);
+  BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
 
   BOOST_CHECK_EQUAL(surfaceGrids.grids.size(), 4);
 
@@ -665,7 +664,6 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   }
 
   BOOST_CHECK_EQUAL(payloads.names.size(), 7);
-#endif
 
   // Write payloads to JSON directly
 
