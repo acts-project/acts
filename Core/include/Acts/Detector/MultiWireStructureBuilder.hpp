@@ -41,7 +41,7 @@ class MultiWireStructureBuilder {
     /// The bounds of the multi-wire volume
     std::vector<double> mlBounds = {};
 
-    // The binning of the multi wire structure
+    /// The binning configuration for the multi wire structure
     std::vector<std::tuple<DirectedProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
