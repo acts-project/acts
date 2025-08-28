@@ -25,6 +25,7 @@ namespace Acts {
 template <ChargeConcept charge_t>
 class GenericParticleHypothesis {
  public:
+  /// Type alias for charge type used in particle hypothesis
   using ChargeType = charge_t;
 
   /// Creates a particle hypothesis using absolute PDG, mass and the charge
@@ -54,8 +55,7 @@ class GenericParticleHypothesis {
   }
 
   /// Copy from another charge hypothesis.
-  ///
-  /// @note This enables implicit conversion.
+  /// @param other The other particle hypothesis to copy from
   template <typename other_charge_t>
   explicit constexpr GenericParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
@@ -64,12 +64,15 @@ class GenericParticleHypothesis {
         m_chargeType{other.chargeType()} {}
 
   /// Get the hypothesized absolute PDG.
+  /// @return The absolute PDG particle identifier
   constexpr PdgParticle absolutePdg() const noexcept { return m_absPdg; }
 
   /// Get the hypothesized mass.
+  /// @return The particle mass in natural units
   constexpr float mass() const noexcept { return m_mass; }
 
   /// Get the hypothesized absolute charge.
+  /// @return The absolute charge magnitude
   constexpr float absoluteCharge() const noexcept {
     return m_chargeType.absQ();
   }
@@ -78,6 +81,7 @@ class GenericParticleHypothesis {
   /// charge hypothesis.
   ///
   /// @param qOverP the `q over p` track parameter.
+  /// @return The extracted signed charge
   template <typename T>
   constexpr auto extractCharge(T qOverP) const noexcept {
     return m_chargeType.extractCharge(qOverP);
@@ -87,6 +91,7 @@ class GenericParticleHypothesis {
   /// the charge hypothesis.
   ///
   /// @param qOverP the `q over p` track parameter.
+  /// @return The extracted absolute momentum
   template <typename T>
   constexpr auto extractMomentum(T qOverP) const noexcept {
     return m_chargeType.extractMomentum(qOverP);
@@ -97,16 +102,21 @@ class GenericParticleHypothesis {
   ///
   /// @param momentum the absolute momentum.
   /// @param signedQ the signed charge.
+  /// @return The calculated charge over momentum ratio
   template <typename P, typename Q>
   constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
     return m_chargeType.qOverP(momentum, signedQ);
   }
 
   /// Get the hypothesized charge type.
+  /// @return Reference to the charge type object
   constexpr const ChargeType& chargeType() const noexcept {
     return m_chargeType;
   }
 
+  /// Output stream representation of the particle hypothesis
+  /// @param os Output stream to write to
+  /// @return Modified output stream for chaining\n
   std::ostream& toStream(std::ostream& os) const {
     os << "ParticleHypothesis{absPdg=";
     if (auto shortString = pdgToShortAbsString(absolutePdg())) {
@@ -118,6 +128,10 @@ class GenericParticleHypothesis {
     return os;
   }
 
+  /// Output stream operator for particle hypothesis
+  /// @param os Output stream to write to
+  /// @param particleHypothesis The particle hypothesis to output
+  /// @return Reference to output stream for chaining
   friend std::ostream& operator<<(
       std::ostream& os, const GenericParticleHypothesis& particleHypothesis) {
     return particleHypothesis.toStream(os);
