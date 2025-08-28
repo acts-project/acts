@@ -24,19 +24,31 @@ namespace Acts {
 template <typename grid_t>
 class BinnedGroup {
  public:
+  /// Friend iterator class for accessing private members
   friend BinnedGroupIterator<grid_t>;
 
+  /// Dimension of the underlying grid
   static constexpr std::size_t DIM = grid_t::DIM;
 
   /// @brief Default constructor
   BinnedGroup() = delete;
 
   /// brief Constructor
+  /// @param grid The grid to use for binning
+  /// @param bottomFinder The bottom bin finder
+  /// @param topFinder The top bin finder
+  /// @param navigation The navigation array for grid bins
   BinnedGroup(grid_t&& grid, const GridBinFinder<DIM>& bottomFinder,
               const GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
+  /// Constructor with grid, mask, and finders
+  /// @param grid Grid object (moved)
+  /// @param mask Vector of boolean masks
+  /// @param bottomFinder Bottom bin finder
+  /// @param topFinder Top bin finder
+  /// @param navigation Navigation array (optional)
   BinnedGroup(grid_t&& grid, std::vector<bool> mask,
               const GridBinFinder<DIM>& bottomFinder,
               const GridBinFinder<DIM>& topFinder,
