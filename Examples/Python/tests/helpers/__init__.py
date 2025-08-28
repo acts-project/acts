@@ -99,12 +99,6 @@ except ImportError:
 
 isCI = os.environ.get("CI") is not None
 
-if isCI:
-    for k, v in dict(locals()).items():
-        if k.endswith("Enabled"):
-            locals()[k] = True
-
-
 class AssertCollectionExistsAlg(IAlgorithm):
     events_seen = 0
     collections: List[str]
