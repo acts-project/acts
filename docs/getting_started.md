@@ -54,7 +54,7 @@ versions of all dependencies are provided e.g. by the [LCG
 releases](https://lcginfo.cern.ch/) starting from [LCG 102b](https://lcginfo.cern.ch/release/102b/).
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
-available and are discussed in the [Building Acts](#building-acts) section.
+available and are discussed in the [Building ACTS](#building-acts) section.
 
 [Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
@@ -376,7 +376,7 @@ To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and
 You can now use the ODD in the python binding by using:
 
 ```python
-oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
+oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_ACTS/thirdparty/OpenDataDetector/data/odd-material-maps.root")
 detector = getOpenDataDetector(oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
