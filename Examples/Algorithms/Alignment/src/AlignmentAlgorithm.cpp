@@ -72,10 +72,10 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
-    trackSourceLinks.reserve(protoTrack.size());
+    trackSourceLinks.reserve(protoTrack.hitIndices.size());
 
     // Fill the source links via their indices from the container
-    for (auto measIndex : protoTrack) {
+    for (auto measIndex : protoTrack.hitIndices) {
       const ConstVariableBoundMeasurementProxy measurement =
           measurements.getMeasurement(measIndex);
       IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
