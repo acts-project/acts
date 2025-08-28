@@ -110,9 +110,11 @@ class DiscSurface : public RegularSurface {
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
+  /// @return Reference to this DiscSurface after assignment
   DiscSurface& operator=(const DiscSurface& other);
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   // User overloads from `RegularSurface`
@@ -162,6 +164,7 @@ class DiscSurface : public RegularSurface {
                                 AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
+  /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
 
   /// Local to global transformation
@@ -301,6 +304,7 @@ class DiscSurface : public RegularSurface {
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Return a Polyhedron for the surfaces
