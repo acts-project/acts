@@ -133,6 +133,22 @@ class MultiLayerNavigation : public IInternalNavigation {
 /// A path generator that generates a straight path along a direction
 /// in the grid
 struct PathGridSurfacesGenerator {
+  /// Generates a straight-line path for grid surface navigation.
+  ///
+  /// This operator creates a sequence of 3D positions along a straight line
+  /// starting from the given position and extending in the specified direction.
+  /// The path is discretized into a series of steps of equal size, which can
+  /// be used for systematic navigation through grid-based detector surfaces.
+  ///
+  /// @param startPosition The initial 3D position to start the path from
+  /// @param direction The unit direction vector along which to generate the path
+  /// @param stepSize The distance between consecutive path points
+  /// @param numberOfSteps The total number of steps to generate in the path
+  ///
+  /// @return Vector of 3D positions representing the generated path
+  ///
+  /// @note The direction vector should typically be normalized for consistent step sizes
+  /// @note The returned path will contain exactly @p numberOfSteps positions
   std::vector<Vector3> operator()(Vector3 startPosition,
                                   const Vector3& direction, double stepSize,
                                   std::size_t numberOfSteps) const {
