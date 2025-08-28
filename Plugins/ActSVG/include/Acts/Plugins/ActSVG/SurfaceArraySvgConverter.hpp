@@ -22,9 +22,7 @@ namespace Acts {
 
 class SurfaceArray;
 
-namespace Svg {
-
-namespace SurfaceArrayConverter {
+namespace Svg::SurfaceArrayConverter {
 
 /// Nested options struct
 struct Options {
@@ -50,8 +48,6 @@ ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
                                 const SurfaceArray& surfaceArray,
                                 const Options& cOptions = Options());
 
-}  // namespace SurfaceArrayConverter
-
-}  // namespace Svg
+}  // namespace Svg::SurfaceArrayConverter
 
 }  // namespace Acts
