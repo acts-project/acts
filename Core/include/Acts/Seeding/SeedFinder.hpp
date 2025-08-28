@@ -38,8 +38,10 @@ concept CollectionStoresSeedsTo =
       detail::pushBackOrInsertAtEnd(coll, seed);
     };
 
+/// Types of space point candidates for seeding
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
+/// Level of detector measurement information for seeding
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
 template <typename external_spacepoint_t, typename grid_t,
