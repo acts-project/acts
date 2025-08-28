@@ -72,8 +72,8 @@ struct NavigationState {
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
 
-  // starting index of the surface candidate - to catch correctly the first
-  // surface
+  /// Starting index of the surface candidate to correctly identify the first
+  /// surface
   int surfaceCandidateIndex = -1;
 
   /// Boundary directives for surfaces
@@ -85,6 +85,8 @@ struct NavigationState {
   /// Auxiliary attached information
   std::any auxiliary;
 
+  /// Get the current surface candidate being processed
+  /// @return Reference to the current surface candidate
   const SurfaceCandidate& surfaceCandidate() const {
     return surfaceCandidates.at(surfaceCandidateIndex);
   }

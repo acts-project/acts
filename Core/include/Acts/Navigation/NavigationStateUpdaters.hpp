@@ -121,6 +121,7 @@ class SingleObjectNavigation : public navigation_type {
   }
 
   /// Const Access to the object
+  /// @return Pointer to the object or nullptr if not set
   const object_type* object() const { return m_object; }
 
  private:
