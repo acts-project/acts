@@ -695,13 +695,13 @@ class TrackProxy {
   /// - All dynamic track columns
   ///
   /// **What does NOT get copied:**
-  /// - Track states (existing track states remain unchanged)
-  /// - tipIndex() and stemIndex() (track state linking is preserved)
+  /// - Track states (existing track states remain unchanged in the container)
   ///
   /// **Result:**
-  /// - The destination track keeps its existing track state sequence
   /// - All track-level properties are updated to match the source
-  /// - Track state tip and stem indices will be set to kInvalid
+  /// - tipIndex() and stemIndex() are set to kInvalid (track states become inaccessible)
+  /// - Existing track states remain in the container but are no longer linked to this track
+  /// - nTrackStates() will return 0 due to invalid indices
   ///
   /// @note Only available if the track proxy is not read-only
   /// @note Both track containers must have compatible dynamic columns
