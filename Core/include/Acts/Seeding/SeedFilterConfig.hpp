@@ -49,6 +49,7 @@ struct SeedFilterConfig {
   /// want to increase the weight of the seed by seedWeightIncrement when the
   /// number of compatible seeds is higher than a certain value
   float seedWeightIncrement = 0;
+  /// Number of seeds allowed before increment
   float numSeedIncrement = std::numeric_limits<float>::infinity();
 
   /// Seeding parameters used for quality seed confirmation
@@ -83,7 +84,12 @@ struct SeedFilterConfig {
   /// compatible SPs
   bool useDeltaRorTopRadius = false;
 
+  /// Flag indicating whether configuration values are in internal units
   bool isInInternalUnits = true;
+
+  /// Convert configuration to internal units.
+  /// @deprecated SeedFilterConfig already uses internal units
+  /// @return Copy of this configuration (already in internal units)
   //[[deprecated("SeedFilterConfig uses internal units")]]
   SeedFilterConfig toInternalUnits() const { return *this; }
 };
