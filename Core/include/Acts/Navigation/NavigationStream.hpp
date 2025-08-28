@@ -56,12 +56,15 @@ class NavigationStream {
     SurfaceIntersection intersection = SurfaceIntersection::invalid();
     /// The portal
     const Acts::Experimental::Portal* gen2Portal = nullptr;
+    /// Portal interface for navigation
     const Portal* portal = nullptr;
     /// The boundary tolerance
     BoundaryTolerance bTolerance = BoundaryTolerance::None();
     /// Convenience access to surface
+    /// @return Reference to the surface from the intersection
     const Surface& surface() const { return intersection.surface(); }
-    /// Cinvencience access to the path length
+    /// Convenience access to the path length
+    /// @return Path length from the intersection
     double pathLength() const { return intersection.pathLength(); }
 
     /// Order along the path length
@@ -89,26 +92,32 @@ class NavigationStream {
   }
 
   /// Const access the current candidate
+  /// @return Const reference to current candidate
   const Candidate& currentCandidate() const {
     return m_candidates.at(m_currentIndex);
   }
 
   /// Current Index
+  /// @return Index of the current candidate in the vector
   std::size_t currentIndex() const { return m_currentIndex; }
 
-  /// Non-cost access the candidate vector
+  /// Non-const access the candidate vector
+  /// @return Mutable reference to vector of navigation candidates
   std::vector<Candidate>& candidates() { return m_candidates; }
 
   /// Const access the candidate vector
+  /// @return Const reference to vector of navigation candidates
   const std::vector<Candidate>& candidates() const { return m_candidates; }
 
-  /// Non-cost access the current candidate
+  /// Non-const access the current candidate
   ///
   /// This will throw and out of bounds exception if the stream is not
   /// valid anymore.
+  /// @return Mutable reference to current candidate
   Candidate& currentCandidate() { return m_candidates.at(m_currentIndex); }
 
   /// The number of active candidates
+  /// @return Number of remaining candidates from current position onwards
   std::size_t remainingCandidates() const {
     return (m_candidates.size() - m_currentIndex);
   }
@@ -129,6 +138,7 @@ class NavigationStream {
 
   /// Fill one portal into the candidate vector
   ///
+  /// @param portal Portal to add as candidate
   void addPortalCandidate(const Experimental::Portal& portal);
   /// @param portal the portals that are filled in
 
@@ -170,6 +180,10 @@ class NavigationStream {
               const NavigationStream::QueryPoint& queryPoint,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
+  /// Reset the navigation stream by clearing all candidates and resetting the
+  /// index.
+  ///
+  /// This clears the candidates vector and resets the current index to 0.
   void reset();
 
  private:
