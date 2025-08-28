@@ -186,12 +186,23 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    apply([&visitor, restrictToSensitives](const Surface& surface) {
-      if (restrictToSensitives && surface.geometryId().sensitive() == 0) {
+    auto sensitive = [&visitor](const Surface& surface) {
+      if (surface.geometryId().sensitive() == 0) {
         return;
       }
       visitor(&surface);
-    });
+    };
+
+    if (restrictToSensitives) {
+      apply(sensitive);
+    } else {
+      apply(overloaded{
+          sensitive,
+          [&visitor](const Portal& portal) { visitor(&portal.surface()); },
+          [&visitor](const BoundarySurface& bs) {
+            visitor(&bs.surfaceRepresentation());
+          }});
+    }
   }
 
   /// @brief Visit all sensitive surfaces
@@ -497,6 +508,14 @@ class TrackingVolume : public Volume {
                  const ViewConfig& viewConfig,
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
+
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  const INavigationPolicy* navigationPolicy() const;
+
+  /// Access the navigation policy if any that is registered on this volume
+  /// @return a pointer to the navigation policy, or nullptr if none is set
+  INavigationPolicy* navigationPolicy();
 
   /// Register a navigation policy with this volume. The argument can not be
   /// nullptr.

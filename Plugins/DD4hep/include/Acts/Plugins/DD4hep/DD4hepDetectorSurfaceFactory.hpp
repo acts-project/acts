@@ -8,15 +8,10 @@
 
 #pragma once
 
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 

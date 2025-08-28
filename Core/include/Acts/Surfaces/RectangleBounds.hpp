@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -64,21 +63,20 @@ class RectangleBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final { return SurfaceBounds::eRectangle; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eRectangle; }
 
-  std::vector<double> values() const final {
-    return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
-  }
+  /// @copydoc SurfaceBounds::values
+  std::vector<double> values() const final;
 
-  /// Inside check for the bounds object driven by the boundary check directive
-  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
-  /// the bounds  Inside can be called without/with tolerances.
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///
@@ -91,6 +89,10 @@ class RectangleBounds : public PlanarBounds {
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
+
+  /// @copydoc SurfaceBounds::center
+  /// @note For RectangleBounds: returns the geometric center (min + max) / 2
+  Vector2 center() const final;
 
   /// Output Method for std::ostream
   ///

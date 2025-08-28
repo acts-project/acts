@@ -37,10 +37,11 @@ constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
 
-constexpr auto bz = 2_T;
-
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
+
+constexpr auto bz = 2_T;
+
 const auto magFieldZero =
     std::make_shared<MagneticField>(Acts::Vector3::Zero());
 const auto magFieldNonZero =

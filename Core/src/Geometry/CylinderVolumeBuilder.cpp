@@ -23,40 +23,37 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <math.h>
 
-Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
-    const Acts::CylinderVolumeBuilder::Config& cvbConfig,
+namespace Acts {
+
+CylinderVolumeBuilder::CylinderVolumeBuilder(
+    const CylinderVolumeBuilder::Config& cvbConfig,
     std::unique_ptr<const Logger> logger)
-    : Acts::ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger)) {
+    : ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger)) {
   setConfiguration(cvbConfig);
 }
 
-Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder() = default;
+CylinderVolumeBuilder::~CylinderVolumeBuilder() = default;
 
-void Acts::CylinderVolumeBuilder::setConfiguration(
-    const Acts::CylinderVolumeBuilder::Config& cvbConfig) {
+void CylinderVolumeBuilder::setConfiguration(
+    const CylinderVolumeBuilder::Config& cvbConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = cvbConfig;
 }
 
-void Acts::CylinderVolumeBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void CylinderVolumeBuilder::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-std::shared_ptr<Acts::TrackingVolume>
-Acts::CylinderVolumeBuilder::trackingVolume(
+std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
     std::shared_ptr<const VolumeBounds> externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
@@ -422,14 +419,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // Set the inner or outer material
       if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
-                                       Acts::tubeInnerCover);
+                                       tubeInnerCover);
       }
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
-                                     Acts::tubeOuterCover);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2],
-                                     Acts::negativeFaceXY);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
-                                     Acts::positiveFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1], tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2], negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3], positiveFaceXY);
     }
     if (barrel) {
       // Assign boundary material if existing
@@ -438,14 +432,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // Set the inner or outer material
       if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
-                                       Acts::tubeInnerCover);
+                                       tubeInnerCover);
       }
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
-                                     Acts::tubeOuterCover);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
-                                     Acts::negativeFaceXY);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
-                                     Acts::positiveFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1], tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3], negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4], positiveFaceXY);
     }
     if (pEndcap) {
       volumesContainer.push_back(pEndcap);
@@ -453,14 +444,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       // Set the inner or outer material
       if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
-                                       Acts::tubeInnerCover);
+                                       tubeInnerCover);
       }
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
-                                     Acts::tubeOuterCover);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
-                                     Acts::negativeFaceXY);
-      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5],
-                                     Acts::positiveFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1], tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4], negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5], positiveFaceXY);
     }
     // and low lets create the new volume
     volume =
@@ -552,7 +540,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 }
 
 // -----------------------------
-Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
+VolumeConfig CylinderVolumeBuilder::analyzeContent(
     const GeometryContext& gctx, const LayerVector& lVector,
     const MutableTrackingVolumeVector& mtvVector) const {
   // @TODO add envelope tolerance
@@ -569,6 +557,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
       double thickness = layer->thickness();
       // get the center of the layer
       const Vector3& center = layer->surfaceRepresentation().center(gctx);
+      double rCenter = std::hypot(center.x(), center.y());
       // check if it is a cylinder layer
       const CylinderLayer* cLayer =
           dynamic_cast<const CylinderLayer*>(layer.get());
@@ -585,8 +574,8 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
             CylinderBounds::eHalfLengthZ);
         lConfig.rMin =
             std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
-        lConfig.rMax =
-            std::max(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
+        lConfig.rMax = std::max(lConfig.rMax,
+                                rCenter + rMaxC + m_cfg.layerEnvelopeR.second);
         lConfig.zMin =
             std::min(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
         lConfig.zMax =
@@ -603,8 +592,8 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         double zMaxD = center.z() + 0.5 * thickness;
         lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
-        lConfig.rMax =
-            std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
+        lConfig.rMax = std::max(lConfig.rMax,
+                                rCenter + rMaxD + m_cfg.layerEnvelopeR.second);
         lConfig.rMin = std::max(0.0, lConfig.rMin);
         lConfig.zMin = std::min(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         lConfig.zMax = std::max(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
@@ -639,3 +628,5 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
   // and return what you have
   return lConfig;
 }
+
+}  // namespace Acts

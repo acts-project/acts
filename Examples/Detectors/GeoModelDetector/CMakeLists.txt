@@ -1,8 +1,9 @@
-add_library(
-    ActsExamplesDetectorGeoModel
+acts_add_library(
+    ExamplesDetectorGeoModel
     SHARED
     src/GeoModelDetector.cpp
     src/AlignedGeoModelDetectorElement.cpp
+    src/GeoModelMuonMockupBuilder.cpp
 )
 
 target_include_directories(
@@ -13,10 +14,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDetectorGeoModel
     PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsPluginGeoModel
-        ActsExamplesDetectorsCommon
+        Acts::ExamplesFramework
+        Acts::PluginGeoModel
+        Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
@@ -24,7 +24,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
 
     target_link_libraries(
         ActsExamplesDetectorGeoModel
-        PUBLIC ActsExamplesGeant4 ${GeoModel2G4_LIBRARY}
+        PUBLIC Acts::ExamplesGeant4 ${GeoModel2G4_LIBRARY}
     )
 
     target_sources(
@@ -39,8 +39,3 @@ else()
         PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()
-
-install(
-    TARGETS ActsExamplesDetectorGeoModel
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

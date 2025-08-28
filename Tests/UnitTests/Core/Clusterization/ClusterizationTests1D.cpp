@@ -32,10 +32,6 @@ bool cellComp(const Cell1D& left, const Cell1D& right) {
   return left.col < right.col;
 }
 
-Ccl::Label& getCellLabel(Cell1D& cell) {
-  return cell.label;
-}
-
 int getCellColumn(const Cell1D& cell) {
   return cell.col;
 }
@@ -111,7 +107,9 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
-    ClusterC newCls = Ccl::createClusters<CellC, ClusterC, 1>(cells);
+    Acts::Ccl::ClusteringData data;
+    ClusterC newCls;
+    Ccl::createClusters<CellC, ClusterC, 1>(data, cells, newCls);
 
     for (Cluster& cl : newCls) {
       hash(cl);

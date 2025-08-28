@@ -92,10 +92,6 @@ int getCellColumn(const Cell2D& cell) {
   return cell.col;
 }
 
-Ccl::Label& getCellLabel(Cell2D& cell) {
-  return cell.label;
-}
-
 bool operator==(const Cell2D& left, const Cell2D& right) {
   return left.row == right.row && left.col == right.col;
 }
@@ -231,7 +227,9 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
-    ClusterC newCls = Ccl::createClusters<CellC, ClusterC>(cells);
+    Acts::Ccl::ClusteringData data;
+    ClusterC newCls;
+    Ccl::createClusters<CellC, ClusterC>(data, cells, newCls);
 
     for (Cluster& cl : newCls) {
       hash(cl);

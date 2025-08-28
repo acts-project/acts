@@ -1,4 +1,4 @@
-add_library(ActsExamplesTraccc INTERFACE)
+acts_add_library(ExamplesTraccc INTERFACE)
 
 target_include_directories(
     ActsExamplesTraccc
@@ -8,12 +8,9 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesTraccc
     INTERFACE
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesPropagation
-        ActsPluginDetray
+        Acts::ExamplesFramework
+        Acts::ExamplesPropagation
+        Acts::PluginDetray
 )
 
-acts_compile_headers(ActsExamplesTraccc GLOB "include/**/*.hpp")
-
-install(TARGETS ActsExamplesTraccc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+acts_compile_headers(ExamplesTraccc GLOB "include/**/*.hpp")
