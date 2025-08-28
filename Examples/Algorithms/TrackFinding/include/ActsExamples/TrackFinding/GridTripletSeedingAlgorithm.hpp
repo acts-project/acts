@@ -248,6 +248,10 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  float getDeltaZbottom(float, float) const;
+  float getDeltaZtop(float, float) const;
+  
+ private:
   Config m_cfg;
   Acts::Experimental::CylindricalSpacePointGrid2::Config m_gridConfig;
 

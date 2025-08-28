@@ -131,8 +131,14 @@ class Impl final : public DoubletSeedFinder {
       float deltaZ = 0;
       if constexpr (isBottomCandidate) {
         deltaZ = zM - zO;
+        if (outsideRangeCheck( std::abs(deltaZ), 0, middleSpInfo.maxDeltaZbottom)) {
+          continue;
+        }
       } else {
         deltaZ = zO - zM;
+        if (outsideRangeCheck( std::abs(deltaZ), 0, middleSpInfo.maxDeltaZtop)) {
+          continue;
+        }
       }
 
       if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
@@ -353,7 +359,7 @@ MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
   const float sinPhiM = -spM.xy()[1] * uIP;
   const float uIP2 = uIP * uIP;
 
-  return {uIP, uIP2, cosPhiM, sinPhiM};
+  return {uIP, uIP2, cosPhiM, sinPhiM, std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
 }
 
 }  // namespace Acts::Experimental
