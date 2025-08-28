@@ -40,6 +40,9 @@ class GeometryContext : public ContextType {
 /// ```
 template <typename T>
 struct GeometryContextOstreamWrapper {
+  /// Constructor wrapping an object with geometry context for output streaming
+  /// @param object The object to wrap for streaming
+  /// @param gctx The geometry context to associate with the object
   GeometryContextOstreamWrapper(const T& object, const GeometryContext& gctx)
       : m_object(object), m_gctx(gctx) {}
 

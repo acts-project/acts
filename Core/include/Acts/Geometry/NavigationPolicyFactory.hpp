@@ -64,6 +64,7 @@ class NavigationPolicyFactory {
 
   /// Create a new navigation policy factory
   /// @deprecated Use the default constructor instead
+  /// @return A new NavigationPolicyFactory instance
   [[deprecated("Use the default constructor")]]
   static auto make() {
     return NavigationPolicyFactory{};
