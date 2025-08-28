@@ -63,7 +63,9 @@ class GeometryHierarchyMap {
  public:
   /// Combined geometry identifier and value element. Only used for input.
   using InputElement = typename std::pair<GeometryIdentifier, value_t>;
+  /// Type alias for const iterator over stored values
   using Iterator = typename std::vector<value_t>::const_iterator;
+  /// Type alias for stored value type
   using Value = value_t;
 
   /// Construct the container from the given elements.
@@ -78,34 +80,48 @@ class GeometryHierarchyMap {
 
   // defaulted constructors and assignment operators
   GeometryHierarchyMap() = default;
+  /// Copy constructor
   GeometryHierarchyMap(const GeometryHierarchyMap&) = default;
+  /// Move constructor
   GeometryHierarchyMap(GeometryHierarchyMap&&) noexcept = default;
   ~GeometryHierarchyMap() = default;
+  /// Copy assignment operator
+  /// @return Reference to this object for chaining
   GeometryHierarchyMap& operator=(const GeometryHierarchyMap&) = default;
+  /// Move assignment operator
+  /// @return Reference to this object for chaining
   GeometryHierarchyMap& operator=(GeometryHierarchyMap&&) noexcept = default;
 
   /// Return an iterator pointing to the beginning of the stored values.
+  /// @return Iterator to the first element
   Iterator begin() const { return m_values.begin(); }
 
   /// Return an iterator pointing to the end of the stored values.
+  /// @return Iterator past the last element
   Iterator end() const { return m_values.end(); }
 
   /// Check if any elements are stored.
+  /// @return True if the container is empty, false otherwise
   bool empty() const { return m_values.empty(); }
 
   /// Return the number of stored elements.
+  /// @return Number of elements in the container
   std::size_t size() const { return m_values.size(); }
 
   /// Access the geometry identifier for the i-th element with bounds check.
+  /// @param index The index of the element to access
   ///
   /// @throws std::out_of_range for invalid indices
+  /// @return The geometry identifier at the specified index
   GeometryIdentifier idAt(std::size_t index) const {
     return GeometryIdentifier(m_ids.at(index));
   }
 
   /// Access the value of the i-th element in the container with bounds check.
+  /// @param index The index of the element to access
   ///
   /// @throws std::out_of_range for invalid indices
+  /// @return Reference to the value at the specified index
   const Value& valueAt(std::size_t index) const { return m_values.at(index); }
 
   /// Find the most specific value for a given geometry identifier.

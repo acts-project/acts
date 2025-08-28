@@ -32,6 +32,7 @@ class ISurfaceMaterial;
 class ILayerBuilder;
 class IConfinedTrackingVolumeBuilder;
 
+/// Volume wrapping conditions for cylinder volume building
 /// @enum WrappingCondition
 enum WrappingCondition {
   Undefined = 0,         ///< inconsistency detected
@@ -159,6 +160,7 @@ struct VolumeConfig {
   /// Check if contained full set
   ///
   /// @param [in] vConfig is the config against which is checked
+  /// @return True if the given config is fully contained by this one
   bool contains(const VolumeConfig& vConfig) const {
     return (containsInR(vConfig) && containsInZ(vConfig));
   }
@@ -166,6 +168,7 @@ struct VolumeConfig {
   /// Check if contained radially
   ///
   /// @param [in] vConfig is the config against which is checked
+  /// @return True if the given config is contained radially
   bool containsInR(const VolumeConfig& vConfig) const {
     return (rMin >= vConfig.rMax);
   }
@@ -173,11 +176,13 @@ struct VolumeConfig {
   /// Check if contained longitudinally
   ///
   /// @param [in] vConfig is the config against which is checked
+  /// @return True if the given config is contained longitudinally
   bool containsInZ(const VolumeConfig& vConfig) const {
     return (vConfig.zMin > zMin && vConfig.zMax < zMax);
   }
 
   /// Method for output formatting
+  /// @return String representation of this volume config
   std::string toString() const {
     /// for screen output
     std::stringstream sl;
@@ -191,7 +196,9 @@ struct WrappingConfig {
  public:
   /// the new volumes
   VolumeConfig nVolumeConfig;
+  /// Configuration for the central volume in wrapping setup
   VolumeConfig cVolumeConfig;
+  /// Configuration for the positive volume in wrapping setup
   VolumeConfig pVolumeConfig;
 
   /// the combined volume
@@ -199,15 +206,18 @@ struct WrappingConfig {
 
   /// existing volume config with potential gaps
   VolumeConfig existingVolumeConfig;
+  /// Configuration for the first gap volume in wrapping
   VolumeConfig fGapVolumeConfig;
+  /// Configuration for the second gap volume in wrapping
   VolumeConfig sGapVolumeConfig;
 
   /// externally provided config, this can only change the
   /// the ncp volumes
   VolumeConfig externalVolumeConfig;
 
-  // WrappingCondition
+  /// Wrapping condition determining how volumes are combined
   WrappingCondition wCondition = Undefined;
+  /// String representation of wrapping condition for debug output
   std::string wConditionScreen = "[left untouched]";
 
   /// constructor
@@ -411,6 +421,7 @@ struct WrappingConfig {
   }
 
   /// Method for output formatting
+  /// @return String representation of this wrapping config
   std::string toString() const {
     // for screen output
     std::stringstream sl;

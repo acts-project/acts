@@ -56,6 +56,7 @@ class ApproachDescriptor {
   virtual const std::vector<const Surface*>& containedSurfaces() const = 0;
 
   /// Non-const version
+  /// @return Mutable reference to all contained surfaces of this approach descriptor
   virtual std::vector<const Surface*>& containedSurfaces() = 0;
 };
 

@@ -61,7 +61,8 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @return This method returns a surface reference
   const DiscSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the disc surface
   DiscSurface& surfaceRepresentation() override;
 
  private:
@@ -85,6 +86,8 @@ class DiscLayer : virtual public DiscSurface, public Layer {
             LayerType laytyp = Acts::active);
 
   /// Copy constructor with shift
+  /// @param cla The disc layer to copy from
+  /// @param tr The transformation to apply
   DiscLayer(const DiscLayer& cla, const Transform3& tr);
 };
 

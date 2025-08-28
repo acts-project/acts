@@ -116,12 +116,14 @@ class BoundarySurfaceT {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pars The parameters used for this call
+  /// @return True if the parameters are on the boundary surface
   template <class parameters_t>
   bool onBoundary(const GeometryContext& gctx, const parameters_t& pars) const {
     return surfaceRepresentation().isOnSurface(gctx, pars);
   }
 
   /// The Surface Representation of this
+  /// @return Reference to the surface representation of this boundary
   virtual const RegularSurface& surfaceRepresentation() const;
 
   /// Helper method: attach a Volume to this BoundarySurfaceT

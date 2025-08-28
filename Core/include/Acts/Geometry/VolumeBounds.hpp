@@ -151,6 +151,7 @@ class VolumeBounds {
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream to be dumped into
+  /// @return Modified ostream for chaining
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 };
 
@@ -165,8 +166,15 @@ inline double VolumeBounds::referenceBorder(AxisDirection /*aDir*/) const {
 }
 
 /// Overload of << operator for std::ostream for debug output
+/// @param sl Output stream
+/// @param vb VolumeBounds to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb);
 
+/// Equality comparison for VolumeBounds
+/// @param lhs Left-hand side VolumeBounds
+/// @param rhs Right-hand side VolumeBounds
+/// @return True if bounds are equal
 inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   if (&lhs == &rhs) {
     return true;
@@ -174,6 +182,10 @@ inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
 }
 
+/// Stream operator for VolumeBounds::BoundsType
+/// @param sl Output stream
+/// @param bt BoundsType to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const VolumeBounds::BoundsType& bt);
 
 }  // namespace Acts
