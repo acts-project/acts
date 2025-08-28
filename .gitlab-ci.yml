@@ -557,7 +557,10 @@ lcg_106a:
     matrix:
       - OS: [alma9]
         COMPILER:
+          - gcc14
+          - gcc15
           - clang16
+          - clang19
 
 lcg_107:
   extends: .lcg_base_job
@@ -570,6 +573,10 @@ lcg_107:
       - OS: [alma9]
         COMPILER:
           - gcc13
+          - gcc14
+          - gcc15
+          - clang16
+          - clang19
 
 lcg_107a:
   extends: .lcg_base_job
@@ -582,6 +589,9 @@ lcg_107a:
       - OS: [alma9]
         COMPILER:
           - gcc14
+          - gcc15
+          - clang16
+          - clang19
 
 lcg_108:
   extends: .lcg_base_job
@@ -593,5 +603,9 @@ lcg_108:
     matrix:
       - OS: [alma9]
         COMPILER:
+          - gcc14
           - gcc15
+          - clang16
           - clang19
+
+
