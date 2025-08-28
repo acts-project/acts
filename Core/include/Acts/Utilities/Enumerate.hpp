@@ -19,7 +19,8 @@ namespace Acts {
 /// for (auto [ i, value ] = enumerate(container) ) { ... };
 ///
 /// with 'container' any stl-like container
-///
+/// @param iterable Container to enumerate
+/// @return Enumerable wrapper with index and value pairs
 template <typename container_type,
           typename container_type_iter =
               decltype(std::begin(std::declval<container_type>())),
