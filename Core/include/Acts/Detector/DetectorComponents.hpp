@@ -83,7 +83,7 @@ struct InternalStructure {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces
   InternalNavigationDelegate surfacesUpdater;
-  // Navigation delegate for volumes
+  /// Navigation delegate for volumes
   ExternalNavigationDelegate volumeUpdater;
 };
 
