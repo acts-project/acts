@@ -51,6 +51,10 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
 template <typename propagator_t, typename bethe_heitler_approx_t,
           typename traj_t>
 struct GaussianSumFitter {
+  /// Constructor with propagator, Bethe-Heitler approximation, and logger
+  /// @param propagator Propagator for track propagation
+  /// @param bha Bethe-Heitler approximation for energy loss modeling
+  /// @param _logger Logger for diagnostic output
   GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha,
                     std::unique_ptr<const Logger> _logger =
                         getDefaultLogger("GSF", Logging::INFO))
@@ -67,8 +71,11 @@ struct GaussianSumFitter {
 
   /// The logger
   std::unique_ptr<const Logger> m_logger;
+  /// Logger instance for actor debugging
   std::unique_ptr<const Logger> m_actorLogger;
 
+  /// Get the logger instance
+  /// @return Reference to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// The navigator type
@@ -78,6 +85,13 @@ struct GaussianSumFitter {
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
   /// @brief The fit function for the Direct navigator
+  /// @param begin Iterator to the start of source links
+  /// @param end Iterator to the end of source links
+  /// @param sParameters Starting track parameters for the fit
+  /// @param options Options for the GSF fit
+  /// @param sSequence Sequence of surfaces to navigate through
+  /// @param trackContainer Container to store the fitted track
+  /// @return Result containing fitted track proxy or error
   template <typename source_link_it_t, typename start_parameters_t,
             TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
@@ -126,6 +140,12 @@ struct GaussianSumFitter {
   }
 
   /// @brief The fit function for the standard navigator
+  /// @param begin Iterator to the start of source links
+  /// @param end Iterator to the end of source links
+  /// @param sParameters Starting track parameters for the fit
+  /// @param options Options for the GSF fit
+  /// @param trackContainer Container to store the fitted track
+  /// @return Result containing fitted track proxy or error
   template <typename source_link_it_t, typename start_parameters_t,
             TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
@@ -188,6 +208,14 @@ struct GaussianSumFitter {
   /// The generic implementation of the fit function.
   /// TODO check what this function does with the referenceSurface is e.g. the
   /// first measurementSurface
+  /// @param begin Iterator to the start of source links
+  /// @param end Iterator to the end of source links
+  /// @param sParameters Starting track parameters for the fit
+  /// @param options Options for the GSF fit
+  /// @param fwdPropInitializer Initializer for forward propagation
+  /// @param bwdPropInitializer Initializer for backward propagation
+  /// @param trackContainer Container to store the fitted track
+  /// @return Result containing fitted track proxy with forward and backward propagation results
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
             TrackContainerFrontend track_container_t>
