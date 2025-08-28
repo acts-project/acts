@@ -77,32 +77,32 @@ struct Style {
 };
 
 /// Default style for sensitive objects
-inline static auto defaultSensitiveStyle = Style{{66, 166, 245},
-                                                 0.85,
-                                                 {245, 166, 66},
-                                                 {"mouseover", "mouseout"},
-                                                 0.25,
-                                                 {0, 0, 0},
-                                                 2.,
-                                                 {0, 0, 0},
-                                                 {},
-                                                 14u,
-                                                 {0},
-                                                 72u};
+inline static const Style defaultSensitiveStyle{{66, 166, 245},
+                                                0.85,
+                                                {245, 166, 66},
+                                                {"mouseover", "mouseout"},
+                                                0.25,
+                                                {0, 0, 0},
+                                                2.,
+                                                {0, 0, 0},
+                                                {},
+                                                14u,
+                                                {0},
+                                                72u};
 
 /// Default style for grid objects
-inline static auto defaultGridStyle = Style{{0, 0, 0},
-                                            0.0,
-                                            {100, 100, 100},
-                                            {"mouseover", "mouseout"},
-                                            0.25,
-                                            {0, 0, 0},
-                                            3.,
-                                            {0, 0, 0},
-                                            {},
-                                            14u,
-                                            {0},
-                                            72u};
+inline static const Style defaultGridStyle{{0, 0, 0},
+                                           0.0,
+                                           {100, 100, 100},
+                                           {"mouseover", "mouseout"},
+                                           0.25,
+                                           {0, 0, 0},
+                                           3.,
+                                           {0, 0, 0},
+                                           {},
+                                           14u,
+                                           {0},
+                                           72u};
 
 /// Create a group
 ///

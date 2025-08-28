@@ -30,7 +30,8 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
   auto binning = surfaceArray.binningValues();
   auto axes = surfaceArray.getAxes();
 
-  enum ViewType { cylinder, polar, planar, none };
+  enum class ViewType { cylinder, polar, planar, none };
+  using enum ViewType;
   ViewType vType = none;
 
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
@@ -38,8 +39,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
     std::vector<double> edges0;
     std::vector<double> edges1;
     // Helper method to convert from ACTS to Grid edges
-    auto convertGridEdges = [](const std::vector<double>& actsEdges)
-        -> std::vector<actsvg::scalar> {
+    auto convertGridEdges = [](const std::vector<double>& actsEdges) {
       std::vector<actsvg::scalar> svgEdges;
       svgEdges.reserve(actsEdges.size());
       for (const auto ae : actsEdges) {
@@ -123,7 +123,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
       templateObjects.push_back(referenceObject);
     }
   }
-  radius /= surfaces.size();
+  radius /= static_cast<double>(surfaces.size());
 
   // scale the grid edges
   if (pGrid._type == actsvg::proto::grid::e_z_phi) {

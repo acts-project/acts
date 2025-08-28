@@ -226,11 +226,12 @@ void addSvg(Context& ctx) {
            [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
              self.set_view_box(box);
            })
-      .def("write", [](actsvg::svg::file& self, const std::string& filename) {
-        std::ofstream file(filename);
-        file << self;
-        file.close();
-      });
+      .def("write",
+           [](const actsvg::svg::file& self, const std::string& filename) {
+             std::ofstream file(filename);
+             file << self;
+             file.close();
+           });
 
   {
     svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
@@ -379,9 +380,13 @@ void addSvg(Context& ctx) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  { svg.def("drawDetector", &drawDetector); }
+  {
+    svg.def("drawDetector", &drawDetector);
+  }
 
-  { svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays); }
+  {
+    svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays);
+  }
 
   // Legacy geometry drawing
   {
