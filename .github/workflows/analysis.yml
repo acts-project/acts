@@ -33,7 +33,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:80
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -41,17 +41,8 @@ jobs:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cache build
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-
       - name: Configure
         run: >
-          ccache -z &&
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
@@ -59,8 +50,6 @@ jobs:
           -DACTS_BUILD_ODD=OFF
       - name: Build
         run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
       - name: Unit tests
         run: ctest --test-dir build -j$(nproc)
 
@@ -91,44 +80,44 @@ jobs:
           name: PR_NUMBER
           path: PR_NUMBER.txt
 
-  build_performance:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install dependencies
-        uses: ./.github/actions/dependencies
-        with:
-          compiler: g++
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies
-        run: pip3 install cmakeperf==0.6.1
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          --preset=github-ci
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          -DCMAKE_CXX_FLAGS="-Werror"
-          -DPython_EXECUTABLE=$(which python3)
-          -DACTS_BUILD_ODD=OFF
-      - name: Measure
-        run: cmakeperf collect build/compile_commands.json -o perf.csv
-      - name: Results
-        run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cmakeperf
-          path: perf.csv
+  # build_performance:
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/acts-project/ubuntu2404:80
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Install dependencies
+  #       uses: ./.github/actions/dependencies
+  #       with:
+  #         compiler: g++
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #
+  #     - name: Install dependencies
+  #       run: pip3 install cmakeperf==0.6.1
+  #     - name: Configure
+  #       run: >
+  #         cmake -B build -S .
+  #         --preset=github-ci
+  #         -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  #         -DCMAKE_CXX_FLAGS="-Werror"
+  #         -DPython_EXECUTABLE=$(which python3)
+  #         -DACTS_BUILD_ODD=OFF
+  #     - name: Measure
+  #       run: cmakeperf collect build/compile_commands.json -o perf.csv
+  #     - name: Results
+  #       run: cmakeperf print perf.csv
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: cmakeperf
+  #         path: perf.csv
 
   # metric_tracking:
   #   runs-on: ubuntu-latest
   #   needs: build_performance
   #   if: github.ref == 'refs/heads/main'
   #   steps:
-  #     - uses: actions/checkout@v5
+  #     - uses: actions/checkout@v4
   #     - name: Install dependencies
   #       run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
   #     - uses: actions/download-artifact@v4
