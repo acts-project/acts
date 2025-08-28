@@ -22,20 +22,38 @@
 namespace Acts {
 class BinningData;
 
+/// Convert BinningData to JSON
+/// @param j Destination JSON object
+/// @param bd Source BinningData to convert
 void to_json(nlohmann::json& j, const BinningData& bd);
 
+/// Convert JSON to BinningData
+/// @param j Source JSON object
+/// @param bd Destination BinningData to populate
 void from_json(const nlohmann::json& j, BinningData& bd);
 
+/// Convert BinUtility to JSON
+/// @param j Destination JSON object
+/// @param bu Source BinUtility to convert
 void to_json(nlohmann::json& j, const BinUtility& bu);
 
+/// Convert JSON to BinUtility
+/// @param j Source JSON object
+/// @param bu Destination BinUtility to populate
 void from_json(const nlohmann::json& j, BinUtility& bu);
 
+/// Convert Range1D to JSON
+/// @param j Destination JSON object
+/// @param r Source Range1D to convert
 template <typename Type>
 void to_json(nlohmann::json& j, const Range1D<Type>& r) {
   j["min"] = r.min();
   j["max"] = r.max();
 }
 
+/// Convert JSON to Range1D
+/// @param j Source JSON object
+/// @param r Destination Range1D to populate
 template <typename Type>
 void from_json(const nlohmann::json& j, Range1D<Type>& r) {
   r.setMin(static_cast<Type>(j["min"]));
