@@ -29,6 +29,7 @@ class IVisualization3D;
 /// that need to be connected to form a face.
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
+  /// Type alias for face definition as vertex indices
   using FaceType = std::vector<std::size_t>;
 
   /// Default constructor
@@ -84,6 +85,9 @@ struct Polyhedron {
   /// @return ranges that describe the space taken by this surface
   Extent extent(const Transform3& transform = Transform3::Identity()) const;
 
+  /// Visualize the polyhedron using a visualization helper
+  /// @param helper The visualization interface to use for rendering
+  /// @param viewConfig Configuration options for visualization appearance
   void visualize(IVisualization3D& helper,
                  const ViewConfig& viewConfig = {}) const;
 };
