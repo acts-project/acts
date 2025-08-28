@@ -16,8 +16,11 @@ namespace Acts {
 
 /// Simple struct to select volumes
 struct VolumeSelector {
+  /// Flag indicating whether to select volumes with material
   bool selectMaterial = true;
+  /// Flag indicating whether to select volumes with layers
   bool selectLayer = false;
+  /// Flag indicating whether to select passive volumes
   bool selectPassive = false;
 
   /// VolumeSelector with options
@@ -34,6 +37,7 @@ struct VolumeSelector {
   /// Call operator to check if a volume should be selected
   ///
   /// @param volume is the test volume
+  /// @return true if volume meets selection criteria
   bool operator()(const Acts::TrackingVolume& volume) const {
     if (selectMaterial && volume.volumeMaterial() != nullptr) {
       return true;
@@ -50,8 +54,11 @@ struct VolumeSelector {
 
 /// The information to be writtern out per hit volume
 struct VolumeHit {
+  /// Pointer to the tracking volume that was hit
   const TrackingVolume* volume = nullptr;
+  /// Position where the volume was encountered
   Vector3 position;
+  /// Direction of propagation when volume was encountered
   Vector3 direction;
 };
 
@@ -70,9 +77,11 @@ struct VolumeCollector {
   /// It has all the VolumeHit objects that
   /// are collected (and thus have been selected)
   struct this_result {
+    /// Container of collected volume hits during propagation
     std::vector<VolumeHit> collected;
   };
 
+  /// Type alias for collector result type
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator

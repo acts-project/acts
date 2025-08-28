@@ -17,8 +17,11 @@ namespace Acts {
 
 /// Simple struct to select surfaces
 struct SurfaceSelector {
+  /// Flag indicating whether to select sensitive surfaces
   bool selectSensitive = true;
+  /// Flag indicating whether to select surfaces with material
   bool selectMaterial = false;
+  /// Flag indicating whether to select passive surfaces
   bool selectPassive = false;
 
   /// SurfaceSelector with options
@@ -35,6 +38,7 @@ struct SurfaceSelector {
   /// Call operator to check if a surface should be selected
   ///
   /// @param surface is the test surface
+  /// @return true if surface meets selection criteria
   bool operator()(const Acts::Surface& surface) const {
     if (selectSensitive && surface.associatedDetectorElement() != nullptr) {
       return true;
@@ -51,8 +55,11 @@ struct SurfaceSelector {
 
 /// The information to be writtern out per hit surface
 struct SurfaceHit {
+  /// Pointer to the surface that was hit
   const Surface* surface = nullptr;
+  /// Position where the surface was encountered
   Vector3 position;
+  /// Direction of propagation when surface was encountered
   Vector3 direction;
 };
 
@@ -71,9 +78,11 @@ struct SurfaceCollector {
   /// It has all the SurfaceHit objects that
   /// are collected (and thus have been selected)
   struct this_result {
+    /// Container of collected surface hits during propagation
     std::vector<SurfaceHit> collected;
   };
 
+  /// Type alias for collector result type
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
