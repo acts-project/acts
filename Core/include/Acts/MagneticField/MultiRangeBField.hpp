@@ -37,13 +37,20 @@ class MultiRangeBField final : public MagneticFieldProvider {
  public:
   /// @brief Construct a magnetic field from a vector of ranges.
   ///
+  /// @param ranges Vector of magnetic field ranges to use
   /// @warning These ranges are listed in increasing order of precedence,
   /// i.e. ranges further along the vector have higher priority.
   explicit MultiRangeBField(const std::vector<BFieldRange>& ranges);
 
+  /// Construct from a vector of magnetic field ranges (move version).
+  /// @param ranges Vector of magnetic field ranges to use (moved)
+  /// @warning These ranges are listed in increasing order of precedence,
+  /// i.e. ranges further along the vector have higher priority.
   explicit MultiRangeBField(std::vector<BFieldRange>&& ranges);
 
   /// @brief Construct a cache object.
+  /// @param mctx Magnetic field context for cache creation
+  /// @return Cache object for magnetic field computations
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;
 
