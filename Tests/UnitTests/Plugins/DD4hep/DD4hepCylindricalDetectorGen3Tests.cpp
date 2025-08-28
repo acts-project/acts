@@ -175,8 +175,8 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto necR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., necZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> necSurfaces = {necR0Surfaces,
-                                                                necR1Surfaces};
+  std::vector<std::vector<Acts::Surface*>> necSurfaces = {necR0Surfaces,
+                                                          necR1Surfaces};
 
   // Barrel surfaces
   std::vector<std::array<double, 2u>> innerOuter = {
@@ -190,7 +190,7 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<const Acts::Surface*>> barrelSurfaces = {
+  std::vector<std::vector<Acts::Surface*>> barrelSurfaces = {
       b0Surfaces, b1Surfaces, b2Surfaces};
 
   // Nec surfaces
@@ -201,8 +201,8 @@ void generateXML(const std::filesystem::path& xmlPath) {
   auto pecR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., pecZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
-                                                                pecR1Surfaces};
+  std::vector<std::vector<Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
+                                                          pecR1Surfaces};
 
   // Create an XML from it
   std::ofstream cxml;
@@ -322,8 +322,9 @@ using ResizeStrategy = Acts::VolumeResizeStrategy;
 // Print Element Tree
 void print_elements(const DetElement& el, unsigned int level = 0) {
   for (const auto& [name, child] : el.children()) {
-    for (unsigned int i = 0; i < level; ++i)
+    for (unsigned int i = 0; i < level; ++i) {
       std::cout << "\t";
+    }
     std::cout << "-> " << name << std::endl;
     print_elements(child, level + 1);
   }
@@ -341,8 +342,9 @@ const DetElement* find_element(const DetElement& el, const std::string& el_name,
     }
     if (++level <= search_depth) {
       auto el_child = find_element(child, el_name, search_depth);
-      if (abort_search)
+      if (abort_search) {
         return el_child;
+      }
     }
   }
   return nullptr;
@@ -534,7 +536,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
             // Set navigation policy for efficient surface lookup
             layer.setNavigationPolicyFactory(
-                Acts::NavigationPolicyFactory::make()
+                Acts::NavigationPolicyFactory{}
                     .add<Acts::SurfaceArrayNavigationPolicy>(
                         Acts::SurfaceArrayNavigationPolicy::Config{
                             .layerType = Cylinder, .bins = {30, 10}})
@@ -607,7 +609,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           auto& layer = parent.addLayer(layerName);
 
           layer.setNavigationPolicyFactory(
-              Acts::NavigationPolicyFactory::make()
+              Acts::NavigationPolicyFactory{}
                   .add<Acts::SurfaceArrayNavigationPolicy>(
                       Acts::SurfaceArrayNavigationPolicy::Config{
                           .layerType = Disc, .bins = {30, 30}})
