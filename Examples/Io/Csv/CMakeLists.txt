@@ -19,8 +19,8 @@ acts_add_library(
     src/CsvMuonSegmentReader.cpp
     src/CsvProtoTrackWriter.cpp
     src/CsvSpacePointWriter.cpp
-    src/CsvExaTrkXGraphWriter.cpp
-    src/CsvExaTrkXGraphReader.cpp
+    src/CsvGnnGraphWriter.cpp
+    src/CsvGnnGraphReader.cpp
     src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
 )
