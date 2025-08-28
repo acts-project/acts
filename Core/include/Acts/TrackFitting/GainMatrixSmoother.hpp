@@ -37,6 +37,7 @@ class GainMatrixSmoother {
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
+  /// @return Success or failure of the smoothing procedure
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
@@ -131,13 +132,29 @@ class GainMatrixSmoother {
     return error ? Result<void>::failure(error) : Result<void>::success();
   }
 
+  /// Type alias for delegate to get track state parameters
   using GetParameters =
       Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                                       false>::Parameters(void*)>;
+  /// Type alias for delegate to get track state covariance matrix
   using GetCovariance =
       Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                                       false>::Covariance(void*)>;
 
+  /// Calculate smoothed parameters for a single track state using gain matrix
+  /// formalism.
+  ///
+  /// @param ts Current track state to be smoothed
+  /// @param prev_ts Previous track state (already smoothed)
+  /// @param filtered Delegate to get filtered parameters
+  /// @param filteredCovariance Delegate to get filtered covariance
+  /// @param smoothed Delegate to get smoothed parameters
+  /// @param predicted Delegate to get predicted parameters
+  /// @param predictedCovariance Delegate to get predicted covariance
+  /// @param smoothedCovariance Delegate to get smoothed covariance
+  /// @param jacobian Delegate to get Jacobian matrix
+  /// @param logger Logger for verbose output
+  /// @return Success or failure of the smoothing calculation
   Result<void> calculate(void* ts, void* prev_ts, const GetParameters& filtered,
                          const GetCovariance& filteredCovariance,
                          const GetParameters& smoothed,
