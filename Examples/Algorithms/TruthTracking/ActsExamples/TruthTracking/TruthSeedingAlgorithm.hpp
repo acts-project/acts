@@ -33,7 +33,10 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
+    /// The input sim hits collection that is used to order space points in the
+    /// seeds.
     std::string inputSimHits;
+    /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
     /// Input space point collections.
     ///
