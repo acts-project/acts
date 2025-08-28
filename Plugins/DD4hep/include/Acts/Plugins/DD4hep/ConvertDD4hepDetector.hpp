@@ -170,6 +170,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
+/// @param logger Logging instance
+/// @return Shared pointer to CylinderVolumeHelper
 std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
     const Logger& logger);
 
