@@ -58,8 +58,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
+    /// Type alias for range configuration with axis direction and bounds
     using RangeConfig = std::pair<AxisDirection, std::pair<double, double>>;
 
+    /// Type alias for split configuration with axis direction and position
     using SplitConfig = std::pair<AxisDirection, double>;
 
     /// Identify the search volume by name
@@ -84,11 +86,20 @@ class TGeoLayerBuilder : public ILayerBuilder {
     LayerConfig() = default;
   };
 
+  /// Type alias for detector element factory function
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
       const TGeoDetectorElement::Identifier&, const TGeoNode&,
       const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
 
+  /// Default factory function for creating TGeoDetectorElement instances.
+  /// @param identifier Detector element identifier
+  /// @param tGeoNode ROOT geometry node
+  /// @param tGeoMatrix ROOT geometry transformation matrix
+  /// @param axes String describing the axes configuration
+  /// @param scalor Scaling factor for geometry transformations
+  /// @param material Surface material to be assigned to the element
+  /// @return Shared pointer to the created TGeoDetectorElement
   static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
       const TGeoDetectorElement::Identifier& identifier,
       const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
@@ -140,21 +151,25 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of negative-side layers
   const LayerVector negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the central layers
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of central layers
   const LayerVector centralLayers(const GeometryContext& gctx) const final;
 
-  /// LayerBuilder interface method - returning the layers at negative side
+  /// LayerBuilder interface method - returning the layers at positive side
   ///
   /// @param gctx the geometry context for this build call
   ///
+  /// @return Vector of positive-side layers
   const LayerVector positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
+  /// @return Reference to the configuration name string
   const std::string& identification() const final;
 
   /// Set the configuration object
@@ -162,12 +177,15 @@ class TGeoLayerBuilder : public ILayerBuilder {
   void setConfiguration(const Config& config);
 
   /// Get the configuration object
+  /// @return Copy of the current configuration
   Config getConfiguration() const;
 
   /// Set logging instance
+  /// @param newLogger Logger instance to use for debug output
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
+  /// @return Reference to vector of detector elements
   const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
   detectorElements() const;
 
