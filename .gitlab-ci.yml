@@ -495,8 +495,8 @@ linux_ubuntu_2404_clang19:
 
     SETUP:
 
-  cache:
-   - !reference [.ccache_base, cache]
+#  cache:
+#   - !reference [.ccache_base, cache]
 
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
@@ -524,7 +524,7 @@ linux_ubuntu_2404_clang19:
 
 
 
-    - ccache --version
+#    - ccache --version
 
   script:
     - >
@@ -532,9 +532,9 @@ linux_ubuntu_2404_clang19:
       --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
-    - ccache -z
+#    - ccache -z
     - cmake --build build -- -j6
-    - ccache -s
+#    - ccache -s
 
     - ctest --test-dir build -j$(nproc)
 
