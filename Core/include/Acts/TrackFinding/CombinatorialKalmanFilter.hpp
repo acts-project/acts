@@ -604,9 +604,13 @@ class CombinatorialKalmanFilter {
            ++it) {
         // Keep the root branch as the first branch, make a copy for the
         // others
-        auto newBranch = (it == newTrackStateList.rbegin())
-                             ? rootBranch
-                             : rootBranch.shallowCopy();
+        auto shallowCopy = [&] {
+          auto sc = rootBranch.container().makeTrack();
+          sc.copyFromShallow(rootBranch);
+          return sc;
+        };
+        auto newBranch =
+            (it == newTrackStateList.rbegin()) ? rootBranch : shallowCopy();
         newBranch.tipIndex() = *it;
         newBranches.push_back(newBranch);
       }
