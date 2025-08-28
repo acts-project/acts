@@ -699,8 +699,10 @@ class TrackProxy {
   ///
   /// **Result:**
   /// - All track-level properties are updated to match the source
-  /// - tipIndex() and stemIndex() are set to kInvalid (track states become inaccessible)
-  /// - Existing track states remain in the container but are no longer linked to this track
+  /// - tipIndex() and stemIndex() are set to kInvalid (track states become
+  /// inaccessible)
+  /// - Existing track states remain in the container but are no longer linked
+  /// to this track
   /// - nTrackStates() will return 0 due to invalid indices
   ///
   /// @note Only available if the track proxy is not read-only
