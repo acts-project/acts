@@ -22,9 +22,13 @@ struct NoEdgesError : std::exception {};
 
 /// Struct that ties together the tensors used in the GNN pipeline
 struct PipelineTensors {
+  /// Tensor containing node feature data
   Tensor<float> nodeFeatures;
+  /// Tensor containing edge connectivity indices
   Tensor<std::int64_t> edgeIndex;
+  /// Optional tensor containing edge feature data
   std::optional<Tensor<float>> edgeFeatures;
+  /// Optional tensor containing edge classification scores
   std::optional<Tensor<float>> edgeScores;
 };
 
