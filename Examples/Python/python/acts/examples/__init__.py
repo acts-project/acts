@@ -34,7 +34,7 @@ def ConcretePropagator(propagator):
 
 _patch_config(ActsPythonBindings._examples)
 
-# Manually patch ExaTrkX constructors
+# Manually patch Gnn constructors
 # Need to do it this way, since they are not always present
 for module in [
     "TorchMetricLearning",

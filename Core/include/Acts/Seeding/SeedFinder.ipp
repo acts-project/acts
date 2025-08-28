@@ -676,8 +676,6 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         // use arithmetic average
         float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
-      } else if (cotThetaAvg2 <= 0) {
-        continue;
       }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
