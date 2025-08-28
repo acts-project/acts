@@ -526,13 +526,41 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
     for (const auto& [ilayer, surfaces] : layers) {
       barrel.addMaterial(
-          "Pixel_Barrel_" + std::to_string(ilayer) + "_Material",
-          [&](auto& lmat) {
-            lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40},
-                               {AxisZ, Bound, 20});
+          std::format("Pixel_Barrel_L{}_Material", ilayer), [&](auto& lmat) {
+            // Outermost layer can't have material, because it will get merged
+            // with the outer cylinder shell of the endcap cylinders
+            //
+            //                          Material here is fine   |
+            //                                                  |
+            //                                                  |
+            //                Will get merged. Therefore none   |
+            //                   of them can have material      |
+            //                                                  |
+            //                               |                  |
+            //                               |                  |
+            //                               |                  |
+            //       +-----------------------+-+----------------+---------+
+            //       |                         |                |         |
+            //       |                         |                |         |
+            //       v                         v                |         v
+            // +----------+-------------------------------------+---+----------+
+            // |          |                Barrel L2            |   |          |
+            // |          +-------------------------------------v---+          |
+            // |          |                   Gap                   |          |
+            // |          +-----------------------------------------+          |
+            // |  Neg EC  |                Barrel L1                |  Pos EC  |
+            // |          +-----------------------------------------+          |
+            // |          |                   Gap                   |          |
+            // |          +-----------------------------------------+          |
+            // |          |                Barrel L0                |          |
+            // +----------+-----------------------------------------+----------+
+            if (ilayer < static_cast<int>(layers.size() - 1)) {
+              lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40},
+                                 {AxisZ, Bound, 20});
+            }
             // Add layer with surfaces
             auto& layer =
-                lmat.addLayer("Pixel_Barrel_" + std::to_string(ilayer));
+                lmat.addLayer(std::format("Pixel_Barrel_L{}", ilayer));
 
             // Set navigation policy for efficient surface lookup
             layer.setNavigationPolicyFactory(
@@ -555,10 +583,11 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
     // Add endcap containers
     for (int ecid : {-1, 1}) {
-      const std::string s = ecid == 1 ? "p" : "n";
+      const std::string_view s = ecid == 1 ? "p" : "n";
       auto& ecGeoId = pixelContainer.withGeometryIdentifier();
       ecGeoId.setAllVolumeIdsTo(s_pixelVolumeId + ecid).incrementLayerIds(1);
-      auto& ec = ecGeoId.addCylinderContainer("Pixel_" + s + "EC", AxisZ);
+      auto& ec =
+          ecGeoId.addCylinderContainer(std::format("Pixel_{}EC", s), AxisZ);
       ec.setAttachmentStrategy(AttachmentStrategy::Gap);
       ec.setResizeStrategy(ResizeStrategy::Expand);
 
@@ -603,7 +632,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       // Create layers from proto layers
       for (const auto& [key, pl] : Acts::enumerate(mergedLayers)) {
         pl.protoLayer.medium(AxisZ);
-        auto layerName = std::format("Pixel_{}EC_", key);
+        auto layerName = std::format("Pixel_{}EC_L{}", s, key);
         auto addLayer = [&layerName, &pl](auto& parent) {
           // Add layer with surfaces
           auto& layer = parent.addLayer(layerName);
