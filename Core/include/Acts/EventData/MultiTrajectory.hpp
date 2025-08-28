@@ -125,8 +125,11 @@ concept VisitorConcept = requires(T& t, TS& ts) {
 /// other parts of the @c MultiTrajectory implementation. It extracts these
 /// from @c TrackStateTraits using the default maximum measurement dimension.
 namespace MultiTrajectoryTraits {
+/// Maximum number of measurement dimensions supported by trajectory
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
+/// Type alias for trajectory index type
 using IndexType = TrackIndexType;
+/// Invalid track state index constant
 constexpr IndexType kInvalid = kTrackIndexInvalid;
 }  // namespace MultiTrajectoryTraits
 
@@ -144,11 +147,14 @@ struct IsReadOnlyMultiTrajectory;
 template <typename derived_t>
 class MultiTrajectory {
  public:
+  /// Type alias for derived multi-trajectory implementation
   using Derived = derived_t;
 
+  /// Flag indicating whether this multi-trajectory is read-only
   static constexpr bool ReadOnly = IsReadOnlyMultiTrajectory<Derived>::value;
 
   // Pull out type alias and re-expose them for ease of use.
+  /// Maximum number of measurement dimensions supported by this trajectory
   static constexpr unsigned int MeasurementSizeMax =
       MultiTrajectoryTraits::MeasurementSizeMax;
 
@@ -245,6 +251,8 @@ class MultiTrajectory {
   /// Add a track state to the container and return a track state proxy to it
   /// This effectively calls @c addTrackState and @c getTrackState
   /// @note Only available if the track state container is not read-only
+  /// @param mask Mask indicating which track state components to allocate
+  /// @param iprevious Index of the previous track state for linking
   /// @return a track state proxy to the newly added track state
   TrackStateProxy makeTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
@@ -694,26 +702,45 @@ class MultiTrajectory {
     });
   }
 
+  /// Allocate storage for calibrated measurement
+  /// @tparam measdim Measurement dimension
+  /// @tparam val_t Value type
+  /// @tparam cov_t Covariance type
+  /// @param istate State index
+  /// @param val Measurement values
+  /// @param cov Measurement covariance
   template <std::size_t measdim, typename val_t, typename cov_t>
   void allocateCalibrated(IndexType istate, const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov) {
     self().allocateCalibrated_impl(istate, val, cov);
   }
 
+  /// Set the uncalibrated source link for a track state
+  /// @param istate State index
+  /// @param sourceLink Source link to set
   void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)
     requires(!ReadOnly)
   {
     self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
   }
 
+  /// Get the uncalibrated source link for a track state
+  /// @param istate State index
+  /// @return Source link for the specified state
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
     return self().getUncalibratedSourceLink_impl(istate);
   }
 
+  /// Get the reference surface for a track state
+  /// @param istate State index
+  /// @return Pointer to the reference surface
   const Surface* referenceSurface(IndexType istate) const {
     return self().referenceSurface_impl(istate);
   }
 
+  /// Set the reference surface for a track state
+  /// @param istate State index
+  /// @param surface Shared pointer to the reference surface
   void setReferenceSurface(IndexType istate,
                            std::shared_ptr<const Surface> surface)
     requires(!ReadOnly)
