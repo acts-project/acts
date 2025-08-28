@@ -21,6 +21,8 @@ namespace Acts {
 /// @tparam R The ranges type pack
 /// @param r The ranges parameter pack
 /// @note the behaviour is undefined if the ranges do not have equal range
+///
+/// @return Zip object providing iteration over multiple ranges simultaneously
 template <typename... R>
 auto zip(R &&...r) {
   struct It {

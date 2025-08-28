@@ -63,6 +63,7 @@ class KDTree {
   /// @brief The type of iterators in our vectors.
   using iterator_t = typename vector_t::iterator;
 
+  /// Type alias for const iterator over coordinate-value pairs
   using const_iterator_t = typename vector_t::const_iterator;
 
   // We do not need an empty constructor - this is never useful.
@@ -261,8 +262,12 @@ class KDTree {
   /// @return The number of elements in the k-d tree.
   std::size_t size(void) const { return m_root->size(); }
 
+  /// Get iterator to first element
+  /// @return Const iterator to the beginning of the tree elements
   const_iterator_t begin(void) const { return m_elems.begin(); }
 
+  /// Get iterator to one past the last element
+  /// @return Const iterator to the end of the tree elements
   const_iterator_t end(void) const { return m_elems.end(); }
 
  private:

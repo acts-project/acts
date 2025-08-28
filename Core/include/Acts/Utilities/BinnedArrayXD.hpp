@@ -39,8 +39,7 @@ class BinnedArrayXD : public BinnedArray<T> {
 
  public:
   /// Constructor for single object
-  ///
-  /// @tparam object is the single object
+  /// @param object The single object to store
   explicit BinnedArrayXD(T object)
       : BinnedArray<T>(),
         m_objectGrid(
