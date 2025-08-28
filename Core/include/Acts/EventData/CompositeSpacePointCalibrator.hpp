@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+
 namespace Acts::Experimental {
 
 /// @brief Interface concept to calibrate CompositeSpacePoints
@@ -23,15 +24,19 @@ concept CompositeSpacePointFastCalibrator =
       ///        which is defined as the first derivative of the relation.
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
+      /// @param t0: Time of the hard scatter in the detector frame
       { calibrator.driftVelocity(ctx, spacePoint, t0) } -> std::same_as<double>;
+
       /// @brief Returns the drift acceleration of the straw measurement's radius - time relation
       ///        which is defined as the second derivative of the relation
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
       /// @param spacePoint: Reference to the calibrated space point
+      /// @param t0: Time of the hard scatter in the detector frame
       {
         calibrator.driftAcceleration(ctx, spacePoint, t0)
       } -> std::same_as<double>;
 
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
+
 }  // namespace Acts::Experimental

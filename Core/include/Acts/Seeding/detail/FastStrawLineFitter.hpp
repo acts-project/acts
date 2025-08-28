@@ -56,7 +56,7 @@ namespace Acts::Experimental::detail {
 ///
 ///         The \chi^{2} then becomes a function of the two parameters (\theta, t_{0})
 ///         which need to be minimized by varying these two parameters.
-
+///
 class FastStrawLineFitter {
  public:
   /// @brief abrivation of the residual indices to fetch the proper covariance
@@ -297,9 +297,9 @@ class FastStrawLineFitter {
                       FitResult& result) const;
   /// @brief Enumeration to describe the outcome of the fit iteration
   enum class UpdateStatus {
-    Converged,  ///< The fit converged
-    Exceeded,   ////< Maximum number of iterations exceeded
-    GoodStep,   ///< The fit did not converge yet
+    Converged = 1,  ///< The fit converged
+    Exceeded = 2,   ///< Maximum number of iterations exceeded
+    GoodStep = 3,   ///< The fit did not converge yet
   };
   /// @brief Update the straw circle parameters for a fit with ts0 & theta
   /// @param fitPars: Fit constants from the straw measurements
@@ -308,7 +308,7 @@ class FastStrawLineFitter {
   ///                   step was successful
   UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
                                FitResultT0& fitResult) const;
-  ///  @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
+  /// @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
   /// @param ctx: Reference to the experiment specific calibration context to
   ///             calculate the updated straw drift radius, velocity &
   ///             acceleration
