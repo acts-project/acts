@@ -20,13 +20,25 @@ namespace Acts {
 /// has a specific meaning (e.g., flags surfaces as sensitive).
 class JsonDetectorElement : public DetectorElementBase {
  public:
+  /// Constructor from JSON surface description
+  /// @param jSurface JSON object describing the surface
+  /// @param thickness Thickness of the detector element
   JsonDetectorElement(const nlohmann::json &jSurface, double thickness);
 
+  /// Return mutable reference to the surface
+  /// @return Mutable reference to the associated surface
   Surface &surface() override;
+  /// Return const reference to the surface
+  /// @return Const reference to the associated surface
   const Surface &surface() const override;
 
+  /// Return the thickness of the detector element
+  /// @return Thickness value
   double thickness() const override;
 
+  /// Return the transform for this detector element
+  /// @param gctx Geometry context (unused for this implementation)
+  /// @return Transform matrix for this detector element
   const Transform3 &transform(const GeometryContext &gctx) const override;
 
  private:

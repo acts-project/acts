@@ -17,8 +17,14 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+/// Convert Transform3 to JSON
+/// @param j Destination JSON object
+/// @param t Source Transform3 to convert
 void to_json(nlohmann::json& j, const Transform3& t);
 
+/// Convert JSON to Transform3
+/// @param j Source JSON object
+/// @param t Destination Transform3 to populate
 void from_json(const nlohmann::json& j, Transform3& t);
 
 namespace Transform3JsonConverter {

@@ -37,7 +37,9 @@ template <typename value_t,
           class decorator_t = void /* e.g. ITrackingGeometryJsonDecorator */>
 class GeometryHierarchyMapJsonConverter {
  public:
+  /// Type alias for values stored in geometry hierarchy map
   using Value = value_t;
+  /// Type alias for geometry hierarchy map container
   using Container = GeometryHierarchyMap<value_t>;
 
   /// Construct the converter.
@@ -83,7 +85,10 @@ class GeometryHierarchyMapJsonConverter {
 template <typename T, class decorator_t>
 struct missing_specialization : std::false_type {};
 
-// methods to adapt type decorations for the given decorator
+/// Adapt type decorations for the given decorator (reference version)
+/// @param decorator Decorator instance
+/// @param src Source object to decorate
+/// @param dest Destination JSON object
 template <class T, class decorator_t>
 void decorateJson([[maybe_unused]] const decorator_t* decorator,
                   [[maybe_unused]] const T& src,
@@ -93,6 +98,10 @@ void decorateJson([[maybe_unused]] const decorator_t* decorator,
       missing_specialization<T, decorator_t>::value,
       "Explicit specialization needed for each decorator_t and src T");
 }
+/// Adapt type decorations for the given decorator (pointer version)
+/// @param decorator Decorator instance
+/// @param src Source object pointer to decorate
+/// @param dest Destination JSON object
 template <class T, class decorator_t>
 void decorateJson([[maybe_unused]] const decorator_t* decorator,
                   [[maybe_unused]] const T* src,
