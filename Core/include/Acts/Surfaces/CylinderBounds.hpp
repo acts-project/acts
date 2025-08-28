@@ -47,6 +47,8 @@ namespace Acts {
 ///
 class CylinderBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eR = 0,
     eHalfLengthZ = 1,
@@ -116,9 +118,11 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
+  /// @return True if the cylinder covers full azimuthal range
   bool coversFullAzimuth() const { return m_closed; }
 
   /// Create the bow/circle vertices on either side of the cylinder
@@ -139,6 +143,8 @@ class CylinderBounds : public SurfaceBounds {
   Vector2 center() const final;
 
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
