@@ -16,8 +16,28 @@
 namespace Acts::Test {
 
 class TemporaryDirectory {
+  static bool skipTemporary() {
+    static const bool flag = [] {
+      const char* envvar = std::getenv("ACTS_NO_TEST_TEMP");
+      if (envvar != nullptr) {
+        std::string val{envvar};
+        if (val != "") {
+          return true;
+        }
+      }
+      return false;
+    }();
+
+    return flag;
+  }
+
  public:
   TemporaryDirectory() {
+    if (skipTemporary()) {
+      m_dir = std::filesystem::current_path();
+      return;
+    }
+
     auto base = std::filesystem::temp_directory_path();
 
     const auto& testName =
@@ -28,7 +48,11 @@ class TemporaryDirectory {
     std::filesystem::create_directory(m_dir);
   }
 
-  ~TemporaryDirectory() { std::filesystem::remove_all(m_dir); }
+  ~TemporaryDirectory() {
+    if (!skipTemporary()) {
+      std::filesystem::remove_all(m_dir);
+    }
+  }
 
   const std::filesystem::path& path() const { return m_dir; }
 
