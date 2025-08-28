@@ -23,6 +23,11 @@ class ITripletSeedFilter {
  public:
   virtual ~ITripletSeedFilter() = default;
 
+  /// @brief Check if there are sufficient top doublets for triplet formation
+  /// @param spacePoints Container of space points
+  /// @param spM Middle space point proxy
+  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @return True if sufficient doublets are available for triplet seeds
   virtual bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp& topDoublets) const = 0;

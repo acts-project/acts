@@ -97,6 +97,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// if we want to increase the weight of the seed by seedWeightIncrement
     /// when the number of compatible seeds is higher than a certain value
     float seedWeightIncrement = 0;
+    /// Number of seeds required before `seedWeightIncrement` is applied
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
     /// Seeding parameters used for quality seed confirmation
@@ -130,13 +131,16 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
+    /// Custom cuts interface for experiments
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };
 
   /// State of the filter that is communicated between different stages
   struct State {
+    /// Collector for triplet candidates associated with middle space points
     CandidatesForMiddleSp2 candidatesCollector;
 
+    /// Maximum radius for seed confirmation
     float rMaxSeedConf{};
 
     /// Map to store the best seed quality for each space point
@@ -152,8 +156,11 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   /// Cache for intermediate results to avoid reallocations. No information is
   /// carried over between different stages.
   struct Cache {
+    /// Cache for top space point indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
+    /// Cache for compatible seed radii during score calculation
     std::vector<float> compatibleSeedR;
+    /// Cache for sorted triplet candidates during selection
     std::vector<TripletCandidate2> sortedCandidates;
   };
 
@@ -166,6 +173,10 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   explicit BroadTripletSeedFilter(const Config& config, State& state,
                                   Cache& cache, const Logger& logger);
 
+  /// @param spacePoints Container of space points
+  /// @param spM Middle space point proxy
+  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @return true if sufficient top doublets are found
   bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp& topDoublets) const override;
@@ -180,9 +191,13 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
       SeedContainer2& outputCollection) const override;
 
  private:
+  /// Configuration parameters for the seed filter algorithm
   const Config* m_cfg{};
+  /// Mutable state for intermediate results between filter stages
   State* m_state{};
+  /// Cache for temporary data to avoid reallocations
   Cache* m_cache{};
+  /// Logger for debugging and information messages
   const Logger* m_logger{};
 
   const Config& config() const { return *m_cfg; }
