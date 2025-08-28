@@ -13,6 +13,7 @@
 
 namespace Acts {
 
+/// Error codes for Eigen stepper operations
 enum class EigenStepperError {
   // ensure all values are non-zero
   StepSizeStalled = 1,
@@ -20,6 +21,9 @@ enum class EigenStepperError {
   StepSizeAdjustmentFailed,
 };
 
+/// Create error code from EigenStepperError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(EigenStepperError e);
 
 }  // namespace Acts
