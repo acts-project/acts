@@ -14,7 +14,6 @@
 namespace Acts::Experimental {
 
 /// @brief Interface concept to calibrate CompositeSpacePoints
-
 template <typename Calibrator_t, typename SpacePoint_t>
 concept CompositeSpacePointFastCalibrator =
     CompositeSpacePoint<SpacePoint_t> &&
