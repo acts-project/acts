@@ -536,7 +536,6 @@ linux_ubuntu_2404_clang19:
       cmake -B build -S src
       --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
     - cmake --build build -- -j6
