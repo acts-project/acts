@@ -73,9 +73,13 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Assignment Move operator
+  /// @param bsm The source object to move from
+  /// @return Reference to this object after move assignment
   BinnedSurfaceMaterial& operator=(BinnedSurfaceMaterial&& bsm) = default;
 
   /// Assignment operator
+  /// @param bsm The source object to copy from
+  /// @return Reference to this object after copy assignment
   BinnedSurfaceMaterial& operator=(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Destructor
@@ -84,12 +88,15 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Scale operation
   ///
   /// @param factor is the scale factor for the full material
+  /// @return Reference to this object after scaling
   BinnedSurfaceMaterial& scale(double factor) final;
 
   /// Return the BinUtility
+  /// @return Reference to the bin utility used for material binning
   const BinUtility& binUtility() const;
 
   /// @brief Retrieve the entire material slab matrix
+  /// @return Reference to the complete matrix of material slabs
   const MaterialSlabMatrix& fullMaterial() const;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
@@ -99,6 +106,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
