@@ -365,6 +365,8 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
       resCalcUp.updateFullResidual(lineUp, timeT0, sp);
       resCalcDn.updateFullResidual(lineDn, timeT0, sp);
     } else {
+      lineUp.updateParameters(lineParsUp);
+      lineDn.updateParameters(lineParsDn);
       resCalcUp.updateFullResidual(line, timeT0 + h, sp);
       resCalcDn.updateFullResidual(line, timeT0 - h, sp);
     }
@@ -571,11 +573,10 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
                               makeDirectionFromPhiTheta(40._degree, 50_degree),
                               10._cm, true});
 }
-
 BOOST_AUTO_TEST_CASE(StripResidual) {
   Pars_t linePars{};
   linePars[toUnderlying(ParIdx::phi)] = 60._degree;
-  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
+  linePars[toUnderlying(ParIdx::theta)] = 30._degree;
 
   testResidual(linePars,
                TestSpacePoint{Vector{75._cm, -75._cm, 100._cm},
@@ -683,13 +684,22 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
     resCalc.updateFullResidual(line, t0, testMe);
 
     resCalc.updateChiSq(chi2, testMe.covariance());
+    resCalc.symmetrizeHessian(chi2);
+    constexpr auto N = 5u;
+    for (std::size_t i = 1; i < N; ++i) {
+      for (std::size_t j = 0; j <= i; ++j) {
+        BOOST_CHECK_EQUAL(chi2.hessian(i, j), chi2.hessian(j, i));
+      }
+    }
+
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << ": Calculated chi2: " << chi2.chi2 << ", Gradient: "
                         << toString(chi2.gradient) << ", Hessian: \n"
-                        << chi2.hessian);
+                        << chi2.hessian
+                        << "\ndeterminant: " << chi2.hessian.determinant());
     BOOST_CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(
                           line, resCfg.localToGlobal, t0, testMe),
-                      chi2.chi2, 1.e-7);
+                      chi2.chi2, 1.e-10);
 
     constexpr double h = 1.e-7;
     constexpr double tolerance = 1.e-3;
