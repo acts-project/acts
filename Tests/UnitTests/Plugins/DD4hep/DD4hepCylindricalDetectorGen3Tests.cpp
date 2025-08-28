@@ -667,9 +667,14 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   });
   // ------- Add Pixel to Blueprint -------
 
+  std::cout << tempDir.path() << std::endl;
+  std::ofstream dotOut{tempDir.path() / "CylindricalDetector.dot"};
+  blueprint->graphviz(dotOut);
+
   // Final step
   Acts::GeometryContext gctx;
-  auto trackingGeometry = blueprint->construct({}, gctx);
+  auto logger = Acts::getDefaultLogger("Geo", Acts::Logging::VERBOSE);
+  auto trackingGeometry = blueprint->construct({}, gctx, *logger);
 
   BOOST_REQUIRE_NE(&world, nullptr);
   BOOST_REQUIRE_NE(trackingGeometry.get(), nullptr);
