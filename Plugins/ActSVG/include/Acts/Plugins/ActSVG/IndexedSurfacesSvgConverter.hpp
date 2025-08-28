@@ -61,7 +61,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
                                     const index_grid& indexGrid,
                                     const Options& cOptions) {
   // The return surfaces
-  std::vector<ProtoSurface> pSurfaces;
+  ProtoSurfaces pSurfaces;
   pSurfaces.reserve(surfaces.size());
 
   // Make a local copy of the grid Options, in case we have to estimate
@@ -128,7 +128,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   auto axes = indexGrid.grid.axes();
 
   // Specify the highlight indices
-  std::vector<std::vector<std::size_t>> highlightIndices;
+  ProtoAssociations highlightIndices;
 
   // 1D connections
   if constexpr (index_grid::grid_type::DIM == 1u) {
@@ -242,9 +242,9 @@ ProtoIndexedSurfaceGrid convert(
     const Experimental::InternalNavigationDelegate& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
-  std::vector<ProtoSurface> pSurfaces;
+  ProtoSurfaces pSurfaces;
   ProtoGrid pGrid;
-  std::vector<std::vector<std::size_t>> indices;
+  ProtoAssociations indices;
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
   unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
@@ -275,7 +275,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
   // The surfaces
   std::vector<actsvg::svg::object> sObs;
   for (const auto& s : pSurfaces) {
-    if (pGrid._type == actsvg::proto::grid::e_z_phi) {
+    if (pGrid._type == ProtoGrid::e_z_phi) {
       sObs.push_back(Acts::Svg::View::zrphi(s, s._name));
     } else {
       sObs.push_back(Acts::Svg::View::xy(s, s._name));
