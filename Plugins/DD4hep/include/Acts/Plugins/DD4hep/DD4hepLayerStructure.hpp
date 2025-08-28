@@ -61,7 +61,7 @@ class DD4hepLayerStructure {
     std::string name = "";
     /// An out put log level
     Logging::Level logLevel = Logging::INFO;
-    // The extent structure - optionally
+    /// The extent structure - optionally
     std::optional<Extent> extent = std::nullopt;
     /// The extent constraints - optionally
     std::vector<AxisDirection> extentConstraints = {};

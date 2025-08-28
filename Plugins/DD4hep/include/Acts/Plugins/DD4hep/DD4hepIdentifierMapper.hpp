@@ -13,9 +13,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <climits>
+#include <functional>
 
 namespace Acts {
 
+/// @brief Type alias for DD4hep identifier type
+/// @details Used to represent unique identifiers in the DD4hep geometry description framework
 using DD4hepIdentifier = DD4hepDetectorElement::DD4hepVolumeID;
 
 /// @brief This struct helps to capture the DD4hep identifier
@@ -53,6 +56,8 @@ struct DD4hepIdentifierCapture {
   }
 };
 
+/// @brief Type alias for mapping between DD4hep and Acts identifiers
+/// @details Function type that converts DD4hep identifiers to Acts geometry identifiers
 using DD4hepIdentifierMapper =
     Experimental::GeometryIdMapper<DD4hepIdentifier, DD4hepIdentifierCapture>;
 
