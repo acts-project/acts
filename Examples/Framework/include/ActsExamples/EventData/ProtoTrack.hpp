@@ -17,9 +17,7 @@
 namespace ActsExamples {
 
 /// A proto track is a collection of hits identified by their indices.
-struct ProtoTrack {
-  boost::container::small_vector<Index, 3> hitIndices;
-};
+using ProtoTrack = boost::container::small_vector<Index, 3>;
 /// Container of proto tracks. Each proto track is identified by its index.
 using ProtoTrackContainer = std::vector<ProtoTrack>;
 

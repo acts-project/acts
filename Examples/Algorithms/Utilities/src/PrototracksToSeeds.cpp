@@ -30,10 +30,9 @@ ProcessCode PrototracksToSeeds::execute(const AlgorithmContext& ctx) const {
   auto prototracks = m_inputProtoTracks(ctx);
 
   const auto nBefore = prototracks.size();
-  prototracks.erase(
-      std::remove_if(prototracks.begin(), prototracks.end(),
-                     [](const auto& t) { return t.hitIndices.size() < 3; }),
-      prototracks.end());
+  prototracks.erase(std::remove_if(prototracks.begin(), prototracks.end(),
+                                   [](const auto& t) { return t.size() < 3; }),
+                    prototracks.end());
   ACTS_DEBUG("Discarded " << prototracks.size() - nBefore
                           << " prototracks with less then 3 hits");
 

@@ -72,7 +72,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     // fill hit indices to create the proto track
     ProtoTrack track;
     std::vector<const SimHit*> hits;
-    track.hitIndices.reserve(measurements.size());
+    track.reserve(measurements.size());
     hits.reserve(measurements.size());
     for (const auto& [barcode, index] : measurements) {
       ConstVariableBoundMeasurementProxy measurement =
@@ -99,7 +99,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
 
       const auto& simHit = *simHitIt;
 
-      track.hitIndices.emplace_back(index);
+      track.emplace_back(index);
       hits.emplace_back(&simHit);
     }
 
@@ -112,7 +112,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     });
     ProtoTrack sortedTrack;
     for (const auto& idx : indices) {
-      sortedTrack.hitIndices.emplace_back(track.hitIndices[idx]);
+      sortedTrack.emplace_back(track[idx]);
     }
 
     // add proto track to the output collection

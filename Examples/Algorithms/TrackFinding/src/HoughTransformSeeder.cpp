@@ -199,7 +199,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
           for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
             if (hit_indices[layer] >= 0) {
               for (auto index : hitIndicesAll[layer][hit_indices[layer]]) {
-                protoTrack.hitIndices.push_back(index);
+                protoTrack.push_back(index);
               }
             }
           }

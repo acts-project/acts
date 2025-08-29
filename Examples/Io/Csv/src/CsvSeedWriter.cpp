@@ -110,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     if (particleHitCounts.size() == 1) {
       truthMatched = true;
       // Get the index of the first space point
-      const auto& hitIdx = ptrack.hitIndices.front();
+      const auto& hitIdx = ptrack.front();
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
       // Get the truth particle direction from the sim hits
@@ -189,7 +189,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     mos << info.vertexZ << ",";
     mos << info.quality << ",";
     mos << "\"[";
-    for (auto& ID : info.measurementsID.hitIndices) {
+    for (auto& ID : info.measurementsID) {
       mos << ID << ",";
     }
     mos << "]\"";

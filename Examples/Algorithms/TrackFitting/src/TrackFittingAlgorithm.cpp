@@ -114,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
-    if (protoTrack.hitIndices.empty()) {
+    if (protoTrack.empty()) {
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
@@ -127,10 +127,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
-    trackSourceLinks.reserve(protoTrack.hitIndices.size());
+    trackSourceLinks.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
-    for (auto measIndex : protoTrack.hitIndices) {
+    for (auto measIndex : protoTrack) {
       ConstVariableBoundMeasurementProxy measurement =
           measurements.getMeasurement(measIndex);
       IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
@@ -148,8 +148,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
         ACTS_VERBOSE("Measurements: (prototrack->track): "
-                     << protoTrack.hitIndices.size() << " -> "
-                     << track.nMeasurements());
+                     << protoTrack.size() << " -> " << track.nMeasurements());
       } else {
         ACTS_VERBOSE("No fitted parameters for track " << itrack);
       }
