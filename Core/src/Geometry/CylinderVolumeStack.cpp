@@ -980,7 +980,6 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
             ACTS_VERBOSE("~> Creating new gap volume at inner r");
             auto gapBounds = std::make_shared<CylinderVolumeBounds>(
                 newMinR, oldMinR, newHlZ);
-            ACTS_VERBOSE(*gapBounds);
             auto gapTransform = newVolume.globalTransform;
             auto gapVolume = addGapVolume(gapTransform, gapBounds);
             ACTS_VERBOSE("WITH target transform\n" << gapTransform.matrix());
