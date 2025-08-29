@@ -102,11 +102,6 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
-  // reserve space for the track containers
-  // simply assume 30 states per track for now
-  trackContainer->reserve(protoTracks.size());
-  trackStateContainer->reserve(protoTracks.size() * 30);
-
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
