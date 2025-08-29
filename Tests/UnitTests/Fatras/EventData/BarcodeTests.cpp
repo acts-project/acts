@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(BarcodeHash) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeStreamOutput) {
-  // if anything gets accidentaly converted to char,
+  // if anything gets accidentally converted to char,
   // it will be A, B, C, D, and E, respectively
 
   auto p1 = Barcode(65u, 66u, 67u, 68u, 69u);

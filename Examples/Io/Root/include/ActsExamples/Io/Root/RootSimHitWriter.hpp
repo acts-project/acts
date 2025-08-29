@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <vector>
 
 class TFile;
 class TTree;
