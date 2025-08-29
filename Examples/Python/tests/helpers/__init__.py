@@ -106,6 +106,7 @@ except ImportError:
 
 isCI = os.environ.get("CI") is not None
 
+
 class AssertCollectionExistsAlg(IAlgorithm):
     events_seen = 0
     collections: List[str]
