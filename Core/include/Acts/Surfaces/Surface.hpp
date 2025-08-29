@@ -72,8 +72,8 @@ class Surface : public virtual GeometryObject,
 
   /// Helper strings for screen output
   static constexpr std::array<std::string_view, Surface::SurfaceType::Other>
-    s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",       "Perigee",
-                          "Plane", "Straw",    "Curvilinear"};
+      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",       "Perigee",
+                            "Plane", "Straw",    "Curvilinear"};
 
   friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
