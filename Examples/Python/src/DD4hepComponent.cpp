@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
 #include <memory>
 #include <utility>
@@ -26,6 +27,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 using namespace ActsExamples;
 using namespace Acts::Python;
 
@@ -47,21 +49,47 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    auto f =
-        py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(
-            m, "DD4hepDetector")
-            .def(py::init<const DD4hepDetector::Config&>())
-            .def_property_readonly("field", &DD4hepDetector::field);
+    auto base =
+        py::class_<DD4hepDetectorBase, Detector,
+                   std::shared_ptr<DD4hepDetectorBase>>(m, "DD4hepDetectorBase")
+            .def_property_readonly("field", &DD4hepDetectorBase::field);
+    auto c = py::class_<DD4hepDetectorBase::Config>(base, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name);
+    patchKwargsConstructor(c);
+  }
 
-    auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
-                       bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
+  {
+    auto f = py::class_<DD4hepDetector, DD4hepDetectorBase,
+                        std::shared_ptr<DD4hepDetector>>(m, "DD4hepDetector")
+                 .def(py::init<const DD4hepDetector::Config&>());
+
+    auto c = py::class_<DD4hepDetector::Config, DD4hepDetectorBase::Config>(
+                 f, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
                        defaultLayerThickness, materialDecorator,
                        geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
 
     m.def("alignedDD4hepDetectorElementFactory",
           &ActsExamples::alignedDD4hepDetectorElementFactory);
+  }
+
+  {
+    auto odd =
+        py::class_<OpenDataDetector, DD4hepDetectorBase,
+                   std::shared_ptr<OpenDataDetector>>(m, "OpenDataDetector")
+            .def(py::init<const OpenDataDetector::Config&,
+                          const Acts::GeometryContext&>(),
+                 "config"_a, "gctx"_a);
+
+    auto c = py::class_<OpenDataDetector::Config, DD4hepDetectorBase::Config>(
+                 odd, "Config")
+                 .def(py::init<>());
+    // ACTS_PYTHON_STRUCT(c, );
+
+    patchKwargsConstructor(c);
   }
 
   {

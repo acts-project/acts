@@ -24,8 +24,8 @@
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -36,6 +36,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -43,7 +44,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
@@ -127,6 +127,12 @@ class PyTrackingGeometryVisitor : public Acts::TrackingGeometryMutableVisitor {
     _INVOKE(Acts::TrackingGeometryMutableVisitor::visitSurface, "visitSurface",
             surface);
   }
+
+  void visitBoundarySurface(
+      Acts::BoundarySurfaceT<Acts::TrackingVolume>& boundary) override {
+    _INVOKE(Acts::TrackingGeometryMutableVisitor::visitBoundarySurface,
+            "visitBoundarySurface", boundary);
+  }
 };
 
 #undef _INVOKE
@@ -134,7 +140,6 @@ class PyTrackingGeometryVisitor : public Acts::TrackingGeometryMutableVisitor {
 }  // namespace
 
 namespace Acts::Python {
-
 void addBlueprint(Context& ctx);
 
 void addGeometry(Context& ctx) {
@@ -196,7 +201,8 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
-        // Can't bind directly because GeometryObject is virtual base of Surface
+        // Can't bind directly because GeometryObject is virtual base of
+        // Surface
         .def_property_readonly(
             "geometryId", [](const Surface& self) { return self.geometryId(); })
         .def("center", &Surface::center)
@@ -235,15 +241,17 @@ void addGeometry(Context& ctx) {
         py::class_<Acts::TrackingGeometry,
                    std::shared_ptr<Acts::TrackingGeometry>>(m,
                                                             "TrackingGeometry")
-            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                             std::shared_ptr<const IMaterialDecorator> matDec,
-                             const GeometryIdentifierHook& hook,
-                             Acts::Logging::Level level) {
-              auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
-              auto obj = std::make_shared<Acts::TrackingGeometry>(
-                  volPtr, matDec.get(), hook, *logger);
-              return obj;
-            }))
+            .def(py::init(
+                [](const MutableTrackingVolumePtr& volPtr,
+                   const std::shared_ptr<const IMaterialDecorator>& matDec,
+                   const GeometryIdentifierHook& hook,
+                   Acts::Logging::Level level) {
+                  auto logger =
+                      Acts::getDefaultLogger("TrackingGeometry", level);
+                  auto obj = std::make_shared<Acts::TrackingGeometry>(
+                      volPtr, matDec.get(), hook, *logger);
+                  return obj;
+                }))
             .def("visitSurfaces",
                  [](Acts::TrackingGeometry& self, py::function& func) {
                    self.visitSurfaces(func);
@@ -314,7 +322,7 @@ void addGeometry(Context& ctx) {
         m, "GeometryIdentifierHook")
         .def(py::init([](py::object callable) {
           auto hook = std::make_shared<GeometryIdentifierHookBinding>();
-          hook->callable = callable;
+          hook->callable = std::move(callable);
           return hook;
         }));
   }
@@ -398,6 +406,11 @@ void addGeometry(Context& ctx) {
 
   py::class_<PortalShellBase>(m, "PortalShellBase");
 
+  py::class_<BoundarySurfaceT<TrackingVolume>>(
+      m, "BoundarySurfaceT_TrackingVolume");
+
+  py::class_<Portal>(m, "Portal");
+
   addBlueprint(ctx);
 }
 
@@ -447,7 +460,7 @@ void addExperimentalGeometry(Context& ctx) {
 
   // Portal definition
   py::class_<Experimental::Portal, std::shared_ptr<Experimental::Portal>>(
-      m, "Portal");
+      m, "PortalGen2");
 
   {
     // The surface hierarchy map
