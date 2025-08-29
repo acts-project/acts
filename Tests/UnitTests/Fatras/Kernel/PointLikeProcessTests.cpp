@@ -43,7 +43,7 @@ struct MockMakeChildren {
 //  }
 
   template <typename generator_t>
-  std::pair<double, double> generatePathLimits(generator_t& generator, const Particle& particle) const
+  std::pair<double, double> generatePathLimits(generator_t&, const Particle&) const
   {
     return {0., 0.};
   }
