@@ -18,43 +18,41 @@ namespace ActsExamples {
 
 class SimVertexBarcode {
  public:
-  using Value = SimBarcode::Value;
+  using ValueVtx = SimBarcode::ValueVtx;
+  using ValuePart = SimBarcode::ValuePart;
+  using ValueGen = SimBarcode::ValueGen;
 
   constexpr SimVertexBarcode() = default;
-  explicit constexpr SimVertexBarcode(Value encoded)
-      : m_id(SimBarcode(encoded)) {
-    if (m_id != m_id.vertexId()) {
-      throw std::invalid_argument("SimVertexBarcode: invalid vertexId");
-    }
-  }
-  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
-      : SimVertexBarcode(vertexId.vertexId().value()) {}
+  explicit constexpr SimVertexBarcode(SimBarcode barcode)
+      : m_id(barcode.vertexId()) {}
 
-  /// Get the encoded value of all index levels.
-  constexpr Value value() const { return m_id.value(); }
+  constexpr SimVertexBarcode(ValueVtx pv, ValueVtx sv, ValueGen g)
+      : m_id(pv, sv, g) {}
 
   /// Return the barcode.
   constexpr SimBarcode barcode() const { return m_id; }
 
   /// Return the primary vertex identifier.
-  constexpr Value vertexPrimary() const { return m_id.vertexPrimary(); }
+  constexpr ValueVtx vertexPrimary() const { return m_id.vertexPrimary(); }
   /// Return the secondary vertex identifier.
-  constexpr Value vertexSecondary() const { return m_id.vertexSecondary(); }
+  constexpr ValueVtx vertexSecondary() const { return m_id.vertexSecondary(); }
   /// Return the generation identifier.
-  constexpr Value generation() const { return m_id.generation(); }
+  constexpr ValueGen generation() const { return m_id.generation(); }
 
   /// Set the primary vertex identifier.
-  constexpr SimVertexBarcode& setVertexPrimary(Value id) {
+  constexpr SimVertexBarcode& setVertexPrimary(ValueVtx id) {
     return m_id.setVertexPrimary(id), *this;
   }
   /// Set the secondary vertex identifier.
-  constexpr SimVertexBarcode& setVertexSecondary(Value id) {
+  constexpr SimVertexBarcode& setVertexSecondary(ValueVtx id) {
     return m_id.setVertexSecondary(id), *this;
   }
   /// Set the particle identifier.
-  constexpr SimVertexBarcode& setGeneration(Value id) {
+  constexpr SimVertexBarcode& setGeneration(ValueGen id) {
     return m_id.setGeneration(id), *this;
   }
+
+  Acts::HashedString hash() const { return m_id.hash(); }
 
  private:
   /// The vertex ID
@@ -139,7 +137,7 @@ namespace std {
 template <>
 struct hash<ActsExamples::SimVertexBarcode> {
   auto operator()(ActsExamples::SimVertexBarcode barcode) const noexcept {
-    return std::hash<ActsExamples::SimVertexBarcode::Value>()(barcode.value());
+    return barcode.hash();
   }
 };
 }  // namespace std

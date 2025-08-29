@@ -356,7 +356,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       auto particleId = particle.particleId();
 
       m_treeEventNr = ctx.eventNumber;
-      m_treeParticleId = particleId.value();
+      m_treeParticleId = particleId.getData();
 
       m_treeIsMatched = false;
       if (auto imatched = particleTrackMatching.find(particleId);

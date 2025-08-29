@@ -555,8 +555,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
             });
 
         ACTS_VERBOSE("Converted sim hit for truth particle: "
-                     << simHit.particleId() << " ("
-                     << simHit.particleId().value() << ") at "
+                     << simHit.particleId() << " at "
                      << simHit.fourPosition().transpose() << " with time "
                      << simHit.time());
 
@@ -808,7 +807,7 @@ void EDM4hepSimInputConverter::processChildren(
 
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "+ add particle " << particle << " ("
-                 << particle.particleId().value() << ") from #"
+                 << particle.particleId() << ") from #"
                  << daughter.getObjectID());
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "  - generation: " << particle.particleId().generation());

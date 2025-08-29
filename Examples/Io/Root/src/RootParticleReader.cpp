@@ -41,7 +41,7 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("particle_id", &m_particleId);
+  m_inputChain->SetBranchAddress("particle_hash", &m_particleHash);
   m_inputChain->SetBranchAddress("particle_type", &m_particleType);
   m_inputChain->SetBranchAddress("process", &m_process);
   m_inputChain->SetBranchAddress("vx", &m_vx);
@@ -97,7 +97,7 @@ std::pair<std::size_t, std::size_t> RootParticleReader::availableEvents()
 }
 
 RootParticleReader::~RootParticleReader() {
-  delete m_particleId;
+  delete m_particleHash;
   delete m_particleType;
   delete m_process;
   delete m_vx;
@@ -146,7 +146,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading event: " << context.eventNumber
                                << " stored as entry: " << entry);
 
-  unsigned int nParticles = m_particleId->size();
+  unsigned int nParticles = m_particleType->size();
 
   for (unsigned int i = 0; i < nParticles; i++) {
     SimParticle p;
@@ -155,7 +155,9 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
     p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType).at(i)));
     p.setCharge((*m_q).at(i) * Acts::UnitConstants::e);
     p.setMass((*m_m).at(i) * Acts::UnitConstants::GeV);
-    p.setParticleId(SimBarcode((*m_particleId).at(i)));
+    p.setParticleId(SimBarcode((*m_vertexPrimary).at(i),
+                               (*m_vertexSecondary).at(i), (*m_particle).at(i),
+                               (*m_generation).at(i), (*m_subParticle).at(i)));
 
     SimParticleState& initialState = p.initial();
 

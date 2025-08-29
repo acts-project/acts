@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 #include <TChain.h>
@@ -41,10 +40,12 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   // Set the branches
-  int f = 0;
   auto setBranches = [&](const auto& keys, auto& columns) {
+    using MappedType =
+        typename std::remove_reference_t<decltype(columns)>::mapped_type;
     for (auto key : keys) {
-      columns.insert({key, f++});
+      MappedType a{};  // 0 or nullptr
+      columns.emplace(key, a);
     }
     for (auto key : keys) {
       m_inputChain->SetBranchAddress(key, &columns.at(key));
@@ -55,6 +56,7 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   setBranches(m_uint32Keys, m_uint32Columns);
   setBranches(m_uint64Keys, m_uint64Columns);
   setBranches(m_int32Keys, m_int32Columns);
+  setBranches(m_vec_uint32Keys, m_vec_uint32Columns);
 
   // add file to the input chain
   m_inputChain->Add(m_cfg.filePath.c_str());
@@ -147,7 +149,7 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
     }
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
-    const SimBarcode pid{m_uint64Columns.at("particle_id")};
+    const SimBarcode pid{*m_vec_uint32Columns.at("barcode")};
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {

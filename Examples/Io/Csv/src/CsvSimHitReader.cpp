@@ -64,7 +64,10 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     ACTS_DEBUG("found a sim hit");
     const auto geometryId = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
-    const auto particleId = ActsFatras::Barcode(data.particle_id);
+
+    const auto particleId = ActsFatras::Barcode(
+        data.particle_id_pv, data.particle_id_sv, data.particle_id_part,
+        data.particle_id_gen, data.particle_id_subpart);
 
     Acts::Vector4 pos4{
         data.tx * Acts::UnitConstants::mm,

@@ -195,22 +195,20 @@ struct CompareParticleId {
 };
 struct PrimaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
-        particle.particleId().vertexPrimary());
+    return SimBarcode().setVertexPrimary(particle.particleId().vertexPrimary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
-        particle.particleId().vertexPrimary());
+    return SimBarcode().setVertexPrimary(particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u)
+    return SimBarcode()
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u)
+    return SimBarcode()
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }

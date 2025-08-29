@@ -25,17 +25,6 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
-std::uint64_t concatInts(int a, int b) {
-  auto va = static_cast<std::uint32_t>(a);
-  auto vb = static_cast<std::uint32_t>(b);
-  std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
-  return value;
-}
-
-std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
-  return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
-          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
-}
 
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
@@ -44,7 +33,7 @@ inline auto particleVectorToSet(
     std::vector<ActsExamples::SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
-    return a.particleId().value() == b.particleId().value();
+    return a.particleId() == b.particleId();
   };
 
   std::ranges::sort(particles, detail::CompareParticleId{});
@@ -252,7 +241,10 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     }
 
     SimBarcode dummyBarcode{
-        concatInts(Part_barcode[ip], Part_event_number[ip])};
+        static_cast<SimBarcode::ValueVtx>(Part_event_number[ip]),
+        static_cast<SimBarcode::ValueVtx>(
+            Part_barcode[ip] < s_maxBarcodeForPrimary ? 0 : 1),
+        static_cast<SimBarcode::ValuePart>(Part_barcode[ip]), 0, 0};
     SimParticleState particle(dummyBarcode,
                               static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -456,7 +448,11 @@ RootAthenaDumpReader::readMeasurements(
       for (const auto& [subevt, barcode] :
            Acts::zip(CLparticleLink_eventIndex->at(im),
                      CLparticleLink_barcode->at(im))) {
-        SimBarcode dummyBarcode{concatInts(barcode, subevt)};
+        SimBarcode dummyBarcode{static_cast<SimBarcode::ValueVtx>(subevt),
+                                static_cast<SimBarcode::ValueVtx>(
+                                    barcode < s_maxBarcodeForPrimary ? 0 : 1),
+                                static_cast<SimBarcode::ValuePart>(barcode), 0,
+                                0};
         // If we don't find the particle, create one with default values
         if (particles.find(dummyBarcode) == particles.end()) {
           ACTS_VERBOSE("Particle with subevt "
@@ -655,13 +651,12 @@ RootAthenaDumpReader::reprocessParticles(
     const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
 
     if (begin == end) {
-      ACTS_VERBOSE("Particle " << particle.particleId().value()
+      ACTS_VERBOSE("Particle " << particle.particleId()
                                << " has no measurements");
       continue;
     }
 
-    auto [athBarcode, athSubevent] = splitInt(particle.particleId().value());
-    auto primary = (athBarcode < s_maxBarcodeForPrimary);
+    auto primary = particle.particleId().vertexSecondary() == 0;
 
     ActsFatras::Barcode fatrasBarcode;
 
