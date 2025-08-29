@@ -40,7 +40,8 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
-      inputParticleMeasurementsMap, outputProtoTracks);
+      inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
+      inputMeasurementSimHitsMap, outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,
@@ -132,8 +133,9 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
-      inputParticles, inputParticleMeasurementsMap, inputSpacePoints,
-      outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
+      inputParticles, inputParticleMeasurementsMap, inputSimHits,
+      inputMeasurementSimHitsMap, inputSpacePoints, outputParticles,
+      outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
                                 inputHits, inputParticlesSelected, outputHits,
