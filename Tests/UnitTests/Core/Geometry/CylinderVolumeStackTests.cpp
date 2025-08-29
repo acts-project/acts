@@ -2612,6 +2612,108 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegativeFlipped) {
   BOOST_CHECK_CLOSE(originalSecondVol->center()[eZ], 0, 1e-10);
 }
 
+BOOST_AUTO_TEST_CASE(RStackGapCreationWithUpdatedTransform) {
+  double hlZ = 400_mm;
+  double rMin1 = 100_mm;
+  double rMax1 = 200_mm;
+  double rMin2 = 200_mm;
+  double rMax2 = 300_mm;
+
+  // Create two cylinder volumes stacked in r
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(rMin1, rMax1, hlZ);
+  auto bounds2 = std::make_shared<CylinderVolumeBounds>(rMin2, rMax2, hlZ);
+
+  Transform3 transform = Transform3::Identity();
+  auto vol1 = std::make_shared<Volume>(transform, bounds1);
+  auto vol2 = std::make_shared<Volume>(transform, bounds2);
+
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+  // Test with Gap for outer radius and Expand for inner radius
+  CylinderVolumeStack cylStack(volumes, AxisDirection::AxisR,
+                               VolumeAttachmentStrategy::Midpoint,
+                               VolumeResizeStrategy::Gap, *logger);
+
+  cylStack.update(
+      std::make_shared<CylinderVolumeBounds>(50_mm, rMax2, hlZ + 5_mm),
+      Transform3(Translation3(Vector3::UnitZ() * 5_mm)), *logger);
+
+  auto& cylBounds =
+      dynamic_cast<CylinderVolumeBounds&>(cylStack.volumeBounds());
+
+  BOOST_CHECK_EQUAL(cylBounds.get(CylinderVolumeBounds::eMinR), 50_mm);
+  BOOST_CHECK_EQUAL(cylBounds.get(CylinderVolumeBounds::eMaxR), rMax2);
+  BOOST_CHECK_EQUAL(cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
+                    hlZ + 5_mm);
+
+  auto gapIt = std::ranges::find_if(volumes, [&](const auto* vol) {
+    return vol != vol1.get() && vol != vol2.get();  // Find gap volume
+  });
+
+  BOOST_REQUIRE(gapIt != volumes.end());
+
+  const auto* gap1 = *gapIt;
+
+  BOOST_CHECK_EQUAL(vol1->center()[eZ], 5_mm);
+  BOOST_CHECK_EQUAL(vol2->center()[eZ], 5_mm);
+  BOOST_CHECK_EQUAL(gap1->center()[eZ], 5_mm);
+
+  cylStack.update(
+      std::make_shared<CylinderVolumeBounds>(50_mm, 350_mm, hlZ + 10_mm),
+      Transform3(Translation3(Vector3::UnitZ() * 10_mm)), *logger);
+
+  gapIt = std::ranges::find_if(volumes, [&](const auto* vol) {
+    return vol != vol1.get() && vol != vol2.get() &&
+           vol != gap1;  // Find gap volume
+  });
+
+  BOOST_REQUIRE(gapIt != volumes.end());
+
+  const auto* gap2 = *gapIt;
+
+  BOOST_CHECK_EQUAL(vol1->center()[eZ], 10_mm);
+  BOOST_CHECK_EQUAL(vol2->center()[eZ], 10_mm);
+  BOOST_CHECK_EQUAL(gap1->center()[eZ], 10_mm);
+  BOOST_CHECK_EQUAL(gap2->center()[eZ], 10_mm);
+
+  const auto& gap1Bounds =
+      dynamic_cast<const CylinderVolumeBounds&>(gap1->volumeBounds());
+
+  const auto& gap2Bounds =
+      dynamic_cast<const CylinderVolumeBounds&>(gap2->volumeBounds());
+
+  bounds1 =
+      std::dynamic_pointer_cast<CylinderVolumeBounds>(vol1->volumeBoundsPtr());
+  bounds2 =
+      std::dynamic_pointer_cast<CylinderVolumeBounds>(vol2->volumeBoundsPtr());
+
+  BOOST_REQUIRE(bounds1 != nullptr);
+  BOOST_REQUIRE(bounds2 != nullptr);
+
+  BOOST_CHECK_EQUAL(bounds1->get(CylinderVolumeBounds::eMinR), rMin1);
+  BOOST_CHECK_EQUAL(bounds1->get(CylinderVolumeBounds::eMaxR), rMax1);
+  BOOST_CHECK_EQUAL(bounds1->get(CylinderVolumeBounds::eHalfLengthZ),
+                    hlZ + 10_mm);
+
+  BOOST_CHECK_EQUAL(bounds2->get(CylinderVolumeBounds::eMinR), rMin2);
+  BOOST_CHECK_EQUAL(bounds2->get(CylinderVolumeBounds::eMaxR), rMax2);
+  BOOST_CHECK_EQUAL(bounds2->get(CylinderVolumeBounds::eHalfLengthZ),
+                    hlZ + 10_mm);
+
+  BOOST_CHECK_EQUAL(gap1Bounds.get(CylinderVolumeBounds::eMinR), 50_mm);
+  BOOST_CHECK_EQUAL(gap1Bounds.get(CylinderVolumeBounds::eMaxR), rMin1);
+  BOOST_CHECK_EQUAL(gap1Bounds.get(CylinderVolumeBounds::eHalfLengthZ),
+                    hlZ + 10_mm);
+
+  BOOST_CHECK_EQUAL(gap2Bounds.get(CylinderVolumeBounds::eMinR), rMax2);
+  BOOST_CHECK_EQUAL(gap2Bounds.get(CylinderVolumeBounds::eMaxR), 350_mm);
+  BOOST_CHECK_EQUAL(gap2Bounds.get(CylinderVolumeBounds::eHalfLengthZ),
+                    hlZ + 10_mm);
+
+  BOOST_CHECK_EQUAL(vol1->center()[eZ], 10_mm);
+  BOOST_CHECK_EQUAL(vol2->center()[eZ], 10_mm);
+  BOOST_CHECK_EQUAL(gap1->center()[eZ], 10_mm);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
