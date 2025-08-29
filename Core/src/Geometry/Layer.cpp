@@ -194,7 +194,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
                          options.resolveSensitive)) {
     // get the candidates
     const std::vector<const Surface*>& sensitiveSurfaces =
-        m_surfaceArray->neighbors(position);
+        m_surfaceArray->neighbors(position, direction);
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
