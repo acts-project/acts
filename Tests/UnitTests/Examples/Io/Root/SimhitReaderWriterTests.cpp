@@ -17,7 +17,6 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <random>
 
 using namespace ActsExamples;
@@ -33,7 +32,11 @@ auto makeTestSimhits(std::size_t nSimHits) {
   SimHitContainer simhits;
   for (auto i = 0ul; i < nSimHits; ++i) {
     Acts::GeometryIdentifier geoid(distIds(gen));
-    SimBarcode pid(distIds(gen));
+    SimBarcode pid(static_cast<SimBarcode::ValueVtx>(distIds(gen)),
+                   static_cast<SimBarcode::ValueVtx>(distIds(gen)),
+                   static_cast<SimBarcode::ValuePart>(distIds(gen)),
+                   static_cast<SimBarcode::ValueGen>(distIds(gen)),
+                   static_cast<SimBarcode::ValuePart>(distIds(gen)));
 
     Acts::Vector4 pos4 = Acts::Vector4::Random();
     Acts::Vector4 before4 = Acts::Vector4::Random();

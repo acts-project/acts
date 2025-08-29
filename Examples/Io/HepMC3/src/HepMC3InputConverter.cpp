@@ -78,7 +78,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
   for (const auto& vertex : vertices) {
     ss << "Vtx:    " << vertex.vertexId() << " at "
        << vertex.position4.transpose() << "\n";
-    for (const auto& [idx, particleId] : enumerate(vertex.incoming)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.incoming)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " I:     ";
@@ -89,7 +89,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
       ss << "\n";
     }
 
-    for (const auto& [idx, particleId] : enumerate(vertex.outgoing)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.outgoing)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " O:     ";
@@ -158,7 +158,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << kUndecayedParticleStatus << ")");
       }
       // This particle is a final state particle
-      SimBarcode particleId{0u};
+      SimBarcode particleId{};
       nParticles += 1;
       particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
           .setVertexSecondary(vertex.vertexId().vertexSecondary())

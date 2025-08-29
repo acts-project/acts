@@ -89,12 +89,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
       }
       ACTS_VERBOSE("Accepting: Hit above threshold: " << momentum);
 
-      if (particleHits.find(simHit.particleId().value()) ==
-          particleHits.end()) {
-        particleHits[simHit.particleId().value()] = {};
+      if (particleHits.find(simHit.particleId().hash()) == particleHits.end()) {
+        particleHits[simHit.particleId().hash()] = {};
       }
-      particleHits[simHit.particleId().value()].push_back(
-          simHit.fourPosition());
+      particleHits[simHit.particleId().hash()].push_back(simHit.fourPosition());
     }
     // Draw loop
     std::size_t lOffset = 1;
