@@ -525,60 +525,63 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
     }
 
     for (const auto& [ilayer, surfaces] : layers) {
-      barrel.addMaterial(
-          std::format("Pixel_Barrel_L{}_Material", ilayer), [&](auto& lmat) {
-            // Outermost layer can't have material, because it will get merged
-            // with the outer cylinder shell of the endcap cylinders
-            //
-            //                          Material here is fine   |
-            //                                                  |
-            //                                                  |
-            //                Will get merged. Therefore none   |
-            //                   of them can have material      |
-            //                                                  |
-            //                               |                  |
-            //                               |                  |
-            //                               |                  |
-            //       +-----------------------+-+----------------+---------+
-            //       |                         |                |         |
-            //       |                         |                |         |
-            //       v                         v                |         v
-            // +----------+-------------------------------------+---+----------+
-            // |          |                Barrel L2            |   |          |
-            // |          +-------------------------------------v---+          |
-            // |          |                   Gap                   |          |
-            // |          +-----------------------------------------+          |
-            // |  Neg EC  |                Barrel L1                |  Pos EC  |
-            // |          +-----------------------------------------+          |
-            // |          |                   Gap                   |          |
-            // |          +-----------------------------------------+          |
-            // |          |                Barrel L0                |          |
-            // +----------+-----------------------------------------+----------+
-            if (ilayer < static_cast<int>(layers.size() - 1)) {
-              lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40},
-                                 {AxisZ, Bound, 20});
-            }
-            // Add layer with surfaces
-            auto& layer =
-                lmat.addLayer(std::format("Pixel_Barrel_L{}", ilayer));
+      Acts::Experimental::BlueprintNode* lparent = nullptr;
 
-            // Set navigation policy for efficient surface lookup
-            layer.setNavigationPolicyFactory(
-                Acts::NavigationPolicyFactory{}
-                    .add<Acts::SurfaceArrayNavigationPolicy>(
-                        Acts::SurfaceArrayNavigationPolicy::Config{
-                            .layerType = Cylinder, .bins = {30, 10}})
-                    .add<Acts::TryAllNavigationPolicy>(
-                        Acts::TryAllNavigationPolicy::Config{.sensitives =
-                                                                 false})
-                    .asUniquePtr());
+      // Outermost layer can't have material, because it will get merged
+      // with the outer cylinder shell of the endcap cylinders
+      //
+      //                          Material here is fine   |
+      //                                                  |
+      //                                                  |
+      //                Will get merged. Therefore none   |
+      //                   of them can have material      |
+      //                                                  |
+      //                               |                  |
+      //                               |                  |
+      //                               |                  |
+      //       +-----------------------+-+----------------+---------+
+      //       |                         |                |         |
+      //       |                         |                |         |
+      //       v                         v                |         v
+      // +----------+-------------------------------------+---+----------+
+      // |          |                Barrel L2            |   |          |
+      // |          +-------------------------------------v---+          |
+      // |          |                   Gap                   |          |
+      // |          +-----------------------------------------+          |
+      // |  Neg EC  |                Barrel L1                |  Pos EC  |
+      // |          +-----------------------------------------+          |
+      // |          |                   Gap                   |          |
+      // |          +-----------------------------------------+          |
+      // |          |                Barrel L0                |          |
+      // +----------+-----------------------------------------+----------+
+      if (ilayer < static_cast<int>(layers.size() - 1)) {
+        auto& lmat = barrel.addMaterial(
+            std::format("Pixel_Barrel_L{}_Material", ilayer));
+        lmat.configureFace(OuterCylinder, {AxisRPhi, Bound, 40},
+                           {AxisZ, Bound, 20});
+        lparent = &lmat;
+      } else {
+        lparent = &barrel;
+      }
 
-            layer.setSurfaces(surfaces);
-            layer.setEnvelope(Acts::ExtentEnvelope{{
-                .z = {5_mm, 5_mm},  // ???
-                .r = {2_mm, 2_mm},  // ???
-            }});
-          });
+      // Add layer with surfaces
+      auto& layer = lparent->addLayer(std::format("Pixel_Barrel_L{}", ilayer));
+
+      // Set navigation policy for efficient surface lookup
+      layer.setNavigationPolicyFactory(
+          Acts::NavigationPolicyFactory{}
+              .add<Acts::SurfaceArrayNavigationPolicy>(
+                  Acts::SurfaceArrayNavigationPolicy::Config{
+                      .layerType = Cylinder, .bins = {30, 10}})
+              .add<Acts::TryAllNavigationPolicy>(
+                  Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+              .asUniquePtr());
+
+      layer.setSurfaces(surfaces);
+      layer.setEnvelope(Acts::ExtentEnvelope{{
+          .z = {5_mm, 5_mm},  // ???
+          .r = {2_mm, 2_mm},  // ???
+      }});
     }
 
     // Add endcap containers
