@@ -982,7 +982,6 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                 newMinR, oldMinR, newHlZ);
             auto gapTransform = newVolume.globalTransform;
             auto gapVolume = addGapVolume(gapTransform, gapBounds);
-            ACTS_VERBOSE("WITH target transform\n" << gapTransform.matrix());
             volumeTuples.insert(volumeTuples.begin(),
                                 VolumeTuple{*gapVolume, m_groupTransform});
             auto gap = volumeTuples.front();
