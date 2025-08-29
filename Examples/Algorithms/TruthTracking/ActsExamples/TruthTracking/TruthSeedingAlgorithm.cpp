@@ -170,25 +170,13 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
     // Space points on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
-    std::vector<double> times;
     spacePointsOnTrack.reserve(track.size());
     // Loop over the measurement index on the proto track to find the space
     // points
     for (const auto& measurementIndex : track) {
       auto it = spMap.find(measurementIndex);
-      const auto simHitMapIt = measurementSimHitsMap.find(measurementIndex);
-      std::optional<double> time;
-      if (simHitMapIt == measurementSimHitsMap.end()) {
-        const auto simHitIt = simHits.nth(simHitMapIt->second);
-        if (simHitIt == simHits.end()) {
-          const auto& simHit = *simHitIt;
-          time = simHit.time();
-        }
-      }
-
       if (it != spMap.end()) {
         spacePointsOnTrack.push_back(it->second);
-        times.push_back(time.value_or(0.0));
       }
     }
     // At least three space points are required
@@ -196,22 +184,19 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    std::vector<std::size_t> indices;
-    indices.resize(spacePointsOnTrack.size());
-    std::iota(indices.begin(), indices.end(), 0);
+    // Sort the space points time
+    std::ranges::sort(spacePointsOnTrack, [&](const auto* a, const auto* b) {
+      auto ta = a->t();
+      auto tb = b->t();
+      if (!ta.has_value()) {
+        return false;
+      }
+      if (!tb.has_value()) {
+        return true;
+      }
 
-    // Sort the space points by hit time
-    std::ranges::sort(indices, [&](std::size_t a, std::size_t b) {
-      return times[a] < times[b];
+      return *ta < *tb;
     });
-
-    std::vector<const SimSpacePoint*> sortedSpacePointsTemp =
-        std::move(spacePointsOnTrack);
-    spacePointsOnTrack.clear();
-
-    for (const auto& idx : indices) {
-      spacePointsOnTrack.push_back(sortedSpacePointsTemp[idx]);
-    }
 
     // Loop over the found space points to find the seed with maximum deltaR
     // between the bottom and top space point
