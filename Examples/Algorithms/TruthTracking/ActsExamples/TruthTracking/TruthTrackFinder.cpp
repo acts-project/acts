@@ -115,8 +115,6 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
       sortedTrack.hitIndices.emplace_back(track.hitIndices[idx]);
     }
 
-    sortedTrack.particle = &particle;
-
     // add proto track to the output collection
     tracks.emplace_back(std::move(sortedTrack));
   }

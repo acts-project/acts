@@ -163,8 +163,6 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       track.hitIndices.emplace_back(index);
     }
 
-    track.particle = &particle;
-
     // The list of measurements and the initial start parameters
     if (track.hitIndices.size() < 3) {
       ACTS_WARNING("Particle " << particle << " has less than 3 measurements");
