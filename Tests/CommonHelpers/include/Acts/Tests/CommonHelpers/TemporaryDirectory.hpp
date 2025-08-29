@@ -21,7 +21,7 @@ class TemporaryDirectory {
       const char* envvar = std::getenv("ACTS_NO_TEST_TEMP");
       if (envvar != nullptr) {
         std::string val{envvar};
-        if (val != "") {
+        if (!val.empty()) {
           return true;
         }
       }
