@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -442,16 +442,14 @@ DetrayPayloadConverter::convertMaterial(
   detray::io::material_volume_payload homogeneous;
   homogeneous.volume_link.link = volPayload.index.link;
 
+  // @HACK: Detray does not like homoegeneous material only on SOME surfaces.
   ACTS_WARNING("Adding dummy material slabs to homogeneous collection for "
                << volPayload.surfaces.size()
                << " surfaces (detray "
                   "hack)");
   for (const auto& surface : volPayload.surfaces) {
     auto& slabPayload = homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
-    // @FIXME: Joana says this should be surface-in-volume index
-    // slabPayload.index_in_coll = homogeneous.mat_slabs.size() - 1;
     slabPayload.index_in_coll = surface.index_in_coll.value();
-    // slabPayload.index_in_coll = std::nullopt;
     slabPayload.surface.link = surface.index_in_coll.value();
   }
 
@@ -475,15 +473,12 @@ DetrayPayloadConverter::convertMaterial(
                          << srfIdx);
             auto& targetSlab = *it;
             targetSlab = slab;
-            // Redundant index?
             targetSlab.index_in_coll = srfIdx;
-            // targetSlab.index_in_coll = std::nullopt;
             targetSlab.surface.link = srfIdx;
           } else {
             ACTS_VERBOSE("Updating slab in homogeneous material for surface "
                          << srfIdx);
             homogeneous.mat_slabs.emplace_back(slab);
-            // @FIXME: Joana says this should be surface-in-volume index
             homogeneous.mat_slabs.back().index_in_coll = srfIdx;
             homogeneous.mat_slabs.back().surface.link = srfIdx;
           }
@@ -579,10 +574,10 @@ DetrayPayloadConverter::convertMaterial(
       continue;
     }
 
-    std::unique_ptr<DetraySurfaceMaterial> detrayMaterial =
+    std::optional detrayMaterial =
         m_cfg.convertSurfaceMaterial(*surface.surfaceMaterial());
 
-    if (detrayMaterial == nullptr) {
+    if (!detrayMaterial.has_value()) {
       continue;
     }
 
@@ -605,11 +600,11 @@ DetrayPayloadConverter::convertMaterial(
       continue;
     }
 
-    std::unique_ptr<DetraySurfaceMaterial> detrayMaterial =
+    std::optional detrayMaterial =
         m_cfg.convertSurfaceMaterial(*surfaceMaterial);
 
     // Portal surface material reports it does not apply to detray, skip
-    if (detrayMaterial == nullptr) {
+    if (!detrayMaterial.has_value()) {
       continue;
     }
 
@@ -800,10 +795,10 @@ DetrayPayloadConverter::convertTrackingGeometry(
         return it->second;
       };
 
-      std::unique_ptr<DetraySurfaceGrid> detrayGrid = nullptr;
+      std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
 
       navPolicy->visit([&](const INavigationPolicy& policy) {
-        if (detrayGrid != nullptr) {
+        if (detrayGrid.has_value()) {
           ACTS_ERROR("Volume "
                      << volume.volumeName()
                      << " has more than one detray-convertible navigation "
@@ -816,7 +811,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
             m_cfg.convertNavigationPolicy(policy, surfaceLookupFn, logger());
       });
 
-      if (detrayGrid != nullptr) {
+      if (detrayGrid.has_value()) {
         ACTS_DEBUG("Volume " << volume.volumeName()
                              << " (detray idx: " << volPayload.index.link
                              << ") has navigation policy which produced "
