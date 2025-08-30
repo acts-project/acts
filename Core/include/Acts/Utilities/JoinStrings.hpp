@@ -52,8 +52,9 @@ concept formattable =
 /// @returns Joined string
 template <std::ranges::range R>
   requires detail::formattable<std::ranges::range_value_t<R>, char>
-std::string joinStrings(R&& values, std::string_view delimiter,
-                        std::string_view format) {
+std::string joinStrings(
+    R&& values, std::string_view delimiter,
+    std::format_string<const std::ranges::range_value_t<R>&> format) {
   std::string result;
   bool first = true;
 
@@ -61,7 +62,7 @@ std::string joinStrings(R&& values, std::string_view delimiter,
     if (!first) {
       result += delimiter;
     }
-    result += std::vformat(format, std::make_format_args(value));
+    result += std::format(format, value);
     first = false;
   }
 
