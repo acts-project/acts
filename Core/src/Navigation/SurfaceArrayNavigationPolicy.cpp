@@ -8,11 +8,10 @@
 
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-
-#include <algorithm>
 
 namespace Acts {
 
@@ -52,11 +51,11 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
     m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsPhi, binsR);
+        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), 10, binsPhi, binsR);
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
-    m_surfaceArray =
-        sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
+    m_surfaceArray = sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), 10,
+                                                binsPhi, binsZ);
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");
@@ -81,7 +80,7 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
   const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position);
+      m_surfaceArray->neighbors(args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 

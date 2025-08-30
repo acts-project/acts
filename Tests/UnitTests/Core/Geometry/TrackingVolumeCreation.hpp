@@ -57,13 +57,14 @@ TrackingVolumePtr constructCylinderVolume(
   SurfaceArrayCreator::Config sacConfig;
   SurfaceArrayCreator sac{sacConfig};
 
-  auto bArray = sac.surfaceArrayOnCylinder(gctx, surfaces_only);
+  double thickness = surfaceRstagger + 2 * layerEnvelope;
+
+  auto bArray = sac.surfaceArrayOnCylinder(gctx, surfaces_only, thickness);
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
   auto layer0 = CylinderLayer::create(Transform3::Identity(), layer0bounds,
-                                      std::move(bArray),
-                                      surfaceRstagger + 2 * layerEnvelope);
+                                      std::move(bArray), thickness);
   std::unique_ptr<const LayerArray> layerArray =
       std::make_unique<const BinnedArrayXD<LayerPtr>>(layer0);
 
@@ -106,4 +107,5 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   // return the container
   return hVolume;
 }
+
 }  // namespace Acts

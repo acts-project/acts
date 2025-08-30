@@ -23,15 +23,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
@@ -462,4 +458,5 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

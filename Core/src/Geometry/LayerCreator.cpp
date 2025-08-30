@@ -100,7 +100,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer);
+        gctx, std::move(surfaces), layerThickness, binsPhi, binsZ, protoLayer);
 
     checkBinning(gctx, *sArray);
   }
@@ -178,7 +178,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer);
+        gctx, std::move(surfaces), layerThickness, bTypePhi, bTypeZ,
+        protoLayer);
 
     checkBinning(gctx, *sArray);
   }
@@ -246,7 +247,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, transform);
+        gctx, std::move(surfaces), layerThickness, binsR, binsPhi, protoLayer,
+        transform);
 
     checkBinning(gctx, *sArray);
   }
@@ -316,7 +318,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
+        gctx, std::move(surfaces), layerThickness, bTypeR, bTypePhi, protoLayer,
+        transform);
 
     checkBinning(gctx, *sArray);
   }
@@ -419,7 +422,8 @@ MutableLayerPtr LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer, transform);
+        gctx, std::move(surfaces), layerThickness, bins1, bins2, aDir,
+        protoLayer, transform);
 
     checkBinning(gctx, *sArray);
   }

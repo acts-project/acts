@@ -18,8 +18,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -57,8 +55,8 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   const double thickness(1.0);
   SurfaceArrayCreator sac;
   std::size_t binsX(2), binsY(4);
-  auto pSurfaceArray = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX,
-                                               binsY, AxisDirection::AxisZ);
+  auto pSurfaceArray = sac.surfaceArrayOnPlane(
+      tgContext, aSurfaces, thickness, binsX, binsY, AxisDirection::AxisZ);
   auto pPlaneLayerFromSurfaces =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray));
   BOOST_CHECK_EQUAL(pPlaneLayerFromSurfaces->layerType(), LayerType::active);
