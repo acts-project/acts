@@ -8,8 +8,11 @@
 
 #include "Acts/Utilities/GraphViz.hpp"
 
+#include "Acts/Utilities/JoinStrings.hpp"
+
 #include <algorithm>
-#include <sstream>
+#include <iterator>
+#include <ranges>
 #include <string>
 
 #include <boost/algorithm/string/join.hpp>
@@ -245,41 +248,27 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
 
   std::string id = node.id;
   std::ranges::replace(id, ' ', '_');
-  os << id << " [";
 
   std::vector<std::string> attributes;
 
-  std::vector<std::string> styles;
-  std::ranges::transform(node.style, std::back_inserter(styles),
-                         [](const Style& style) {
-                           std::stringstream ss;
-                           ss << style;
-                           return ss.str();
-                         });
-
   if (!node.label.empty()) {
-    attributes.push_back("label=<" + node.label + ">");
+    attributes.push_back(std::format("label=<{}>", node.label));
   }
 
-  std::stringstream ss;
-  ss << node.shape;
-  attributes.push_back("shape=" + ss.str());
+  attributes.push_back(std::format("shape={}", node.shape));
 
-  attributes.push_back("style=" + boost::algorithm::join(styles, ","));
+  attributes.push_back(std::format("style={}", joinStrings(node.style, ",")));
 
-  os << boost::algorithm::join(attributes, ", ");
+  std::format_to(std::ostream_iterator<char>(os), "{} [{}];\n", id,
+                 joinStrings(attributes, ", "));
 
-  os << "];\n";
   return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const Edge& node) {
-  os << node.from.id << " -> " << node.to.id << " [";
-
-  os << "style=" << node.style;
-
-  os << "];\n";
-
+  std::format_to(std::ostream_iterator<char>(os),
+                 "\"{}\" -> \"{}\" [style={}];\n", node.from.id, node.to.id,
+                 node.style);
   return os;
 }
 
