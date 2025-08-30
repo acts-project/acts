@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 //
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
@@ -18,16 +17,17 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <memory>
 #include <ranges>
 #include <sstream>
 #include <stdexcept>
 
-#include <_strings.h>
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
 namespace Acts {
+
+using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
+using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
 namespace {
 
@@ -98,7 +98,7 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 
 }  // namespace
 
-std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
+std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const SurfaceArrayNavigationPolicy& policy,
     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
   const auto* gridLookup =
@@ -168,11 +168,11 @@ std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   }
 
   // Create the detray surface grid payload
-  auto gridPayload = std::make_unique<DetraySurfaceGrid>();
+  DetraySurfaceGrid gridPayload;
 
   // Set up the grid link with appropriate acceleration structure type
   detray::io::accel_id accelId = getDetrayAccelId(gridLookup->surfaceType());
-  gridPayload->grid_link =
+  gridPayload.grid_link =
       detray::io::typed_link_payload<detray::io::accel_id>{accelId, 0u};
 
   // @FIXME: We might have to change the order of the axis based on the surface type
@@ -194,7 +194,7 @@ std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
           (i == 0) ? detray::axis::label::e_x : detray::axis::label::e_y;
     }
 
-    gridPayload->axes.push_back(axisPayload);
+    gridPayload.axes.push_back(axisPayload);
   }
 
   std::set<const Surface*> seenSurfaces;
@@ -228,7 +228,7 @@ std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     // Add the bin to the grid payload
     detray::io::grid_bin_payload<std::size_t> binPayload{{{di, dj}},
                                                          surfaceIndices};
-    gridPayload->bins.push_back(binPayload);
+    gridPayload.bins.push_back(binPayload);
   };
 
   // Depending on the axis boundary type, we need to skip over the
@@ -271,18 +271,18 @@ std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
   ACTS_DEBUG("Filled surfaces " << seenSurfaces.size() << " into grid");
 
-  ACTS_DEBUG("Created detray payload with " << gridPayload->bins.size()
+  ACTS_DEBUG("Created detray payload with " << gridPayload.bins.size()
                                             << " populated bins");
 
   return gridPayload;
 }
 
 #define NOOP_CONVERTER_IMPL_FULL(type, name)                                  \
-  std::unique_ptr<DetraySurfaceGrid> DetrayPayloadConverter::convert##name(   \
+  std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convert##name(     \
       const type& /*policy*/, const SurfaceLookupFunction& /*surfaceLookup*/, \
       const Logger& logger) {                                                 \
     ACTS_DEBUG(#name << " does not implement explicit detray conversion");    \
-    return nullptr;                                                           \
+    return std::nullopt;                                                      \
   }
 
 #define NOOP_CONVERTER_IMPL(type) NOOP_CONVERTER_IMPL_FULL(type, type)
