@@ -9,18 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"

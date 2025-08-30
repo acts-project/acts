@@ -6,11 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -19,9 +17,9 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -30,19 +28,11 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class MagneticFieldProvider;
-class SourceLink;
-class Surface;
-class TrackingGeometry;
-}  // namespace Acts
 
 namespace {
 
@@ -84,7 +74,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   DirectFitter directFitter;
 
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
+  Acts::MbfSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
   double reverseFilteringCovarianceScaling = 1.0;
   SimpleOutlierFinder outlierFinder;
@@ -108,9 +98,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
-    extensions.smoother.connect<
-        &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-        &kfSmoother);
+    extensions.smoother
+        .connect<&Acts::MbfSmoother::operator()<Acts::VectorMultiTrajectory>>(
+            &kfSmoother);
     extensions.reverseFilteringLogic
         .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
             &reverseFilteringLogic);
