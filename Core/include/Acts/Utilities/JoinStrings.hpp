@@ -16,6 +16,7 @@ namespace Acts {
 /// Utuility to join a range of strings with a delimiter.
 /// Accepts any range of elements convertible to `std::string_view`.
 /// @param strings Range of strings to join
+/// @param delimiter Delimiter to insert between elements
 /// @returns Joined string
 template <std::ranges::range R>
   requires std::convertible_to<std::ranges::range_value_t<R>, std::string_view>

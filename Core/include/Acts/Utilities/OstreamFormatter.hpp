@@ -18,9 +18,8 @@ template <typename Char>
 struct BasicOstreamFormatter
     : std::formatter<std::basic_string_view<Char>, Char> {
   template <typename T, typename OutputIt>
-  auto format(const T& value,
-              std::basic_format_context<OutputIt, Char>& ctx) const
-      -> OutputIt {
+  auto format(const T& value, std::basic_format_context<OutputIt, Char>& ctx)
+      const -> OutputIt {
     std::basic_stringstream<Char> ss;
     ss << value;
     return std::formatter<std::basic_string_view<Char>, Char>::format(ss.view(),
