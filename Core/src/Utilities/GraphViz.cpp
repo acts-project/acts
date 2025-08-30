@@ -257,9 +257,7 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
 
   attributes.push_back(std::format("shape={}", node.shape));
 
-  auto styles = std::views::transform(
-      node.style, [](const Style& style) { return std::format("{}", style); });
-  attributes.push_back(std::format("style={}", joinStrings(styles, ",")));
+  attributes.push_back(std::format("style={}", joinStrings(node.style, ",")));
 
   std::format_to(std::ostream_iterator<char>(os), "{} [{}];\n", id,
                  joinStrings(attributes, ", "));
