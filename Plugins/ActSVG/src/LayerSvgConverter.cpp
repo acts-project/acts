@@ -31,9 +31,9 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     sacOptions.surfaceStyles = cOptions.surfaceStyles;
     auto [surfaces, grid, associations] = SurfaceArrayConverter::convert(
         gctx, *(layer.surfaceArray()), sacOptions);
-    volume._surfaces = surfaces;
+    volume._surfaces = {surfaces};
     volume._surface_grid = grid;
-    volume._grid_associations = associations;
+    volume._grid_associations = {associations};
   }
 
   // The sheet
@@ -93,7 +93,7 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
       double z = sfCenter.z();
       // Get the average radius
       avgRadius += radius;
-      // Raw display surfaces for projects
+      // Raw display surfaces for projections
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
