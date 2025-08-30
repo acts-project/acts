@@ -32,6 +32,7 @@
 #include <vector>
 
 namespace Acts {
+
 namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
@@ -55,8 +56,8 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend struct Acts::Test::SurfaceArrayCreatorFixture;
-  friend class Acts::SurfaceArray;
+  friend struct Test::SurfaceArrayCreatorFixture;
+  friend class SurfaceArray;
 
   struct ProtoAxis {
     BinningType bType = BinningType::equidistant;
@@ -130,8 +131,9 @@ class SurfaceArrayCreator {
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
-      std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
+      std::size_t binsPhi, std::size_t binsZ,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
@@ -151,9 +153,9 @@ class SurfaceArrayCreator {
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnCylinder(
+  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces,
+      std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
@@ -176,8 +178,8 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
-      std::size_t binsPhi,
+      std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
+      std::size_t binsR, std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -201,10 +203,10 @@ class SurfaceArrayCreator {
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
-  std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnDisc(
+  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-      BinningType bTypePhi,
+      std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
+      BinningType bTypeR, BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -229,8 +231,8 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-      std::size_t bins2, AxisDirection aDir,
+      std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
+      std::size_t bins1, std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
@@ -246,7 +248,7 @@ class SurfaceArrayCreator {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
-    if (aDir == Acts::AxisDirection::AxisPhi) {
+    if (aDir == AxisDirection::AxisPhi) {
       // Take the two binning positions
       Vector3 pos1 = a->referencePosition(gctx, AxisDirection::AxisR);
       Vector3 pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
@@ -264,13 +266,13 @@ class SurfaceArrayCreator {
       return std::abs(dPhi) < std::numbers::pi / 180.;
     }
 
-    if (aDir == Acts::AxisDirection::AxisZ) {
+    if (aDir == AxisDirection::AxisZ) {
       return (std::abs(a->referencePosition(gctx, AxisDirection::AxisR).z() -
                        b->referencePosition(gctx, AxisDirection::AxisR).z()) <
               1_um);
     }
 
-    if (aDir == Acts::AxisDirection::AxisR) {
+    if (aDir == AxisDirection::AxisR) {
       return (std::abs(perp(a->referencePosition(gctx, AxisDirection::AxisR)) -
                        perp(b->referencePosition(gctx, AxisDirection::AxisR))) <
               1_um);
@@ -372,49 +374,55 @@ class SurfaceArrayCreator {
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          ProtoAxis pAxisA, ProtoAxis pAxisB) {
+                          double thickness, ProtoAxis pAxisA,
+                          ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
-    // this becomes completely unreadable otherwise
-    // clang-format off
     if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
+                                              pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
+                                              pAxisB.nBins);
 
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-            std::move(surface), 10 * UnitConstants::mm, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), thickness,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
+                                              pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-            std::move(surface), 10 * UnitConstants::mm, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), thickness,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
+                                              pAxisB.nBins);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-            std::move(surface), 10 * UnitConstants::mm, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), thickness,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-            std::move(surface), 10 * UnitConstants::mm, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), thickness,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
-    // clang-format on
 
     return ptr;
   }
@@ -458,9 +466,9 @@ class SurfaceArrayCreator {
   /// @param surface the surface associated with the given vertices
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates
-  std::vector<Acts::Vector3> makeGlobalVertices(
-      const GeometryContext& gctx, const Acts::Surface& surface,
-      const std::vector<Acts::Vector2>& locVertices) const;
+  std::vector<Vector3> makeGlobalVertices(
+      const GeometryContext& gctx, const Surface& surface,
+      const std::vector<Vector2>& locVertices) const;
 };
 
 }  // namespace Acts
