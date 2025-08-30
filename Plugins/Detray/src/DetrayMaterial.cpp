@@ -9,13 +9,10 @@
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 //
 
-#include "Acts/Geometry/DetrayExceptions.hpp"
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -23,6 +20,9 @@
 #include <stdexcept>
 
 namespace Acts {
+
+using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
+using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
 namespace {
 detray::io::material_slab_payload convertMaterialSlab(
@@ -108,7 +108,7 @@ detray::io::axis_payload convertBinningData(const BinningData& bData) {
 }
 }  // namespace
 
-std::unique_ptr<DetraySurfaceMaterial>
+std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& material) {
   using enum AxisDirection;
@@ -202,32 +202,36 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
       materialGrid.bins.push_back(slabBin);
     }
   }
-  return std::make_unique<DetraySurfaceMaterial>(materialGrid);
+  return materialGrid;
 }
 
-std::unique_ptr<DetraySurfaceMaterial>
+std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertGridSurfaceMaterial(
     const detail::IGridSurfaceMaterialBase& /*material*/) {
   throw DetrayUnsupportedMaterialException("detail::IGridSurfaceMaterialBase");
 }
 
-std::unique_ptr<DetraySurfaceMaterial>
+std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
     const HomogeneousSurfaceMaterial& material) {
-  return std::make_unique<DetraySurfaceMaterial>(
-      convertMaterialSlab(material.materialSlab()));
+  return convertMaterialSlab(material.materialSlab());
 }
 
-std::unique_ptr<DetraySurfaceMaterial>
+std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
     const ProtoSurfaceMaterialT<Acts::BinUtility>& /*material*/) {
-  return nullptr;
+  return std::nullopt;
 }
 
-std::unique_ptr<DetraySurfaceMaterial>
+std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
     const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/) {
-  return nullptr;
+  return std::nullopt;
 }
+
+DetrayUnsupportedMaterialException::DetrayUnsupportedMaterialException(
+    std::string_view name)
+    : std::runtime_error(std::string("Material type ") + std::string(name) +
+                         " not supported by detray") {}
 
 }  // namespace Acts

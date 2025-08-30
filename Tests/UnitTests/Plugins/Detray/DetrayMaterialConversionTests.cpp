@@ -135,7 +135,8 @@ BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
 
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-unpackGrid(const Acts::DetraySurfaceMaterial& material) {
+unpackGrid(
+    const Acts::DetrayPayloadConverter::DetraySurfaceMaterial& material) {
   if (auto* grid = std::get_if<detray::io::grid_payload<
           detray::io::material_slab_payload, detray::io::material_id>>(
           &material)) {

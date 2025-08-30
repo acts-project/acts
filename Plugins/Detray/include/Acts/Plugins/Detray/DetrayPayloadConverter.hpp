@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetrayFwd.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -26,6 +25,33 @@
 #include <map>
 #include <memory>
 
+namespace detray {
+
+using dindex = unsigned int;
+
+namespace io {
+
+struct detector_payload;
+struct transform_payload;
+struct mask_payload;
+struct surface_payload;
+struct volume_payload;
+struct material_slab_payload;
+struct material_volume_payload;
+struct detector_homogeneous_material_payload;
+
+template <typename, typename>
+struct grid_payload;
+enum class material_id : unsigned int;
+
+template <typename, typename>
+struct detector_grids_payload;
+
+enum class accel_id : unsigned int;
+
+}  // namespace io
+}  // namespace detray
+
 namespace Acts {
 
 class GeometryContext;
@@ -40,42 +66,53 @@ class ISurfaceMaterial;
 
 class DetrayPayloadConverter {
  public:
-  static std::unique_ptr<DetraySurfaceMaterial>
-  convertHomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& material);
+  using DetraySurfaceMaterial =
+      std::variant<detray::io::grid_payload<detray::io::material_slab_payload,
+                                            detray::io::material_id>,
+                   detray::io::material_slab_payload>;
 
-  static std::unique_ptr<DetraySurfaceMaterial> convertGridSurfaceMaterial(
+  using DetraySurfaceGrid =
+      detray::io::grid_payload<std::size_t, detray::io::accel_id>;
+
+  /// Function type for looking up surface indices in detray conversion
+  using SurfaceLookupFunction = std::function<std::size_t(const Surface*)>;
+
+  static std::optional<DetraySurfaceMaterial> convertHomogeneousSurfaceMaterial(
+      const HomogeneousSurfaceMaterial& material);
+
+  static std::optional<DetraySurfaceMaterial> convertGridSurfaceMaterial(
       const detail::IGridSurfaceMaterialBase& material);
 
-  static std::unique_ptr<DetraySurfaceMaterial> convertBinnedSurfaceMaterial(
+  static std::optional<DetraySurfaceMaterial> convertBinnedSurfaceMaterial(
       const BinnedSurfaceMaterial& material);
 
-  static std::unique_ptr<DetraySurfaceMaterial>
+  static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialBinUtility(
       const ProtoSurfaceMaterialT<Acts::BinUtility>& material);
 
-  static std::unique_ptr<DetraySurfaceMaterial>
+  static std::optional<DetraySurfaceMaterial>
   convertProtoSurfaceMaterialProtoAxes(
       const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& material);
 
-  static std::unique_ptr<DetraySurfaceGrid> convertSurfaceArray(
+  static std::optional<DetraySurfaceGrid> convertSurfaceArray(
       const SurfaceArrayNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
-  static std::unique_ptr<DetraySurfaceGrid> convertTryAllNavigationPolicy(
+  static std::optional<DetraySurfaceGrid> convertTryAllNavigationPolicy(
       const TryAllNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
-  static std::unique_ptr<DetraySurfaceGrid> convertCylinderNavigationPolicy(
+  static std::optional<DetraySurfaceGrid> convertCylinderNavigationPolicy(
       const CylinderNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
-  static std::unique_ptr<DetraySurfaceGrid> convertMultiLayerNavigationPolicy(
+  static std::optional<DetraySurfaceGrid> convertMultiLayerNavigationPolicy(
       const Experimental::MultiLayerNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
   // This is a noop, the payload converter will actually traverse the children
   // via `visit`.
-  static std::unique_ptr<DetraySurfaceGrid> convertMultiNavigationPolicy(
+  static std::optional<DetraySurfaceGrid> convertMultiNavigationPolicy(
       const MultiNavigationPolicy& policy,
       const SurfaceLookupFunction& surfaceLookup, const Logger& logger);
 
@@ -94,7 +131,7 @@ class DetrayPayloadConverter {
     const TrackingVolume* beampipeVolume = nullptr;
 
     TypeDispatcher<INavigationPolicy,
-                   std::unique_ptr<DetraySurfaceGrid>(
+                   std::optional<DetraySurfaceGrid>(
                        const SurfaceLookupFunction& surfaceLookup,
                        const Logger& logger)>
         convertNavigationPolicy{
@@ -102,7 +139,7 @@ class DetrayPayloadConverter {
             convertCylinderNavigationPolicy, convertMultiLayerNavigationPolicy,
             convertMultiNavigationPolicy};
 
-    TypeDispatcher<ISurfaceMaterial, std::unique_ptr<DetraySurfaceMaterial>()>
+    TypeDispatcher<ISurfaceMaterial, std::optional<DetraySurfaceMaterial>()>
         convertSurfaceMaterial{
             convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
             convertGridSurfaceMaterial, convertProtoSurfaceMaterialProtoAxes,
@@ -182,4 +219,10 @@ class DetrayPayloadConverter {
   const Logger& logger() const { return *m_logger; }
   std::unique_ptr<const Logger> m_logger;
 };
+
+class DetrayUnsupportedMaterialException : public std::runtime_error {
+ public:
+  explicit DetrayUnsupportedMaterialException(std::string_view name);
+};
+
 }  // namespace Acts

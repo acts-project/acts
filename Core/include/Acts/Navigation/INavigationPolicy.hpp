@@ -11,7 +11,6 @@
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
-#include <functional>
 #include <type_traits>
 
 namespace Acts {
@@ -19,9 +18,6 @@ namespace Acts {
 class TrackingVolume;
 class INavigationPolicy;
 class Surface;
-
-/// Function type for looking up surface indices in detray conversion
-using SurfaceLookupFunction = std::function<std::size_t(const Surface*)>;
 
 /// Concept for a navigation policy
 /// This exists so `updateState` can be a non-virtual method and we still have a
