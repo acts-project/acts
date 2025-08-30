@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <DD4hep/Fields.h>
@@ -22,14 +21,12 @@ namespace Acts {
 
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
-  m_fieldConversionFactor =
-      dd4hep::_toDouble("1/tesla") * Acts::UnitConstants::T;
-  m_lengthConversionFactor =
-      dd4hep::_toDouble("1*mm") / Acts::UnitConstants::mm;
+  m_fieldConversionFactor = dd4hep::_toDouble("1/tesla") * UnitConstants::T;
+  m_lengthConversionFactor = dd4hep::_toDouble("1*mm") / UnitConstants::mm;
 }
 
 MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(
-    const Acts::MagneticFieldContext& /*mctx*/) const {
+    const MagneticFieldContext& /*mctx*/) const {
   return MagneticFieldProvider::Cache{};
 }
 
