@@ -567,8 +567,8 @@ Acts::cylinderVolumeHelper_dd4hep(const Logger& logger) {
   return cylinderVolumeHelper;
 }
 
-void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
-                             std::vector<dd4hep::DetElement>& compounds) {
+void Acts::collectCompounds_dd4hep(dd4hep::DetElement& detElement,
+                                   std::vector<dd4hep::DetElement>& compounds) {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
