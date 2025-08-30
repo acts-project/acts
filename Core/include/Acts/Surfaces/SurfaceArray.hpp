@@ -132,9 +132,10 @@ class SurfaceArray {
     using Grid_t = Grid<SurfaceVector, Axes...>;
 
     SurfaceGridLookup(std::shared_ptr<RegularSurface> representative,
-                      std::tuple<Axes...> axes,
+                      double tolerance, std::tuple<Axes...> axes,
                       std::vector<AxisDirection> bValues = {})
         : m_representative(std::move(representative)),
+          m_tolerance(tolerance),
           m_grid(std::move(axes)),
           m_binValues(std::move(bValues)) {
       m_neighborMap.resize(m_grid.size());
@@ -157,6 +158,10 @@ class SurfaceArray {
         Vector3 normal = m_representative->normal(gctx, pos);
         auto intersection =
             m_representative->intersect(gctx, pos, normal).closest();
+        if (!intersection.isValid() ||
+            std::abs(intersection.pathLength()) > m_tolerance) {
+          continue;
+        }
         Vector2 lposition =
             m_representative
                 ->globalToLocal(gctx, intersection.position(), normal)
@@ -173,9 +178,11 @@ class SurfaceArray {
 
         for (const Surface* srf : surfaces) {
           auto intersection = srf->intersect(gctx, global, normal).closest();
-          if (intersection.isValid()) {
-            m_grid.at(i).push_back(srf);
+          if (!intersection.isValid() ||
+              std::abs(intersection.pathLength()) > m_tolerance) {
+            continue;
           }
+          m_grid.at(i).push_back(srf);
         }
       }
 
@@ -389,6 +396,7 @@ class SurfaceArray {
     }
 
     std::shared_ptr<RegularSurface> m_representative;
+    double m_tolerance{};
     Grid_t m_grid;
     std::vector<AxisDirection> m_binValues;
     std::vector<SurfaceVector> m_neighborMap;
