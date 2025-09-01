@@ -55,6 +55,7 @@ class SurfaceArray {
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin
     virtual const SurfaceVector& lookup(const Vector3& position,
                                         const Vector3& direction) const = 0;
@@ -74,6 +75,7 @@ class SurfaceArray {
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     virtual const SurfaceVector& neighbors(const Vector3& position,
                                            const Vector3& direction) const = 0;
@@ -275,6 +277,7 @@ class SurfaceArray {
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position,
                                    const Vector3& direction) const override {
@@ -504,6 +507,7 @@ class SurfaceArray {
 
   /// @brief Get all surfaces in bin given by position @p pos.
   /// @param position the lookup position
+  /// @param direction the lookup direction
   /// @return const reference to @c SurfaceVector contained in bin at that
   /// position
   const SurfaceVector& at(const Vector3& position,
@@ -524,7 +528,8 @@ class SurfaceArray {
   }
 
   /// @brief Get all surfaces in bin at @p pos and its neighbors
-  /// @param position The position to lookup as nominal
+  /// @param position The position to lookup
+  /// @param direction The direction to lookup
   /// @return Merged @c SurfaceVector of neighbors and nominal
   /// @note The @c SurfaceVector will be combined. For technical reasons, the
   ///       different bin content vectors have to be copied, so the resulting

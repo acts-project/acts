@@ -362,12 +362,7 @@ class SurfaceArrayCreator {
   /// that is required by the templating.
   /// @tparam bdtA AxisBoundaryType of axis A
   /// @tparam bdtB AxisBoundaryType of axis B
-  /// @tparam F1 type-deducted value of g2l lambda
-  /// @tparam F2 type-deducted value of l2g lambda
-  /// @param type The surface type, this determines the local to global calculation
-  /// @param transform The transform to apply to the surface`
-  /// @param R the radius (interpretation depends on @p type)
-  /// @param Z the z position (interpretation depends on @p type)
+  /// @param surface the surface of the grid
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
