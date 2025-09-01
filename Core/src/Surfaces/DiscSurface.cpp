@@ -273,13 +273,15 @@ SurfaceMultiIntersection DiscSurface::intersect(
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   // Get the contextual transform
-  auto gctxTransform = transform(gctx);
+  const Transform3& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
-  auto intersection =
+  const Intersection3D intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
-  auto status = intersection.status();
+  IntersectionStatus status = intersection.status();
   if (status == IntersectionStatus::unreachable) {
-    return {{}, *this, boundaryTolerance};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()},
+            *this,
+            boundaryTolerance};
   }
   if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
     return {
@@ -292,7 +294,7 @@ SurfaceMultiIntersection DiscSurface::intersect(
   if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
     const double r2 = fromCenter.squaredNorm();
     const bool isInside =
-        (r2 <= square(m_bounds->rMax())) && (r2 >= square(m_bounds->rMin()));
+        (r2 >= square(m_bounds->rMin())) && (r2 <= square(m_bounds->rMax()));
     if (!isInside) {
       status = IntersectionStatus::unreachable;
     }
