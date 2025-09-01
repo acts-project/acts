@@ -259,7 +259,7 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     m_projDirLenPartial[pIdx] = lGrad.dot(wireDir);
     // clang-format off
     m_gradProjDir[pIdx] = m_invProjDirLen * (lGrad - m_projDirLenPartial[pIdx] * wireDir) +
-                           m_projDirLenPartial[pIdx] * m_wireProject * m_projDir * m_invProjDirLenSq;
+                          m_projDirLenPartial[pIdx] * m_wireProject * m_invProjDirLenSq * m_projDir;
     // clang-format on
 
     // skip the Hessian calculation, if toggled

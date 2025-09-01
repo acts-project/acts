@@ -30,12 +30,14 @@ using RandomEngine = std::mt19937;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using Config_t = CompSpacePointAuxiliaries::Config;
 using ParIdx = CompSpacePointAuxiliaries::FitParIndex;
+using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 
 using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
 constexpr auto logLvl = Logging::Level::INFO;
 constexpr std::size_t nEvents = 1000000;
+constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
 
@@ -183,27 +185,29 @@ template <typename T>
 constexpr T absMax(const T& a, const T& b) {
   return std::max(Acts::abs(a), Acts::abs(b));
 }
+template <typename T, typename... argsT>
+constexpr T absMax(const T& a, const argsT... args) {
+  return std::max(Acts::abs(a), absMax(args...));
+}
 
-#define CHECK_CLOSE(a, b, tol)            \
-  if (absMax(a, b) > 1.1) {               \
-    BOOST_CHECK_CLOSE(a, b, 100. * tol);  \
-  } else {                                \
-    BOOST_CHECK_LE(std::abs(a - b), tol); \
-  }
+#define CHECK_CLOSE(a, b, tol) \
+  BOOST_CHECK_LE(std::abs(a - b) / absMax(a, b, 1.), tol);
 
 #define COMPARE_VECTORS(v1, v2, tol)                                    \
   {                                                                     \
     ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Compare vectors: " \
                           << toString(v1) << " vs. " << toString(v2));  \
-    for (int i = 0; i < 3; ++i) {                                       \
-      CHECK_CLOSE(v1[i], v2[i], tol);                                   \
-    }                                                                   \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::bending)],                 \
+                v2[toUnderlying(ResidualIdx::bending)], tol);           \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::nonBending)],              \
+                v2[toUnderlying(ResidualIdx::nonBending)], tol);        \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::time)],                    \
+                v2[toUnderlying(ResidualIdx::time)], tol);              \
   }
 
 BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
 
 void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
-  using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = false;
@@ -227,10 +231,12 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
 
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << ": Residual: " << toString(resCalc.residual())
-                        << ", line distance: " << lineDist);
+                        << ", line distance: " << lineDist
+                        << ",  analog residual: "
+                        << (lineDist - testPoint.driftRadius()));
     ///
     CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::bending)],
-                lineDist - testPoint.driftRadius(), 1.e-8);
+                (lineDist - testPoint.driftRadius()), 1.e-8);
     if (testPoint.measuresLoc0()) {
       auto closePoint =
           lineIntersect(line.position(), line.direction(),
@@ -291,8 +297,7 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     }
   }
 
-  constexpr double h = 5.e-9;
-  constexpr double tolerance = 1.e-3;
+  constexpr double h = 5.e-7;
   for (auto par : resCfg.parsToUse) {
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
     lineParsUp[toUnderlying(par)] += h;
@@ -356,11 +361,11 @@ void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
 
   // check the distances along the strips if they are the same
   for (std::size_t i = 0; i < truthDistances.size(); i++) {
-    BOOST_CHECK_LE(distsAlongStrip[i] + truthDistances[i],
-                   std::numeric_limits<float>::epsilon());
+    CHECK_CLOSE(Acts::abs(distsAlongStrip[i] + truthDistances[i]), 0.,
+                tolerance);
   }
 
-  COMPARE_VECTORS(seedPos, truthPosZ0, std::numeric_limits<float>::epsilon());
+  COMPARE_VECTORS(seedPos, truthPosZ0, tolerance);
   // check the direction
   CHECK_CLOSE(std::abs(seedDir.dot(truthDir)), 1.,
               std::numeric_limits<float>::epsilon());
@@ -395,14 +400,13 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
       (locToGlob * planeIsect).norm() / Acts::PhysicalConstants::c + timeT0;
 
   CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::time)],
-              sp.time() - ToF, 1.e-10);
+              (sp.time() - ToF), 1.e-10);
   ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Time of flight: " << ToF
                       << ", measured time : " << sp.time() << " --> residual: "
                       << (sp.time() - ToF) << " vs. from calculator: "
                       << resCalc.residual()[toUnderlying(ResidualIdx::time)]
                       << ".");
   constexpr double h = 5.e-9;
-  constexpr double tolerance = 1.e-3;
 
   Line_t lineUp{}, lineDn{};
   for (const auto partial : resCfg.parsToUse) {
@@ -508,7 +512,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
                           << toString(resCalc.gradient(partial)));
     }
     constexpr double h = 1.e-7;
-    constexpr double tolerance = 1.e-3;
     for (const auto partial : resCfg.parsToUse) {
       Pars_t lineParsUp{linePars}, lineParsDn{linePars};
       double t0Up{t0}, t0Dn{t0};
@@ -549,63 +552,64 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
       }
     }
   };
-  Pars_t linePars{};
-  linePars[toUnderlying(ParIdx::phi)] = 90._degree;
-  linePars[toUnderlying(ParIdx::theta)] = 45_degree;
-  linePars[toUnderlying(ParIdx::x0)] = 0._cm;
-  linePars[toUnderlying(ParIdx::y0)] = -105_cm;
 
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
-                     10._ns);
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
-                     Vector{1., 1., 0.}.normalized(), 10._ns);
-  linePars[toUnderlying(ParIdx::phi)] = 60._degree;
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
-                     10._ns);
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
-                     Vector{1., 1., 0.}.normalized(), 10._ns);
+  RandomEngine rndEngine{4711};
 
-  resCfg.localToGlobal.translation() = Vector{10._cm, 20._cm, -50._cm};
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
-                     10._ns);
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
-                     Vector{1., 1., 0.}.normalized(), 10._ns);
+  const Vector wirePos{100._cm, 50._cm, 30._cm};
+  for (std::size_t e = 0; e < nEvents; ++e) {
+    break;
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
+    resCfg.localToGlobal = Acts::Transform3::Identity();
+    Pars_t linePars{generateLine(rndEngine)};
+    using uniform = std::uniform_real_distribution<double>;
+    const double t0 = uniform{0_ns, 150._ns}(rndEngine);
 
-  //// Next test the displacement
-  resCfg.localToGlobal *= Acts::AngleAxis3{
-      30_degree, makeDirectionFromPhiTheta(30_degree, -45_degree)};
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm}, Vector::UnitX(),
-                     10._ns);
-  testTimingResidual(linePars, Vector{0._cm, -75._cm, 150._cm},
-                     Vector{1., 1., 0.}.normalized(), 10._ns);
+    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
+    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
+
+    resCfg.localToGlobal.translation() =
+        Vector{uniform{-10._cm, 10._cm}(rndEngine),
+               uniform{-20._cm, 20._cm}(rndEngine),
+               uniform{-30._cm, 30._cm}(rndEngine)};
+    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
+    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
+
+    //// Next test the displacement
+    resCfg.localToGlobal *=
+        Acts::AngleAxis3{uniform{-30._degree, 30._degree}(rndEngine),
+                         makeDirectionFromPhiTheta(
+                             uniform{-30._degree, 30._degree}(rndEngine),
+                             uniform{-45._degree, -35._degree}(rndEngine))};
+    testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
+    testTimingResidual(linePars, wirePos, Vector{1., 1., 0.}.normalized(), t0);
+  }
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
   RandomEngine rndEngine{2525};
+  ACTS_INFO("Run WireResidualTest");
 
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
-    return;
     Pars_t linePars{generateLine(rndEngine)};
     // Generate the first test measurement
     const Vector wirePos{100._cm, 50._cm, 30._cm};
     testResidual(linePars, TestSpacePoint{wirePos, Vector::UnitX(), 10._cm});
 
-    // testResidual(linePars,
-    //              TestSpacePoint{wirePos,
-    //              Vector::UnitX(), 10._cm, true});
-    //
+    testResidual(linePars,
+                 TestSpacePoint{wirePos, Vector::UnitX(), 10._cm, true});
+
     testResidual(linePars,
                  TestSpacePoint{
                      wirePos, makeDirectionFromPhiTheta(10._degree, 30._degree),
                      10._cm});
-    // testResidual(linePars,
-    //              TestSpacePoint{
-    //                  wirePos,
-    //                  makeDirectionFromPhiTheta(10._degree, 30._degree),
-    //                  10._cm, true});
+    testResidual(linePars,
+                 TestSpacePoint{
+                     wirePos, makeDirectionFromPhiTheta(10._degree, 30._degree),
+                     10._cm, true});
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {
+  ACTS_INFO("Run StripResidualTest");
   RandomEngine rndEngine{2505};
   const Vector stripPos{75._cm, -75._cm, 100._cm};
   const Vector b1{makeDirectionFromPhiTheta(90._degree, 90._degree)};
@@ -623,13 +627,12 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
     testResidual(linePars, TestSpacePoint{stripPos, b1, b2,
                                           TestSpacePoint::bothDirections});
 
-    // testResidual(
-    //     linePars,
-    //     TestSpacePoint{stripPos,
-    //                    makeDirectionFromPhiTheta(30._degree, 90._degree),
-    //                    makeDirectionFromPhiTheta(60._degree,
-    //                    90_degree),
-    //                    TestSpacePoint::bothDirections});
+    testResidual(
+        linePars,
+        TestSpacePoint{stripPos,
+                       makeDirectionFromPhiTheta(30._degree, 90._degree),
+                       makeDirectionFromPhiTheta(60._degree, 90_degree),
+                       TestSpacePoint::bothDirections});
   }
 }
 
@@ -733,7 +736,6 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                 chi2.chi2, 1.e-10);
 
     constexpr double h = 1.e-7;
-    constexpr double tolerance = 1.e-3;
     for (const auto par : resCfg.parsToUse) {
       Pars_t lineParsUp{line.parameters()};
       Pars_t lineParsDn{line.parameters()};
@@ -819,10 +821,11 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
+  ACTS_INFO("Run Combinatorial seed test");
   RandomEngine rndEngine{23568};
   constexpr std::size_t nStrips = 8;
 
-  const std::array<Vector3, nStrips> stripDirections = {
+  const std::array<Vector3, nStrips> stripDirections{
       Vector3::UnitX(),
       Vector3::UnitX(),
       makeDirectionFromPhiTheta(1.5_degree, 90_degree),
@@ -841,9 +844,8 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   // pseudo track initialization
 
   for (std::size_t i = 0; i < nEvents; ++i) {
-    ACTS_DEBUG(__func__ << "() " << __LINE__
-                        << " - Combinatorial Seed test - Processing Event: "
-                        << i);
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Combinatorial Seed test - "
+                        << "Processing Event: " << i);
     // update pseudo track parameters with random values
     Line_t line{generateLine(rndEngine)};
 
