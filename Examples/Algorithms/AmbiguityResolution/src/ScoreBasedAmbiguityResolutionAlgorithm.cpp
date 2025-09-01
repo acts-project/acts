@@ -115,7 +115,8 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionals;
   optionals.cuts.push_back(doubleHolesFilter);
 
-  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor = {};
+  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor =
+      {};
 
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
       tracks, &sourceLinkHash, &sourceLinkEquality, optionals, scoreMonitor);
@@ -130,8 +131,6 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
-
-
 
   if (!scoreMonitor.empty()) {
     // load  names of detectors from the json file 

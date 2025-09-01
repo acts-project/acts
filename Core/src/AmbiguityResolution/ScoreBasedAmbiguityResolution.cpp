@@ -23,4 +23,3 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
           trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin] ||
           trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }
-

@@ -204,7 +204,8 @@ class ScoreBasedAmbiguityResolution {
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}, std::vector<ScoreMonitor>& scoreMonitor = {}) const;
+          {}, 
+      std::vector<ScoreMonitor>& scoreMonitor = {}) const;
 
   /// Compute the score of each track based on the ambiguity function.
   ///
@@ -217,7 +218,8 @@ class ScoreBasedAmbiguityResolution {
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}, std::vector<ScoreMonitor>& scoreMonitor = {}) const;
+          {},
+      std::vector<ScoreMonitor>& scoreMonitor = {}) const;
 
   /// Rejects Tracks based on eta dependent cuts.
   ///
@@ -263,7 +265,8 @@ class ScoreBasedAmbiguityResolution {
       const track_container_t& tracks, source_link_hash_t sourceLinkHash,
       source_link_equality_t sourceLinkEquality,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}, std::vector<ScoreMonitor>& scoreMonitor = {}) const;
+          {},
+      std::vector<ScoreMonitor>& scoreMonitor = {}) const;
 
  private:
   Config m_cfg;
