@@ -70,8 +70,8 @@ class DisjointSets {
   inline void clear() {
     // index 0 is a dummy
     m_nextId = 1;
-    m_parent.assign(1, 0);
-    m_rank.assign(1, 0);
+    m_parent.resize(1);
+    m_rank.resize(1);
   }
 
  private:
