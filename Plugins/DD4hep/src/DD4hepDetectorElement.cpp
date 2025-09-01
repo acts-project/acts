@@ -14,7 +14,9 @@
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Volumes.h>
 
-Acts::DD4hepDetectorElement::DD4hepDetectorElement(
+namespace Acts {
+
+DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
     bool /*isDisc*/, std::shared_ptr<const ISurfaceMaterial> material)
     : TGeoDetectorElement(
@@ -23,3 +25,5 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
           detElement.nominal().worldTransformation(), axes, scalor,
           std::move(material)),
       m_detElement(detElement) {}
+
+}  // namespace Acts
