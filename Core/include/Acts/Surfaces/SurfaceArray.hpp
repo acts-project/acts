@@ -253,6 +253,9 @@ class SurfaceArray {
 
       auto intersection =
           m_representative->intersect(gctx, position, direction).closest();
+      if (!intersection.isValid()) {
+        return m_grid.at(0);  // overflow bin
+      }
       Vector2 lposition =
           m_representative
               ->globalToLocal(gctx, intersection.position(), direction)
@@ -285,6 +288,9 @@ class SurfaceArray {
 
       auto intersection =
           m_representative->intersect(gctx, position, direction).closest();
+      if (!intersection.isValid()) {
+        return m_grid.at(0);  // overflow bin
+      }
       Vector2 lposition =
           m_representative
               ->globalToLocal(gctx, intersection.position(), direction)
