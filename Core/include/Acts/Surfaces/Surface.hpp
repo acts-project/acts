@@ -26,6 +26,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace Acts {
@@ -69,12 +70,12 @@ class Surface : public virtual GeometryObject,
     Other = 7
   };
 
-  friend std::ostream& operator<<(std::ostream& os, SurfaceType type) {
-    return os << s_surfaceTypeNames[static_cast<std::size_t>(type)];
-  }
-
   /// Helper strings for screen output
-  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+  static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
+      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
+                            "Plane", "Straw",    "Curvilinear", "Other"};
+
+  friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
  protected:
   /// Constructor with Transform3 as a shared object

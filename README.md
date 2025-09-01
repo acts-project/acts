@@ -1,4 +1,4 @@
-# Acts Common Tracking Software
+# ACTS Common Tracking Software
 
 or *A Common Tracking Software* if you do not like recursive acronyms
 
@@ -9,14 +9,14 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 [![Status](https://badgen.net/github/checks/acts-project/acts/main)](https://github.com/acts-project/acts/actions)
 [![Metrics](https://badgen.net/badge/metric/tracker/purple)](https://acts-project.github.io/metrics/)
 
-Acts is an experiment-independent toolkit for (charged) particle track
+ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-More information can be found in the [Acts documentation](https://acts.readthedocs.io/).
+More information can be found in the [ACTS documentation](https://acts.readthedocs.io/).
 
 ## Quick start
 
-Acts is developed in C++ and is build using [CMake](https://cmake.org). Building
+ACTS is developed in C++ and is build using [CMake](https://cmake.org). Building
 the core library requires a C++20 compatible compiler,
 [Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
@@ -30,7 +30,7 @@ cmake --build <build>
 
 For more details, e.g. specific versions and additional dependencies, have a
 look at the [getting started guide](docs/getting_started.md). If you find a bug,
-have a feature request, or want to contribute to Acts, have a look at the
+have a feature request, or want to contribute to ACTS, have a look at the
 [contribution guidelines](CONTRIBUTING.rst).
 
 ## Versioning and public API
@@ -43,7 +43,7 @@ and subject to the semantic versioning rules. The details are outlined in the
 
 ## Repository organization
 
-The repository contains all code of the Acts projects, not just the core library
+The repository contains all code of the ACTS projects, not just the core library
 that a physics experiment is expected to use as part of its reconstruction code.
 All optional components are disabled by default. Please see the
 [getting started guide](docs/getting_started.md) on how-to enable them.
@@ -66,13 +66,13 @@ All optional components are disabled by default. Please see the
 
 ## Authors and license
 
-Contributors to the Acts project are listed in the [AUTHORS](AUTHORS) file.
+Contributors to the ACTS project are listed in the [AUTHORS](AUTHORS) file.
 
-The Acts project is published under the terms of the Mozilla Public License, v. 2.0.
+The ACTS project is published under the terms of the Mozilla Public License, v. 2.0.
 A copy of the license can be found in the [LICENSE](LICENSE) file or at
 https://mozilla.org/MPL/2.0/ .
 
-The Acts project contains copies of the following external packages:
+The ACTS project contains copies of the following external packages:
 
 -   [OpenDataDetector](https://github.com/acts-project/OpenDataDetector)
     licensed under the MPLv2 license.
