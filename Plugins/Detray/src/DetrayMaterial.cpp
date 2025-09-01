@@ -8,18 +8,19 @@
 
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 //
-
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <numbers>
 #include <stdexcept>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
 using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
@@ -234,4 +235,4 @@ DetrayUnsupportedMaterialException::DetrayUnsupportedMaterialException(
     : std::runtime_error(std::string("Material type ") + std::string(name) +
                          " not supported by detray") {}
 
-}  // namespace Acts
+}  // namespace ActsPlugins
