@@ -136,13 +136,21 @@ struct GaussianSumFitter {
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
     // Initialize the forward propagation with the DirectNavigator
-    auto fwdPropInitializer = [this](const auto& opts) {
+    auto fwdPropInitializer = [&](const auto& opts) {
       using Actors = ActorList<GsfActor, EndOfWorldReached>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
+      }
 
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
@@ -151,13 +159,21 @@ struct GaussianSumFitter {
     };
 
     // Initialize the backward propagation with the DirectNavigator
-    auto bwdPropInitializer = [this](const auto& opts) {
+    auto bwdPropInitializer = [&](const auto& opts) {
       using Actors = ActorList<GsfActor, EndOfWorldReached>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
+      }
 
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
@@ -334,7 +350,20 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
+      std::vector<
+          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+          inflatedParamVector;
+      assert(!fwdGsfResult.lastMeasurementComponents.empty());
+      assert(fwdGsfResult.lastMeasurementSurface != nullptr);
+      for (auto& [w, p, cov] : fwdGsfResult.lastMeasurementComponents) {
+        inflatedParamVector.emplace_back(
+            w, p, cov * options.reverseFilteringCovarianceScaling);
+      }
+
+      MultiComponentBoundTrackParameters inflatedParams(
+          fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
+          std::move(inflatedParamVector), sParameters.particleHypothesis());
+
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
                                                    MultiStepperSurfaceReached>(
           target, bwdPropOptions);
@@ -348,7 +377,7 @@ struct GaussianSumFitter {
           std::declval<StateType&&>(), std::declval<PropagationResultType>(),
           target, std::declval<const OptionsType&>()));
 
-      auto initRes = m_propagator.initialize(state, params);
+      auto initRes = m_propagator.initialize(state, inflatedParams);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }

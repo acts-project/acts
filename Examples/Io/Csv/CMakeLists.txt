@@ -1,7 +1,7 @@
 include(ActsTargetLinkLibrariesSystem)
 
-add_library(
-    ActsExamplesIoCsv
+acts_add_library(
+    ExamplesIoCsv
     SHARED
     src/CsvMeasurementReader.cpp
     src/CsvMeasurementWriter.cpp
@@ -15,12 +15,12 @@ add_library(
     src/CsvTrackParameterWriter.cpp
     src/CsvSeedWriter.cpp
     src/CsvTrackWriter.cpp
-    src/CsvDriftCircleReader.cpp
-    src/CsvMuonSimHitReader.cpp
+    src/CsvMuonSpacePointReader.cpp
+    src/CsvMuonSegmentReader.cpp
     src/CsvProtoTrackWriter.cpp
     src/CsvSpacePointWriter.cpp
-    src/CsvExaTrkXGraphWriter.cpp
-    src/CsvExaTrkXGraphReader.cpp
+    src/CsvGnnGraphWriter.cpp
+    src/CsvGnnGraphReader.cpp
     src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
 )
@@ -30,11 +30,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoCsv
-    PRIVATE
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesDigitization
-        Threads::Threads
+    PRIVATE Acts::ExamplesFramework Acts::ExamplesDigitization Threads::Threads
 )
-
-install(TARGETS ActsExamplesIoCsv LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

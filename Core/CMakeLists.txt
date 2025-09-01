@@ -4,7 +4,7 @@ configure_file(
 )
 
 # source files will be added later
-add_library(ActsCore SHARED "")
+acts_add_library(Core "")
 
 target_sources(ActsCore PRIVATE src/ActsVersion.cpp)
 
@@ -82,12 +82,6 @@ if(ACTS_ENABLE_MEMORY_PROFILING)
     endif()
 endif()
 
-install(
-    TARGETS ActsCore
-    EXPORT ActsCoreTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp
@@ -104,6 +98,7 @@ add_subdirectory(src/Material)
 add_subdirectory(src/Navigation)
 add_subdirectory(src/Propagator)
 add_subdirectory(src/Seeding)
+add_subdirectory(src/Seeding2)
 add_subdirectory(src/Surfaces)
 add_subdirectory(src/TrackFinding)
 add_subdirectory(src/TrackFitting)
@@ -112,6 +107,4 @@ add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
 add_subdirectory(src/AmbiguityResolution)
 
-acts_compile_headers(ActsCore GLOB
-    include/Acts/**/*.hpp
-)
+acts_compile_headers(Core GLOB include/Acts/**/*.hpp)

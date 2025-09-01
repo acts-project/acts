@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -16,10 +17,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <span>
+#include <type_traits>
 
 #include <boost/container/static_vector.hpp>
 
 namespace Acts {
+
+class Surface;
 
 /// Status enum
 enum class IntersectionStatus : int {
@@ -44,16 +49,33 @@ template <unsigned int DIM>
 class Intersection {
  public:
   /// Position type
-  using Position = ActsVector<DIM>;
+  using Position = Eigen::Map<const ActsVector<DIM>>;
 
   /// Constructor with arguments
   ///
   /// @param position is the position of the intersection
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
+  constexpr Intersection(const ActsVector<DIM>& position, double pathLength,
+                         IntersectionStatus status) noexcept
+      : Intersection(std::span<const double, DIM>{position.data(), DIM},
+                     pathLength, status) {}
+
   constexpr Intersection(const Position& position, double pathLength,
-                         IntersectionStatus status)
-      : m_position(position), m_pathLength(pathLength), m_status(status) {}
+                         IntersectionStatus status) noexcept
+      : Intersection(std::span<const double, DIM>{position.data(), DIM},
+                     pathLength, status) {}
+
+  constexpr Intersection(std::span<const double, DIM> position,
+                         double pathLength, IntersectionStatus status) noexcept
+      : m_pathLength(pathLength), m_status(status) {
+    std::ranges::copy(position, m_position.begin());
+  }
+
+  Intersection(const Intersection&) noexcept = default;
+  Intersection(Intersection&&) noexcept = default;
+  Intersection& operator=(const Intersection&) noexcept = default;
+  Intersection& operator=(Intersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const {
@@ -61,7 +83,7 @@ class Intersection {
   }
 
   /// Returns the position of the interseciton
-  constexpr const Position& position() const { return m_position; }
+  constexpr Position position() const { return Position{m_position.data()}; }
 
   /// Returns the path length to the interseciton
   constexpr double pathLength() const { return m_pathLength; }
@@ -111,7 +133,7 @@ class Intersection {
 
  private:
   /// Position of the intersection
-  Position m_position = Position::Zero();
+  std::array<double, DIM> m_position{};
   /// Signed path length to the intersection (if valid)
   double m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
@@ -123,22 +145,34 @@ class Intersection {
 using Intersection2D = Intersection<2>;
 using Intersection3D = Intersection<3>;
 
+static_assert(std::is_trivially_move_constructible_v<Intersection2D>);
+static_assert(std::is_trivially_copy_constructible_v<Intersection2D>);
+static_assert(std::is_trivially_move_assignable_v<Intersection2D>);
+
 static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
 using MultiIntersection3D =
     boost::container::static_vector<Intersection3D,
                                     s_maximumNumberOfIntersections>;
 
-template <typename object_t>
-class ObjectIntersection {
+class SurfaceIntersection {
  public:
-  /// Object intersection
-  ///
   /// @param intersection is the intersection
-  /// @param object is the object to be instersected
+  /// @param surface is the surface that has been intersected
   /// @param index is the intersection index
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object, std::uint8_t index = 0)
-      : m_intersection(intersection), m_object(object), m_index(index) {}
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  constexpr SurfaceIntersection(
+      const Intersection3D& intersection, const Surface& surface,
+      std::uint8_t index = 0,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None()) noexcept
+      : m_intersection(intersection),
+        m_surface(&surface),
+        m_index(index),
+        m_boundaryTolerance(boundaryTolerance) {}
+
+  SurfaceIntersection(const SurfaceIntersection&) noexcept = default;
+  SurfaceIntersection(SurfaceIntersection&&) noexcept = default;
+  SurfaceIntersection& operator=(const SurfaceIntersection&) noexcept = default;
+  SurfaceIntersection& operator=(SurfaceIntersection&&) noexcept = default;
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
@@ -149,7 +183,7 @@ class ObjectIntersection {
   }
 
   /// Returns the position of the interseciton
-  constexpr const Intersection3D::Position& position() const {
+  Intersection3D::Position position() const {
     return m_intersection.position();
   }
 
@@ -161,32 +195,44 @@ class ObjectIntersection {
     return m_intersection.status();
   }
 
-  /// Returns the object that has been intersected
-  constexpr const object_t* object() const { return m_object; }
+  /// Returns the surface that has been intersected
+  [[deprecated(
+      "Use surface() instead. This will be removed in a future release.")]]
+  constexpr const Surface* object() const {
+    return m_surface;
+  }
+
+  /// Returns the surface that has been intersected
+  constexpr const Surface& surface() const { return *m_surface; }
 
   constexpr std::uint8_t index() const { return m_index; }
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
 
-  constexpr static ObjectIntersection invalid(
-      const object_t* object = nullptr) {
-    return ObjectIntersection(Intersection3D::invalid(), object);
+  constexpr static SurfaceIntersection invalid() {
+    return SurfaceIntersection(Intersection3D::invalid());
+  }
+  constexpr static SurfaceIntersection invalid(const Surface& surface) {
+    return SurfaceIntersection(Intersection3D::invalid(), surface);
   }
 
   constexpr static bool pathLengthOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) {
     return Intersection3D::pathLengthOrder(aIntersection.intersection(),
                                            bIntersection.intersection());
   }
 
-  constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
+  constexpr static bool closestOrder(const SurfaceIntersection& aIntersection,
+                                     const SurfaceIntersection& bIntersection) {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
 
   constexpr static bool closestForwardOrder(
-      const ObjectIntersection& aIntersection,
-      const ObjectIntersection& bIntersection) {
+      const SurfaceIntersection& aIntersection,
+      const SurfaceIntersection& bIntersection) {
     return Intersection3D::closestForwardOrder(aIntersection.intersection(),
                                                bIntersection.intersection());
   }
@@ -194,42 +240,60 @@ class ObjectIntersection {
  private:
   /// The intersection itself
   Intersection3D m_intersection = Intersection3D::invalid();
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
+  /// The surface that was (tried to be) intersected
+  const Surface* m_surface = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 
-  constexpr ObjectIntersection() = default;
+  constexpr SurfaceIntersection() = default;
+  explicit constexpr SurfaceIntersection(const Intersection3D& intersection)
+      : m_intersection(intersection) {}
 };
 
-template <typename object_t>
-class ObjectMultiIntersection {
+static_assert(std::is_trivially_move_constructible_v<SurfaceIntersection>);
+static_assert(std::is_trivially_move_assignable_v<SurfaceIntersection>);
+
+class SurfaceMultiIntersection {
  public:
   using SplitIntersections =
-      boost::container::static_vector<ObjectIntersection<object_t>,
+      boost::container::static_vector<SurfaceIntersection,
                                       s_maximumNumberOfIntersections>;
 
-  /// Object intersection
-  ///
   /// @param intersections are the intersections
-  /// @param object is the object to be instersected
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections), m_object(object) {}
+  /// @param surface is the surface that has been intersected
+  /// @param boundaryTolerance is the boundary tolerance for the intersection
+  SurfaceMultiIntersection(
+      const MultiIntersection3D& intersections, const Surface& surface,
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None())
+      : m_intersections(intersections),
+        m_surface(&surface),
+        m_boundaryTolerance(boundaryTolerance) {}
 
-  constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
-    return {m_intersections[index], m_object, index};
+  SurfaceIntersection operator[](std::uint8_t index) const {
+    return {m_intersections[index], *m_surface, index, m_boundaryTolerance};
   }
 
-  constexpr const MultiIntersection3D& intersections() const {
-    return m_intersections;
+  const MultiIntersection3D& intersections() const { return m_intersections; }
+
+  std::size_t size() const { return m_intersections.size(); }
+
+  /// Returns the surface that has been intersected
+  [[deprecated(
+      "Use surface() instead. This will be removed in a future release.")]]
+  constexpr const Surface* object() const {
+    return m_surface;
   }
 
-  constexpr std::size_t size() const { return m_intersections.size(); }
+  /// Returns the surface that has been intersected
+  constexpr const Surface& surface() const { return *m_surface; }
 
-  constexpr const object_t* object() const { return m_object; }
+  constexpr BoundaryTolerance boundaryTolerance() const {
+    return m_boundaryTolerance;
+  }
 
-  constexpr SplitIntersections split() const {
+  SplitIntersections split() const {
     SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
       result.push_back(operator[](i));
@@ -237,25 +301,27 @@ class ObjectMultiIntersection {
     return result;
   }
 
-  constexpr ObjectIntersection<object_t> closest() const {
+  SurfaceIntersection closest() const {
     auto splitIntersections = split();
     return *std::min_element(splitIntersections.begin(),
                              splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestOrder);
+                             SurfaceIntersection::closestOrder);
   }
 
-  constexpr ObjectIntersection<object_t> closestForward() const {
+  SurfaceIntersection closestForward() const {
     auto splitIntersections = split();
     return *std::min_element(splitIntersections.begin(),
                              splitIntersections.end(),
-                             ObjectIntersection<object_t>::closestForwardOrder);
+                             SurfaceIntersection::closestForwardOrder);
   }
 
  private:
   /// The intersections
   MultiIntersection3D m_intersections;
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
+  /// The surface that was (tried to be) intersected
+  const Surface* m_surface = nullptr;
+  /// The boundary tolerance for the intersection
+  BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
 };
 
 namespace detail {

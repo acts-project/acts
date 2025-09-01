@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 #include <any>
 #include <array>
@@ -23,18 +23,16 @@
 #include <utility>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
-
-template <typename T, class... Axes>
-class GridGlobalIterator;
-
-template <typename T, class... Axes>
-class GridLocalIterator;
 
 namespace detail {
 
-template <typename T, bool isConst>
-class AnyGridViewBase;
+template <typename>
+class AnyGridView;
+template <typename>
+class AnyGridConstView;
 
 }  // namespace detail
 
@@ -118,8 +116,10 @@ class IGrid {
   ///         value
   virtual std::any atLocalBinsAny(AnyIndexType indices) = 0;
 
-  template <typename T, bool isConst>
-  friend class detail::AnyGridViewBase;
+  template <typename>
+  friend class AnyGridView;
+  template <typename>
+  friend class AnyGridConstView;
 };
 
 /// @brief class for describing a regular multi-dimensional grid
@@ -152,9 +152,9 @@ class Grid final : public IGrid {
   /// index type using local bin indices along each axis
   using index_t = std::array<std::size_t, DIM>;
   /// global iterator type
-  using global_iterator_t = Acts::GridGlobalIterator<T, Axes...>;
+  using global_iterator_t = GridGlobalIterator<T, Axes...>;
   /// local iterator type
-  using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
+  using local_iterator_t = GridLocalIterator<T, Axes...>;
 
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template

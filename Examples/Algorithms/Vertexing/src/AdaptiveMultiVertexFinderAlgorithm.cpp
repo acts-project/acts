@@ -9,12 +9,12 @@
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
@@ -23,13 +23,10 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -37,7 +34,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
-#include <unordered_map>
 #include <utility>
 
 #include "TruthVertexSeeder.hpp"
@@ -289,7 +285,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // show some debug output
-  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  ACTS_DEBUG("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
     ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
                                   << vtx.tracks().size() << " tracks.");

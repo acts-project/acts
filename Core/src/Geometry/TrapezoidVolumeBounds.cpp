@@ -152,15 +152,15 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
     return false;
   }
   Vector2 locp(pos.x(), pos.y());
-  bool inside(m_faceXYTrapezoidBounds->inside(
-      locp, BoundaryTolerance::AbsoluteBound(tol, tol)));
-  return inside;
+  return m_faceXYTrapezoidBounds->inside(
+      locp, BoundaryTolerance::AbsoluteEuclidean(tol));
 }
 
 std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
   os << std::setiosflags(std::ios::fixed);
   os << std::setprecision(5);
-  os << "TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+  os << "TrapezoidVolumeBounds: (halfX @-Y, halfX @+Y, halfY, halfZ, alpha, "
+        "beta) "
         "= ";
   os << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
      << get(eHalfLengthY) << ", " << get(eHalfLengthZ);

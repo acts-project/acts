@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
@@ -49,9 +46,9 @@ struct SurfacesFiller {
   /// @param surfaces the surfaces that are filled in
   inline static void fill(NavigationState& nState,
                           const std::vector<const Surface*>& surfaces) {
-    std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
+    std::ranges::for_each(surfaces, [&](const auto& s) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>::invalid(), s, nullptr,
+          SurfaceIntersection::invalid(), s, nullptr,
           nState.surfaceBoundaryTolerance});
     });
   }
@@ -66,9 +63,9 @@ struct PortalsFiller {
   /// @param portals the portals that are filled in
   inline static void fill(NavigationState& nState,
                           const std::vector<const Portal*>& portals) {
-    std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
+    std::ranges::for_each(portals, [&](const auto& p) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>::invalid(), nullptr, p,
+          SurfaceIntersection::invalid(), nullptr, p,
           BoundaryTolerance::None()});
     });
   }

@@ -10,6 +10,8 @@
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Table.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +28,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -36,6 +39,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <typeinfo>
 
 #include <TROOT.h>
@@ -122,6 +126,7 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (!writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
+  m_writers.push_back(writer);
   addElement(std::move(writer));
 }
 
@@ -304,6 +309,62 @@ void storeTiming(const std::vector<std::string>& identifiers,
   }
   file << "\n";
 }
+
+// Convert duration to milliseconds
+double durationToMs(Duration duration) {
+  double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
+  return ns / 1e6;
+}
+
+void printTiming(const std::vector<std::string>& identifiers,
+                 const std::vector<Duration>& durations, std::size_t numEvents,
+                 const Acts::Logger& logger) {
+  if (identifiers.empty() || durations.empty()) {
+    return;
+  }
+
+  Acts::Table table;
+  using enum Acts::Table::Alignment;
+  table.addColumn("Algorithm", "{}", Left);
+  table.addColumn("Total Time (ms)", "{:.2f}", Right);
+  table.addColumn("Time/Event (ms)", "{:.2f}", Right);
+  table.addColumn("Fraction", "{:.1f}%", Right);
+
+  Duration totalTime =
+      std::accumulate(durations.begin(), durations.end(), Duration::zero());
+
+  // Create sorted indices based on total duration (descending)
+  std::vector<std::size_t> sortedIndices(identifiers.size());
+  std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
+  std::sort(sortedIndices.begin(), sortedIndices.end(),
+            [&](std::size_t a, std::size_t b) {
+              return durations[a] > durations[b];
+            });
+
+  for (std::size_t idx : sortedIndices) {
+    double fraction =
+        totalTime > Duration::zero()
+            ? 100.0 *
+                  std::chrono::duration_cast<NanoSeconds>(durations[idx])
+                      .count() /
+                  std::chrono::duration_cast<NanoSeconds>(totalTime).count()
+            : 0.0;
+
+    double totalValue = durationToMs(durations[idx]);
+    double perEventValue =
+        numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
+
+    table.addRow(identifiers[idx], totalValue, perEventValue, fraction);
+  }
+
+  // Add summary row
+  double totalSummaryValue = durationToMs(totalTime);
+  double totalPerEventValue =
+      numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
+  table.addRow("TOTAL", totalSummaryValue, totalPerEventValue, 100.0);
+
+  ACTS_INFO("Timing breakdown:\n" << table);
+}
 }  // namespace
 
 int Sequencer::run() {
@@ -350,9 +411,20 @@ int Sequencer::run() {
   ACTS_VERBOSE("Initialize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Initialize " << alg->typeName() << ": " << alg->name());
-    if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize " << alg->typeName() << ": "
-                                         << alg->name());
+    try {
+      if (alg->initialize() != ProcessCode::SUCCESS) {
+        throw std::runtime_error("Failed to process event data");
+      }
+    } catch (const std::exception& e) {
+      ACTS_FATAL("Failed to initialize " << alg->typeName() << " \""
+                                         << alg->name() << "\"" << e.what());
+      throw;
+    }
+  }
+
+  // Inform readers that we're going to start from a specific event number
+  for (const auto& reader : m_readers) {
+    if (reader->skip(eventsRange.first) != ProcessCode::SUCCESS) {
       throw std::runtime_error("Failed to process event data");
     }
   }
@@ -360,15 +432,34 @@ int Sequencer::run() {
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+
+  std::atomic<std::size_t> nextThreadId = 0;
+  tbb::enumerable_thread_specific<std::size_t> threadIds{
+      [&nextThreadId]() { return nextThreadId++; }};
+
+  std::atomic<std::size_t> nextEvent = eventsRange.first;
+
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
         tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<std::size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
+          std::size_t threadId = threadIds.local();
 
-          for (std::size_t event = r.begin(); event != r.end(); ++event) {
-            ACTS_DEBUG("start processing event " << event);
+          for (std::size_t n = r.begin(); n != r.end(); ++n) {
+            ACTS_VERBOSE("Thread about to pick next event");
+
+            for (const auto& writer : m_writers) {
+              if (writer->beginEvent(threadId) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to process event data");
+              }
+            }
+
+            std::size_t event = nextEvent++;
+
+            ACTS_DEBUG("start processing event " << event << " on thread "
+                                                 << threadId);
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(
@@ -377,7 +468,7 @@ int Sequencer::run() {
                 m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to
             // be changed to Algorithm context copies
-            AlgorithmContext context(0, event, eventStore);
+            AlgorithmContext context(0, event, eventStore, threadId);
             std::size_t ialgo = 0;
 
             /// Decorate the context
@@ -400,10 +491,15 @@ int Sequencer::run() {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << alg->typeName() << ": "
                                       << alg->name());
-              if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute " << alg->typeName() << ": "
-                                                << alg->name());
-                throw std::runtime_error("Failed to process event data");
+              try {
+                if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                  throw std::runtime_error("Failed to process event data");
+                }
+              } catch (const std::exception& e) {
+                ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
+                                                << alg->name()
+                                                << "\": " << e.what());
+                throw;
               }
               ACTS_VERBOSE("Completed " << alg->typeName() << ": "
                                         << alg->name());
@@ -465,10 +561,14 @@ int Sequencer::run() {
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Finalize " << alg->typeName() << ": " << alg->name());
-    if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize " << alg->typeName() << ": "
-                                       << alg->name());
-      throw std::runtime_error("Failed to process event data");
+    try {
+      if (alg->finalize() != ProcessCode::SUCCESS) {
+        throw std::runtime_error("Failed to process event data");
+      }
+    } catch (const std::exception& e) {
+      ACTS_FATAL("Failed to finalize " << alg->typeName() << " \""
+                                       << alg->name() << "\"" << e.what());
+      throw;
     }
   }
 
@@ -487,6 +587,8 @@ int Sequencer::run() {
     ACTS_DEBUG("  " << names[i] << ": "
                     << perEvent(clocksAlgorithms[i], numEvents));
   }
+
+  printTiming(names, clocksAlgorithms, numEvents, logger());
 
   if (!m_cfg.outputDir.empty()) {
     storeTiming(names, clocksAlgorithms, numEvents,

@@ -35,6 +35,7 @@ def main():
         ".git",
         ".github",
         ".idea",
+        ".devcontainer",
     )
     exclude_files = (
         "acts_logo_colored.svg",
@@ -51,13 +52,14 @@ def main():
         "Magfield.ipynb",
         "SolenoidField.ipynb",
         # TODO Add README next to the following files?
-        "default-input-config-generic.json",
-        "geoSelection-openDataDetector.json",
-        "alignment-geo-contextualDetector.json",
+        "generic-input-config.json",
+        "generic-alignment-geo.json",
+        "odd-digi-smearing-config-notime.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
+        "CompressedIO.h",
     )
 
     suffix_header = (

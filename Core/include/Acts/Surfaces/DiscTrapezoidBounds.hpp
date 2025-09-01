@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -62,22 +61,33 @@ class DiscTrapezoidBounds : public DiscBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final { return SurfaceBounds::eDiscTrapezoid; }
+  /// @copydoc SurfaceBounds::type
+  BoundsType type() const final { return eDiscTrapezoid; }
+
+  /// @copydoc SurfaceBounds::isCartesian
+  bool isCartesian() const final { return false; }
+
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  ///  This method checks if the radius given in the LocalPosition is inside
-  ///  [rMin,rMax]
-  /// if only tol0 is given and additional in the phi sector is tol1 is given
-  /// @param lposition is the local position to be checked (in polar
-  /// coordinates)
-  /// @param boundaryTolerance is the boundary check directive
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+  /// @copydoc SurfaceBounds::inside
+  bool inside(const Vector2& lposition) const final;
+
+  /// @copydoc SurfaceBounds::closestPoint
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
+
+  using SurfaceBounds::inside;
+
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -163,12 +173,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   ///
   /// @param lposition The local position in polar coordinates
   Vector2 toLocalCartesian(const Vector2& lposition) const;
-
-  /// Jacobian
-  /// into its Cartesian representation
-  ///
-  /// @param lposition The local position in polar coordinates
-  SquareMatrix2 jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 }  // namespace Acts

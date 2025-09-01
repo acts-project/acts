@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"

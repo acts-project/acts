@@ -80,10 +80,6 @@ create2D(
     const std::vector<
         std::vector<typename material_accessor_t::grid_value_type>>& payload) {
   // Validate axis compatibility
-  if (pAxis0.getAxisDirection() == pAxis1.getAxisDirection()) {
-    throw std::invalid_argument(
-        "createGridSurfaceMaterial: ProtoAxes must have different directions");
-  }
   auto ism = pAxis0.getAxis().visit(
       [&]<typename AxisTypeA>(const AxisTypeA& axisA)
           -> std::unique_ptr<IGridSurfaceMaterial<

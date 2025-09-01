@@ -84,7 +84,7 @@ namespace DD4hepBinningHelpers {
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
-std::vector<std::tuple<Acts::ProtoAxis, std::size_t>> convertBinning(
+std::vector<std::tuple<DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
 }  // namespace DD4hepBinningHelpers

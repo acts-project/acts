@@ -14,13 +14,29 @@ namespace Acts::detail {
 
 /// Compute the average properties for a combined slab of two materials.
 ///
-/// @params slab1 Properties of the first material slab
-/// @params slab2 Properties of the second material slab
+/// The averaged material slab has the combined thickness of the two input slabs
+/// and assumes the two input materials are homogeneously and continuously mixed
+/// throughout the slab.
+///
+/// @param slab1 Properties of the first material slab
+/// @param slab2 Properties of the second material slab
+///
 /// @returns Material slab with the combined thickness and average parameters
+MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
+
+/// Compute the average properties for a combined slab of two materials.
 ///
 /// The averaged material slab has the combined thickness of the two input slabs
 /// and assumes the two input materials are homogeneously and continuously mixed
 /// throughout the slab.
-MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
+///
+/// @param slab1 Properties of the first material slab
+/// @param material2 Properties of the second material
+/// @param thickness2 Thickness of the second material slab. Can be negative to
+///                   subtract the second material from the first slab.
+///
+/// @returns Material slab with the combined thickness and average parameters
+MaterialSlab combineSlabs(const MaterialSlab& slab1, const Material& material2,
+                          float thickness2);
 
 }  // namespace Acts::detail

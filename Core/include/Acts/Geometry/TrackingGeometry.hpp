@@ -205,6 +205,13 @@ class TrackingGeometry {
                  const ViewConfig& portalViewConfig = s_viewPortal,
                  const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
+  /// Which *type* of geometry this represents: Gen1 or Gen3
+  enum class GeometryVersion { Gen1, Gen3 };
+
+  /// Return the *generation* of this `TrackingGeometry`
+  /// @return the generation of this `TrackingGeometry`
+  GeometryVersion geometryVersion() const;
+
  private:
   // the known world
   std::shared_ptr<TrackingVolume> m_world;

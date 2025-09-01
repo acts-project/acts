@@ -159,6 +159,13 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
         .setVertexSecondary(vertexSecondary())
         .setGeneration(generation());
   }
+
+  friend inline std::ostream& operator<<(std::ostream& os, Barcode barcode) {
+    os << "vp=" << barcode.vertexPrimary()
+       << "|vs=" << barcode.vertexSecondary() << "|p=" << barcode.particle()
+       << "|g=" << barcode.generation() << "|sp=" << barcode.subParticle();
+    return os;
+  }
 };
 
 }  // namespace ActsFatras

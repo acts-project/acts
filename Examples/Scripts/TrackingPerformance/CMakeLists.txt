@@ -11,7 +11,7 @@ target_link_libraries(
 add_executable(ActsAnalysisTrackSummary TrackSummary.cpp)
 target_link_libraries(
     ActsAnalysisTrackSummary
-    ActsExamplesFramework
+    Acts::ExamplesFramework
     ROOT::Core
     ROOT::Hist
     ROOT::Tree

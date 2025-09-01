@@ -146,6 +146,17 @@ class VectorTrackContainerBase {
   constexpr bool hasColumn_impl(HashedString key) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
+      case "tipIndex"_hash:
+      case "stemIndex"_hash:
+      case "params"_hash:
+      case "cov"_hash:
+      case "nMeasurements"_hash:
+      case "nHoles"_hash:
+      case "chi2"_hash:
+      case "ndf"_hash:
+      case "nOutliers"_hash:
+      case "nSharedHits"_hash:
+        return true;
       default:
         return m_dynamic.contains(key);
     }

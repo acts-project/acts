@@ -175,13 +175,13 @@ class BinningData {
     }
   }
 
-  /// Constructor from ProtoAxis
+  /// Constructor from DirectedProtoAxis
   ///
-  /// @param pAxis is the ProtoAxis object
+  /// @param dpAxis is the ProtoAxis object
   ///
-  explicit BinningData(const ProtoAxis& pAxis)
-      : binvalue(pAxis.getAxisDirection()), subBinningData(nullptr) {
-    const auto& axis = pAxis.getAxis();
+  explicit BinningData(const DirectedProtoAxis& dpAxis)
+      : binvalue(dpAxis.getAxisDirection()), subBinningData(nullptr) {
+    const auto& axis = dpAxis.getAxis();
     type = axis.getType() == AxisType::Equidistant ? equidistant : arbitrary;
     option = axis.getBoundaryType() == AxisBoundaryType::Closed ? closed : open;
     min = static_cast<float>(axis.getMin());
