@@ -51,11 +51,11 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
     m_surfaceArray =
-        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), 10, binsPhi, binsR);
+        sac.surfaceArrayOnDisc(gctx, std::move(surfaces), binsPhi, binsR);
   } else if (config.layerType == LayerType::Cylinder) {
     auto [binsPhi, binsZ] = config.bins;
-    m_surfaceArray = sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), 10,
-                                                binsPhi, binsZ);
+    m_surfaceArray =
+        sac.surfaceArrayOnCylinder(gctx, std::move(surfaces), binsPhi, binsZ);
   } else if (config.layerType == LayerType::Plane) {
     ACTS_ERROR("Plane layers are not yet supported");
     throw std::invalid_argument("Plane layers are not yet supported");

@@ -100,7 +100,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), layerThickness, binsPhi, binsZ, protoLayer);
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer);
 
     checkBinning(gctx, *sArray);
   }
@@ -178,8 +178,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), layerThickness, bTypePhi, bTypeZ,
-        protoLayer);
+        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer);
 
     checkBinning(gctx, *sArray);
   }
@@ -247,8 +246,7 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), layerThickness, binsR, binsPhi, protoLayer,
-        transform);
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, transform);
 
     checkBinning(gctx, *sArray);
   }
@@ -285,8 +283,8 @@ MutableLayerPtr LayerCreator::discLayer(
     protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
   }
 
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisZ);
+  const double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -318,8 +316,7 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), layerThickness, bTypeR, bTypePhi, protoLayer,
-        transform);
+        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
 
     checkBinning(gctx, *sArray);
   }
@@ -358,42 +355,30 @@ MutableLayerPtr LayerCreator::planeLayer(
   double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
   switch (aDir) {
     case AxisDirection::AxisX: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
-                          protoLayer.min(AxisDirection::AxisY));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisZ) -
-                          protoLayer.min(AxisDirection::AxisZ));
-      layerThickness = (protoLayer.max(AxisDirection::AxisX) -
-                        protoLayer.min(AxisDirection::AxisX));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisY);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+      layerThickness = protoLayer.range(AxisDirection::AxisX);
       break;
     }
     case AxisDirection::AxisY: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisX) -
-                          protoLayer.min(AxisDirection::AxisX));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisZ) -
-                          protoLayer.min(AxisDirection::AxisZ));
-      layerThickness = (protoLayer.max(AxisDirection::AxisY) -
-                        protoLayer.min(AxisDirection::AxisY));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisX);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+      layerThickness = protoLayer.range(AxisDirection::AxisY);
       break;
     }
     case AxisDirection::AxisZ: {
-      layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisX) -
-                          protoLayer.min(AxisDirection::AxisX));
-      layerHalf2 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
-                          protoLayer.min(AxisDirection::AxisY));
-      layerThickness = (protoLayer.max(AxisDirection::AxisZ) -
-                        protoLayer.min(AxisDirection::AxisZ));
+      layerHalf1 = 0.5 * protoLayer.range(AxisDirection::AxisX);
+      layerHalf2 = 0.5 * protoLayer.range(AxisDirection::AxisY);
+      layerThickness = protoLayer.range(AxisDirection::AxisZ);
       break;
     }
     default:
       throw std::invalid_argument("Invalid binning value");
   }
 
-  double centerX = 0.5 * (protoLayer.max(AxisDirection::AxisX) +
-                          protoLayer.min(AxisDirection::AxisX));
-  double centerY = 0.5 * (protoLayer.max(AxisDirection::AxisY) +
-                          protoLayer.min(AxisDirection::AxisY));
-  double centerZ = 0.5 * (protoLayer.max(AxisDirection::AxisZ) +
-                          protoLayer.min(AxisDirection::AxisZ));
+  const double centerX = protoLayer.medium(AxisDirection::AxisX);
+  const double centerY = protoLayer.medium(AxisDirection::AxisY);
+  const double centerZ = protoLayer.medium(AxisDirection::AxisZ);
 
   ACTS_VERBOSE("Creating a plane Layer:");
   ACTS_VERBOSE(" - with layer center     = "
@@ -422,8 +407,7 @@ MutableLayerPtr LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        gctx, std::move(surfaces), layerThickness, bins1, bins2, aDir,
-        protoLayer, transform);
+        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer, transform);
 
     checkBinning(gctx, *sArray);
   }

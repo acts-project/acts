@@ -31,9 +31,8 @@ using VectorHelpers::phi;
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
-    std::size_t binsPhi, std::size_t binsZ,
-    std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+    std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // Check if we have proto layer, else build it
@@ -52,14 +51,15 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ProtoAxis pAxisZ = createEquidistantAxis(
       gctx, surfacesRaw, AxisDirection::AxisZ, protoLayer, ftransform, binsZ);
 
-  double R = protoLayer.medium(AxisDirection::AxisR, true);
-  double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
+  const double R = protoLayer.medium(AxisDirection::AxisR, true);
+  const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
+  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   auto surface = Surface::makeShared<CylinderSurface>(transform, R, halfZ);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), thickness, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
   completeBinning(gctx, *sl, surfacesRaw);
@@ -70,17 +70,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
-    BinningType bTypePhi, BinningType bTypeZ,
-    std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
+    BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
-  double R = protoLayer.medium(AxisDirection::AxisR, true);
-  double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
+  const double R = protoLayer.medium(AxisDirection::AxisR, true);
+  const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
+  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
@@ -107,15 +107,15 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), thickness, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
   completeBinning(gctx, *sl, surfacesRaw);
 
   // get the number of bins
   auto axes = sl->getAxes();
-  std::size_t bins0 = axes.at(0)->getNBins();
-  std::size_t bins1 = axes.at(1)->getNBins();
+  const std::size_t bins0 = axes.at(0)->getNBins();
+  const std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
@@ -128,9 +128,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
-    std::size_t binsR, std::size_t binsPhi,
-    std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+    std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
@@ -146,16 +145,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
       createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
                             protoLayer, ftransform, binsPhi);
 
-  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  double Rmin = protoLayer.min(AxisDirection::AxisR, true);
-  double Rmax = protoLayer.max(AxisDirection::AxisR, true);
+  const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
+  const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
+  const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
   auto surface = Surface::makeShared<DiscSurface>(transform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), thickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -174,9 +174,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
-    BinningType bTypeR, BinningType bTypePhi,
-    std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
+    BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
@@ -247,21 +246,22 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     }
   }
 
-  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  double Rmin = protoLayer.min(AxisDirection::AxisR, true);
-  double Rmax = protoLayer.max(AxisDirection::AxisR, true);
+  const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
+  const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
+  const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
   auto surface = Surface::makeShared<DiscSurface>(ftransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), thickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
-  std::size_t bins0 = axes.at(0)->getNBins();
-  std::size_t bins1 = axes.at(1)->getNBins();
+  const std::size_t bins0 = axes.at(0)->getNBins();
+  const std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
@@ -277,8 +277,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, double thickness,
-    std::size_t bins1, std::size_t bins2, AxisDirection aDir,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+    std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -293,6 +293,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   Transform3 ftransform = transform;
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
+
+  const double layerTolerance = protoLayer.range(aDir) * 0.5;
 
   // Axis along the binning
   switch (aDir) {
@@ -311,7 +313,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                  protoLayer.max(AxisDirection::AxisZ))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), thickness, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisY: {
@@ -329,7 +331,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                  protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), thickness, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisZ: {
@@ -347,7 +349,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                  protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), thickness, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2);
       break;
     }
     default: {
