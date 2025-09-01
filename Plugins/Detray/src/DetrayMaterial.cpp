@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/Detray/DetrayPayloadConverter.hpp"
 //
-
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
