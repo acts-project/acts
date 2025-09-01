@@ -40,8 +40,7 @@ std::string joinStrings(R&& strings, std::string_view delimiter) {
 namespace detail {
 /// This mimics the signature of C++23's std::formattable concept
 template <typename T, typename>
-concept formattable =
-    requires(T&& t) { std::format("{}", std::forward<T>(t)); };
+concept formattable = requires(T t) { std::format("{}", t); };
 }  // namespace detail
 
 /// Utility to join a range of formattable elements with a delimiter and custom
