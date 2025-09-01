@@ -74,10 +74,11 @@ template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
+    std::vector<ScoreMonitor>& scoreMonitor)
     const {
   std::vector<double> trackScore;
-  std::vector<ScoreMonitor> scoreMonitor;
+  
   trackScore.reserve(tracks.size());
   scoreMonitor.reserve(tracks.size());
 
@@ -202,8 +203,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   }  // end of loop over tracks
 
-  m_scoreMonitor = std::move(scoreMonitor);
-
   return trackScore;
 }
 
@@ -211,10 +210,11 @@ template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
+    std::vector<ScoreMonitor>& scoreMonitor
+  )
     const {
   std::vector<double> trackScore;
-  std::vector<ScoreMonitor> scoreMonitor;
   trackScore.reserve(tracks.size());
   scoreMonitor.reserve(tracks.size());
 
@@ -364,8 +364,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
   }  // end of loop over tracks
 
-  m_scoreMonitor = scoreMonitor;
-
   return trackScore;
 }
 
@@ -374,7 +372,7 @@ template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const track_container_t& tracks, source_link_hash_t sourceLinkHash,
     source_link_equality_t sourceLinkEquality,
-    const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
+    const Optionals<typename track_container_t::ConstTrackProxy>& optionals, std::vector<ScoreMonitor>& scoreMonitor)
     const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
@@ -386,9 +384,9 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
   if (m_cfg.useAmbiguityScoring) {
-    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionals);
+    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionals, scoreMonitor);
   } else {
-    trackScore = simpleScore(tracks, trackFeaturesVectors, optionals);
+    trackScore = simpleScore(tracks, trackFeaturesVectors, optionals, scoreMonitor);
   }
 
   auto MeasurementIndexMap =

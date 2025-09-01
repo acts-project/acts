@@ -114,12 +114,16 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
 
   Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionals;
   optionals.cuts.push_back(doubleHolesFilter);
+
+  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor = {};
+
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
-      tracks, &sourceLinkHash, &sourceLinkEquality, optionals);
+      tracks, &sourceLinkHash, &sourceLinkEquality, optionals, scoreMonitor);
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
   solvedTracks.ensureDynamicColumns(tracks);
+
   for (auto iTrack : goodTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
@@ -127,21 +131,22 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  // Save the score monitor data to a ROOT file
-  nlohmann::json json_file;
-  std::ifstream file(m_cfg.configFile);
-  if (!file.is_open()) {
-    std::cerr << "Error opening file: " << m_cfg.configFile << std::endl;
-    return {};
-  }
-  file >> json_file;
-  file.close();
-  auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
-  Acts::from_json(json_file, prtDetectorNames.get());
 
-  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor =
-      m_ambi.getScoreMonitor();
+
   if (!scoreMonitor.empty()) {
+    // load  names of detectors from the json file 
+    nlohmann::json json_file;
+    std::ifstream file(m_cfg.configFile);
+    if (!file.is_open()) {
+      std::cerr << "Error opening file: " << m_cfg.configFile << std::endl;
+      return {};
+    }
+    file >> json_file;
+    file.close();
+    auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
+    Acts::from_json(json_file, prtDetectorNames.get());
+
+    // Save the score monitor data to a ROOT file
     Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, *prtDetectorNames);
   } else {
     ACTS_ERROR("No score monitor data available to save.");
