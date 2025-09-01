@@ -79,9 +79,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
   std::vector<double> trackScore;
 
   trackScore.reserve(tracks.size());
-  if (scoreMonitor){
-  scoreMonitor->clear();
-  scoreMonitor->reserve(tracks.size());
+  if (scoreMonitor) {
+    scoreMonitor->clear();
+    scoreMonitor->reserve(tracks.size());
   }
   int iTrack = 0;
 
@@ -113,8 +113,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       iTrack++;
       trackScore.push_back(score);
       monitor.setZero();
-      if (scoreMonitor){
-      scoreMonitor->push_back(monitor);
+      if (scoreMonitor) {
+        scoreMonitor->push_back(monitor);
       }
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
@@ -146,10 +146,10 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       iTrack++;
       trackScore.push_back(score);
       monitor.setZero();
-      if (scoreMonitor){
+      if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
-        }
-              ACTS_DEBUG("Track: " << iTrack << " score : " << score);
+      }
+      ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
 
@@ -220,11 +220,10 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
 
-  if (scoreMonitor){
-  scoreMonitor->clear();
-  scoreMonitor->reserve(tracks.size());
+  if (scoreMonitor) {
+    scoreMonitor->clear();
+    scoreMonitor->reserve(tracks.size());
   }
-
 
   ACTS_VERBOSE("Using Ambiguity Scoring function");
 
@@ -262,8 +261,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       iTrack++;
       trackScore.push_back(score);
       monitor.setZero();
-      if (scoreMonitor){
-      scoreMonitor->push_back(monitor);
+      if (scoreMonitor) {
+        scoreMonitor->push_back(monitor);
       }
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
@@ -295,9 +294,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       iTrack++;
       trackScore.push_back(score);
       monitor.setZero();
-      if (scoreMonitor){
+      if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
-        }
+      }
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
@@ -371,9 +370,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
     // Add the score to the vector
     trackScore.push_back(score);
-    if (scoreMonitor){
+    if (scoreMonitor) {
       scoreMonitor->push_back(monitor);
-      }
+    }
     ACTS_VERBOSE("Track: " << iTrack << " score: " << score);
 
   }  // end of loop over tracks

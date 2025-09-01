@@ -115,12 +115,13 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionals;
   optionals.cuts.push_back(doubleHolesFilter);
 
-
-  auto scoreMonitorPtr = std::make_unique<std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>();
+  auto scoreMonitorPtr = std::make_unique<
+      std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>();
   auto& scoreMonitor = *scoreMonitorPtr;
 
-  std::vector<int> goodTracks = m_ambi.solveAmbiguity(
-      tracks, &sourceLinkHash, &sourceLinkEquality, optionals, scoreMonitorPtr.get());
+  std::vector<int> goodTracks =
+      m_ambi.solveAmbiguity(tracks, &sourceLinkHash, &sourceLinkEquality,
+                            optionals, scoreMonitorPtr.get());
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
