@@ -133,7 +133,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   }
 
   if (!scoreMonitor.empty()) {
-    // load  names of detectors from the json file 
+    // load  names of detectors from the json file
     nlohmann::json json_file;
     std::ifstream file(m_cfg.configFile);
     if (!file.is_open()) {

@@ -204,7 +204,7 @@ class ScoreBasedAmbiguityResolution {
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
-          {}, 
+          {},
       std::vector<ScoreMonitor>& scoreMonitor = {}) const;
 
   /// Compute the score of each track based on the ambiguity function.

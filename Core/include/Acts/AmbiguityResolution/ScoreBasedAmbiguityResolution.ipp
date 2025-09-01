@@ -77,7 +77,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const Optionals<typename track_container_t::ConstTrackProxy>& optionals,
     std::vector<ScoreMonitor>& scoreMonitor) const {
   std::vector<double> trackScore;
-  
+
   trackScore.reserve(tracks.size());
   scoreMonitor.reserve(tracks.size());
 
@@ -381,10 +381,10 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
   if (m_cfg.useAmbiguityScoring) {
-    trackScore = 
+    trackScore =
         ambiguityScore(tracks, trackFeaturesVectors, optionals, scoreMonitor);
   } else {
-    trackScore = 
+    trackScore =
         simpleScore(tracks, trackFeaturesVectors, optionals, scoreMonitor);
   }
 
