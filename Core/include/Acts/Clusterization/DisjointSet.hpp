@@ -53,9 +53,9 @@ class DisjointSets {
 
     const std::size_t rankRootX = m_rank[rootX];
     const std::size_t rankRootY = m_rank[rootY];
-    if (rankRootY < rankRootX) {
+    if (rankRootX < rankRootY) {
       m_parent[rootX] = rootY;
-    } else if (rankRootX < rankRootY) {
+    } else if (rankRootY < rankRootX) {
       m_parent[rootY] = rootX;
     } else {
       m_parent[rootY] = rootX;
@@ -70,15 +70,20 @@ class DisjointSets {
   inline void clear() {
     // index 0 is a dummy
     m_nextId = 1;
-    m_parent.resize(1);
-    m_rank.resize(1);
+    m_parent.assign(1, 0);
+    m_rank.assign(1, 0);
   }
 
  private:
   inline std::size_t findRoot(std::size_t x) noexcept {
-    assert(x < m_parent.size());
+    assert(x > 0 && x < m_parent.size());
+    if (x == 0 || x >= m_parent.size()) {
+      return 0;
+    }
+
     while (true) {
       std::size_t parent = m_parent[x];
+      assert(parent < m_parent.size());
       if (parent == x) {
         return x;
       }
