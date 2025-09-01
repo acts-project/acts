@@ -12,14 +12,17 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
@@ -207,7 +210,33 @@ void addSvg(Context& ctx) {
 
   auto svg = m.def_submodule("svg");
 
-  svg.def("toFile", &Svg::toFile);
+  {
+    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
+            py::arg("filename"));
+  }
+
+  py::class_<actsvg::svg::object>(svg, "object")
+      .def_readwrite("id", &actsvg::svg::object::_id);
+
+  py::class_<actsvg::svg::file>(svg, "file")
+      .def(py::init<>())
+      .def("add_object", &actsvg::svg::file::add_object)
+      .def("add_objects", &actsvg::svg::file::add_objects)
+      .def("clip",
+           [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
+             self.set_view_box(box);
+           })
+      .def("write",
+           [](const actsvg::svg::file& self, const std::string& filename) {
+             std::ofstream file(filename);
+             file << self;
+             file.close();
+           });
+
+  {
+    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
+            py::arg("filename"));
+  }
 
   // Core components, added as an acts.svg submodule
   {
@@ -352,6 +381,8 @@ void addSvg(Context& ctx) {
 
   // How a detector is drawn: Svg Detector options & drawning
   { svg.def("drawDetector", &drawDetector); }
+
+  { svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays); }
 
   // Legacy geometry drawing
   {

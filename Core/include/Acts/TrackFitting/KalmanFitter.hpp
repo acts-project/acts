@@ -486,7 +486,10 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
-                    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    if (trackState.typeFlags().test(
+                            TrackStateFlag::MeasurementFlag)) {
+                      trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    }
                   }
                 });
           }
@@ -723,7 +726,7 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        auto fittedStates = *result.fittedStates;
+        auto& fittedStates = *result.fittedStates;
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.

@@ -89,7 +89,7 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
   for (auto iTrack : state.selectedTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(state.trackTips.at(iTrack));
-    destProxy.copyFrom(srcProxy, false);
+    destProxy.copyFromWithoutStates(srcProxy);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
