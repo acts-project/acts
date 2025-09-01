@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -277,14 +278,30 @@ SurfaceMultiIntersection DiscSurface::intersect(
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
-  // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != IntersectionStatus::unreachable &&
-      m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
-    // Built-in local to global for speed reasons
-    const auto& tMatrix = gctxTransform.matrix();
-    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
-    const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (!insideBounds(localCartesianToPolar(lcartesian), boundaryTolerance)) {
+  if (status == IntersectionStatus::unreachable) {
+    return {{}, *this, boundaryTolerance};
+  }
+  if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
+    return {
+        {intersection, Intersection3D::invalid()}, *this, boundaryTolerance};
+  }
+  // Built-in local to global for speed reasons
+  const auto& tMatrix = gctxTransform.matrix();
+  const Vector3 fromCenter =
+      intersection.position() - tMatrix.block<3, 1>(0, 3);
+  if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
+    const double r2 = fromCenter.squaredNorm();
+    const bool isInside =
+        (r2 <= square(m_bounds->rMax())) && (r2 >= square(m_bounds->rMin()));
+    if (!isInside) {
+      status = IntersectionStatus::unreachable;
+    }
+  } else {
+    const Vector2 localCartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * fromCenter;
+    const bool isInside =
+        insideBounds(localCartesianToPolar(localCartesian), boundaryTolerance);
+    if (!isInside) {
       status = IntersectionStatus::unreachable;
     }
   }
