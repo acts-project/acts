@@ -363,6 +363,7 @@ class SurfaceArrayCreator {
   /// @tparam bdtA AxisBoundaryType of axis A
   /// @tparam bdtB AxisBoundaryType of axis B
   /// @param surface the surface of the grid
+  /// @param layerTolerance the layer tolerance
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
