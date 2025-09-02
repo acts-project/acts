@@ -82,7 +82,7 @@ jobs:
 
       - name: Save PR number to file
         if: github.event_name == 'pull_request'
-        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+        run: echo -n ${{ github.event.number }} > PR_NUMBER.txt
 
       - name: Persist PR number
         if: github.event_name == 'pull_request'
