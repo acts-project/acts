@@ -12,7 +12,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -40,8 +39,6 @@ Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
     m_ssSensitiveSurfaces = 1;
   }
 }
-
-Layer::~Layer() noexcept = default;
 
 const ApproachDescriptor* Layer::approachDescriptor() const {
   return m_approachDescriptor.get();

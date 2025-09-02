@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 

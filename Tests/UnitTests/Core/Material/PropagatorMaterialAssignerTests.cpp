@@ -31,7 +31,9 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+
+#include <limits>
 
 namespace Acts::Test {
 

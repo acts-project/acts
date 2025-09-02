@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <cstddef>
 #include <ostream>

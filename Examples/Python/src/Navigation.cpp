@@ -14,8 +14,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 
 #include <memory>
 #include <stdexcept>

@@ -13,13 +13,14 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace Acts {
-
 class ConeBounds;
-class SurfaceArray;
 
 /// @class ConeLayer
 ///
@@ -39,11 +40,15 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   /// @todo change od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
-  static std::shared_ptr<ConeLayer> create(
+  static MutableLayerPtr create(
       const Transform3& transform, std::shared_ptr<const ConeBounds> cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = active);
+      LayerType laytyp = Acts::active) {
+    return MutableLayerPtr(new ConeLayer(transform, std::move(cbounds),
+                                         std::move(surfaceArray), thickness,
+                                         std::move(ad), laytyp));
+  }
 
   ConeLayer() = delete;
   ConeLayer(const ConeLayer& cla) = delete;
@@ -71,7 +76,7 @@ class ConeLayer : virtual public ConeSurface, public Layer {
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ade = nullptr,
-            LayerType laytyp = active);
+            LayerType laytyp = Acts::active);
 
   /// Private copy constructor with shift, called by create(args*)
   ///

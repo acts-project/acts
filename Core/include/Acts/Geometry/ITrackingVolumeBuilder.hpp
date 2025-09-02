@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 
 #include <memory>
+#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -23,7 +24,6 @@ using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 using LayerPtr = std::shared_ptr<const Layer>;
 using LayerVector = std::vector<LayerPtr>;
-
 ///  @class ITrackingVolumeBuilder
 ///
 /// Interface class ITrackingVolumeBuilders
@@ -35,6 +35,7 @@ using LayerVector = std::vector<LayerPtr>;
 /// If an innerVolume is given, this is wrapped
 /// If a VolumeBounds object is given this defines the maximum extent.
 ///
+
 class ITrackingVolumeBuilder {
  public:
   /// Virtual destructor

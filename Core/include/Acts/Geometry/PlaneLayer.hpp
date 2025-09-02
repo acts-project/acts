@@ -12,13 +12,14 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace Acts {
 
 class PlanarBounds;
-class SurfaceArray;
 
 /// @class PlaneLayer
 ///
@@ -37,11 +38,15 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  static std::shared_ptr<PlaneLayer> create(
+  static MutableLayerPtr create(
       const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = active);
+      LayerType laytyp = Acts::active) {
+    return MutableLayerPtr(new PlaneLayer(transform, pbounds,
+                                          std::move(surfaceArray), thickness,
+                                          std::move(ad), laytyp));
+  }
 
   PlaneLayer() = delete;
   PlaneLayer(const PlaneLayer& pla) = delete;
@@ -73,7 +78,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
              double thickness = 0.,
              std::unique_ptr<ApproachDescriptor> ades = nullptr,
-             LayerType laytyp = active);
+             LayerType laytyp = Acts::active);
 
   /// Private constructor for a PlaneLayer, is called by create(arge*
   ///

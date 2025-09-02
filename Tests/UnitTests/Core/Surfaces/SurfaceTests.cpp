@@ -14,9 +14,8 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"

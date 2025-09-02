@@ -106,5 +106,4 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   // return the container
   return hVolume;
 }
-
 }  // namespace Acts

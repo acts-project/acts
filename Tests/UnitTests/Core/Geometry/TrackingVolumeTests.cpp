@@ -16,7 +16,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include "LayerStub.hpp"
