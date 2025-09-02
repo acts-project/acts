@@ -171,7 +171,7 @@ class SurfaceArray {
               std::abs(intersection.pathLength()) > m_tolerance) {
             continue;
           }
-          // m_grid.at(i).push_back(srf);
+          m_grid.at(i).push_back(srf);
         }
       }
 
