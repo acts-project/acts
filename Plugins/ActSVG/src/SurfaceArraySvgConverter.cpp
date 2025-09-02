@@ -184,7 +184,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
         bCenter = Vector3(radius * std::cos(p1), radius * std::sin(p1), p0);
       }
       // Get all the bin entries and members
-      auto bSurfaces = surfaceArray.neighbors(bCenter, bDirection);
+      auto bSurfaces = surfaceArray.neighbors(bCenter);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
         auto candidate = std::ranges::find(surfaces, bs);

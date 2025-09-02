@@ -80,7 +80,7 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
   const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position, args.direction);
+      m_surfaceArray->neighbors(args.position);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 

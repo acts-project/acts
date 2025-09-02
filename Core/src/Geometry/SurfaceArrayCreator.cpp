@@ -9,16 +9,12 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>
 #include <numbers>
@@ -44,28 +40,25 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
                                       << binsPhi * binsZ << " bins.");
 
-  Transform3 fullTransform = transform;
+  Transform3 ftransform = transform;
   ProtoAxis pAxisPhi =
       createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                            protoLayer, fullTransform, binsPhi);
-  ProtoAxis pAxisZ =
-      createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ, protoLayer,
-                            fullTransform, binsZ);
+                            protoLayer, ftransform, binsPhi);
+  ProtoAxis pAxisZ = createEquidistantAxis(
+      gctx, surfacesRaw, AxisDirection::AxisZ, protoLayer, ftransform, binsZ);
 
-  const double R = protoLayer.medium(AxisDirection::AxisR, true);
-  const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
-  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
+  double R = protoLayer.medium(AxisDirection::AxisR, true);
 
-  auto surface = Surface::makeShared<CylinderSurface>(transform, R, halfZ);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          Surface::SurfaceType::Cylinder, ftransform, R, 0, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
+  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+                                        ftransform);
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -78,43 +71,41 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
-  const double R = protoLayer.medium(AxisDirection::AxisR, true);
-  const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
-  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
+  double R = protoLayer.medium(AxisDirection::AxisR, true);
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
 
-  Transform3 fullTransform = transform;
+  Transform3 ftransform = transform;
 
   if (bTypePhi == equidistant) {
     pAxisPhi = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                                     protoLayer, fullTransform, 0);
+                                     protoLayer, ftransform, 0);
   } else {
     pAxisPhi = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                                  protoLayer, fullTransform);
+                                  protoLayer, ftransform);
   }
 
   if (bTypeZ == equidistant) {
     pAxisZ = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
-                                   protoLayer, fullTransform);
+                                   protoLayer, ftransform);
   } else {
     pAxisZ = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
-                                protoLayer, fullTransform);
+                                protoLayer, ftransform);
   }
 
-  auto surface = Surface::makeShared<CylinderSurface>(transform, R, halfZ);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          Surface::SurfaceType::Cylinder, ftransform, R, 0, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
+  completeBinning(gctx, *sl, surfacesRaw);
 
   // get the number of bins
   auto axes = sl->getAxes();
-  const std::size_t bins0 = axes.at(0)->getNBins();
-  const std::size_t bins1 = axes.at(1)->getNBins();
+  std::size_t bins0 = axes.at(0)->getNBins();
+  std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
@@ -122,7 +113,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << bins0 * bins1 << " bins.");
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+                                        ftransform);
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -137,25 +128,20 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
-  Transform3 fullTransform = transform;
-  ProtoAxis pAxisR =
-      createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisR, protoLayer,
-                            fullTransform, binsR);
+  Transform3 ftransform = transform;
+  ProtoAxis pAxisR = createEquidistantAxis(
+      gctx, surfacesRaw, AxisDirection::AxisR, protoLayer, ftransform, binsR);
   ProtoAxis pAxisPhi =
       createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                            protoLayer, fullTransform, binsPhi);
+                            protoLayer, ftransform, binsPhi);
 
-  const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
-  const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
-  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
+  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  auto surface = Surface::makeShared<DiscSurface>(transform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          Surface::SurfaceType::Disc, ftransform, 0, Z, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -165,11 +151,11 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
-
   sl->fill(gctx, surfacesRaw);
+  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+                                        ftransform);
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -187,15 +173,15 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;
 
-  Transform3 fullTransform = transform;
-  Transform3 inverseTransform = fullTransform.inverse();
+  Transform3 ftransform = transform;
+  Transform3 itransform = ftransform.inverse();
 
   if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisR,
-                                   protoLayer, fullTransform);
+                                   protoLayer, ftransform);
   } else {
     pAxisR = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisR,
-                                protoLayer, fullTransform);
+                                protoLayer, ftransform);
   }
 
   // if we have more than one R ring, we need to figure out
@@ -206,7 +192,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
       Vector3 bpos =
-          inverseTransform * srf->referencePosition(gctx, AxisDirection::AxisR);
+          itransform * srf->referencePosition(gctx, AxisDirection::AxisR);
       std::size_t bin = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
@@ -233,45 +219,41 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     std::size_t nBinsPhi =
         (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
     pAxisPhi = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                                     protoLayer, fullTransform, nBinsPhi);
+                                     protoLayer, ftransform, nBinsPhi);
 
   } else {
     // use regular determination
     if (bTypePhi == equidistant) {
-      pAxisPhi =
-          createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                                protoLayer, fullTransform, 0);
+      pAxisPhi = createEquidistantAxis(
+          gctx, surfacesRaw, AxisDirection::AxisPhi, protoLayer, ftransform, 0);
     } else {
       pAxisPhi = createVariableAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
-                                    protoLayer, fullTransform);
+                                    protoLayer, ftransform);
     }
   }
 
-  const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
-  const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
-  const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
-  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
+  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          Surface::SurfaceType::Disc, ftransform, 0, Z, pAxisR, pAxisPhi);
 
   // get the number of bins
   auto axes = sl->getAxes();
-  const std::size_t bins0 = axes.at(0)->getNBins();
-  const std::size_t bins1 = axes.at(1)->getNBins();
+  std::size_t bins0 = axes.at(0)->getNBins();
+  std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
   sl->fill(gctx, surfacesRaw);
+  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+                                        ftransform);
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -290,66 +272,46 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
-  Transform3 fullTransform = transform;
+  Transform3 ftransform = transform;
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
-
-  const double layerTolerance = protoLayer.range(aDir) * 0.5;
 
   // Axis along the binning
   switch (aDir) {
     case AxisDirection::AxisX: {
       ProtoAxis pAxis1 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisY,
-                                protoLayer, fullTransform, bins1);
+                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
-                                protoLayer, fullTransform, bins2);
-      auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisY),
-                                 protoLayer.min(AxisDirection::AxisZ)),
-                         Vector2(protoLayer.max(AxisDirection::AxisY),
-                                 protoLayer.max(AxisDirection::AxisZ))));
+                                protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisY: {
       ProtoAxis pAxis1 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisX,
-                                protoLayer, fullTransform, bins1);
+                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
-                                protoLayer, fullTransform, bins2);
-      auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisX),
-                                 protoLayer.min(AxisDirection::AxisY)),
-                         Vector2(protoLayer.max(AxisDirection::AxisX),
-                                 protoLayer.max(AxisDirection::AxisY))));
+                                protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     case AxisDirection::AxisZ: {
       ProtoAxis pAxis1 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisX,
-                                protoLayer, fullTransform, bins1);
+                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisY,
-                                protoLayer, fullTransform, bins2);
-      auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisX),
-                                 protoLayer.min(AxisDirection::AxisY)),
-                         Vector2(protoLayer.max(AxisDirection::AxisX),
-                                 protoLayer.max(AxisDirection::AxisY))));
+                                protoLayer, ftransform, bins2);
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          Surface::SurfaceType::Plane, ftransform, 0, 0, pAxis1, pAxis2);
       break;
     }
     default: {
@@ -361,9 +323,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   }
 
   sl->fill(gctx, surfacesRaw);
+  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+                                        ftransform);
   //!< @todo implement - take from ATLAS complex TRT builder
 }
 

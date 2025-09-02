@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -27,7 +26,6 @@
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -293,6 +291,36 @@ class SurfaceArrayCreator {
   /// Private access to logger
   const Logger& logger() const { return *m_logger; }
 
+  /// Private helper method to complete the binning
+  ///
+  ///
+  ///  given a grid point o
+  ///    |  0  |  1 |  2  |  3 |  4  |
+  ///    ------------------------------
+  ///  0 |  x  |    |     |    |  x  |
+  ///  1 |     |    |  o  |    |     |
+  ///  2 |  x  |    |     |    |  x  |
+  ///
+  /// This is being called when you chose to use more bins thans surfaces
+  /// I.e. to put a finer granularity binning onto your surface
+  /// Neighbour bins are then filled to contain pointers as well
+  /// This method delegates to SurfaceGridLookup itself.
+  /// @param [in] gctx the geometry context for this call
+  /// @param sl The @c SurfaceGridLookup
+  /// @param surfaces the surfaces
+  void completeBinning(const GeometryContext& gctx,
+                       SurfaceArray::ISurfaceGridLookup& sl,
+                       const std::vector<const Surface*>& surfaces) const {
+    ACTS_VERBOSE(
+        "Complete binning by filling closest neighbour surfaces into "
+        "empty bins.");
+
+    std::size_t binCompleted = sl.completeBinning(gctx, surfaces);
+
+    ACTS_VERBOSE("       filled  : " << binCompleted
+                                     << " (includes under/overflow)");
+  }
+
   std::vector<const Surface*> findKeySurfaces(
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
@@ -362,15 +390,15 @@ class SurfaceArrayCreator {
   /// that is required by the templating.
   /// @tparam bdtA AxisBoundaryType of axis A
   /// @tparam bdtB AxisBoundaryType of axis B
-  /// @param surface the surface of the grid
-  /// @param layerTolerance the layer tolerance
-  /// @param pAxisA ProtoAxis object for axis A
-  /// @param pAxisB ProtoAxis object for axis B
+  /// @param type The surface type, this determines the local to global calculation
+  /// @param transform The transform to apply to the surface`
+  /// @param R the radius (interpretation depends on @p type)
+  /// @param Z the z position (interpretation depends on @p type)
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          double layerTolerance, ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) {
+  makeSurfaceGridLookup2D(Surface::SurfaceType type,
+                          const Transform3& transform, double R, double Z,
+                          ProtoAxis pAxisA, ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
@@ -382,9 +410,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr =
+          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
+                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
@@ -393,9 +421,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr =
+          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
+                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
@@ -404,9 +432,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr =
+          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
+                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
@@ -414,9 +442,9 @@ class SurfaceArrayCreator {
 
       using SGL =
           SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr =
+          std::make_unique<SGL>(type, transform, R, Z, std::pair{axisA, axisB},
+                                std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
 
     return ptr;
