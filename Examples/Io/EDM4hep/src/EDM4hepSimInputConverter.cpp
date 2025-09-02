@@ -434,7 +434,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         }
       }
 
-      particleSimulated.final().setPosition4(
+      particleSimulated.finalState().setPosition4(
           inParticle.getEndpoint()[0] * Acts::UnitConstants::mm,
           inParticle.getEndpoint()[1] * Acts::UnitConstants::mm,
           inParticle.getEndpoint()[2] * Acts::UnitConstants::mm, time);
@@ -442,17 +442,19 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       Acts::Vector3 momentumFinal = {inParticle.getMomentumAtEndpoint()[0],
                                      inParticle.getMomentumAtEndpoint()[1],
                                      inParticle.getMomentumAtEndpoint()[2]};
-      particleSimulated.final().setDirection(momentumFinal.normalized());
-      particleSimulated.final().setAbsoluteMomentum(momentumFinal.norm());
+      particleSimulated.finalState().setDirection(momentumFinal.normalized());
+      particleSimulated.finalState().setAbsoluteMomentum(momentumFinal.norm());
 
-      ACTS_VERBOSE("- Updated particle initial -> final, position: "
-                   << particleSimulated.initial().fourPosition().transpose()
-                   << " -> "
-                   << particleSimulated.final().fourPosition().transpose());
-      ACTS_VERBOSE("                                     momentum: "
-                   << particleSimulated.initial().fourMomentum().transpose()
-                   << " -> "
-                   << particleSimulated.final().fourMomentum().transpose());
+      ACTS_VERBOSE(
+          "- Updated particle initial -> final, position: "
+          << particleSimulated.initialState().fourPosition().transpose()
+          << " -> "
+          << particleSimulated.finalState().fourPosition().transpose());
+      ACTS_VERBOSE(
+          "                                     momentum: "
+          << particleSimulated.initialState().fourMomentum().transpose()
+          << " -> "
+          << particleSimulated.finalState().fourMomentum().transpose());
 
       particlesSimulatedUnordered->push_back(particleSimulated);
     }
@@ -563,11 +565,13 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         if (auto itSim = particlesSimulated.find(simHit.particleId());
             itSim != particlesSimulated.end()) {
           ACTS_VERBOSE("Found associated simulated particle");
-          itSim->final().setNumberOfHits(itSim->final().numberOfHits() + 1);
+          itSim->finalState().setNumberOfHits(
+              itSim->finalState().numberOfHits() + 1);
         } else if (auto itGen = particlesGenerator.find(simHit.particleId());
                    itGen != particlesGenerator.end()) {
           ACTS_VERBOSE("Found associated generator particle");
-          itGen->final().setNumberOfHits(itGen->final().numberOfHits() + 1);
+          itGen->finalState().setNumberOfHits(
+              itGen->finalState().numberOfHits() + 1);
         } else {
           const auto& ptcl = Acts::EDM4hepUtil::getParticle(hit);
           ACTS_ERROR("SimHit (r="
@@ -709,7 +713,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     for (const auto& particle : particlesSimulated) {
       // Add current particle to the outgoing particles of the vertex
 
-      if (particle.final().numberOfHits() == 0) {
+      if (particle.finalState().numberOfHits() == 0) {
         // Only produce vertices for particles that actually produced any hits
         continue;
       }

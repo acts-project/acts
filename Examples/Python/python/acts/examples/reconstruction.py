@@ -928,7 +928,6 @@ def addGridTripletSeeding(
             helixCutTolerance=None,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            maxPtScattering=seedFinderConfigArg.maxPtScattering,
             toleranceParam=None,
             deltaInvHelixDiameter=None,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
@@ -938,10 +937,12 @@ def addGridTripletSeeding(
             compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
             seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
             numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
     )
@@ -1469,6 +1470,7 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
+    reverseFilteringCovarianceScaling: float = 1.0,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
@@ -1482,6 +1484,7 @@ def addKalmanTracks(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
         "chi2Cut": float("inf"),
@@ -1543,6 +1546,7 @@ def addTruthTrackingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
+        "reverseFilteringCovarianceScaling": 100.0,
         "level": customLogLevel(),
     }
 
@@ -1924,16 +1928,16 @@ def addTrackSelection(
     return trackSelector
 
 
-ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
+GnnBackend = Enum("GnnBackend", "Torch Onnx")
 
 
-def addExaTrkX(
+def addGnn(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geometrySelection: Union[Path, str],
     modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-    backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
+    backend: Optional[GnnBackend] = GnnBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1970,7 +1974,7 @@ def addExaTrkX(
         "cut": 0.5,
     }
 
-    if backend == ExaTrkXBackend.Torch:
+    if backend == GnnBackend.Torch:
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
@@ -1983,7 +1987,7 @@ def addExaTrkX(
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
-    elif backend == ExaTrkXBackend.Onnx:
+    elif backend == GnnBackend.Onnx:
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
@@ -1995,10 +1999,10 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
 
-    findingAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
+    findingAlg = acts.examples.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
         inputSpacePoints="spacepoints",
-        outputProtoTracks="exatrkx_prototracks",
+        outputProtoTracks="gnn_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -2020,8 +2024,8 @@ def addExaTrkX(
         inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="exatrkx_track_particle_matching",
-        outputParticleTrackMatching="exatrkx_particle_track_matching",
+        outputTrackParticleMatching="gnn_track_particle_matching",
+        outputParticleTrackMatching="gnn_particle_track_matching",
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)

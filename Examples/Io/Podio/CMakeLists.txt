@@ -12,5 +12,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoPodio
-    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio Acts::Core
+    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio
 )

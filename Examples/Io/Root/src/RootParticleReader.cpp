@@ -159,7 +159,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                                (*m_vertexSecondary).at(i), (*m_particle).at(i),
                                (*m_generation).at(i), (*m_subParticle).at(i)));
 
-    SimParticleState& initialState = p.initial();
+    SimParticleState& initialState = p.initialState();
 
     initialState.setPosition4((*m_vx).at(i) * Acts::UnitConstants::mm,
                               (*m_vy).at(i) * Acts::UnitConstants::mm,
@@ -169,7 +169,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
     initialState.setDirection((*m_px).at(i), (*m_py).at(i), (*m_pz).at(i));
     initialState.setAbsoluteMomentum((*m_p).at(i) * Acts::UnitConstants::GeV);
 
-    SimParticleState& finalState = p.final();
+    SimParticleState& finalState = p.finalState();
 
     // TODO eloss cannot be read since we need the final momentum
     finalState.setMaterialPassed((*m_pathInX0).at(i) * Acts::UnitConstants::mm,

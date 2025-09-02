@@ -26,6 +26,11 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   ACTS_VERBOSE("~> bins: " << config.bins.first << " x " << config.bins.second);
 
   SurfaceArrayCreator::Config sacConfig;
+  // This is important! detray does not support separate transforms for the
+  // grids (yet?), so we need to ensure that the volume and surface array
+  // transforms are at most translated relative to one another, so that the
+  // projection is correct.
+  sacConfig.doPhiBinningOptimization = false;
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
   std::vector<std::shared_ptr<const Surface>> surfaces;
@@ -83,6 +88,10 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   for (const auto* surface : sensitiveSurfaces) {
     stream.addSurfaceCandidate(*surface, args.tolerance);
   };
+}
+
+const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
+  return *m_surfaceArray;
 }
 
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {

@@ -78,7 +78,7 @@ def runGNN4ITk(
 
     e = acts.examples.NodeFeature
     s.addAlgorithm(
-        acts.examples.TrackFindingAlgorithmExaTrkX(
+        acts.examples.TrackFindingAlgorithmGnn(
             level=logLevel,
             graphConstructor=graphConstructor,
             edgeClassifiers=[edgeClassifier],

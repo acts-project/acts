@@ -26,6 +26,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace Acts {
@@ -70,7 +71,11 @@ class Surface : public virtual GeometryObject,
   };
 
   /// Helper strings for screen output
-  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+  static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
+      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
+                            "Plane", "Straw",    "Curvilinear", "Other"};
+
+  friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
  protected:
   /// Constructor with Transform3 as a shared object
@@ -151,7 +156,7 @@ class Surface : public virtual GeometryObject,
   /// (d) then transform comparison
   ///
   /// @param other source surface for the comparison
-  virtual bool operator==(const Surface& other) const;
+  bool operator==(const Surface& other) const;
 
  public:
   /// Return method for the Surface type to avoid dynamic casts

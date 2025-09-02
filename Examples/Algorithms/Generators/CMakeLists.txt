@@ -9,9 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGenerators
-    PUBLIC
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::ExamplesIoHepMC3
-        HepMC3::HepMC3
+    PUBLIC Acts::ExamplesIoHepMC3 HepMC3::HepMC3
 )
