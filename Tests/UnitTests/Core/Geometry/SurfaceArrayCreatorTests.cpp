@@ -12,21 +12,19 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
@@ -574,10 +572,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   double R = 10.;
 
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      Surface::SurfaceType::Cylinder, Transform3::Identity(), R, 0,
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+      cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
 
@@ -589,7 +588,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   // actually filled SA
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr);
+    auto binContent = sa.at(ctr, ctr.normalized());
 
     BOOST_CHECK(binContent.size() <= 2u);
   }
@@ -615,9 +614,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   double R = 10.;
   Transform3 itr = tr.inverse();
 
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
-                                    AxisBoundaryType::Bound>(
-      Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhi, pAxisZ);
+                                    AxisBoundaryType::Bound>(cylinder, 1.,
+                                                             pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
@@ -630,7 +631,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto B = pr.second;
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr);
+    auto binContent = sa.at(ctr, ctr.normalized());
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
     act.insert(binContent[0]);
@@ -656,7 +657,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                        AxisBoundaryType::Bound>(
-        Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhiVar, pAxisZVar);
+        cylinder, 1., pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
@@ -692,7 +693,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto B = pr.second;
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-      auto binContent = sa2.at(ctr);
+      auto binContent = sa2.at(ctr, ctr.normalized());
       BOOST_CHECK_EQUAL(binContent.size(), 2u);
       std::set<const Surface*> act;
       act.insert(binContent[0]);
