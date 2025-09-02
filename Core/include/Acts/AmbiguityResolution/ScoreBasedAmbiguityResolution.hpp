@@ -198,6 +198,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   /// @param optionals is the user defined optional cuts to be applied.
+  /// @param scoreMonitor is an optional vector to monitor the track score
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> simpleScore(
@@ -212,6 +213,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   /// @param optionals is the user defined optional cuts to be applied.
+  /// @param scoreMonitor is an optional vector to monitor the track score
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> ambiguityScore(
@@ -258,6 +260,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
   /// @param optionals are the optional cuts and score modifiers to be applied
+  /// @param scoreMonitor is an optional vector to monitor the track score
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
             typename source_link_hash_t, typename source_link_equality_t>
