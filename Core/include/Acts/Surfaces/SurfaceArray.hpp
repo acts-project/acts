@@ -328,16 +328,21 @@ class SurfaceArray {
         if (!isValidBin(i)) {
           continue;
         }
-        typename Grid_t::index_t loc = m_grid.localBinsFromGlobalBin(i);
-        auto neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        const std::array<std::size_t, 2> indices =
+            m_grid.localBinsFromGlobalBin(i);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
         neighbors.clear();
 
-        for (const auto idx : neighborIdxs) {
+        for (std::size_t idx : m_grid.neighborHoodIndices(indices, 1u)) {
           const std::vector<const Surface*>& binContent = m_grid.at(idx);
           std::copy(binContent.begin(), binContent.end(),
                     std::back_inserter(neighbors));
         }
+
+        std::ranges::sort(neighbors);
+        auto last = std::ranges::unique(neighbors);
+        neighbors.erase(last.begin(), last.end());
+        neighbors.shrink_to_fit();
       }
     }
 
