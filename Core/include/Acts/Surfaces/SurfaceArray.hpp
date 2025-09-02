@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -20,14 +21,14 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <iostream>
-#include <type_traits>
+#include <limits>
 #include <vector>
 
 namespace Acts {
 
 using SurfaceVector = std::vector<const Surface*>;
 
-/// @brief Provides Surface binning in N dimensions
+/// @brief Provides Surface binning in 2 dimensions
 ///
 /// Uses @c Grid under the hood to implement the storage and lookup
 /// Contains a lookup struct which talks to the @c Grid
@@ -102,10 +103,6 @@ class SurfaceArray {
 
     virtual Surface::SurfaceType surfaceType() const = 0;
 
-    /// @brief Get the number of dimensions of the grid.
-    /// @return number of dimensions
-    virtual std::size_t dimensions() const = 0;
-
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
     /// @return bool if the bin is valid
@@ -152,26 +149,21 @@ class SurfaceArray {
       for (const Surface* srf : surfaces) {
         const Vector3 pos = srf->referencePosition(gctx, AxisDirection::AxisR);
         const Vector3 normal = m_representative->normal(gctx, pos);
-        const SurfaceIntersection intersection =
-            m_representative->intersect(gctx, pos, normal).closest();
-        if (!intersection.isValid() ||
-            std::abs(intersection.pathLength()) > m_tolerance) {
+        const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
+        if (globalBin == 0) {
           continue;
         }
-        const Vector2 lposition =
-            m_representative
-                ->globalToLocal(gctx, intersection.position(), normal)
-                .value();
-        m_grid.atPosition(lposition).push_back(srf);
+        m_grid.at(globalBin).push_back(srf);
       }
 
       // bin to surface matching
       for (std::size_t i = 0; i < m_grid.size(); i++) {
-        const auto j = m_grid.localBinsFromGlobalBin(i);
-        const Vector2 local = Eigen::Map<Vector2>(m_grid.binCenter(j).data());
-        const Vector3 normal = m_representative->normal(gctx, local);
+        const std::array<std::size_t, 2> j = m_grid.localBinsFromGlobalBin(i);
+        const std::array<double, 2> gridLocal = m_grid.binCenter(j);
+        const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+        const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
         const Vector3 global =
-            m_representative->localToGlobal(gctx, local, normal);
+            m_representative->localToGlobal(gctx, surfaceLocal, normal);
 
         for (const Surface* srf : surfaces) {
           const SurfaceIntersection intersection =
@@ -245,7 +237,8 @@ class SurfaceArray {
 
     const SurfaceVector& lookup(const Vector3& position,
                                 const Vector3& direction) const override {
-      return m_grid.atPosition(findGlobalBin(position, direction));
+      return m_grid.atPosition(findGlobalBin(
+          position, direction, std::numeric_limits<double>::infinity()));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -269,7 +262,8 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position,
                                    const Vector3& direction) const override {
-      return m_neighborMap.at(findGlobalBin(position, direction));
+      return m_neighborMap.at(findGlobalBin(
+          position, direction, std::numeric_limits<double>::infinity()));
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -307,10 +301,6 @@ class SurfaceArray {
     Surface::SurfaceType surfaceType() const override {
       return m_representative->type();
     }
-
-    /// @brief Get the number of dimensions of the grid.
-    /// @return number of dimensions
-    std::size_t dimensions() const override { return 2; }
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
@@ -378,13 +368,17 @@ class SurfaceArray {
       return gridLocal;
     }
 
-    std::size_t findGlobalBin(const Vector3& position,
-                              const Vector3& direction) const {
+    std::size_t findGlobalBin(const Vector3& position, const Vector3& direction,
+                              double tolerance) const {
       GeometryContext gctx;
 
       const SurfaceIntersection intersection =
-          m_representative->intersect(gctx, position, direction).closest();
-      if (!intersection.isValid()) {
+          m_representative
+              ->intersect(gctx, position, direction,
+                          BoundaryTolerance::Infinite())
+              .closest();
+      if (!intersection.isValid() ||
+          std::abs(intersection.pathLength()) > tolerance) {
         return 0;  // overflow bin
       }
       const Vector2 surfaceLocal =
@@ -462,10 +456,6 @@ class SurfaceArray {
     Surface::SurfaceType surfaceType() const override {
       return Surface::SurfaceType::Other;
     }
-
-    /// @brief Get the number of dimensions
-    /// @return always 0
-    std::size_t dimensions() const override { return 0; }
 
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
