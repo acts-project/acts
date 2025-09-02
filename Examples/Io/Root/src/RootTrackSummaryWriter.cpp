@@ -373,7 +373,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
-    m_majorityParticleId.push_back(majorityParticleId.getData());
+    m_majorityParticleId.push_back(majorityParticleId.asVector());
     m_trackClassification.push_back(static_cast<int>(trackClassification));
     m_nMajorityHits.push_back(nMajorityHits);
     m_t_charge.push_back(t_charge);

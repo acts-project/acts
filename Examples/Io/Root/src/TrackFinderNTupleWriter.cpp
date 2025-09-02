@@ -64,7 +64,8 @@ struct TrackFinderNTupleWriter::Impl {
   std::mutex prtMutex;
   // particle identification
   ULong64_t prtEventId = 0;
-  std::vector<std::uint32_t> prtParticleId = {0, 0, 0, 0, 0};
+  std::vector<std::uint32_t> prtParticleId =
+      ActsFatras::Barcode::Invalid().asVector();
   Int_t prtParticleType = 0;
   // particle kinematics
   // vertex position in mm
@@ -206,7 +207,7 @@ struct TrackFinderNTupleWriter::Impl {
         trkParticleNumHitsTotal.clear();
         trkParticleNumHitsOnTrack.clear();
         for (const auto& phc : particleMatch.contributingParticles) {
-          trkParticleId.push_back(phc.particleId.getData());
+          trkParticleId.push_back(phc.particleId.asVector());
           // count total number of hits for this particle
           auto trueParticleHits =
               makeRange(particleMeasurementsMap.equal_range(phc.particleId));
@@ -228,7 +229,7 @@ struct TrackFinderNTupleWriter::Impl {
 
         // identification
         prtEventId = eventId;
-        prtParticleId = particle.particleId().getData();
+        prtParticleId = particle.particleId().asVector();
         prtParticleType = particle.pdg();
         // kinematics
         prtVx = particle.position().x() / Acts::UnitConstants::mm;

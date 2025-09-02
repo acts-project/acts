@@ -926,7 +926,7 @@ void VertexNTupleWriter::writeTrackInfo(
     }
 
     if (particle != nullptr) {
-      innerTrkParticleId.push_back(particle->particleId().getData());
+      innerTrkParticleId.push_back(particle->particleId().asVector());
 
       trueUnitDir = particle->direction();
       trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -938,7 +938,7 @@ void VertexNTupleWriter::writeTrackInfo(
     } else {
       ACTS_VERBOSE("Track has no matching truth particle.");
 
-      innerTrkParticleId.push_back({0, 0, 0, 0, 0});
+      innerTrkParticleId.push_back(ActsFatras::Barcode::Invalid().asVector());
 
       innerTruthPhi.push_back(nan);
       innerTruthTheta.push_back(nan);

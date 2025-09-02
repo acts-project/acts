@@ -231,7 +231,7 @@ ProcessCode RootTrackParameterWriter::writeT(
 
     if (particleHitCounts.size() == 1) {
       m_t_matched = true;
-      m_t_particleId = particleHitCounts.front().particleId.getData();
+      m_t_particleId = particleHitCounts.front().particleId.asVector();
       m_nMajorityHits = particleHitCounts.front().hitCount;
 
       // Get the index of the first space point
@@ -301,7 +301,7 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_pull_time = getPull(m_res_time, m_err_time);
     } else {
       m_t_matched = false;
-      m_t_particleId = {0, 0, 0, 0, 0};
+      m_t_particleId = ActsFatras::Barcode::Invalid().asVector();
       m_nMajorityHits = 0;
 
       m_t_loc0 = NaNfloat;

@@ -29,7 +29,7 @@ constexpr auto eps = std::numeric_limits<double>::epsilon();
 BOOST_AUTO_TEST_SUITE(FatrasParticle)
 
 BOOST_AUTO_TEST_CASE(Construct) {
-  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  const auto pid = Barcode(1, 0, 42, 0, 0);
   const auto particle = Particle(pid, PdgParticle::eProton, 1_e, 1_GeV);
 
   BOOST_CHECK_EQUAL(particle.particleId(), pid);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
 }
 
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
-  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  const auto pid = Barcode(1, 0, 42, 0, 0);
   auto particle = Particle(pid, PdgParticle::eProton, 1_e, 1_GeV)
                       .setDirection(Acts::Vector3::UnitX())
                       .setAbsoluteMomentum(2_GeV);

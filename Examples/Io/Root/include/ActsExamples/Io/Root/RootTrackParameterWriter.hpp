@@ -17,6 +17,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <mutex>
 #include <string>
@@ -125,7 +126,8 @@ class RootTrackParameterWriter final
   // Truth parameters
   /// Whether the seed is matched with truth
   bool m_t_matched{false};
-  std::vector<std::uint32_t> m_t_particleId{0, 0, 0, 0, 0};
+  std::vector<std::uint32_t> m_t_particleId =
+      ActsFatras::Barcode::Invalid().asVector();
   unsigned int m_nMajorityHits{0};
 
   float m_t_loc0{NaNfloat};

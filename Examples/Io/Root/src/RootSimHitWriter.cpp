@@ -94,7 +94,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
   m_eventId = ctx.eventNumber;
   for (const auto& hit : hits) {
     m_geometryId = hit.geometryId().value();
-    m_barcode = hit.particleId().getData();
+    m_barcode = hit.particleId().asVector();
     // write hit position
     m_tx = hit.fourPosition().x() / Acts::UnitConstants::mm;
     m_ty = hit.fourPosition().y() / Acts::UnitConstants::mm;

@@ -18,37 +18,44 @@ namespace ActsExamples {
 
 class SimVertexBarcode {
  public:
-  using ValueVtx = SimBarcode::ValueVtx;
-  using ValuePart = SimBarcode::ValuePart;
-  using ValueGen = SimBarcode::ValueGen;
+  using PrimaryVertexId = SimBarcode::PrimaryVertexId;
+  using SecondaryVertexId = SimBarcode::SecondaryVertexId;
+  using ParticleId = SimBarcode::ParticleId;
+  using GenerationId = SimBarcode::GenerationId;
+  using SubParticleId = SimBarcode::SubParticleId;
 
-  constexpr SimVertexBarcode() = default;
+  // constexpr SimVertexBarcode() = default;
   explicit constexpr SimVertexBarcode(SimBarcode barcode)
       : m_id(barcode.vertexId()) {}
 
-  constexpr SimVertexBarcode(ValueVtx pv, ValueVtx sv, ValueGen g)
+  constexpr SimVertexBarcode(PrimaryVertexId pv, SecondaryVertexId sv,
+                             GenerationId g)
       : m_id(pv, sv, g) {}
 
   /// Return the barcode.
   constexpr SimBarcode barcode() const { return m_id; }
 
   /// Return the primary vertex identifier.
-  constexpr ValueVtx vertexPrimary() const { return m_id.vertexPrimary(); }
+  constexpr PrimaryVertexId vertexPrimary() const {
+    return m_id.vertexPrimary();
+  }
   /// Return the secondary vertex identifier.
-  constexpr ValueVtx vertexSecondary() const { return m_id.vertexSecondary(); }
+  constexpr SecondaryVertexId vertexSecondary() const {
+    return m_id.vertexSecondary();
+  }
   /// Return the generation identifier.
-  constexpr ValueGen generation() const { return m_id.generation(); }
+  constexpr GenerationId generation() const { return m_id.generation(); }
 
   /// Set the primary vertex identifier.
-  constexpr SimVertexBarcode& setVertexPrimary(ValueVtx id) {
+  constexpr SimVertexBarcode& setVertexPrimary(PrimaryVertexId id) {
     return m_id.setVertexPrimary(id), *this;
   }
   /// Set the secondary vertex identifier.
-  constexpr SimVertexBarcode& setVertexSecondary(ValueVtx id) {
+  constexpr SimVertexBarcode& setVertexSecondary(SecondaryVertexId id) {
     return m_id.setVertexSecondary(id), *this;
   }
   /// Set the particle identifier.
-  constexpr SimVertexBarcode& setGeneration(ValueGen id) {
+  constexpr SimVertexBarcode& setGeneration(GenerationId id) {
     return m_id.setGeneration(id), *this;
   }
 
@@ -76,7 +83,7 @@ class SimVertexBarcode {
 /// A simulated vertex e.g. from a physics process.
 struct SimVertex {
   /// The vertex ID
-  SimVertexBarcode id;
+  SimVertexBarcode id = SimVertexBarcode(SimBarcode::Invalid());
   /// The vertex four-position
   Acts::Vector4 position4 = Acts::Vector4::Zero();
   /// The vertex process type

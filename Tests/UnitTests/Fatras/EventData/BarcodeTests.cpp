@@ -12,6 +12,7 @@
 
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using ActsFatras::Barcode;
@@ -20,7 +21,7 @@ BOOST_AUTO_TEST_SUITE(FatrasBarcode)
 
 BOOST_AUTO_TEST_CASE(BarcodeMakeDescendant) {
   // initial barcode with primary particle
-  auto p3 = Barcode().setVertexPrimary(1).setVertexSecondary(2).setParticle(3);
+  auto p3 = Barcode(1, 2, 3, 0, 0);
   BOOST_CHECK_EQUAL(p3.vertexPrimary(), 1u);
   BOOST_CHECK_EQUAL(p3.vertexSecondary(), 2u);
   BOOST_CHECK_EQUAL(p3.particle(), 3u);
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(BarcodeWithoutSubparticle) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
-  auto p1 = Barcode().setVertexPrimary(1u).setVertexSecondary(2u);
+  auto p1 = Barcode::Invalid().setVertexPrimary(1u).setVertexSecondary(2u);
   p1.setParticle(3u).setGeneration(4u).setSubParticle(5u);
   auto p2 = Barcode(1u, 2u, 3u, 4u, 5u);
   auto p3 = Barcode(1u, 2u, 3u, 4u).setSubParticle(5u);
@@ -104,11 +105,11 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeLimits) {
-  Barcode::ValueVtx primVtx = 1001u;
-  Barcode::ValueVtx secVtx = 10002u;
-  Barcode::ValuePart part = 100003u;
-  Barcode::ValueGen gen = 104u;
-  Barcode::ValuePart subPart = 100005u;
+  Barcode::PrimaryVertexId primVtx = 1001u;
+  Barcode::SecondaryVertexId secVtx = 10002u;
+  Barcode::ParticleId part = 100003u;
+  Barcode::GenerationId gen = 104u;
+  Barcode::SubParticleId subPart = 100005u;
 
   auto p1 = Barcode(primVtx, secVtx, part, gen, subPart);
   BOOST_CHECK_EQUAL(p1.vertexPrimary(), 1001u);
@@ -120,10 +121,24 @@ BOOST_AUTO_TEST_CASE(BarcodeLimits) {
 
 BOOST_AUTO_TEST_CASE(BarcodeHash) {
   auto p1 = Barcode(1u, 2u, 3u, 4u, 5u);
-  BOOST_CHECK_EQUAL(p1.hash(), 1183340696u);
+  BOOST_CHECK_EQUAL(p1.hash(), 3676852789u);
 
   auto p2 = Barcode(11u, 22u, 33u, 44u, 55u);
-  BOOST_CHECK_EQUAL(p2.hash(), 361680327u);
+  BOOST_CHECK_EQUAL(p2.hash(), 726136415u);
+
+  auto p3 = Barcode(1u, 3u, 2u, 4u, 5u);
+  BOOST_CHECK_NE(p1.hash(), p3.hash());
+
+  std::unordered_map<Barcode, int> map;
+  map.emplace(p1, 101);
+  map[p2] = 202;
+
+  auto search = map.find(p1);
+  BOOST_CHECK(search != map.end());
+  BOOST_CHECK_EQUAL(search->second, 101);
+  BOOST_CHECK_EQUAL(map[p2], 202);
+  search = map.find(p3);
+  BOOST_CHECK(search == map.end());
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeStreamOutput) {

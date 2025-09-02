@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
 
   ParticleData data;
   for (const auto& particle : particles) {
-    const auto particleID = particle.particleId().getData();
+    const auto particleID = particle.particleId().asVector();
     data.particle_id_pv = particleID[0];
     data.particle_id_sv = particleID[1];
     data.particle_id_part = particleID[2];

@@ -241,10 +241,10 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     }
 
     SimBarcode dummyBarcode{
-        static_cast<SimBarcode::ValueVtx>(Part_event_number[ip]),
-        static_cast<SimBarcode::ValueVtx>(
+        static_cast<SimBarcode::PrimaryVertexId>(Part_event_number[ip]),
+        static_cast<SimBarcode::SecondaryVertexId>(
             Part_barcode[ip] < s_maxBarcodeForPrimary ? 0 : 1),
-        static_cast<SimBarcode::ValuePart>(Part_barcode[ip]), 0, 0};
+        static_cast<SimBarcode::ParticleId>(Part_barcode[ip]), 0, 0};
     SimParticleState particle(dummyBarcode,
                               static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -448,11 +448,11 @@ RootAthenaDumpReader::readMeasurements(
       for (const auto& [subevt, barcode] :
            Acts::zip(CLparticleLink_eventIndex->at(im),
                      CLparticleLink_barcode->at(im))) {
-        SimBarcode dummyBarcode{static_cast<SimBarcode::ValueVtx>(subevt),
-                                static_cast<SimBarcode::ValueVtx>(
-                                    barcode < s_maxBarcodeForPrimary ? 0 : 1),
-                                static_cast<SimBarcode::ValuePart>(barcode), 0,
-                                0};
+        SimBarcode dummyBarcode{
+            static_cast<SimBarcode::PrimaryVertexId>(subevt),
+            static_cast<SimBarcode::SecondaryVertexId>(
+                barcode < s_maxBarcodeForPrimary ? 0 : 1),
+            static_cast<SimBarcode::ParticleId>(barcode), 0, 0};
         // If we don't find the particle, create one with default values
         if (particles.find(dummyBarcode) == particles.end()) {
           ACTS_VERBOSE("Particle with subevt "
@@ -658,10 +658,8 @@ RootAthenaDumpReader::reprocessParticles(
 
     auto primary = particle.particleId().vertexSecondary() == 0;
 
-    ActsFatras::Barcode fatrasBarcode;
-
     // vertex primary shouldn't be zero for a valid particle
-    fatrasBarcode.setVertexPrimary(1);
+    ActsFatras::Barcode fatrasBarcode{1, 0, 0, 0, 0};
     if (primary) {
       fatrasBarcode.setVertexSecondary(0);
       fatrasBarcode.setParticle(primaryCount);

@@ -97,14 +97,14 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
     // incoming particles
     std::vector<std::vector<std::uint32_t>> incoming_particles;
     for (const auto& particle : vertex.incoming) {
-      incoming_particles.push_back(particle.getData());
+      incoming_particles.push_back(particle.asVector());
     }
     m_incomingParticles.push_back(std::move(incoming_particles));
 
     // outgoing particles
     std::vector<std::vector<std::uint32_t>> outgoing_particles;
     for (const auto& particle : vertex.outgoing) {
-      outgoing_particles.push_back(particle.getData());
+      outgoing_particles.push_back(particle.asVector());
     }
     m_outgoingParticles.push_back(std::move(outgoing_particles));
 

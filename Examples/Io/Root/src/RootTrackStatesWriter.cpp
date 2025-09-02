@@ -421,7 +421,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            particleIds.push_back(simHit.particleId().getData());
+            particleIds.push_back(simHit.particleId().asVector());
           }
         }
 

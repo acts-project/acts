@@ -339,9 +339,9 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       for (const auto& genParticle : generatorStableParticles) {
         SimParticle particle =
             EDM4hepUtil::readParticle(genParticle)
-                .withParticleId(SimBarcode{}
-                                    .setParticle(nParticles)
-                                    .setVertexPrimary(nPrimaryVertices));
+                .withParticleId(SimBarcode{
+                    static_cast<SimBarcode::PrimaryVertexId>(nPrimaryVertices),
+                    0, static_cast<SimBarcode::ParticleId>(nParticles), 0, 0});
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
