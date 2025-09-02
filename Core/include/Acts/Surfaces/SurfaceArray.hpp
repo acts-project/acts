@@ -44,15 +44,6 @@ class SurfaceArray {
     virtual void fill(const GeometryContext& gctx,
                       const SurfaceVector& surfaces) = 0;
 
-    /// @brief Attempts to fix sub-optimal binning by filling closest
-    ///        Surfaces into empty bin
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param surfaces The surface pointers to fill
-    /// @return number of bins that were filled
-    virtual std::size_t completeBinning(const GeometryContext& gctx,
-                                        const SurfaceVector& surfaces) = 0;
-
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
     /// @param position Lookup position
@@ -177,54 +168,6 @@ class SurfaceArray {
 
       deduplicateBinContents();
       populateNeighborCache();
-    }
-
-    /// @brief Attempts to fix sub-optimal binning by filling closest
-    ///        Surfaces into empty bins
-    /// @note This does not always do what you want.
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param surfaces The surface pointers to fill
-    /// @return number of bins that were filled
-    std::size_t completeBinning(const GeometryContext& gctx,
-                                const SurfaceVector& surfaces) override {
-      std::size_t binCompleted = 0;
-      std::size_t nBins = size();
-      double minPath = 0;
-      double curPath = 0;
-      const Surface* minSrf = nullptr;
-
-      for (std::size_t b = 0; b < nBins; ++b) {
-        if (!isValidBin(b)) {
-          continue;
-        }
-        std::vector<const Surface*>& binContent = lookup(b);
-        // only complete if we have an empty bin
-        if (!binContent.empty()) {
-          continue;
-        }
-
-        Vector3 binCtr = getBinCenter(b);
-        minPath = std::numeric_limits<double>::max();
-        for (const auto& srf : surfaces) {
-          curPath =
-              (binCtr - srf->referencePosition(gctx, AxisDirection::AxisR))
-                  .norm();
-
-          if (curPath < minPath) {
-            minPath = curPath;
-            minSrf = srf;
-          }
-        }
-
-        binContent.push_back(minSrf);
-        ++binCompleted;
-      }
-
-      deduplicateBinContents();
-      // recreate neighborcache
-      populateNeighborCache();
-      return binCompleted;
     }
 
     const SurfaceVector& lookup(const Vector3& position,
@@ -468,13 +411,6 @@ class SurfaceArray {
     /// @note Does nothing
     void fill(const GeometryContext& /*gctx*/,
               const SurfaceVector& /*surfaces*/) override {}
-
-    /// @brief Comply with concept and provide completeBinning method
-    /// @note Does nothing
-    std::size_t completeBinning(const GeometryContext& /*gctx*/,
-                                const SurfaceVector& /*surfaces*/) override {
-      return 0;
-    }
 
     /// @brief Returns if the bin is valid (it is)
     /// @return always true

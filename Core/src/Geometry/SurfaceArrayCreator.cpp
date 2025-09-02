@@ -63,7 +63,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
           std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
-  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
@@ -111,7 +110,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
           std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
-  completeBinning(gctx, *sl, surfacesRaw);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -167,8 +165,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
+
   sl->fill(gctx, surfacesRaw);
-  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
@@ -271,7 +269,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
                                       << bins0 * bins1 << " bins.");
 
   sl->fill(gctx, surfacesRaw);
-  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
@@ -364,7 +361,6 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   }
 
   sl->fill(gctx, surfacesRaw);
-  completeBinning(gctx, *sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);

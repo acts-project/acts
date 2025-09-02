@@ -425,36 +425,6 @@ class SurfaceArrayCreator {
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 
-  /// Private helper method to complete the binning
-  ///
-  ///
-  ///  given a grid point o
-  ///    |  0  |  1 |  2  |  3 |  4  |
-  ///    ------------------------------
-  ///  0 |  x  |    |     |    |  x  |
-  ///  1 |     |    |  o  |    |     |
-  ///  2 |  x  |    |     |    |  x  |
-  ///
-  /// This is being called when you chose to use more bins thans surfaces
-  /// I.e. to put a finer granularity binning onto your surface
-  /// Neighbour bins are then filled to contain pointers as well
-  /// This method delegates to SurfaceGridLookup itself.
-  /// @param [in] gctx the geometry context for this call
-  /// @param sl The @c SurfaceGridLookup
-  /// @param surfaces the surfaces
-  void completeBinning(const GeometryContext& gctx,
-                       SurfaceArray::ISurfaceGridLookup& sl,
-                       const std::vector<const Surface*>& surfaces) const {
-    ACTS_VERBOSE(
-        "Complete binning by filling closest neighbour surfaces into "
-        "empty bins.");
-
-    std::size_t binCompleted = sl.completeBinning(gctx, surfaces);
-
-    ACTS_VERBOSE("       filled  : " << binCompleted
-                                     << " (includes under/overflow)");
-  }
-
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
   /// @param [in] gctx the geometry context for this call

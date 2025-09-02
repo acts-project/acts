@@ -41,6 +41,8 @@ Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
   }
 }
 
+Layer::~Layer() = default;
+
 const ApproachDescriptor* Layer::approachDescriptor() const {
   return m_approachDescriptor.get();
 }
