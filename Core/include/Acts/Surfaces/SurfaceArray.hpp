@@ -40,7 +40,6 @@ class SurfaceArray {
   struct ISurfaceGridLookup {
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
-
     /// @param surfaces Input surface pointers
     virtual void fill(const GeometryContext& gctx,
                       const SurfaceVector& surfaces) = 0;
@@ -49,7 +48,6 @@ class SurfaceArray {
     ///        Surfaces into empty bin
     ///
     /// @param gctx The current geometry context object, e.g. alignment
-
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     virtual std::size_t completeBinning(const GeometryContext& gctx,
@@ -156,36 +154,31 @@ class SurfaceArray {
         m_grid.at(globalBin).push_back(srf);
       }
 
+      std::cout << "grid size " << m_grid.size() << std::endl;
+      std::cout << "surface count " << surfaces.size() << std::endl;
+
       // bin to surface matching
-      for (std::size_t i = 0; i < m_grid.size(); i++) {
-        const std::array<std::size_t, 2> j = m_grid.localBinsFromGlobalBin(i);
-        const std::array<double, 2> gridLocal = m_grid.binCenter(j);
-        const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
-        const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
-        const Vector3 global =
-            m_representative->localToGlobal(gctx, surfaceLocal, normal);
+      // for (std::size_t i = 0; i < m_grid.size(); i++) {
+      //   const std::array<std::size_t, 2> j = m_grid.localBinsFromGlobalBin(i);
+      //   const std::array<double, 2> gridLocal = m_grid.binCenter(j);
+      //   const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+      //   const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
+      //   const Vector3 global =
+      //       m_representative->localToGlobal(gctx, surfaceLocal, normal);
 
-        for (const Surface* srf : surfaces) {
-          const SurfaceIntersection intersection =
-              srf->intersect(gctx, global, normal).closest();
-          if (!intersection.isValid() ||
-              std::abs(intersection.pathLength()) > m_tolerance) {
-            continue;
-          }
-          m_grid.at(i).push_back(srf);
-        }
-      }
+      //   for (const Surface* srf : surfaces) {
+      //     const SurfaceIntersection intersection =
+      //         srf->intersect(gctx, global, normal).closest();
+      //     if (!intersection.isValid() ||
+      //         std::abs(intersection.pathLength()) > m_tolerance) {
+      //       continue;
+      //     }
+      //     m_grid.at(i).push_back(srf);
+      //   }
+      // }
 
+      deduplicateBinContents();
       populateNeighborCache();
-
-      // deduplicate
-      for (std::size_t i = 0; i < m_grid.size(); i++) {
-        auto& binContent = m_grid.at(i);
-        std::ranges::sort(binContent);
-        auto last = std::ranges::unique(binContent);
-        binContent.erase(last.begin(), last.end());
-        binContent.shrink_to_fit();
-      }
     }
 
     /// @brief Attempts to fix sub-optimal binning by filling closest
@@ -230,6 +223,7 @@ class SurfaceArray {
         ++binCompleted;
       }
 
+      deduplicateBinContents();
       // recreate neighborcache
       populateNeighborCache();
       return binCompleted;
@@ -320,6 +314,16 @@ class SurfaceArray {
     }
 
    private:
+    void deduplicateBinContents() {
+      for (std::size_t i = 0; i < m_grid.size(); i++) {
+        auto& binContent = m_grid.at(i);
+        std::ranges::sort(binContent);
+        auto last = std::ranges::unique(binContent);
+        binContent.erase(last.begin(), last.end());
+        binContent.shrink_to_fit();
+      }
+    }
+
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
       for (std::size_t i = 0; i < m_grid.size(); i++) {

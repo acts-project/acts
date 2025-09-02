@@ -566,6 +566,7 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createEquidistantAxis(
     // use bin count
     binNumber = nBins;
   }
+  binNumber *= 1;
 
   // bind matcher & context with binning type
   auto matcher = m_cfg.surfaceMatcher;
