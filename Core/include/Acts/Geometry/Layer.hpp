@@ -93,7 +93,7 @@ class Layer : public virtual GeometryObject {
   Layer(const Layer&) = delete;
 
   /// Destructor
-  virtual ~Layer();
+  ~Layer() noexcept override = default;
 
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
   ///

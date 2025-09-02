@@ -45,8 +45,7 @@ class Volume : public GeometryObject {
   /// @param shift is the optional shift applied as : shift * vol.transform()
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
-  Volume() = delete;
-  virtual ~Volume() = default;
+  ~Volume() noexcept override = default;
 
   /// Assignment operator
   ///
