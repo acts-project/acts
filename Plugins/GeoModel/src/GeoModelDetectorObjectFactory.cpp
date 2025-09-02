@@ -51,7 +51,7 @@ void GeoModelDetectorObjectFactory::construct(Cache &cache,
 
     /** Full physical volumes represent  logical detector units.*/
     for (const auto &[name, physVol] : qFPV) {
-      ACTS_INFO("Convert volume " << name);
+      ACTS_DEBUG("Convert volume " << name);
       convertFpv(name, physVol, cache, gctx);
     }
   }

@@ -69,7 +69,7 @@ void addTGeo(Context& ctx);
 void addJson(Context& ctx);
 void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
-void addExaTrkXTrackFinding(Context& ctx);
+void addGnnTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
@@ -142,7 +142,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTGeo(ctx);
   addDetray(ctx);
   addHepMC3(ctx);
-  addExaTrkXTrackFinding(ctx);
+  addGnnTrackFinding(ctx);
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);

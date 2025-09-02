@@ -25,48 +25,66 @@ namespace {
 /// Check the compatibility of strip space point coordinates in xyz assuming
 /// the Bottom-Middle direction with the strip measurement details
 bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
-                          const Eigen::Vector3f& spacePointPosition,
-                          Eigen::Vector3f& outputCoordinates) {
-  const Eigen::Vector3f& topStripVector = sp.topStripVector();
-  const Eigen::Vector3f& bottomStripVector = sp.bottomStripVector();
-  const Eigen::Vector3f& stripCenterDistance = sp.stripCenterDistance();
+                          const std::array<float, 3>& spacePointPosition,
+                          std::array<float, 3>& outputCoordinates) {
+  const std::array<float, 3>& topStripVector = sp.topStripVector();
+  const std::array<float, 3>& bottomStripVector = sp.bottomStripVector();
+  const std::array<float, 3>& stripCenterDistance = sp.stripCenterDistance();
 
-  // cross product between top strip vector and spacepointPosition
-  Eigen::Vector3f d1 = topStripVector.cross(spacePointPosition);
+  // cross product between top strip vector and spacePointPosition
+  const std::array<float, 3> d1 = {
+      topStripVector[1] * spacePointPosition[2] -
+          topStripVector[2] * spacePointPosition[1],
+      topStripVector[2] * spacePointPosition[0] -
+          topStripVector[0] * spacePointPosition[2],
+      topStripVector[0] * spacePointPosition[1] -
+          topStripVector[1] * spacePointPosition[0]};
 
   // scalar product between bottom strip vector and d1
-  float bd1 = bottomStripVector.dot(d1);
+  const float bd1 = bottomStripVector[0] * d1[0] +
+                    bottomStripVector[1] * d1[1] + bottomStripVector[2] * d1[2];
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
-  float s1 = stripCenterDistance.dot(d1);
+  const float s1 = stripCenterDistance[0] * d1[0] +
+                   stripCenterDistance[1] * d1[1] +
+                   stripCenterDistance[2] * d1[2];
   if (std::abs(s1) > std::abs(bd1) * tolerance) {
     return false;
   }
 
-  // cross product between bottom strip vector and spacepointPosition
-  Eigen::Vector3f d0 = bottomStripVector.cross(spacePointPosition);
+  // cross product between bottom strip vector and spacePointPosition
+  const std::array<float, 3> d0 = {
+      bottomStripVector[1] * spacePointPosition[2] -
+          bottomStripVector[2] * spacePointPosition[1],
+      bottomStripVector[2] * spacePointPosition[0] -
+          bottomStripVector[0] * spacePointPosition[2],
+      bottomStripVector[0] * spacePointPosition[1] -
+          bottomStripVector[1] * spacePointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the top detector element
-  float s0 = stripCenterDistance.dot(d0);
+  // spacePointPosition is inside the top detector element
+  float s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+             stripCenterDistance[2] * d0[2];
   if (std::abs(s0) > std::abs(bd1) * tolerance) {
     return false;
   }
 
-  // if arrive here spacepointPosition is compatible with strip directions and
+  // if arrive here spacePointPosition is compatible with strip directions and
   // detector elements
 
-  const Eigen::Vector3f& topStripCenter = sp.topStripCenter();
+  const std::array<float, 3>& topStripCenter = sp.topStripCenter();
 
-  // spacepointPosition corrected with respect to the top strip position and
+  // spacePointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates = topStripCenter + topStripVector * s0;
+  outputCoordinates[0] = topStripCenter[0] + topStripVector[0] * s0;
+  outputCoordinates[1] = topStripCenter[1] + topStripVector[1] * s0;
+  outputCoordinates[2] = topStripCenter[2] + topStripVector[2] * s0;
   return true;
 }
 
-template <bool useStripInfo, bool sortedInCotTheta>
+template <bool useStripInfo, bool sortedByCotTheta>
 class Impl final : public TripletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -78,18 +96,23 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    const float rM = spM.r();
-    const float varianceRM = spM.varianceR();
+    const float rM = spM.zr()[1];
     const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
 
-    float cotThetaB = bottomDoublet.cotTheta();
-    float erB = bottomDoublet.er();
-    float iDeltaRB = bottomDoublet.iDeltaR();
-    float Ub = bottomDoublet.u();
-    float Vb = bottomDoublet.v();
+    // Reserve enough space, in case current capacity is too little
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
+
+    const float cotThetaB = bottomDoublet.cotTheta();
+    const float erB = bottomDoublet.er();
+    const float iDeltaRB = bottomDoublet.iDeltaR();
+    const float Ub = bottomDoublet.u();
+    const float Vb = bottomDoublet.v();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -99,33 +122,26 @@ class Impl final : public TripletSeedFinder {
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
+    const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
          zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
                               0, topDoublets.size()))) {
-      SpacePointIndex2 spT = topDoublet.spacePointIndex();
-      float cotThetaT = topDoublet.cotTheta();
+      const SpacePointIndex2 spT = topDoublet.spacePointIndex();
+      const float cotThetaT = topDoublet.cotTheta();
 
       // use geometric average
-      float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if (cotThetaAvg2 <= 0) {
-        continue;
-      }
+      const float cotThetaAvg2 = cotThetaB * cotThetaT;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.er() + erB +
-                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                         topDoublet.iDeltaR();
+      const float error2 = topDoublet.er() + erB +
+                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
+                               iDeltaRB * topDoublet.iDeltaR();
 
-      float deltaCotTheta = cotThetaB - cotThetaT;
-      float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+      const float deltaCotTheta = cotThetaB - cotThetaT;
+      const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -138,7 +154,7 @@ class Impl final : public TripletSeedFinder {
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > error2 + scatteringInRegion2) {
-        if constexpr (sortedInCotTheta) {
+        if constexpr (sortedByCotTheta) {
           // skip top SPs based on cotTheta sorting when producing triplets
           // break if cotTheta from bottom SP < cotTheta from top SP because
           // the SP are sorted by cotTheta
@@ -150,17 +166,17 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float dU = topDoublet.u() - Ub;
+      const float dU = topDoublet.u() - Ub;
       // protects against division by 0
-      if (dU == 0.) {
+      if (dU == 0) {
         continue;
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (topDoublet.v() - Vb) / dU;
-      float S2 = 1 + A * A;
-      float B = Vb - A * Ub;
-      float B2 = B * B;
+      const float A = (topDoublet.v() - Vb) / dU;
+      const float S2 = 1 + A * A;
+      const float B = Vb - A * Ub;
+      const float B2 = B * B;
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -171,27 +187,13 @@ class Impl final : public TripletSeedFinder {
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
-      float iHelixDiameter2 = B2 / S2;
-      float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
+      const float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      if (!std::isinf(m_cfg.maxPtScattering)) {
-        // if pT > maxPtScattering, calculate allowed scattering angle using
-        // maxPtScattering instead of pt.
-        // To avoid 0-divison the pT check is skipped in case of B2==0, and
-        // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0 || m_cfg.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * m_cfg.maxPtScattering) {
-          float pTscatterSigma =
-              (m_cfg.highland / m_cfg.maxPtScattering) * m_cfg.sigmaScattering;
-          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
-      }
-
+      const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
-        if constexpr (sortedInCotTheta) {
+        if constexpr (sortedByCotTheta) {
           if (cotThetaB < cotThetaT) {
             break;
           }
@@ -203,7 +205,7 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float im = std::abs((A - B * rM) * rM);
+      const float im = std::abs((A - B * rM) * rM);
       if (im > m_cfg.impactMax) {
         continue;
       }
@@ -213,7 +215,7 @@ class Impl final : public TripletSeedFinder {
       tripletTopCandidates.emplace_back(spT, B / std::sqrt(S2), im);
     }  // loop on tops
 
-    if constexpr (sortedInCotTheta) {
+    if constexpr (sortedByCotTheta) {
       // remove the top doublets that were skipped due to cotTheta sorting
       topDoublets = topDoublets.subrange(topDoubletOffset);
     }
@@ -222,29 +224,28 @@ class Impl final : public TripletSeedFinder {
   template <typename TopDoublets>
   void createStripTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet,
+      const TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
-    float rM = spM.r();
-    float cosPhiM = spM.x() / rM;
-    float sinPhiM = spM.y() / rM;
-    float varianceRM = spM.varianceR();
-    float varianceZM = spM.varianceZ();
+    const float rM = spM.zr()[1];
+    const float cosPhiM = spM.xy()[0] / rM;
+    const float sinPhiM = spM.xy()[1] / rM;
+    const float varianceZM = spM.varianceZ();
+    const float varianceRM = spM.varianceR();
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    const ConstSpacePointProxy2 spB =
-        spacePoints[bottomDoublet.spacePointIndex()];
-
     float cotThetaB = bottomDoublet.cotTheta();
-    float erB = bottomDoublet.er();
-    float iDeltaRB = bottomDoublet.iDeltaR();
-    float Vb = bottomDoublet.v();
-    float Ub = bottomDoublet.u();
+    const float erB = bottomDoublet.er();
+    const float iDeltaRB = bottomDoublet.iDeltaR();
+    const float Vb = bottomDoublet.v();
+    const float Ub = bottomDoublet.u();
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float iSinTheta2 = 1 + cotThetaB * cotThetaB;
+    const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -254,19 +255,17 @@ class Impl final : public TripletSeedFinder {
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
+    const float scatteringInRegion2 = m_cfg.multipleScattering2 * iSinTheta2;
 
-    float sinTheta = 1 / std::sqrt(iSinTheta2);
-    float cosTheta = cotThetaB * sinTheta;
+    const float sinTheta = 1 / std::sqrt(iSinTheta2);
+    const float cosTheta = cotThetaB * sinTheta;
 
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
-    Eigen::Vector2f rotationTermsUVtoXY = {cosPhiM * sinTheta,
-                                           sinPhiM * sinTheta};
+    const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
+                                                      sinPhiM * sinTheta};
 
     for (auto topDoublet : topDoublets) {
-      const ConstSpacePointProxy2 spT =
-          spacePoints[topDoublet.spacePointIndex()];
       // protects against division by 0
       float dU = topDoublet.u() - Ub;
       if (dU == 0) {
@@ -274,78 +273,82 @@ class Impl final : public TripletSeedFinder {
       }
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A0 = (topDoublet.v() - Vb) / dU;
+      const float A0 = (topDoublet.v() - Vb) / dU;
 
-      float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // position of Middle SP converted from UV to XY assuming cotTheta
       // evaluated from the Bottom and Middle SPs double
-      Eigen::Vector3f positionMiddle = {
+      const std::array<float, 3> positionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
           zPositionMiddle};
 
-      Eigen::Vector3f rMTransf;
+      std::array<float, 3> rMTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spM, positionMiddle,
                                 rMTransf)) {
         continue;
       }
 
       // coordinate transformation and checks for bottom spacepoint
-      float B0 = 2 * (Vb - A0 * Ub);
-      float Cb = 1 - B0 * bottomDoublet.y();
-      float Sb = A0 + B0 * bottomDoublet.x();
-      Eigen::Vector3f positionBottom = {
+      const float B0 = 2 * (Vb - A0 * Ub);
+      const float Cb = 1 - B0 * bottomDoublet.y();
+      const float Sb = A0 + B0 * bottomDoublet.x();
+      const std::array<float, 3> positionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
 
-      Eigen::Vector3f rBTransf;
+      const ConstSpacePointProxy2 spB =
+          spacePoints[bottomDoublet.spacePointIndex()];
+      std::array<float, 3> rBTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spB, positionBottom,
                                 rBTransf)) {
         continue;
       }
 
       // coordinate transformation and checks for top spacepoint
-      float Ct = 1 - B0 * topDoublet.y();
-      float St = A0 + B0 * topDoublet.x();
-      Eigen::Vector3f positionTop = {
+      const float Ct = 1 - B0 * topDoublet.y();
+      const float St = A0 + B0 * topDoublet.x();
+      const std::array<float, 3> positionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zPositionMiddle};
 
-      Eigen::Vector3f rTTransf;
+      const ConstSpacePointProxy2 spT =
+          spacePoints[topDoublet.spacePointIndex()];
+      std::array<float, 3> rTTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, spT, positionTop,
                                 rTTransf)) {
         continue;
       }
 
       // bottom and top coordinates in the spM reference frame
-      float xB = rBTransf[0] - rMTransf[0];
-      float yB = rBTransf[1] - rMTransf[1];
-      float zB = rBTransf[2] - rMTransf[2];
-      float xT = rTTransf[0] - rMTransf[0];
-      float yT = rTTransf[1] - rMTransf[1];
-      float zT = rTTransf[2] - rMTransf[2];
+      const float xB = rBTransf[0] - rMTransf[0];
+      const float yB = rBTransf[1] - rMTransf[1];
+      const float zB = rBTransf[2] - rMTransf[2];
+      const float xT = rTTransf[0] - rMTransf[0];
+      const float yT = rTTransf[1] - rMTransf[1];
+      const float zT = rTTransf[2] - rMTransf[2];
 
-      float iDeltaRB2 = 1 / (xB * xB + yB * yB);
-      float iDeltaRT2 = 1 / (xT * xT + yT * yT);
+      const float iDeltaRB2 = 1 / (xB * xB + yB * yB);
+      const float iDeltaRT2 = 1 / (xT * xT + yT * yT);
 
       cotThetaB = -zB * std::sqrt(iDeltaRB2);
-      float cotThetaT = zT * std::sqrt(iDeltaRT2);
+      const float cotThetaT = zT * std::sqrt(iDeltaRT2);
 
       // use arithmetic average
-      float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
-      float cotThetaAvg2 = averageCotTheta * averageCotTheta;
+      const float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
+      const float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = topDoublet.er() + erB +
-                     2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                         topDoublet.iDeltaR();
+      const float error2 = topDoublet.er() + erB +
+                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
+                               iDeltaRB * topDoublet.iDeltaR();
 
-      float deltaCotTheta = cotThetaB - cotThetaT;
-      float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+      const float deltaCotTheta = cotThetaB - cotThetaT;
+      const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -362,26 +365,26 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      float rMxy =
+      const float rMxy =
           std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
-      float irMxy = 1 / rMxy;
-      float Ax = rMTransf[0] * irMxy;
-      float Ay = rMTransf[1] * irMxy;
+      const float irMxy = 1 / rMxy;
+      const float Ax = rMTransf[0] * irMxy;
+      const float Ay = rMTransf[1] * irMxy;
 
-      float ub = (xB * Ax + yB * Ay) * iDeltaRB2;
-      float vb = (yB * Ax - xB * Ay) * iDeltaRB2;
-      float ut = (xT * Ax + yT * Ay) * iDeltaRT2;
-      float vt = (yT * Ax - xT * Ay) * iDeltaRT2;
+      const float ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+      const float vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+      const float ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+      const float vt = (yT * Ax - xT * Ay) * iDeltaRT2;
 
       dU = ut - ub;
       // protects against division by 0
       if (dU == 0) {
         continue;
       }
-      float A = (vt - vb) / dU;
-      float S2 = 1 + A * A;
-      float B = vb - A * ub;
-      float B2 = B * B;
+      const float A = (vt - vb) / dU;
+      const float S2 = 1 + A * A;
+      const float B = vb - A * ub;
+      const float B2 = B * B;
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -392,24 +395,10 @@ class Impl final : public TripletSeedFinder {
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
-      float iHelixDiameter2 = B2 / S2;
-      float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
+      const float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      if (!std::isinf(m_cfg.maxPtScattering)) {
-        // if pT > maxPtScattering, calculate allowed scattering angle using
-        // maxPtScattering instead of pt.
-        // To avoid 0-divison the pT check is skipped in case of B2==0, and
-        // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0 || m_cfg.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * m_cfg.maxPtScattering) {
-          float pTscatterSigma =
-              (m_cfg.highland / m_cfg.maxPtScattering) * m_cfg.sigmaScattering;
-          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
-      }
-
+      const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
         continue;
@@ -418,14 +407,14 @@ class Impl final : public TripletSeedFinder {
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float Im = std::abs((A - B * rMxy) * rMxy);
-      if (Im > m_cfg.impactMax) {
+      const float im = std::abs((A - B * rMxy) * rMxy);
+      if (im > m_cfg.impactMax) {
         continue;
       }
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), Im);
+      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), im);
     }  // loop on tops
   }
 
@@ -511,21 +500,21 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
       boost::mp11::mp_list<std::bool_constant<false>, std::bool_constant<true>>;
 
   using UseStripInfoOptions = BooleanOptions;
-  using SortedInCotThetaOptions = BooleanOptions;
+  using SortedByCotThetaOptions = BooleanOptions;
 
   using TripletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
-                              SortedInCotThetaOptions>;
+                              SortedByCotThetaOptions>;
 
   std::unique_ptr<TripletSeedFinder> result;
   boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
     using OptionType = decltype(option);
 
     using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
-    using SortedInCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
+    using SortedByCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
 
     if (config.useStripInfo != UseStripInfo::value ||
-        config.sortedByCotTheta != SortedInCotTheta::value) {
+        config.sortedByCotTheta != SortedByCotTheta::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -538,7 +527,7 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
 
     // create the implementation for the given configuration
     result =
-        std::make_unique<Impl<UseStripInfo::value, SortedInCotTheta::value>>(
+        std::make_unique<Impl<UseStripInfo::value, SortedByCotTheta::value>>(
             config);
   });
   if (result == nullptr) {
