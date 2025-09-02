@@ -15,10 +15,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <cstddef>
-#include <iterator>
 #include <numbers>
 #include <ostream>
 
@@ -27,20 +24,19 @@
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
   using namespace std::string_literals;
 
   // Create the bin utility
-  Acts::BinUtility bu;
+  BinUtility bu;
   // Loop over the bins
   for (auto& bin : binning) {
     AxisDirection bval = axisDirectionFromName(bin.first);
-    Acts::BinningOption bopt = bin.second;
+    BinningOption bopt = bin.second;
     double min = 0.;
     double max = 0.;
-    if (bopt == Acts::closed) {
+    if (bopt == closed) {
       min = -std::numbers::pi;
       max = std::numbers::pi;
     }
@@ -48,16 +44,15 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     ACTS_VERBOSE("  - material binning for " << bin.first << " on " << valueTag
                                              << ": " << bins);
     if (bins >= 1) {
-      bu += Acts::BinUtility(bins, min, max, bopt, bval);
+      bu += BinUtility(bins, min, max, bopt, bval);
     }
   }
-  return std::make_shared<Acts::ProtoSurfaceMaterial>(bu);
+  return std::make_shared<ProtoSurfaceMaterial>(bu);
 }
 
 void Acts::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
@@ -106,8 +101,7 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), cylinderLayer,
-                          {{"binPhi", Acts::closed}, {"binZ", Acts::open}},
-                          logger);
+                          {{"binPhi", closed}, {"binZ", open}}, logger);
   }
 }
 
@@ -123,7 +117,6 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), discLayer,
-                          {{"binPhi", Acts::closed}, {"binR", Acts::open}},
-                          logger);
+                          {{"binPhi", closed}, {"binR", open}}, logger);
   }
 }
