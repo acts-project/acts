@@ -24,7 +24,6 @@ class SimVertexBarcode {
   using GenerationId = SimBarcode::GenerationId;
   using SubParticleId = SimBarcode::SubParticleId;
 
-  // constexpr SimVertexBarcode() = default;
   explicit constexpr SimVertexBarcode(SimBarcode barcode)
       : m_id(barcode.vertexId()) {}
 

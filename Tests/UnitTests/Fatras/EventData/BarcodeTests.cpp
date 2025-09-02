@@ -10,6 +10,7 @@
 
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <array>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -78,30 +79,51 @@ BOOST_AUTO_TEST_CASE(BarcodeWithoutSubparticle) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
-  auto p1 = Barcode::Invalid().setVertexPrimary(1u).setVertexSecondary(2u);
-  p1.setParticle(3u).setGeneration(4u).setSubParticle(5u);
+  auto p1 = Barcode::Invalid();
+  p1.setVertexPrimary(1u);
+  p1.setVertexSecondary(2u);
+  p1.setParticle(3u);
+  p1.setGeneration(4u);
+  p1.setSubParticle(5u);
   auto p2 = Barcode(1u, 2u, 3u, 4u, 5u);
   auto p3 = Barcode(1u, 2u, 3u, 4u).setSubParticle(5u);
   auto p4 = Barcode(1u, 2u, 4u).setParticle(3u).setSubParticle(5u);
-  std::vector<std::uint32_t> values = {1u, 2u, 3u, 4u, 5u};
-  auto p5 = Barcode(values);
+  std::vector<std::uint32_t> vecValues = {1u, 2u, 3u, 4u, 5u};
+  auto p5 = Barcode(vecValues);
+  std::array<std::uint32_t, 5> arrValues = {1u, 2u, 3u, 4u, 5u};
+  auto p6 = Barcode(arrValues);
 
   BOOST_CHECK_EQUAL(p1, p2);
   BOOST_CHECK_EQUAL(p1, p3);
   BOOST_CHECK_EQUAL(p1, p4);
   BOOST_CHECK_EQUAL(p1, p5);
+  BOOST_CHECK_EQUAL(p1, p6);
 
-  auto p6 = Barcode(11u, 2u, 3u, 4u, 5u);
-  auto p7 = Barcode(1u, 22u, 3u, 4u, 5u);
-  auto p8 = Barcode(1u, 2u, 33u, 4u, 5u);
-  auto p9 = Barcode(1u, 2u, 3u, 44u, 5u);
-  auto p10 = Barcode(1u, 2u, 3u, 4u, 55u);
+  auto q1 = Barcode(11u, 2u, 3u, 4u, 5u);
+  auto q2 = Barcode(1u, 22u, 3u, 4u, 5u);
+  auto q3 = Barcode(1u, 2u, 33u, 4u, 5u);
+  auto q4 = Barcode(1u, 2u, 3u, 44u, 5u);
+  auto q5 = Barcode(1u, 2u, 3u, 4u, 55u);
 
-  BOOST_CHECK_NE(p1, p6);
-  BOOST_CHECK_NE(p1, p7);
-  BOOST_CHECK_NE(p1, p8);
-  BOOST_CHECK_NE(p1, p9);
-  BOOST_CHECK_NE(p1, p10);
+  BOOST_CHECK_NE(p1, q1);
+  BOOST_CHECK_NE(p1, q2);
+  BOOST_CHECK_NE(p1, q3);
+  BOOST_CHECK_NE(p1, q4);
+  BOOST_CHECK_NE(p1, q5);
+
+  BOOST_CHECK(p1 < q1);
+  BOOST_CHECK(q2 > q4);
+  BOOST_CHECK(q3 > q5);
+  BOOST_CHECK(p1 < q4);
+  BOOST_CHECK(q5 > p1);
+
+  std::vector<std::uint32_t> badValues = {11u, 12u, 13u, 14u};
+  auto r1 = Barcode::Invalid();
+  BOOST_CHECK_THROW(r1.setData(badValues), std::invalid_argument);
+
+  std::array<std::uint32_t, 6> badValues2 = {11u, 12u, 13u, 14u, 15u, 16u};
+  auto r2 = Barcode::Invalid();
+  BOOST_CHECK_THROW(r2.setData(badValues2), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeLimits) {
