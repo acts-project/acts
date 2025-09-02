@@ -124,7 +124,7 @@ jobs:
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion="${{ steps.next_version.outputs.content }}"
             --define sonar.scm.revision="${{ github.event.workflow_run.head_sha }}"
-            --define sonar.pullrequest.key="${{ steps.pr_number.outputs.content }}"
+            --define sonar.pullrequest.key=${{ steps.pr_number.outputs.content }}
             --define sonar.pullrequest.branch="${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}"
             --define sonar.pullrequest.base="${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}"
 
