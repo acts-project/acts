@@ -12,5 +12,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoPodio
-    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio
+    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginEDM4hep
 )

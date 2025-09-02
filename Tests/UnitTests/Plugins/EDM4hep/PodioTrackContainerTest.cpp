@@ -17,6 +17,9 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/EDM4hep/PodioTrackContainer.hpp"
+#include "Acts/Plugins/EDM4hep/PodioTrackStateContainer.hpp"
+#include "Acts/Plugins/EDM4hep/PodioUtil.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
@@ -36,9 +39,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsPlugins/Podio/PodioTrackContainer.hpp"
-#include "ActsPlugins/Podio/PodioTrackStateContainer.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
 #include <ActsPodioEdm/TrackCollection.h>
 
@@ -51,11 +51,7 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::HashedStringLiteral;
-using namespace ActsPlugins;
-
-namespace ActsTests {
-
-BOOST_AUTO_TEST_SUITE(PodioSuite)
+BOOST_AUTO_TEST_SUITE(PodioTrackContainerTest)
 
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
@@ -107,14 +103,14 @@ BOOST_AUTO_TEST_CASE(ConvertSurface) {
   auto trf = Transform3::Identity();
   trf.translation().setRandom();
 
-  auto free = Surface::makeShared<PlaneSurface>(trf, rBounds);
+  auto free = Acts::Surface::makeShared<PlaneSurface>(trf, rBounds);
 
   NullHelper helper;
   auto surface = PodioUtil::convertSurfaceToPodio(helper, *free);
 
   auto free2 = PodioUtil::convertSurfaceFromPodio(helper, surface);
 
-  GeometryContext gctx;
+  Acts::GeometryContext gctx;
 
   BOOST_REQUIRE(free2);
   BOOST_CHECK_EQUAL(free->type(), free2->type());
@@ -134,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   auto rBounds = std::make_shared<RectangleBounds>(15, 20);
   auto trf = Transform3::Identity();
   trf.translation().setRandom();
-  auto free = Surface::makeShared<PlaneSurface>(trf, rBounds);
+  auto free = Acts::Surface::makeShared<PlaneSurface>(trf, rBounds);
 
   MapHelper helper;
 
@@ -145,11 +141,11 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   ParticleHypothesis pHypo = ParticleHypothesis::pion();
 
   {
-    MutablePodioTrackStateContainer tsc{helper};
-    MutablePodioTrackContainer ptc{helper};
+    Acts::MutablePodioTrackStateContainer tsc{helper};
+    Acts::MutablePodioTrackContainer ptc{helper};
     ActsPodioEdm::TrackCollection& tracks = ptc.trackCollection();
 
-    TrackContainer tc{ptc, tsc};
+    Acts::TrackContainer tc{ptc, tsc};
 
     BOOST_CHECK(!tc.hasColumn("int_column"_hash));
     BOOST_CHECK(!tc.hasColumn("float_column"_hash));
@@ -212,7 +208,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     t.nSharedHits() = 99;
     BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
 
-    GeometryContext gctx;
+    Acts::GeometryContext gctx;
     t.setReferenceSurface(free);
     const auto& free2 = t.referenceSurface();
     BOOST_CHECK_EQUAL(free->center(gctx), free2.center(gctx));
@@ -258,11 +254,11 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   }
 
   {
-    ConstPodioTrackStateContainer tsc{helper, frame};
-    ConstPodioTrackContainer ptc{helper, frame};
+    Acts::ConstPodioTrackStateContainer tsc{helper, frame};
+    Acts::ConstPodioTrackContainer ptc{helper, frame};
     // const ActsPodioEdm::TrackCollection& tracks = ptc.trackCollection();
 
-    TrackContainer tc{ptc, tsc};
+    Acts::TrackContainer tc{ptc, tsc};
 
     BOOST_CHECK(tc.hasColumn("int_column"_hash));
     BOOST_CHECK(tc.hasColumn("float_column"_hash));
@@ -327,14 +323,14 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   mtj.addColumn<std::uint64_t>("ts_counter");
   mtj.addColumn<std::uint8_t>("ts_odd");
 
-  MutablePodioTrackStateContainer tsc2{helper};
-  MutablePodioTrackContainer ptc2{helper};
-  TrackContainer tc2{ptc2, tsc2};
+  Acts::MutablePodioTrackStateContainer tsc2{helper};
+  Acts::MutablePodioTrackContainer ptc2{helper};
+  Acts::TrackContainer tc2{ptc2, tsc2};
   // doesn't have the dynamic column
 
-  MutablePodioTrackStateContainer tsc3{helper};
-  MutablePodioTrackContainer ptc3{helper};
-  TrackContainer tc3{ptc3, tsc3};
+  Acts::MutablePodioTrackStateContainer tsc3{helper};
+  Acts::MutablePodioTrackContainer ptc3{helper};
+  Acts::TrackContainer tc3{ptc3, tsc3};
 
   tc3.addColumn<std::uint64_t>("counter");
   tc3.addColumn<std::uint8_t>("odd");
@@ -393,5 +389,3 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}  // namespace ActsTests

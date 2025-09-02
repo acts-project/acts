@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsPlugins/Podio/PodioUtil.hpp"
 
 #include <filesystem>
 
@@ -88,3 +88,5 @@ const PodioReader::Config& PodioReader::config() const {
 }
 
 }  // namespace ActsExamples
+
+  
