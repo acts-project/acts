@@ -16,7 +16,6 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -27,6 +26,7 @@
 namespace Acts {
 
 class Surface;
+class SurfaceArray;
 class ISurfaceMaterial;
 class BinUtility;
 class Volume;
