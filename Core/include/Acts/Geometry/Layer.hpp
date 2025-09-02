@@ -86,19 +86,8 @@ class Layer : public virtual GeometryObject {
   friend class Gen1GeometryClosureVisitor;
 
  public:
-  /// Default Constructor - deleted
-  Layer() = delete;
-
-  /// Copy Constructor - deleted
-  Layer(const Layer&) = delete;
-
   /// Destructor
   ~Layer() noexcept override;
-
-  /// Assignment operator - forbidden, layer assignment must not be ambiguous
-  ///
-  /// @param layer is the source layer for assignment
-  Layer& operator=(const Layer& layer) = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray* surfaceArray() const;
