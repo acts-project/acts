@@ -292,6 +292,7 @@ SurfaceMultiIntersection DiscSurface::intersect(
   const Vector3 fromCenter =
       intersection.position() - tMatrix.block<3, 1>(0, 3);
   if (m_bounds->coversFullAzimuth() && boundaryTolerance.isNone()) {
+    // avoids `atan2` in case of full phi coverage
     const double r2 = fromCenter.squaredNorm();
     const bool isInside =
         (r2 >= square(m_bounds->rMin())) && (r2 <= square(m_bounds->rMax()));
