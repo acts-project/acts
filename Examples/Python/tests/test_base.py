@@ -59,9 +59,9 @@ def test_empty_sequencer(conf_const):
     s.run()
 
 
-def test_sequencer_single_threaded(ptcl_gun, capfd):
+def test_sequencer_single_threaded(hello_world, capfd):
     s = acts.examples.Sequencer(numThreads=1, events=2)
-    ptcl_gun(s)
+    hello_world(s)
     s.run()
     cap = capfd.readouterr()
     assert cap.err == ""
@@ -69,11 +69,11 @@ def test_sequencer_single_threaded(ptcl_gun, capfd):
     assert "Processed 2 events" in cap.out
 
 
-def test_sequencer_multi_threaded(ptcl_gun, capfd):
+def test_sequencer_multi_threaded(hello_world, capfd):
     # This test can use 2 threads (for the 2 events),
     # but could be run single-threaded if threading is not available.
     s = acts.examples.Sequencer(numThreads=-1, events=2)
-    ptcl_gun(s)
+    hello_world(s)
     s.run()
     cap = capfd.readouterr()
     assert cap.err == ""

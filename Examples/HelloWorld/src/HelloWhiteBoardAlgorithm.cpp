@@ -6,15 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "HelloWhiteBoardAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloWhiteBoardAlgorithm.hpp"
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-
-#include "HelloData.hpp"
+#include "ActsExamples/HelloWorld/HelloData.hpp"
 
 ActsExamples::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
-    const Config& cfg, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
+    const Config& config, Acts::Logging::Level level)
+    : ActsExamples::IAlgorithm("HelloWhiteBoard", level), m_cfg(config) {
   // non-optional config settings must be checked on construction.
   if (m_cfg.input.empty()) {
     throw std::invalid_argument("Missing input collection");

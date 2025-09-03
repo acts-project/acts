@@ -36,15 +36,18 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
   };
 
   explicit HelloRandomAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
-  // Generate random numbers from various distributions.
+  /// Generate random numbers from various distributions.
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
+  /// Access to the config struct
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 };
 
 }  // namespace ActsExamples

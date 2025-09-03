@@ -19,7 +19,7 @@
 namespace ActsExamples {
 
 /// Example algorithm that reads/writes data from/to the event store.
-class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
+class HelloWhiteBoardAlgorithm : public IAlgorithm {
  public:
   struct Config {
     /// Input collection name.
@@ -29,16 +29,19 @@ class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
   };
 
   explicit HelloWhiteBoardAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Read input and copy to the output
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  ReadDataHandle<HelloDataCollection> m_readHandle{this, "Input"};
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
+  // Access to the config struct
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<HelloDataCollection> m_readHandle{this, "Input"};
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 };
 
 }  // namespace ActsExamples

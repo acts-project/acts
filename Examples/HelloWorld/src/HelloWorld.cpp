@@ -8,13 +8,12 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/HelloWorld/HelloLoggerAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloRandomAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloWhiteBoardAlgorithm.hpp"
 
 #include <cstdlib>
 #include <memory>
-
-#include "HelloLoggerAlgorithm.hpp"
-#include "HelloRandomAlgorithm.hpp"
-#include "HelloWhiteBoardAlgorithm.hpp"
 
 int main(void) {
   Acts::Logging::Level logLevel = Acts::Logging::INFO;
