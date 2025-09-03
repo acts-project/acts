@@ -258,8 +258,8 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   if (lro_perp2 > r2) {
     // check the distance of closest approach to the origin in XY
     const Vector2 a = lro.head<2>();
-    const Vector2 n = lrd.head<2>() / std::sqrt(lrd_perp2);
-    const double d2 = (a - a.dot(n) * n).squaredNorm();
+    const Vector2 n = lrd.head<2>();
+    const double d2 = (a - a.dot(n) * n / lrd_perp2).squaredNorm();
     // if the distance of closest approach is greater than the radius, there is
     // no intersection
     if (d2 > r2) {
