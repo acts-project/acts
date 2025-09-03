@@ -344,7 +344,7 @@ struct Simulation {
       }
       // sub-particle numbering must be non-zero
       currId = currId.withSubParticle(prevId.subParticle() + 1u);
-      particles[j + 1u] = particles[j + 1u].setParticleId(currId);
+      particles[j + 1u] = particles[j + 1u].withParticleId(currId);
     }
   }
 };
