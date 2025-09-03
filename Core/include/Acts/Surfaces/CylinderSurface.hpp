@@ -21,7 +21,6 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <memory>
 #include <numbers>
@@ -265,45 +264,8 @@ class CylinderSurface : public RegularSurface {
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
  protected:
-  std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
-
- private:
-  /// Implementation of the intersection solver
-  ///
-  ///  <b>mathematical motivation:</b>
-  ///
-  /// The cylinder is given by :
-  ///   - cylinder center: ccenter (C)
-  ///   - the direction of the cylinder axis: cdirection (DZ)
-  ///   - the radius r
-  /// The line is given by :
-  ///   - a reference position : lposition (L0)
-  ///   - the line direction: ldirection (DL)
-  ///   the parametric form for the line is then : L(t) = L0 + t * DL
-  ///
-  /// Any point P on infinite cylinder if :
-  ///      ((P - C) x DZ)^2 = r^2 * DZ^2
-  /// We know that DZ is a unit vector:
-  ///   DZ^2 == 1
-  /// When expanded with the line equation, this is  :
-  ///      ((L0 - C) x DZ + t * (DL x DZ))^2 = r^2 * DZ^2
-  /// which is a quadratic equation in the form (X + t * Y)^2 = d, where :
-  ///  X = (L0 - C) x DZ
-  ///  Y = DL x DZ
-  ///  d = r^2 * (DZ)^2
-  /// Now, expand the equation :
-  /// t^2 * (Y . Y) + t * (2 * (X . Y)) + (X . X) - d = 0
-  /// => second order equation in the form : a*t^2 + b*t + c = 0 where
-  /// a = (Y . Y)
-  /// b = 2 * (X . Y)
-  /// c = (X . X) - d
-  /// finally solve the second order equation : a*t^2 + b*t + c = 0
-  /// reinsertion into the line equation.
-  ///
-  /// @return the quadratic equation
-  detail::RealQuadraticEquation intersectionSolver(
-      const Transform3& transform, const Vector3& position,
-      const Vector3& direction) const;
+  /// bounds (shared)
+  std::shared_ptr<const CylinderBounds> m_bounds;
 };
 
 static_assert(RegularSurfaceConcept<CylinderSurface>,

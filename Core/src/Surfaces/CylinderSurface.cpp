@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
@@ -196,88 +197,94 @@ Vector3 CylinderSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
-detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const Transform3& transform, const Vector3& position,
-    const Vector3& direction) const {
-  // Solve for radius R
-  double R = bounds().get(CylinderBounds::eR);
-
-  // Get the transformation matrtix
-  const auto& tMatrix = transform.matrix();
-  Vector3 caxis = tMatrix.block<3, 1>(0, 2).transpose();
-  Vector3 ccenter = tMatrix.block<3, 1>(0, 3).transpose();
-
-  // Check documentation for explanation
-  Vector3 pc = position - ccenter;
-  Vector3 pcXcd = pc.cross(caxis);
-  Vector3 ldXcd = direction.cross(caxis);
-  double a = ldXcd.dot(ldXcd);
-  double b = 2. * (ldXcd.dot(pcXcd));
-  double c = pcXcd.dot(pcXcd) - (R * R);
-  // And solve the qaudratic equation
-  return detail::RealQuadraticEquation(a, b, c);
-}
-
 SurfaceMultiIntersection CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
-  // Solve the quadratic equation
-  auto qe = intersectionSolver(gctxTransform, position, direction);
+  Vector3 lro = position;   //< local frame ray origin
+  Vector3 lrd = direction;  //< local frame ray direction
+  if (!gctxTransform.linear().isIdentity()) {
+    lro = gctxTransform.inverse() * position;
+    lrd = gctxTransform.linear().inverse() * direction;
+  } else if (!gctxTransform.translation().isZero()) {
+    lro -= gctxTransform.translation();
+  }
 
-  // If no valid solution return a non-valid surfaceIntersection
+  // helper function for boundary check
+  const auto boundaryCheck =
+      [&](const Vector3& solution, double path,
+          IntersectionStatus status) -> IntersectionStatus {
+    if (boundaryTolerance.isInfinite()) {
+      return status;
+    }
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
+      const double solutionLocalZ = lro[2] + path * lrd[2];
+      const double halfLengthZ = bounds().get(CylinderBounds::eHalfLengthZ);
+      return std::abs(solutionLocalZ) < halfLengthZ
+                 ? status
+                 : IntersectionStatus::unreachable;
+    }
+    return isOnSurface(gctx, solution, direction, boundaryTolerance)
+               ? status
+               : IntersectionStatus::unreachable;
+  };
+  // helper function to build the intersection solution
+  const auto buildSolution = [&](double path) -> Intersection3D {
+    Vector3 solution = position + path * direction;
+    IntersectionStatus status = std::abs(path) < std::abs(tolerance)
+                                    ? IntersectionStatus::onSurface
+                                    : IntersectionStatus::reachable;
+    status = boundaryCheck(solution, path, status);
+    return {solution, path, status};
+  };
+
+  const double lrd_perp2 = lrd[0] * lrd[0] + lrd[1] * lrd[1];
+
+  // check if the ray is parallel to the cylinder axis (z-axis)
+  if (lrd_perp2 < tolerance) {
+    return {{}, *this, boundaryTolerance};
+  }
+
+  const double r = bounds().get(CylinderBounds::eR);
+  const double r2 = r * r;
+
+  const double lro_perp2 = lro[0] * lro[0] + lro[1] * lro[1];
+
+  // check if the ray originates outside the cylinder radius
+  if (lro_perp2 > r2) {
+    // check the distance of closest approach to the origin in XY
+    const Vector2 a = lro.head<2>();
+    const Vector2 n = lrd.head<2>() / std::sqrt(lrd_perp2);
+    const double d2 = (a - a.dot(n) * n).squaredNorm();
+    // if the distance of closest approach is greater than the radius, there is
+    // no intersection
+    if (d2 > r2) {
+      return {{}, *this, boundaryTolerance};
+    }
+  }
+
+  const double r2_diff = lro_perp2 - r2;
+
+  detail::RealQuadraticEquation qe(
+      lrd_perp2, 2 * (lro[0] * lrd[0] + lro[1] * lrd[1]), r2_diff);
+
+  // check if there are any solutions
   if (qe.solutions == 0) {
     return {{Intersection3D::invalid(), Intersection3D::invalid()},
             *this,
             boundaryTolerance};
   }
 
-  // Check the validity of the first solution
-  Vector3 solution1 = position + qe.first * direction;
-  IntersectionStatus status1 = std::abs(qe.first) < std::abs(tolerance)
-                                   ? IntersectionStatus::onSurface
-                                   : IntersectionStatus::reachable;
-
-  // Helper method for boundary check
-  auto boundaryCheck = [&](const Vector3& solution,
-                           IntersectionStatus status) -> IntersectionStatus {
-    // No check to be done, return current status
-    if (boundaryTolerance.isInfinite()) {
-      return status;
-    }
-    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
-      // Project out the current Z value via local z axis
-      // Built-in local to global for speed reasons
-      const auto& tMatrix = gctxTransform.matrix();
-      // Create the reference vector in local
-      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
-      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
-      return std::abs(cZ) < std::abs(hZ) ? status
-                                         : IntersectionStatus::unreachable;
-    }
-    return isOnSurface(gctx, solution, direction, boundaryTolerance)
-               ? status
-               : IntersectionStatus::unreachable;
-  };
-  // Check first solution for boundary compatibility
-  status1 = boundaryCheck(solution1, status1);
-  // Set the intersection
-  Intersection3D first(solution1, qe.first, status1);
+  Intersection3D first = buildSolution(qe.first);
+  // check if this was the only solution
   if (qe.solutions == 1) {
     return {{first, first}, *this, boundaryTolerance};
   }
-  // Check the validity of the second solution
-  Vector3 solution2 = position + qe.second * direction;
-  IntersectionStatus status2 = std::abs(qe.second) < std::abs(tolerance)
-                                   ? IntersectionStatus::onSurface
-                                   : IntersectionStatus::reachable;
-  // Check first solution for boundary compatibility
-  status2 = boundaryCheck(solution2, status2);
-  Intersection3D second(solution2, qe.second, status2);
-  // Order based on path length
+  Intersection3D second = buildSolution(qe.second);
+
+  // return both based on path length
   if (first.pathLength() <= second.pathLength()) {
     return {{first, second}, *this, boundaryTolerance};
   }

@@ -6,14 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// RealQuadraticEquation.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include <cmath>
-#include <utility>
 
 namespace Acts::detail {
 
@@ -43,7 +38,6 @@ namespace Acts::detail {
 /// \frac{\beta - \sqrt{\beta^{2}-4\alpha\gamma}}{2\alpha} @f$.<br>
 ///  - case @f$ \beta > 0 @f$ is similar.
 ///
-
 struct RealQuadraticEquation {
   double first = 0;
   double second = 0;
