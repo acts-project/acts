@@ -394,6 +394,8 @@ class SurfaceArrayCreator {
   /// @param transform The transform to apply to the surface`
   /// @param R the radius (interpretation depends on @p type)
   /// @param Z the z position (interpretation depends on @p type)
+  /// @param pAxisA ProtoAxis object for axis A
+  /// @param pAxisB ProtoAxis object for axis B
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(Surface::SurfaceType type,
