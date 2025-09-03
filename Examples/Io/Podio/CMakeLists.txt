@@ -5,6 +5,7 @@ acts_add_library(
     src/PodioReader.cpp
     src/CollectionBaseWriteHandle.cpp
     src/PodioInputConverter.cpp
+    src/PodioMeasurementOutputConverter.cpp
 )
 
 target_include_directories(

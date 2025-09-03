@@ -99,3 +99,26 @@ datatypes:
     Members:
       - ActsPodioEdm::JacobianInfo data // the jacobian data
 
+
+  ActsPodioEdm::Measurement:
+    Description: "Local representation of a measurement"
+    Author : "Paul Gessinger, CERN"
+
+    Members:
+      - ActsPodioEdm::Surface referenceSurface // the associated surface
+    VectorMembers:
+      - std::uint16_t indices // the local indices
+      - double parameterValues // the measurement parameter value
+      - double covarianceValues // the measurement covairance value
+
+    # @TODO: Should map back to the simhit(s) that created it
+    
+    OneToOneRelations:
+      - edm4hep::SimTrackerHit simHit // the associated simulated hit 
+
+    ExtraCode:
+      declaration: |
+        std::size_t size() const {
+          return indices_size();
+        }
+

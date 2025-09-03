@@ -56,6 +56,9 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
     std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
+    /// Output a mapping from internal sim hit index to edm4hep input hits
+    /// @note Optional, will not be computed if it's not stored
+    std::optional<std::string> outputSimHitAssociation = std::nullopt;
     /// Output simulated vertices collection.
     std::string outputSimVertices;
 
@@ -114,6 +117,8 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
       this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<std::vector<edm4hep::SimTrackerHit>>
+      m_outputSimHitAssociation{this, "OutputSimHitAssociation"};
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
                                                           "OutputSimVertices"};

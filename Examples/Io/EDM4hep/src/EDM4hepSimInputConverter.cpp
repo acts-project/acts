@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -54,8 +55,7 @@ struct ParticleInfo {
 
 EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
                                                    Acts::Logging::Level level)
-    : PodioInputConverter("EDM4hepSimInputConverter", level,
-                          config.inputFrame),
+    : PodioInputConverter("EDM4hepSimInputConverter", level, config.inputFrame),
       m_cfg(config) {
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
@@ -68,6 +68,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing output collection sim hits");
   }
+
   if (m_cfg.outputSimVertices.empty()) {
     throw std::invalid_argument("Missing output collection sim vertices");
   }
@@ -75,6 +76,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
+  m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
@@ -263,11 +265,15 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     }
   }
 
-  // Let's figure out first how many hits each particle has:
+  std::vector<const edm4hep::SimTrackerHitCollection*> simHitCollections;
   for (const auto& name : m_cfg.inputSimHits) {
-    const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
+    simHitCollections.push_back(
+        &frame.get<edm4hep::SimTrackerHitCollection>(name));
+  }
 
-    for (const auto& hit : inputHits) {
+  // Let's figure out first how many hits each particle has:
+  for (const auto* inputHits : simHitCollections) {
+    for (const auto& hit : *inputHits) {
       auto particle = ActsPlugins::EDM4hepUtil::getParticle(hit);
 
       std::size_t index = particle.getObjectID().index;
@@ -489,73 +495,95 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
     const auto& vm = m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
-    for (const auto& name : m_cfg.inputSimHits) {
-      const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
-      ACTS_VERBOSE("SimHit collection " << name << " has " << inputHits.size()
+    auto geometryMapper = [&](std::uint64_t cellId) {
+      ACTS_VERBOSE("CellID: " << cellId);
+
+      const auto detElement = vm.lookupDetElement(cellId);
+
+      ACTS_VERBOSE(" -> detElement: " << detElement.name());
+      ACTS_VERBOSE("   -> id: " << detElement.id());
+      ACTS_VERBOSE("   -> key: " << detElement.key());
+
+      Acts::Vector3 position;
+      position
+          << detElement.nominal().worldTransformation().GetTranslation()[0],
+          detElement.nominal().worldTransformation().GetTranslation()[1],
+          detElement.nominal().worldTransformation().GetTranslation()[2];
+      position *= Acts::UnitConstants::cm;
+
+      ACTS_VERBOSE("   -> detElement position: " << position.transpose());
+
+      auto it = m_surfaceMap.find(detElement.key());
+      if (it == m_surfaceMap.end()) {
+        ACTS_ERROR("Unable to find surface for detElement "
+                   << detElement.name() << " with cellId " << cellId);
+        throw std::runtime_error("Unable to find surface for detElement");
+      }
+      const auto* surface = it->second;
+      if (surface == nullptr) {
+        ACTS_ERROR("Unable to find surface for detElement "
+                   << detElement.name() << " with cellId " << cellId);
+        throw std::runtime_error("Unable to find surface for detElement");
+      }
+      ACTS_VERBOSE("   -> surface: " << surface->geometryId());
+      return surface->geometryId();
+    };
+
+    auto particleMapper = [&](const auto& inParticle) {
+      auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
+      if (it == edm4hepParticleMap.end()) {
+        ACTS_ERROR(
+            "SimHit has source particle that we did not see "
+            "before, particle=\n"
+            << inParticle);
+        // If we get this here, this is some sort of bug
+        throw std::runtime_error(
+            "SimHit has source particle that we did not see before, "
+            "but expect to be here");
+      }
+
+      auto pid = unorderedParticlesInitial.at(it->second.particleIndex);
+      return pid;
+    };
+
+    // We will (ab)use the sim hit index to store the association with the
+    // incoming edm4hep simhit. The reason is that we will not have the final
+    // sim hit index in the collection that's sorted by geometry id, so we can't
+    // otherwise build an assotiation map. The index will later be overwritten
+    // based
+    //
+    // This index will be across the input collections,
+    // so we need to check if the total count is too large
+    std::size_t totalSimHitCount = 0;
+    std::int32_t simHitIndex = 0;
+
+    if (m_outputSimHitAssociation.isInitialized()) {
+      totalSimHitCount = std::accumulate(
+          simHitCollections.begin(), simHitCollections.end(), 0u,
+          [&](auto sum, const auto* coll) { return sum + coll->size(); });
+
+      if (totalSimHitCount >
+          std::numeric_limits<decltype(simHitIndex)>::max()) {
+        ACTS_ERROR(
+            "Due to the way the conversion uses a 32bit integer to store the "
+            "edm4hep sim hit index, the total number of sim hits across all "
+            "input collections must be <= "
+            << std::numeric_limits<decltype(simHitIndex)>::max() << ", but is "
+            << totalSimHitCount);
+        throw std::runtime_error("Total sim hit count is too large");
+      }
+    }
+
+    for (const auto& [inputHits, name] :
+         Acts::zip(simHitCollections, m_cfg.inputSimHits)) {
+      ACTS_VERBOSE("SimHit collection " << name << " has " << inputHits->size()
                                         << " hits");
 
-      simHitsUnordered->reserve(simHitsUnordered->size() + inputHits.size());
+      simHitsUnordered->reserve(simHitsUnordered->size() + inputHits->size());
 
-      for (const auto& hit : inputHits) {
-        auto simHit = EDM4hepUtil::readSimHit(
-            hit,
-            [&](const auto& inParticle) {
-              auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
-              if (it == edm4hepParticleMap.end()) {
-                ACTS_ERROR(
-                    "SimHit has source particle that we did not see "
-                    "before, particle=\n"
-                    << inParticle);
-                // If we get this here, this is some sort of bug
-                throw std::runtime_error(
-                    "SimHit has source particle that we did not see before, "
-                    "but expect to be here");
-              }
-
-              auto pid = unorderedParticlesInitial.at(it->second.particleIndex);
-              return pid;
-            },
-            [&](std::uint64_t cellId) {
-              ACTS_VERBOSE("CellID: " << cellId);
-
-              const auto detElement = vm.lookupDetElement(cellId);
-
-              ACTS_VERBOSE(" -> detElement: " << detElement.name());
-              ACTS_VERBOSE("   -> id: " << detElement.id());
-              ACTS_VERBOSE("   -> key: " << detElement.key());
-
-              Acts::Vector3 position;
-              position << detElement.nominal()
-                              .worldTransformation()
-                              .GetTranslation()[0],
-                  detElement.nominal()
-                      .worldTransformation()
-                      .GetTranslation()[1],
-                  detElement.nominal()
-                      .worldTransformation()
-                      .GetTranslation()[2];
-              position *= Acts::UnitConstants::cm;
-
-              ACTS_VERBOSE(
-                  "   -> detElement position: " << position.transpose());
-
-              auto it = m_surfaceMap.find(detElement.key());
-              if (it == m_surfaceMap.end()) {
-                ACTS_ERROR("Unable to find surface for detElement "
-                           << detElement.name() << " with cellId " << cellId);
-                throw std::runtime_error(
-                    "Unable to find surface for detElement");
-              }
-              const auto* surface = it->second;
-              if (surface == nullptr) {
-                ACTS_ERROR("Unable to find surface for detElement "
-                           << detElement.name() << " with cellId " << cellId);
-                throw std::runtime_error(
-                    "Unable to find surface for detElement");
-              }
-              ACTS_VERBOSE("   -> surface: " << surface->geometryId());
-              return surface->geometryId();
-            });
+      for (const auto& hit : *inputHits) {
+        auto simHit = EDM4hepUtil::readSimHit(hit, particleMapper,
+                                              geometryMapper, simHitIndex);
 
         ACTS_VERBOSE("Converted sim hit for truth particle: "
                      << simHit.particleId() << " at "
@@ -597,6 +625,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         }
 
         simHitsUnordered->push_back(std::move(simHit));
+        simHitIndex += 1;
       }
     }
   }
@@ -607,6 +636,43 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
   SimHitContainer simHits{simHitsUnordered->begin(), simHitsUnordered->end()};
   simHitsUnordered.reset();
+
+  // We now know the final indices of the indices in the output particle
+  // collection. In the next step, the indices along the particle path will be
+  // rewritten, so we can build an assotiaion map here.
+
+  if (m_outputSimHitAssociation.isInitialized()) {
+    std::vector<edm4hep::SimTrackerHit> simHitAssociation;
+    simHitAssociation.reserve(simHits.size());
+
+    // @TODO: Make this optional depending on the output key setting
+    Acts::ScopedTimer timer("Building sim hit association", logger(),
+                            Acts::Logging::DEBUG);
+    for (const auto& hit : simHits) {
+      std::size_t index = hit.index();
+      // find hit for this index in the input collections
+      for (const auto&& [name, coll] :
+           Acts::zip(m_cfg.inputSimHits, simHitCollections)) {
+        if (index >= coll->size()) {
+          index -= coll->size();
+          continue;
+        }
+
+        simHitAssociation.push_back(coll->at(index));
+
+        break;
+      }
+    }
+
+    if (simHitAssociation.size() != simHits.size()) {
+      ACTS_ERROR("Sim hit association size " << simHitAssociation.size()
+                                             << " does not match sim hit size "
+                                             << simHits.size());
+      throw std::runtime_error("Sim hit association size mismatch");
+    }
+
+    m_outputSimHitAssociation(ctx, std::move(simHitAssociation));
+  }
 
   if (m_cfg.sortSimHitsInTime) {
     Acts::ScopedTimer timer("Sorting sim hits in time", logger(),
@@ -642,10 +708,10 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       for (std::size_t i = 0; i < hitIndices.size(); ++i) {
         auto& hit = *simHits.nth(hitIndices[i]);
-        SimHit updatedHit{hit.geometryId(),     hit.particleId(),
-                          hit.fourPosition(),   hit.momentum4Before(),
-                          hit.momentum4After(), static_cast<std::int32_t>(i)};
-        hit = updatedHit;
+        // SimHit does not have setters, so need to create a new one
+        hit = {hit.geometryId(),     hit.particleId(),
+               hit.fourPosition(),   hit.momentum4Before(),
+               hit.momentum4After(), static_cast<std::int32_t>(i)};
       }
 
       if (logger().doPrint(Acts::Logging::VERBOSE)) {
@@ -655,6 +721,14 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                              << " " << simHits.nth(hitIdx)->time());
         }
       }
+    }
+  } else {
+    // Reset all indices to -1 to indicate we don't know the ordering along the
+    // particle
+    for (auto& hit : simHits) {
+      // SimHit does not have setters, so need to create a new one
+      hit = {hit.geometryId(),      hit.particleId(),     hit.fourPosition(),
+             hit.momentum4Before(), hit.momentum4After(), -1};
     }
   }
 
@@ -858,3 +932,6 @@ void EDM4hepSimInputConverter::setSubParticleIds(
 }
 
 }  // namespace ActsExamples
+
+
+  

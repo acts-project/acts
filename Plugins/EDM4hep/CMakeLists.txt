@@ -90,10 +90,8 @@ install(
     COMPONENT dev
 )
 
-if(${ROOT_VERSION} GREATER 6)
-    install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/libActsPodioEdmDict_rdict.pcm"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        COMPONENT dev
-    )
-endif()
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/libActsPodioEdmDict_rdict.pcm"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    COMPONENT dev
+)
