@@ -54,8 +54,8 @@ struct ParticleInfo {
 
 EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
                                                    Acts::Logging::Level level)
-    : EDM4hepInputConverter("EDM4hepSimInputConverter", level,
-                            config.inputFrame),
+    : PodioInputConverter("EDM4hepSimInputConverter", level,
+                          config.inputFrame),
       m_cfg(config) {
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(

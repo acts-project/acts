@@ -70,10 +70,11 @@ auto declareAlgorithm(pybind11::module_& m, const char* name) {
 
 /// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
-#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...) \
-  do {                                                           \
-    auto [alg, c] = declareAlgorithm<algorithm>(mod, name);      \
-    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                          \
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)          \
+  do {                                                                    \
+    auto [alg, c] =                                                       \
+        declareAlgorithm<algorithm, ActsExamples::IAlgorithm>(mod, name); \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                   \
   } while (0)
 
 /// Similar as above for writers

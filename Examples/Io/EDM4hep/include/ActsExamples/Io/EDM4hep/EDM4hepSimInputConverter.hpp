@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
+#include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
 #include <memory>
 #include <string>
@@ -41,7 +41,7 @@ class DD4hepDetector;
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
+class EDM4hepSimInputConverter final : public PodioInputConverter {
  public:
   struct Config {
     /// Where to read input file from.

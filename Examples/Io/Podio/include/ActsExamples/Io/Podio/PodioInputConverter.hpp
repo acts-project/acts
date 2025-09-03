@@ -18,18 +18,18 @@ class Frame;
 
 namespace ActsExamples {
 
-/// This is an abstract base class for EDM4hep input converters, that
+/// This is an abstract base class for PODIO input converters, that
 /// centralizes the retrieval of the input @c podio::Frame object to convert
 /// from.
-class EDM4hepInputConverter : public IAlgorithm {
+class PodioInputConverter : public IAlgorithm {
  public:
-  /// Constructor for the EDM4hep input converter.
+  /// Constructor for the PODIO input converter.
   ///
   /// @param name The name of the algorithm
   /// @param level The logging level
   /// @param inputFrame The input frame to convert
-  EDM4hepInputConverter(const std::string& name, Acts::Logging::Level level,
-                        const std::string& inputFrame);
+  PodioInputConverter(const std::string& name, Acts::Logging::Level level,
+                      const std::string& inputFrame);
 
   /// Execute the algorithm. Subclasses do not implement this method.
   ///

@@ -4,6 +4,7 @@ acts_add_library(
     src/PodioWriter.cpp
     src/PodioReader.cpp
     src/CollectionBaseWriteHandle.cpp
+    src/PodioInputConverter.cpp
 )
 
 target_include_directories(

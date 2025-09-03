@@ -7,15 +7,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -34,7 +35,7 @@ using namespace ActsExamples;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   {
-    auto [alg, config] = declareAlgorithm<EDM4hepSimInputConverter>(
+    auto [alg, config] = declareAlgorithm<EDM4hepSimInputConverter, IAlgorithm>(
         m, "EDM4hepSimInputConverter");
     ACTS_PYTHON_STRUCT(config, inputFrame, inputParticles, inputSimHits,
                        outputParticlesGenerator, outputParticlesSimulation,
@@ -58,15 +59,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
                                 "EDM4hepTrackInputConverter", inputFrame,
                                 inputTracks, outputTracks, Bz);
 
-  py::class_<EDM4hepOutputConverter, IAlgorithm,
-             std::shared_ptr<EDM4hepOutputConverter>>(m,
-                                                      "EDM4hepOutputConverter")
-      .def_property_readonly("collections",
-                             &EDM4hepOutputConverter::collections);
-
   {
     auto [alg, config] =
-        declareAlgorithm<EDM4hepSimHitOutputConverter, EDM4hepOutputConverter>(
+        declareAlgorithm<EDM4hepSimHitOutputConverter, PodioOutputConverter>(
             m, "EDM4hepSimHitOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputSimHits, inputParticles, outputParticles,
                        outputSimTrackerHits);
@@ -79,22 +74,22 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,
-                                          EDM4hepOutputConverter>(
+                                          PodioOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputMeasurements, inputClusters,
                        outputTrackerHitsPlane, outputTrackerHitsRaw);
   }
 
   {
-    auto [alg, config] = declareAlgorithm<EDM4hepParticleOutputConverter,
-                                          EDM4hepOutputConverter>(
-        m, "EDM4hepParticleOutputConverter");
+    auto [alg, config] =
+        declareAlgorithm<EDM4hepParticleOutputConverter, PodioOutputConverter>(
+            m, "EDM4hepParticleOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputParticles, outputParticles);
   }
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMultiTrajectoryOutputConverter,
-                                          EDM4hepOutputConverter>(
+                                          PodioOutputConverter>(
         m, "EDM4hepMultiTrajectoryOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputTrajectories, inputMeasurementParticlesMap,
                        outputTracks, Bz);
@@ -102,7 +97,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
 
   {
     auto [alg, config] =
-        declareAlgorithm<EDM4hepTrackOutputConverter, EDM4hepOutputConverter>(
+        declareAlgorithm<EDM4hepTrackOutputConverter, PodioOutputConverter>(
             m, "EDM4hepTrackOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, Bz);
   }

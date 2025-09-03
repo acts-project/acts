@@ -26,7 +26,7 @@ namespace ActsExamples {
 EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
     const EDM4hepMeasurementOutputConverter::Config& config,
     Acts::Logging::Level level)
-    : EDM4hepOutputConverter("EDM4hepMeasurementOutputConverter", level),
+    : PodioOutputConverter("EDM4hepMeasurementOutputConverter", level),
       m_cfg(config) {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
