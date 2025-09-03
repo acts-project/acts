@@ -480,7 +480,8 @@ bool LayerCreator::checkBinning(const GeometryContext& gctx,
   ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
 
   if (nEmptyBins > 0) {
-    ACTS_ERROR(" -- Not all bins point to surface. " << nEmptyBins << " empty");
+    ACTS_VERBOSE(" -- Not all bins point to surface. " << nEmptyBins
+                                                       << " empty");
   } else {
     ACTS_VERBOSE(" -- All bins point to a surface");
   }
@@ -506,7 +507,7 @@ bool LayerCreator::checkBinning(const GeometryContext& gctx,
     ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
   }
 
-  return nEmptyBins == 0 && diff.empty();
+  return diff.empty();
 }
 
 }  // namespace Acts

@@ -155,14 +155,18 @@ class SurfaceArray {
             m_grid.neighborHoodIndices(startIndices, 1u);
 
         std::set<std::size_t> visited({startBin});
-        std::set<std::size_t> queue(startNeighborIndices.begin(),
-                                    startNeighborIndices.end());
+        std::vector<std::size_t> queue(startNeighborIndices.begin(),
+                                       startNeighborIndices.end());
 
         while (!queue.empty()) {
-          const std::size_t current = *queue.begin();
+          const std::size_t current = queue.back();
+          queue.pop_back();
+          if (visited.count(current) > 0) {
+            continue;
+          }
+
           const std::array<std::size_t, 2> currentIndices =
               m_grid.localBinsFromGlobalBin(current);
-          queue.erase(queue.begin());
           visited.insert(current);
 
           const std::array<double, 2> gridLocal =
@@ -181,12 +185,10 @@ class SurfaceArray {
           }
           m_grid.at(current).push_back(&surface);
 
-          for (std::size_t neighbor :
-               m_grid.neighborHoodIndices(currentIndices, 1u)) {
-            if (visited.count(neighbor) == 0) {
-              queue.insert(neighbor);
-            }
-          }
+          const auto neighborIndices =
+              m_grid.neighborHoodIndices(currentIndices, 1u);
+          queue.insert(queue.end(), neighborIndices.begin(),
+                       neighborIndices.end());
         }
       };
 

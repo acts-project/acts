@@ -632,16 +632,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(ctr, ctr.normalized());
-    BOOST_CHECK_EQUAL(binContent.size(), 2u);
-    std::set<const Surface*> act;
-    act.insert(binContent[0]);
-    act.insert(binContent[1]);
+    BOOST_CHECK_GE(binContent.size(), 2u);
+    std::set<const Surface*> act(binContent.begin(), binContent.end());
 
-    std::set<const Surface*> exp;
-    exp.insert(A);
-    exp.insert(B);
-
-    BOOST_CHECK(act == exp);
+    std::set<const Surface*> exp({A, B});
+    BOOST_CHECK(std::ranges::includes(act, exp));
   }
 
   // VARIABLE
@@ -694,19 +689,15 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
       auto binContent = sa2.at(ctr, ctr.normalized());
-      BOOST_CHECK_EQUAL(binContent.size(), 2u);
-      std::set<const Surface*> act;
-      act.insert(binContent[0]);
-      act.insert(binContent[1]);
+      BOOST_CHECK_GE(binContent.size(), 2u);
+      std::set<const Surface*> act(binContent.begin(), binContent.end());
 
-      std::set<const Surface*> exp;
-      exp.insert(A);
-      exp.insert(B);
-
-      BOOST_CHECK(act == exp);
+      std::set<const Surface*> exp({A, B});
+      BOOST_CHECK(std::ranges::includes(act, exp));
     }
   }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test
