@@ -177,7 +177,6 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
       double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
-      Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
       if (vType == polar) {
         bCenter = Vector3(p0 * std::cos(p1), p0 * std::sin(p1), 0.);
       } else if (vType == cylinder) {
