@@ -244,7 +244,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 
   // check if the ray is parallel to the cylinder axis (z-axis)
   if (lrd_perp2 < tolerance) {
-    return {{}, *this, boundaryTolerance};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()},
+            *this,
+            boundaryTolerance};
   }
 
   const double r = bounds().get(CylinderBounds::eR);
@@ -261,7 +263,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
     // if the distance of closest approach is greater than the radius, there is
     // no intersection
     if (d2 > r2) {
-      return {{}, *this, boundaryTolerance};
+      return {{Intersection3D::invalid(), Intersection3D::invalid()},
+              *this,
+              boundaryTolerance};
     }
   }
 
