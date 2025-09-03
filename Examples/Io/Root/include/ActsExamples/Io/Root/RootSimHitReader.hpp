@@ -87,16 +87,18 @@ class RootSimHitReader : public IReader {
   constexpr static std::array<const char *, 12> m_floatKeys = {
       "tx",  "ty", "tz",      "tt",      "tpx",     "tpy",
       "tpz", "te", "deltapx", "deltapy", "deltapz", "deltae"};
-  constexpr static std::array<const char *, 2> m_uint64Keys = {"geometry_id",
-                                                               "particle_id"};
+  constexpr static std::array<const char *, 1> m_uint64Keys = {"geometry_id"};
   constexpr static std::array<const char *, 6> m_uint32Keys = {
       "event_id", "volume_id",   "boundary_id",
       "layer_id", "approach_id", "sensitive_id"};
   constexpr static std::array<const char *, 1> m_int32Keys = {"index"};
+  constexpr static std::array<const char *, 1> m_vecUint32Keys = {"barcode"};
 
   std::unordered_map<std::string_view, float> m_floatColumns;
   std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
+  std::unordered_map<std::string_view, std::vector<std::uint32_t> *>
+      m_vecUint32Columns;
 
   // For some reason I need to use here `unsigned long long` instead of
   // `std::uint64_t` to prevent an internal ROOT type mismatch...

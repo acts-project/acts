@@ -91,19 +91,25 @@ class RootVertexReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint64_t>* m_vertexId = new std::vector<std::uint64_t>;
   std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
   std::vector<float>* m_vx = new std::vector<float>;
   std::vector<float>* m_vy = new std::vector<float>;
   std::vector<float>* m_vz = new std::vector<float>;
   std::vector<float>* m_vt = new std::vector<float>;
-  std::vector<std::vector<std::uint64_t>>* m_outgoingParticles =
-      new std::vector<std::vector<std::uint64_t>>;
-  // Decoded vertex identifier; see Barcode definition for details.
-  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_vertexSecondary =
-      new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
+
+  /// Incoming particles to the vertex.
+  std::vector<std::vector<std::vector<std::uint32_t>>>* m_incomingParticles =
+      new std::vector<std::vector<std::vector<std::uint32_t>>>;
+
+  /// Outgoing particles from the vertex.
+  std::vector<std::vector<std::vector<std::uint32_t>>>* m_outgoingParticles =
+      new std::vector<std::vector<std::vector<std::uint32_t>>>;
+
+  /// Decoded vertex identifier; see Barcode definition for details.
+  std::vector<std::uint16_t>* m_vertexPrimary = new std::vector<std::uint16_t>;
+  std::vector<std::uint16_t>* m_vertexSecondary =
+      new std::vector<std::uint16_t>;
+  std::vector<std::uint8_t>* m_generation = new std::vector<std::uint8_t>;
 };
 
 }  // namespace ActsExamples

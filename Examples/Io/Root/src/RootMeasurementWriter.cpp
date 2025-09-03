@@ -54,7 +54,7 @@ struct RootMeasurementWriter::DigitizationTree {
   float trueGz = 0.;
   float incidentPhi = 0.;
   float incidentTheta = 0.;
-  std::vector<std::uint64_t> particles;
+  std::vector<std::vector<std::uint32_t>> particles;
 
   // Residuals and pulls
   float residual[Acts::eBoundSize] = {};
@@ -309,7 +309,8 @@ ProcessCode RootMeasurementWriter::writeT(
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
-      m_outputTree->particles.push_back(simHits.nth(i)->particleId().value());
+      m_outputTree->particles.push_back(
+          simHits.nth(i)->particleId().asVector());
     }
 
     m_outputTree->fillTruthParameters(local, pos4, dir, angles);

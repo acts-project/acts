@@ -47,7 +47,7 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
   m_outputTree->Branch("geometry_id", &m_geometryId, "geometry_id/l");
-  m_outputTree->Branch("particle_id", &m_particleId, "particle_id/l");
+  m_outputTree->Branch("barcode", &m_barcode);
   m_outputTree->Branch("tx", &m_tx);
   m_outputTree->Branch("ty", &m_ty);
   m_outputTree->Branch("tz", &m_tz);
@@ -93,8 +93,8 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& hit : hits) {
-    m_particleId = hit.particleId().value();
     m_geometryId = hit.geometryId().value();
+    m_barcode = hit.particleId().asVector();
     // write hit position
     m_tx = hit.fourPosition().x() / Acts::UnitConstants::mm;
     m_ty = hit.fourPosition().y() / Acts::UnitConstants::mm;

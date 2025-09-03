@@ -8,9 +8,13 @@
 
 #pragma once
 
-#include "Acts/Utilities/MultiIndex.hpp"
-
 #include <cstdint>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <boost/functional/hash.hpp>
 
 namespace ActsFatras {
 
@@ -91,62 +95,159 @@ namespace ActsFatras {
 /// easily solved by renumbering the sub-particle identifier within each
 /// generation to contain unique values. However, this can only be done when all
 /// particles are known.
-class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
-  using Base = Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16>;
-
+class Barcode {
  public:
-  using Base::Base;
-  using Base::Value;
+  using PrimaryVertexId = std::uint16_t;
+  using SecondaryVertexId = std::uint16_t;
+  using ParticleId = std::uint32_t;
+  using GenerationId = std::uint8_t;
+  using SubParticleId = std::uint32_t;
 
   // Construct an invalid barcode with all levels set to zero.
-  constexpr Barcode() : Base(Base::Zeros()) {}
+  static constexpr Barcode Invalid() { return Barcode(0u, 0u, 0u, 0u, 0u); }
+  constexpr Barcode()
+      : vertexPrimaryID(0u),
+        vertexSecondaryID(0u),
+        particleID(0u),
+        generationID(0u),
+        subParticleID(0u) {
+    // needed by std::unordered_map
+  }
+
+  // Construct a valid barcode.
+  constexpr Barcode(PrimaryVertexId pv, SecondaryVertexId sv, ParticleId p,
+                    GenerationId g, SubParticleId sp = 0u)
+      : vertexPrimaryID(pv),
+        vertexSecondaryID(sv),
+        particleID(p),
+        generationID(g),
+        subParticleID(sp) {}
+  Barcode(std::span<std::uint32_t> data) { setData(data); }
+  // Construct a valid barcode for vertex.
+  constexpr Barcode(PrimaryVertexId pv, SecondaryVertexId sv, GenerationId g)
+      : vertexPrimaryID(pv),
+        vertexSecondaryID(sv),
+        particleID(0u),
+        generationID(g),
+        subParticleID(0u) {}
+
   Barcode(const Barcode&) = default;
   Barcode(Barcode&&) = default;
   Barcode& operator=(const Barcode&) = default;
   Barcode& operator=(Barcode&&) = default;
 
+  ///  Compare two barcodes
+  bool operator==(const Barcode&) const = default;
+  friend constexpr auto operator<=>(Barcode lhs, Barcode rhs) {
+    return lhs.asVector() <=> rhs.asVector();
+  }
+
+  /// Check validity of the barcode
+  static constexpr bool isValid(const Barcode& b) { return b != Invalid(); }
+  constexpr bool isValid() const { return isValid(*this); }
+
   /// Return the primary vertex identifier.
-  constexpr Value vertexPrimary() const { return level(0); }
+  constexpr PrimaryVertexId vertexPrimary() const { return vertexPrimaryID; }
   /// Return the secondary vertex identifier.
-  constexpr Value vertexSecondary() const { return level(1); }
+  constexpr SecondaryVertexId vertexSecondary() const {
+    return vertexSecondaryID;
+  }
   /// Return the particle identifier.
-  constexpr Value particle() const { return level(2); }
+  constexpr ParticleId particle() const { return particleID; }
   /// Return the generation identifier.
-  constexpr Value generation() const { return level(3); }
+  constexpr GenerationId generation() const { return generationID; }
   /// Return the sub-particle identifier.
-  constexpr Value subParticle() const { return level(4); }
+  constexpr SubParticleId subParticle() const { return subParticleID; }
+
+  /// Export barcode as vector
+  constexpr std::vector<std::uint32_t> asVector() const {
+    return {vertexPrimary(), vertexSecondary(), particle(), generation(),
+            subParticle()};
+  }
+
+  /// Set the barcode identifiers from a vector
+  void setData(std::span<std::uint32_t> data) {
+    if (data.size() != 5) {
+      throw std::invalid_argument(
+          "Size of the data is " + std::to_string(data.size()) +
+          " but Barcode requires data vector to have exactly 5 elements");
+    }
+
+    vertexPrimaryID = data[0];
+    vertexSecondaryID = data[1];
+    particleID = data[2];
+    generationID = data[3];
+    subParticleID = data[4];
+  }
 
   /// Set the primary vertex identifier.
-  constexpr Barcode& setVertexPrimary(Value id) {
-    set(0, id);
+  [[deprecated("Use withVertexPrimary() instead")]]
+  constexpr Barcode& setVertexPrimary(PrimaryVertexId id) {
+    vertexPrimaryID = id;
     return *this;
   }
   /// Set the secondary vertex identifier.
-  constexpr Barcode& setVertexSecondary(Value id) {
-    set(1, id);
+  [[deprecated("Use withVertexSecondary() instead")]]
+  constexpr Barcode& setVertexSecondary(SecondaryVertexId id) {
+    vertexSecondaryID = id;
     return *this;
   }
   /// Set the parent particle identifier.
-  constexpr Barcode& setParticle(Value id) {
-    set(2, id);
+  [[deprecated("Use withParticle() instead")]]
+  constexpr Barcode& setParticle(ParticleId id) {
+    particleID = id;
     return *this;
   }
   /// Set the particle identifier.
-  constexpr Barcode& setGeneration(Value id) {
-    set(3, id);
+  [[deprecated("Use withGeneration() instead")]]
+  constexpr Barcode& setGeneration(GenerationId id) {
+    generationID = id;
     return *this;
   }
   /// Set the process identifier.
-  constexpr Barcode& setSubParticle(Value id) {
-    set(4, id);
+  [[deprecated("Use withSubParticle() instead")]]
+  constexpr Barcode& setSubParticle(SubParticleId id) {
+    subParticleID = id;
     return *this;
+  }
+
+  /// Create a new barcode with a different primary vertex identifier.
+  [[nodiscard]]
+  constexpr Barcode withVertexPrimary(PrimaryVertexId id) const {
+    return Barcode(id, vertexSecondary(), particle(), generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different secondary vertex identifier.
+  [[nodiscard]]
+  constexpr Barcode withVertexSecondary(SecondaryVertexId id) const {
+    return Barcode(vertexPrimary(), id, particle(), generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different particle identifier.
+  [[nodiscard]]
+  constexpr Barcode withParticle(ParticleId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), id, generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different generation identifier.
+  [[nodiscard]]
+  constexpr Barcode withGeneration(GenerationId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(), id,
+                   subParticle());
+  }
+  /// Create a new barcode with a different sub-particle identifier.
+  [[nodiscard]]
+  constexpr Barcode withSubParticle(SubParticleId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(), generation(),
+                   id);
   }
 
   /// Construct a new barcode representing a descendant particle.
   ///
   /// @param sub sub-particle index of the new barcode.
-  Barcode makeDescendant(Value sub = 0u) const {
-    return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
+  Barcode makeDescendant(SubParticleId sub = 0u) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(),
+                   generation() + 1, sub);
   }
 
   /// Reduce the barcode to the vertex identifier.
@@ -154,18 +255,45 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
     // The vertex is identified by primary vertex, secondary vertex, and
     // generation. The other components are set to 0 so two particle originating
     // from the same vertex will have the same vertex ID.
-    return Barcode()
-        .setVertexPrimary(vertexPrimary())
-        .setVertexSecondary(vertexSecondary())
-        .setGeneration(generation());
+    return Barcode(vertexPrimary(), vertexSecondary(), generation());
   }
 
+  /// Reduce the barcode to the particle identifier.
+  constexpr Barcode withoutSubparticle() const {
+    // Provide a pseudo-barcode that contains all fields but not the
+    // subparticle counter. This can be used as key in a map to store the
+    // subparticle information
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(),
+                   generation());
+  }
+
+  /// Print the barcode
   friend inline std::ostream& operator<<(std::ostream& os, Barcode barcode) {
-    os << "vp=" << barcode.vertexPrimary()
-       << "|vs=" << barcode.vertexSecondary() << "|p=" << barcode.particle()
-       << "|g=" << barcode.generation() << "|sp=" << barcode.subParticle();
+    // extra "+" to ensure printing as a number and not as a character
+    os << "vp=" << +barcode.vertexPrimary()
+       << "|vs=" << +barcode.vertexSecondary() << "|p=" << +barcode.particle()
+       << "|g=" << +barcode.generation() << "|sp=" << +barcode.subParticle();
     return os;
   }
+
+  /// Get hash of the barcode
+  std::size_t hash() const {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, vertexPrimary());
+    boost::hash_combine(seed, vertexSecondary());
+    boost::hash_combine(seed, particle());
+    boost::hash_combine(seed, generation());
+    boost::hash_combine(seed, subParticle());
+
+    return seed;
+  }
+
+ private:
+  PrimaryVertexId vertexPrimaryID;
+  SecondaryVertexId vertexSecondaryID;
+  ParticleId particleID;
+  GenerationId generationID;
+  SubParticleId subParticleID;
 };
 
 }  // namespace ActsFatras
@@ -175,7 +303,7 @@ namespace std {
 template <>
 struct hash<ActsFatras::Barcode> {
   auto operator()(ActsFatras::Barcode barcode) const noexcept {
-    return std::hash<ActsFatras::Barcode::Value>()(barcode.value());
+    return barcode.hash();
   }
 };
 }  // namespace std

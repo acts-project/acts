@@ -47,7 +47,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
 
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
-  m_outputTree->Branch("particle_id", &m_particleId);
+  m_outputTree->Branch("particle_hash", &m_particleHash);
   m_outputTree->Branch("particle_type", &m_particleType);
   m_outputTree->Branch("process", &m_process);
   m_outputTree->Branch("vx", &m_vx);
@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
-    m_particleId.push_back(particle.particleId().value());
+    m_particleHash.push_back(particle.particleId().hash());
     m_particleType.push_back(particle.pdg());
     m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
@@ -154,7 +154,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   m_outputTree->Fill();
 
-  m_particleId.clear();
+  m_particleHash.clear();
   m_particleType.clear();
   m_process.clear();
   m_vx.clear();
