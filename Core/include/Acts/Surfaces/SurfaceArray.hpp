@@ -134,46 +134,78 @@ class SurfaceArray {
     /// @param surfaces Input surface pointers
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
-      // surface to bin matching
-      for (const Surface* srf : surfaces) {
-        const Vector3 pos = srf->referencePosition(gctx, AxisDirection::AxisR);
+      /// map surface center to grid
+      const auto surfaceToBinMapping = [&](const Surface& surface) {
+        const Vector3 pos =
+            surface.referencePosition(gctx, AxisDirection::AxisR);
         const Vector3 normal = m_representative->normal(gctx, pos);
         const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
-        if (globalBin == 0) {
-          continue;
+        if (globalBin != 0) {
+          m_grid.at(globalBin).push_back(&surface);
         }
-        m_grid.at(globalBin).push_back(srf);
-      }
+        return globalBin;
+      };
 
-      // bin to surface matching
-      for (std::size_t i = 0; i < m_grid.size(); i++) {
-        const std::array<std::size_t, 2> j = m_grid.localBinsFromGlobalBin(i);
-        const std::array<double, 2> gridLocal = m_grid.binCenter(j);
-        const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
-        const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
-        const Vector3 global =
-            m_representative->localToGlobal(gctx, surfaceLocal, normal);
+      /// flood fill neighboring bins given a starting bin
+      const auto binToSurfaceMapping = [&](const Surface& surface,
+                                           std::size_t startBin) {
+        const std::array<std::size_t, 2> startIndices =
+            m_grid.localBinsFromGlobalBin(startBin);
+        const auto startNeighborIndices =
+            m_grid.neighborHoodIndices(startIndices, 1u);
 
-        for (const Surface* srf : surfaces) {
+        std::set<std::size_t> visited({startBin});
+        std::set<std::size_t> queue(startNeighborIndices.begin(),
+                                    startNeighborIndices.end());
+
+        while (!queue.empty()) {
+          const std::size_t current = *queue.begin();
+          const std::array<std::size_t, 2> currentIndices =
+              m_grid.localBinsFromGlobalBin(current);
+          queue.erase(queue.begin());
+          visited.insert(current);
+
+          const std::array<double, 2> gridLocal =
+              m_grid.binCenter(currentIndices);
+          const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+          const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
+          const Vector3 global =
+              m_representative->localToGlobal(gctx, surfaceLocal, normal);
+
           const SurfaceIntersection intersection =
-              srf->intersect(gctx, global, normal, BoundaryTolerance::None())
+              surface.intersect(gctx, global, normal, BoundaryTolerance::None())
                   .closest();
           if (!intersection.isValid() ||
               std::abs(intersection.pathLength()) > m_tolerance) {
             continue;
           }
-          m_grid.at(i).push_back(srf);
+          m_grid.at(current).push_back(&surface);
+
+          for (std::size_t neighbor :
+               m_grid.neighborHoodIndices(currentIndices, 1u)) {
+            if (visited.count(neighbor) == 0) {
+              queue.insert(neighbor);
+            }
+          }
         }
+      };
+
+      for (const Surface* surface : surfaces) {
+        const std::size_t globalBin = surfaceToBinMapping(*surface);
+        if (globalBin == 0) {
+          continue;
+        }
+
+        binToSurfaceMapping(*surface, globalBin);
       }
 
-      deduplicateBinContents();
       populateNeighborCache();
     }
 
     const SurfaceVector& lookup(const Vector3& position,
                                 const Vector3& direction) const override {
-      return m_grid.atPosition(findGlobalBin(
-          position, direction, std::numeric_limits<double>::infinity()));
+      return m_grid.at(findGlobalBin(position, direction,
+                                     std::numeric_limits<double>::infinity()));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -255,16 +287,6 @@ class SurfaceArray {
     }
 
    private:
-    void deduplicateBinContents() {
-      for (std::size_t i = 0; i < m_grid.size(); i++) {
-        auto& binContent = m_grid.at(i);
-        std::ranges::sort(binContent);
-        auto last = std::ranges::unique(binContent);
-        binContent.erase(last.begin(), last.end());
-        binContent.shrink_to_fit();
-      }
-    }
-
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
       for (std::size_t i = 0; i < m_grid.size(); i++) {
