@@ -227,10 +227,11 @@ struct MeasurementData {
   float local0 = 0, local1 = 0, phi = 0, theta = 0, time = 0;
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
+  float global_x = 0, global_y = 0, global_z = 0;
 
   DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, local_key,
                  local0, local1, phi, theta, time, var_local0, var_local1,
-                 var_phi, var_theta, var_time);
+                 var_phi, var_theta, var_time, global_x, global_y, global_z);
 };
 
 struct CellData {
@@ -372,12 +373,12 @@ struct SurfaceGridData {
 };
 
 struct SpacepointData {
-  std::uint64_t measurement_id;
-  std::uint64_t geometry_id;
-  float x, y, z;
+  std::uint64_t measurement_id_1, measurement_id_2;
+  std::uint64_t geometry_id_1, geometry_id_2;
+  float x, y, z, t;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
-                 var_z);
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id_1, measurement_id_2,
+                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
 
 struct TrackParameterData {
