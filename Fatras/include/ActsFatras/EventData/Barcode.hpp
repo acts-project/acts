@@ -181,29 +181,65 @@ class Barcode {
   }
 
   /// Set the primary vertex identifier.
+  [[deprecated("Use withVertexPrimary() instead")]]
   constexpr Barcode& setVertexPrimary(PrimaryVertexId id) {
     vertexPrimaryID = id;
     return *this;
   }
   /// Set the secondary vertex identifier.
+  [[deprecated("Use withVertexSecondary() instead")]]
   constexpr Barcode& setVertexSecondary(SecondaryVertexId id) {
     vertexSecondaryID = id;
     return *this;
   }
   /// Set the parent particle identifier.
+  [[deprecated("Use withParticle() instead")]]
   constexpr Barcode& setParticle(ParticleId id) {
     particleID = id;
     return *this;
   }
   /// Set the particle identifier.
+  [[deprecated("Use withGeneration() instead")]]
   constexpr Barcode& setGeneration(GenerationId id) {
     generationID = id;
     return *this;
   }
   /// Set the process identifier.
+  [[deprecated("Use withSubParticle() instead")]]
   constexpr Barcode& setSubParticle(SubParticleId id) {
     subParticleID = id;
     return *this;
+  }
+
+  /// Create a new barcode with a different primary vertex identifier.
+  [[nodiscard]]
+  constexpr Barcode withVertexPrimary(PrimaryVertexId id) const {
+    return Barcode(id, vertexSecondary(), particle(), generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different secondary vertex identifier.
+  [[nodiscard]]
+  constexpr Barcode withVertexSecondary(SecondaryVertexId id) const {
+    return Barcode(vertexPrimary(), id, particle(), generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different particle identifier.
+  [[nodiscard]]
+  constexpr Barcode withParticle(ParticleId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), id, generation(),
+                   subParticle());
+  }
+  /// Create a new barcode with a different generation identifier.
+  [[nodiscard]]
+  constexpr Barcode withGeneration(GenerationId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(), id,
+                   subParticle());
+  }
+  /// Create a new barcode with a different sub-particle identifier.
+  [[nodiscard]]
+  constexpr Barcode withSubParticle(SubParticleId id) const {
+    return Barcode(vertexPrimary(), vertexSecondary(), particle(), generation(),
+                   id);
   }
 
   /// Construct a new barcode representing a descendant particle.
@@ -240,7 +276,17 @@ class Barcode {
     return os;
   }
 
-  std::uint32_t hash() const { return boost::hash_value(asVector()); }
+  /// Get hash of the barcode
+  std::size_t hash() const {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, vertexPrimary());
+    boost::hash_combine(seed, vertexSecondary());
+    boost::hash_combine(seed, particle());
+    boost::hash_combine(seed, generation());
+    boost::hash_combine(seed, subParticle());
+
+    return seed;
+  }
 
  private:
   PrimaryVertexId vertexPrimaryID;

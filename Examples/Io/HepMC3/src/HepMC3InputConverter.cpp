@@ -140,7 +140,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         SimVertex secondaryVertex;
         nSecondaryVertices += 1;
         secondaryVertex.id =
-            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+            SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
         secondaryVertex.position4 = convertPosition(endVertex.position());
 
         handleVertex(endVertex, secondaryVertex, vertices, particles,
@@ -159,10 +159,11 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
       }
       // This particle is a final state particle
       nParticles += 1;
-      SimBarcode particleId{vertex.vertexId().vertexPrimary(),
-                            vertex.vertexId().vertexSecondary(),
-                            static_cast<SimBarcode::ParticleId>(nParticles), 0,
-                            0};
+      SimBarcode particleId =
+          SimBarcode()
+              .withVertexPrimary(vertex.vertexId().vertexPrimary())
+              .withVertexSecondary(vertex.vertexId().vertexSecondary())
+              .withParticle(nParticles);
 
       Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = 0.0;
@@ -314,9 +315,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
 
       nPrimaryVertices += 1;
       SimVertex primaryVertex;
-      primaryVertex.id = SimVertexBarcode{
-          static_cast<SimVertexBarcode::PrimaryVertexId>(nPrimaryVertices), 0,
-          0};
+      primaryVertex.id = SimVertexBarcode().withVertexPrimary(nPrimaryVertices);
       primaryVertex.position4 = convertPosition(cluster.at(0)->position());
 
       std::size_t nSecondaryVertices = 0;

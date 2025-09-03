@@ -87,7 +87,7 @@ struct Fixture {
       : rng(rngSeed),
         gid(Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(
             3)),
-        pid(ActsFatras::Barcode(12, 0, 23, 0, 0)),
+        pid(ActsFatras::Barcode().withVertexPrimary(12).withParticle(23)),
         surface(std::move(surf)) {
     using namespace Acts::UnitLiterals;
     using Acts::VectorHelpers::makeVector4;

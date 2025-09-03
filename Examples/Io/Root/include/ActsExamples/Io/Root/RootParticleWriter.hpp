@@ -79,7 +79,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   /// Event identifier.
   std::uint32_t m_eventId = 0;
   /// Event-unique particle identifier, i.e hash of the barcode.
-  std::vector<std::uint32_t> m_particleHash;
+  std::vector<std::size_t> m_particleHash;
   /// Particle type a.k.a. PDG particle number
   std::vector<std::int32_t> m_particleType;
   /// Production process type, i.e. what generated the particle.

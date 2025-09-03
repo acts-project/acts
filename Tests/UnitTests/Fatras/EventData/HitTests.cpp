@@ -19,7 +19,7 @@ using namespace ActsFatras;
 
 namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
-const auto pid = Barcode(12, 0, 23, 0, 0);
+const auto pid = Barcode().withVertexPrimary(12).withParticle(23);
 const auto gid =
     Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(3);
 }  // namespace

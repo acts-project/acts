@@ -164,7 +164,7 @@ std::optional<SimBarcode> ParticleTrackingAction::makeParticleId(
 
   auto pid = eventStore().trackIdMapping.at(parentId).makeDescendant();
   auto key = pid.withoutSubparticle();
-  pid.setSubParticle(++eventStore().subparticleMap[key]);
+  pid = pid.withSubParticle(++eventStore().subparticleMap[key]);
 
   return pid;
 }

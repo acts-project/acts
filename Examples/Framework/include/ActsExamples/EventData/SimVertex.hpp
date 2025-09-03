@@ -27,6 +27,7 @@ class SimVertexBarcode {
   explicit constexpr SimVertexBarcode(SimBarcode barcode)
       : m_id(barcode.vertexId()) {}
 
+  constexpr SimVertexBarcode() = default;
   constexpr SimVertexBarcode(PrimaryVertexId pv, SecondaryVertexId sv,
                              GenerationId g)
       : m_id(pv, sv, g) {}
@@ -46,16 +47,38 @@ class SimVertexBarcode {
   constexpr GenerationId generation() const { return m_id.generation(); }
 
   /// Set the primary vertex identifier.
-  constexpr SimVertexBarcode& setVertexPrimary(PrimaryVertexId id) {
-    return m_id.setVertexPrimary(id), *this;
+  [[deprecated("Use withVertexPrimary() instead")]]
+  constexpr SimVertexBarcode setVertexPrimary(PrimaryVertexId id) {
+    m_id = m_id.withVertexPrimary(id);
+    return *this;
   }
   /// Set the secondary vertex identifier.
-  constexpr SimVertexBarcode& setVertexSecondary(SecondaryVertexId id) {
-    return m_id.setVertexSecondary(id), *this;
+  [[deprecated("Use withVertexSecondary() instead")]]
+  constexpr SimVertexBarcode setVertexSecondary(SecondaryVertexId id) {
+    m_id = m_id.withVertexSecondary(id);
+    return *this;
   }
   /// Set the particle identifier.
-  constexpr SimVertexBarcode& setGeneration(GenerationId id) {
-    return m_id.setGeneration(id), *this;
+  [[deprecated("Use withGeneration() instead")]]
+  constexpr SimVertexBarcode setGeneration(GenerationId id) {
+    m_id = m_id.withGeneration(id);
+    return *this;
+  }
+
+  /// Create a new barcode with a different primary vertex identifier.
+  [[nodiscard]]
+  constexpr SimVertexBarcode withVertexPrimary(PrimaryVertexId id) const {
+    return SimVertexBarcode(m_id.withVertexPrimary(id));
+  }
+  /// Create a new barcode with a different secondary vertex identifier.
+  [[nodiscard]]
+  constexpr SimVertexBarcode withVertexSecondary(SecondaryVertexId id) const {
+    return SimVertexBarcode(m_id.withVertexSecondary(id));
+  }
+  /// Create a new barcode with a different generation identifier.
+  [[nodiscard]]
+  constexpr SimVertexBarcode withGeneration(GenerationId id) const {
+    return SimVertexBarcode(m_id.withGeneration(id));
   }
 
   Acts::HashedString hash() const { return m_id.hash(); }

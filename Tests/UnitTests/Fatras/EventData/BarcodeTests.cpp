@@ -79,15 +79,15 @@ BOOST_AUTO_TEST_CASE(BarcodeWithoutSubparticle) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
-  auto p1 = Barcode::Invalid();
-  p1.setVertexPrimary(1u);
-  p1.setVertexSecondary(2u);
-  p1.setParticle(3u);
-  p1.setGeneration(4u);
-  p1.setSubParticle(5u);
+  auto p1 = Barcode()
+                .withVertexPrimary(1u)
+                .withVertexSecondary(2u)
+                .withParticle(3u)
+                .withGeneration(4u)
+                .withSubParticle(5u);
   auto p2 = Barcode(1u, 2u, 3u, 4u, 5u);
-  auto p3 = Barcode(1u, 2u, 3u, 4u).setSubParticle(5u);
-  auto p4 = Barcode(1u, 2u, 4u).setParticle(3u).setSubParticle(5u);
+  auto p3 = Barcode(1u, 2u, 3u, 4u).withSubParticle(5u);
+  auto p4 = Barcode(1u, 2u, 4u).withParticle(3u).withSubParticle(5u);
   std::vector<std::uint32_t> vecValues = {1u, 2u, 3u, 4u, 5u};
   auto p5 = Barcode(vecValues);
   std::array<std::uint32_t, 5> arrValues = {1u, 2u, 3u, 4u, 5u};
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
   BOOST_CHECK_THROW(r1.setData(badValues), std::invalid_argument);
 
   std::array<std::uint32_t, 6> badValues2 = {11u, 12u, 13u, 14u, 15u, 16u};
-  auto r2 = Barcode::Invalid();
+  Barcode r2;
   BOOST_CHECK_THROW(r2.setData(badValues2), std::invalid_argument);
 }
 
@@ -143,10 +143,10 @@ BOOST_AUTO_TEST_CASE(BarcodeLimits) {
 
 BOOST_AUTO_TEST_CASE(BarcodeHash) {
   auto p1 = Barcode(1u, 2u, 3u, 4u, 5u);
-  BOOST_CHECK_EQUAL(p1.hash(), 3676852789u);
+  BOOST_CHECK_EQUAL(p1.hash(), 6445027996773929525u);
 
   auto p2 = Barcode(11u, 22u, 33u, 44u, 55u);
-  BOOST_CHECK_EQUAL(p2.hash(), 726136415u);
+  BOOST_CHECK_EQUAL(p2.hash(), 13009826896635491935u);
 
   auto p3 = Barcode(1u, 3u, 2u, 4u, 5u);
   BOOST_CHECK_NE(p1.hash(), p3.hash());
