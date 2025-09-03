@@ -32,17 +32,6 @@ using namespace Acts;
 using namespace ActsPython;
 using namespace ActsExamples;
 
-template <typename A, typename B = IAlgorithm>
-auto declareAlgorithm(py::module_& m, const char* name) {
-  using Config = typename A::Config;
-  auto alg = py::class_<A, B, std::shared_ptr<A>>(m, name)
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly("config", &A::config);
-  auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-  return std::tuple{alg, c};
-}
-
 PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   {
     auto [alg, config] = declareAlgorithm<EDM4hepSimInputConverter>(
