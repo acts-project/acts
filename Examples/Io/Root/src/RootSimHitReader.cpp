@@ -40,9 +40,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   // Set the branches
-  auto setBranches = [&](const auto& keys, auto& columns) {
-    using MappedType =
-        typename std::remove_reference_t<decltype(columns)>::mapped_type;
+  auto setBranches = [&]<class T>(const auto& keys, T& columns) {
+    using MappedType = typename std::remove_reference_t<T>::mapped_type;
     for (auto key : keys) {
       MappedType a{};  // 0 or nullptr
       columns.emplace(key, a);
