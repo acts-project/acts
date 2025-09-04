@@ -374,50 +374,45 @@ class SurfaceArrayCreator {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
+    // this becomes completely unreadable otherwise
+    // clang-format off
     if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(
+        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
+
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(
+        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(
+        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
+
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(
+        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
+    // clang-format on
 
     return ptr;
   }
