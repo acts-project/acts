@@ -56,7 +56,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
   const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
-  auto surface = Surface::makeShared<CylinderSurface>(transform, R, halfZ);
+  auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
@@ -103,7 +103,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 protoLayer, fullTransform);
   }
 
-  auto surface = Surface::makeShared<CylinderSurface>(transform, R, halfZ);
+  auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
@@ -151,7 +151,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
-  auto surface = Surface::makeShared<DiscSurface>(transform, Rmin, Rmax);
+  auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
@@ -188,7 +188,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisR;
 
   Transform3 fullTransform = transform;
-  Transform3 inverseTransform = fullTransform.inverse();
+  Transform3 inverseTransform = transform.inverse();
 
   if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisR,
@@ -306,11 +306,11 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
                                 protoLayer, fullTransform, bins2);
       auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisY),
-                                 protoLayer.min(AxisDirection::AxisZ)),
-                         Vector2(protoLayer.max(AxisDirection::AxisY),
-                                 protoLayer.max(AxisDirection::AxisZ))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisDirection::AxisY),
+                                     protoLayer.min(AxisDirection::AxisZ)),
+                             Vector2(protoLayer.max(AxisDirection::AxisY),
+                                     protoLayer.max(AxisDirection::AxisZ))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
           std::move(surface), layerTolerance, pAxis1, pAxis2);
@@ -324,11 +324,11 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisZ,
                                 protoLayer, fullTransform, bins2);
       auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisX),
-                                 protoLayer.min(AxisDirection::AxisY)),
-                         Vector2(protoLayer.max(AxisDirection::AxisX),
-                                 protoLayer.max(AxisDirection::AxisY))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisDirection::AxisX),
+                                     protoLayer.min(AxisDirection::AxisY)),
+                             Vector2(protoLayer.max(AxisDirection::AxisX),
+                                     protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
           std::move(surface), layerTolerance, pAxis1, pAxis2);
@@ -342,11 +342,11 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
           createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisY,
                                 protoLayer, fullTransform, bins2);
       auto surface = Surface::makeShared<PlaneSurface>(
-          transform, std::make_shared<RectangleBounds>(
-                         Vector2(protoLayer.min(AxisDirection::AxisX),
-                                 protoLayer.min(AxisDirection::AxisY)),
-                         Vector2(protoLayer.max(AxisDirection::AxisX),
-                                 protoLayer.max(AxisDirection::AxisY))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisDirection::AxisX),
+                                     protoLayer.min(AxisDirection::AxisY)),
+                             Vector2(protoLayer.max(AxisDirection::AxisX),
+                                     protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
           std::move(surface), layerTolerance, pAxis1, pAxis2);
@@ -433,7 +433,7 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
 
     // create rotation, so that maxPhi is +pi
     AxisScalar angle = -(std::numbers::pi + maxPhi);
-    transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
+    transform = transform * AngleAxis3(angle, Vector3::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as aDirs,
     // but
