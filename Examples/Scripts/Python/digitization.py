@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Optional
+import argparse
 
 import acts
 import acts.examples
@@ -80,15 +81,59 @@ def runDigitization(
 
 
 if "__main__" == __name__:
-    detector = acts.examples.GenericDetector()
+
+    # Parse the command line arguments
+    p = argparse.ArgumentParser(description="Digitization")
+    p.add_argument(
+        "--events",
+        "-n",
+        type=int,
+        help="Number of events",
+        default=1000,
+    )
+    p.add_argument(
+        "--type",
+        "-t",
+        type=str,
+        help="Type of digitization",
+        default="smearing",
+        choices=["smearing", "geometric"],
+    )
+    p.add_argument(
+        "--detector",
+        "-d",
+        type=str,
+        help="Output file",
+        default="generic",
+        choices=["generic", "odd"],
+    )
+    args = p.parse_args()
+
+    if args.detector == "generic":
+        detector = acts.examples.GenericDetector()
+    else:
+        from acts.examples.odd import getOpenDataDetector
+
+        detector = getOpenDataDetector()
+
     trackingGeometry = detector.trackingGeometry()
 
     digiConfigFile = (
         Path(__file__).resolve().parent.parent.parent.parent
-        / "Examples/Configs/generic-digi-smearing-config.json"
+        / "Examples/Configs"
+        / f"{args.detector}-digi-{args.type}-config.json"
     )
     assert digiConfigFile.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    s = acts.examples.Sequencer(
+        events=args.events, numThreads=-1, logLevel=acts.logging.INFO
+    )
 
-    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+    runDigitization(
+        trackingGeometry,
+        field,
+        outputDir=Path.cwd(),
+        digiConfigFile=digiConfigFile,
+        s=s,
+    ).run()

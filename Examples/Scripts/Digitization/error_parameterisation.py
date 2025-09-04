@@ -348,21 +348,38 @@ if "__main__" == __name__:
     p.add_argument("--json-in")
     p.add_argument("--json-out")
     p.add_argument("--plot-pulls", action="store_true")
+    p.add_argument(
+        "--volumes-ids",
+        nargs="+",
+        type=int,
+        default=[16, 17, 18, 23, 24, 25, 28, 29, 30],
+    )
+    p.add_argument(
+        "--volume-names",
+        nargs="+",
+        type=str,
+        default=[
+            "Pixel NEC",
+            "Pixel Barrel",
+            "Pixel PEC",
+            "SStrips NEC",
+            "SStrips Barrel",
+            "SStrips PEC",
+            "LStrips NEC",
+            "LStrips Barrel",
+            "LStrips PEC",
+        ],
+    )
     args = p.parse_args()
 
     # Open the root file
     rfile = uproot.open(args.root)
-    volumes = [
-        (16, "Pixel NEC"),
-        (17, "Pixel Barrel"),
-        (18, "Pixel PEC"),
-        (23, "SStrips NEC"),
-        (24, "SStrips Barrel"),
-        (25, "SStrips PEC"),
-        (28, "LStrips NEC"),
-        (29, "LStrips Barrel"),
-        (30, "LStrips PEC"),
-    ]
+
+    # For the current ODD this would be
+    if len(args.volumes_ids) != len(args.volume_names):
+        raise ValueError("Volume IDs and names must have the same length")
+
+    volumes = list(zip(args.volumes_ids, args.volume_names))
 
     # Open the json to be updated
     digi_cfg = None
