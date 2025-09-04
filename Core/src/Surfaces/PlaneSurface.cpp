@@ -183,8 +183,7 @@ MultiIntersection3D PlaneSurface::intersect(
     }
   }
   return MultiIntersection3D(Intersection3D(intersection.position(),
-                                            intersection.pathLength(), status),
-                             Intersection3D::Invalid());
+                                            intersection.pathLength(), status));
 }
 
 ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(

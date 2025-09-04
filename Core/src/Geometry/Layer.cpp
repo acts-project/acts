@@ -201,10 +201,9 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
 
     // if possible use a position on the representative surface for the surface
     // array lookup
-    if (SurfaceIntersection intersection =
-            surfaceRepresentation()
-                .intersect(gctx, position, direction)
-                .closest();
+    if (Intersection3D intersection = surfaceRepresentation()
+                                          .intersect(gctx, position, direction)
+                                          .closest();
         intersection.isValid()) {
       lookupPosition = intersection.position();
     }

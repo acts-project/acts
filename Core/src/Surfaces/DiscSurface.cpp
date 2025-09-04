@@ -279,13 +279,10 @@ MultiIntersection3D DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   IntersectionStatus status = intersection.status();
   if (status == IntersectionStatus::unreachable) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            *this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid());
   }
   if (m_bounds == nullptr || boundaryTolerance.isInfinite()) {
-    return {
-        {intersection, Intersection3D::invalid()}, *this, boundaryTolerance};
+    return MultiIntersection3D(intersection);
   }
   // Built-in local to global for speed reasons
   const auto& tMatrix = gctxTransform.matrix();
@@ -309,8 +306,7 @@ MultiIntersection3D DiscSurface::intersect(
     }
   }
   return MultiIntersection3D(Intersection3D(intersection.position(),
-                                            intersection.pathLength(), status),
-                             Intersection3D::Invalid());
+                                            intersection.pathLength(), status));
 }
 
 ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
