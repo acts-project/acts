@@ -29,19 +29,6 @@ namespace {
 /// A mock process that leaves the particle as-is and creates four daughter
 /// particles with momenta 1,2,3,4 GeV.
 struct MockMakeChildren {
-//  template <typename generator_t>
-//  std::array<ActsFatras::Particle, 4> operator()(
-//      generator_t & /*generator*/, const Acts::MaterialSlab & /*slab*/,
-//      ActsFatras::Particle & /*particle*/) const {
-//    // create daughter particles
-//    return {
-//        Particle().setAbsoluteMomentum(1_GeV),
-//        Particle().setAbsoluteMomentum(2_GeV),
-//        Particle().setAbsoluteMomentum(3_GeV),
-//        Particle().setAbsoluteMomentum(4_GeV),
-//    };
-//  }
-
   template <typename generator_t>
   std::pair<double, double> generatePathLimits(generator_t&, const Particle&) const
   {
