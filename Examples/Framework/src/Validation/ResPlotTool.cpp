@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
@@ -153,16 +154,16 @@ void ResPlotTool::fill(
   using Acts::VectorHelpers::theta;
 
   // get the fitted parameter (at perigee surface) and its error
-  auto trackParameter = fittedParamters.parameters();
+  Acts::BoundVector trackParameter = fittedParamters.parameters();
 
   // get the perigee surface
-  const auto& pSurface = fittedParamters.referenceSurface();
+  const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
   // get the truth position and momentum
   ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
-  auto intersection =
+  Acts::Intersection3D intersection =
       pSurface
           .intersect(gctx, truthParticle.position(), truthParticle.direction())
           .closest();

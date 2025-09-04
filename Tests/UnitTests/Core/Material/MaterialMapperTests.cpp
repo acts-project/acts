@@ -18,12 +18,9 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <limits>
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts::Test {
 
@@ -55,20 +52,20 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
     // Intersect the surfaces
     for (auto& surface : surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                   BoundaryTolerance::None());
+      MultiIntersection3D multiIntersection = surface->intersect(
+          gctx, position, direction, BoundaryTolerance::None());
       // One solution, take it
-      if (sMultiIntersection.size() == 1u &&
-          sMultiIntersection[0u].status() >=
+      if (multiIntersection.size() == 1u &&
+          multiIntersection.at(0).status() >=
               Acts::IntersectionStatus::reachable &&
-          sMultiIntersection[0u].pathLength() >= 0.0) {
+          multiIntersection.at(0).pathLength() >= 0.0) {
         surfaceAssignments.push_back(
-            {surface, sMultiIntersection[0u].position(), direction});
+            {surface, multiIntersection.at(0).position(), direction});
         continue;
       }
-      if (sMultiIntersection.size() > 1u) {
+      if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
-        auto closestForward = sMultiIntersection.closestForward();
+        Intersection3D closestForward = multiIntersection.closestForward();
         if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(

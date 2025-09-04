@@ -175,8 +175,8 @@ class ConeSurface : public RegularSurface {
   ///
   /// If possible returns both solutions for the cylinder
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D object (contains intersection & surface)
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =

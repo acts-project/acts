@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -20,6 +19,7 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -178,7 +178,7 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  auto intersect = [&](const TrackStateProxy &state) -> SurfaceIntersection {
+  auto intersect = [&](const TrackStateProxy &state) -> Intersection3D {
     assert(state.hasSmoothed() || state.hasFiltered());
 
     FreeVector freeVector;
@@ -205,7 +205,7 @@ findTrackStateForExtrapolation(
         return first.error();
       }
 
-      SurfaceIntersection intersection = intersect(*first);
+      Intersection3D intersection = intersect(*first);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
@@ -225,7 +225,7 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      SurfaceIntersection intersection = intersect(*last);
+      Intersection3D intersection = intersect(*last);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
@@ -251,8 +251,8 @@ findTrackStateForExtrapolation(
         return last.error();
       }
 
-      SurfaceIntersection intersectionFirst = intersect(*first);
-      SurfaceIntersection intersectionLast = intersect(*last);
+      Intersection3D intersectionFirst = intersect(*first);
+      Intersection3D intersectionLast = intersect(*last);
 
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
