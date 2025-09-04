@@ -8,6 +8,7 @@ import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import json
+import math
 import os
 
 from pathlib import Path
@@ -24,6 +25,8 @@ def run_error_parametriation(
     break_cluster_size=5,
     view_colors=["deepskyblue", "gold"],
     view_rms_range=5,
+    plot_pulls=False,
+    pull_view_colors=["steelblue", "goldenrod"],
 ):
     # Create a figure directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -73,9 +76,13 @@ def run_error_parametriation(
             local_values.append(1)
             logging.info(f" - local 1 coorindate found")
 
-        var_matrix = np.zeros((2, break_cluster_size))
+        # variance matrix
+        rms_matrix = np.zeros((2, break_cluster_size))
         var_entry = {"volume": v_id}
         var_data = []
+
+        # pull matrix
+        pull_matrix = np.zeros((2, break_cluster_size))
 
         # write html content
         plots = []
@@ -114,8 +121,15 @@ def run_error_parametriation(
                 # Plot the resolution
                 res = vol_sel["rec_loc" + str(l)] - vol_sel["true_loc" + str(l)]
                 rms = np.std(res)
-                var_matrix[l, c_size] = rms * rms
-                rms_local_data.append(float(rms * rms))
+                rms_matrix[l, c_size] = rms
+                rms_local_data.append(float(rms))
+                # Plot the pull distributions
+                rms_pull = 0
+                if plot_pulls:
+                    pull = res / vol_sel["var_loc" + str(l)].apply(np.sqrt)
+                    rms_pull = np.std(pull)
+                    pull_matrix[l, c_size] = rms_pull
+
                 c_size_flag = str(c_size)
                 # Peak into next selection
                 next_sel = vol[vol["clus_size_loc" + str(l)] == c_size + 1]
@@ -163,6 +177,35 @@ def run_error_parametriation(
                 plt.savefig(svg_path)
                 lplots.append(svg_path)
                 plt.clf()
+                if plot_pulls:
+                    plt.hist(
+                        pull,
+                        bins=100,
+                        range=(-view_rms_range, view_rms_range),
+                        histtype="step",
+                        fill=True,
+                        color=pull_view_colors[l],
+                    )
+                    plt.text(
+                        0.05,
+                        0.95,
+                        "rms = " + str(round(rms_pull, 3)),
+                        transform=plt.gca().transAxes,
+                        fontsize=14,
+                        verticalalignment="top",
+                    )
+                    plt.xlabel(
+                        "Pull - local " + str(l) + ", cluster size " + c_size_flag
+                    )
+                    # Save the figure
+                    svg_path = (
+                        output_fig_dir
+                        / f"{v_id_str}_pull_loc{l}_clus_size{c_size_flag}.svg"
+                    )
+                    plt.savefig(svg_path)
+                    lplots.append(svg_path)
+                    plt.clf()
+
                 if break_condition:
                     break
             # Add the rms data
@@ -190,15 +233,26 @@ def run_error_parametriation(
             with open(json_out, "w") as outfile:
                 json.dump(var_dict, outfile, indent=4)
 
-        # The matrix plot
+        # The matrix plot - variances
         fig, ax = plt.subplots(ncols=1, nrows=1)
-        pos = ax.matshow(var_matrix, cmap="Blues")
+        pos = ax.matshow(rms_matrix, cmap="Blues")
         plt.xlabel("Cluster size")
         plt.ylabel("Local coordinate")
         plt.title(v_name)
-        fig.colorbar(pos, ax=ax)
+        fig.colorbar(pos, ax=ax, label="RMS")
         svg_path = output_fig_dir / f"{v_id_str}_summary.svg"
         plt.savefig(svg_path)
+        plt.clf()
+
+        # The matrix plot - pulls
+        fig, ax = plt.subplots(ncols=1, nrows=1)
+        pos = ax.matshow(pull_matrix, cmap="Reds")
+        plt.xlabel("Cluster size")
+        plt.ylabel("Local coordinate")
+        plt.title(v_name)
+        fig.colorbar(pos, ax=ax, label="RMS (pull)")
+        pull_svg_path = output_fig_dir / f"{v_id_str}_pull_summary.svg"
+        plt.savefig(pull_svg_path)
         plt.clf()
 
         # Create the html content
@@ -211,7 +265,12 @@ def run_error_parametriation(
                 else:
                     plot_content += f"<div></div>"
 
-        volume_links += f'<div><a href="html/volume_{v_id}.html"><div>{svg_path.read_text()}</div></a></div>'
+        volume_links += (
+            f'<div><a href="html/volume_{v_id}.html"><div>{svg_path.read_text()}'
+        )
+        if plot_pulls:
+            volume_links += f"{pull_svg_path.read_text()}"
+        volume_links += "</div></a></div>"
 
         volume_file = output_html_dir / f"volume_{v_id}.html"
         previous_file = output_html_dir / f"volume_{prev_id[0]}.html"
@@ -288,6 +347,7 @@ if "__main__" == __name__:
     p.add_argument("--root")
     p.add_argument("--json-in")
     p.add_argument("--json-out")
+    p.add_argument("--plot-pulls", action="store_true")
     args = p.parse_args()
 
     # Open the root file
@@ -317,5 +377,10 @@ if "__main__" == __name__:
     logging.basicConfig(encoding="utf-8", level=logging.INFO)
 
     run_error_parametriation(
-        rfile, digi_cfg, volumes, Path.cwd() / "output", args.json_out
+        rfile,
+        digi_cfg,
+        volumes,
+        Path.cwd() / "output",
+        args.json_out,
+        plot_pulls=args.plot_pulls,
     )
