@@ -337,6 +337,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         if (thisSection.xSize() > opt.xMinBinSize &&
             thisSection.ySize() > opt.yMinBinSize) {
           // need 4 subdivisions
+          divisions.reserve(4);
           divisions.push_back(thisSection.topLeft());
           divisions.push_back(thisSection.topRight());
           divisions.push_back(thisSection.bottomLeft());
@@ -344,10 +345,12 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         } else if (thisSection.xSize() <= opt.xMinBinSize &&
                    thisSection.ySize() > opt.yMinBinSize) {
           // only split in y
+          divisions.reserve(2);
           divisions.push_back(thisSection.top());
           divisions.push_back(thisSection.bottom());
         } else {
           // only split in x
+          divisions.reserve(2);
           divisions.push_back(thisSection.left());
           divisions.push_back(thisSection.right());
         }
