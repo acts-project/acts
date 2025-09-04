@@ -44,6 +44,8 @@ def run_error_parametriation(
 
     var_entries = []
 
+    measurements = rfile["measurements"].arrays(library="pd")
+
     # loop over the volumes
     for iv, v_id_n in enumerate(volumes):
         v_id, v_name = v_id_n
@@ -55,8 +57,8 @@ def run_error_parametriation(
         next_id = volumes[iv + 1] if iv < len(volumes) - 1 else volumes[0]
 
         # Get the volume
-        v_id_str = "vol" + str(v_id)
-        vol = rfile[v_id_str].arrays(library="pd")
+        vol = measurements[measurements["volume_id"] == v_id]
+        v_id_str = "volume_" + str(v_id)
 
         # RMS matrix
         max_size_0 = 1
