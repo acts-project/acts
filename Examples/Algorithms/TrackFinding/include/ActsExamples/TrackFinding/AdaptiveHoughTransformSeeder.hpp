@@ -302,7 +302,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::erase_if(section.indices(), [lineFunctor, &measurements,
                                       &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
-      return !section.isLineInside(std::bind_front(lineFunctor, m));
+      return !section.isLineInside(std::bind_front(lineFunctor, std::cref(m)));
     });
   }
 

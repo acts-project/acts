@@ -488,14 +488,15 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
     const AccumulatorSection &section,
     const std::vector<PreprocessedMeasurement> &measurements,
     const LineParamFunctor &lineFunctor, unsigned threshold) const {
-  using namespace std::placeholders;
   unsigned inside = 0;
   for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
     const auto &m1 = measurements[section.indices()[idx1]];
-    std::function<float(float)> line1 = std::bind_front(lineFunctor, m1);
+    std::function<float(float)> line1 =
+        std::bind_front(lineFunctor, std::cref(m1));
     for (std::size_t idx2 = idx1 + 1; idx2 < section.count(); ++idx2) {
       const auto &m2 = measurements[section.indices()[idx2]];
-      std::function<float(float)> line2 = std::bind_front(lineFunctor, m2);
+      std::function<float(float)> line2 =
+          std::bind_front(lineFunctor, std::cref(m2));
       if (section.isCrossingInside(line1, line2)) {
         inside++;
         if (inside >= threshold) {
