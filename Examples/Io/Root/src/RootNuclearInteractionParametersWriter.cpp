@@ -259,7 +259,7 @@ inline void recordKinematicParametrisation(
   gDirectory->mkdir(std::to_string(multiplicity).c_str());
   gDirectory->cd(std::to_string(multiplicity).c_str());
 
-  // Parametrise the momentum und invarian mass distributions
+  // Parametrise the momentum and invariant mass distributions
   const auto momentumParameters = Parametrisation::buildMomentumParameters(
       eventFractionCollection, multiplicity, interactionType, cfg.momentumBins);
   std::vector<Parametrisation::CumulativeDistribution> distributionsMom =

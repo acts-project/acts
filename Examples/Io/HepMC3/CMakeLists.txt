@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesIoHepMC3
+acts_add_library(
+    ExamplesIoHepMC3
     SHARED
     src/HepMC3Reader.cpp
     src/HepMC3Writer.cpp
@@ -18,8 +18,8 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC ActsCore ActsExamplesFramework ${HEPMC3_LIBRARIES}
-    PRIVATE ActsFatras
+    PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
+    PRIVATE Acts::Fatras
 )
 
 # HepMC3 version < 3.3.0 had non-inline pseudo static members that give linker errors:
@@ -97,8 +97,3 @@ if(TARGET HepMC3::rootIO)
 else()
     message(CHECK_PASS "not found")
 endif()
-
-install(
-    TARGETS ActsExamplesIoHepMC3
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

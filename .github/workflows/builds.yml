@@ -140,7 +140,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -158,7 +158,7 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not exatrkx" -v
+          pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -181,7 +181,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -227,7 +227,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: physmon
           path: physmon

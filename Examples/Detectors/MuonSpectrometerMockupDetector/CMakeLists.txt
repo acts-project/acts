@@ -1,34 +1,35 @@
-add_library(
-    ActsExamplesMuonSpectrometerMockupDetector
-    SHARED
-    src/MockupSectorBuilder.cpp
-)
-target_include_directories(
-    ActsExamplesMuonSpectrometerMockupDetector
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
-target_link_libraries(
-    ActsExamplesMuonSpectrometerMockupDetector
-    PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesGeant4
-        ActsExamplesDetectorGeant4
-        ActsPluginGeant4
-)
+if(ACTS_BUILD_PLUGIN_GEOMODEL OR ACTS_BUILD_EXAMPLES_GEANT4)
+    acts_add_library(ExamplesMuonSpectrometerMockupDetector SHARED)
 
-if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsExamplesMuonSpectrometerMockupDetector
-        PUBLIC ActsPluginGeoModel GeoModelIO::GeoModelWrite
+        PUBLIC Acts::ExamplesFramework
     )
-    target_sources(
+    target_include_directories(
         ActsExamplesMuonSpectrometerMockupDetector
-        PUBLIC src/GeoMuonMockupExperiment.cpp
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     )
+    if(ACTS_BUILD_PLUGIN_GEOMODEL)
+        target_sources(
+            ActsExamplesMuonSpectrometerMockupDetector
+            PUBLIC src/GeoMuonMockupExperiment.cpp
+        )
+        target_link_libraries(
+            ActsExamplesMuonSpectrometerMockupDetector
+            PUBLIC ActsPluginGeoModel GeoModelIO::GeoModelWrite
+        )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_GEANT4)
+        target_sources(
+            ActsExamplesMuonSpectrometerMockupDetector
+            PUBLIC src/MockupSectorBuilder.cpp
+        )
+        target_link_libraries(
+            ActsExamplesMuonSpectrometerMockupDetector
+            PUBLIC
+                Acts::ExamplesGeant4
+                Acts::ExamplesDetectorGeant4
+                Acts::PluginGeant4
+        )
+    endif()
 endif()
-
-install(
-    TARGETS ActsExamplesMuonSpectrometerMockupDetector
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)

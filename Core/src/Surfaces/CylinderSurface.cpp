@@ -81,7 +81,7 @@ Vector3 CylinderSurface::referencePosition(const GeometryContext& gctx,
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
+    return localToGlobal(gctx, Vector2{phi * R, 0});
   }
   // give the center as default for all of these binning types
   // AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ,
@@ -245,6 +245,17 @@ MultiIntersection3D CylinderSurface::intersect(
     // No check to be done, return current status
     if (boundaryTolerance.isInfinite()) {
       return status;
+    }
+    if (boundaryTolerance.isNone() && bounds().coversFullAzimuth()) {
+      // Project out the current Z value via local z axis
+      // Built-in local to global for speed reasons
+      const auto& tMatrix = gctxTransform.matrix();
+      // Create the reference vector in local
+      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      double hZ = bounds().get(CylinderBounds::eHalfLengthZ) + tolerance;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : IntersectionStatus::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status

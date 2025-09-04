@@ -20,8 +20,7 @@ macro(add_unittest _name _source)
     target_link_libraries(
         ${_target}
         PRIVATE
-            ActsCore
-            ActsTestsCommonHelpers
+            Acts::TestsCommonHelpers
             Boost::unit_test_framework
             ${unittest_extra_libraries}
     )

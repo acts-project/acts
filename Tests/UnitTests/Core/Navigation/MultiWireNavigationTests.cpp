@@ -143,8 +143,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 
   // Build the volume
   MultiWireVolumeBuilder mwBuilder(mwCfg);
-  std::unique_ptr<Acts::TrackingVolume> volume =
-      mwBuilder.buildVolume(tContext);
+  std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
 
   // Check the volume
   // we do not except any children volumes
@@ -161,6 +160,9 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   Vector3 startPos = {0., -59., 0.};
   Vector3 startDir = {0., 1., 0.};
   NavigationArguments args{startPos, startDir};
+
+  auto navFactory = mwBuilder.createNavigationPolicyFactory();
+  volume->setNavigationPolicy(navFactory->build(tContext, *volume, *logger));
 
   volume->initializeNavigationCandidates(args, stream, *logger);
 

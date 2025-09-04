@@ -17,6 +17,7 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
+#include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -162,12 +163,12 @@ void addTrackFinding(Context& ctx) {
       rMinMiddle, rMaxMiddle, useVariableMiddleSPRange, rRangeMiddleSP,
       deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin, deltaZMax,
       interactionPointCut, collisionRegionMin, collisionRegionMax,
-      helixCutTolerance, sigmaScattering, radLengthPerSeed, maxPtScattering,
-      toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
-      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
-      seedWeightIncrement, numSeedIncrement, useDeltaRinsteadOfTopRadius,
-      seedConfirmation, centralSeedConfirmationRange,
-      forwardSeedConfirmationRange, useExtraCuts);
+      helixCutTolerance, sigmaScattering, radLengthPerSeed, toleranceParam,
+      deltaInvHelixDiameter, compatSeedWeight, impactWeightFactor,
+      zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
+      numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
+      forwardSeedConfirmationRange, maxSeedsPerSpMConf,
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
@@ -186,6 +187,13 @@ void addTrackFinding(Context& ctx) {
       inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
       houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AdaptiveHoughTransformSeeder, mex,
+      "AdaptiveHoughTransformSeeder", inputSpacePoints, outputSeeds,
+      outputProtoTracks, trackingGeometry, qOverPtMin, qOverPtMinBinSize,
+      phiMinBinSize, threshold, noiseThreshold, deduplicate, inverseA,
+      doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize, zMinBinSize);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments,

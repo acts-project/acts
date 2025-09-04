@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"

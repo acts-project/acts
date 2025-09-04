@@ -1,4 +1,6 @@
-set(library_sources
+acts_add_library(
+    PluginRoot
+    SHARED
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
     src/RootSpacePointIo.cpp
@@ -8,20 +10,19 @@ set(library_sources
     src/TGeoParser.cpp
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
+    ACTS_INCLUDE_FOLDER include/Acts
 )
 
 # Internal system of units change, This behavior affected versions up to v6-25-01
 # see: https://root.cern.ch/doc/v626/classTGeoMaterial.html
 if(${ROOT_VERSION} VERSION_GREATER "6.25.01")
-    list(APPEND library_sources src/TGeoMaterialConverter.cpp)
+    target_sources(ActsPluginRoot PRIVATE src/TGeoMaterialConverter.cpp)
 else()
     message(
         INFO
         " Skipping TGeoMaterialConverter due to ROOT version ${ROOT_VERSION}"
     )
 endif()
-
-add_library(ActsPluginRoot SHARED ${library_sources})
 
 target_include_directories(
     ActsPluginRoot
@@ -31,12 +32,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginRoot
-    PUBLIC ActsCore ROOT::Core ROOT::Tree ROOT::Geom
+    PUBLIC Acts::Core ROOT::Core ROOT::Tree ROOT::Geom
 )
-
-install(
-    TARGETS ActsPluginRoot
-    EXPORT ActsPluginRootTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
