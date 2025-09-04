@@ -15,7 +15,7 @@
 
 namespace ActsFatras {
 
-/// A continuous simulation process based on a physics model plus selectors.
+/// A point like simulation process based on a physics model plus selectors.
 ///
 /// @tparam physics_t is the physics model type
 /// @tparam input_particle_selector_t is the input particle selector
@@ -72,7 +72,9 @@ struct PointLikeProcess {
   template <class generator_t>
   bool run(generator_t& rng, Particle& particle, std::vector<Particle>& generatedParticles) const
   {
-    if(!selectInputParticle(particle)) return false;
+    if (!selectInputParticle(particle)) {
+      return false;
+    }
 
     std::vector<Particle> children;
     physics.run(rng, particle, children);
