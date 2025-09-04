@@ -88,7 +88,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   // correctly defined using the halflength
   Transform3 fullTransform = transform;
   if (fullTransform.isApprox(Transform3::Identity())) {
-    fullTransform = Translation3(0., 0., layerZ) * fullTransform;
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
 
@@ -165,7 +165,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   // create the layer transforms if not given
   Transform3 fullTransform = transform;
   if (fullTransform.isApprox(Transform3::Identity()) && bTypeZ == equidistant) {
-    fullTransform = Translation3(0., 0., layerZ) * fullTransform;
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
 
@@ -240,7 +240,7 @@ MutableLayerPtr LayerCreator::discLayer(
   // create the layer transforms if not given
   Transform3 fullTransform = transform;
   if (fullTransform.isApprox(Transform3::Identity())) {
-    fullTransform = Translation3(0., 0., layerZ) * fullTransform;
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
   }
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
@@ -309,7 +309,7 @@ MutableLayerPtr LayerCreator::discLayer(
   // create the layer transforms if not given
   Transform3 fullTransform = transform;
   if (fullTransform.isApprox(Transform3::Identity())) {
-    fullTransform = Translation3(0., 0., layerZ) * fullTransform;
+    fullTransform = Translation3(0, 0, layerZ) * fullTransform;
   }
 
   // create the surface array
