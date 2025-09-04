@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ApiTest) {
 
   ss << edge;
 
-  exp = R"(node1 -> node2 [style=dashed];
+  exp = R"("node1" -> "node2" [style=dashed];
 )";
 
   BOOST_CHECK_EQUAL(ss.str(), exp);

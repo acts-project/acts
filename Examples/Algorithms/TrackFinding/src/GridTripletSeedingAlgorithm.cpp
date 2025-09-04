@@ -247,7 +247,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletFinderConfig.minPt = m_cfg.minPt;
   tripletFinderConfig.sigmaScattering = m_cfg.sigmaScattering;
   tripletFinderConfig.radLengthPerSeed = m_cfg.radLengthPerSeed;
-  tripletFinderConfig.maxPtScattering = m_cfg.maxPtScattering;
   tripletFinderConfig.impactMax = m_cfg.impactMax;
   tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
