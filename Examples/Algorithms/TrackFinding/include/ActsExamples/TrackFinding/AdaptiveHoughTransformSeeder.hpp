@@ -307,10 +307,10 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   }
 
   template <typename M>
-  void exploreParametersSpace(std::deque<AccumulatorSection> &sectionsStack,
+  void exploreParametersSpace(std::vector<AccumulatorSection> &sectionsStack,
                               const std::vector<M> &measurements,
                               const ExplorationOptions<M> &opt,
-                              std::deque<AccumulatorSection> &results) const {
+                              std::vector<AccumulatorSection> &results) const {
     using Decision = ExplorationOptions<M>::Decision;
     while (!sectionsStack.empty()) {
       ACTS_VERBOSE("Stack size " << sectionsStack.size());
@@ -411,7 +411,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param stack - sections stack to fill
   /// @param measurements - measurements to fill the stack
   void fillStackPhiSplit(
-      std::deque<AccumulatorSection> &stack,
+      std::vector<AccumulatorSection> &stack,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -422,8 +422,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackQOverPtPhi(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -434,13 +434,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackZCotTheta(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   void processStackZCotThetaSplit(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief produce 3 Sp seeds out of solutions
@@ -448,7 +448,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SimSeedContainer &seeds, const std::deque<AccumulatorSection> &solutions,
+      SimSeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =
@@ -476,7 +476,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const std::vector<PreprocessedMeasurement> &measurements,
       const LineParamFunctor &lineFunctor, const unsigned threshold) const;
 
-  void deduplicate(std::deque<AccumulatorSection> &input) const;
+  void deduplicate(std::vector<AccumulatorSection> &input) const;
 };
 
 }  // namespace ActsExamples
