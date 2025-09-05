@@ -59,6 +59,15 @@ def test_empty_sequencer(conf_const):
     s.run()
 
 
+def test_helloworld(hello_world, capfd):
+    s = acts.examples.Sequencer(events=1)
+    hello_world(s)
+    s.run()
+    cap = capfd.readouterr()
+    assert cap.err == ""
+    assert "Hello World! (from event=0)" in cap.out
+
+
 def test_sequencer_single_threaded(hello_world, capfd):
     s = acts.examples.Sequencer(numThreads=1, events=2)
     hello_world(s)

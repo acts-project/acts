@@ -18,8 +18,8 @@ ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::HelloLoggerAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber);
-  ACTS_DEBUG("  - that's an ACTS_DEBUG message");
-  ACTS_VERBOSE("  - that's an ACTS_VERBOSE message");
+  ACTS_INFO("Hello World! (from event=" << ctx.eventNumber << ")");
+  ACTS_DEBUG("That's an ACTS_DEBUG message");
+  ACTS_VERBOSE("That's an ACTS_VERBOSE message");
   return ActsExamples::ProcessCode::SUCCESS;
 }
