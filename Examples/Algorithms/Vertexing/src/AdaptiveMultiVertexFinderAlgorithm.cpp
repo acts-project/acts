@@ -106,6 +106,7 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
     Seeder::Config seederConfig;
     seederConfig.useXY = false;
     seederConfig.useTime = m_cfg.useTime;
+    seederConfig.simultaneousSeeds = m_cfg.simultaneousSeeds;
     return std::make_unique<Seeder>(seederConfig);
   }
 
