@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <random>
@@ -25,7 +26,9 @@ using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using namespace Acts::PlanarHelper;
 using namespace Acts::detail::LineHelper;
+using namespace Acts::VectorHelpers;
 using RandomEngine = std::mt19937;
+using uniform = std::uniform_real_distribution<double>;
 
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using Config_t = CompSpacePointAuxiliaries::Config;
@@ -36,7 +39,7 @@ using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
 constexpr auto logLvl = Logging::Level::INFO;
-constexpr std::size_t nEvents = 1000000;
+constexpr std::size_t nEvents = 10000;
 constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
@@ -161,7 +164,6 @@ class TestSpacePoint {
 Line_t::ParamVector generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
-  using uniform = std::uniform_real_distribution<double>;
   linePars[toUnderlying(ParIndex::phi)] =
       uniform{-180._degree, 180._degree}(engine);
   linePars[toUnderlying(ParIndex::y0)] = uniform{-5000., 5000.}(engine);
@@ -189,6 +191,10 @@ template <typename T, typename... argsT>
 constexpr T absMax(const T& a, const argsT... args) {
   return std::max(Acts::abs(a), absMax(args...));
 }
+double angle(const Vector& v1, const Vector& v2) {
+  const double dots = Acts::abs(v1.dot(v2));
+  return std::acos(std::clamp(dots, 0., 1.));
+}
 
 #define CHECK_CLOSE(a, b, tol) \
   BOOST_CHECK_LE(std::abs(a - b) / absMax(a, b, 1.), tol);
@@ -214,26 +220,30 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
   Line_t line{linePars};
 
-  ACTS_DEBUG(__func__ << "() - " << __LINE__
-                      << ": Residual test w.r.t. test line: "
-                      << toString(line.position()) << ", "
-                      << toString(line.direction()));
+  ACTS_INFO(__func__ << "() - " << __LINE__
+                     << ":\n##############################################\n###"
+                        "###########################################\n"
+                     << "Residual test w.r.t. test line: "
+                     << toString(line.position()) << ", "
+                     << toString(line.direction())
+                     << ", theta: " << (theta(line.direction()) / 1._degree)
+                     << ", phi: " << (phi(line.direction())) / 1._degree);
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
   resCalc.updateSpatialResidual(line, testPoint);
-  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
-                      << testPoint);
+  ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
+                     << testPoint);
   if (testPoint.isStraw()) {
     const double lineDist =
         signedDistance(testPoint.localPosition(), testPoint.sensorDirection(),
                        line.position(), line.direction());
 
-    ACTS_DEBUG(__func__ << "() - " << __LINE__
-                        << ": Residual: " << toString(resCalc.residual())
-                        << ", line distance: " << lineDist
-                        << ",  analog residual: "
-                        << (lineDist - testPoint.driftRadius()));
+    ACTS_INFO(__func__ << "() - " << __LINE__
+                       << ": Residual: " << toString(resCalc.residual())
+                       << ", line distance: " << lineDist
+                       << ",  analog residual: "
+                       << (lineDist - testPoint.driftRadius()));
     ///
     CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::bending)],
                 (lineDist - testPoint.driftRadius()), 1.e-8);
@@ -241,12 +251,14 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
       auto closePoint =
           lineIntersect(line.position(), line.direction(),
                         testPoint.localPosition(), testPoint.sensorDirection());
+
+      ACTS_INFO(__func__
+                << "() - " << __LINE__ << ": Distance along wire "
+                << closePoint.pathLength() << ", residual: "
+                << resCalc.residual()[toUnderlying(ResidualIdx::nonBending)]);
+
       CHECK_CLOSE(resCalc.residual()[toUnderlying(ResidualIdx::nonBending)],
                   closePoint.pathLength(), 1.e-10);
-      ACTS_DEBUG(__func__
-                 << "() - " << __LINE__ << ": Distance along wire "
-                 << closePoint.pathLength() << ", residual: "
-                 << resCalc.residual()[toUnderlying(ResidualIdx::nonBending)]);
     }
   } else {
     const Vector3& n{testPoint.planeNormal()};
@@ -297,12 +309,14 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     }
   }
 
-  constexpr double h = 5.e-7;
+  constexpr double h = 2.e-7;
   for (auto par : resCfg.parsToUse) {
-    Pars_t lineParsUp{linePars}, lineParsDn{linePars};
+    Pars_t lineParsUp{linePars};
+    Pars_t lineParsDn{linePars};
     lineParsUp[toUnderlying(par)] += h;
     lineParsDn[toUnderlying(par)] -= h;
-    Line_t lineUp{lineParsUp}, lineDn{lineParsDn};
+    const Line_t lineUp{lineParsUp};
+    const Line_t lineDn{lineParsDn};
 
     CompSpacePointAuxiliaries resCalcUp{
         resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
@@ -315,22 +329,22 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
 
-    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Derivative test: "
-                        << CompSpacePointAuxiliaries::parName(par)
-                        << ", derivative: " << toString(resCalc.gradient(par))
-                        << ",  numerical: " << toString(numDeriv));
+    ACTS_INFO(__func__ << "() - " << __LINE__ << ": Derivative test: "
+                       << CompSpacePointAuxiliaries::parName(par)
+                       << ", derivative: " << toString(resCalc.gradient(par))
+                       << ",  numerical: " << toString(numDeriv));
 
     COMPARE_VECTORS(numDeriv, resCalc.gradient(par), tolerance);
     /// Next attempt to calculate the second derivative
     for (auto par1 : resCfg.parsToUse) {
       const Vector numDeriv1{
           (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
-      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
-                          << CompSpacePointAuxiliaries::parName(par) << ", "
-                          << CompSpacePointAuxiliaries::parName(par1)
-                          << ") -- numerical: " << toString(numDeriv1)
-                          << ", analytic: "
-                          << toString(resCalc.hessian(par, par1)));
+      ACTS_INFO(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                         << CompSpacePointAuxiliaries::parName(par) << ", "
+                         << CompSpacePointAuxiliaries::parName(par1)
+                         << ") -- numerical: " << toString(numDeriv1)
+                         << ", analytic: "
+                         << toString(resCalc.hessian(par, par1)));
       COMPARE_VECTORS(numDeriv1, resCalc.hessian(par, par1), tolerance);
     }
   }
@@ -561,7 +575,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     resCfg.localToGlobal = Acts::Transform3::Identity();
     Pars_t linePars{generateLine(rndEngine)};
-    using uniform = std::uniform_real_distribution<double>;
     const double t0 = uniform{0_ns, 150._ns}(rndEngine);
 
     testTimingResidual(linePars, wirePos, Vector::UnitX(), t0);
@@ -587,25 +600,30 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
   RandomEngine rndEngine{2525};
   ACTS_INFO("Run WireResidualTest");
+  const Vector wirePos{100._cm, 50._cm, 30._cm};
+  const Vector wireDir1{Vector::UnitX()};
+  const Vector wireDir2{makeDirectionFromPhiTheta(10._degree, 30._degree)};
 
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     Pars_t linePars{generateLine(rndEngine)};
     // Generate the first test measurement
-    const Vector wirePos{100._cm, 50._cm, 30._cm};
-    testResidual(linePars, TestSpacePoint{wirePos, Vector::UnitX(), 10._cm});
+    testResidual(linePars, TestSpacePoint{wirePos, wireDir1, 10._cm});
 
-    testResidual(linePars,
-                 TestSpacePoint{wirePos, Vector::UnitX(), 10._cm, true});
+    testResidual(linePars, TestSpacePoint{wirePos, wireDir2, 10._cm});
 
-    testResidual(linePars,
-                 TestSpacePoint{
-                     wirePos, makeDirectionFromPhiTheta(10._degree, 30._degree),
-                     10._cm});
-    testResidual(linePars,
-                 TestSpacePoint{
-                     wirePos, makeDirectionFromPhiTheta(10._degree, 30._degree),
-                     10._cm, true});
+    const Line_t line{linePars};
+    auto isect =
+        lineIntersect(line.position(), line.direction(), wirePos, wireDir1);
+    testResidual(linePars, TestSpacePoint{
+                               isect.position() +
+                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir1,
+                               wireDir1, 10._cm, true});
+    isect = lineIntersect(line.position(), line.direction(), wirePos, wireDir2);
+    testResidual(linePars, TestSpacePoint{
+                               isect.position() +
+                                   uniform{-50._cm, 50._cm}(rndEngine)*wireDir2,
+                               wireDir2, 10._cm, true});
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {

@@ -307,7 +307,7 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
                                                     const Vector& hitMinSeg,
                                                     const Vector& wireDir) {
   m_residual[nonBendingComp] =
-      m_invProjDirLenSq * (hitMinSeg.dot(line.direction()) * m_wireProject -
+      m_invProjDirLenSq * (m_wireProject * hitMinSeg.dot(line.direction()) -
                            hitMinSeg.dot(wireDir));
 
   ACTS_VERBOSE("updateAlongTheStraw() - Residual is "
@@ -329,7 +329,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
 
     } else if (isPositionParam(partial)) {
       // clang-format off
-      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (lGradient.dot(line.direction()* m_wireProject - wireDir));
+      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (m_wireProject * lGradient.dot(line.direction())
+                                                              - lGradient.dot(wireDir));
       // clang-format on
     }
     ACTS_VERBOSE("updateAlongTheStraw() - First derivative w.r.t "
