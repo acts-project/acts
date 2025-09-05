@@ -197,6 +197,30 @@ def rng():
 
 
 @pytest.fixture
+def hello_world(rng):
+    def _factory(s):
+
+        hello_logger = acts.examples.HelloLoggerAlgorithm(
+            level=acts.logging.INFO,
+        )
+        s.addAlgorithm(hello_logger)
+
+        hello_random = acts.examples.HelloRandomAlgorithm(
+            level=acts.logging.INFO, randomNumbers=rng, output="random_output"
+        )
+        s.addAlgorithm(hello_random)
+
+        hello_whiteboard = acts.examples.HelloWhiteBoardAlgorithm(
+            level=acts.logging.INFO, input="random_output", output="modified_output"
+        )
+        s.addAlgorithm(hello_whiteboard)
+
+        return hello_logger, hello_random, hello_whiteboard
+
+    return _factory
+
+
+@pytest.fixture
 def basic_prop_seq(rng):
     def _basic_prop_seq_factory(geo, s=None):
         if s is None:
