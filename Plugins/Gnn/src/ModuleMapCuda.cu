@@ -340,175 +340,116 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   ScopedCudaPtr<int> cuda_edge_sum(nb_doublets + 1, stream);
 
   int nb_doublet_edges{};
-  // ---------------------------------------------
-  // A: New method to exploit more parallelism
-  // ---------------------------------------------
-  if (m_cfg.moreParallel) {
-    // Algorithm to build edges parallel for each hit+doublet combination
-    // ==================================================================
-    //
-    // The motivation for this is the work imbalance for different doublets
-    // By essentially pulling out the outer loop over the hits on a module
-    // we have a better change that the work is more evenly distributed
-    //
-    // a) Assume hit ids
-    // 0 1 2 3 4 5
-    //
-    // b) Assume module ids for hits
-    // 0 0 1 1 2 3
-    //
-    // c) Assume doublet module map
-    // 0: 0 -> 1
-    // 1: 0 -> 2
-    // 2: 1 -> 2
-    // 3: 2 -> 3
-    //
-    // d) Count start hits per doublet
-    // 2 2 2 1
-    //
-    // e) Prefix sum
-    // 0 2 4 6 7
 
-    ScopedCudaPtr<int> cuda_nb_src_hits_per_doublet(nb_doublets + 1, stream);
+  // Algorithm to build edges parallel for each hit+doublet combination
+  // ==================================================================
+  //
+  // The motivation for this is the work imbalance for different doublets
+  // By essentially pulling out the outer loop over the hits on a module
+  // we have a better change that the work is more evenly distributed
+  //
+  // a) Assume hit ids
+  // 0 1 2 3 4 5
+  //
+  // b) Assume module ids for hits
+  // 0 0 1 1 2 3
+  //
+  // c) Assume doublet module map
+  // 0: 0 -> 1
+  // 1: 0 -> 2
+  // 2: 1 -> 2
+  // 3: 2 -> 3
+  //
+  // d) Count start hits per doublet
+  // 2 2 2 1
+  //
+  // e) Prefix sum
+  // 0 2 4 6 7
 
-    detail::count_src_hits_per_doublet<<<grid_dim, block_dim, 0, stream>>>(
-        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(), cuda_hit_indice,
-        cuda_nb_src_hits_per_doublet.data());
-    ACTS_CUDA_CHECK(cudaGetLastError());
+  ScopedCudaPtr<int> cuda_nb_src_hits_per_doublet(nb_doublets + 1, stream);
 
-    thrust::exclusive_scan(
-        thrust::device.on(stream), cuda_nb_src_hits_per_doublet.data(),
-        cuda_nb_src_hits_per_doublet.data() + nb_doublets + 1,
-        cuda_nb_src_hits_per_doublet.data());
+  detail::count_src_hits_per_doublet<<<grid_dim, block_dim, 0, stream>>>(
+      nb_doublets, m_cudaModuleMapDoublet->cuda_module1(), cuda_hit_indice,
+      cuda_nb_src_hits_per_doublet.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
-    int sum_nb_src_hits_per_doublet{};
-    ACTS_CUDA_CHECK(
-        cudaMemcpyAsync(&sum_nb_src_hits_per_doublet,
-                        &cuda_nb_src_hits_per_doublet.data()[nb_doublets],
-                        sizeof(int), cudaMemcpyDeviceToHost, stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-    ACTS_DEBUG("sum_nb_hits_per_doublet: " << sum_nb_src_hits_per_doublet);
+  thrust::exclusive_scan(thrust::device.on(stream),
+                         cuda_nb_src_hits_per_doublet.data(),
+                         cuda_nb_src_hits_per_doublet.data() + nb_doublets + 1,
+                         cuda_nb_src_hits_per_doublet.data());
 
-    if (sum_nb_src_hits_per_doublet == 0) {
-      throw NoEdgesError{};
-    }
+  int sum_nb_src_hits_per_doublet{};
+  ACTS_CUDA_CHECK(
+      cudaMemcpyAsync(&sum_nb_src_hits_per_doublet,
+                      &cuda_nb_src_hits_per_doublet.data()[nb_doublets],
+                      sizeof(int), cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_DEBUG("sum_nb_hits_per_doublet: " << sum_nb_src_hits_per_doublet);
 
-    ScopedCudaPtr<int> cuda_edge_sum_per_src_hit(
-        sum_nb_src_hits_per_doublet + 1, stream);
-
-    dim3 grid_dim_shpd =
-        ((sum_nb_src_hits_per_doublet + block_dim.x - 1) / block_dim.x);
-    detail::count_doublet_edges_new<float>
-        <<<grid_dim_shpd, block_dim, 0, stream>>>(
-            sum_nb_src_hits_per_doublet, nb_doublets,
-            cuda_nb_src_hits_per_doublet.data(),
-            m_cudaModuleMapDoublet->cuda_module1(),
-            m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
-            cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(),
-            cuda_TThits.cuda_phi(), m_cudaModuleMapDoublet->cuda_z0_min(),
-            m_cudaModuleMapDoublet->cuda_z0_max(),
-            m_cudaModuleMapDoublet->cuda_deta_min(),
-            m_cudaModuleMapDoublet->cuda_deta_max(),
-            m_cudaModuleMapDoublet->cuda_phi_slope_min(),
-            m_cudaModuleMapDoublet->cuda_phi_slope_max(),
-            m_cudaModuleMapDoublet->cuda_dphi_min(),
-            m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
-            cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
-
-    thrust::exclusive_scan(
-        thrust::device.on(stream), cuda_edge_sum_per_src_hit.data(),
-        cuda_edge_sum_per_src_hit.data() + sum_nb_src_hits_per_doublet + 1,
-        cuda_edge_sum_per_src_hit.data());
-
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(
-        &nb_doublet_edges,
-        &cuda_edge_sum_per_src_hit.data()[sum_nb_src_hits_per_doublet],
-        sizeof(int), cudaMemcpyDeviceToHost, stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-    ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
-    ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
-                           << " MB for edges");
-    cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
-    cuda_reduced_M2_hits.emplace(nb_doublet_edges, stream);
-
-    detail::build_doublet_edges_new<float>
-        <<<grid_dim_shpd, block_dim, 0, stream>>>(
-            sum_nb_src_hits_per_doublet, nb_doublets,
-            cuda_nb_src_hits_per_doublet.data(),
-            m_cudaModuleMapDoublet->cuda_module1(),
-            m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
-            cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(),
-            cuda_TThits.cuda_phi(), m_cudaModuleMapDoublet->cuda_z0_min(),
-            m_cudaModuleMapDoublet->cuda_z0_max(),
-            m_cudaModuleMapDoublet->cuda_deta_min(),
-            m_cudaModuleMapDoublet->cuda_deta_max(),
-            m_cudaModuleMapDoublet->cuda_phi_slope_min(),
-            m_cudaModuleMapDoublet->cuda_phi_slope_max(),
-            m_cudaModuleMapDoublet->cuda_dphi_min(),
-            m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
-            cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-            cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
-
-    detail::computeDoubletEdgeSum<<<grid_dim, block_dim, 0, stream>>>(
-        nb_doublets, cuda_nb_src_hits_per_doublet.data(),
-        cuda_edge_sum_per_src_hit.data(), cuda_edge_sum.data());
-    ACTS_CUDA_CHECK(cudaGetLastError());
-  } else {
-    // Allocate one integer on device and set it to 0
-    ScopedCudaPtr<int> cuda_nb_doublet_edges(1, stream);
-    ACTS_CUDA_CHECK(
-        cudaMemsetAsync(cuda_nb_doublet_edges.data(), 0, sizeof(int), stream));
-
-    detail::count_doublet_edges<float><<<grid_dim, block_dim, 0, stream>>>(
-        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
-        m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
-        cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
-        m_cudaModuleMapDoublet->cuda_z0_min(),
-        m_cudaModuleMapDoublet->cuda_z0_max(),
-        m_cudaModuleMapDoublet->cuda_deta_min(),
-        m_cudaModuleMapDoublet->cuda_deta_max(),
-        m_cudaModuleMapDoublet->cuda_phi_slope_min(),
-        m_cudaModuleMapDoublet->cuda_phi_slope_max(),
-        m_cudaModuleMapDoublet->cuda_dphi_min(),
-        m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
-        cuda_nb_doublet_edges.data(), cuda_edge_sum.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
-
-    // Copy the number of edges to the host, synchronize and allocate
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges,
-                                    cuda_nb_doublet_edges.data(), sizeof(int),
-                                    cudaMemcpyDeviceToHost, stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-    ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
-
-    ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
-                           << " MB for edges");
-    cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
-    cuda_reduced_M2_hits.emplace(nb_doublet_edges, stream);
-
-    // Prefix sum to get the edge offset for each doublet
-    thrust::exclusive_scan(thrust::device.on(stream), cuda_edge_sum.data(),
-                           cuda_edge_sum.data() + (nb_doublets + 1),
-                           cuda_edge_sum.data());
-
-    detail::doublet_cuts_new<float><<<grid_dim, block_dim, 0, stream>>>(
-        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
-        m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
-        cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
-        m_cudaModuleMapDoublet->cuda_z0_min(),
-        m_cudaModuleMapDoublet->cuda_z0_max(),
-        m_cudaModuleMapDoublet->cuda_deta_min(),
-        m_cudaModuleMapDoublet->cuda_deta_max(),
-        m_cudaModuleMapDoublet->cuda_phi_slope_min(),
-        m_cudaModuleMapDoublet->cuda_phi_slope_max(),
-        m_cudaModuleMapDoublet->cuda_dphi_min(),
-        m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
-        cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-        cuda_edge_sum.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
+  if (sum_nb_src_hits_per_doublet == 0) {
+    throw NoEdgesError{};
   }
+
+  ScopedCudaPtr<int> cuda_edge_sum_per_src_hit(sum_nb_src_hits_per_doublet + 1,
+                                               stream);
+
+  dim3 grid_dim_shpd =
+      ((sum_nb_src_hits_per_doublet + block_dim.x - 1) / block_dim.x);
+  detail::count_doublet_edges<float><<<grid_dim_shpd, block_dim, 0, stream>>>(
+      sum_nb_src_hits_per_doublet, nb_doublets,
+      cuda_nb_src_hits_per_doublet.data(),
+      m_cudaModuleMapDoublet->cuda_module1(),
+      m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
+      cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
+      m_cudaModuleMapDoublet->cuda_z0_min(),
+      m_cudaModuleMapDoublet->cuda_z0_max(),
+      m_cudaModuleMapDoublet->cuda_deta_min(),
+      m_cudaModuleMapDoublet->cuda_deta_max(),
+      m_cudaModuleMapDoublet->cuda_phi_slope_min(),
+      m_cudaModuleMapDoublet->cuda_phi_slope_max(),
+      m_cudaModuleMapDoublet->cuda_dphi_min(),
+      m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
+      cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
+  ACTS_CUDA_CHECK(cudaGetLastError());
+
+  thrust::exclusive_scan(
+      thrust::device.on(stream), cuda_edge_sum_per_src_hit.data(),
+      cuda_edge_sum_per_src_hit.data() + sum_nb_src_hits_per_doublet + 1,
+      cuda_edge_sum_per_src_hit.data());
+
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(
+      &nb_doublet_edges,
+      &cuda_edge_sum_per_src_hit.data()[sum_nb_src_hits_per_doublet],
+      sizeof(int), cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
+  ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
+                         << " MB for edges");
+  cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
+  cuda_reduced_M2_hits.emplace(nb_doublet_edges, stream);
+
+  detail::build_doublet_edges<float><<<grid_dim_shpd, block_dim, 0, stream>>>(
+      sum_nb_src_hits_per_doublet, nb_doublets,
+      cuda_nb_src_hits_per_doublet.data(),
+      m_cudaModuleMapDoublet->cuda_module1(),
+      m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
+      cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
+      m_cudaModuleMapDoublet->cuda_z0_min(),
+      m_cudaModuleMapDoublet->cuda_z0_max(),
+      m_cudaModuleMapDoublet->cuda_deta_min(),
+      m_cudaModuleMapDoublet->cuda_deta_max(),
+      m_cudaModuleMapDoublet->cuda_phi_slope_min(),
+      m_cudaModuleMapDoublet->cuda_phi_slope_max(),
+      m_cudaModuleMapDoublet->cuda_dphi_min(),
+      m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice,
+      cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
+      cuda_edge_sum_per_src_hit.data(), m_cfg.epsilon);
+  ACTS_CUDA_CHECK(cudaGetLastError());
+
+  detail::computeDoubletEdgeSum<<<grid_dim, block_dim, 0, stream>>>(
+      nb_doublets, cuda_nb_src_hits_per_doublet.data(),
+      cuda_edge_sum_per_src_hit.data(), cuda_edge_sum.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_VERBOSE("First 10 doublet edges:\n"
                << debugPrintEdges(nb_doublet_edges,
@@ -576,98 +517,66 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
                                   cuda_TThits.size() * sizeof(bool), stream));
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  if (m_cfg.moreParallel) {
-    // Allocate memory for the number of hits per triplet
-    ScopedCudaPtr<int> cuda_src_hits_per_triplet(nb_triplets + 1, stream);
+  // Allocate memory for the number of hits per triplet
+  ScopedCudaPtr<int> cuda_src_hits_per_triplet(nb_triplets + 1, stream);
 
-    detail::count_triplet_hits<<<grid_dim, block_dim, 0, stream>>>(
-        nb_triplets, m_cudaModuleMapTriplet->cuda_module12_map(),
-        m_cudaModuleMapTriplet->cuda_module23_map(), cuda_edge_sum.data(),
-        cuda_src_hits_per_triplet.data());
-    ACTS_CUDA_CHECK(cudaGetLastError());
+  detail::count_triplet_hits<<<grid_dim, block_dim, 0, stream>>>(
+      nb_triplets, m_cudaModuleMapTriplet->cuda_module12_map(),
+      m_cudaModuleMapTriplet->cuda_module23_map(), cuda_edge_sum.data(),
+      cuda_src_hits_per_triplet.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
-    // Perform prefix sum to get the offset for each triplet
-    thrust::exclusive_scan(thrust::device.on(stream),
-                           cuda_src_hits_per_triplet.data(),
-                           cuda_src_hits_per_triplet.data() + nb_triplets + 1,
-                           cuda_src_hits_per_triplet.data());
+  // Perform prefix sum to get the offset for each triplet
+  thrust::exclusive_scan(thrust::device.on(stream),
+                         cuda_src_hits_per_triplet.data(),
+                         cuda_src_hits_per_triplet.data() + nb_triplets + 1,
+                         cuda_src_hits_per_triplet.data());
 
-    int nb_src_hits_per_triplet_sum{};
-    ACTS_CUDA_CHECK(
-        cudaMemcpyAsync(&nb_src_hits_per_triplet_sum,
-                        &cuda_src_hits_per_triplet.data()[nb_triplets],
-                        sizeof(int), cudaMemcpyDeviceToHost, stream));
-    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
-    ACTS_DEBUG("nb_src_hits_per_triplet_sum: " << nb_src_hits_per_triplet_sum);
-    if (nb_src_hits_per_triplet_sum == 0) {
-      throw NoEdgesError{};
-    }
-
-    dim3 grid_dim_shpt =
-        ((nb_src_hits_per_triplet_sum + block_dim.x - 1) / block_dim.x);
-
-    detail::triplet_cuts_new2<float><<<grid_dim_shpt, block_dim, 0, stream>>>(
-        nb_src_hits_per_triplet_sum, nb_triplets,
-        cuda_src_hits_per_triplet.data(),
-        m_cudaModuleMapTriplet->cuda_module12_map(),
-        m_cudaModuleMapTriplet->cuda_module23_map(), cuda_TThits.cuda_x(),
-        cuda_TThits.cuda_y(), cuda_TThits.cuda_z(), cuda_TThits.cuda_R(),
-        cuda_z0.data(), cuda_phi_slope.data(), cuda_deta.data(),
-        cuda_dphi.data(), m_cudaModuleMapTriplet->module12().cuda_z0_min(),
-        m_cudaModuleMapTriplet->module12().cuda_z0_max(),
-        m_cudaModuleMapTriplet->module12().cuda_deta_min(),
-        m_cudaModuleMapTriplet->module12().cuda_deta_max(),
-        m_cudaModuleMapTriplet->module12().cuda_phi_slope_min(),
-        m_cudaModuleMapTriplet->module12().cuda_phi_slope_max(),
-        m_cudaModuleMapTriplet->module12().cuda_dphi_min(),
-        m_cudaModuleMapTriplet->module12().cuda_dphi_max(),
-        m_cudaModuleMapTriplet->module23().cuda_z0_min(),
-        m_cudaModuleMapTriplet->module23().cuda_z0_max(),
-        m_cudaModuleMapTriplet->module23().cuda_deta_min(),
-        m_cudaModuleMapTriplet->module23().cuda_deta_max(),
-        m_cudaModuleMapTriplet->module23().cuda_phi_slope_min(),
-        m_cudaModuleMapTriplet->module23().cuda_phi_slope_max(),
-        m_cudaModuleMapTriplet->module23().cuda_dphi_min(),
-        m_cudaModuleMapTriplet->module23().cuda_dphi_max(),
-        m_cudaModuleMapTriplet->cuda_diff_dydx_min(),
-        m_cudaModuleMapTriplet->cuda_diff_dydx_max(),
-        m_cudaModuleMapTriplet->cuda_diff_dzdr_min(),
-        m_cudaModuleMapTriplet->cuda_diff_dzdr_max(), TMath::Pi(),
-        cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-        cuda_sorted_M2_hits.data(), cuda_edge_sum.data(), cuda_vertices.data(),
-        cuda_mask.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
-  } else {
-    Acts::detail::triplet_cuts_new<float><<<grid_dim, block_dim, 0, stream>>>(
-        nb_triplets, m_cudaModuleMapTriplet->cuda_module12_map(),
-        m_cudaModuleMapTriplet->cuda_module23_map(), cuda_TThits.cuda_x(),
-        cuda_TThits.cuda_y(), cuda_TThits.cuda_z(), cuda_TThits.cuda_R(),
-        cuda_z0.data(), cuda_phi_slope.data(), cuda_deta.data(),
-        cuda_dphi.data(), m_cudaModuleMapTriplet->module12().cuda_z0_min(),
-        m_cudaModuleMapTriplet->module12().cuda_z0_max(),
-        m_cudaModuleMapTriplet->module12().cuda_deta_min(),
-        m_cudaModuleMapTriplet->module12().cuda_deta_max(),
-        m_cudaModuleMapTriplet->module12().cuda_phi_slope_min(),
-        m_cudaModuleMapTriplet->module12().cuda_phi_slope_max(),
-        m_cudaModuleMapTriplet->module12().cuda_dphi_min(),
-        m_cudaModuleMapTriplet->module12().cuda_dphi_max(),
-        m_cudaModuleMapTriplet->module23().cuda_z0_min(),
-        m_cudaModuleMapTriplet->module23().cuda_z0_max(),
-        m_cudaModuleMapTriplet->module23().cuda_deta_min(),
-        m_cudaModuleMapTriplet->module23().cuda_deta_max(),
-        m_cudaModuleMapTriplet->module23().cuda_phi_slope_min(),
-        m_cudaModuleMapTriplet->module23().cuda_phi_slope_max(),
-        m_cudaModuleMapTriplet->module23().cuda_dphi_min(),
-        m_cudaModuleMapTriplet->module23().cuda_dphi_max(),
-        m_cudaModuleMapTriplet->cuda_diff_dydx_min(),
-        m_cudaModuleMapTriplet->cuda_diff_dydx_max(),
-        m_cudaModuleMapTriplet->cuda_diff_dzdr_min(),
-        m_cudaModuleMapTriplet->cuda_diff_dzdr_max(), TMath::Pi(),
-        cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
-        cuda_sorted_M2_hits.data(), cuda_edge_sum.data(), cuda_vertices.data(),
-        cuda_mask.data(), m_cfg.epsilon);
-    ACTS_CUDA_CHECK(cudaGetLastError());
+  int nb_src_hits_per_triplet_sum{};
+  ACTS_CUDA_CHECK(
+      cudaMemcpyAsync(&nb_src_hits_per_triplet_sum,
+                      &cuda_src_hits_per_triplet.data()[nb_triplets],
+                      sizeof(int), cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_DEBUG("nb_src_hits_per_triplet_sum: " << nb_src_hits_per_triplet_sum);
+  if (nb_src_hits_per_triplet_sum == 0) {
+    throw NoEdgesError{};
   }
+
+  dim3 grid_dim_shpt =
+      ((nb_src_hits_per_triplet_sum + block_dim.x - 1) / block_dim.x);
+
+  detail::triplet_cuts<float><<<grid_dim_shpt, block_dim, 0, stream>>>(
+      nb_src_hits_per_triplet_sum, nb_triplets,
+      cuda_src_hits_per_triplet.data(),
+      m_cudaModuleMapTriplet->cuda_module12_map(),
+      m_cudaModuleMapTriplet->cuda_module23_map(), cuda_TThits.cuda_x(),
+      cuda_TThits.cuda_y(), cuda_TThits.cuda_z(), cuda_TThits.cuda_R(),
+      cuda_z0.data(), cuda_phi_slope.data(), cuda_deta.data(), cuda_dphi.data(),
+      m_cudaModuleMapTriplet->module12().cuda_z0_min(),
+      m_cudaModuleMapTriplet->module12().cuda_z0_max(),
+      m_cudaModuleMapTriplet->module12().cuda_deta_min(),
+      m_cudaModuleMapTriplet->module12().cuda_deta_max(),
+      m_cudaModuleMapTriplet->module12().cuda_phi_slope_min(),
+      m_cudaModuleMapTriplet->module12().cuda_phi_slope_max(),
+      m_cudaModuleMapTriplet->module12().cuda_dphi_min(),
+      m_cudaModuleMapTriplet->module12().cuda_dphi_max(),
+      m_cudaModuleMapTriplet->module23().cuda_z0_min(),
+      m_cudaModuleMapTriplet->module23().cuda_z0_max(),
+      m_cudaModuleMapTriplet->module23().cuda_deta_min(),
+      m_cudaModuleMapTriplet->module23().cuda_deta_max(),
+      m_cudaModuleMapTriplet->module23().cuda_phi_slope_min(),
+      m_cudaModuleMapTriplet->module23().cuda_phi_slope_max(),
+      m_cudaModuleMapTriplet->module23().cuda_dphi_min(),
+      m_cudaModuleMapTriplet->module23().cuda_dphi_max(),
+      m_cudaModuleMapTriplet->cuda_diff_dydx_min(),
+      m_cudaModuleMapTriplet->cuda_diff_dydx_max(),
+      m_cudaModuleMapTriplet->cuda_diff_dzdr_min(),
+      m_cudaModuleMapTriplet->cuda_diff_dzdr_max(), TMath::Pi(),
+      cuda_reduced_M1_hits->data(), cuda_reduced_M2_hits->data(),
+      cuda_sorted_M2_hits.data(), cuda_edge_sum.data(), cuda_vertices.data(),
+      cuda_mask.data(), m_cfg.epsilon);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   //----------------
   // edges reduction
