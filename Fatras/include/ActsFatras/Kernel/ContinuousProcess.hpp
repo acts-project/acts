@@ -39,7 +39,8 @@ namespace ActsFatras {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitly specified.
-template <detail::ContinuousProcessConcept physics_t, typename input_particle_selector_t,
+template <detail::ContinuousProcessConcept physics_t,
+          typename input_particle_selector_t,
           typename output_particle_selector_t,
           typename child_particle_selector_t = output_particle_selector_t>
 struct ContinuousProcess {

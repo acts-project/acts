@@ -24,7 +24,7 @@ namespace ActsFatras {
 /// @tparam child_particle_selector_t is the child particle selector
 ///
 /// The physics model type **must** provide a call operator with the following
-/// two member functionss
+/// two member functions
 ///
 ///     // generate X0/L0 limits
 ///     template <typename generator_t>
@@ -51,7 +51,8 @@ namespace ActsFatras {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitly specified.
-template <detail::PointLikeProcessConcept physics_t, typename input_particle_selector_t,
+template <detail::PointLikeProcessConcept physics_t,
+          typename input_particle_selector_t,
           typename output_particle_selector_t,
           typename child_particle_selector_t = output_particle_selector_t>
 struct PointLikeProcess {
@@ -65,14 +66,14 @@ struct PointLikeProcess {
   child_particle_selector_t selectChildParticle;
 
   template <class generator_t>
-  std::pair<double, double> generatePathLimits(generator_t& generator, const Particle& particle) const
-  {
+  std::pair<double, double> generatePathLimits(generator_t& generator,
+                                               const Particle& particle) const {
     return physics.generatePathLimits(generator, particle);
   }
 
   template <class generator_t>
-  bool run(generator_t& rng, Particle& particle, std::vector<Particle>& generatedParticles) const
-  {
+  bool run(generator_t& rng, Particle& particle,
+           std::vector<Particle>& generatedParticles) const {
     if (!selectInputParticle(particle)) {
       return false;
     }

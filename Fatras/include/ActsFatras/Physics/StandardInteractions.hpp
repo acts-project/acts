@@ -10,12 +10,12 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
-#include "ActsFatras/Kernel/PointLikeProcess.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
+#include "ActsFatras/Kernel/PointLikeProcess.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
-#include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
@@ -51,7 +51,8 @@ using StandardBetheHeitler =
 
 /// Handle photon conversions with a pair of an electron and a positron emitted.
 using StandardPhotonConversion =
-    PointLikeProcess<PhotonConversion, SelectPhotonLike, SelectPMin, SelectPMin>;
+    PointLikeProcess<PhotonConversion, SelectPhotonLike, SelectPMin,
+                     SelectPMin>;
 }  // namespace detail
 
 /// Standard set of electro-magnetic interactions for charged particles.

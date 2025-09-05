@@ -30,14 +30,14 @@ namespace {
 /// particles with momenta 1,2,3,4 GeV.
 struct MockMakeChildren {
   template <typename generator_t>
-  std::pair<double, double> generatePathLimits(generator_t&, const Particle&) const
-  {
+  std::pair<double, double> generatePathLimits(generator_t&,
+                                               const Particle&) const {
     return {0., 0.};
   }
 
   template <class generator_t>
-  bool run(generator_t&, Particle&, std::vector<Particle>& generatedParticles) const
-  {
+  bool run(generator_t&, Particle&,
+           std::vector<Particle>& generatedParticles) const {
     generatedParticles = {Particle().setAbsoluteMomentum(1_GeV),
                           Particle().setAbsoluteMomentum(2_GeV),
                           Particle().setAbsoluteMomentum(3_GeV),
@@ -49,14 +49,14 @@ struct MockMakeChildren {
 
 /// Mock particle selector that selects everything
 struct MockEverything {
-  bool operator()(const Particle & /*particle*/) const { return true; }
+  bool operator()(const Particle& /*particle*/) const { return true; }
 };
 
 /// Mock particle selector for particles with momenta equal or above 10GeV.
 struct MockHighP {
   double minP = 10_GeV;
 
-  bool operator()(const ActsFatras::Particle &particle) const {
+  bool operator()(const ActsFatras::Particle& particle) const {
     return (minP <= particle.absoluteMomentum());
   }
 };
