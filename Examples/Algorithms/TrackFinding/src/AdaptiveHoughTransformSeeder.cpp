@@ -144,7 +144,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   preparePreprocessedMeasurements(ctx, measurements);
 
   // prepare initial stack
-  std::deque<AccumulatorSection> stack1;
+  std::vector<AccumulatorSection> stack1;
   fillStackPhiSplit(stack1, measurements);
 
   // split into regions in z_vertex cot theta, there is a lot of duplication and
@@ -154,7 +154,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                              2.0f * config().cotThetaRange, -config().zRange,
                              -config().cotThetaRange);
   }
-  std::deque<AccumulatorSection> stack2;
+  std::vector<AccumulatorSection> stack2;
   {
     Acts::ScopedTimer st("splitInZCotTheta", logger());
     processStackZCotThetaSplit(stack1, stack2, measurements);
@@ -213,7 +213,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     }
   }
 
-  std::deque<AccumulatorSection> &solutions =
+  std::vector<AccumulatorSection> &solutions =
       config().doSecondPhase ? stack2 : stack1;
   Acts::ScopedTimer st("seedsMaking", logger());
 
@@ -262,7 +262,7 @@ void AdaptiveHoughTransformSeeder::preparePreprocessedMeasurements(
 }
 
 void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
-    std::deque<AccumulatorSection> &stack,
+    std::vector<AccumulatorSection> &stack,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   Acts::ScopedTimer st("splitInQuadrants", logger());
   const int nSplits = 8;
@@ -292,8 +292,8 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
 }
 
 void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
-    std::deque<AccumulatorSection> &input,
-    std::deque<AccumulatorSection> &output,
+    std::vector<AccumulatorSection> &input,
+    std::vector<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   struct Stats {
     double area{};
@@ -358,8 +358,8 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotTheta(
-    std::deque<AccumulatorSection> &input,
-    std::deque<AccumulatorSection> &output,
+    std::vector<AccumulatorSection> &input,
+    std::vector<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   ExplorationOptions opt;
   opt.xMinBinSize = config().zMinBinSize;
@@ -392,8 +392,8 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
-    std::deque<AccumulatorSection> &input,
-    std::deque<AccumulatorSection> &output,
+    std::vector<AccumulatorSection> &input,
+    std::vector<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   ExplorationOptions opt;
   opt.xMinBinSize = 101.0f * Acts::UnitConstants::mm;
@@ -425,7 +425,7 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 }
 
 void AdaptiveHoughTransformSeeder::makeSeeds(
-    SimSeedContainer &seeds, const std::deque<AccumulatorSection> &solutions,
+    SimSeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   std::size_t seedIndex = 0;
   for (const AccumulatorSection &s : solutions) {
@@ -488,14 +488,15 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
     const AccumulatorSection &section,
     const std::vector<PreprocessedMeasurement> &measurements,
     const LineParamFunctor &lineFunctor, unsigned threshold) const {
-  using namespace std::placeholders;
   unsigned inside = 0;
   for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
     const auto &m1 = measurements[section.indices()[idx1]];
-    std::function<float(float)> line1 = std::bind_front(lineFunctor, m1);
+    std::function<float(float)> line1 =
+        std::bind_front(lineFunctor, std::cref(m1));
     for (std::size_t idx2 = idx1 + 1; idx2 < section.count(); ++idx2) {
       const auto &m2 = measurements[section.indices()[idx2]];
-      std::function<float(float)> line2 = std::bind_front(lineFunctor, m2);
+      std::function<float(float)> line2 =
+          std::bind_front(lineFunctor, std::cref(m2));
       if (section.isCrossingInside(line1, line2)) {
         inside++;
         if (inside >= threshold) {
@@ -508,12 +509,11 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
   return inside >= threshold;
 }
 void AdaptiveHoughTransformSeeder::deduplicate(
-    std::deque<AccumulatorSection> &input) const {
+    std::vector<AccumulatorSection> &input) const {
   std::vector<const AccumulatorSection *> op;
   op.reserve(input.size());
-  for (const AccumulatorSection &s : input) {
-    op.push_back(&s);
-  }
+  std::transform(input.begin(), input.end(), std::back_inserter(op),
+                 [](const AccumulatorSection &s) { return &s; });
 
   auto binaryPredSort = [](const AccumulatorSection *a,
                            const AccumulatorSection *b) {
@@ -526,7 +526,7 @@ void AdaptiveHoughTransformSeeder::deduplicate(
 
   std::ranges::sort(op, binaryPredSort);
   auto [rbegin, rend] = std::ranges::unique(op, binaryPredUnique);
-  std::deque<AccumulatorSection> temp;
+  std::vector<AccumulatorSection> temp;
   for (auto sPtr = std::begin(op); sPtr != rbegin; ++sPtr) {
     temp.push_back(**sPtr);
   }
