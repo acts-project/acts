@@ -41,7 +41,7 @@ Surface::Surface(const GeometryContext& gctx, const Surface& other,
       m_transform(std::make_unique<Transform3>(shift * other.transform(gctx))),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
-Surface::~Surface() = default;
+Surface::~Surface() noexcept = default;
 
 std::ostream& operator<<(std::ostream& os, Surface::SurfaceType type) {
   return os << Surface::s_surfaceTypeNames[static_cast<std::size_t>(type)];
