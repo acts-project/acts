@@ -648,7 +648,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
         // restore the track to the original state
+        auto tipIndex = trackCandidate.tipIndex();
+        auto stemIndex = trackCandidate.stemIndex();
         trackCandidate.copyFromWithoutStates(firstTrack);
+        trackCandidate.tipIndex() = tipIndex;
+        trackCandidate.stemIndex() = stemIndex;
 
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
