@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -23,7 +22,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace Acts {
 
