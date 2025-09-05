@@ -9,14 +9,16 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 
 #include <array>
 #include <cstddef>
 #include <functional>
 #include <string>
 
-namespace ActsExamples {
+namespace Acts {
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
@@ -52,7 +54,9 @@ namespace ActsExamples {
 /// If the flag is set to true the r-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapRzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
@@ -99,11 +103,14 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
 /// If the flag is set to true the z-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromRoot(
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapXyzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
     double lengthUnit, double BFieldUnit, bool firstOctant = false);
 
-}  // namespace ActsExamples
+}  // namespace Acts

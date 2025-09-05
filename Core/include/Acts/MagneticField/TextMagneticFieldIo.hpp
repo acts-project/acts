@@ -9,14 +9,16 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <array>
 #include <cstddef>
 #include <functional>
 #include <string>
 
-namespace ActsExamples {
+namespace Acts {
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
@@ -45,29 +47,27 @@ namespace ActsExamples {
 ///       the internal vectors. A correct value is not needed, but will help
 ///       to speed up the field map initialization process.
 /// @param[in] firstQuadrant Flag if set to true indicating that only the
-/// first
-/// quadrant of the grid points and the BField values has been given and
-/// that
-/// the BFieldMap should be created symmetrically for all quadrants.
+/// first quadrant of the grid points and the BField values has been given and
+/// that the BFieldMap should be created symmetrically for all quadrants.
 /// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r
 /// axis.
 /// If the flag is set to true the r-axis grid values will be set to
-/// {-1,0,1}
-/// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
+/// {-1,0,1} and the BFieldValues will be set to {3,2,3}.
+/// @param delimiter The delimiter used in the text file to separate values
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapRzFromText(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant = false);
+    bool firstQuadrant = false, const std::string& delimiter = "");
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value e.g.: we have small grid with
-/// the
-/// values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i(x),
-/// j(y)
-/// and z(k), the globalIndex is M and the field map is:
+/// the  values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i(x),
+/// j(y) and z(k), the globalIndex is M and the field map is:
 ///|| x | i || y | j || z | k || |B(x,y,z)| ||  M ||
 ///  --------------------------------------------
 ///|| 2 | 0 || 3 | 0 || 4 | 0 ||  2.323   ||  0 ||
@@ -101,13 +101,16 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
 /// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r
 /// axis.
 /// If the flag is set to true the z-axis grid values will be set to
-/// {-1,0,1}
-/// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromText(
+/// {-1,0,1} and the BFieldValues will be set to {3,2,3}.
+/// @param delimiter The delimiter used in the text file to separate values
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapXyzFromText(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstOctant = false);
+    bool firstOctant = false, const std::string& delimiter = "");
 
-}  // namespace ActsExamples
+}  // namespace Acts
