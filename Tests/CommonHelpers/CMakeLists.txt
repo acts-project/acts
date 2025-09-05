@@ -21,10 +21,18 @@ target_include_directories(
     ActsTestsCommonHelpers
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
-target_link_libraries(
-    ActsTestsCommonHelpers
-    PUBLIC Acts::Core Acts::ExamplesFramework
-    PRIVATE std::filesystem
-)
+if(ACTS_BUILD_EXAMPLES)
+    target_link_libraries(
+        ActsTestsCommonHelpers
+        PUBLIC Acts::Core Acts::ExamplesFramework
+        PRIVATE std::filesystem
+    )
+else()
+    target_link_libraries(
+        ActsTestsCommonHelpers
+        PUBLIC ActsCore
+        PRIVATE std::filesystem
+    )
+endif()
 
 acts_compile_headers(TestsCommonHelpers GLOB "include/Acts/**/*.hpp")
