@@ -27,7 +27,6 @@
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -83,8 +82,8 @@ class SurfaceArrayCreator {
 
   // Configuration struct
   struct Config {
-    /// Type-erased function which determines whether two surfaces are supposed
-    /// to be considered equivalent in terms of the binning
+    /// Type-erased function which determines whether two surfaces are
+    /// supposed to be considered equivalent in terms of the binning
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
 
     /// Optimize the binning in phi for disc layers. Reduces the number
@@ -138,8 +137,8 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and bin
-  /// numbers are unknown - this method goes through the surfaces and finds out
-  /// the needed information
+  /// numbers are unknown - this method goes through the surfaces and finds
+  /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
@@ -185,8 +184,8 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   ///
   /// - create an array in a cylinder, binned in phi, r when extremas and bin
-  /// numbers are unknown - this method goes through the surfaces and finds out
-  /// the needed information
+  /// numbers are unknown - this method goes through the surfaces and finds
+  /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -308,9 +307,9 @@ class SurfaceArrayCreator {
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
   /// direction) are extracted. The boundary value between two surfaces is the
-  /// mean value of the two center position in the binning direction. The first
-  /// and the last boundaries are calculated from the vertices of the first and
-  /// last surface.
+  /// mean value of the two center position in the binning direction. The
+  /// first and the last boundaries are calculated from the vertices of the
+  /// first and last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
@@ -333,8 +332,8 @@ class SurfaceArrayCreator {
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
-  /// direction) are extracted. The number of key surfaces euqals the number of
-  /// bins. Afterwards the minimum and maximum are calculated by
+  /// direction) are extracted. The number of key surfaces euqals the number
+  /// of bins. Afterwards the minimum and maximum are calculated by
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
@@ -374,45 +373,50 @@ class SurfaceArrayCreator {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
-    // this becomes completely unreadable otherwise
-    // clang-format off
     if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
+                                              pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
+                                              pAxisB.nBins);
 
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
+      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
+                                              pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
+      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
+                                              pAxisB.nBins);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(
-        std::move(surface), layerTolerance, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      using SGL =
+          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
+      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
+                                  std::pair{axisA, axisB},
+                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
-    // clang-format on
 
     return ptr;
   }

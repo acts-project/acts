@@ -29,7 +29,6 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
