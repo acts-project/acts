@@ -146,97 +146,6 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
   }
 }
 
-/// Counting kernel to allow counting the edges
-template <class T>
-__global__ void
-#ifdef USE_LAUNCH_BOUNDS
-__launch_bounds__(512, 2)
-#endif
-    count_doublet_edges(int nb_doublets, const int *modules1,
-                        const int *modules2, const T *R, const T *z,
-                        const T *eta, const T *phi, T *z0_min, T *z0_max,
-                        T *deta_min, T *deta_max, T *phi_slope_min,
-                        T *phi_slope_max, T *dphi_min, T *dphi_max,
-                        const int *indices, T pi, int *nb_edges_total,
-                        int *nb_edges_doublet, T epsilon) {
-  // loop over module1 SP
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_doublets) {
-    return;
-  }
-
-  int module1 = modules1[i];
-  int module2 = modules2[i];
-  int edges = 0;
-
-  for (int k = indices[module1]; k < indices[module1 + 1]; k++) {
-    T phi_SP1 = phi[k];
-    T eta_SP1 = eta[k];
-    T R_SP1 = R[k];
-    T z_SP1 = z[k];
-
-    for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
-      T z0, phi_slope, deta, dphi;
-      hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, z0, phi_slope, deta, dphi, epsilon);
-
-      if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
-                               deta_min, deta_max, phi_slope_min, phi_slope_max,
-                               dphi_min, dphi_max)) {
-        edges++;
-      }
-    }
-  }
-
-  // increase global and local counter
-  nb_edges_doublet[i] = edges;
-  atomicAdd(nb_edges_total, edges);
-}
-
-/// New kernel that use precounted number of edges
-template <class T>
-__global__ void
-#ifdef USE_LAUNCH_BOUNDS
-__launch_bounds__(512, 2)
-#endif
-    doublet_cuts_new(int nb_doublets, const int *modules1, const int *modules2,
-                     const T *R, const T *z, const T *eta, const T *phi,
-                     T *z0_min, T *z0_max, T *deta_min, T *deta_max,
-                     T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-                     T *dphi_max, const int *indices, T pi, int *M1_SP,
-                     int *M2_SP, const int *nb_edges, T epsilon) {
-  // loop over module1 SP
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_doublets) {
-    return;
-  }
-
-  int module1 = modules1[i];
-  int module2 = modules2[i];
-  int edges = nb_edges[i];
-
-  for (int k = indices[module1]; k < indices[module1 + 1]; k++) {
-    T phi_SP1 = phi[k];
-    T eta_SP1 = eta[k];
-    T R_SP1 = R[k];
-    T z_SP1 = z[k];
-
-    for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
-      T z0, phi_slope, deta, dphi;
-      hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, z0, phi_slope, deta, dphi, epsilon);
-
-      if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
-                               deta_min, deta_max, phi_slope_min, phi_slope_max,
-                               dphi_min, dphi_max)) {
-        M1_SP[edges] = k;
-        M2_SP[edges] = l;
-        edges++;
-      }
-    }
-  }
-}
-
 __device__ void findFirstWithBisect(int left, int right, int query, int &result,
                                     const int *array) {
   while (left <= right) {
@@ -252,124 +161,6 @@ __device__ void findFirstWithBisect(int left, int right, int query, int &result,
     } else {
       right = mid - 1;
     }
-  }
-}
-
-template <typename T>
-__device__ void triplet_cuts_inner_loop_body(
-    int i, int k, int last12, int shift23, int ind23, T *x, T *y, T *z, T *R,
-    T *z0, T *phi_slope, T *deta, T *dphi, T *MD12_z0_min, T *MD12_z0_max,
-    T *MD12_deta_min, T *MD12_deta_max, T *MD12_phi_slope_min,
-    T *MD12_phi_slope_max, T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
-    T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max, T *MD23_phi_slope_min,
-    T *MD23_phi_slope_max, T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
-    T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi, int *M1_SP,
-    int *M2_SP, int *sorted_M2_SP, int *edge_indices, bool *vertices,
-    bool *edge_tag, T epsilon) {
-  int p = sorted_M2_SP[k];
-
-  int SP1 = M1_SP[p];
-  int SP2 = M2_SP[p];
-  bool next_ind = false;
-  if (k < last12) {
-    next_ind = (SP2 != (M2_SP[sorted_M2_SP[k + 1]]));
-  }
-
-  if (!apply_geometric_cuts(i, z0[p], phi_slope[p], deta[p], dphi[p],
-                            MD12_z0_min, MD12_z0_max, MD12_deta_min,
-                            MD12_deta_max, MD12_phi_slope_min,
-                            MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max)) {
-    return;
-  }
-
-  int l = shift23;
-#ifdef USE_LAUNCH_BOUNDS
-  findFirstWithBisect(shift23, ind23 - 1, SP2, l, M1_SP);
-#else
-  for (; l < ind23 && SP2 != M1_SP[l]; l++) {
-  }  // search first hit indice on
-#endif
-
-  bool new_elt = false;
-  for (; l < ind23 && SP2 == M1_SP[l]; l++) {
-    int SP3 = M2_SP[l];
-    if (!apply_geometric_cuts(
-            i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min, MD23_z0_max,
-            MD23_deta_min, MD23_deta_max, MD23_phi_slope_min,
-            MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max)) {
-      continue;
-    }
-
-    T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3, epsilon);
-    if (!((diff_dydx >= diff_dydx_min[i]) * (diff_dydx <= diff_dydx_max[i]))) {
-      continue;
-    }
-
-    T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3, epsilon);
-    if (!((diff_dzdr >= diff_dzdr_min[i]) * (diff_dzdr <= diff_dzdr_max[i]))) {
-      continue;
-    }
-
-    vertices[SP3] = edge_tag[l] = true;
-    new_elt = true;
-  }
-  if (new_elt) {
-    edge_tag[p] = vertices[SP1] = vertices[SP2] = true;
-  }
-  if (next_ind && new_elt) {
-    shift23 = l;
-  }
-}
-
-template <typename T>
-__global__ void
-#ifdef USE_LAUNCH_BOUNDS
-__launch_bounds__(512, 2)
-#endif
-    triplet_cuts_new(int nb_triplets, const int *modules12_map,
-                     const int *modules23_map, T *x, T *y, T *z, T *R, T *z0,
-                     T *phi_slope, T *deta, T *dphi, T *MD12_z0_min,
-                     T *MD12_z0_max, T *MD12_deta_min, T *MD12_deta_max,
-                     T *MD12_phi_slope_min, T *MD12_phi_slope_max,
-                     T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
-                     T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max,
-                     T *MD23_phi_slope_min, T *MD23_phi_slope_max,
-                     T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
-                     T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi,
-                     int *M1_SP, int *M2_SP, int *sorted_M2_SP,
-                     int *edge_indices, bool *vertices, bool *edge_tag,
-                     T epsilon) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_triplets) {
-    return;
-  }
-
-  int module12 = modules12_map[i];
-  int module23 = modules23_map[i];
-
-  int nb_hits_M12 = edge_indices[module12 + 1] - edge_indices[module12];
-  int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
-
-  bool hits_on_modules = nb_hits_M12 * nb_hits_M23;
-  if (!hits_on_modules) {
-    return;
-  }
-
-  int shift12 = edge_indices[module12];
-  int shift23 = edge_indices[module23];
-
-  int last12 = shift12 + nb_hits_M12 - 1;
-  int ind23 = shift23 + nb_hits_M23;
-
-  for (int k = shift12; k <= last12; k++) {
-    triplet_cuts_inner_loop_body(
-        i, k, last12, shift23, ind23, x, y, z, R, z0, phi_slope, deta, dphi,
-        MD12_z0_min, MD12_z0_max, MD12_deta_min, MD12_deta_max,
-        MD12_phi_slope_min, MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max,
-        MD23_z0_min, MD23_z0_max, MD23_deta_min, MD23_deta_max,
-        MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
-        diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
-        M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag, epsilon);
   }
 }
 
@@ -418,7 +209,6 @@ __device__ void doublet_cut_kernel(
     T *dphi_max, const int *indices, T epsilon, F &&function) {
   // Since doublet_offsets should be the prefix sum of the
   // number of space points per doublet, we can construct the doublet index
-  // TODO this is a linear search, can be optimized
   int doublet_idx = 0;
   locateInPrefixSumBisect(0, nb_doublets, i, doublet_idx, doublet_offsets);
 
@@ -450,7 +240,7 @@ __device__ void doublet_cut_kernel(
 }
 
 template <class T>
-__global__ void count_doublet_edges_new(
+__global__ void count_doublet_edges(
     int sum_nb_src_hits_per_doublet, int nb_doublets,
     const int *doublet_offsets, const int *modules1, const int *modules2,
     const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
@@ -471,7 +261,7 @@ __global__ void count_doublet_edges_new(
 }
 
 template <class T>
-__global__ void build_doublet_edges_new(
+__global__ void build_doublet_edges(
     int sum_nb_src_hits_per_doublet, int nb_doublets,
     const int *doublet_offsets, const int *modules1, const int *modules2,
     const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
@@ -544,20 +334,18 @@ __global__ void
 #ifdef USE_LAUNCH_BOUNDS
 __launch_bounds__(512, 2)
 #endif
-    triplet_cuts_new2(int nb_src_hits_per_triplet_sum, int nb_triplets,
-                      const int *triplet_offsets, const int *modules12_map,
-                      const int *modules23_map, T *x, T *y, T *z, T *R, T *z0,
-                      T *phi_slope, T *deta, T *dphi, T *MD12_z0_min,
-                      T *MD12_z0_max, T *MD12_deta_min, T *MD12_deta_max,
-                      T *MD12_phi_slope_min, T *MD12_phi_slope_max,
-                      T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
-                      T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max,
-                      T *MD23_phi_slope_min, T *MD23_phi_slope_max,
-                      T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
-                      T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max,
-                      T pi, int *M1_SP, int *M2_SP, int *sorted_M2_SP,
-                      int *edge_indices, bool *vertices, bool *edge_tag,
-                      T epsilon) {
+    triplet_cuts(int nb_src_hits_per_triplet_sum, int nb_triplets,
+                 const int *triplet_offsets, const int *modules12_map,
+                 const int *modules23_map, T *x, T *y, T *z, T *R, T *z0,
+                 T *phi_slope, T *deta, T *dphi, T *MD12_z0_min, T *MD12_z0_max,
+                 T *MD12_deta_min, T *MD12_deta_max, T *MD12_phi_slope_min,
+                 T *MD12_phi_slope_max, T *MD12_dphi_min, T *MD12_dphi_max,
+                 T *MD23_z0_min, T *MD23_z0_max, T *MD23_deta_min,
+                 T *MD23_deta_max, T *MD23_phi_slope_min, T *MD23_phi_slope_max,
+                 T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
+                 T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi,
+                 int *M1_SP, int *M2_SP, int *sorted_M2_SP, int *edge_indices,
+                 bool *vertices, bool *edge_tag, T epsilon) {
   int ii = blockIdx.x * blockDim.x + threadIdx.x;
   if (ii >= nb_src_hits_per_triplet_sum) {
     return;
