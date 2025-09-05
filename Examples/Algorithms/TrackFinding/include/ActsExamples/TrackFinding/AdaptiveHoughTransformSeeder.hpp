@@ -107,7 +107,7 @@ class AccumulatorSection {
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
   template <typename F>
-  inline bool isLineInside(F&& function) const &
+  inline bool isLineInside(F &&function) const &
     requires std::invocable<F, float>
   {
     const float yB = function(m_xBegin);
@@ -124,7 +124,7 @@ class AccumulatorSection {
   /// sections
   /// @return true if the lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(F&& line1, F&& line2) const &
+  inline bool isCrossingInside(F &&line1, F &&line2) const &
     requires std::invocable<F, float>
   {
     // this microalgorithm idea is illustrated below
