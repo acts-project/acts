@@ -12,9 +12,11 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 
+#include <limits>
+
 namespace ActsFatras {
 
-/// A continuous simulation process based on a physics model plus selectors.
+/// A point like simulation process based on a physics model plus selectors.
 ///
 /// @tparam physics_t is the physics model type
 /// @tparam input_particle_selector_t is the input particle selector
@@ -22,15 +24,25 @@ namespace ActsFatras {
 /// @tparam child_particle_selector_t is the child particle selector
 ///
 /// The physics model type **must** provide a call operator with the following
-/// signature
+/// two member functions
 ///
-///     <Particle Container>
-///     operator()(
-///         generator_t& generator,
-///         const Acts::MaterialSlab& slab,
-///         Particle& particle) const
+///     // generate X0/L0 limits
+///     template <typename generator_t>
+///     std::pair<Scalar, Scalar>
+///     generatePathLimits(
+///         generator& rng,
+///         const Particle& particle) const
 ///
-/// The return type can be any `Container` with `Particle` elements.
+///     // run the process simulation
+///     template <typename generator_t>
+///     bool
+///     run(
+///         generator_t& rng,
+///         Particle& particle,
+///         std::vector<Particle>& generatedParticles) const
+///
+/// The return type of generatePathLimits() can be any `Container` with
+/// `Particle` elements.
 ///
 /// The input selector defines whether the process is applied while the
 /// output selector defines a break condition, i.e. whether to continue
@@ -39,11 +51,11 @@ namespace ActsFatras {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitly specified.
-template <detail::ContinuousProcessConcept physics_t,
+template <detail::PointLikeProcessConcept physics_t,
           typename input_particle_selector_t,
           typename output_particle_selector_t,
           typename child_particle_selector_t = output_particle_selector_t>
-struct ContinuousProcess {
+struct PointLikeProcess {
   /// The physics interactions implementation.
   physics_t physics;
   /// Input selection: if this process applies to this particle.
@@ -53,29 +65,25 @@ struct ContinuousProcess {
   /// Child selection: if a generated child particle should be kept.
   child_particle_selector_t selectChildParticle;
 
-  /// Execute the physics process considering the configured selectors.
-  ///
-  /// @param[in]     generator is the random number generator
-  /// @param[in]     slab      is the passed material
-  /// @param[in,out] particle  is the particle being updated
-  /// @param[out]    generated is the container of generated particles
-  /// @return Break condition, i.e. whether this process stops the propagation
-  ///
-  /// @tparam generator_t must be a RandomNumberEngine
-  template <typename generator_t>
-  bool operator()(generator_t &generator, const Acts::MaterialSlab &slab,
-                  Particle &particle, std::vector<Particle> &generated) const {
-    // not selecting this process is not a break condition
+  template <class generator_t>
+  std::pair<double, double> generatePathLimits(generator_t& generator,
+                                               const Particle& particle) const {
+    return physics.generatePathLimits(generator, particle);
+  }
+
+  template <class generator_t>
+  bool run(generator_t& rng, Particle& particle,
+           std::vector<Particle>& generatedParticles) const {
     if (!selectInputParticle(particle)) {
       return false;
     }
-    // modify particle according to the physics process
-    auto children = physics(generator, slab, particle);
-    // move selected child particles to the output container
+
+    std::vector<Particle> children;
+    physics.run(rng, particle, children);
+
     std::copy_if(std::begin(children), std::end(children),
-                 std::back_inserter(generated), selectChildParticle);
-    // break condition is defined by whether the output particle is still valid
-    // or not e.g. because it has fallen below a momentum threshold.
+                 std::back_inserter(generatedParticles), selectChildParticle);
+
     return !selectOutputParticle(particle);
   }
 };
