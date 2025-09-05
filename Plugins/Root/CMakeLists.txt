@@ -1,6 +1,7 @@
 acts_add_library(
     PluginRoot
     SHARED
+    src/AmbiScoreMonitor.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
     src/RootSpacePointIo.cpp
