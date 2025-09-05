@@ -283,6 +283,7 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
   for (auto& [_, entry] : chamberVolumes) {
     stationNode->addChild(std::move(entry.first));
   }
+  ACTS_VERBOSE("done with loop over common stations");
 
   return stationNode;
 }

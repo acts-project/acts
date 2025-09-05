@@ -65,7 +65,7 @@ int main() {
   	NavigationArguments args{startPos, startDir};
 
 	FrustumNavigationPolicy::Config frustumConfig;
-	FrustumNavigationPolicy frustumNav(gContext,trackingGeometry->highestTrackingVolume,logger,frustumConfig);
+	FrustumNavigationPolicy frustumNav(gContext,*trackingGeometry->highestTrackingVolume(),*logger,frustumConfig);
 	NavigationDelegate delegate;
   	frustumNav.connect(delegate);
 	delegate(args,stream, *logger);

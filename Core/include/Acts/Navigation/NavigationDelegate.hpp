@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Frustum.hpp"
 
 namespace Acts {
 
@@ -31,7 +30,6 @@ struct NavigationArguments {
   Vector3 direction{};
 
   /// Boundary tolerance for surface intersection calculations
-
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 };
 
