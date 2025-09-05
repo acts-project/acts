@@ -109,7 +109,7 @@ class Surface : public virtual GeometryObject,
           const Transform3& shift);
 
  public:
-  virtual ~Surface();
+  ~Surface() noexcept override;
 
   /// Factory for producing memory managed instances of Surface.
   /// Will forward all parameters and will attempt to find a suitable
