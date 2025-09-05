@@ -17,7 +17,7 @@
 
 namespace Acts::Experimental {
 
-class CompSpacePointLineFitter {
+class CompositeSpacePointLineFitter {
  public:
   /// @brief Abrivation of the line type
   using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
@@ -88,19 +88,23 @@ class CompSpacePointLineFitter {
     unsigned nIter{0};
   };
 
-  template <CompositeSpacePointContainer Cont_t>
+  template <CompositeSpacePointContainer Cont_t,
+            CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   struct FitOptions {
     FitOptions() {}
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
     using typename SpacePoint_t = RemovePointer_t<Cont_t::value_type>;
-    ///@brief During the repetitive recalibration, single hits may be invalidated 
-    ///       under the track parameters. Define a Delegate to sort out the invalid
+    ///@brief During the repetitive recalibration, single hits may be invalidated
+    ///       under the track parameters. Define a Delegate to sort out the
+    ///       invalid
     //        hits from the fit
     using Selector_t = Delegate<bool(const SpacePoint_t&)>;
     /// @brief Good hit selector
     Selector_t selector;
+    /// @brief Calibrator
+    const Calibrator_t* calibrator{nullptr};
     /// @brief Experiment specific calibration context
     Acts::CalibrationContext calibContext{};
     /// @brief Local to global transform
@@ -112,12 +116,9 @@ class CompSpacePointLineFitter {
     Cont_t measurements{};
   };
 
-  template <CompositeSpacePointContainer Cont_t>
-      FitResult<Cont_t> fit(FitOptions<Cont_t>&& fitOpts) const;
-
-  
-
-
+  template <CompositeSpacePointContainer Cont_t,
+            CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
+  FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
 
  private:
   const Logger& logger() const { return *m_logger; }
@@ -128,4 +129,4 @@ class CompSpacePointLineFitter {
 
 }  // namespace Acts::Experimental
 
-#include
+#include "Acts/Seeding/detail/CompositeSpacePointLineFitter.ipp"

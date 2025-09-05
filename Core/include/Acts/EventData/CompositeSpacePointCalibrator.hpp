@@ -12,8 +12,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 namespace Acts::Experimental {
 
-/// @brief Interface concept to calibrate CompositeSpacePoints
-
+/// @brief Interface concept to define the straw measurement calibrator used by the FastStrawLineFitter. The basic assumption is that the straw radii are reconstructed from a time measurement which is converted into a drift-radius using a differentiable r-t relation. Due to e.g. late arrival of the particle, the drift time may be subject to corrections which is summarized by a general time shift t0. This shift in time can be estimated during a straight line fit. The calibrator returns the updated drift radius & the first and second derivative of the r-t relation called driftVelocity and driftAcceleration, respectively.
 template <typename Calibrator_t, typename SpacePoint_t>
 concept CompositeSpacePointFastCalibrator =
     CompositeSpacePoint<SpacePoint_t> &&
@@ -34,4 +33,33 @@ concept CompositeSpacePointFastCalibrator =
 
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
+
+/// @brief Interface concept to define a generic
+template <typename Calibrator_t, typename UnCalibCont_t, typename CalibCont_t>
+concept CompositeSpacePointCalibrator =
+    CompositeSpacePointContainer<UnCalibCont_t> &&
+    CompositeSpacePointContainer<CalibCont_t> &&
+    requires(const Calibrator_t calibrator, const UnCalibCont_t& uncalibCont,
+             CalibCont_t& calibCont, const Vector3& trackPos,
+             const Vector3& trackDir, const double trackT0,
+             const CalibrationContext& ctx) {
+      ///  @brief Calibrate the entire input space point container using the external track parameters
+      ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
+      ///  @param trackPos: Position of the track / segment
+      ///  @param trackDir: Direction of the track / segment
+      ///  @param trackT0: Time offset w.r.t. the nominal time of flight calculated by (globPos) / c
+      ///  @param uncalibCont: Const reference to the calibrated input container to calibrate
+      {
+        calibrator.calibrate(ctx, trackPos, trackDir, trackT0, uncalibCont)
+      } -> std::same_as<CalibCont_t>;
+      /// @brief Update the signs of each straw measurement according to whether the measurement is on the
+      ///        left or on the right-hand side of the given line
+      ///  @param trackPos: Position of the track / segment
+      ///  @param trackDir: Direction of the track / segment
+      ///  @param calibCont: Mutable reference to the calibrate composite space point container
+      {
+        calibrator.updateSigns(trackPos, trackDir, calibCont)
+      } -> std::same_as<void>;
+    };
+
 }  // namespace Acts::Experimental
