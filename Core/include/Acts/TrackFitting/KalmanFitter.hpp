@@ -304,7 +304,8 @@ class KalmanFitter {
         KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
+    const std::unordered_map<const Surface*, SourceLink>* inputMeasurements =
+        nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -597,7 +598,7 @@ class KalmanFitter {
       const bool surfaceHasMaterial = surface->surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
+      auto sourceLinkIt = inputMeasurements->find(surface);
       if (sourceLinkIt != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -702,7 +703,7 @@ class KalmanFitter {
                                 const navigator_t& navigator,
                                 result_type& result) const {
       // Try to find the surface in the measurement surfaces
-      auto sourceLinkIt = inputMeasurements->find(surface->geometryId());
+      auto sourceLinkIt = inputMeasurements->find(surface);
       if (sourceLinkIt != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface "
@@ -1091,14 +1092,12 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
     // for (const auto& sl : sourceLinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      // @TODO: This can probably change over to surface pointers as keys
-      auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl),
+                                std::move(sl));
     }
 
     // Create the ActorList
@@ -1117,8 +1116,8 @@ class KalmanFitter {
 
     // Add the measurement surface as external surface to navigator.
     // We will try to hit those surface by ignoring boundary checks.
-    for (const auto& [surfaceId, _] : inputMeasurements) {
-      propagatorOptions.navigation.insertExternalSurface(surfaceId);
+    for (const auto& [surface, _] : inputMeasurements) {
+      propagatorOptions.navigation.insertExternalSurface(surface);
     }
 
     // Catch the actor and set the measurements
@@ -1176,13 +1175,11 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    std::unordered_map<const Surface*, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
-      // @TODO: This can probably change over to surface pointers as keys
-      auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(kfOptions.extensions.surfaceAccessor(sl),
+                                std::move(sl));
     }
 
     // Create the ActorList
