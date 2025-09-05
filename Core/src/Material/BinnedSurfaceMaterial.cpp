@@ -29,15 +29,6 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
       m_binUtility(binUtility),
       m_fullMaterial(std::move(fullProperties)) {}
 
-Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
-  for (auto& materialVector : m_fullMaterial) {
-    for (auto& materialBin : materialVector) {
-      materialBin.scaleThickness(factor);
-    }
-  }
-  return (*this);
-}
-
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
   // the first bin
