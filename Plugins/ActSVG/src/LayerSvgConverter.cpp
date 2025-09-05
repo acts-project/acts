@@ -11,9 +11,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-
-#include <set>
-#include <sstream>
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     const GeometryContext& gctx, const Layer& layer,

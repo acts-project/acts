@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -36,6 +35,8 @@ class GeometryObject {
   /// @param geometryId the geometry identifier of the object
   explicit GeometryObject(const GeometryIdentifier& geometryId)
       : m_geometryId(geometryId) {}
+
+  virtual ~GeometryObject() noexcept = default;
 
   /// Assignment operator
   ///
