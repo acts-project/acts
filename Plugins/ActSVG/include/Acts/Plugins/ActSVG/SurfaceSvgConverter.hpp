@@ -27,7 +27,7 @@ namespace SurfaceConverter {
 /// Nested Options struct
 struct Options {
   /// A The style for the surfaces
-  Style style;
+  Style style = defaultSensitiveStyle;
   /// Indicate if you want to draw this as a template surface
   bool templateSurface = false;
 };

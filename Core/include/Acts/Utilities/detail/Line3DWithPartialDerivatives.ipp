@@ -10,31 +10,48 @@
 
 #include "Acts/Utilities/detail/Line3DWithPartialDerivatives.hpp"
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::detail {
 
 template <std::floating_point T>
+Line3DWithPartialDerivatives<T>::ParamVector
+Line3DWithPartialDerivatives<T>::parameters() const {
+  ParamVector pars{};
+  pars[toUnderlying(ParIndex::x0)] = m_pos[Acts::eX];
+  pars[toUnderlying(ParIndex::y0)] = m_pos[Acts::eY];
+  pars[toUnderlying(ParIndex::theta)] = Acts::VectorHelpers::theta(m_dir);
+  pars[toUnderlying(ParIndex::phi)] = Acts::VectorHelpers::phi(m_dir);
+  return pars;
+}
+
+template <std::floating_point T>
+template <std::size_t N>
+Line3DWithPartialDerivatives<T>::Line3DWithPartialDerivatives(
+    const std::array<T, N>& initPars) noexcept {
+  updateParameters(initPars);
+}
+
+template <std::floating_point T>
+template <std::size_t N>
 void Line3DWithPartialDerivatives<T>::updateParameters(
-    const ParamVector& newPars) {
-  constexpr auto x0 = static_cast<std::uint8_t>(ParIndex::x0);
-  constexpr auto y0 = static_cast<std::uint8_t>(ParIndex::y0);
-  constexpr auto theta = static_cast<std::uint8_t>(ParIndex::theta);
-  constexpr auto phi = static_cast<std::uint8_t>(ParIndex::phi);
+    const std::array<T, N>& newPars) noexcept
+  requires(N >= s_nPars)
+{
+  m_pos[Acts::eX] = newPars[toUnderlying(ParIndex::x0)];
+  m_pos[Acts::eY] = newPars[toUnderlying(ParIndex::y0)];
 
-  m_pos[Acts::eX] = newPars[x0];
-  m_pos[Acts::eY] = newPars[y0];
-
-  const T cosTheta = std::cos(newPars[theta]);
-  const T sinTheta = std::sin(newPars[theta]);
-  const T cosPhi = std::cos(newPars[phi]);
-  const T sinPhi = std::sin(newPars[phi]);
+  const T cosTheta = std::cos(newPars[toUnderlying(ParIndex::theta)]);
+  const T sinTheta = std::sin(newPars[toUnderlying(ParIndex::theta)]);
+  const T cosPhi = std::cos(newPars[toUnderlying(ParIndex::phi)]);
+  const T sinPhi = std::sin(newPars[toUnderlying(ParIndex::phi)]);
 
   m_dir = Vector{cosPhi * sinTheta, sinPhi * sinTheta, cosTheta};
 
-  m_gradient[y0] = Vector::UnitY();
-  m_gradient[x0] = Vector::UnitX();
+  m_gradient[toUnderlying(ParIndex::y0)] = Vector::UnitY();
+  m_gradient[toUnderlying(ParIndex::x0)] = Vector::UnitX();
   /**            x_{0}                cos (phi) sin (theta)
    *  position = y_{0}  , Direction = sin (phi) sin (theta)
    *             0                         cos theta
@@ -46,8 +63,10 @@ void Line3DWithPartialDerivatives<T>::updateParameters(
    *(theta) dTheta         - sin (theta)             dPhi                 0
    *
    *******************************************************************************/
-  m_gradient[theta] = Vector{cosPhi * cosTheta, sinPhi * cosTheta, -sinTheta};
-  m_gradient[phi] = Vector{-sinTheta * sinPhi, sinTheta * cosPhi, 0};
+  m_gradient[toUnderlying(ParIndex::theta)] =
+      Vector{cosPhi * cosTheta, sinPhi * cosTheta, -sinTheta};
+  m_gradient[toUnderlying(ParIndex::phi)] =
+      Vector{-sinTheta * sinPhi, sinTheta * cosPhi, 0};
   /*********************************************************************************
    *   Non-vanishing second order derivatives
    *
@@ -60,9 +79,12 @@ void Line3DWithPartialDerivatives<T>::updateParameters(
    *   -------------     = cos(theta)   cos phi
    *    d theta dPhi                       0
    ************************************************************************************/
-  constexpr auto idxThetaSq = vecIdxFromSymMat<s_nPars>(theta, theta);
-  constexpr auto idxPhiSq = vecIdxFromSymMat<s_nPars>(phi, phi);
-  constexpr auto idxPhiTheta = vecIdxFromSymMat<s_nPars>(theta, phi);
+  constexpr auto idxThetaSq = vecIdxFromSymMat<s_nPars>(
+      toUnderlying(ParIndex::theta), toUnderlying(ParIndex::theta));
+  constexpr auto idxPhiSq = vecIdxFromSymMat<s_nPars>(
+      toUnderlying(ParIndex::phi), toUnderlying(ParIndex::phi));
+  constexpr auto idxPhiTheta = vecIdxFromSymMat<s_nPars>(
+      toUnderlying(ParIndex::theta), toUnderlying(ParIndex::phi));
   m_hessian[idxThetaSq] = -m_dir;
   m_hessian[idxPhiSq] = -sinTheta * Vector{cosPhi, sinPhi, 0.};
   m_hessian[idxPhiTheta] = cosTheta * Vector{-sinPhi, cosPhi, 0.};

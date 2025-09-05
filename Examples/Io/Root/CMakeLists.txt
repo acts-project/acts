@@ -37,7 +37,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoRoot
     PUBLIC
-        Acts::Core
         Acts::PluginRoot
         Acts::ExamplesDigitization
         Acts::ExamplesFramework

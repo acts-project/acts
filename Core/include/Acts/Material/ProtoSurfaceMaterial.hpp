@@ -50,7 +50,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Copy move constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
+  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept =
+      default;
 
   /// Destructor
   ~ProtoSurfaceMaterialT() override = default;
@@ -65,7 +66,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ///
   /// @param smproxy The source proxy
   ProtoSurfaceMaterialT<BinningType>& operator=(
-      ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
+      ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
 
   /// Scale operation - dummy implementation
   ///

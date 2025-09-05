@@ -100,7 +100,7 @@ clang_tidy:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx_cpu:
+build_gnn_cpu:
   stage: build
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
@@ -126,9 +126,9 @@ build_exatrkx_cpu:
     # Here we only do a minimal build without examples to save resources
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-      -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
+      --preset=gitlab-ci-gnn
+      -DACTS_GNN_ENABLE_CUDA=OFF
+      -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
     - cmake --build build -- -j6
@@ -137,7 +137,7 @@ build_exatrkx_cpu:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx:
+build_gnn:
   stage: build
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
@@ -170,7 +170,7 @@ build_exatrkx:
     - mkdir build
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
+      --preset=gitlab-ci-gnn
 
     - ccache -z
     - cmake --build build -- -j6
@@ -179,10 +179,10 @@ build_exatrkx:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_unittests:
+test_gnn_unittests:
   stage: test
   needs:
-    - build_exatrkx
+    - build_gnn
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
@@ -199,15 +199,15 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+    - ctest --test-dir build -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_python:
+test_gnn_python:
   stage: test
   needs:
-    - build_exatrkx
+    - build_gnn
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
   tags:
     - docker-gpu-nvidia
@@ -356,7 +356,7 @@ linux_test_examples:
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rfExw -k "not exatrkx" -v
+    - pytest -rfExw -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
