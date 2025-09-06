@@ -10,6 +10,8 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Utilities/StringHelpers.hpp"
+
 #include <format>
 namespace Acts::Experimental {
 
@@ -105,10 +107,48 @@ CompositeSpacePointLineFitter::fit(
 
   /// Proceed with the usual fit
   ChiSqCache cache{};
-  Line_t line{result.parameters};
+  Line_t line{};
   detail::CompSpacePointAuxiliaries pullCalculator{resCfg, logger().clone()};
   for (; !result.converged && result.nIter < m_cfg.nIterMax; ++result.nIter) {
     cache.reset();
+    // Update the parameters from the last iteration
+    line.updateParameters(result.parameters);
+    const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
+    // Update the measurements
+    if (m_cfg.recalibrate) {
+      result.measurements = fitOpts.calibrator->calibrate(
+          fitOpts.calibContext, line.position(), line.direction(), t0,
+          result.measurements);
+      // Check whether the measurements are still valid
+      if (!calculateNdoF()) {
+        // No valid measurement is left
+        if (resCfg.parsToUse.empty()) {
+          ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
+                                << toString(line.position()) << " + "
+                                << toString(line.direction()) << ", t0: " << t0
+                                << " invalidated all measurements");
+          return result;
+        }
+        // Instantiate an updated pull calculator
+        pullCalculator =
+            detail::CompSpacePointAuxiliaries{resCfg, logger().clone()};
+      }
+      // update the drift signs
+      fitOpts.calibrator->updateSigns(line.position(), line.direction(),
+                                      result.measurements);
+    }
+    for (const auto& spacePoint : result.measurements) {
+      // Skip bad measurements
+      if (!fitOpts.selector(*spacePoint)) {
+        continue;
+      }
+      // Calculate the residual & derivatives
+      pullCalculator.updateSpatialResidual(line, *spacePoint);
+      // Propagte to the chi2
+      pullCalculator.updateChiSq(cache, spacePoint->covariance());
+    }
+    pullCalculator.symmetrizeHessian(cache);
+    // Now update the parameters
   }
   return result;
 }

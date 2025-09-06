@@ -29,11 +29,11 @@ class CompositeSpacePointLineFitter {
   /// @brief Assignment of the parameter vector components
   using FitParIndex = detail::CompSpacePointAuxiliaries::FitParIndex;
 
-  static constexpr auto n_Pars = toUnderlying(FitParIndex::nPars);
+  static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
-  using ParamVec_t = Acts::ActsVector<n_Pars>;
+  using ParamVec_t = std::array<double, s_nPars>;
   /// @brief Covariance estimation matrix on the segment line parameters
-  using CovMat_t = Acts::ActsSquareMatrix<n_Pars>;
+  using CovMat_t = Acts::ActsSquareMatrix<s_nPars>;
 
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
@@ -63,7 +63,7 @@ class CompositeSpacePointLineFitter {
     /// @brief How many iterations with changes below tolerance
     unsigned int noMoveIter{2};
     /// @brief Allowed parameter ranges
-    using RangeArray = std::array<std::array<double, 2>, n_Pars>;
+    using RangeArray = std::array<std::array<double, 2>, s_nPars>;
     RangeArray ranges{};
   };
 
@@ -85,7 +85,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Move assignment operator
     FitParameters& operator=(FitParameters&& other) = default;
     /// @brief Local straight line parameters
-    ParamVec_t parameters{ParamVec_t::Zero()};
+    ParamVec_t parameters{filledArray<double, s_nPars>(0)};
     /// @brief Covariance on the local line parameters
     CovMat_t covariance{CovMat_t::Identity()};
     /// @brief Number of degrees of freedom
@@ -120,7 +120,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Local to global transform
     Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Initial parameter guess
-    ParamVec_t parameters{ParamVec_t::Zero()};
+    ParamVec_t parameters{filledArray<double, s_nPars>(0)};
   };
 
   template <CompositeSpacePointContainer Cont_t>

@@ -69,10 +69,15 @@ class SpCalibrator {
   Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
-                        const Container_t& uncalibCont) const;
+                        const Container_t& uncalibCont) const {
+    return uncalibCont;
+  }
 
   void updateSigns(const Vector3& trackPos, const Vector3& trackDir,
-                   Container_t& measurements) const;
+                   Container_t& measurements) const {
+    auto signs =
+        CompSpacePointAuxiliaries::strawSigns(trackPos, trackDir, measurements);
+  }
 };
 static_assert(
     CompositeSpacePointCalibrator<SpCalibrator, Container_t, Container_t>);
@@ -86,13 +91,13 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   using FitOpts_t =
       CompositeSpacePointLineFitter::FitOptions<Container_t, SpCalibrator>;
-  using FitResult_t = CompositeSpacePointLineFitter::FitResult<Container_t>;
 
   CompositeSpacePointLineFitter::Config cfg{};
 
-  // CompositeSpacePointLineFitter fitter{cfg};
+  CompositeSpacePointLineFitter fitter{cfg};
 
-  Container_t measurements{};
+  FitOpts_t fitOpts{};
+  auto result = fitter.fit(std::move(fitOpts));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
