@@ -159,11 +159,23 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
                                           << " sensitive surfaces.");
+
+          // Transform geometry bounds to local coordinate system for envelope calculation
+          // Since ProtoLayer extent is in local coordinates due to itransform,
+          // we need to transform the geometry bounds to the same coordinate system
+          Vector3 localZMin = itransform * Vector3(0, 0, zMin);
+          Vector3 localZMax = itransform * Vector3(0, 0, zMax);
+          double localGeomZMin = localZMin.z();
+          double localGeomZMax = localZMax.z();
+          if (localGeomZMin > localGeomZMax) {
+            std::swap(localGeomZMin, localGeomZMax);
+          }
+          
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
-              std::abs(zMin - pl.min(AxisDirection::AxisZ)),
-              std::abs(zMax - pl.max(AxisDirection::AxisZ))};
+              std::abs(localGeomZMin - pl.min(Acts::AxisDirection::AxisZ)),
+              std::abs(localGeomZMax - pl.max(Acts::AxisDirection::AxisZ))};
           pl.envelope[AxisDirection::AxisR] = {
               std::abs(rMin - pl.min(AxisDirection::AxisR)),
               std::abs(rMax - pl.max(AxisDirection::AxisR))};
