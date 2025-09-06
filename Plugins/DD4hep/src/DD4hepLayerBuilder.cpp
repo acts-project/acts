@@ -170,7 +170,7 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
           if (localGeomZMin > localGeomZMax) {
             std::swap(localGeomZMin, localGeomZMax);
           }
-          
+
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
