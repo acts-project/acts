@@ -174,8 +174,8 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
-              std::abs(localGeomZMin - pl.min(Acts::AxisDirection::AxisZ)),
-              std::abs(localGeomZMax - pl.max(Acts::AxisDirection::AxisZ))};
+              std::abs(localGeomZMin - pl.min(AxisDirection::AxisZ)),
+              std::abs(localGeomZMax - pl.max(AxisDirection::AxisZ))};
           pl.envelope[AxisDirection::AxisR] = {
               std::abs(rMin - pl.min(AxisDirection::AxisR)),
               std::abs(rMax - pl.max(AxisDirection::AxisR))};
