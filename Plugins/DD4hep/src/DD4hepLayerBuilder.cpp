@@ -131,17 +131,13 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
-        double zMin =
-            (transform.translation() -
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        double zMax =
-            (transform.translation() +
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        if (zMin > zMax) {
-          std::swap(zMin, zMax);
-        }
+
+        // For disc layers, since ProtoLayer uses local coordinates,
+        // we can simply use ±dz directly in local coordinates
+        double dz = tube->GetDz() * UnitConstants::cm;
+        double zMin = -dz;
+        double zMax = +dz;
+
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
@@ -160,22 +156,14 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
                                           << " sensitive surfaces.");
 
-          // Transform geometry bounds to local coordinate system for envelope calculation
-          // Since ProtoLayer extent is in local coordinates due to itransform,
-          // we need to transform the geometry bounds to the same coordinate system
-          Vector3 localZMin = itransform * Vector3(0, 0, zMin);
-          Vector3 localZMax = itransform * Vector3(0, 0, zMax);
-          double localGeomZMin = localZMin.z();
-          double localGeomZMax = localZMax.z();
-          if (localGeomZMin > localGeomZMax) {
-            std::swap(localGeomZMin, localGeomZMax);
-          }
+          // Since zMin/zMax are now already in local coordinates, 
+          // no coordinate transformation is needed
 
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
-              std::abs(localGeomZMin - pl.min(AxisDirection::AxisZ)),
-              std::abs(localGeomZMax - pl.max(AxisDirection::AxisZ))};
+              std::abs(zMin - pl.min(AxisDirection::AxisZ)),
+              std::abs(zMax - pl.max(AxisDirection::AxisZ))};
           pl.envelope[AxisDirection::AxisR] = {
               std::abs(rMin - pl.min(AxisDirection::AxisR)),
               std::abs(rMax - pl.max(AxisDirection::AxisR))};
