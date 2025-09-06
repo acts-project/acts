@@ -21,24 +21,27 @@ class CompositeSpacePointLineFitter {
  public:
   /// @brief Abrivation of the line type
   using Line_t = detail::CompSpacePointAuxiliaries::Line_t;
-  /// @brief Abrivation of the carrier object of the chi2 of the measurements w.r.t. the line together with the corresponding derivatives
-  using ChiSqCache = detail::CompSpacePointAuxiliaries::ChiSqWithDerivatives
-      /// @brief Vector abrivation
-      using Vector = Line_t::Vector;
+  /// @brief Abrivation of the carrier object of the chi2 of the measurements w.r.t. the line together
+  ///        with the corresponding derivatives
+  using ChiSqCache = detail::CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  /// @brief Vector abrivation
+  using Vector = Line_t::Vector;
+  /// @brief Assignment of the parameter vector components
+  using FitParIndex = detail::CompSpacePointAuxiliaries::FitParIndex;
 
   static constexpr auto n_Pars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
   using ParamVec_t = Acts::ActsVector<n_Pars>;
   /// @brief Covariance estimation matrix on the segment line parameters
   using CovMat_t = Acts::ActsSquareMatrix<n_Pars>;
-  /// @brief Assignment of the parameter vector components
-  using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
     /// @brief Number of iterations
     unsigned nIterMax{1000};
+    /// @brief Fit the time offset if possible
+    bool fitT0{false};
     /// @brief Recalibrate the hits between two iterations
     bool recalibrate{false};
     /// @brief Switch to use the fast fitter if only straw measurements are passed
@@ -55,7 +58,6 @@ class CompositeSpacePointLineFitter {
     /// @brief  Include the time of flight assuming that the particle travels with the
     ///         speed of light in the time residual calculations
     bool includeToF{true};
-
     /// @brief Abort the fit as soon as more than n parameters leave the fit range
     unsigned int nParsOutOfBounds{1};
     /// @brief How many iterations with changes below tolerance
@@ -64,6 +66,12 @@ class CompositeSpacePointLineFitter {
     using RangeArray = std::array<std::array<double, 2>, n_Pars>;
     RangeArray ranges{};
   };
+
+  CompositeSpacePointLineFitter(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = getDefaultLogger(
+          "CompositeSpacePointLineFitter", Logging::Level::INFO))
+      : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   struct FitParameters {
     /// @brief Default constructor
@@ -86,6 +94,8 @@ class CompositeSpacePointLineFitter {
     double chi2{0.};
     /// @brief Number of iterations to converge
     unsigned nIter{0};
+    /// @brief Did the fit converge at all
+    bool converged{false};
   };
 
   template <CompositeSpacePointContainer Cont_t,
@@ -95,7 +105,7 @@ class CompositeSpacePointLineFitter {
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
-    using typename SpacePoint_t = RemovePointer_t<Cont_t::value_type>;
+    using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
     ///@brief During the repetitive recalibration, single hits may be invalidated
     ///       under the track parameters. Define a Delegate to sort out the
     ///       invalid
@@ -108,7 +118,9 @@ class CompositeSpacePointLineFitter {
     /// @brief Experiment specific calibration context
     Acts::CalibrationContext calibContext{};
     /// @brief Local to global transform
-    Acts::Transform3 locToGlob{Act::Transform3::Identity()};
+    Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
+    /// @brief Initial parameter guess
+    ParamVec_t parameters{ParamVec_t::Zero()};
   };
 
   template <CompositeSpacePointContainer Cont_t>
@@ -129,4 +141,4 @@ class CompositeSpacePointLineFitter {
 
 }  // namespace Acts::Experimental
 
-#include "Acts/Seeding/detail/CompositeSpacePointLineFitter.ipp"
+#include "Acts/Seeding/CompositeSpacePointLineFitter.ipp"
