@@ -131,17 +131,13 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
-        double zMin =
-            (transform.translation() -
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        double zMax =
-            (transform.translation() +
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        if (zMin > zMax) {
-          std::swap(zMin, zMax);
-        }
+
+        // For disc layers, since ProtoLayer uses local coordinates,
+        // we can simply use ±dz directly in local coordinates
+        double dz = tube->GetDz() * UnitConstants::cm;
+        double zMin = -dz;
+        double zMax = +dz;
+
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
@@ -159,6 +155,10 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
                                           << " sensitive surfaces.");
+
+          // Since zMin/zMax are now already in local coordinates,
+          // no coordinate transformation is needed
+
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
