@@ -28,14 +28,30 @@ namespace Acts {
 
 class MaterialSlab;
 
+/// @brief Type alias for equidistant axis with open boundary type
+/// @details Used for defining grid axes with equally spaced bins and open boundaries
 using EAxis = Acts::Axis<AxisType::Equidistant>;
+
+/// @brief Type alias for a 2-dimensional grid
+/// @details Grid structure for storing values with two dimensions
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+
+/// @brief Type alias for a 3-dimensional grid
+/// @details Grid structure for storing values with three dimensions
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+
+/// @brief Type alias for a 2-dimensional material grid
+/// @details Grid structure for storing material parameters with two dimensions
 using MaterialGrid2D =
     Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
+
+/// @brief Type alias for a 3-dimensional material grid
+/// @details Grid structure for storing material parameters with three dimensions
 using MaterialGrid3D =
     Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
+/// @brief Type alias for the axis data in material grids
+/// @details Tuple containing the minimum value, maximum value, and number of bins for an axis
 using MaterialGridAxisData = std::tuple<double, double, std::size_t>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This

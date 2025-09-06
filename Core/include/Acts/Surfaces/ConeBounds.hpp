@@ -32,6 +32,8 @@ namespace Acts {
 ///
 class ConeBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eAlpha = 0,
     eMinZ = 1,
@@ -116,10 +118,12 @@ class ConeBounds : public SurfaceBounds {
   double r(double z) const { return std::abs(z * m_tanAlpha); }
 
   /// Return tangent of alpha (pre-computed)
+  /// @return Tangent of the cone half-angle
   double tanAlpha() const { return m_tanAlpha; }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

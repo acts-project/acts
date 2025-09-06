@@ -14,13 +14,19 @@
 
 namespace Acts {
 
+/// @brief Type alias for bound track parameters of singly charged particles
+/// @details Track parameters defined in a local coordinate system for particles with charge ±1
 using SinglyChargedBoundTrackParameters =
     GenericBoundTrackParameters<SinglyChargedParticleHypothesis>;
+/// Type alias for free track parameters of singly charged particles
 using SinglyChargedFreeTrackParameters =
     GenericFreeTrackParameters<SinglyChargedParticleHypothesis>;
 
+/// @brief Type alias for bound track parameters of neutral particles
+/// @details Track parameters for neutral particles in a bound coordinate system
 using NeutralBoundTrackParameters =
     GenericBoundTrackParameters<NeutralParticleHypothesis>;
+/// Type alias for free track parameters of neutral particles
 using NeutralFreeTrackParameters =
     GenericFreeTrackParameters<NeutralParticleHypothesis>;
 

@@ -100,6 +100,7 @@ class NeighborHoodIndices {
 template <AxisBoundaryType bdt>
 class Axis<AxisType::Equidistant, bdt> : public IAxis {
  public:
+  /// Static type identifier for this equidistant axis specialization
   static constexpr AxisType type = AxisType::Equidistant;
 
   /// @brief default constructor
@@ -372,6 +373,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   std::size_t getNBins() const override { return m_bins; }
 
   /// @brief check whether value is inside axis limits
+  /// @param x The value to check
   ///
   /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
   ///         @c false
@@ -420,6 +422,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 template <AxisBoundaryType bdt>
 class Axis<AxisType::Variable, bdt> : public IAxis {
  public:
+  /// Static type identifier for this variable-width axis specialization
   static constexpr AxisType type = AxisType::Variable;
 
   /// @param [in] binEdges vector of bin edges
@@ -689,6 +692,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::size_t getNBins() const override { return m_binEdges.size() - 1; }
 
   /// @brief check whether value is inside axis limits
+  /// @param x The value to check
   ///
   /// @return @c true if \f$\text{xmin} \le x < \text{xmax}\f$, otherwise
   ///         @c false

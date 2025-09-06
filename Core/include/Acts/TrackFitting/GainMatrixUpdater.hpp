@@ -47,6 +47,7 @@ class GainMatrixUpdater {
   /// @tparam kMeasurementSizeMax
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
+  /// @return Success or failure of the update procedure with chi2 information
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,

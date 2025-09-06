@@ -182,6 +182,8 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   }
 
   /// The call to provide the surfaces
+  /// @param gctx Geometry context (not used in KDT provider)
+  /// @return Vector of surfaces from the KDT query
   std::vector<std::shared_ptr<Surface>> surfaces(
       [[maybe_unused]] const GeometryContext& gctx) const final {
     return m_kdt->surfaces(m_region);

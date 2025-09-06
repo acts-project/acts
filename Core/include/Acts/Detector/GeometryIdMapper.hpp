@@ -44,8 +44,11 @@ class GeometryIdMapper final : public IGeometryIdGenerator {
 
   /// @brief Cache object
   struct Cache {
+    /// Counter for volume geometry ID assignment
     unsigned int volumeCounter = 0u;
+    /// Counter for portal geometry ID assignment
     unsigned int portalCounter = 0u;
+    /// Counter for surface geometry ID assignment
     unsigned int surfaceCounter = 0u;
   };
 

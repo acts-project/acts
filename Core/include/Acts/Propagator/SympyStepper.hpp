@@ -61,6 +61,7 @@ class SympyStepper {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    /// Configuration options for the stepper
     Options options;
 
     /// Internal free vector parameters
@@ -72,6 +73,7 @@ class SympyStepper {
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
     bool covTransport = false;
+    /// Covariance matrix for error propagation
     Covariance cov = Covariance::Zero();
 
     /// The full jacobian of the transport entire transport
@@ -109,6 +111,7 @@ class SympyStepper {
     /// Statistics of the stepper
     StepperStatistics statistics;
 
+    /// Accumulator for material effects along the trajectory
     detail::MaterialEffectsAccumulator materialEffectsAccumulator;
   };
 

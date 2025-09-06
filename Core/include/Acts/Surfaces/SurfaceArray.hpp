@@ -95,11 +95,17 @@ class SurfaceArray {
     /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*> getAxes() const = 0;
 
+    /// @brief Get a view of the grid for inspection
+    /// @return Optional grid view containing surface vectors
     virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
         const = 0;
 
+    /// @brief Get the transformation associated with this surface lookup
+    /// @return Reference to the transformation matrix
     virtual const Transform3& getTransform() const = 0;
 
+    /// @brief Get the surface type used for this lookup
+    /// @return Surface type enumeration value
     virtual Surface::SurfaceType surfaceType() const = 0;
 
     /// @brief Get the number of dimensions of the grid.
@@ -115,6 +121,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
+    /// @return Vector of axis directions for binning
     virtual std::vector<AxisDirection> binningValues() const { return {}; };
 
     /// Pure virtual destructor
@@ -125,6 +132,7 @@ class SurfaceArray {
   /// @tparam Axes The axes used for the grid
   template <class... Axes>
   struct SurfaceGridLookup : ISurfaceGridLookup {
+    /// Dimensionality of the surface grid (number of axes)
     static constexpr std::size_t DIM = sizeof...(Axes);
 
    public:
@@ -133,6 +141,7 @@ class SurfaceArray {
     /// std::array<double, 1>
     using point_t =
         std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
+    /// Type alias for grid over surface vectors
     using Grid_t = Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
@@ -303,6 +312,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes
+    /// @return Vector of axis directions for binning
     std::vector<AxisDirection> binningValues() const override {
       return m_binValues;
     }
@@ -490,6 +500,7 @@ class SurfaceArray {
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
+    /// @return Always returns 0
     std::size_t completeBinning(const GeometryContext& /*gctx*/,
                                 const SurfaceVector& /*surfaces*/) override {
       return 0;
@@ -589,10 +600,13 @@ class SurfaceArray {
     return p_gridLookup->isValidBin(bin);
   }
 
+  /// Get the transform of this surface array.
+  /// @return Reference to the transformation matrix
   const Transform3& transform() const { return m_transform; }
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes
+  /// @return Vector of axis directions for binning
   std::vector<AxisDirection> binningValues() const {
     return p_gridLookup->binningValues();
   };
@@ -604,6 +618,7 @@ class SurfaceArray {
   std::ostream& toStream(const GeometryContext& gctx, std::ostream& sl) const;
 
   /// Return the lookup object
+  /// @return Reference to the surface grid lookup interface
   const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
  private:

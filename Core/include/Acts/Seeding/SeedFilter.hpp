@@ -34,9 +34,16 @@ struct SeedFilterState {
 template <typename external_spacepoint_t>
 class SeedFilter final {
  public:
+  /// Constructor with configuration and optional experimental cuts
+  /// @param config Seed filter configuration
+  /// @param expCuts Optional experimental cuts (defaults to nullptr)
   explicit SeedFilter(
       const SeedFilterConfig& config,
       IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  /// Constructor with configuration, logger, and optional experimental cuts
+  /// @param config Seed filter configuration
+  /// @param logger Logger for output messages
+  /// @param expCuts Optional experimental cuts (defaults to nullptr)
   explicit SeedFilter(
       const SeedFilterConfig& config, std::unique_ptr<const Logger> logger,
       IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
@@ -87,7 +94,11 @@ class SeedFilter final {
           const external_spacepoint_t>::value_type>& candidates,
       const std::size_t numQualitySeeds, collection_t& outputCollection) const;
 
+  /// Get the seed filter configuration
+  /// @return Copy of the seed filter configuration
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
+  /// Get the experimental cuts pointer
+  /// @return Pointer to experimental cuts (may be nullptr)
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
     return m_experimentCuts;
   }

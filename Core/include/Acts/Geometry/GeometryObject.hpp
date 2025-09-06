@@ -41,6 +41,7 @@ class GeometryObject {
   /// Assignment operator
   ///
   /// @param geometryId the source geometryId
+  /// @return Reference to this GeometryObject after assignment
   GeometryObject& operator=(const GeometryObject& geometryId) {
     if (&geometryId != this) {
       m_geometryId = geometryId.m_geometryId;
@@ -75,6 +76,7 @@ class GeometryObject {
   void assignGeometryId(const GeometryIdentifier& geometryId);
 
  protected:
+  /// Unique geometry identifier for this object
   GeometryIdentifier m_geometryId;
 };
 

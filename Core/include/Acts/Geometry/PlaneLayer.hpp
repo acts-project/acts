@@ -52,7 +52,8 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @return returns a reference to a PlaneSurface
   const PlaneSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the plane surface
   PlaneSurface& surfaceRepresentation() override;
 
  private:

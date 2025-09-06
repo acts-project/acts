@@ -28,8 +28,10 @@ namespace Acts {
 template <std::size_t DIM>
 class GridBinFinder {
  public:
+  /// Number of neighbor bins in 3^DIM grid configuration
   static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
 
+  /// Type alias for variant storing different bin finding configurations
   using stored_values_t =
       std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
 
@@ -58,6 +60,8 @@ class GridBinFinder {
   explicit GridBinFinder(std::array<stored_values_t, DIM> values)
       : m_values(std::move(values)) {}
 
+  /// Get the stored bin edge values for all dimensions
+  /// @return Array of bin edge values for each dimension
   const std::array<stored_values_t, DIM>& values() const { return m_values; }
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid

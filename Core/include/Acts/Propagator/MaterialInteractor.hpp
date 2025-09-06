@@ -35,6 +35,7 @@ struct MaterialInteractor {
   /// Whether to add or remove noise.
   NoiseUpdateMode noiseUpdateMode = NoiseUpdateMode::addNoise;
 
+  /// Type alias for material interaction result
   using result_type = RecordedMaterial;
 
   /// @brief Interaction with detector material for the ActionList

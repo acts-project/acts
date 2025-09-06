@@ -194,14 +194,18 @@ struct ProtoLayerT : public ProtoLayerBase {
 
 }  // namespace detail
 
+/// A mutable proto layer that can be modified after construction
 struct MutableProtoLayer : public detail::ProtoLayerT<false> {
   using detail::ProtoLayerT<false>::ProtoLayerT;
 };
 
-// Forward-declaration friendly class for backward compatibility
+/// Forward-declaration friendly class for backward compatibility
+/// This class does not allow modification of the underlying surfaces
 struct ProtoLayer : public detail::ProtoLayerT<true> {
   using detail::ProtoLayerT<true>::ProtoLayerT;
 
+  /// Constructor from mutable proto layer
+  /// @param other The mutable proto layer to copy from
   explicit ProtoLayer(const MutableProtoLayer& other);
 };
 
