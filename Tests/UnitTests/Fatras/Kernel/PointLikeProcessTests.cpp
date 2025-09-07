@@ -30,13 +30,13 @@ namespace {
 /// particles with momenta 1,2,3,4 GeV.
 struct MockMakeChildren {
   template <typename generator_t>
-  std::pair<double, double> generatePathLimits(generator_t&,
-                                               const Particle&) const {
+  std::pair<double, double> generatePathLimits(generator_t& /*generator*/,
+                                               const Particle& /*particle*/) const {
     return {0., 0.};
   }
 
   template <class generator_t>
-  bool run(generator_t&, Particle&,
+  bool run(generator_t& /*generator*/, Particle& /*particle*/,
            std::vector<Particle>& generatedParticles) const {
     generatedParticles = {Particle().setAbsoluteMomentum(1_GeV),
                           Particle().setAbsoluteMomentum(2_GeV),
