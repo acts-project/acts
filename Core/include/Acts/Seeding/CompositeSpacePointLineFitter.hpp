@@ -11,6 +11,7 @@
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/EventData/CompositeSpacePointCalibrator.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
+#include "Acts/Seeding/detail/FastStrawLineFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -39,7 +40,7 @@ class CompositeSpacePointLineFitter {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
     /// @brief Number of iterations
-    unsigned nIterMax{1000};
+    unsigned maxIter{1000};
     /// @brief Fit the time offset if possible
     bool fitT0{false};
     /// @brief Recalibrate the hits between two iterations
@@ -60,8 +61,6 @@ class CompositeSpacePointLineFitter {
     bool includeToF{true};
     /// @brief Abort the fit as soon as more than n parameters leave the fit range
     unsigned int nParsOutOfBounds{1};
-    /// @brief How many iterations with changes below tolerance
-    unsigned int noMoveIter{2};
     /// @brief Allowed parameter ranges
     using RangeArray = std::array<std::array<double, 2>, s_nPars>;
     RangeArray ranges{};
@@ -120,7 +119,7 @@ class CompositeSpacePointLineFitter {
     /// @brief Local to global transform
     Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Initial parameter guess
-    ParamVec_t parameters{filledArray<double, s_nPars>(0)};
+    ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
   };
 
   template <CompositeSpacePointContainer Cont_t>
@@ -133,6 +132,19 @@ class CompositeSpacePointLineFitter {
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
 
  private:
+  /// @brief Enumeration to classify the parameter update
+  enum class UpdateStep : std::uint8_t {
+    goodStep = 0,     // Good step proceed with fit
+    converged = 1,    // The fit converged
+    outOfBounds = 2,  // Too many fit parameters fell out of bounds -> abort
+  };
+
+  template <unsigned N>
+  UpdateStep updateParameters(const FitParIndex firstPar,
+                              const ChiSqCache& cache,
+                              ParamVec_t& currentPars) const
+    requires(N >= 2 && N <= s_nPars);
+
   const Logger& logger() const { return *m_logger; }
 
   Config m_cfg{};

@@ -28,6 +28,7 @@ CompositeSpacePointLineFitter::fit(
 
   FitResult<Cont_t> result{};
   result.measurements = std::move(fitOpts.measurements);
+  result.parameters = std::move(fitOpts.startParameters);
 
   // Declare the auxiliaries object to calculate the residuals
   detail::CompSpacePointAuxiliaries::Config resCfg{};
@@ -41,7 +42,6 @@ CompositeSpacePointLineFitter::fit(
   std::size_t nLoc1{0};
   std::size_t nTime{0};
   std::size_t nStraw{0};
-
   /// @brief Calculate the number of degrees of freedom & deduce which
   ///        parameters are to be fitted. Returns false if the parameters
   ///        to fit change w.r.t the currently configured parameters
@@ -100,21 +100,52 @@ CompositeSpacePointLineFitter::fit(
                              "check your measurements");
     return result;
   }
+
+  Line_t line{};
   // First check whether all measurements are straw and the
   // fast fitter shall be used.
   if (m_cfg.useFastFitter && nStraw == nLoc1 + nLoc0) {
+    detail::FastStrawLineFitter::Config fastCfg{};
+    fastCfg.maxIter = m_cfg.maxIter;
+    fastCfg.precCutOff = m_cfg.precCutOff;
+    detail::FastStrawLineFitter fastFitter{fastCfg, logger().clone()};
+    line.updateParameters(result.parameters);
+    // Fit without t0
+    if (resCfg.parsToUse.back() != FitParIndex::t0) {
+      auto fastResult = fastFitter.fit(
+          result.measurements, detail::CompSpacePointAuxiliaries::strawSigns(
+                                   line, result.measurements));
+      if (!fastResult) {
+        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit failed.");
+        return result;
+      }
+      // Copy the parameters & covariance
+      result.parameters[toUnderlying(FitParIndex::y0)] = fastResult->y0;
+      result.parameters[toUnderlying(FitParIndex::theta)] = fastResult->theta;
+      result.covariance(toUnderlying(FitParIndex::y0),
+                        toUnderlying(FitParIndex::y0)) =
+          Acts::square(fastResult->dY0);
+      result.covariance(toUnderlying(FitParIndex::theta),
+                        toUnderlying(FitParIndex::theta)) =
+          Acts::square(fastResult->dTheta);
+      // Store information about fit quality and convergence speed
+      result.nDoF = fastResult->nDoF;
+      result.nIter = fastResult->nIter;
+      result.chi2 = fastResult->chi2;
+      result.converged = true;
+      return result;
+    }
   }
 
   /// Proceed with the usual fit
   ChiSqCache cache{};
-  Line_t line{};
   detail::CompSpacePointAuxiliaries pullCalculator{resCfg, logger().clone()};
-  for (; !result.converged && result.nIter < m_cfg.nIterMax; ++result.nIter) {
+  for (; !result.converged && result.nIter < m_cfg.maxIter; ++result.nIter) {
     cache.reset();
     // Update the parameters from the last iteration
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
-    // Update the measurements
+    // Update the measurements if calibration loop is switched on
     if (m_cfg.recalibrate) {
       result.measurements = fitOpts.calibrator->calibrate(
           fitOpts.calibContext, line.position(), line.direction(), t0,
@@ -137,20 +168,94 @@ CompositeSpacePointLineFitter::fit(
       fitOpts.calibrator->updateSigns(line.position(), line.direction(),
                                       result.measurements);
     }
+    // Calculate the new chi2
     for (const auto& spacePoint : result.measurements) {
       // Skip bad measurements
       if (!fitOpts.selector(*spacePoint)) {
         continue;
       }
+      double driftV{0.};
+      double driftA{0.};
       // Calculate the residual & derivatives
-      pullCalculator.updateSpatialResidual(line, *spacePoint);
+      if (resCfg.parsToUse.back() == FitParIndex::t0) {
+        pullCalculator.updateFullResidual(line, t0, *spacePoint, driftV,
+                                          driftA);
+      } else {
+        pullCalculator.updateSpatialResidual(line, *spacePoint);
+      }
       // Propagte to the chi2
       pullCalculator.updateChiSq(cache, spacePoint->covariance());
     }
     pullCalculator.symmetrizeHessian(cache);
+    result.chi2 = cache.chi2;
     // Now update the parameters
+    UpdateStep update{UpdateStep::goodStep};
+    switch (resCfg.parsToUse.size()) {
+      // 2D fit (intercept + inclination angle)
+      case 2: {
+        update = updateParameters<2>(resCfg.parsToUse.front(), cache,
+                                     result.parameters);
+        break;
+      }
+      // 2D fit + time
+      case 3: {
+        update = updateParameters<3>(resCfg.parsToUse.front(), cache,
+                                     result.parameters);
+        break;
+      }
+      // 3D spatial fit (x0, y0, theta, phi)
+      case 4: {
+        update = updateParameters<4>(resCfg.parsToUse.front(), cache,
+                                     result.parameters);
+        break;
+      }
+      // full fit
+      case 5: {
+        update = updateParameters<5>(resCfg.parsToUse.front(), cache,
+                                     result.parameters);
+        break;
+      }
+      default:
+        ACTS_WARNING(__func__ << "() " << __LINE__
+                              << ": Invalid parameter size "
+                              << resCfg.parsToUse.size());
+        return result;
+    }
   }
   return result;
+}
+
+template <unsigned N>
+CompositeSpacePointLineFitter::UpdateStep
+CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
+                                                const ChiSqCache& cache,
+                                                ParamVec_t& currentPars) const
+  requires(N >= 2 && N <= s_nPars)
+{
+  ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
+                     << ": Current chi2: " << cache.chi2 << ",  gradient: "
+                     << toString(cache.gradient) << ", hessian: \n"
+                     << cache.hessian);
+  auto firstIdx = toUnderlying(firstPar);
+  assert(firstIdx + N < s_nPars);
+  // Current parameters mapped to an Eigen interface
+  Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
+  // Take out the filled block from the gradient
+  Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
+                                               firstIdx};
+  if (miniGradient.norm() < m_cfg.precCutOff) {
+    return UpdateStep::converged;
+  }
+  // Take out the filled block from the hessian
+  Acts::ActsSquareMatrix<N> miniHessian{
+      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+  ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
+                     << ": Projected parameters: " << toString(miniPars)
+                     << " gradient: " << toString(miniGradient)
+                     << ", hessian: \n"
+                     << miniHessian);
+
+  return UpdateStep::goodStep;
 }
 
 }  // namespace Acts::Experimental

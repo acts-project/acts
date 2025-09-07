@@ -67,7 +67,7 @@ class FastStrawLineFitter {
   struct Config {
     /// @brief Number of maximum iterations
     std::size_t maxIter{10};
-    /// @brief Cutoff to def
+    /// @brief Cutoff to define the fit to be converged if the parameter change is below threshold
     double precCutOff{1.e-9};
   };
   /// @brief Constructor of the fast straw line fitter
