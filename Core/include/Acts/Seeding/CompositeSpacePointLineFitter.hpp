@@ -39,6 +39,8 @@ class CompositeSpacePointLineFitter {
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
+    /// @brief Gradient decent step size if the Hessian is singular
+    double gradientStep{1.e-4};
     /// @brief Number of iterations
     unsigned maxIter{1000};
     /// @brief Fit the time offset if possible
