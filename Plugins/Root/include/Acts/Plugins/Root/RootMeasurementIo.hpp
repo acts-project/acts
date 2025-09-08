@@ -1,0 +1,132 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+
+#include <array>
+#include <tuple>
+#include <vector>
+
+class TTree;
+
+namespace Acts {
+
+class GeometryIdentifier;
+
+/// @brief Helper class to manage the I/O of measurements and associated clusters
+/// to and from ROOT files.
+class RootMeasurementIo {
+ public:
+  // Configuration struct
+  struct Config {
+    // Indicate the reconstruction indices to be stored
+    std::vector<BoundIndices>& recoIndices;
+
+    // Indicate the cluster indices to be stored
+    std::vector<BoundIndices>& clusterIndices;
+  };
+
+  /// Constructor from configuration struct
+  ///
+  /// @param config the configuration for the accessor
+  explicit RootMeasurementIo(const Config& config);
+
+  /// @brief sets the branch connection for writing to a file
+  ///
+  /// @param measurementTree the TTree to write the measurement track to
+  void connectForWrite(TTree& measurementTree);
+
+  /// Convenience function to register identification
+  ///
+  /// @param eventNr The event number
+  /// @param geoID The geometry identifier of the measurement
+  void fillIdentification(int evnt, const GeometryIdentifier& geoId);
+
+  /// Convenience function to register the truth parameters
+  ///
+  /// @param lp The true local position
+  /// @param xt The true 4D global position
+  /// @param dir The true particle direction
+  /// @param angles The incident angles
+  /// @param qop The true q/p
+  void fillTruthParameters(const Vector2& lp, const Vector4& xt,
+                           const Vector3& dir,
+                           const std::pair<double, double> angles);
+
+  /// Convenience function to fill bound parameters
+  ///  - abstracted to be used in different contexts
+  ///
+  /// @param measurement The measurement parameters
+  /// @param covariance The measurement covariance
+  /// @param subspaceIndex The subspace indices of the measurement
+  void fillBoundMeasurement(const std::vector<double>& measurement,
+                            const std::vector<double>& covariance,
+                            const std::vector<unsigned int>& subspaceIndex);
+
+  /// Convenience function to fill the cluster information
+  ///  - abstracted to be used in different contexts
+  ///
+  /// @param pos The global position of the cluster
+  /// @param channels The channel information
+  void fillCluster(const Vector3& pos,
+                   const std::vector<std::tuple<int, int, float>>& channels);
+
+  /// Clear the payload
+  void clear();
+
+ private:
+  // Names of the bound parameters
+  static constexpr std::array<std::string, eBoundSize> bNames = {
+      "loc0", "loc1", "phi", "theta", "qop", "time"};
+
+  /// The configuration for the accessor
+  Config m_cfg;
+
+  struct MeasurementPayload {
+    // Identification parameters
+    int eventNr = 0;
+    int volumeID = 0;
+    int layerID = 0;
+    int surfaceID = 0;
+    int extraID = 0;
+
+    // Reconstruction information
+    float recBound[eBoundSize] = {};
+    float varBound[eBoundSize] = {};
+
+    float recGx = 0.;
+    float recGy = 0.;
+    float recGz = 0.;
+
+    // Truth parameters
+    float trueBound[eBoundSize] = {};
+    float trueGx = 0.;
+    float trueGy = 0.;
+    float trueGz = 0.;
+    float incidentPhi = 0.;
+    float incidentTheta = 0.;
+
+    // Residuals and pulls
+    float residual[eBoundSize] = {};
+    float pull[eBoundSize] = {};
+
+    // Cluster information comprised of
+    // nch :  number of channels
+    // cSize : cluster size in loc0 and loc1
+    // chId : channel identification
+    // chValue: value/activation of the channel
+    int nch = 0;
+    int cSize[2] = {};
+    std::array<std::vector<int>, 2> chId;
+    std::vector<float> chValue;
+  } m_payload;
+};
+}  // namespace Acts
