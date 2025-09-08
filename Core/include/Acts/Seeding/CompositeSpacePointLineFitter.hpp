@@ -17,7 +17,12 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts::Experimental {
-
+/// @brief Generic Implementation to fit a straight line to set of composite space point measurements.
+///        The line is parameterized by x_{0}, y_{0}, theta, phi, where the
+///        first two parameters are the line's intercept at z=0 and the latter
+///        two are the polar and azimuthal angle in the local frame common to
+///        all space points. Optionally, the fitter may also estimate the offset
+///        in the time of arrival at the line's reference plane.
 class CompositeSpacePointLineFitter {
  public:
   /// @brief Abrivation of the line type
@@ -35,7 +40,7 @@ class CompositeSpacePointLineFitter {
   using ParamVec_t = std::array<double, s_nPars>;
   /// @brief Covariance estimation matrix on the segment line parameters
   using CovMat_t = Acts::ActsSquareMatrix<s_nPars>;
-
+  /// @brief Fitter configuration object
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
     double precCutOff{1.e-7};
@@ -95,10 +100,20 @@ class CompositeSpacePointLineFitter {
     double chi2{0.};
     /// @brief Number of iterations to converge
     unsigned nIter{0};
-    /// @brief Did the fit converge at all
+    /// @brief Convergence of the fit
     bool converged{false};
   };
 
+  template <CompositeSpacePointContainer Cont_t>
+  struct FitResult : public FitParameters {
+    Cont_t measurements{};
+  };
+
+  /// @brief Configuration object parsed per each fit. It contains the
+  ///        measurement container, a pointer to the measurement calibrator +
+  ///        calibration context, a delegate used to sort out badly calibrated
+  ///        measurements, and also initial start parameters stemming from an
+  ///        external seeder.
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   struct FitOptions {
@@ -124,11 +139,6 @@ class CompositeSpacePointLineFitter {
     ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
   };
 
-  template <CompositeSpacePointContainer Cont_t>
-  struct FitResult : public FitParameters {
-    Cont_t measurements{};
-  };
-
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   FitResult<Cont_t> fit(FitOptions<Cont_t, Calibrator_t>&& fitOpts) const;
@@ -141,10 +151,31 @@ class CompositeSpacePointLineFitter {
     outOfBounds = 2,  // Too many fit parameters fell out of bounds -> abort
   };
 
+  /// @brief Update the straight line parameters based on the current chi2 and its
+  ///        derivatives. Returns whether the parameter update succeeded or was
+  ///        sufficiently small such that the fit is converged
+  /// @tparam N: Number of fitted parameters. Either 1 intercept + 1 angle (2D), 2D + time,
+  ///            both intercepts & angles, all 5 straight line parameters
+  /// @param firstPar: The first fitted straight line parameter in the parameter vector
+  ///                  Toggles between x0 + phi vs y0 + theta fits
+  /// @param cache: Evaluated chi2 & derivatives needed to calculate the update step via
+  ///               Newton's method
+  /// @param currentPars: Mutable referebce to the line parameter values at the current iteration
   template <unsigned N>
   UpdateStep updateParameters(const FitParIndex firstPar,
                               const ChiSqCache& cache,
                               ParamVec_t& currentPars) const
+    requires(N >= 2 && N <= s_nPars);
+  /// @brief Copies the inverse of the chi2's Hessian
+  ///        to the covariance matrix of the fit
+  /// @tparam N: Number of fitted parameters. Either 1 intercept + 1 angle (2D), 2D + time,
+  ///            both intercepts & angles, all 5 straight line parameters
+  /// @param firstPar: The first fitted straight line parameter in the parameter vector
+  ///                  Toggles between x0 + phi vs y0 + theta fits
+  /// @param hessian: Reference to the Hessian matrix
+  /// @param covariance: Reference to the covariance matrix
+  template <unsigned N>
+  void fillCovariance(const CovMat_t& hessian, CovMat_t& covariance) const
     requires(N >= 2 && N <= s_nPars);
 
   const Logger& logger() const { return *m_logger; }

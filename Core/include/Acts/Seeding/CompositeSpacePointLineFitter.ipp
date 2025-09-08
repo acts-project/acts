@@ -146,6 +146,12 @@ CompositeSpacePointLineFitter::fit(
     // Update the parameters from the last iteration
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
+
+    ACTS_INFO(__func__ << "() " << __LINE__ << ": Start iteration #"
+                       << (result.nIter + 1) << ", current line "
+                       << toString(line.position()) << " + "
+                       << toString(line.direction()) << ", t0: " << t0
+                       << ", chi2: " << result.chi2 << ".");
     // Update the measurements if calibration loop is switched on
     if (m_cfg.recalibrate) {
       result.measurements = fitOpts.calibrator->calibrate(
@@ -222,6 +228,58 @@ CompositeSpacePointLineFitter::fit(
                               << resCfg.parsToUse.size());
         return result;
     }
+    switch (update) {
+      case UpdateStep::converged: {
+        result.converged = true;
+        break;
+      }
+      case UpdateStep::goodStep: {
+        break;
+      }
+      case UpdateStep::outOfBounds: {
+        return result;
+      }
+    }
+  }
+  // Parameters converged
+  if (result.converged) {
+    line.updateParameters(result.parameters);
+    const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
+    // Recalibrate the measurements before returning
+    result.measurements = fitOpts.calibrator->calibrate(
+        fitOpts.calibContext, line.position(), line.direction(), t0,
+        result.measurements);
+
+    // Assign the Hessian
+    switch (resCfg.parsToUse.size()) {
+      // 2D fit (intercept + inclination angle)
+      case 2: {
+        update = fillCovariance<2>(resCfg.parsToUse.front(), cache.hessian,
+                                   result.covariance);
+        break;
+      }
+      // 2D fit + time
+      case 3: {
+        update = fillCovariance<3>(resCfg.parsToUse.front(), cache.hessian,
+                                   result.covariance);
+        break;
+      }
+      // 3D spatial fit (x0, y0, theta, phi)
+      case 4: {
+        update = fillCovariance<4>(resCfg.parsToUse.front(), cache.hessian,
+                                   result.covariance);
+        break;
+      }
+      // full fit
+      case 5: {
+        update = fillCovariance<5>(resCfg.parsToUse.front(), cache.hessian,
+                                   result.covariance);
+        break;
+      }
+      // No need to warn here -> captured by the fit iterations
+      default:
+        break;
+    }
   }
   return result;
 }
@@ -284,11 +342,29 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
 
     ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
                        << ": Update parameters by " << toString(update));
-
     miniPars -= update;
   }
+  // Check parameter ranges
 
   return UpdateStep::goodStep;
+}
+
+template <unsigned N>
+void CompositeSpacePointLineFitter::fillCovariance(const CovMat_t& hessian,
+                                                   CovMat_t& covariance) const
+  requires(N >= 2 && N <= s_nPars)
+{
+  auto firstIdx = toUnderlying(firstPar);
+  assert(firstIdx + N < s_nPars);
+
+  Acts::ActsSquareMatrix<N> miniHessian{
+      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+
+  auto inverseH = safeInverse(miniHessian);
+  // The Hessian can safely be inverted
+  if (inverseH) {
+    covariance.block<N, N>(firstIdx, firstIdx) = (*inverseH);
+  }
 }
 
 }  // namespace Acts::Experimental
