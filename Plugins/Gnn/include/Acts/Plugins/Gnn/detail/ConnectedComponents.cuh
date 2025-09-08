@@ -270,15 +270,17 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
 /// 0, 3, 5
 template <typename TLabel>
 __global__ void setBounds(const TLabel *labels, TLabel *bounds,
-                          std::size_t size) {
+                          std::size_t size, std::size_t numLabels) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= size) {
     return;
-  }
-
-  if (idx == 0) {
+  } else if (idx == 0) {
     bounds[0] = 0;
     return;
+  }
+
+  if (idx == size - 1) {
+    bounds[numLabels] = size;
   }
 
   auto diff = labels[idx] - labels[idx - 1];
@@ -307,7 +309,8 @@ void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
   // Set the bounds for each label
   dim3 blockSize = 1024;
   dim3 gridSize = (numSpacepoints + blockSize.x - 1) / blockSize.x;
-  setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacepoints);
+  setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacepoints,
+                                                numLabels);
 }
 
 }  // namespace Acts::detail

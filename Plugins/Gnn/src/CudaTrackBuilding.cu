@@ -80,9 +80,6 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
       m_cfg.useOneBlockImplementation);
   auto t1 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Connected components took " << ms(t0, t1) << " ms");
-
-  // TODO not sure why there is an issue that is not detected in the unit tests
-  numberLabels += 1;
   ACTS_VERBOSE("Found " << numberLabels << " track candidates");
 
   // Postprocess labels
@@ -96,16 +93,16 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   // Allocate space for the bounds
   int* cudaBounds{};
   ACTS_CUDA_CHECK(
-      cudaMallocAsync(&cudaBounds, numberLabels * sizeof(int), stream));
+      cudaMallocAsync(&cudaBounds, (numberLabels + 1) * sizeof(int), stream));
 
   // Compute the bounds of the track candidates
   detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs, cudaBounds,
                                    numSpacepoints, numberLabels, stream);
 
   // Copy the bounds to the host
-  std::vector<int> bounds(numberLabels);
+  std::vector<int> bounds(numberLabels + 1);
   ACTS_CUDA_CHECK(cudaMemcpyAsync(bounds.data(), cudaBounds,
-                                  numberLabels * sizeof(int),
+                                  (numberLabels + 1) * sizeof(int),
                                   cudaMemcpyDeviceToHost, stream));
 
   // Copy the sorted spacepoint IDs to the host
@@ -124,10 +121,10 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   ACTS_CUDA_CHECK(cudaGetLastError());
 
-  bounds.push_back(numSpacepoints);  // Add the end bound
   ACTS_DEBUG("Bounds size: " << bounds.size());
   ACTS_DEBUG("Bounds: " << bounds.at(0) << ", " << bounds.at(1) << ", "
                         << bounds.at(2) << ", ..., "
+                        << bounds.at(numberLabels - 2) << ", "
                         << bounds.at(numberLabels - 1) << ", "
                         << bounds.at(numberLabels));
 
