@@ -254,26 +254,26 @@ CompositeSpacePointLineFitter::fit(
     switch (resCfg.parsToUse.size()) {
       // 2D fit (intercept + inclination angle)
       case 2: {
-        update = fillCovariance<2>(resCfg.parsToUse.front(), cache.hessian,
-                                   result.covariance);
+        fillCovariance<2>(resCfg.parsToUse.front(), cache.hessian,
+                          result.covariance);
         break;
       }
       // 2D fit + time
       case 3: {
-        update = fillCovariance<3>(resCfg.parsToUse.front(), cache.hessian,
-                                   result.covariance);
+        fillCovariance<3>(resCfg.parsToUse.front(), cache.hessian,
+                          result.covariance);
         break;
       }
       // 3D spatial fit (x0, y0, theta, phi)
       case 4: {
-        update = fillCovariance<4>(resCfg.parsToUse.front(), cache.hessian,
-                                   result.covariance);
+        fillCovariance<4>(resCfg.parsToUse.front(), cache.hessian,
+                          result.covariance);
         break;
       }
       // full fit
       case 5: {
-        update = fillCovariance<5>(resCfg.parsToUse.front(), cache.hessian,
-                                   result.covariance);
+        fillCovariance<5>(resCfg.parsToUse.front(), cache.hessian,
+                          result.covariance);
         break;
       }
       // No need to warn here -> captured by the fit iterations
@@ -350,7 +350,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
 }
 
 template <unsigned N>
-void CompositeSpacePointLineFitter::fillCovariance(const CovMat_t& hessian,
+void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
+                                                   const CovMat_t& hessian,
                                                    CovMat_t& covariance) const
   requires(N >= 2 && N <= s_nPars)
 {
@@ -358,7 +359,7 @@ void CompositeSpacePointLineFitter::fillCovariance(const CovMat_t& hessian,
   assert(firstIdx + N < s_nPars);
 
   Acts::ActsSquareMatrix<N> miniHessian{
-      cache.hessian.block<N, N>(firstIdx, firstIdx)};
+      hessian.block<N, N>(firstIdx, firstIdx)};
 
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted

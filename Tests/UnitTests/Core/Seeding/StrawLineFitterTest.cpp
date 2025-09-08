@@ -16,11 +16,18 @@
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
+using namespace Acts::UnitLiterals;
+using namespace Acts::detail::LineHelper;
+using namespace Acts::PlanarHelper;
 
 using RandomEngine = std::mt19937;
 using uniform = std::uniform_real_distribution<double>;
+using normal_t = std::normal_distribution<double>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
+using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 constexpr auto logLvl = Acts::Logging::Level::INFO;
+
+ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
 namespace Acts::Test {
 
@@ -33,20 +40,25 @@ class FitTestSpacePoint {
   /// @param mLoc0: Flag toggling whether the position along the wire is also provided
   FitTestSpacePoint(const Vector3& pos, const double driftR,
                     const double driftRUncert, const bool mLoc0 = false)
-      : m_position{pos},
-        m_driftR{driftR},
-        m_measLoc0{mLoc0} {m_covariance[toUnderlying()] = }
+      : m_position{pos}, m_driftR{driftR}, m_measLoc0{mLoc0} {
+    m_covariance[toUnderlying(ResidualIdx::bending)] =
+        Acts::square(driftRUncert);
+  }
 
-        /// @brief Constructor for strip measurements
-        FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
-                          const Vector3& toNext, const double uncertLoc0,
-                          const double uncertLoc1)
-      : m_position{pos},
+  /// @brief Constructor for strip measurements
+  FitTestSpacePoint(const Vector3& stripPos, const Vector3& stripDir,
+                    const Vector3& toNext, const double uncertLoc0,
+                    const double uncertLoc1)
+      : m_position{stripPos},
         m_sensorDir{stripDir},
         m_toNextSen{toNext},
-        m_measLoc0{uncertLoc0 > 0},
-        m_measLoc1{uncertLoc1 > 0} {}
-
+        m_measLoc0{uncertLoc0 > 0.},
+        m_measLoc1{uncertLoc1 > 0.} {
+    using enum ResidualIdx;
+    m_covariance[toUnderlying(nonBending)] = Acts::square(uncertLoc0);
+    m_covariance[toUnderlying(bending)] = Acts::square(uncertLoc1);
+  }
+  /// @brief Position of the space point
   const Vector3& localPosition() const { return m_position; }
   /// @brief Wire direction
   const Vector3& sensorDirection() const { return m_sensorDir; }
@@ -70,6 +82,8 @@ class FitTestSpacePoint {
   bool measuresLoc1() const { return m_measLoc1 || isStraw(); }
   /// @brief Sets the straw tube's drift radius
   void updateDriftR(const double updatedR) { m_driftR = updatedR; }
+  /// @brief Updates the position of the space point
+  void updatePosition(const Vector3& newPos) { m_position = newPos; }
 
  private:
   Vector3 m_position{Vector3::Zero()};
@@ -90,38 +104,63 @@ using Container_t = std::vector<std::shared_ptr<FitTestSpacePoint>>;
 static_assert(CompositeSpacePointContainer<Container_t>);
 class SpCalibrator {
  public:
+  static double driftUncert(const double r) {
+    return 0.2_mm / (1._mm + Acts::square(r)) + 0.1_mm;
+  }
+  /// @brief Calibrate a set of straw measurements using the best known estimate on a straight line track
+  /// @param ctx: Calibration context (Needed by conept interface)
+  /// @param trackPos: Position of the track at z=0.
+  /// @param trackDir: Direction of the track in the local frame
+  /// @param timeOffSet: Offset in the time of arrival (To be implemented)
+  /// @param uncalibCont: Uncalibrated composite space point container
   Container_t calibrate(const Acts::CalibrationContext& /*ctx*/,
                         const Vector3& trackPos, const Vector3& trackDir,
-                        const double timeOffSet,
+                        const double /*timeOffSet*/,
                         const Container_t& uncalibCont) const {
+    Container_t calibMeas{};
+    for (const auto& sp : uncalibCont) {
+      if (!sp->measuresLoc0() || !sp->measuresLoc1()) {
+        /// Estimate the best position along the sensor
+        auto bestPos = lineIntersect(trackPos, trackDir, sp->localPosition(),
+                                     sp->sensorDirection());
+        sp->updatePosition(bestPos.position());
+      }
+      if (sp->isStraw()) {
+        sp->updateDriftR(Acts::abs(sp->driftRadius()));
+      }
+    }
     return uncalibCont;
   }
-
+  /// @brief Updates the sign of the Straw's drift radii indicating that they are on the left (-1)
+  ///        or right side (+1) of the track line
   void updateSigns(const Vector3& trackPos, const Vector3& trackDir,
                    Container_t& measurements) const {
     auto signs =
         CompSpacePointAuxiliaries::strawSigns(trackPos, trackDir, measurements);
+    /// The signs have the same size as the measurement container
     for (std::size_t s = 0; s < signs.size(); ++s) {
+      /// Take care to not turn strips into straws by accident
       if (measurements[s]->isStraw()) {
         measurements[s]->updateDriftR(
-            Acts::abs(measurements[s]->driftRadius() * signs[s]));
+            Acts::abs(measurements[s]->driftRadius()) * signs[s]);
       }
     }
   }
 };
-
+/// Ensure that the Test space point calibrator satisfies the calibrator concept
 static_assert(
     CompositeSpacePointCalibrator<SpCalibrator, Container_t, Container_t>);
 
-/// @brief Generate a random straight track with a flat distribution in theta & y0
-///        Range in theta is [0, 180] degrees in steps of 0.1 excluding the
-///        vicinity around 90 degrees.
-///          In y0, the generated range is [-500, 500] mm
+/// @brief Generates a random straight line
+/// @param engine Random number sequence to draw the parameters from
+/// @return A Line object instantiated with the generated parameters
 Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
-  linePars[toUnderlying(ParIndex::x0)] = 0.;
-  linePars[toUnderlying(ParIndex::phi)] = 90._degree;
+  linePars[toUnderlying(ParIndex::x0)] =
+      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
+  linePars[toUnderlying(ParIndex::phi)] =
+      std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::y0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
@@ -131,11 +170,15 @@ Line_t generateLine(RandomEngine& engine) {
     return generateLine(engine);
   }
   Line_t line{linePars};
-  ACTS_DEBUG("Generated parameters theta: "
-             << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-             << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
-             << toString(line.position()) << " + "
-             << toString(line.direction()));
+  ACTS_DEBUG(
+      "Generated parameters -"
+      << std::format("theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}",
+                     (linePars[toUnderlying(ParIndex::theta)] / 1._degree),
+                     (linePars[toUnderlying(ParIndex::phi)] / 1._degree),
+                     linePars[toUnderlying(ParIndex::y0)],
+                     linePars[toUnderlying(ParIndex::x0)])
+      << " --> " << toString(line.position()) << " + "
+      << toString(line.direction()));
   return line;
 }
 /// @brief Extrapolate the straight line track through the straw layers to
@@ -148,8 +191,12 @@ Line_t generateLine(RandomEngine& engine) {
 /// @param trajLine: The track to extrapolate
 /// @param engine: Random number generator to smear the drift radius
 /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
-Container_t generateMeasurements(const Line_t& trajLine, const double t0) {
+Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
+                                 RandomEngine& engine,
+                                 const bool smearRadius = true) {
+  /// Direction vector to go a positive step in the tube honeycomb grid
   const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
+  /// Direction vector to go a negative step in the tube honeycomb grid
   const Vector3 negStaggering{0., -std::cos(60._degree), std::sin(60._degree)};
   /// Number of tube layers per multilayer
   constexpr std::size_t nLayersPerMl = 8;
@@ -159,6 +206,16 @@ Container_t generateMeasurements(const Line_t& trajLine, const double t0) {
   constexpr double tubeRadius = 15._mm;
   /// Distance between the first <nLayersPerMl> layers and the second pack
   constexpr double tubeLayerDist = 1.2_m;
+  /// Distance between the tube multilayers and to the first strip layer
+  constexpr double tubeStripDist = 30._cm;
+  /// Distance between two strip layers
+  constexpr double stripLayDist = 0.5_cm;
+  /// Strip pitch in x0 direction
+  constexpr double stripPitchLoc0 = 4._cm;
+  /// Strip pitch in y0 direction
+  constexpr double stripPitchLoc1 = 2._cm;
+  /// Number of strip layers on each side
+  constexpr std::size_t nStripLay = 4;
 
   std::array<Vector3, nTubeLayers> tubePositions{
       filledArray<Vector3, nTubeLayers>(Vector3{0., tubeRadius, tubeRadius})};
@@ -179,7 +236,7 @@ Container_t generateMeasurements(const Line_t& trajLine, const double t0) {
   }
   ACTS_DEBUG("##############################################");
 
-  TestStrawCont_t circles{};
+  Container_t measurements{};
   /// Extrapolate the track to the z-planes of the tubes and determine which
   /// tubes were actually hit
   for (const auto& stag : tubePositions) {
@@ -189,7 +246,6 @@ Container_t generateMeasurements(const Line_t& trajLine, const double t0) {
     auto planeExtpHigh = Acts::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
         stag.z() + tubeRadius);
-
     ACTS_DEBUG("Extrapolated to plane " << toString(planeExtpLow.position())
                                         << " "
                                         << toString(planeExtpHigh.position()));
@@ -212,21 +268,39 @@ Container_t generateMeasurements(const Line_t& trajLine, const double t0) {
       if (std::abs(rad) > tubeRadius) {
         continue;
       }
-      std::normal_distribution<> dist{
-          rad, StrawTestCalibrator::calcDriftUncert(rad)};
-      const double smearedR = smearRadius ? std::abs(dist(engine)) : rad;
+      const double smearedR =
+          smearRadius
+              ? std::abs(normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
+              : rad;
       if (smearedR > tubeRadius) {
         continue;
       }
-      circles.emplace_back(std::make_unique<StrawTestPoint>(
-          tube, smearedR, StrawTestCalibrator::calcDriftUncert(smearedR)));
+      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+          tube, smearedR, SpCalibrator::driftUncert(smearedR)));
     }
   }
-  ACTS_DEBUG("Track hit in total " << circles.size() << " tubes ");
-  return circles;
+  for (std::size_t sL = 0; sL < nStripLay; ++sL) {
+    const double distInZ = tubeStripDist + sL * stripLayDist;
+    const double planeLow = tubePositions.front().z() - distInZ;
+    const double planeHigh = tubePositions.back().z() + distInZ;
+    for (const double plane : {planeLow, planeHigh}) {
+      const auto extp = intersectPlane(
+          trajLine.position(), trajLine.direction(), Vector3::UnitZ(), plane);
+      Vector3 extpPos = extp.position();
+      extpPos[0] = normal_t{extpPos[0], stripPitchLoc0}(engine);
+      extpPos[1] = 0.;
+      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+          extpPos, Vector3::UnitY(), Vector3::UnitX(), stripPitchLoc0, 0.));
+      extpPos = extp.position();
+      extpPos[1] = normal_t{extpPos[1], stripPitchLoc1}(engine);
+      extpPos[0] = 0.;
+      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+          extpPos, Vector3::UnitX(), Vector3::UnitY(), 0., stripPitchLoc1));
+    }
+  }
+  ACTS_DEBUG("Track hit in total " << measurements.size() << " sensors.");
+  return measurements;
 }
-
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 

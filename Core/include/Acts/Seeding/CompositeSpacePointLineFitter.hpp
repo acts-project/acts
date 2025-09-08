@@ -174,7 +174,8 @@ class CompositeSpacePointLineFitter {
   /// @param hessian: Reference to the Hessian matrix
   /// @param covariance: Reference to the covariance matrix
   template <unsigned N>
-  void fillCovariance(const CovMat_t& hessian, CovMat_t& covariance) const
+  void fillCovariance(const FitParIndex firstPar, const CovMat_t& hessian,
+                      CovMat_t& covariance) const
     requires(N >= 2 && N <= s_nPars);
 
   const Logger& logger() const { return *m_logger; }
