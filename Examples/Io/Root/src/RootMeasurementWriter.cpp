@@ -137,7 +137,8 @@ ProcessCode RootMeasurementWriter::writeT(
     const Acts::Surface& surface = *(surfaceItr->second);
 
     // Fill the identification
-    m_measurementIo->fillIdentification(ctx.eventNumber, geoId);
+    m_measurementIo->fillIdentification(static_cast<int>(ctx.eventNumber),
+                                        geoId);
 
     // Find the contributing simulated hits
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));

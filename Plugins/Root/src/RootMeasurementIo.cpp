@@ -74,10 +74,10 @@ void Acts::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
 void Acts::RootMeasurementIo::fillIdentification(
     int evnt, const GeometryIdentifier& geoId) {
   m_payload.eventNr = evnt;
-  m_payload.volumeID = geoId.volume();
-  m_payload.layerID = geoId.layer();
-  m_payload.surfaceID = geoId.sensitive();
-  m_payload.extraID = geoId.extra();
+  m_payload.volumeID = static_cast<int>(geoId.volume());
+  m_payload.layerID = static_cast<int>(geoId.layer());
+  m_payload.surfaceID = static_cast<int>(geoId.sensitive());
+  m_payload.extraID = static_cast<int>(geoId.extra());
 }
 
 void Acts::RootMeasurementIo::fillTruthParameters(
@@ -93,8 +93,8 @@ void Acts::RootMeasurementIo::fillTruthParameters(
   m_payload.trueGy = xt[ePos1];
   m_payload.trueGz = xt[ePos2];
 
-  m_payload.incidentPhi = angles.first;
-  m_payload.incidentTheta = angles.second;
+  m_payload.incidentPhi = static_cast<float>(angles.first);
+  m_payload.incidentTheta = static_cast<float>(angles.second);
 }
 
 void Acts::RootMeasurementIo::fillBoundMeasurement(
@@ -110,8 +110,8 @@ void Acts::RootMeasurementIo::fillBoundMeasurement(
   for (auto [im, m] : enumerate(measurements)) {
     auto ib = subspaceIndex[im];
 
-    m_payload.recBound[ib] = m;
-    m_payload.varBound[ib] = variances[im];
+    m_payload.recBound[ib] = static_cast<float>(m);
+    m_payload.varBound[ib] = static_cast<float>(variances[im]);
     m_payload.residual[ib] = m_payload.recBound[ib] - m_payload.trueBound[ib];
     m_payload.pull[ib] =
         m_payload.residual[ib] / std::sqrt(m_payload.varBound[ib]);
@@ -123,9 +123,9 @@ void Acts::RootMeasurementIo::fillCluster(
     const std::vector<std::tuple<int, int, float>>& channels) {
   m_payload.nch = static_cast<int>(channels.size());
   for (auto [ch0, ch1, chv] : channels) {
-    m_payload.chId[0].push_back(static_cast<int>(ch0));
-    m_payload.chId[1].push_back(static_cast<int>(ch1));
-    m_payload.chValue.push_back(static_cast<float>(chv));
+    m_payload.chId[0].push_back(ch0);
+    m_payload.chId[1].push_back(ch1);
+    m_payload.chValue.push_back(chv);
   }
   // Calculate cluster size in 0 and 1 direction
   auto [min0, max0] = std::ranges::minmax_element(m_payload.chId[0]);

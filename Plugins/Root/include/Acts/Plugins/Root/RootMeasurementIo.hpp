@@ -98,15 +98,15 @@ class RootMeasurementIo {
     int extraID = 0;
 
     // Reconstruction information
-    float recBound[eBoundSize] = {};
-    float varBound[eBoundSize] = {};
+    std::array<float, eBoundSize> recBound = {};
+    std::array<float, eBoundSize> varBound = {};
 
     float recGx = 0.;
     float recGy = 0.;
     float recGz = 0.;
 
     // Truth parameters
-    float trueBound[eBoundSize] = {};
+    std::array<float, eBoundSize> trueBound = {};
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
@@ -114,8 +114,8 @@ class RootMeasurementIo {
     float incidentTheta = 0.;
 
     // Residuals and pulls
-    float residual[eBoundSize] = {};
-    float pull[eBoundSize] = {};
+    std::array<float, eBoundSize> residual = {};
+    std::array<float, eBoundSize> pull = {};
 
     // Cluster information comprised of
     // nch :  number of channels
@@ -123,9 +123,11 @@ class RootMeasurementIo {
     // chId : channel identification
     // chValue: value/activation of the channel
     int nch = 0;
-    int cSize[2] = {};
+    std::array<int, 2> cSize = {};
     std::array<std::vector<int>, 2> chId;
     std::vector<float> chValue;
-  } m_payload;
+  };
+
+  MeasurementPayload m_payload;
 };
 }  // namespace Acts
