@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0 # To prevent shallow clone
 
       - name: 'Download artifact'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: dl-af
         with:
           script: |
