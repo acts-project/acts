@@ -143,8 +143,12 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
           // in case no surfaces are handed over the layer thickness will be
           // set to a default value to allow attaching material layers
-          double eiz = (transform.translation().z() != 0.) ? - m_cfg.defaultThickness : 0.;
-          double eoz = (transform.translation().z() != 0.) ? + m_cfg.defaultThickness : 0.;
+          double eiz = (transform.translation().z() != 0.)
+                           ? -m_cfg.defaultThickness
+                           : 0.;
+          double eoz = (transform.translation().z() != 0.)
+                           ? +m_cfg.defaultThickness
+                           : 0.;
           pl.extent.range(AxisDirection::AxisZ).set(eiz, eoz);
           pl.extent.range(AxisDirection::AxisR).set(rMin, rMax);
           pl.envelope[AxisDirection::AxisR] = {0., 0.};
