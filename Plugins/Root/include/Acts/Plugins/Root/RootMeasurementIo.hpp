@@ -64,10 +64,10 @@ class RootMeasurementIo {
   ///  - abstracted to be used in different contexts
   ///
   /// @param measurement The measurement parameters
-  /// @param covariance The measurement covariance
+  /// @param variances The measurement variances (assumed diagonally)
   /// @param subspaceIndex The subspace indices of the measurement
   void fillBoundMeasurement(const std::vector<double>& measurement,
-                            const std::vector<double>& covariance,
+                            const std::vector<double>& variances,
                             const std::vector<unsigned int>& subspaceIndex);
 
   /// Convenience function to fill the cluster information
