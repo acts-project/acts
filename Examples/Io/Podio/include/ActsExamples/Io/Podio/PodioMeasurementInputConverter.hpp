@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
@@ -20,7 +22,20 @@ class PodioMeasurementInputConverter : public PodioInputConverter {
     /// Input measurement collection name in podio
     std::string inputMeasurements = "ActsMeasurements";
     /// Output measurement collection
-    // std::string outputMeasurements;
+    std::string outputMeasurements;
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap;
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap;
+    /// Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap;
+    /// Output collection to map simulated hits to measurements.
+    std::string outputSimHitMeasurementsMap;
+
+    /// Sim hit collection used to associated read measurements
+    std::string inputSimHits;
+    /// Sim hit association used to connect measurements to sim hits
+    std::string inputSimHitAssociation;
   };
 
   /// constructor
@@ -37,6 +52,26 @@ class PodioMeasurementInputConverter : public PodioInputConverter {
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+      this, "OutputMeasurementParticlesMap"};
+
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
+
+  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+      this, "OutputSimHitMeasurementsMap"};
+
+  // Temporary!
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
+      m_inputSimHitAssociation{this, "InputSimHitAssociation"};
 };
 
 }  // namespace ActsExamples

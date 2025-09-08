@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <memory>
 #include <string>
@@ -35,6 +36,8 @@ struct ParticleInfo;
 }
 
 class DD4hepDetector;
+
+using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
 
 /// Read particles from EDM4hep.
 ///
@@ -117,7 +120,7 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
       this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
-  WriteDataHandle<std::vector<edm4hep::SimTrackerHit>>
+  WriteDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
       m_outputSimHitAssociation{this, "OutputSimHitAssociation"};
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,

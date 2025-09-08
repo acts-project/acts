@@ -48,8 +48,7 @@ ProcessCode PodioMeasurementOutputConverter::execute(
   auto outputMeasurements =
       std::make_unique<ActsPodioEdm::MeasurementCollection>();
 
-  for (const ActsExamples::MeasurementContainer::ConstVariableProxy& meas :
-       measurements) {
+  for (const MeasurementContainer::ConstVariableProxy& meas : measurements) {
     auto to = outputMeasurements->create();
     for (const auto val : meas.subspaceIndexVector()) {
       to.addToIndices(static_cast<std::uint16_t>(val));
@@ -66,7 +65,7 @@ ProcessCode PodioMeasurementOutputConverter::execute(
       to.addToCovarianceValues(val);
     }
 
-    to.setReferenceSurface({.identifier = meas.geometryId().value()});
+    to.setGeometryId(meas.geometryId().value());
 
     throw_assert(to.size() == meas.size(), "Invalid sizes after filling");
 
@@ -78,7 +77,7 @@ ProcessCode PodioMeasurementOutputConverter::execute(
     }
 
     // Get the edm4hep input sim hit from the internal index
-    const auto& sourceHit = simHitAssociation.at(simHitIt->second);
+    const auto& sourceHit = simHitAssociation.lookup(simHitIt->second);
     to.setSimHit(sourceHit);
   }
 

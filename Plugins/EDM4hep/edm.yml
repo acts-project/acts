@@ -105,7 +105,7 @@ datatypes:
     Author : "Paul Gessinger, CERN"
 
     Members:
-      - ActsPodioEdm::Surface referenceSurface // the associated surface
+      - std::uint64_t geometryId // the associated surface identifier
     VectorMembers:
       - std::uint16_t indices // the local indices
       - double parameterValues // the measurement parameter value

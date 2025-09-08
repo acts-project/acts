@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
@@ -637,18 +638,18 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   SimHitContainer simHits{simHitsUnordered->begin(), simHitsUnordered->end()};
   simHitsUnordered.reset();
 
-  // We now know the final indices of the indices in the output particle
+  // We now know the final indices of the indices in the output simhit
   // collection. In the next step, the indices along the particle path will be
   // rewritten, so we can build an assotiaion map here.
 
   if (m_outputSimHitAssociation.isInitialized()) {
-    std::vector<edm4hep::SimTrackerHit> simHitAssociation;
+    ActsPlugins::EDM4hepUtil::SimHitAssociation simHitAssociation;
     simHitAssociation.reserve(simHits.size());
 
     // @TODO: Make this optional depending on the output key setting
     Acts::ScopedTimer timer("Building sim hit association", logger(),
                             Acts::Logging::DEBUG);
-    for (const auto& hit : simHits) {
+    for (const auto&& [indexInColl, hit] : Acts::enumerate(simHits)) {
       std::size_t index = hit.index();
       // find hit for this index in the input collections
       for (const auto&& [name, coll] :
@@ -658,7 +659,11 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
           continue;
         }
 
-        simHitAssociation.push_back(coll->at(index));
+        ACTS_VERBOSE("Hit assoc int -> ext #" << indexInColl << " -> "
+                                              << coll->at(index).id() << " "
+                                              << hit.position().transpose());
+
+        simHitAssociation.add(indexInColl, coll->at(index));
 
         break;
       }
@@ -698,7 +703,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         ACTS_VERBOSE("Before sorting:");
         for (const auto& hitIdx : hitIndices) {
           ACTS_VERBOSE(" - " << hitIdx << " / " << simHits.nth(hitIdx)->index()
-                             << " " << simHits.nth(hitIdx)->time());
+                             << " t=" << simHits.nth(hitIdx)->time());
         }
       }
 
@@ -718,7 +723,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
         ACTS_VERBOSE("After sorting:");
         for (const auto& hitIdx : hitIndices) {
           ACTS_VERBOSE(" - " << hitIdx << " / " << simHits.nth(hitIdx)->index()
-                             << " " << simHits.nth(hitIdx)->time());
+                             << " t=" << simHits.nth(hitIdx)->time());
         }
       }
     }
@@ -813,6 +818,10 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
   m_outputParticlesSimulation(ctx, std::move(particlesSimulated));
   m_outputSimVertices(ctx, std::move(simVertices));
+
+  for (const auto&& [i, hit] : Acts::enumerate(simHits)) {
+    ACTS_VERBOSE("- " << i << " " << hit.fourPosition().transpose());
+  }
 
   m_outputSimHits(ctx, std::move(simHits));
 
@@ -932,6 +941,3 @@ void EDM4hepSimInputConverter::setSubParticleIds(
 }
 
 }  // namespace ActsExamples
-
-
-  
