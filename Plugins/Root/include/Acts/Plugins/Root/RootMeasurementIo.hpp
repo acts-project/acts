@@ -46,8 +46,8 @@ class RootMeasurementIo {
 
   /// Convenience function to register identification
   ///
-  /// @param eventNr The event number
-  /// @param geoID The geometry identifier of the measurement
+  /// @param evnt The event number
+  /// @param geoId The geometry identifier of the measurement
   void fillIdentification(int evnt, const GeometryIdentifier& geoId);
 
   /// Convenience function to register the truth parameters
@@ -56,7 +56,6 @@ class RootMeasurementIo {
   /// @param xt The true 4D global position
   /// @param dir The true particle direction
   /// @param angles The incident angles
-  /// @param qop The true q/p
   void fillTruthParameters(const Vector2& lp, const Vector4& xt,
                            const Vector3& dir,
                            const std::pair<double, double> angles);
