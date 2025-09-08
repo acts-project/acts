@@ -17,6 +17,14 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts::Experimental {
+
+namespace detail {
+template <CompositeSpacePoint Sp_t>
+bool passThroughSelector(const Sp_t& /*sp*/) {
+  return true;
+}
+}  // namespace detail
+
 /// @brief Generic Implementation to fit a straight line to set of composite space point measurements.
 ///        The line is parameterized by x_{0}, y_{0}, theta, phi, where the
 ///        first two parameters are the line's intercept at z=0 and the latter
@@ -117,7 +125,6 @@ class CompositeSpacePointLineFitter {
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
   struct FitOptions {
-    FitOptions() {}
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
@@ -136,6 +143,10 @@ class CompositeSpacePointLineFitter {
     Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Initial parameter guess
     ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
+    /// @brief empty standard constructor
+    FitOptions() {
+      selector.template connect<&detail::passThroughSelector<SpacePoint_t>>();
+    }
   };
 
   template <CompositeSpacePointContainer Cont_t,

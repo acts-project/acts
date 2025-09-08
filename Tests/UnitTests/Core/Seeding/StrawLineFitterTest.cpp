@@ -312,10 +312,19 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   CompositeSpacePointLineFitter::Config cfg{};
 
-  CompositeSpacePointLineFitter fitter{cfg};
+  CompositeSpacePointLineFitter fitter{cfg,
+                                       getDefaultLogger("LineFitter", logLvl)};
 
-  FitOpts_t fitOpts{};
-  auto result = fitter.fit(std::move(fitOpts));
+  auto calibrator = std::make_unique<SpCalibrator>();
+  for (std::size_t evt = 0; evt < 10; ++evt) {
+    const auto line = generateLine(engine);
+    const double t0 = uniform{-50._ns, 50._ns}(engine);
+
+    FitOpts_t fitOpts{};
+    fitOpts.calibrator = calibrator.get();
+    fitOpts.measurements = generateMeasurements(line, t0, engine);
+    auto result = fitter.fit(std::move(fitOpts));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
