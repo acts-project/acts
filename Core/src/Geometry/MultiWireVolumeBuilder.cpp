@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
-#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
