@@ -124,8 +124,7 @@ class CompositeSpacePointLineFitter {
     using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
     ///@brief During the repetitive recalibration, single hits may be invalidated
     ///       under the track parameters. Define a Delegate to sort out the
-    ///       invalid
-    //        hits from the fit
+    ///       invalid hits from the fit
     using Selector_t = Delegate<bool(const SpacePoint_t&)>;
     /// @brief Good hit selector
     Selector_t selector;
