@@ -157,8 +157,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// is 5%
     /// TODO: necessary to make amount of material dependent on detector region?
     float radLengthPerSeed = 0.05;
-    /// Maximum transverse momentum for scattering calculation
-    float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
