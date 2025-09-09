@@ -19,7 +19,7 @@ jobs:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: 1.9.8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache doxygen
         id: cache-doxygen

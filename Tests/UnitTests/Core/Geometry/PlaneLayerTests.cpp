@@ -18,8 +18,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cstddef>
 #include <memory>
