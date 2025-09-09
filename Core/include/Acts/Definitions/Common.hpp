@@ -22,6 +22,10 @@ enum class MaterialUpdateStage : int {
   PostUpdate = 1
 };
 
+/// Stream operator for MaterialUpdateStage
+/// @param os Output stream
+/// @param matUpdate MaterialUpdateStage to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
 
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance

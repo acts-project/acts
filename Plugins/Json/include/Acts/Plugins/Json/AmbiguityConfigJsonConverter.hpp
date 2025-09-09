@@ -18,11 +18,16 @@
 
 namespace Acts {
 
+/// @brief Type alias for detector-specific ambiguity resolution configuration
+/// @details Configuration parameters for ambiguity resolution in a specific detector component
 using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
+/// @brief Type alias for a pair of detector configuration and ambiguity resolution configuration
+/// @details Maps detector IDs to their configurations and stores a vector of detector-specific settings
 using ConfigPair =
     std::pair<std::map<std::size_t, std::size_t>, std::vector<DetectorConfig>>;
-/// This function is used to convert the ScoreBasedAmbiguityResolutionCongig
-/// from JSON to C++
+/// Convert JSON to ConfigPair
+/// @param j Source JSON object
+/// @param p Destination ConfigPair to populate
 void from_json(const nlohmann::json& j, ConfigPair& p);
 
 }  // namespace Acts

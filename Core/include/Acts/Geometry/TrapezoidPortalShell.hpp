@@ -22,6 +22,7 @@ namespace Acts {
 /// volumes
 class TrapezoidPortalShell : public PortalShellBase {
  public:
+  /// Type alias for trapezoid volume face enumeration
   using Face = TrapezoidVolumeBounds::Face;
 
   using enum TrapezoidVolumeBounds::Face;
@@ -45,6 +46,8 @@ class TrapezoidPortalShell : public PortalShellBase {
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
 
+  /// @brief Get the transformation matrix for this trapezoid portal shell
+  /// @return Reference to the transformation matrix
   virtual const Transform3& transform() const = 0;
 };
 
@@ -58,8 +61,8 @@ std::ostream& operator<<(std::ostream& os, TrapezoidPortalShell::Face face);
 /// This class describes a trapezoid shell containing a single volume.
 class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
  public:
-  // constructs a single trapezoid shell for the given tracking volume
-  // @param volume The volume to create the shell for
+  /// Construct a single trapezoid shell for the given tracking volume.
+  /// @param volume The volume to create the shell for
   explicit SingleTrapezoidPortalShell(TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size

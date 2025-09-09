@@ -29,9 +29,12 @@ class DetectorVolume;
 struct EndOfWorld : public IExternalNavigation {
   /// @brief a null volume link - explicitly
   ///
+  /// @param gctx Geometry context (ignored)
+  /// @param nState Navigation state to update
   /// @note the method parameters are ignored
-  inline void update(const GeometryContext& /*ignored*/,
+  inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
+    (void)gctx;
     nState.currentVolume = nullptr;
   }
 };
@@ -74,10 +77,11 @@ struct DetectorVolumesCollection {
 /// of volumes.
 ///
 struct BoundVolumesGrid1Navigation : public IExternalNavigation {
+  /// Type alias for indexed grid navigation updater
   using IndexedUpdater =
       IndexedGridNavigation<IExternalNavigation, VariableBoundIndexGrid1,
                             DetectorVolumesCollection, DetectorVolumeFiller>;
-  // The indexed updator
+  /// The indexed updater for grid-based volume navigation
   IndexedUpdater indexedUpdater;
 
   /// Allowed constructor with explicit arguments

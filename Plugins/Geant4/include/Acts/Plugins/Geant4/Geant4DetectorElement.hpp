@@ -43,15 +43,19 @@ class Geant4DetectorElement : public DetectorElementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return Reference to the local-to-global transformation matrix
   const Transform3& transform(const GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
+  /// @return Const reference to the associated surface
   const Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
+  /// @return Mutable reference to the associated surface
   Surface& surface() override;
 
   /// Return the thickness of this detector element
+  /// @return The thickness value in length units
   double thickness() const override;
 
   /// @return to the Geant4 physical volume

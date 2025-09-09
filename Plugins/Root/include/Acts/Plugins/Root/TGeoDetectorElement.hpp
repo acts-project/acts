@@ -38,8 +38,11 @@ class Surface;
 ///
 class TGeoDetectorElement : public Acts::DetectorElementBase {
  public:
+  /// Type alias for detector element identifier type (unsigned 64-bit integer)
   using identifier_type = unsigned long long;
+  /// Type alias for identifier difference type (signed 64-bit integer)
   using identifier_diff = long long;
+  /// Type alias for identifier value
   using Identifier = identifier_type;
 
   /// Broadcast the context type
@@ -112,28 +115,36 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
 
   ~TGeoDetectorElement() override;
 
+  /// Get the detector element identifier
+  /// @return The unique identifier for this detector element
   Identifier identifier() const;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return Reference to the transformation matrix from local to global coordinates
   const Transform3& transform(const GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
+  /// @return Reference to the nominal transformation matrix
   const Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
+  /// @return Const reference to the surface
   const Surface& surface() const override;
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
+  /// @return Mutable reference to the surface
   Surface& surface() override;
 
   /// Returns the thickness of the module
+  /// @return Thickness of the detector element in units of length
   double thickness() const override;
 
   /// Return the TGeoNode for back navigation
+  /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
 
  private:

@@ -100,43 +100,64 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
 
   // Construct an invalid barcode with all levels set to zero.
   constexpr Barcode() : Base(Base::Zeros()) {}
+  /// Copy constructor
   Barcode(const Barcode&) = default;
+  /// Move constructor
   Barcode(Barcode&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this barcode after copying
   Barcode& operator=(const Barcode&) = default;
+  /// Move assignment operator
+  /// @return Reference to this barcode after moving
   Barcode& operator=(Barcode&&) = default;
 
   /// Return the primary vertex identifier.
+  /// @return The primary vertex identifier value
   constexpr Value vertexPrimary() const { return level(0); }
   /// Return the secondary vertex identifier.
+  /// @return The secondary vertex identifier value
   constexpr Value vertexSecondary() const { return level(1); }
   /// Return the particle identifier.
+  /// @return The particle identifier value
   constexpr Value particle() const { return level(2); }
   /// Return the generation identifier.
+  /// @return The generation identifier value
   constexpr Value generation() const { return level(3); }
   /// Return the sub-particle identifier.
+  /// @return The sub-particle identifier value
   constexpr Value subParticle() const { return level(4); }
 
   /// Set the primary vertex identifier.
+  /// @param id Primary vertex identifier to set
+  /// @return Reference to this barcode for chaining
   constexpr Barcode& setVertexPrimary(Value id) {
     set(0, id);
     return *this;
   }
   /// Set the secondary vertex identifier.
+  /// @param id Secondary vertex identifier to set
+  /// @return Reference to this barcode for chaining
   constexpr Barcode& setVertexSecondary(Value id) {
     set(1, id);
     return *this;
   }
   /// Set the parent particle identifier.
+  /// @param id Particle identifier to set
+  /// @return Reference to this barcode for chaining
   constexpr Barcode& setParticle(Value id) {
     set(2, id);
     return *this;
   }
   /// Set the particle identifier.
+  /// @param id Generation identifier to set
+  /// @return Reference to this barcode for chaining
   constexpr Barcode& setGeneration(Value id) {
     set(3, id);
     return *this;
   }
   /// Set the process identifier.
+  /// @param id Sub-particle identifier to set
+  /// @return Reference to this barcode for chaining
   constexpr Barcode& setSubParticle(Value id) {
     set(4, id);
     return *this;
@@ -145,11 +166,13 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
   /// Construct a new barcode representing a descendant particle.
   ///
   /// @param sub sub-particle index of the new barcode.
+  /// @return New barcode with increased generation and specified sub-particle index
   Barcode makeDescendant(Value sub = 0u) const {
     return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
   }
 
   /// Reduce the barcode to the vertex identifier.
+  /// @return Barcode containing only vertex and generation information
   constexpr Barcode vertexId() const {
     // The vertex is identified by primary vertex, secondary vertex, and
     // generation. The other components are set to 0 so two particle originating

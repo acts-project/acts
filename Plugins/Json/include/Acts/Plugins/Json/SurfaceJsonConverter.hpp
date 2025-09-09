@@ -33,16 +33,20 @@ using SurfaceAndMaterialWithContext =
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 
-/// Conversion of a pair of surface and material used for the material mapping
+/// Convert SurfaceAndMaterialWithContext to JSON
+/// @param j Destination JSON object
+/// @param surface Source SurfaceAndMaterialWithContext to convert
 void to_json(nlohmann::json& j, const SurfaceAndMaterialWithContext& surface);
 
-/// Non-contextual conversion of a surface
-///
+/// Convert Surface to JSON
+/// @param j Destination JSON object
+/// @param surface Source Surface to convert
 /// @note it will take the default context
 void to_json(nlohmann::json& j, const Surface& surface);
 
-/// Non-contextual conversion of a surface
-///
+/// Convert shared_ptr<Surface> to JSON
+/// @param j Destination JSON object
+/// @param surface Source shared_ptr<Surface> to convert
 /// @note it will take the default context
 void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
 

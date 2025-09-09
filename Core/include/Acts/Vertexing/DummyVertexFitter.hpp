@@ -25,13 +25,16 @@ class DummyTrackLinearizer;
 template <typename linearizer_t = DummyTrackLinearizer>
 class DummyVertexFitter {
  public:
+  /// Type alias for track linearizer used in vertex fitting
   using Linearizer_t = linearizer_t;
+  /// Type alias for propagator (void for dummy implementation)
   using Propagator_t = void;
 
   // Do not allow an instance creation
   DummyVertexFitter() = delete;
 
   /// @brief Dummy fit method
+  /// @return Error result as this is a dummy implementation that should not be used
   Result<Vertex> fit(const std::vector<InputTrack>&, const linearizer_t&,
                      const VertexingOptions&) const;
 };

@@ -73,11 +73,13 @@ class CuboidVolumeStack : public VolumeStack {
   /// Convert axis direction to an array index according to
   /// stack convention. For example, AxisX --> 0
   /// @param direction is the axis direction to convert
+  /// @return Array index corresponding to the axis direction
   static std::size_t axisToIndex(AxisDirection direction);
 
   /// Get axis directions orthogonal to the given one according
   /// to stack convention. For example AxisX --> <AxisY, AxisZ>
   /// @param direction is the axis direction to find the orthogonal for
+  /// @return Pair of orthogonal axis directions
   static std::pair<AxisDirection, AxisDirection> getOrthogonalAxes(
       AxisDirection direction);
 

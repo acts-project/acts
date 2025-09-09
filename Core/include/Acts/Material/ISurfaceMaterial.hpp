@@ -50,6 +50,7 @@ class ISurfaceMaterial {
   /// Scale material
   ///
   /// @param factor is the scale factor applied
+  /// @return Reference to this material object for chaining
   virtual ISurfaceMaterial& scale(double factor) = 0;
 
   /// Return method for full material description of the Surface
@@ -72,10 +73,12 @@ class ISurfaceMaterial {
   ///
   /// @param pDir is the positive direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
+  /// @return Factor for material scaling based on direction and update stage
   double factor(Direction pDir, MaterialUpdateStage mStage) const;
 
   /// Return the type of surface material mapping
   ///
+  /// @return The mapping type indicating how material is associated with the surface
   MappingType mappingType() const { return m_mappingType; }
 
   /// Return method for fully scaled material description of the Surface
@@ -113,6 +116,8 @@ class ISurfaceMaterial {
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  /// @param sl Output stream to write to
+  /// @return Reference to the output stream for chaining
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 
   /// @brief output into a string

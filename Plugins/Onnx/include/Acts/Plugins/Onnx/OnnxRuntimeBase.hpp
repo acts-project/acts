@@ -15,6 +15,7 @@
 
 namespace Acts {
 
+/// Type alias for network batch input data structure
 using NetworkBatchInput =
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 

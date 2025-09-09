@@ -24,6 +24,9 @@
 namespace Acts {
 class SurfaceBounds;
 
+/// Convert SurfaceBounds to JSON
+/// @param j Destination JSON object
+/// @param bounds Source SurfaceBounds to convert
 void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 
 namespace SurfaceBoundsJsonConverter {

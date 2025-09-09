@@ -60,8 +60,11 @@ class INavigationPolicy;
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
+/// @typedef TrackingVolumeBoundaryPtr
+/// Shared pointer to a constant BoundarySurfaceT of a TrackingVolume.
 using TrackingVolumeBoundaryPtr =
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
+/// Type alias for collection of tracking volume boundaries
 using TrackingVolumeBoundaries = std::vector<TrackingVolumeBoundaryPtr>;
 
 // possible contained
@@ -85,8 +88,11 @@ using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 ///       and a gen3 portal but only one of them will be set. This will go away
 ///       once the gen 1 geometry is removed.
 struct BoundaryIntersection {
+  /// Surface intersection information
   SurfaceIntersection intersection;
+  /// Pointer to the boundary surface (gen1 geometry)
   const BoundarySurface* boundarySurface;
+  /// Pointer to the portal (gen3 geometry)
   const Portal* portal;
 };
 
@@ -125,7 +131,11 @@ class TrackingVolume : public Volume {
   ~TrackingVolume() override;
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
+  /// Move constructor for transferring ownership of tracking volume resources.
   TrackingVolume(TrackingVolume&&) noexcept;
+  /// Move assignment operator for transferring ownership of tracking volume
+  /// resources.
+  /// @return Reference to this TrackingVolume after move assignment
   TrackingVolume& operator=(TrackingVolume&&) noexcept;
 
   /// Constructor for a container Volume
@@ -277,6 +287,7 @@ class TrackingVolume : public Volume {
   }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
+  /// @return Reference to the volume name string
   const std::string& volumeName() const;
 
   /// Set the volume name to @p volumeName
@@ -284,9 +295,11 @@ class TrackingVolume : public Volume {
   void setVolumeName(const std::string& volumeName);
 
   /// Return the material of the volume
+  /// @return Pointer to volume material or nullptr if no material assigned
   const IVolumeMaterial* volumeMaterial() const;
 
   /// Return the material of the volume as shared pointer
+  /// @return Shared pointer to volume material
   const std::shared_ptr<const IVolumeMaterial>& volumeMaterialPtr() const;
 
   /// Set the volume material description
@@ -299,9 +312,11 @@ class TrackingVolume : public Volume {
   void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Return the MotherVolume - if it exists
+  /// @return Pointer to mother volume or nullptr if this is the root volume
   const TrackingVolume* motherVolume() const;
 
   /// Return the MotherVolume - if it exists
+  /// @return Mutable pointer to mother volume or nullptr if this is the root volume
   TrackingVolume* motherVolume();
 
   /// Set the MotherVolume
@@ -309,9 +324,11 @@ class TrackingVolume : public Volume {
   /// @param mvol is the mother volume
   void setMotherVolume(TrackingVolume* mvol);
 
+  /// Type alias for mutable range of tracking volumes in container
   using MutableVolumeRange =
       detail::TransformRange<detail::Dereference,
                              std::vector<std::unique_ptr<TrackingVolume>>>;
+  /// Type alias for const range of tracking volumes in container
   using VolumeRange = detail::TransformRange<
       detail::ConstDereference,
       const std::vector<std::unique_ptr<TrackingVolume>>>;
@@ -324,10 +341,12 @@ class TrackingVolume : public Volume {
   /// @return the range of volumes
   MutableVolumeRange volumes();
 
+  /// Type alias for mutable range of portals in tracking volume
   using MutablePortalRange =
       detail::TransformRange<detail::Dereference,
                              std::vector<std::shared_ptr<Portal>>>;
 
+  /// Type alias for const range of portals in tracking volume
   using PortalRange =
       detail::TransformRange<detail::ConstDereference,
                              const std::vector<std::shared_ptr<Portal>>>;
@@ -344,9 +363,11 @@ class TrackingVolume : public Volume {
   /// @param portal The portal to add
   void addPortal(std::shared_ptr<Portal> portal);
 
+  /// Type alias for mutable range of surfaces in tracking volume
   using MutableSurfaceRange =
       detail::TransformRange<detail::Dereference,
                              std::vector<std::shared_ptr<Surface>>>;
+  /// Type alias for const range of surfaces in tracking volume
   using SurfaceRange =
       detail::TransformRange<detail::ConstDereference,
                              const std::vector<std::shared_ptr<Surface>>>;
@@ -421,12 +442,15 @@ class TrackingVolume : public Volume {
   const LayerArray* confinedLayers() const;
 
   /// Return the confined volumes of this container array - if it exists
+  /// @return Shared pointer to array of contained tracking volumes or nullptr
   std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
 
   /// Return the confined dense volumes
+  /// @return Vector of pointers to dense tracking volumes
   const MutableTrackingVolumeVector denseVolumes() const;
 
   /// Method to return the BoundarySurfaces
+  /// @return Reference to vector of boundary surface pointers
   const TrackingVolumeBoundaries& boundarySurfaces() const;
 
   /// Set the boundary surface material description
@@ -496,6 +520,7 @@ class TrackingVolume : public Volume {
   ///  - negativeFaceXY
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
+  /// @return Reference to the glue volumes descriptor
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
   /// Produces a 3D visualization of this tracking volume

@@ -27,6 +27,10 @@ enum class VolumeAttachmentStrategy {
   Gap,
 };
 
+/// Stream operator for VolumeAttachmentStrategy
+/// @param os Output stream
+/// @param strategy VolumeAttachmentStrategy to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, VolumeAttachmentStrategy strategy);
 
 }  // namespace Acts

@@ -35,15 +35,19 @@ struct SimulationResult {
   // called for the first time, i.e. when the result struct is
   // default-initialized.
 
-  // Whether the particle is still alive and the simulation should continue
+  /// Flag indicating whether the particle is still alive and simulation should
+  /// continue
   bool isAlive = true;
-  // Proper time limit before decay.
+  /// Proper time limit before particle decay occurs
   double properTimeLimit = std::numeric_limits<double>::quiet_NaN();
-  // Accumulated radiation/interaction length limit before next interaction.
+  /// Accumulated radiation length limit before next electromagnetic interaction
   double x0Limit = std::numeric_limits<double>::quiet_NaN();
+  /// Accumulated nuclear interaction length limit before next hadronic
+  /// interaction
   double l0Limit = std::numeric_limits<double>::quiet_NaN();
-  // Process selection for the next interaction.
+  /// Process index selection for the next electromagnetic interaction
   std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+  /// Process index selection for the next hadronic interaction
   std::size_t l0Process = std::numeric_limits<std::size_t>::max();
 };
 

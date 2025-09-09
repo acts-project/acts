@@ -107,6 +107,7 @@ inline std::string toString(const Acts::Transform3& transform,
 /// Print out a vector of double
 /// @param pVector The vector to print
 /// @param precision Numeric output precision
+/// @return A formatted string representation of the vector
 inline std::string toString(const std::vector<double>& pVector,
                             int precision = 4) {
   std::ostringstream sout;

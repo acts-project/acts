@@ -40,6 +40,7 @@ concept PointerConcept =
 ///        does not allow for an extension of the std::remove_pointer;
 template <typename T>
 struct RemovePointer {
+  /// Type alias for the original type (non-pointer case)
   using type = T;
 };
 
@@ -47,13 +48,16 @@ struct RemovePointer {
 ///         Acts::SmartPointerConcept, similar to how it works with raw pointers
 template <SmartPointerConcept T>
 struct RemovePointer<T> {
+  /// Type alias for the element type pointed to by smart pointer
   using type = typename T::element_type;
 };
 /// @brief ordinary specialization for pointers
 template <PointerConcept T>
 struct RemovePointer<T> {
+  /// Type alias for the type pointed to by raw pointer
   using type = std::remove_pointer_t<T>;
 };
+/// Helper type alias for removing pointer from type
 template <typename T>
 using RemovePointer_t = RemovePointer<T>::type;
 

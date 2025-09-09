@@ -96,8 +96,6 @@ struct AllPortalsAndSurfacesNavigation : public IInternalNavigation {
   ///
   /// @note that the intersections are ordered, such that the
   /// smallest intersection pathlength >= overstep tolerance is the lowest
-  ///
-  /// @return an ordered list of portal and surface candidates
   inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
     fill(gctx, nState);
@@ -156,8 +154,6 @@ struct AdditionalSurfacesNavigation : public IInternalNavigation {
   ///
   /// @note that the intersections are ordered, such that the
   /// smallest intersection pathlength >= overstep tolerance is the lowest
-  ///
-  /// @return an ordered list of portal and surface candidates
   inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
     fill(gctx, nState);
