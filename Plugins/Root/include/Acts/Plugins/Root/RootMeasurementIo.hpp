@@ -70,13 +70,16 @@ class RootMeasurementIo {
                             const std::vector<double>& variances,
                             const std::vector<unsigned int>& subspaceIndex);
 
+  /// Fill global information of the cluster/measurement
+  ///
+  /// @param pos The global position of the cluster
+  void fillGlobalPosition(const Vector3& pos);
+
   /// Convenience function to fill the cluster information
   ///  - abstracted to be used in different contexts
   ///
-  /// @param pos The global position of the cluster
   /// @param channels The channel information
-  void fillCluster(const Vector3& pos,
-                   const std::vector<std::tuple<int, int, float>>& channels);
+  void fillCluster(const std::vector<std::tuple<int, int, float>>& channels);
 
   /// Clear the payload
   void clear();
@@ -97,7 +100,7 @@ class RootMeasurementIo {
     int surfaceID = 0;
     int extraID = 0;
 
-    // Reconstruction bound information
+    // Reconstructed information
     std::array<float, eBoundSize> recBound = {};
     std::array<float, eBoundSize> varBound = {};
 

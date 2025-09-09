@@ -163,8 +163,8 @@ ProcessCode RootMeasurementWriter::writeT(
     // Fill the cluster information if available
     if (clusters != nullptr) {
       const auto& cluster = (*clusters)[hitIdx];
-      m_measurementIo->fillCluster(cluster.globalPosition,
-                                   prepareChannels(cluster));
+      m_measurementIo->fillGlobalPosition(cluster.globalPosition);
+      m_measurementIo->fillCluster(prepareChannels(cluster));
     }
 
     m_outputTree->Fill();

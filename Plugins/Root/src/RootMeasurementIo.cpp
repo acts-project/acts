@@ -123,8 +123,13 @@ void Acts::RootMeasurementIo::fillBoundMeasurement(
   }
 }
 
+void Acts::RootMeasurementIo::fillGlobalPosition(const Vector3& pos) {
+  m_measurementPayload.recGx = pos.x();
+  m_measurementPayload.recGy = pos.y();
+  m_measurementPayload.recGz = pos.z();
+}
+
 void Acts::RootMeasurementIo::fillCluster(
-    const Vector3& pos,
     const std::vector<std::tuple<int, int, float>>& channels) {
   m_clusterPayload.nch = static_cast<int>(channels.size());
   for (auto [ch0, ch1, chv] : channels) {
@@ -137,9 +142,6 @@ void Acts::RootMeasurementIo::fillCluster(
   auto [min1, max1] = std::ranges::minmax_element(m_clusterPayload.chId[1]);
   m_clusterPayload.clusterSize[0] = (*max0 - *min0 + 1);
   m_clusterPayload.clusterSize[1] = (*max1 - *min1 + 1);
-  m_measurementPayload.recGx = pos.x();
-  m_measurementPayload.recGy = pos.y();
-  m_measurementPayload.recGz = pos.z();
 }
 
 void Acts::RootMeasurementIo::clear() {

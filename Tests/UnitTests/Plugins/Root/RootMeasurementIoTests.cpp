@@ -56,10 +56,9 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
                                Vector3(0.1, 0.2, 0.3),
                                std::make_pair(0.01, 0.02));
   accessor.fillBoundMeasurement({0.11, 0.22}, {0.01, 0.02}, {0, 1});
-
-  accessor.fillCluster(Vector3(1.0, 2.0, 3.0),
-                       std::vector<std::tuple<int, int, float>>{
-                           {1, 2, 0.5}, {2, 3, 1.5}, {3, 4, 2.5}});
+  accessor.fillGlobalPosition(Vector3(1.0, 2.0, 3.0));
+  accessor.fillCluster(std::vector<std::tuple<int, int, float>>{
+      {1, 2, 0.5}, {2, 3, 1.5}, {3, 4, 2.5}});
 
   measurementTree.Fill();
   measurementTree.Write();
