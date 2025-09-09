@@ -19,7 +19,7 @@ set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
 
 # print version and components information
 if(NOT Acts_FIND_QUIETLY)
-  message(STATUS "Found Acts version ${Acts_VERSION} commit ${Acts_COMMIT_HASH_SHORT}")
+  message(STATUS "Found ACTS version ${Acts_VERSION} commit ${Acts_COMMIT_HASH_SHORT}")
 endif()
 
 # check that requested components are available
