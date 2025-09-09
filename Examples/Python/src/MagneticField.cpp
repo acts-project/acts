@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/TextMagneticFieldIo.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/MagneticField/TextMagneticFieldIo.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
 

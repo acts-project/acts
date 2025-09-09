@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
         csvFile << "% r,z,Br,Bz\n";
         // header should be ignored if indicated by #
         csvFile << "# this is a B-Field file in r/z\n";
-        // Empty line should be ingored
+        // Empty line should be ignored
         csvFile << '\n';
 
         // Innermost r-bin
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
         csvFile << "% x,y,z,Bx,By,Bz\n";
         // header should be ignored if indicated by #
         csvFile << "# this is a B-Field file in x/y/z\n";
-        // Empty line should be ingored
+        // Empty line should be ignored
         csvFile << '\n';
         csvFile << 0. << dlm << 0. << dlm << 0.;
         csvFile << dlm << 0. << dlm << 0. << dlm << 2.0 << '\n';

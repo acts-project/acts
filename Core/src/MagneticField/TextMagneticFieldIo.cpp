@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
 
-#include <boost/algorithm/string.hpp>
+#include "Acts/MagneticField/BFieldMapUtils.hpp"
 
 #include <fstream>
 #include <vector>
+
+#include <boost/algorithm/string.hpp>
 
 namespace {
 constexpr std::size_t kDefaultSize = 1 << 15;
