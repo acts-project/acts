@@ -198,7 +198,7 @@ def rng():
 
 @pytest.fixture
 def hello_world(rng):
-    def _factory(s):
+    def _hello_world_factory(s):
 
         hello_logger = acts.examples.HelloLoggerAlgorithm(
             level=acts.logging.INFO,
@@ -217,7 +217,7 @@ def hello_world(rng):
 
         return hello_logger, hello_random, hello_whiteboard
 
-    return _factory
+    return _hello_world_factory
 
 
 @pytest.fixture
