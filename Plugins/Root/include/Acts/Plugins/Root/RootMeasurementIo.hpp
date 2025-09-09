@@ -124,7 +124,7 @@ class RootMeasurementIo {
   struct ClusterPayload {
     // Cluster information
     int nch = 0;
-    std::array<int, 2> clusterSize = {};
+    std::array<int, 2> clusterSize = {0, 0};
     std::array<std::vector<int>, 2> chId;
     std::vector<float> chValue = {};
   };

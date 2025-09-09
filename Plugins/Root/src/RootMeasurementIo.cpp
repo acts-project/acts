@@ -132,6 +132,9 @@ void Acts::RootMeasurementIo::fillGlobalPosition(const Vector3& pos) {
 void Acts::RootMeasurementIo::fillCluster(
     const std::vector<std::tuple<int, int, float>>& channels) {
   m_clusterPayload.nch = static_cast<int>(channels.size());
+  if (m_clusterPayload.nch == 0) {
+    return;
+  }
   for (auto [ch0, ch1, chv] : channels) {
     m_clusterPayload.chId[0].push_back(ch0);
     m_clusterPayload.chId[1].push_back(ch1);
