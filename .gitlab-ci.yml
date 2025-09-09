@@ -495,8 +495,8 @@ linux_ubuntu_2404_clang19:
 
     SETUP:
 
-#  cache:
-#   - !reference [.ccache_base, cache]
+  cache:
+    - !reference [.ccache_base, cache]
 
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
@@ -522,19 +522,15 @@ linux_ubuntu_2404_clang19:
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
 
-
-
-#    - ccache --version
-
   script:
     - >
       cmake -B build -S src
       --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
-#    - ccache -z
+    - ccache -z
     - cmake --build build -- -j6
-#    - ccache -s
+    - ccache -s
 
     - ctest --test-dir build -j$(nproc)
 
