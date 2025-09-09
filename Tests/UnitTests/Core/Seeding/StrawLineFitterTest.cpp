@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <random>
 
@@ -19,6 +21,7 @@ using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
+using namespace Acts::VectorHelpers;
 
 using RandomEngine = std::mt19937;
 using uniform = std::uniform_real_distribution<double>;
@@ -323,6 +326,43 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
     fitOpts.measurements = generateMeasurements(line, t0, engine);
+
+    double tanPhi{0.};
+    double tanTheta{0.};
+    /// Setup the seed parameters in x0 && phi
+    {
+      auto firstPhi = std::ranges::find_if(
+          fitOpts.measurements,
+          [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
+      auto lastPhi = std::ranges::find_if(
+          std::ranges::reverse_view(fitOpts.measurements),
+          [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
+      const Vector firstToLastPhi =
+          (**lastPhi).localPosition() - (**firstPhi).localPosition();
+      tanPhi = firstToLastPhi.x() / firstToLastPhi.z();
+      /// -> x = tanPhi * z + x_{0} ->
+      fitOpts.startParameters[toUnderlying(FitParIndex::x0)] =
+          (**lastPhi).localPosition().x() -
+          (**lastPhi).localPosition().z() * tanPhi;
+    }
+    /// Setup the seed parameters in y0 && theta
+    {
+      auto firstTube = std::ranges::find_if(
+          fitOpts.measurements, [](const auto& sp) { return sp->isStraw(); });
+      auto lastTube =
+          std::ranges::find_if(std::ranges::reverse_view(fitOpts.measurements),
+                               [](const auto& sp) { return sp->isStraw(); });
+      const int signFirst =
+          CompSpacePointAuxiliaries::strawSign(line, **firstTube);
+      const int signLast =
+          CompSpacePointAuxiliaries::strawSign(line, **lastTube);
+    }
+
+    const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
+    fitOpts.startParameters[toUnderlying(FitParIndex::theta)] = theta(seedDir);
+    fitOpts.startParameters[toUnderlying(FitParIndex::phi)] = phi(seedDir);
+
+    //
     auto result = fitter.fit(std::move(fitOpts));
   }
 }
