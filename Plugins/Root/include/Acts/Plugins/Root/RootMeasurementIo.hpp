@@ -97,7 +97,7 @@ class RootMeasurementIo {
     int surfaceID = 0;
     int extraID = 0;
 
-    // Reconstruction information
+    // Reconstruction bound information
     std::array<float, eBoundSize> recBound = {};
     std::array<float, eBoundSize> varBound = {};
 
@@ -116,18 +116,17 @@ class RootMeasurementIo {
     // Residuals and pulls
     std::array<float, eBoundSize> residual = {};
     std::array<float, eBoundSize> pull = {};
-
-    // Cluster information comprised of
-    // nch :  number of channels
-    // cSize : cluster size in loc0 and loc1
-    // chId : channel identification
-    // chValue: value/activation of the channel
-    int nch = 0;
-    std::array<int, 2> cSize = {};
-    std::array<std::vector<int>, 2> chId;
-    std::vector<float> chValue;
   };
 
-  MeasurementPayload m_payload;
+  struct ClusterPayload {
+    // Cluster information
+    int nch = 0;
+    std::array<int, 2> clusterSize = {};
+    std::array<std::vector<int>, 2> chId;
+    std::vector<float> chValue = {};
+  };
+
+  MeasurementPayload m_measurementPayload;
+  ClusterPayload m_clusterPayload;
 };
 }  // namespace Acts
