@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <random>
+#include <ranges>
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -28,6 +30,7 @@ using uniform = std::uniform_real_distribution<double>;
 using normal_t = std::normal_distribution<double>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
+using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -337,7 +340,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       auto lastPhi = std::ranges::find_if(
           std::ranges::reverse_view(fitOpts.measurements),
           [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
-      const Vector firstToLastPhi =
+      const Vector3 firstToLastPhi =
           (**lastPhi).localPosition() - (**firstPhi).localPosition();
       tanPhi = firstToLastPhi.x() / firstToLastPhi.z();
       /// -> x = tanPhi * z + x_{0} ->
