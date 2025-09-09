@@ -13,6 +13,7 @@
 #include "../Surfaces/SurfaceStub.hpp"
 
 namespace Acts {
+
 /// Layer derived class stub
 /// Note: Layer classes in general have a static 'create' factory method, but
 /// nothing
@@ -49,4 +50,5 @@ class LayerStub : virtual public SurfaceStub, public Layer {
   /// Other methods have implementation in baseclass
   /// templated 'onLayer()' from baseclass ?
 };
+
 }  // namespace Acts
