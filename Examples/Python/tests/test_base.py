@@ -60,7 +60,7 @@ def test_empty_sequencer(conf_const):
 
 
 def test_helloworld(hello_world, capfd):
-    s = acts.examples.Sequencer(events=1)
+    s = acts.examples.Sequencer(numThreads=1, events=1)
     hello_world(s)
     s.run()
     cap = capfd.readouterr()
