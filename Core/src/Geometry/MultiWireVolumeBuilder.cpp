@@ -87,7 +87,8 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   // The indexed grid to be filled from the navigation policy
   IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
       std::move(grid),
-      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()});
+      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
+      m_config.transform.inverse());
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
