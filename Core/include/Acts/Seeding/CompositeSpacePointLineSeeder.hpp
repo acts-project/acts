@@ -37,6 +37,8 @@ class CompositeSpacePointLineSeeder {
              // right side
     LL = 3,  // Both circles are on the left side
   };
+  /// @brief Converts the line tangent ambiguity into a string
+  static std::string toString(const TangentAmbi ambi);
   /// @brief Translate the
   static constexpr TangentAmbi encodeAmbiguity(const int signTop,
                                                const int signBottom);
@@ -51,7 +53,7 @@ class CompositeSpacePointLineSeeder {
 
  private:
   static constexpr std::array<std::array<int, 2>, 4> s_signCombo{
-      std::array{1, 1}, std::array{1, -1}, std::array{-1, -1},
+      std::array{1, 1}, std::array{1, -1}, std::array{-1, 1},
       std::array{-1, -1}};
 };
 }  // namespace Acts::Experimental

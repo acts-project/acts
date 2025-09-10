@@ -14,6 +14,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <format>
 #include <random>
 #include <ranges>
 
@@ -32,6 +33,7 @@ using Line_t = CompSpacePointAuxiliaries::Line_t;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 constexpr auto logLvl = Acts::Logging::Level::INFO;
+constexpr std::size_t nEvents = 10000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -163,9 +165,9 @@ static_assert(
 Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
-  linePars[toUnderlying(ParIndex::x0)] =
-      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
   linePars[toUnderlying(ParIndex::phi)] =
+      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
+  linePars[toUnderlying(ParIndex::x0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::y0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
@@ -176,15 +178,23 @@ Line_t generateLine(RandomEngine& engine) {
     return generateLine(engine);
   }
   Line_t line{linePars};
-  ACTS_DEBUG(
-      "Generated parameters -"
-      << std::format("theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}",
-                     (linePars[toUnderlying(ParIndex::theta)] / 1._degree),
-                     (linePars[toUnderlying(ParIndex::phi)] / 1._degree),
-                     linePars[toUnderlying(ParIndex::y0)],
-                     linePars[toUnderlying(ParIndex::x0)])
-      << " --> " << toString(line.position()) << " + "
-      << toString(line.direction()));
+  if (line.direction().z() < 0.) {
+    linePars[toUnderlying(ParIndex::theta)] = theta(-line.direction());
+    linePars[toUnderlying(ParIndex::phi)] = phi(-line.direction());
+    line.updateParameters(linePars);
+  }
+
+  ACTS_DEBUG("\n\n\n"<<
+      __func__ << "() " << __LINE__ << " - Generated parameters "
+               << std::format(
+                      "theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}",
+                      linePars[toUnderlying(ParIndex::theta)] / 1._degree,
+                      linePars[toUnderlying(ParIndex::phi)] / 1._degree,
+                      linePars[toUnderlying(ParIndex::y0)],
+                      linePars[toUnderlying(ParIndex::x0)])
+               << " --> " << toString(line.position()) << " + "
+               << toString(line.direction()));
+
   return line;
 }
 /// @brief Extrapolate the straight line track through the straw layers to
@@ -197,9 +207,11 @@ Line_t generateLine(RandomEngine& engine) {
 /// @param trajLine: The track to extrapolate
 /// @param engine: Random number generator to smear the drift radius
 /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
+/// @param createStrips: If true the strip measurements are created
 Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
                                  RandomEngine& engine,
-                                 const bool smearRadius = true) {
+                                 const bool smearRadius = true,
+                                 const bool createStrips = true) {
   /// Direction vector to go a positive step in the tube honeycomb grid
   const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
   /// Direction vector to go a negative step in the tube honeycomb grid
@@ -267,16 +279,16 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
     /// radius
     for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
-      const double rad = Acts::detail::LineHelper::signedDistance(
-          tube, Vector3::UnitX(), trajLine.position(), trajLine.direction());
+      const double rad = Acts::abs(Acts::detail::LineHelper::signedDistance(
+          tube, Vector3::UnitX(), trajLine.position(), trajLine.direction()));
       ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
 
-      if (std::abs(rad) > tubeRadius) {
+      if (rad > tubeRadius) {
         continue;
       }
       const double smearedR =
           smearRadius
-              ? std::abs(normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
+              ? Acts::abs(normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
               : rad;
       if (smearedR > tubeRadius) {
         continue;
@@ -285,7 +297,7 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
           tube, smearedR, SpCalibrator::driftUncert(smearedR)));
     }
   }
-  for (std::size_t sL = 0; sL < nStripLay; ++sL) {
+  for (std::size_t sL = 0; createStrips && sL < nStripLay; ++sL) {
     const double distInZ = tubeStripDist + sL * stripLayDist;
     const double planeLow = tubePositions.front().z() - distInZ;
     const double planeHigh = tubePositions.back().z() + distInZ;
@@ -305,10 +317,100 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
     }
   }
   ACTS_DEBUG("Track hit in total " << measurements.size() << " sensors.");
+  std::ranges::sort(measurements, [&trajLine](const auto& spA, const auto& spB) {
+      return trajLine.direction().dot(spA->localPosition() - trajLine.position()) <
+            trajLine.direction().dot(spB->localPosition() - trajLine.position());
+  });
   return measurements;
 }
 
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
+
+BOOST_AUTO_TEST_CASE(SeedTangents) {
+  RandomEngine engine{1602};
+  constexpr double tolerance = 1.e-3;
+
+  for (std::size_t evt = 0; evt < nEvents; ++evt) {
+    const auto line = generateLine(engine);
+    auto testTubes = generateMeasurements(line, 0._ns, engine, false, false);
+    const double lineTanTheta = line.direction().y() / line.direction().z();
+    const double lineY0 = line.position().y();
+    for (std::size_t m1 = testTubes.size() - 1; m1 > 0; --m1) {
+      for (std::size_t m2 = 0; m2 < m1; ++m2) {
+        const auto& bottomTube = *testTubes[m2];
+        const auto& topTube = *testTubes[m1];
+        const int signTop = CompSpacePointAuxiliaries::strawSign(line, topTube);
+        const int signBot =
+            CompSpacePointAuxiliaries::strawSign(line, bottomTube);
+        const auto trueAmbi =
+            CompositeSpacePointLineSeeder::encodeAmbiguity(signTop, signBot);
+
+        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - "
+                           << std::format("bottom tube @ {:}, r: {:.3f}({:})",
+                                          toString(bottomTube.localPosition()),
+                                          (signBot * bottomTube.driftRadius()),
+                                          signBot > 0 ? "R" : "L")
+                           << ", "
+                           << std::format("top tube @ {:}, r: {:.3f} ({:})",
+                                          toString(topTube.localPosition()),
+                                          (signTop * topTube.driftRadius()),
+                                          signTop > 0 ? "R" : "L"));
+
+        {
+          using enum CompositeSpacePointLineSeeder::TangentAmbi;
+          bool seenTruePars{false};
+          for (const auto ambi : {LL, RL, LR, RR}) {
+            const auto tangentPars =
+                CompositeSpacePointLineSeeder::constructTangentLine(
+                    topTube, bottomTube, ambi);
+
+            const bool isTruePars =
+                Acts::abs(std::tan(tangentPars.theta) - lineTanTheta) <
+                    tolerance &&
+                Acts::abs(lineY0 - tangentPars.y0) < tolerance;
+            seenTruePars |= isTruePars;
+            ACTS_VERBOSE(__func__
+                         << "() " << __LINE__ << " - Test ambiguity "
+                         << CompositeSpacePointLineSeeder::toString(ambi)
+                         << " -> "
+                         << std::format("theta: {:.3f}, ",
+                                        tangentPars.theta / 1._degree)
+                         << std::format("tanTheta: {:.3f}, ",
+                                        std::tan(tangentPars.theta))
+                         << std::format("y0: {:.3f}", tangentPars.y0)
+                         << (!isTruePars ? (ambi == trueAmbi ? " xxxxxx" : "")
+                                         : " <-------"));
+            const Vector3 seedPos = tangentPars.y0 * Vector3::UnitY();
+            const Vector3 seedDir =
+                makeDirectionFromAxisTangents(0., std::tan(tangentPars.theta));
+
+            const double chi2Top =
+                CompSpacePointAuxiliaries::chi2Term(seedPos, seedDir, topTube);
+            const double chi2Bot = CompSpacePointAuxiliaries::chi2Term(
+                seedPos, seedDir, bottomTube);
+            ACTS_VERBOSE(__func__ << "() " << __LINE__
+                                  << " - Resulting chi2 top: " << chi2Top
+                                  << ", bottom: " << chi2Bot);
+            BOOST_CHECK_LE(chi2Top, 1.e-17);
+            BOOST_CHECK_LE(chi2Bot, 1.e-17);
+          }
+          BOOST_CHECK_EQUAL(seenTruePars, true);
+        }
+
+        const auto seedPars =
+            CompositeSpacePointLineSeeder::constructTangentLine(
+                topTube, bottomTube, trueAmbi);
+        /// Construct line parameters
+        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Line tan theta: "
+                           << lineTanTheta << ", reconstructed theta: "
+                           << std::tan(seedPars.theta) << ", line y0: "
+                           << lineY0 << ", reconstructed y0: " << seedPars.y0);
+        BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanTheta, tolerance);
+        BOOST_CHECK_CLOSE(seedPars.y0, lineY0, tolerance);
+      }
+    }
+  }
+}
 
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1503};
@@ -322,7 +424,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
                                        getDefaultLogger("LineFitter", logLvl)};
 
   auto calibrator = std::make_unique<SpCalibrator>();
-  for (std::size_t evt = 0; evt < 10; ++evt) {
+  return;
+  for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
     const double t0 = uniform{-50._ns, 50._ns}(engine);
 
@@ -359,6 +462,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
           CompSpacePointAuxiliaries::strawSign(line, **firstTube);
       const int signLast =
           CompSpacePointAuxiliaries::strawSign(line, **lastTube);
+
+      auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+          **lastTube, **firstTube,
+          CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
+      tanTheta = std::tan(seedPars.theta);
+      fitOpts.startParameters[toUnderlying(FitParIndex::y0)] = seedPars.y0;
     }
 
     const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);

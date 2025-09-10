@@ -26,8 +26,25 @@ CompositeSpacePointLineSeeder::encodeAmbiguity(const int signTop,
   }
   return LL;
 }
+
+  static std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
+    switch (ambi) {
+      using enum TangentAmbi;
+      case RR:
+        return "Right - Right";
+      case RL:
+        return "Right - Left";
+      case LR:
+        return "Left - Right";
+      case LL:
+        return "Left - Left";
+    }
+    return "Undefined";
+  }
+
 template <CompositeSpacePoint SpacePoint_t>
-CompositeSpacePointLineSeeder::TwoCircleTangentPars CompositeSpacePointLineSeeder::constructTangentLine(
+CompositeSpacePointLineSeeder::TwoCircleTangentPars
+CompositeSpacePointLineSeeder::constructTangentLine(
     const SpacePoint_t& topHit, const SpacePoint_t& bottomHit,
     const TangentAmbi ambi) {
   using ResidualIdx = detail::CompSpacePointAuxiliaries::ResidualIdx;
@@ -58,13 +75,13 @@ CompositeSpacePointLineSeeder::TwoCircleTangentPars CompositeSpacePointLineSeede
   const double combDriftUncert{topHit.covariance()[covIdx] +
                                bottomHit.covariance()[covIdx]};
   const double R =
-      signBot * bottomHit.driftRadius() - signTop * topHit.driftRadius();
+      -signBot * bottomHit.driftRadius() + signTop * topHit.driftRadius();
   result.theta = thetaTubes - std::asin(std::clamp(R / distTubes, -1., 1.));
   const double cosTheta = std::cos(result.theta);
   const double sinTheta = std::sin(result.theta);
-  result.y0 = bottomPos.dot(eY) * cosTheta - bottomPos.dot(eZ) * sinTheta +
+  result.y0 = bottomPos.dot(eY) * cosTheta - bottomPos.dot(eZ) * sinTheta -
               signBot * bottomHit.driftRadius();
-  assert(Acts::abs(topPos.dot(eY) * cosTheta - topPos.dot(eZ) * sinTheta +
+  assert(Acts::abs(topPos.dot(eY) * cosTheta - topPos.dot(eZ) * sinTheta -
                    signTop * topHit.driftRadius() - result.y0) <
          std::numeric_limits<float>::epsilon());
   result.y0 /= cosTheta;
