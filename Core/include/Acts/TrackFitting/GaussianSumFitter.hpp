@@ -147,8 +147,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              options.extensions.surfaceAccessor(SourceLink{*it}));
         }
       }
 
@@ -170,8 +169,7 @@ struct GaussianSumFitter {
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
           propOptions.navigation.insertExternalSurface(
-              options.extensions.surfaceAccessor(SourceLink{*it})
-                  ->geometryId());
+              options.extensions.surfaceAccessor(SourceLink{*it}));
         }
       }
 
