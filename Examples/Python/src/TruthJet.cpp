@@ -9,6 +9,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -19,15 +20,13 @@
 namespace py = pybind11;
 
 using namespace ActsExamples;
-using namespace Acts;
 
 namespace ActsPython {
 
 void addTruthJet(Context& ctx) {
   auto mex = ctx.get("examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthJetAlgorithm, mex,
-                                "TruthJetAlgorithm", inputTruthParticles,
-                                outputJets, jetPtMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex, "TruthJetAlgorithm",
+                                inputTruthParticles, outputJets, jetPtMin);
 }  // addTruthJet
 }  // namespace ActsPython
