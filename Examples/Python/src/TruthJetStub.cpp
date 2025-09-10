@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // This is a stub version when the FastJet plugin is not available
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
-namespace Acts::Python {
+namespace ActsPython {
 void addTruthJet(Context& /*ctx*/) {}
-}  // namespace Acts::Python
+}  // namespace ActsPython
