@@ -8,8 +8,8 @@
 
 #include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <memory>
 
@@ -21,7 +21,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addHashing(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -53,4 +53,4 @@ void addHashing(Context& ctx) {
       numPhiNeighbors, hashingConfig, hashingTrainingConfig, useExtraCuts);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
