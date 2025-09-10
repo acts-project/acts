@@ -47,11 +47,11 @@ void addHashing(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      SeedingAlgorithmHashing, hashingExampleModule,
-      "SeedingAlgorithmHashing", inputSpacePoints, outputSeeds, outputBuckets,
-      seedFilterConfig, seedFinderConfig, seedFinderOptions, gridConfig,
-      gridOptions, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
-      numPhiNeighbors, hashingConfig, hashingTrainingConfig, useExtraCuts);
+      SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",
+      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
+      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
+      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
+      hashingConfig, hashingTrainingConfig, useExtraCuts);
 }
 
 }  // namespace ActsPython
