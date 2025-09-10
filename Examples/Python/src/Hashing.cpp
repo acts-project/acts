@@ -48,11 +48,15 @@ void addHashing(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3d03d19ac (format)
       SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",
       inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
       seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
       allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
       hashingConfig, hashingTrainingConfig, useExtraCuts);
+<<<<<<< HEAD
 =======
       SeedingAlgorithmHashing, hashingExampleModule,
       "SeedingAlgorithmHashing", inputSpacePoints, outputSeeds, outputBuckets,
@@ -60,6 +64,8 @@ void addHashing(Context& ctx) {
       gridOptions, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
       numPhiNeighbors, hashingConfig, hashingTrainingConfig, useExtraCuts);
 >>>>>>> 978afffac (fix hasing macro include)
+=======
+>>>>>>> 3d03d19ac (format)
 }
 
 }  // namespace ActsPython
