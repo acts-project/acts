@@ -42,21 +42,6 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-// ---------------------------------------------------------------
-// #include "Acts/Detector/CylindricalContainerBuilder.hpp"
-// #include "Acts/Detector/DetectorBuilder.hpp"
-// #include "Acts/Detector/detail/BlueprintDrawer.hpp"
-// #include "Acts/Detector/detail/BlueprintHelper.hpp"
-// #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-// #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
-// #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-// #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
-// #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-// #include "Acts/Geometry/Extent.hpp"
-// #include "Acts/Geometry/ProtoLayer.hpp"
-// #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
-// ---------------------------------------------------------------
-
 Acts::GeometryContext tContext;
 Acts::Test::CylindricalTrackingGeometry cGeometry =
     Acts::Test::CylindricalTrackingGeometry(tContext);
