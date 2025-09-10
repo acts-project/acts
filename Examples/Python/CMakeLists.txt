@@ -13,6 +13,7 @@ pybind11_add_module(ActsPythonBindings
   src/Base.cpp
   src/Alignment.cpp
   src/Detector.cpp
+  src/HelloWorld.cpp
   src/Digitization.cpp
   src/Material.cpp
   src/Geometry.cpp
@@ -65,6 +66,7 @@ target_link_libraries(
         Acts::ExamplesFatras
         Acts::ExamplesDetectorTelescope
         Acts::ExamplesUtilities
+        Acts::ExamplesHelloWorld
         Acts::ExamplesAmbiguityResolution
         Acts::ExamplesTruthTracking
         Acts::ExamplesDigitization

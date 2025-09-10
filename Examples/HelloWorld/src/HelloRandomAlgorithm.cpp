@@ -6,18 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "HelloRandomAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloRandomAlgorithm.hpp"
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/HelloWorld/HelloData.hpp"
 
 #include <random>
 
-#include "HelloData.hpp"
-
 ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
-    const HelloRandomAlgorithm::Config& cfg, Acts::Logging::Level level)
-    : IAlgorithm("HelloRandom", level), m_cfg(cfg) {
+    const HelloRandomAlgorithm::Config& config, Acts::Logging::Level level)
+    : IAlgorithm("HelloRandom", level), m_cfg(config) {
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random number service");
   }
