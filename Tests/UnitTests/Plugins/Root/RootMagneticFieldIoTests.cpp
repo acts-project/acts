@@ -32,7 +32,10 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
   // Create the file
   auto rzFile = TFile::Open(fileName.c_str(), "RECREATE");
   auto tree = new TTree(fieldName.c_str(), "BFieldMap");
-  double r, z, Br, Bz;
+  double r = 0.;
+  double z = 0.;
+  double Br = 0.;
+  double Bz = 0.;
   tree->Branch("r", &r, "r/D");
   tree->Branch("z", &z, "z/D");
   tree->Branch("Br", &Br, "Br/D");
@@ -86,7 +89,12 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_root) {
     auto xyzFile = TFile::Open(fileName.c_str(), "RECREATE");
     auto tree = new TTree(fieldName.c_str(), "BFieldMap");
 
-    double x, y, z, Bx, By, Bz;
+    double x = 0.;
+    double y = 0.;
+    double z = 0.;
+    double Bx = 0.;
+    double By = 0.;
+    double Bz = 0.;
     tree->Branch("x", &x, "x/D");
     tree->Branch("y", &y, "y/D");
     tree->Branch("z", &z, "z/D");

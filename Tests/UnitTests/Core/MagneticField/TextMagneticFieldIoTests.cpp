@@ -29,8 +29,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
     for (auto [id, cdlm] : enumerate(std::vector<std::string>{";", ",", ""})) {
       for (auto fOctant : {true, false}) {
         std::string fieldName = "rz_magfield" + std::to_string(id) + "_" +
-                                std::to_string(fOctant) + "fieldScale" +
-                                std::to_string(fieldScale) + ".csv";
+                                std::to_string(static_cast<int>(fOctant)) +
+                                "fieldScale" + std::to_string(fieldScale) +
+                                ".csv";
 
         std::string dlm = cdlm.empty() ? " " : cdlm;
 
@@ -106,8 +107,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
     for (auto [id, cdlm] : enumerate(std::vector<std::string>{";", ",", ""})) {
       for (auto fOctant : {true, false}) {
         std::string fieldName = "xyz_magfield" + std::to_string(id) + "_" +
-                                std::to_string(fOctant) + "fieldScale" +
-                                std::to_string(fieldScale) + ".csv";
+                                std::to_string(static_cast<int>(fOctant)) +
+                                "fieldScale" + std::to_string(fieldScale) +
+                                ".csv";
 
         std::string dlm = cdlm.empty() ? " " : cdlm;
 

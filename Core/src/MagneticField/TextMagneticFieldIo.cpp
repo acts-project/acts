@@ -21,7 +21,7 @@ constexpr std::size_t kDefaultSize = 1 << 15;
 
 bool ignoreLine(const std::string& line) {
   return line.empty() || line[0] == '%' || line[0] == '#' ||
-         std::isalpha(line[0]) ||
+         std::isalpha(line[0]) != 0 ||
          line.find_first_not_of(' ') == std::string::npos;
 }
 
