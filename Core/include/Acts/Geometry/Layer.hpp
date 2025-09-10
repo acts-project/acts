@@ -15,9 +15,9 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -155,7 +155,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
+  boost::container::small_vector<NavigationTarget, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const NavigationOptions<Surface>& options) const;
@@ -170,7 +170,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  SurfaceIntersection surfaceOnApproach(
+  NavigationTarget surfaceOnApproach(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
