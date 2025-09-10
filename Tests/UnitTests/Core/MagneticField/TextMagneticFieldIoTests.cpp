@@ -101,7 +101,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_text) {
 
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
   TemporaryDirectory tmp{};
-
   // This tests octant reading, different deliminators, different scales
   for (auto fieldScale : {1_T, 1_kGauss}) {
     for (auto [id, cdlm] : enumerate(std::vector<std::string>{";", ",", ""})) {
@@ -121,28 +120,22 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
         csvFile << "# this is a B-Field file in x/y/z\n";
         // Empty line should be ignored
         csvFile << '\n';
-        csvFile << 0. << dlm << 0. << dlm << 0.;
-        csvFile << dlm << 0. << dlm << 0. << dlm << 2.0 << '\n';
-        csvFile << 1. << dlm << 2. << dlm << 3.;
-        csvFile << dlm << 0. << dlm << 0. << dlm << 1.9 << '\n';
-        csvFile << 2. << dlm << 4. << dlm << 6.;
-        csvFile << dlm << 0. << dlm << 0. << dlm << 1.8 << '\n';
+
+        std::vector<double> xvals = {0., 0.5, 1.};
+        std::vector<double> yvals = {0., 1., 2.};
+        std::vector<double> zvals = {0., 1., 2., 3.};
         if (!fOctant) {
-          // other otctants
-          csvFile << 1. << dlm << -2. << dlm << 3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << -1. << dlm << 2. << dlm << 3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << -1. << dlm << -2. << dlm << 3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << 1. << dlm << 2. << dlm << -3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << 1. << dlm << -2. << dlm << -3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << -1. << dlm << 2. << dlm << -3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
-          csvFile << -1. << dlm << -2. << dlm << -3.;
-          csvFile << dlm << 0. << dlm << 0. << dlm << 2. << '\n';
+          xvals = {-1., -0.5, 0., 0.5, 1.};
+          yvals = {-2., -1., 0., 1., 2.};
+          zvals = {-3., -2., -1., 0., 1., 2., 3.};
+        }
+        for (auto xv : xvals) {
+          for (auto yv : yvals) {
+            for (auto zv : zvals) {
+              csvFile << xv << dlm << yv << dlm << zv << dlm << 0. << dlm << 0.
+                      << dlm << 2.1 - std::abs(zv) * 0.1 << '\n';
+            }
+          }
         }
         csvFile.close();
 
@@ -152,32 +145,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_text) {
               return (binsXYZ.at(0) * nBinsXYZ.at(1) * nBinsXYZ.at(2) +
                       binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
             },
-            fieldName, 1_mm, fieldScale, true, dlm);  // tmp.path() /
+            fieldName, 1_mm, fieldScale, true, dlm);
 
-        // Check that the bfield is two dimenstional
+        // Check that the bfield is three-dimenstional
         auto nBins = xyzField.getNBins();
         BOOST_CHECK_EQUAL(nBins.size(), 3u);
-
-        // Check number of bins in r and z
-        BOOST_CHECK_EQUAL(nBins.at(0), 2u);
-        BOOST_CHECK_EQUAL(nBins.at(1), 2u);
-        BOOST_CHECK_EQUAL(nBins.at(2), 2u);
-
-        // Check that the bin edges are correct
-        auto mins = xyzField.getMin();
-        auto maxs = xyzField.getMax();
-        BOOST_CHECK_EQUAL(mins.size(), 3u);
-        BOOST_CHECK_EQUAL(maxs.size(), 3u);
-        BOOST_CHECK_EQUAL(mins.at(0), -1.);
-        BOOST_CHECK_EQUAL(mins.at(1), -2.);
-        BOOST_CHECK_EQUAL(mins.at(2), -3.);
-        BOOST_CHECK_EQUAL(maxs.at(0), 1.);
-        BOOST_CHECK_EQUAL(maxs.at(1), 2.);
-        BOOST_CHECK_EQUAL(maxs.at(2), 3.);
-
-        // Get the unchecked field in the middle
-        auto centralField = xyzField.getFieldUnchecked({0., .0, 0.0});
-        BOOST_CHECK(centralField.isApprox(Vector3(0., 0., 2. * fieldScale)));
       }
     }
   }

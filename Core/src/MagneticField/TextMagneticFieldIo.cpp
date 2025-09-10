@@ -11,13 +11,21 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
 
 namespace {
 constexpr std::size_t kDefaultSize = 1 << 15;
+
+bool ignoreLine(const std::string& line) {
+  return line.empty() || line[0] == '%' || line[0] == '#' ||
+         std::isalpha(line[0]) ||
+         line.find_first_not_of(' ') == std::string::npos;
 }
+
+}  // namespace
 
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
@@ -44,8 +52,7 @@ Acts::makeMagneticFieldMapRzFromText(
   double r = 0., z = 0.;
   double br = 0., bz = 0.;
   while (std::getline(map_file, line)) {
-    if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos) {
+    if (ignoreLine(line)) {
       continue;
     }
 
@@ -106,8 +113,7 @@ Acts::makeMagneticFieldMapXyzFromText(
   double x = 0., y = 0., z = 0.;
   double bx = 0., by = 0., bz = 0.;
   while (std::getline(map_file, line)) {
-    if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos) {
+    if (ignoreLine(line)) {
       continue;
     }
 
@@ -138,6 +144,7 @@ Acts::makeMagneticFieldMapXyzFromText(
   yPos.shrink_to_fit();
   zPos.shrink_to_fit();
   bField.shrink_to_fit();
+
   return fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField, lengthUnit,
                      BFieldUnit, firstOctant);
 }

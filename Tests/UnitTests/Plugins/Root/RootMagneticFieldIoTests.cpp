@@ -75,53 +75,67 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_from_root) {
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_xyz_from_root) {
   TemporaryDirectory tmp{};
 
-  auto fileName = tmp.path() / "xyz_magfield.root";
-  std::string fieldName = "BFieldMap";
+  for (auto fOctant : {true, false}) {
+    std::string octantSuffix = fOctant ? "octant" : "full";
 
-  // Create the file
-  auto xyzFile = TFile::Open(fileName.c_str(), "RECREATE");
-  auto tree = new TTree(fieldName.c_str(), "BFieldMap");
+    std::string baseFileName = "xyz_magfield" + octantSuffix + ".root";
+    auto fileName = tmp.path() / baseFileName;
+    std::string fieldName = "BFieldMap";
 
-  double x, y, z, Bx, By, Bz;
-  tree->Branch("x", &x, "x/D");
-  tree->Branch("y", &y, "y/D");
-  tree->Branch("z", &z, "z/D");
-  tree->Branch("Bx", &Bx, "Bx/D");
-  tree->Branch("By", &By, "By/D");
-  tree->Branch("Bz", &Bz, "Bz/D");
-  for (auto xv : {-1., -0.5, 0., 0.5, 1.}) {
-    for (auto yv : {-2., -1., 0., 1., 2.}) {
-      for (auto zv : {-3., -2., -1., 0., 1., 2., 3.}) {
-        x = xv;
-        y = yv;
-        z = zv;
-        Bx = x * 0.1;
-        By = y * 0.1;
-        Bz = z * 0.1 + 2.;
-        tree->Fill();
+    // Create the file
+    auto xyzFile = TFile::Open(fileName.c_str(), "RECREATE");
+    auto tree = new TTree(fieldName.c_str(), "BFieldMap");
+
+    double x, y, z, Bx, By, Bz;
+    tree->Branch("x", &x, "x/D");
+    tree->Branch("y", &y, "y/D");
+    tree->Branch("z", &z, "z/D");
+    tree->Branch("Bx", &Bx, "Bx/D");
+    tree->Branch("By", &By, "By/D");
+    tree->Branch("Bz", &Bz, "Bz/D");
+    std::vector<double> xvals = {0., 0.5, 1.};
+    std::vector<double> yvals = {0., 1., 2.};
+    std::vector<double> zvals = {0., 1., 2., 3.};
+    if (!fOctant) {
+      xvals = {-1., -0.5, 0., 0.5, 1.};
+      yvals = {-2., -1., 0., 1., 2.};
+      zvals = {-3., -2., -1., 0., 1., 2., 3.};
+    }
+    for (auto xv : xvals) {
+      for (auto yv : yvals) {
+        for (auto zv : zvals) {
+          x = xv;
+          y = yv;
+          z = zv;
+          Bx = x * 0.1;
+          By = y * 0.1;
+          Bz = z * 0.1 + 2.;
+          tree->Fill();
+        }
       }
     }
+
+    tree->Write();
+    xyzFile->Close();
+
+    // Now read it back in
+    auto xyzField = makeMagneticFieldMapXyzFromRoot(
+        [](std::array<std::size_t, 3> binsXYZ,
+           std::array<std::size_t, 3> nBinsXYZ) {
+          return (binsXYZ.at(0) * nBinsXYZ.at(1) * nBinsXYZ.at(2) +
+                  binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
+        },
+        fileName, fieldName, 1_mm, 1_T, fOctant);
+
+    // Check that the bfield is three-dimenstional
+    auto nBins = xyzField.getNBins();
+    BOOST_CHECK_EQUAL(nBins.size(), 3u);
+
+    // Check number of bins in x, y and z
+    BOOST_CHECK_EQUAL(nBins.at(0), 5u);
+    BOOST_CHECK_EQUAL(nBins.at(1), 5u);
+    BOOST_CHECK_EQUAL(nBins.at(2), 7u);
   }
-  tree->Write();
-  xyzFile->Close();
-
-  // Now read it back in
-  auto xyzField = makeMagneticFieldMapXyzFromRoot(
-      [](std::array<std::size_t, 3> binsXYZ,
-         std::array<std::size_t, 3> nBinsXYZ) {
-        return (binsXYZ.at(0) * nBinsXYZ.at(1) * nBinsXYZ.at(2) +
-                binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
-      },
-      fileName, fieldName, 1_mm, 1_T, false);
-
-  // Check that the bfield is three-dimenstional
-  auto nBins = xyzField.getNBins();
-  BOOST_CHECK_EQUAL(nBins.size(), 3u);
-
-  // Check number of bins in x, y and z
-  BOOST_CHECK_EQUAL(nBins.at(0), 5u);
-  BOOST_CHECK_EQUAL(nBins.at(1), 5u);
-  BOOST_CHECK_EQUAL(nBins.at(2), 7u);
 }
 
 }  // namespace Acts::Test
