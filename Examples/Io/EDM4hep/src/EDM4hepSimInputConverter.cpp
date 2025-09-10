@@ -80,6 +80,19 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
+  ACTS_INFO("Configured EDM4hepSimInputConverter:");
+  auto printCut = [](std::optional<double> opt) {
+    if (opt.has_value()) {
+      return std::to_string(opt.value());
+    } else {
+      return std::string{"<none>"};
+    }
+  };
+  ACTS_INFO("- particle r: [" << printCut(m_cfg.particleRMin) << ", "
+                              << printCut(m_cfg.particleRMax) << "] mm");
+  ACTS_INFO("- particle z: [" << printCut(m_cfg.particleZMin) << ", "
+                              << printCut(m_cfg.particleZMax) << "] mm");
+
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement =
         dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
@@ -147,6 +160,25 @@ bool EDM4hepSimInputConverter::acceptParticle(
   }
 
   return true;
+}
+
+bool EDM4hepSimInputConverter::particleOrDescendantsHaveHits(
+    const edm4hep::MCParticle& particle,
+    const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+    const {
+  // Check if this particle has hits
+  if (getNumHits(particle) > 0) {
+    return true;
+  }
+
+  // Recursively check all descendants
+  for (const auto& daughter : particle.getDaughters()) {
+    if (particleOrDescendantsHaveHits(daughter, getNumHits)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 namespace {
@@ -361,7 +393,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                      unorderedParticlesInitial.size() - 1};
         processChildren(genParticle, pid, unorderedParticlesInitial,
                         parentRelationship, edm4hepParticleMap,
-                        nSecondaryVertices, maxGen);
+                        nSecondaryVertices, maxGen, getNumHits);
       }
 
       ACTS_VERBOSE("Primary vertex complete, produced "
@@ -416,6 +448,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
       if (!acceptParticle(inParticle) && getNumHits(inParticle) == 0) {
         // Only reject particles if they don't have simhits
+        ACTS_VERBOSE(" - skipping particle (no hits AND not accepted)");
         continue;
       }
 
@@ -832,7 +865,9 @@ void EDM4hepSimInputConverter::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     std::vector<SimBarcode>& particles, ParentRelationship& parentRelationship,
     std::unordered_map<int, detail::ParticleInfo>& particleMap,
-    std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
+    std::size_t& nSecondaryVertices, std::size_t& maxGen,
+    const std::function<std::uint8_t(const edm4hep::MCParticle&)>& getNumHits)
+    const {
   constexpr auto indent = [&](std::size_t n) {
     std::string result;
     for (std::size_t i = 0; i < n; ++i) {
@@ -881,6 +916,16 @@ void EDM4hepSimInputConverter::processChildren(
       continue;
     }
 
+    // Check if we want to keep this particle (includes checking if any of the
+    // descendants have hits that we'll convert)
+    if (!acceptParticle(daughter) &&
+        !particleOrDescendantsHaveHits(daughter, getNumHits)) {
+      ACTS_VERBOSE(indent(gen + 1) << "  - skipping particle " << daughter.id()
+                                   << " (no hits AND not accepted)");
+      // Only reject particles if they and their descendants don't have simhits
+      continue;
+    }
+
     SimParticle particle = EDM4hepUtil::readParticle(daughter);
 
     auto pid = parentId.makeDescendant(nParticles);
@@ -900,7 +945,7 @@ void EDM4hepSimInputConverter::processChildren(
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "  - generation: " << particle.particleId().generation());
     ACTS_VERBOSE(indent(particle.particleId().generation())
-                 << "  - at " << particle.position().transpose());
+                 << "  - at " << particle.fourPosition().transpose());
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "     - createdInSim: "
                  << daughter.isCreatedInSimulation());
@@ -920,7 +965,7 @@ void EDM4hepSimInputConverter::processChildren(
     parentRelationship[particles.size() - 1] = parentIndex;
 
     processChildren(daughter, pid, particles, parentRelationship, particleMap,
-                    nSecondaryVertices, maxGen);
+                    nSecondaryVertices, maxGen, getNumHits);
   }
 }
 
