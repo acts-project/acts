@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Utilities/ContainerConcepts.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerConcepts.hpp"
 
 #include <stdexcept>
 #include <utility>
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename Derived, typename DerivedReadOnly, typename Container,
           typename Index, bool ReadOnly>
@@ -96,4 +96,4 @@ class ContainerRange {
   index_range_type m_range{};
 };
 
-}  // namespace Acts
+}  // namespace Acts::detail
