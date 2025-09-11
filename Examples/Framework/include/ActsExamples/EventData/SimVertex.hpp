@@ -28,9 +28,6 @@ class SimVertexBarcode {
       : m_id(barcode.vertexId()) {}
 
   constexpr SimVertexBarcode() = default;
-  constexpr SimVertexBarcode(PrimaryVertexId pv, SecondaryVertexId sv,
-                             GenerationId g)
-      : m_id(pv, sv, g) {}
 
   /// Return the barcode.
   constexpr SimBarcode barcode() const { return m_id; }

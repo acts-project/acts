@@ -116,8 +116,11 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nVertices; i++) {
     SimVertex v;
 
-    v.id = SimVertexBarcode{(*m_vertexPrimary)[i], (*m_vertexSecondary)[i],
-                            (*m_generation)[i]};
+    v.id = SimVertexBarcode()
+               .withVertexPrimary((*m_vertexPrimary)[i])
+               .withVertexSecondary((*m_vertexSecondary)[i])
+               .withGeneration((*m_generation)[i]);
+
     v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,
@@ -126,12 +129,12 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
 
     // incoming particles
     for (unsigned int j = 0; j < (*m_incomingParticles)[i].size(); j++) {
-      v.incoming.insert(SimBarcode((*m_incomingParticles)[i][j]));
+      v.incoming.insert(SimBarcode().withData((*m_incomingParticles)[i][j]));
     }
 
     // outgoing particles
     for (unsigned int j = 0; j < (*m_outgoingParticles)[i].size(); j++) {
-      v.outgoing.insert(SimBarcode((*m_outgoingParticles)[i][j]));
+      v.outgoing.insert(SimBarcode().withData((*m_outgoingParticles)[i][j]));
     }
 
     vertices.insert(v);

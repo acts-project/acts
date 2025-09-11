@@ -148,7 +148,8 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
     }
 
     const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
-    const SimBarcode pid{*m_vecUint32Columns.at("barcode")};
+    const SimBarcode pid =
+        SimBarcode().withData(*m_vecUint32Columns.at("barcode"));
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {

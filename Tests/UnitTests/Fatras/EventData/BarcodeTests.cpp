@@ -22,7 +22,8 @@ BOOST_AUTO_TEST_SUITE(FatrasBarcode)
 
 BOOST_AUTO_TEST_CASE(BarcodeMakeDescendant) {
   // initial barcode with primary particle
-  auto p3 = Barcode(1, 2, 3, 0, 0);
+  auto p3 =
+      Barcode().withVertexPrimary(1).withVertexSecondary(2).withParticle(3);
   BOOST_CHECK_EQUAL(p3.vertexPrimary(), 1u);
   BOOST_CHECK_EQUAL(p3.vertexSecondary(), 2u);
   BOOST_CHECK_EQUAL(p3.particle(), 3u);
@@ -59,7 +60,12 @@ BOOST_AUTO_TEST_CASE(BarcodeMakeDescendant) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeVertex) {
-  auto p = Barcode(1u, 2u, 3u, 4u, 5u);
+  auto p = Barcode()
+               .withVertexPrimary(1)
+               .withVertexSecondary(2)
+               .withParticle(3)
+               .withGeneration(4)
+               .withSubParticle(5);
   auto vtx = p.vertexId();
   BOOST_CHECK_EQUAL(vtx.vertexPrimary(), 1u);
   BOOST_CHECK_EQUAL(vtx.vertexSecondary(), 2u);
@@ -69,7 +75,12 @@ BOOST_AUTO_TEST_CASE(BarcodeVertex) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeWithoutSubparticle) {
-  auto p1 = Barcode(1u, 2u, 3u, 4u, 5u);
+  auto p1 = Barcode()
+                .withVertexPrimary(1)
+                .withVertexSecondary(2)
+                .withParticle(3)
+                .withGeneration(4)
+                .withSubParticle(5);
   auto p2 = p1.withoutSubparticle();
   BOOST_CHECK_EQUAL(p2.vertexPrimary(), 1u);
   BOOST_CHECK_EQUAL(p2.vertexSecondary(), 2u);
@@ -85,25 +96,22 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
                 .withParticle(3u)
                 .withGeneration(4u)
                 .withSubParticle(5u);
-  auto p2 = Barcode(1u, 2u, 3u, 4u, 5u);
-  auto p3 = Barcode(1u, 2u, 3u, 4u).withSubParticle(5u);
-  auto p4 = Barcode(1u, 2u, 4u).withParticle(3u).withSubParticle(5u);
-  std::vector<std::uint32_t> vecValues = {1u, 2u, 3u, 4u, 5u};
-  auto p5 = Barcode(vecValues);
-  std::array<std::uint32_t, 5> arrValues = {1u, 2u, 3u, 4u, 5u};
-  auto p6 = Barcode(arrValues);
+  std::vector<std::uint32_t> vectorValues = {1u, 2u, 3u, 4u, 5u};
+  auto p2 = Barcode().withData(vectorValues);
+  std::array<std::uint32_t, 5> arrayValues = {1u, 2u, 3u, 4u, 5u};
+  auto p3 = Barcode().withData(arrayValues);
+  auto p4 = Barcode::Invalid();
 
   BOOST_CHECK_EQUAL(p1, p2);
   BOOST_CHECK_EQUAL(p1, p3);
-  BOOST_CHECK_EQUAL(p1, p4);
-  BOOST_CHECK_EQUAL(p1, p5);
-  BOOST_CHECK_EQUAL(p1, p6);
+  BOOST_CHECK(p1.isValid());
+  BOOST_CHECK(!p4.isValid());
 
-  auto q1 = Barcode(11u, 2u, 3u, 4u, 5u);
-  auto q2 = Barcode(1u, 22u, 3u, 4u, 5u);
-  auto q3 = Barcode(1u, 2u, 33u, 4u, 5u);
-  auto q4 = Barcode(1u, 2u, 3u, 44u, 5u);
-  auto q5 = Barcode(1u, 2u, 3u, 4u, 55u);
+  auto q1 = p1.withVertexPrimary(11u);
+  auto q2 = p1.withVertexSecondary(22u);
+  auto q3 = p1.withParticle(33u);
+  auto q4 = p1.withGeneration(44u);
+  auto q5 = p1.withSubParticle(55u);
 
   BOOST_CHECK_NE(p1, q1);
   BOOST_CHECK_NE(p1, q2);
@@ -119,11 +127,11 @@ BOOST_AUTO_TEST_CASE(BarcodeConstructors) {
 
   std::vector<std::uint32_t> badValues = {11u, 12u, 13u, 14u};
   auto r1 = Barcode::Invalid();
-  BOOST_CHECK_THROW(r1.setData(badValues), std::invalid_argument);
+  BOOST_CHECK_THROW(r1 = r1.withData(badValues), std::invalid_argument);
 
   std::array<std::uint32_t, 6> badValues2 = {11u, 12u, 13u, 14u, 15u, 16u};
   Barcode r2;
-  BOOST_CHECK_THROW(r2.setData(badValues2), std::invalid_argument);
+  BOOST_CHECK_THROW(r2 = r2.withData(badValues2), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeLimits) {
@@ -133,7 +141,12 @@ BOOST_AUTO_TEST_CASE(BarcodeLimits) {
   Barcode::GenerationId gen = 104u;
   Barcode::SubParticleId subPart = 100005u;
 
-  auto p1 = Barcode(primVtx, secVtx, part, gen, subPart);
+  auto p1 = Barcode()
+                .withVertexPrimary(primVtx)
+                .withVertexSecondary(secVtx)
+                .withParticle(part)
+                .withGeneration(gen)
+                .withSubParticle(subPart);
   BOOST_CHECK_EQUAL(p1.vertexPrimary(), 1001u);
   BOOST_CHECK_EQUAL(p1.vertexSecondary(), 10002u);
   BOOST_CHECK_EQUAL(p1.particle(), 100003u);
@@ -142,13 +155,28 @@ BOOST_AUTO_TEST_CASE(BarcodeLimits) {
 }
 
 BOOST_AUTO_TEST_CASE(BarcodeHash) {
-  auto p1 = Barcode(1u, 2u, 3u, 4u, 5u);
+  auto p1 = Barcode()
+                .withVertexPrimary(1u)
+                .withVertexSecondary(2u)
+                .withParticle(3u)
+                .withGeneration(4u)
+                .withSubParticle(5u);
   BOOST_CHECK_EQUAL(p1.hash(), 6445027996773929525u);
 
-  auto p2 = Barcode(11u, 22u, 33u, 44u, 55u);
+  auto p2 = Barcode()
+                .withVertexPrimary(11u)
+                .withVertexSecondary(22u)
+                .withParticle(33u)
+                .withGeneration(44u)
+                .withSubParticle(55u);
   BOOST_CHECK_EQUAL(p2.hash(), 13009826896635491935u);
 
-  auto p3 = Barcode(1u, 3u, 2u, 4u, 5u);
+  auto p3 = Barcode()
+                .withSubParticle(5u)
+                .withGeneration(4u)
+                .withParticle(2u)
+                .withVertexSecondary(3u)
+                .withVertexPrimary(1u);
   BOOST_CHECK_NE(p1.hash(), p3.hash());
 
   std::unordered_map<Barcode, int> map;
@@ -167,7 +195,12 @@ BOOST_AUTO_TEST_CASE(BarcodeStreamOutput) {
   // if anything gets accidentally converted to char,
   // it will be A, B, C, D, and E, respectively
 
-  auto p1 = Barcode(65u, 66u, 67u, 68u, 69u);
+  auto p1 = Barcode()
+                .withVertexPrimary(65u)
+                .withVertexSecondary(66u)
+                .withParticle(67u)
+                .withGeneration(68u)
+                .withSubParticle(69u);
   std::string str = "vp=65|vs=66|p=67|g=68|sp=69";
 
   std::stringstream stream;

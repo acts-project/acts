@@ -32,11 +32,16 @@ auto makeTestSimhits(std::size_t nSimHits) {
   SimHitContainer simhits;
   for (auto i = 0ul; i < nSimHits; ++i) {
     Acts::GeometryIdentifier geoid(distIds(gen));
-    SimBarcode pid(static_cast<SimBarcode::PrimaryVertexId>(distIds(gen)),
-                   static_cast<SimBarcode::SecondaryVertexId>(distIds(gen)),
-                   static_cast<SimBarcode::ParticleId>(distIds(gen)),
-                   static_cast<SimBarcode::GenerationId>(distIds(gen)),
-                   static_cast<SimBarcode::SubParticleId>(distIds(gen)));
+    SimBarcode pid =
+        SimBarcode()
+            .withVertexPrimary(
+                static_cast<SimBarcode::PrimaryVertexId>(distIds(gen)))
+            .withVertexSecondary(
+                static_cast<SimBarcode::SecondaryVertexId>(distIds(gen)))
+            .withParticle(static_cast<SimBarcode::ParticleId>(distIds(gen)))
+            .withGeneration(static_cast<SimBarcode::GenerationId>(distIds(gen)))
+            .withSubParticle(
+                static_cast<SimBarcode::SubParticleId>(distIds(gen)));
 
     Acts::Vector4 pos4 = Acts::Vector4::Random();
     Acts::Vector4 before4 = Acts::Vector4::Random();
