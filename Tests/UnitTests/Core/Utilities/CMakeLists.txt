@@ -64,6 +64,7 @@ add_unittest(PolynomialTests PolynomialTests.cpp)
 
 add_unittest(TrackHelpers TrackHelpersTests.cpp)
 add_unittest(GraphViz GraphVizTests.cpp)
+add_unittest(JoinStrings JoinStringsTests.cpp)
 add_unittest(ContextType ContextTypeTests.cpp)
 add_unittest(AnyGridView AnyGridViewTests.cpp)
 add_unittest(TransformComparator TransformComparatorTests.cpp)

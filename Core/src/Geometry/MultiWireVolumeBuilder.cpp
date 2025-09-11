@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
-#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
@@ -46,9 +45,6 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   std::unique_ptr<TrackingVolume> trackingVolume =
       std::make_unique<TrackingVolume>(m_config.transform, bounds,
                                        m_config.name);
-
-  SingleTrapezoidPortalShell portalShell(*trackingVolume);
-  portalShell.applyToVolume();
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
@@ -91,7 +87,8 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
   // The indexed grid to be filled from the navigation policy
   IndexedSurfacesNavigation<decltype(grid)> indexedGrid(
       std::move(grid),
-      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()});
+      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
+      m_config.transform.inverse());
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
