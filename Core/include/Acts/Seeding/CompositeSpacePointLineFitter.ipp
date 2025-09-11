@@ -26,6 +26,7 @@ CompositeSpacePointLineFitter::fit(
         std::format("{}:{} - Please provide a valid pointer to a calibrator.",
                     __FILE__, __LINE__));
   }
+  using namespace Acts::UnitLiterals;
 
   FitResult<Cont_t> result{};
   result.measurements = std::move(fitOpts.measurements);
@@ -86,6 +87,9 @@ CompositeSpacePointLineFitter::fit(
       resCfg.parsToUse.push_back(FitParIndex::t0);
     }
     std::ranges::sort(resCfg.parsToUse);
+    if (resCfg.parsToUse.size() > 0) {
+      result.nDoF = nLoc1 + nLoc0 - resCfg.parsToUse.size();
+    }
 
     ACTS_DEBUG(__func__ << "() " << __LINE__
                         << ": Number of measurements (loc0/loc1/time): "
@@ -101,7 +105,6 @@ CompositeSpacePointLineFitter::fit(
                              "check your measurements");
     return result;
   }
-
   Line_t line{};
   // First check whether all measurements are straw and the
   // fast fitter shall be used.
@@ -137,7 +140,12 @@ CompositeSpacePointLineFitter::fit(
       return result;
     }
   }
-
+  // Update the drift signs if no re-calibration per iteration is scheduled
+  if (!m_cfg.recalibrate) {
+    line.updateParameters(result.parameters);
+    fitOpts.calibrator->updateSigns(line.position(), line.direction(),
+                                    result.measurements);
+  }
   /// Proceed with the usual fit
   ChiSqCache cache{};
   detail::CompSpacePointAuxiliaries pullCalculator{resCfg, logger().clone()};
@@ -147,11 +155,18 @@ CompositeSpacePointLineFitter::fit(
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
 
-    ACTS_INFO(__func__ << "() " << __LINE__ << ": Start iteration #"
-                       << (result.nIter + 1) << ", current line "
-                       << toString(line.position()) << " + "
-                       << toString(line.direction()) << ", t0: " << t0
-                       << ", chi2: " << result.chi2 << ".");
+    ACTS_INFO(
+        __func__
+        << "() " << __LINE__ << ": Start iteration #" << (result.nIter + 1)
+        << ", current parameters "
+        << std::format(
+               "theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}, t0: {:.2f}",
+               result.parameters[toUnderlying(FitParIndex::theta)] / 1._degree,
+               result.parameters[toUnderlying(FitParIndex::phi)] / 1._degree,
+               result.parameters[toUnderlying(FitParIndex::y0)],
+               result.parameters[toUnderlying(FitParIndex::x0)], t0 / 1._ns)
+        << " --> " << toString(line.position()) << " + "
+        << toString(line.direction()) << ", chi2: " << result.chi2 << ".");
     // Update the measurements if calibration loop is switched on
     if (m_cfg.recalibrate) {
       result.measurements = fitOpts.calibrator->calibrate(

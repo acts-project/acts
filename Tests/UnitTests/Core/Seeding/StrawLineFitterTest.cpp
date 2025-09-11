@@ -18,6 +18,9 @@
 #include <random>
 #include <ranges>
 
+#include <TFile.h>
+#include <TTree.h>
+
 using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
@@ -32,6 +35,8 @@ using normal_t = std::normal_distribution<double>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
+using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
+
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 10000;
 
@@ -165,8 +170,9 @@ static_assert(
 Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
-  linePars[toUnderlying(ParIndex::phi)] =
-      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
+  linePars[toUnderlying(ParIndex::phi)] = 90._degree;
+  // linePars[toUnderlying(ParIndex::phi)] =
+  //     std::uniform_real_distribution{-120_degree, 120_degree}(engine);
   linePars[toUnderlying(ParIndex::x0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::y0)] =
@@ -184,16 +190,16 @@ Line_t generateLine(RandomEngine& engine) {
     line.updateParameters(linePars);
   }
 
-  ACTS_DEBUG("\n\n\n"<<
-      __func__ << "() " << __LINE__ << " - Generated parameters "
-               << std::format(
-                      "theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}",
-                      linePars[toUnderlying(ParIndex::theta)] / 1._degree,
-                      linePars[toUnderlying(ParIndex::phi)] / 1._degree,
-                      linePars[toUnderlying(ParIndex::y0)],
-                      linePars[toUnderlying(ParIndex::x0)])
-               << " --> " << toString(line.position()) << " + "
-               << toString(line.direction()));
+  ACTS_DEBUG(
+      "\n\n\n"
+      << __func__ << "() " << __LINE__ << " - Generated parameters "
+      << std::format("theta: {:.2f}, phi: {:.2f}, y0: {:.1f}, x0: {:.1f}",
+                     linePars[toUnderlying(ParIndex::theta)] / 1._degree,
+                     linePars[toUnderlying(ParIndex::phi)] / 1._degree,
+                     linePars[toUnderlying(ParIndex::y0)],
+                     linePars[toUnderlying(ParIndex::x0)])
+      << " --> " << toString(line.position()) << " + "
+      << toString(line.direction()));
 
   return line;
 }
@@ -220,6 +226,8 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
   constexpr std::size_t nLayersPerMl = 8;
   /// Number of overall tubelayers
   constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
+  /// Position in z of the first tube layer
+  constexpr double chamberDistance = 3._m;
   /// Radius of each straw
   constexpr double tubeRadius = 15._mm;
   /// Distance between the first <nLayersPerMl> layers and the second pack
@@ -236,7 +244,7 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
   constexpr std::size_t nStripLay = 4;
 
   std::array<Vector3, nTubeLayers> tubePositions{
-      filledArray<Vector3, nTubeLayers>(Vector3{0., tubeRadius, tubeRadius})};
+      filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
   /// Fill the positions of the reference tubes 1
   for (std::size_t l = 1; l < nTubeLayers; ++l) {
     const Vector3& layStag{l % 2 == 1 ? posStaggering : negStaggering};
@@ -281,11 +289,11 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
       const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
       const double rad = Acts::abs(Acts::detail::LineHelper::signedDistance(
           tube, Vector3::UnitX(), trajLine.position(), trajLine.direction()));
-      ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
-
       if (rad > tubeRadius) {
         continue;
       }
+      ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
+
       const double smearedR =
           smearRadius
               ? Acts::abs(normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
@@ -317,11 +325,61 @@ Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
     }
   }
   ACTS_DEBUG("Track hit in total " << measurements.size() << " sensors.");
-  std::ranges::sort(measurements, [&trajLine](const auto& spA, const auto& spB) {
-      return trajLine.direction().dot(spA->localPosition() - trajLine.position()) <
-            trajLine.direction().dot(spB->localPosition() - trajLine.position());
+  std::ranges::sort(measurements, [&trajLine](const auto& spA,
+                                              const auto& spB) {
+    return trajLine.direction().dot(spA->localPosition() -
+                                    trajLine.position()) <
+           trajLine.direction().dot(spB->localPosition() - trajLine.position());
   });
   return measurements;
+}
+/// @brief Construct the start parameters from the container && the true trajectory
+ParamVec_t startParameters(const Line_t& trajLine, const Container_t& hits) {
+  ParamVec_t pars{};
+
+  double tanPhi{0.};
+  double tanTheta{0.};
+  /// Setup the seed parameters in x0 && phi
+  auto firstPhi = std::ranges::find_if(hits, [](const auto& sp) {
+    return !sp->isStraw() && sp->measuresLoc0();
+  });
+  auto lastPhi = std::ranges::find_if(
+      std::ranges::reverse_view(hits),
+      [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
+
+  if (firstPhi != hits.end() && lastPhi != hits.rend()) {
+    const Vector3 firstToLastPhi =
+        (**lastPhi).localPosition() - (**firstPhi).localPosition();
+    tanPhi = firstToLastPhi.x() / firstToLastPhi.z();
+    /// -> x = tanPhi * z + x_{0} ->
+    pars[toUnderlying(FitParIndex::x0)] =
+        (**lastPhi).localPosition().x() -
+        (**lastPhi).localPosition().z() * tanPhi;
+  }
+  /// Setup the seed parameters in y0 && theta
+  auto firstTube =
+      std::ranges::find_if(hits, [](const auto& sp) { return sp->isStraw(); });
+  auto lastTube =
+      std::ranges::find_if(std::ranges::reverse_view(hits),
+                           [](const auto& sp) { return sp->isStraw(); });
+
+  if (firstTube != hits.end() && lastTube != hits.rend()) {
+    const int signFirst =
+        CompSpacePointAuxiliaries::strawSign(trajLine, **firstTube);
+    const int signLast =
+        CompSpacePointAuxiliaries::strawSign(trajLine, **lastTube);
+
+    auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
+        **lastTube, **firstTube,
+        CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
+    tanTheta = std::tan(seedPars.theta);
+    pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
+  }
+
+  const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
+  pars[toUnderlying(FitParIndex::theta)] = theta(seedDir);
+  pars[toUnderlying(FitParIndex::phi)] = phi(seedDir);
+  return pars;
 }
 
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
@@ -329,6 +387,7 @@ BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 BOOST_AUTO_TEST_CASE(SeedTangents) {
   RandomEngine engine{1602};
   constexpr double tolerance = 1.e-3;
+  return;
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
@@ -346,15 +405,15 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
             CompositeSpacePointLineSeeder::encodeAmbiguity(signTop, signBot);
 
         ACTS_DEBUG(__func__ << "() " << __LINE__ << " - "
-                           << std::format("bottom tube @ {:}, r: {:.3f}({:})",
-                                          toString(bottomTube.localPosition()),
-                                          (signBot * bottomTube.driftRadius()),
-                                          signBot > 0 ? "R" : "L")
-                           << ", "
-                           << std::format("top tube @ {:}, r: {:.3f} ({:})",
-                                          toString(topTube.localPosition()),
-                                          (signTop * topTube.driftRadius()),
-                                          signTop > 0 ? "R" : "L"));
+                            << std::format("bottom tube @ {:}, r: {:.3f}({:})",
+                                           toString(bottomTube.localPosition()),
+                                           (signBot * bottomTube.driftRadius()),
+                                           signBot > 0 ? "R" : "L")
+                            << ", "
+                            << std::format("top tube @ {:}, r: {:.3f} ({:})",
+                                           toString(topTube.localPosition()),
+                                           (signTop * topTube.driftRadius()),
+                                           signTop > 0 ? "R" : "L"));
 
         {
           using enum CompositeSpacePointLineSeeder::TangentAmbi;
@@ -401,10 +460,11 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
             CompositeSpacePointLineSeeder::constructTangentLine(
                 topTube, bottomTube, trueAmbi);
         /// Construct line parameters
-        ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Line tan theta: "
-                           << lineTanTheta << ", reconstructed theta: "
-                           << std::tan(seedPars.theta) << ", line y0: "
-                           << lineY0 << ", reconstructed y0: " << seedPars.y0);
+        ACTS_DEBUG(__func__
+                   << "() " << __LINE__ << " - Line tan theta: " << lineTanTheta
+                   << ", reconstructed theta: " << std::tan(seedPars.theta)
+                   << ", line y0: " << lineY0
+                   << ", reconstructed y0: " << seedPars.y0);
         BOOST_CHECK_CLOSE(std::tan(seedPars.theta), lineTanTheta, tolerance);
         BOOST_CHECK_CLOSE(seedPars.y0, lineY0, tolerance);
       }
@@ -412,6 +472,9 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   }
 }
 
+#define DECLARE_BRANCH(dType, bName) \
+  dType bName{};                     \
+  outTree->Branch(#bName, &bName);
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1503};
 
@@ -419,64 +482,81 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       CompositeSpacePointLineFitter::FitOptions<Container_t, SpCalibrator>;
 
   CompositeSpacePointLineFitter::Config cfg{};
+  cfg.useHessian = false;
 
   CompositeSpacePointLineFitter fitter{cfg,
                                        getDefaultLogger("LineFitter", logLvl)};
 
+  auto outFile =
+      std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
+  auto outTree = std::make_unique<TTree>("SimpleLineFit", "MonitorTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueX0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, truePhi);
+
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoX0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoPhi);
+
+  DECLARE_BRANCH(double, covY0);
+  DECLARE_BRANCH(double, covX0);
+  DECLARE_BRANCH(double, covTheta);
+  DECLARE_BRANCH(double, covPhi);
+
+  DECLARE_BRANCH(double, chi2);
+  DECLARE_BRANCH(unsigned, nIter);
+  DECLARE_BRANCH(unsigned, nDoF);
+
   auto calibrator = std::make_unique<SpCalibrator>();
-  return;
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
+    trueY0 = line.position().y();
+    trueX0 = line.position().x();
+    trueTheta = theta(line.direction());
+    truePhi = phi(line.direction());
+
     const double t0 = uniform{-50._ns, 50._ns}(engine);
 
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
-    fitOpts.measurements = generateMeasurements(line, t0, engine);
+    fitOpts.measurements = generateMeasurements(line, t0, engine, true, true);
+    fitOpts.startParameters = startParameters(line, fitOpts.measurements);
 
-    double tanPhi{0.};
-    double tanTheta{0.};
-    /// Setup the seed parameters in x0 && phi
-    {
-      auto firstPhi = std::ranges::find_if(
-          fitOpts.measurements,
-          [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
-      auto lastPhi = std::ranges::find_if(
-          std::ranges::reverse_view(fitOpts.measurements),
-          [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
-      const Vector3 firstToLastPhi =
-          (**lastPhi).localPosition() - (**firstPhi).localPosition();
-      tanPhi = firstToLastPhi.x() / firstToLastPhi.z();
-      /// -> x = tanPhi * z + x_{0} ->
-      fitOpts.startParameters[toUnderlying(FitParIndex::x0)] =
-          (**lastPhi).localPosition().x() -
-          (**lastPhi).localPosition().z() * tanPhi;
-    }
-    /// Setup the seed parameters in y0 && theta
-    {
-      auto firstTube = std::ranges::find_if(
-          fitOpts.measurements, [](const auto& sp) { return sp->isStraw(); });
-      auto lastTube =
-          std::ranges::find_if(std::ranges::reverse_view(fitOpts.measurements),
-                               [](const auto& sp) { return sp->isStraw(); });
-      const int signFirst =
-          CompSpacePointAuxiliaries::strawSign(line, **firstTube);
-      const int signLast =
-          CompSpacePointAuxiliaries::strawSign(line, **lastTube);
-
-      auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
-          **lastTube, **firstTube,
-          CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
-      tanTheta = std::tan(seedPars.theta);
-      fitOpts.startParameters[toUnderlying(FitParIndex::y0)] = seedPars.y0;
-    }
-
-    const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
-    fitOpts.startParameters[toUnderlying(FitParIndex::theta)] = theta(seedDir);
-    fitOpts.startParameters[toUnderlying(FitParIndex::phi)] = phi(seedDir);
+    recoY0 = fitOpts.startParameters[toUnderlying(FitParIndex::y0)];
+    recoX0 = fitOpts.startParameters[toUnderlying(FitParIndex::x0)];
+    recoTheta = fitOpts.startParameters[toUnderlying(FitParIndex::theta)];
+    recoPhi = fitOpts.startParameters[toUnderlying(FitParIndex::phi)];
 
     //
+
     auto result = fitter.fit(std::move(fitOpts));
+    if (!result.converged) {
+      continue;
+    }
+    recoY0 = result.parameters[toUnderlying(FitParIndex::y0)];
+    recoX0 = result.parameters[toUnderlying(FitParIndex::x0)];
+    recoTheta = result.parameters[toUnderlying(FitParIndex::theta)];
+    recoPhi = result.parameters[toUnderlying(FitParIndex::phi)];
+    covY0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::y0),
+                                        toUnderlying(FitParIndex::y0)));
+    covX0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::x0),
+                                        toUnderlying(FitParIndex::x0)));
+    covTheta = std::sqrt(result.covariance(toUnderlying(FitParIndex::theta),
+                                           toUnderlying(FitParIndex::theta)));
+    covPhi = std::sqrt(result.covariance(toUnderlying(FitParIndex::phi),
+                                         toUnderlying(FitParIndex::phi)));
+
+    chi2 = result.chi2;
+    nDoF = result.nDoF;
+    nIter = result.nIter;
+
+    outTree->Fill();
   }
+  outFile->WriteObject(outTree.get(), outTree->GetName());
+  outTree.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

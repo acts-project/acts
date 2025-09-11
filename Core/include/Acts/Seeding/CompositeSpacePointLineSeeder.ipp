@@ -27,20 +27,21 @@ CompositeSpacePointLineSeeder::encodeAmbiguity(const int signTop,
   return LL;
 }
 
-  static std::string CompositeSpacePointLineSeeder::toString(const TangentAmbi ambi) {
-    switch (ambi) {
-      using enum TangentAmbi;
-      case RR:
-        return "Right - Right";
-      case RL:
-        return "Right - Left";
-      case LR:
-        return "Left - Right";
-      case LL:
-        return "Left - Left";
-    }
-    return "Undefined";
+inline std::string CompositeSpacePointLineSeeder::toString(
+    const TangentAmbi ambi) {
+  switch (ambi) {
+    using enum TangentAmbi;
+    case RR:
+      return "Right - Right";
+    case RL:
+      return "Right - Left";
+    case LR:
+      return "Left - Right";
+    case LL:
+      return "Left - Left";
   }
+  return "Undefined";
+}
 
 template <CompositeSpacePoint SpacePoint_t>
 CompositeSpacePointLineSeeder::TwoCircleTangentPars

@@ -15,3 +15,7 @@ target_link_libraries(
     ActsUnitTestFastStrawLineFitTests
     PRIVATE ROOT::Tree ROOT::RIO
 )
+target_link_libraries(
+    ActsUnitTestStrawLineFitterTest
+    PRIVATE ROOT::Tree ROOT::RIO
+)
