@@ -170,7 +170,7 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_t_eT;
 
   /// event-unique particle identifier a.k.a barcode for hits per each surface
-  std::vector<std::vector<std::uint64_t>> m_particleId;
+  std::vector<std::vector<std::vector<std::uint32_t>>> m_particleId;
 
   /// dimension of measurement
   std::vector<int> m_dim_hit;

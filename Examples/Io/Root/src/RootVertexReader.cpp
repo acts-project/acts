@@ -41,12 +41,12 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("vertex_id", &m_vertexId);
   m_inputChain->SetBranchAddress("process", &m_process);
   m_inputChain->SetBranchAddress("vx", &m_vx);
   m_inputChain->SetBranchAddress("vy", &m_vy);
   m_inputChain->SetBranchAddress("vz", &m_vz);
   m_inputChain->SetBranchAddress("vt", &m_vt);
+  m_inputChain->SetBranchAddress("incoming_particles", &m_incomingParticles);
   m_inputChain->SetBranchAddress("outgoing_particles", &m_outgoingParticles);
   m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary);
   m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary);
@@ -79,12 +79,12 @@ std::pair<std::size_t, std::size_t> RootVertexReader::availableEvents() const {
 }
 
 RootVertexReader::~RootVertexReader() {
-  delete m_vertexId;
   delete m_process;
   delete m_vx;
   delete m_vy;
   delete m_vz;
   delete m_vt;
+  delete m_incomingParticles;
   delete m_outgoingParticles;
   delete m_vertexPrimary;
   delete m_vertexSecondary;
@@ -111,22 +111,30 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading event: " << context.eventNumber
                                << " stored as entry: " << entry);
 
-  unsigned int nVertices = m_vertexId->size();
+  unsigned int nVertices = m_vx->size();
 
   for (unsigned int i = 0; i < nVertices; i++) {
     SimVertex v;
 
-    v.id = SimVertexBarcode{(*m_vertexId)[i]};
+    v.id = SimVertexBarcode()
+               .withVertexPrimary((*m_vertexPrimary)[i])
+               .withVertexSecondary((*m_vertexSecondary)[i])
+               .withGeneration((*m_generation)[i]);
+
     v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,
                                 (*m_vz)[i] * Acts::UnitConstants::mm,
                                 (*m_vt)[i] * Acts::UnitConstants::mm);
 
-    // TODO ingoing particles
+    // incoming particles
+    for (unsigned int j = 0; j < (*m_incomingParticles)[i].size(); j++) {
+      v.incoming.insert(SimBarcode().withData((*m_incomingParticles)[i][j]));
+    }
 
-    for (auto& id : (*m_outgoingParticles)[i]) {
-      v.outgoing.insert(SimBarcode{id});
+    // outgoing particles
+    for (unsigned int j = 0; j < (*m_outgoingParticles)[i].size(); j++) {
+      v.outgoing.insert(SimBarcode().withData((*m_outgoingParticles)[i][j]));
     }
 
     vertices.insert(v);

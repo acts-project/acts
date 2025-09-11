@@ -92,7 +92,7 @@ class RootParticleReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint64_t>* m_particleId = new std::vector<std::uint64_t>;
+  std::vector<std::size_t>* m_particleHash = new std::vector<std::size_t>;
   std::vector<std::int32_t>* m_particleType = new std::vector<std::int32_t>;
   std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
   std::vector<float>* m_vx = new std::vector<float>;

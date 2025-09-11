@@ -108,3 +108,4 @@ extra_histograms:
 
 exclude:
   - event_nr
+  - trk_particleId

@@ -152,7 +152,7 @@ ProcessCode RootMeasurementWriter::writeT(
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
-      m_particles.push_back(simHits.nth(i)->particleId().value());
+      m_particles.push_back(simHits.nth(i)->particleId().asVector());
     }
     m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 

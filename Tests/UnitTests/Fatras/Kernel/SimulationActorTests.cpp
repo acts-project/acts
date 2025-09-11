@@ -165,7 +165,7 @@ struct Fixture {
   using Result = typename Actor::result_type;
 
   // reference information for initial particle
-  Barcode pid = Barcode().setVertexPrimary(12u).setParticle(3u);
+  Barcode pid = Barcode().withVertexPrimary(12u).withParticle(3u);
   ProcessType proc = ProcessType::eUndefined;
   Acts::PdgParticle pdg = Acts::PdgParticle::eProton;
   double q = 1_e;

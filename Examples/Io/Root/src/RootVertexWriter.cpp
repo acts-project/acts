@@ -47,12 +47,12 @@ RootVertexWriter::RootVertexWriter(const RootVertexWriter::Config& cfg,
 
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
-  m_outputTree->Branch("vertex_id", &m_vertexId);
   m_outputTree->Branch("process", &m_process);
   m_outputTree->Branch("vx", &m_vx);
   m_outputTree->Branch("vy", &m_vy);
   m_outputTree->Branch("vz", &m_vz);
   m_outputTree->Branch("vt", &m_vt);
+  m_outputTree->Branch("incoming_particles", &m_incomingParticles);
   m_outputTree->Branch("outgoing_particles", &m_outgoingParticles);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
@@ -83,7 +83,6 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
 
   m_eventId = ctx.eventNumber;
   for (const auto& vertex : vertices) {
-    m_vertexId.push_back(vertex.vertexId().value());
     m_process.push_back(static_cast<std::uint32_t>(vertex.process));
     // position
     m_vx.push_back(Acts::clampValue<float>(vertex.position4.x() /
@@ -94,13 +93,21 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
                                            Acts::UnitConstants::mm));
     m_vt.push_back(Acts::clampValue<float>(vertex.position4.w() /
                                            Acts::UnitConstants::mm));
-    // TODO ingoing particles
-    // outgoing particles
-    std::vector<std::uint64_t> outgoing;
-    for (const auto& particle : vertex.outgoing) {
-      outgoing.push_back(particle.value());
+
+    // incoming particles
+    std::vector<std::vector<std::uint32_t>> incoming_particles;
+    for (const auto& particle : vertex.incoming) {
+      incoming_particles.push_back(particle.asVector());
     }
-    m_outgoingParticles.push_back(std::move(outgoing));
+    m_incomingParticles.push_back(std::move(incoming_particles));
+
+    // outgoing particles
+    std::vector<std::vector<std::uint32_t>> outgoing_particles;
+    for (const auto& particle : vertex.outgoing) {
+      outgoing_particles.push_back(particle.asVector());
+    }
+    m_outgoingParticles.push_back(std::move(outgoing_particles));
+
     // decoded barcode components
     m_vertexPrimary.push_back(vertex.vertexId().vertexPrimary());
     m_vertexSecondary.push_back(vertex.vertexId().vertexSecondary());
@@ -109,12 +116,12 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
 
   m_outputTree->Fill();
 
-  m_vertexId.clear();
   m_process.clear();
   m_vx.clear();
   m_vy.clear();
   m_vz.clear();
   m_vt.clear();
+  m_incomingParticles.clear();
   m_outgoingParticles.clear();
   m_vertexPrimary.clear();
   m_vertexSecondary.clear();
