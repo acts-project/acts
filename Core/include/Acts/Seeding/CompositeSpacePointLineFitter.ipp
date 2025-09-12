@@ -16,6 +16,48 @@
 #include <format>
 namespace Acts::Experimental {
 
+template <CompositeSpacePointContainer Cont_t>
+std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
+    const Cont_t& measurements) const {
+  using Sp_t = RemovePointer_t<typename Cont_t::value_t>;
+  Selector_t<Sp_t> selector{};
+  selector.template connect<&detail::passThroughSelector<Sp_t>>();
+  return countDof(measurements, selector);
+}
+
+template <CompositeSpacePointContainer Cont_t>
+std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
+    const Cont_t& measurements,
+    const Selector_t<RemovePointer_t<typename Cont_t::value_t>>& selector)
+    const {
+  using enum detail::CompSpacePointAuxiliaries::ResidualIdx;
+  auto counts = filledArray<std::size_t, 3>(0u);
+  std::size_t nValid{0};
+  for (const auto& sp : measurements) {
+    if (!selector(*sp)) {
+      continue;
+    }
+    ++nValid;
+    if (sp->mesuresLoc0()) {
+      ++counts[toUnderlying(nonBending)];
+    }
+    if (sp->meausresLoc1()) {
+      ++counts[toUnderlying(bending)];
+    }
+    /// Count the straws as implicit time measurements
+    if (m_cfg.fitT0 && (sp->hasTime() || sp->isStraw())) {
+      ++counts[toUnderlying(time)];
+    }
+  }
+  ACTS_DEBUG(
+      __func__ << "() " << __LINE__ << " - " << nValid << "/"
+               << measurements.size() << " valid measurements passed. Found "
+               << counts[toUnderlying(nonBending)] << "/"
+               << counts[toUnderlying(bending)] << "/"
+               << counts[toUnderlying(time)] << " measuring loc0/loc1/time.");
+  return counts;
+}
+
 template <CompositeSpacePointContainer Cont_t,
           CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
 CompositeSpacePointLineFitter::FitResult<Cont_t>

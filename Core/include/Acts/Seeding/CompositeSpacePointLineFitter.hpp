@@ -43,6 +43,12 @@ class CompositeSpacePointLineFitter {
   /// @brief Assignment of the parameter vector components
   using FitParIndex = detail::CompSpacePointAuxiliaries::FitParIndex;
 
+  ///@brief During the repetitive recalibration, single hits may be invalidated
+  ///       under the track parameters. Define a Delegate to sort out the
+  ///       invalid hits
+  template <CompositeSpacePoint Sp_t>
+  using Selector_t = Delegate<bool(const Sp_t&)>;
+
   static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
   using ParamVec_t = std::array<double, s_nPars>;
@@ -128,13 +134,9 @@ class CompositeSpacePointLineFitter {
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
-    using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
-    ///@brief During the repetitive recalibration, single hits may be invalidated
-    ///       under the track parameters. Define a Delegate to sort out the
-    ///       invalid hits from the fit
-    using Selector_t = Delegate<bool(const SpacePoint_t&)>;
+    using Sp_t = RemovePointer_t<typename Cont_t::value_type>;
     /// @brief Good hit selector
-    Selector_t selector;
+    Selector_t<Sp_t> selector{};
     /// @brief Calibrator
     const Calibrator_t* calibrator{nullptr};
     /// @brief Experiment specific calibration context
@@ -145,9 +147,24 @@ class CompositeSpacePointLineFitter {
     ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
     /// @brief empty standard constructor
     FitOptions() {
-      selector.template connect<&detail::passThroughSelector<SpacePoint_t>>();
+      selector.template connect<&detail::passThroughSelector<Sp_t>>();
     }
   };
+  /// @brief Counts how many measurements measure loc0, loc1 & time
+  /// @param measurements: Collection of composite space points of interest
+  /// @param selector: Delegate to sort out the invalid measurements
+  template <CompositeSpacePointContainer Cont_t>
+  std::array<std::size_t, 3> countDoF(const Cont_t& measurements) const;
+
+  template <CompositeSpacePointContainer Cont_t>
+  std::array<std::size_t, 3> countDoF(
+      const Cont_t& measurements,
+      const Selector_t<RemovePointer_t<typename Cont_t::value_t>>& selector)
+      const;
+
+  /// @brief Helper function to extract which parameters shall be
+  /// template <CompositeSpacePointContainer_t Cont>
+  ///   std::vector<FitParIndex>
 
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>

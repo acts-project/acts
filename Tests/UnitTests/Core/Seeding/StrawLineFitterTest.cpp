@@ -17,6 +17,7 @@
 #include <format>
 #include <random>
 #include <ranges>
+#include <span>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -203,138 +204,206 @@ Line_t generateLine(RandomEngine& engine) {
 
   return line;
 }
-/// @brief Extrapolate the straight line track through the straw layers to
-///        evaluate which tubes were crossed by the track. The straw layers are
-///        staggered in the z-direction and each layer expands in y. To
-///        estimate, which tubes were crossed, the track is extrapolated to the
-///        z-plane below & above the straw wires. Optionally, the true
-///        drift-radius can be smeared assuming a Gaussian with a drift-radius
-///        dependent uncertainty.
-/// @param trajLine: The track to extrapolate
-/// @param engine: Random number generator to smear the drift radius
-/// @param smearRadius: If true, the drift radius is smeared with a Gaussian
-/// @param createStrips: If true the strip measurements are created
-Container_t generateMeasurements(const Line_t& trajLine, const double /*t0*/,
-                                 RandomEngine& engine,
-                                 const bool smearRadius = true,
-                                 const bool createStrips = true) {
-  /// Direction vector to go a positive step in the tube honeycomb grid
-  const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
-  /// Direction vector to go a negative step in the tube honeycomb grid
-  const Vector3 negStaggering{0., -std::cos(60._degree), std::sin(60._degree)};
-  /// Number of tube layers per multilayer
-  constexpr std::size_t nLayersPerMl = 8;
-  /// Number of overall tubelayers
-  constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
-  /// Position in z of the first tube layer
-  constexpr double chamberDistance = 3._m;
-  /// Radius of each straw
-  constexpr double tubeRadius = 15._mm;
-  /// Distance between the first <nLayersPerMl> layers and the second pack
-  constexpr double tubeLayerDist = 1.2_m;
-  /// Distance between the tube multilayers and to the first strip layer
-  constexpr double tubeStripDist = 30._cm;
-  /// Distance between two strip layers
-  constexpr double stripLayDist = 0.5_cm;
-  /// Strip pitch in x0 direction
-  constexpr double stripPitchLoc0 = 4._cm;
-  /// Strip pitch in y0 direction
-  constexpr double stripPitchLoc1 = 2._cm;
-  /// Number of strip layers on each side
-  constexpr std::size_t nStripLay = 4;
 
-  std::array<Vector3, nTubeLayers> tubePositions{
-      filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
-  /// Fill the positions of the reference tubes 1
-  for (std::size_t l = 1; l < nTubeLayers; ++l) {
-    const Vector3& layStag{l % 2 == 1 ? posStaggering : negStaggering};
-    tubePositions[l] = tubePositions[l - 1] + 2. * tubeRadius * layStag;
+class MeasurementGenerator {
+ public:
+  struct Config {
+    /// @brief Create straw measurements
+    bool createStraws{true};
+    /// @brief Smear the straw radius
+    bool smearRadius{true};
+    /// @brief Create strip measurements
+    bool createStrips{true};
+    /// @brief Discretize strips
+    bool smearStrips{true};
+    /// @brief Combine the two strip measurements to a single space point
+    bool combineSpacePoints{false};
+    /// @brief Create strip measurements constraining Loc0
+    bool createStripsLoc0{true};
+    /// @brief Create strip measurements constraining Loc1
+    bool createStripsLoc1{true};
+    /// @brief Pitch between two loc0 strips
+    double stripPitchLoc0{4._cm};
+    /// @brief Pitch between two loc1 strips
+    double stripPitchLoc1{3._cm};
+    /// @brief Vector
+    Vector3 stripDirLoc1{Vector3::UnitX()};
+    /// @brief
+    Vector3 stripDirLoc0{Vector3::UnitY()};
+  };
+  /// @brief Extrapolate the straight line track through the straw layers to
+  ///        evaluate which tubes were crossed by the track. The straw layers
+  ///        are staggered in the z-direction and each layer expands in y. To
+  ///        estimate, which tubes were crossed, the track is extrapolated to
+  ///        the z-plane below & above the straw wires. Optionally, the true
+  ///        drift-radius can be smeared assuming a Gaussian with a drift-radius
+  ///        dependent uncertainty.
+  /// @param line: The track to extrapolate
+  /// @param engine: Random number generator to smear the drift radius
+  /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
+  /// @param createStrips: If true the strip measurements are created
+  static Container_t spawn(const Line_t& line, const double /*t0*/,
+                           RandomEngine& engine, const Config& genCfg) {
+    /// Direction vector to go a positive step in the tube honeycomb grid
+    const Vector3 posStaggering{0., std::cos(60._degree), std::sin(60._degree)};
+    /// Direction vector to go a negative step in the tube honeycomb grid
+    const Vector3 negStaggering{0., -std::cos(60._degree),
+                                std::sin(60._degree)};
+    /// Number of tube layers per multilayer
+    constexpr std::size_t nLayersPerMl = 8;
+    /// Number of overall tubelayers
+    constexpr std::size_t nTubeLayers = nLayersPerMl * 2;
+    /// Position in z of the first tube layer
+    constexpr double chamberDistance = 3._m;
+    /// Radius of each straw
+    constexpr double tubeRadius = 15._mm;
+    /// Distance between the first <nLayersPerMl> layers and the second pack
+    constexpr double tubeLayerDist = 1.2_m;
+    /// Distance between the tube multilayers and to the first strip layer
+    constexpr double tubeStripDist = 30._cm;
+    /// Distance between two strip layers
+    constexpr double stripLayDist = 0.5_cm;
+    /// Number of strip layers on each side
+    constexpr std::size_t nStripLay = 4;
 
-    if (l == nLayersPerMl) {
-      tubePositions[l] += tubeLayerDist * Vector3::UnitZ();
-    }
-  }
-  /// Print the staggering
-  ACTS_DEBUG("##############################################");
+    std::array<Vector3, nTubeLayers> tubePositions{
+        filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
+    /// Fill the positions of the reference tubes 1
+    for (std::size_t l = 1; l < nTubeLayers; ++l) {
+      const Vector3& layStag{l % 2 == 1 ? posStaggering : negStaggering};
+      tubePositions[l] = tubePositions[l - 1] + 2. * tubeRadius * layStag;
 
-  for (std::size_t l = 0; l < nTubeLayers; ++l) {
-    ACTS_DEBUG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
-  }
-  ACTS_DEBUG("##############################################");
-
-  Container_t measurements{};
-  /// Extrapolate the track to the z-planes of the tubes and determine which
-  /// tubes were actually hit
-  for (const auto& stag : tubePositions) {
-    auto planeExtpLow = Acts::PlanarHelper::intersectPlane(
-        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
-        stag.z() - tubeRadius);
-    auto planeExtpHigh = Acts::PlanarHelper::intersectPlane(
-        trajLine.position(), trajLine.direction(), Vector3::UnitZ(),
-        stag.z() + tubeRadius);
-    ACTS_DEBUG("Extrapolated to plane " << toString(planeExtpLow.position())
-                                        << " "
-                                        << toString(planeExtpHigh.position()));
-
-    const auto dToFirstLow = static_cast<int>(std::ceil(
-        (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
-    const auto dToFirstHigh = static_cast<int>(std::ceil(
-        (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
-    /// Does the track go from left to right or right to left?
-    const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
-    /// Loop over the candidate tubes and check each one whether the track
-    /// actually crossed them. Then generate the circle and optionally smear the
-    /// radius
-    for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
-      const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
-      const double rad = Acts::abs(Acts::detail::LineHelper::signedDistance(
-          tube, Vector3::UnitX(), trajLine.position(), trajLine.direction()));
-      if (rad > tubeRadius) {
-        continue;
+      if (l == nLayersPerMl) {
+        tubePositions[l] += tubeLayerDist * Vector3::UnitZ();
       }
-      ACTS_DEBUG("Tube position: " << toString(tube) << ", radius: " << rad);
+    }
+    /// Print the staggering
+    ACTS_DEBUG("##############################################");
 
-      const double smearedR =
-          smearRadius
-              ? Acts::abs(normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
-              : rad;
-      if (smearedR > tubeRadius) {
-        continue;
+    for (std::size_t l = 0; l < nTubeLayers; ++l) {
+      ACTS_DEBUG("  *** " << (l + 1) << " - " << toString(tubePositions[l]));
+    }
+    ACTS_DEBUG("##############################################");
+
+    Container_t measurements{};
+    /// Extrapolate the track to the z-planes of the tubes and determine which
+    /// tubes were actually hit
+    if (genCfg.createStraws) {
+      for (const auto& stag : tubePositions) {
+        auto planeExtpLow =
+            intersectPlane(line.position(), line.direction(), Vector3::UnitZ(),
+                           stag.z() - tubeRadius);
+        auto planeExtpHigh =
+            intersectPlane(line.position(), line.direction(), Vector3::UnitZ(),
+                           stag.z() + tubeRadius);
+        ACTS_DEBUG("Extrapolated to plane "
+                   << toString(planeExtpLow.position()) << " "
+                   << toString(planeExtpHigh.position()));
+
+        const auto dToFirstLow = static_cast<int>(std::ceil(
+            (planeExtpLow.position().y() - stag.y()) / (2. * tubeRadius)));
+        const auto dToFirstHigh = static_cast<int>(std::ceil(
+            (planeExtpHigh.position().y() - stag.y()) / (2. * tubeRadius)));
+        /// Does the track go from left to right or right to left?
+        const int dT = dToFirstHigh > dToFirstLow ? 1 : -1;
+        /// Loop over the candidate tubes and check each one whether the track
+        /// actually crossed them. Then generate the circle and optionally smear
+        /// the radius
+        for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
+          const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
+          const double rad = Acts::abs(Acts::detail::LineHelper::signedDistance(
+              tube, Vector3::UnitX(), line.position(), line.direction()));
+          if (rad > tubeRadius) {
+            continue;
+          }
+          ACTS_DEBUG("Tube position: " << toString(tube)
+                                       << ", radius: " << rad);
+
+          const double smearedR =
+              genCfg.smearRadius
+                  ? Acts::abs(
+                        normal_t{rad, SpCalibrator::driftUncert(rad)}(engine))
+                  : rad;
+          if (smearedR > tubeRadius) {
+            continue;
+          }
+          measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+              tube, smearedR, SpCalibrator::driftUncert(smearedR)));
+        }
       }
-      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-          tube, smearedR, SpCalibrator::driftUncert(smearedR)));
     }
-  }
-  for (std::size_t sL = 0; createStrips && sL < nStripLay; ++sL) {
-    const double distInZ = tubeStripDist + sL * stripLayDist;
-    const double planeLow = tubePositions.front().z() - distInZ;
-    const double planeHigh = tubePositions.back().z() + distInZ;
-    for (const double plane : {planeLow, planeHigh}) {
-      const auto extp = intersectPlane(
-          trajLine.position(), trajLine.direction(), Vector3::UnitZ(), plane);
-      Vector3 extpPos = extp.position();
-      extpPos[0] = normal_t{extpPos[0], stripPitchLoc0}(engine);
-      extpPos[1] = 0.;
-      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-          extpPos, Vector3::UnitY(), Vector3::UnitX(), stripPitchLoc0, 0.));
-      extpPos = extp.position();
-      extpPos[1] = normal_t{extpPos[1], stripPitchLoc1}(engine);
-      extpPos[0] = 0.;
-      measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-          extpPos, Vector3::UnitX(), Vector3::UnitY(), 0., stripPitchLoc1));
+    if (genCfg.createStrips) {
+      ///@brief Helper function to discretize the extrapolated position on the strip plane to actual strips.
+      ///       The function returns the local coordinate in the picked plane
+      ///       projection
+      /// @param extPos: Extrapolated position of the straight line in the plane
+      /// @param loc1: Boolean to fetch either the loc1 projection or the loc0 projection
+      auto discretize = [&genCfg](const Vector3& extPos, const bool loc1) {
+        const double pitch =
+            loc1 ? genCfg.stripPitchLoc1 : genCfg.stripPitchLoc0;
+        assert(pitch > 0.);
+
+        const Vector3& stripDir =
+            loc1 ? genCfg.stripDirLoc1 : genCfg.stripDirLoc0;
+        const Vector3 stripNormal = stripDir.cross(Vector3::UnitZ());
+        const double dist = stripNormal.dot(extPos);
+        return genCfg.smearStrips
+                   ? pitch * static_cast<int>(std::ceil(dist / pitch))
+                   : dist;
+      };
+      /// Calculate the strip measurement's covariance
+      const double stripCovLoc0 =
+          Acts::square(genCfg.stripPitchLoc0) / std::sqrt(12.);
+      const double stripCovLoc1 =
+          Acts::square(genCfg.stripPitchLoc1) / std::sqrt(12.);
+
+      for (std::size_t sL = 0; sL < nStripLay; ++sL) {
+        const double distInZ = tubeStripDist + sL * stripLayDist;
+        const double planeLow = tubePositions.front().z() - distInZ;
+        const double planeHigh = tubePositions.back().z() + distInZ;
+
+        for (const double plane : {planeLow, planeHigh}) {
+          const auto extp = intersectPlane(line.position(), line.direction(),
+                                           Vector3::UnitZ(), plane);
+
+          if (genCfg.combineSpacePoints) {
+            const Vector3 extpPos{discretize(extp.position(), false),
+                                  discretize(extp.position(), true), plane};
+            measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+                extpPos, genCfg.stripDirLoc0, genCfg.stripDirLoc1, stripCovLoc0,
+                stripCovLoc1));
+          } else {
+            if (genCfg.createStripsLoc0) {
+              const Vector3 extpPos{discretize(extp.position(), false), 0.,
+                                    plane};
+              measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+                  extpPos, genCfg.stripDirLoc0,
+                  genCfg.stripDirLoc0.cross(Vector3::UnitZ()), stripCovLoc0,
+                  0.));
+            }
+            if (genCfg.createStripsLoc1) {
+              const Vector3 extpPos{0., discretize(extp.position(), true),
+                                    plane};
+              measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
+                  extpPos, genCfg.stripDirLoc1.cross(Vector3::UnitZ()),
+                  genCfg.stripDirLoc1, 0., stripCovLoc1));
+            }
+          }
+        }
+      }
     }
+    ACTS_DEBUG("Track hit in total " << measurements.size() << " sensors.");
+    std::ranges::sort(measurements, [&line](const auto& spA, const auto& spB) {
+      return line.direction().dot(spA->localPosition() - line.position()) <
+             line.direction().dot(spB->localPosition() - line.position());
+    });
+    return measurements;
   }
-  ACTS_DEBUG("Track hit in total " << measurements.size() << " sensors.");
-  std::ranges::sort(measurements, [&trajLine](const auto& spA,
-                                              const auto& spB) {
-    return trajLine.direction().dot(spA->localPosition() -
-                                    trajLine.position()) <
-           trajLine.direction().dot(spB->localPosition() - trajLine.position());
-  });
-  return measurements;
-}
-/// @brief Construct the start parameters from the container && the true trajectory
-ParamVec_t startParameters(const Line_t& trajLine, const Container_t& hits) {
+};
+/// @brief Construct the start parameters from the hit container && the true trajectory
+/// @param line: True trajectory to pick-up the correct left/right ambiguity for the straw seed hits
+/// @param hits: List of measurements to be used for fitting
+ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   ParamVec_t pars{};
 
   double tanPhi{0.};
@@ -365,9 +434,8 @@ ParamVec_t startParameters(const Line_t& trajLine, const Container_t& hits) {
 
   if (firstTube != hits.end() && lastTube != hits.rend()) {
     const int signFirst =
-        CompSpacePointAuxiliaries::strawSign(trajLine, **firstTube);
-    const int signLast =
-        CompSpacePointAuxiliaries::strawSign(trajLine, **lastTube);
+        CompSpacePointAuxiliaries::strawSign(line, **firstTube);
+    const int signLast = CompSpacePointAuxiliaries::strawSign(line, **lastTube);
 
     auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
         **lastTube, **firstTube,
@@ -389,6 +457,10 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   constexpr double tolerance = 1.e-3;
   return;
 
+  using Seeder = CompositeSpacePointLineSeeder;
+  using SeedAux = CompSpacePointAuxiliaries;
+  using enum Seeder::TangentAmbi;
+
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
     auto testTubes = generateMeasurements(line, 0._ns, engine, false, false);
@@ -398,11 +470,9 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
       for (std::size_t m2 = 0; m2 < m1; ++m2) {
         const auto& bottomTube = *testTubes[m2];
         const auto& topTube = *testTubes[m1];
-        const int signTop = CompSpacePointAuxiliaries::strawSign(line, topTube);
-        const int signBot =
-            CompSpacePointAuxiliaries::strawSign(line, bottomTube);
-        const auto trueAmbi =
-            CompositeSpacePointLineSeeder::encodeAmbiguity(signTop, signBot);
+        const int signTop = SeedAux::strawSign(line, topTube);
+        const int signBot = SeedAux::strawSign(line, bottomTube);
+        const auto trueAmbi = Seeder::encodeAmbiguity(signTop, signBot);
 
         ACTS_DEBUG(__func__ << "() " << __LINE__ << " - "
                             << std::format("bottom tube @ {:}, r: {:.3f}({:})",
@@ -415,50 +485,42 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
                                            (signTop * topTube.driftRadius()),
                                            signTop > 0 ? "R" : "L"));
 
-        {
-          using enum CompositeSpacePointLineSeeder::TangentAmbi;
-          bool seenTruePars{false};
-          for (const auto ambi : {LL, RL, LR, RR}) {
-            const auto tangentPars =
-                CompositeSpacePointLineSeeder::constructTangentLine(
-                    topTube, bottomTube, ambi);
+        bool seenTruePars{false};
+        for (const auto ambi : {LL, RL, LR, RR}) {
+          const auto pars =
+              Seeder::constructTangentLine(topTube, bottomTube, ambi);
 
-            const bool isTruePars =
-                Acts::abs(std::tan(tangentPars.theta) - lineTanTheta) <
-                    tolerance &&
-                Acts::abs(lineY0 - tangentPars.y0) < tolerance;
-            seenTruePars |= isTruePars;
-            ACTS_VERBOSE(__func__
-                         << "() " << __LINE__ << " - Test ambiguity "
-                         << CompositeSpacePointLineSeeder::toString(ambi)
-                         << " -> "
-                         << std::format("theta: {:.3f}, ",
-                                        tangentPars.theta / 1._degree)
-                         << std::format("tanTheta: {:.3f}, ",
-                                        std::tan(tangentPars.theta))
-                         << std::format("y0: {:.3f}", tangentPars.y0)
-                         << (!isTruePars ? (ambi == trueAmbi ? " xxxxxx" : "")
-                                         : " <-------"));
-            const Vector3 seedPos = tangentPars.y0 * Vector3::UnitY();
-            const Vector3 seedDir =
-                makeDirectionFromAxisTangents(0., std::tan(tangentPars.theta));
+          const bool isTruePars =
+              Acts::abs(std::tan(pars.theta) - lineTanTheta) < tolerance &&
+              Acts::abs(lineY0 - pars.y0) < tolerance;
+          seenTruePars |= isTruePars;
+          ACTS_VERBOSE(__func__
+                       << "() " << __LINE__ << " - Test ambiguity "
+                       << CompositeSpacePointLineSeeder::toString(ambi)
+                       << " -> "
+                       << std::format("theta: {:.3f}, ", pars.theta / 1._degree)
+                       << std::format("tanTheta: {:.3f}, ",
+                                      std::tan(pars.theta))
+                       << std::format("y0: {:.3f}", pars.y0)
+                       << (!isTruePars ? (ambi == trueAmbi ? " xxxxxx" : "")
+                                       : " <-------"));
+          const Vector3 seedPos = pars.y0 * Vector3::UnitY();
+          const Vector3 seedDir =
+              makeDirectionFromAxisTangents(0., std::tan(pars.theta));
 
-            const double chi2Top =
-                CompSpacePointAuxiliaries::chi2Term(seedPos, seedDir, topTube);
-            const double chi2Bot = CompSpacePointAuxiliaries::chi2Term(
-                seedPos, seedDir, bottomTube);
-            ACTS_VERBOSE(__func__ << "() " << __LINE__
-                                  << " - Resulting chi2 top: " << chi2Top
-                                  << ", bottom: " << chi2Bot);
-            BOOST_CHECK_LE(chi2Top, 1.e-17);
-            BOOST_CHECK_LE(chi2Bot, 1.e-17);
-          }
-          BOOST_CHECK_EQUAL(seenTruePars, true);
+          const double chi2Top = SeedAux::chi2Term(seedPos, seedDir, topTube);
+          const double chi2Bot =
+              SeedAux::chi2Term(seedPos, seedDir, bottomTube);
+          ACTS_VERBOSE(__func__ << "() " << __LINE__
+                                << " - Resulting chi2 top: " << chi2Top
+                                << ", bottom: " << chi2Bot);
+          BOOST_CHECK_LE(chi2Top, 1.e-17);
+          BOOST_CHECK_LE(chi2Bot, 1.e-17);
         }
+        BOOST_CHECK_EQUAL(seenTruePars, true);
 
         const auto seedPars =
-            CompositeSpacePointLineSeeder::constructTangentLine(
-                topTube, bottomTube, trueAmbi);
+            Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
         ACTS_DEBUG(__func__
                    << "() " << __LINE__ << " - Line tan theta: " << lineTanTheta
@@ -475,17 +537,17 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
 #define DECLARE_BRANCH(dType, bName) \
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
+
 BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   RandomEngine engine{1503};
 
-  using FitOpts_t =
-      CompositeSpacePointLineFitter::FitOptions<Container_t, SpCalibrator>;
+  using Fitter_t = CompositeSpacePointLineFitter;
+  using FitOpts_t = Fitter_t::FitOptions<Container_t, SpCalibrator>;
 
-  CompositeSpacePointLineFitter::Config cfg{};
+  Fitter_t::Config cfg{};
   cfg.useHessian = false;
 
-  CompositeSpacePointLineFitter fitter{cfg,
-                                       getDefaultLogger("LineFitter", logLvl)};
+  Fitter_t fitter{cfg, getDefaultLogger("LineFitter", logLvl)};
 
   auto outFile =
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
@@ -510,36 +572,32 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   DECLARE_BRANCH(unsigned, nIter);
   DECLARE_BRANCH(unsigned, nDoF);
 
+  auto fillPars = [](const auto pars, double& y0, double& x0,
+                     double& theta, double& phi) {
+    y0 = pars[toUnderlying(FitParIndex::y0)];
+    x0 = pars[toUnderlying(FitParIndex::x0)];
+    theta = pars[toUnderlying(FitParIndex::theta)];
+    phi = pars[toUnderlying(FitParIndex::phi)];
+  };
+
   auto calibrator = std::make_unique<SpCalibrator>();
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
-    trueY0 = line.position().y();
-    trueX0 = line.position().x();
-    trueTheta = theta(line.direction());
-    truePhi = phi(line.direction());
-
+    fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     const double t0 = uniform{-50._ns, 50._ns}(engine);
 
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
     fitOpts.measurements = generateMeasurements(line, t0, engine, true, true);
     fitOpts.startParameters = startParameters(line, fitOpts.measurements);
-
-    recoY0 = fitOpts.startParameters[toUnderlying(FitParIndex::y0)];
-    recoX0 = fitOpts.startParameters[toUnderlying(FitParIndex::x0)];
-    recoTheta = fitOpts.startParameters[toUnderlying(FitParIndex::theta)];
-    recoPhi = fitOpts.startParameters[toUnderlying(FitParIndex::phi)];
-
+    fillPars(fitOpts.startParameters, recoY0, recoX0, recoTheta, recoPhi);
     //
 
     auto result = fitter.fit(std::move(fitOpts));
     if (!result.converged) {
       continue;
     }
-    recoY0 = result.parameters[toUnderlying(FitParIndex::y0)];
-    recoX0 = result.parameters[toUnderlying(FitParIndex::x0)];
-    recoTheta = result.parameters[toUnderlying(FitParIndex::theta)];
-    recoPhi = result.parameters[toUnderlying(FitParIndex::phi)];
+    fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
     covY0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::y0),
                                         toUnderlying(FitParIndex::y0)));
     covX0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::x0),
