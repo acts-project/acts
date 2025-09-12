@@ -383,7 +383,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -std::numbers::pi, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMax(), std::numbers::pi, 1e-3);
-  // checkBinContentSize(layer->surfaceArray(), 1); TODO
+  checkBinContentSize(layer->surfaceArray(), 1);
 
   // check that it's applying a rotation transform to improve phi binning
   // BOOST_CHECK_NE(bu->transform(), nullptr);
