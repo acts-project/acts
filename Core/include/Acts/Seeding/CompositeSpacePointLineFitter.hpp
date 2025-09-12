@@ -48,6 +48,9 @@ class CompositeSpacePointLineFitter {
   ///       invalid hits
   template <CompositeSpacePoint Sp_t>
   using Selector_t = Delegate<bool(const Sp_t&)>;
+  /// @brief Abrivation
+  template <CompositeSpacePointContainer Cont_t>
+  using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
   static constexpr auto s_nPars = toUnderlying(FitParIndex::nPars);
   /// @brief Vector containing the 5 straight segment line parameters
@@ -134,7 +137,7 @@ class CompositeSpacePointLineFitter {
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
-    using Sp_t = RemovePointer_t<typename Cont_t::value_type>;
+    using Sp_t = SpacrPoint_t<Cont_t>;
     /// @brief Good hit selector
     Selector_t<Sp_t> selector{};
     /// @brief Calibrator
@@ -152,15 +155,15 @@ class CompositeSpacePointLineFitter {
   };
   /// @brief Counts how many measurements measure loc0, loc1 & time
   /// @param measurements: Collection of composite space points of interest
-  /// @param selector: Delegate to sort out the invalid measurements
   template <CompositeSpacePointContainer Cont_t>
   std::array<std::size_t, 3> countDoF(const Cont_t& measurements) const;
-
+  /// @brief Counts how many measurements measure loc0, loc1 & time
+  /// @param measurements: Collection of composite space points of interest
+  /// @param selector: Delegate to sort out the invalid measurements
   template <CompositeSpacePointContainer Cont_t>
   std::array<std::size_t, 3> countDoF(
       const Cont_t& measurements,
-      const Selector_t<RemovePointer_t<typename Cont_t::value_t>>& selector)
-      const;
+      const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
 
   /// @brief Helper function to extract which parameters shall be
   /// template <CompositeSpacePointContainer_t Cont>

@@ -572,8 +572,8 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   DECLARE_BRANCH(unsigned, nIter);
   DECLARE_BRANCH(unsigned, nDoF);
 
-  auto fillPars = [](const auto pars, double& y0, double& x0,
-                     double& theta, double& phi) {
+  auto fillPars = [](const auto pars, double& y0, double& x0, double& theta,
+                     double& phi) {
     y0 = pars[toUnderlying(FitParIndex::y0)];
     x0 = pars[toUnderlying(FitParIndex::x0)];
     theta = pars[toUnderlying(FitParIndex::theta)];

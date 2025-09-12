@@ -19,7 +19,7 @@ namespace Acts::Experimental {
 template <CompositeSpacePointContainer Cont_t>
 std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements) const {
-  using Sp_t = RemovePointer_t<typename Cont_t::value_t>;
+  using Sp_t = SpacePoint_t<Cont_t>;
   Selector_t<Sp_t> selector{};
   selector.template connect<&detail::passThroughSelector<Sp_t>>();
   return countDof(measurements, selector);
@@ -28,8 +28,7 @@ std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
 template <CompositeSpacePointContainer Cont_t>
 std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements,
-    const Selector_t<RemovePointer_t<typename Cont_t::value_t>>& selector)
-    const {
+    const Selector_t<SpacePoint_t<Cont_t>>& selector) const {
   using enum detail::CompSpacePointAuxiliaries::ResidualIdx;
   auto counts = filledArray<std::size_t, 3>(0u);
   std::size_t nValid{0};
