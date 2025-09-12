@@ -632,7 +632,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(ctr, ctr.normalized());
-    BOOST_CHECK_GE(binContent.size(), 2u);
+    BOOST_CHECK_EQUAL(binContent.size(), 4u);
     std::set<const Surface*> act(binContent.begin(), binContent.end());
 
     std::set<const Surface*> exp({A, B});
@@ -689,7 +689,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
       auto binContent = sa2.at(ctr, ctr.normalized());
-      BOOST_CHECK_GE(binContent.size(), 2u);
+      BOOST_CHECK_EQUAL(binContent.size(), 4u);
       std::set<const Surface*> act(binContent.begin(), binContent.end());
 
       std::set<const Surface*> exp({A, B});
