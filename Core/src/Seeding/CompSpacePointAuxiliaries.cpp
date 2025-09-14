@@ -67,18 +67,30 @@ void CompSpacePointAuxiliaries::updateChiSq(
     val = val > s_tolerance ? 1. / val : 0.;
   }
 
-  auto contract = [&invCov](const Vector& v1, const Vector& v2) -> double {
-    return v1[0] * v2[0] * invCov[0] + v1[1] * v2[1] * invCov[1] +
-           v1[2] * v2[2] * invCov[2];
+  auto contract = [&invCov, this](const Vector& v1,
+                                  const Vector& v2) -> double {
+    const double term = v1[0] * v2[0] * invCov[0] + v1[1] * v2[1] * invCov[1] +
+                        v1[2] * v2[2] * invCov[2];
+    ACTS_VERBOSE("updateChiSq() - Contribution from "
+                 << toString(v1) << " & " << toString(v2) << " is ("
+                 << (v1[0] * v2[0] * invCov[0]) << ", "
+                 << (v1[1] * v2[1] * invCov[1]) << ", "
+                 << v1[2] * v2[2] * invCov[2] << ") -> overall: " << term);
+    return term;
   };
+  ACTS_VERBOSE("updateChiSq() - Update chi2 value.");
   chiSqObj.chi2 += contract(residual(), residual());
   for (const auto partial1 : m_cfg.parsToUse) {
+    ACTS_VERBOSE("updateChiSq() - Update chi2 derivative w.r.t. "
+                 << parName(partial1) << ".");
     chiSqObj.gradient[toUnderlying(partial1)] +=
         2. * contract(residual(), gradient(partial1));
     for (const auto partial2 : m_cfg.parsToUse) {
       if (partial2 > partial1) {
         break;
       }
+      ACTS_VERBOSE("updateChiSq() - Update chi2 hessian w.r.t. "
+                   << parName(partial1) << " & " << parName(partial2) << ".");
       chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2)) +=
           2. * contract(gradient(partial1), gradient(partial2)) +
           (m_cfg.useHessian
@@ -408,21 +420,21 @@ void CompSpacePointAuxiliaries::updateStripResidual(
   constexpr double tolerance = 1.e-12;
   if (std::abs(normDot) < tolerance) {
     reset();
-    ACTS_WARNING("Segment line is embedded into the strip plane "
-                 << toString(line.direction())
-                 << ", normal: " << toString(normal));
+    ACTS_WARNING(
+        "updateStripResidual() - Segment line is embedded into the strip plane "
+        << toString(line.direction()) << ", normal: " << toString(normal));
     return;
   }
   const double planeOffSet = normal.dot(stripPos);
-  ACTS_VERBOSE("Plane normal: "
+  ACTS_VERBOSE("updateStripResidual() - Plane normal: "
                << toString(normal) << " |" << normal.norm()
                << "|, line direction: " << toString(line.direction())
                << ", angle: " << angle(normal, line.direction()));
   const double invNormDot = 1. / normDot;
   const double travelledDist =
       (planeOffSet - line.position().dot(normal)) * invNormDot;
-  ACTS_VERBOSE("Need to travel " << travelledDist
-                                 << " mm to reach the strip plane. ");
+  ACTS_VERBOSE("updateStripResidual() - Need to travel "
+               << travelledDist << " mm to reach the strip plane. ");
 
   const Vector& b1 = isBending ? sensorN : sensorD;
   const Vector& b2 = isBending ? sensorD : sensorN;
@@ -457,10 +469,10 @@ void CompSpacePointAuxiliaries::updateStripResidual(
     m_stereoTrf(bendingComp, nonBendingComp) =
         m_stereoTrf(nonBendingComp, bendingComp) = -b1DotB2 * invDist;
   }
-  ACTS_VERBOSE("Measures bending "
-               << (isBending ? "yes" : "no")
-               << ", measures non-bending:" << (isNonBending ? "yes" : "no"));
-  ACTS_VERBOSE("Strip orientation b1: "
+  ACTS_VERBOSE("updateStripResidual() - Measures bending "
+               << (isBending ? "yes" : "no") << ", measures non-bending "
+               << (isNonBending ? "yes" : "no"));
+  ACTS_VERBOSE("updateStripResidual() - Strip orientation b1: "
                << toString(b1) << " |" << b1.norm() << "|"
                << ", b2: " << toString(b2) << " |" << b2.norm() << "|"
                << ", stereo angle: " << angle(b1, b2));
@@ -475,18 +487,18 @@ void CompSpacePointAuxiliaries::updateStripResidual(
       spatial = m_stereoTrf * spatial;
     }
     residual[timeComp] = 0.;
-    ACTS_VERBOSE("Distance: " << toString(calcDistance)
-                              << ", <calc, n> =" << calcDistance.dot(normal)
-                              << " -> residual: " << toString(residual)
-                              << " --> closure test:"
-                              << toString(residual[bendingComp] * b1 +
-                                          residual[nonBendingComp] * b2));
+    ACTS_VERBOSE(
+        "updateStripResidual() - Distance: "
+        << toString(calcDistance) << ", <calc, n> =" << calcDistance.dot(normal)
+        << " -> residual: " << toString(residual) << " --> closure test:"
+        << toString(residual[bendingComp] * b1 +
+                    residual[nonBendingComp] * b2));
   };
   // Update the residual accordingly
   assignResidual(line.position() + travelledDist * line.direction() - stripPos,
                  m_residual);
   for (const auto partial : m_cfg.parsToUse) {
-    ACTS_VERBOSE("stripResidual() - Calculate partial derivative w.r.t "
+    ACTS_VERBOSE("updateStripResidual() - Calculate partial derivative w.r.t "
                  << parName(partial));
     switch (partial) {
       case FitParIndex::phi:
@@ -534,7 +546,7 @@ void CompSpacePointAuxiliaries::updateStripResidual(
         continue;
       }
       ACTS_VERBOSE(
-          "stripResidual() - Calculate second partial derivative w.r.t "
+          "updateStripResidual() - Calculate second partial derivative w.r.t "
           << parName(partial1) << ", " << parName(partial2));
 
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {

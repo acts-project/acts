@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -40,8 +41,8 @@ using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 10000;
+constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
+constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -179,8 +180,8 @@ Line_t generateLine(RandomEngine& engine) {
   using ParIndex = Line_t::ParIndex;
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::phi)] = 90._degree;
-  // linePars[toUnderlying(ParIndex::phi)] =
-  //     std::uniform_real_distribution{-120_degree, 120_degree}(engine);
+  linePars[toUnderlying(ParIndex::phi)] =
+      std::uniform_real_distribution{-120_degree, 120_degree}(engine);
   linePars[toUnderlying(ParIndex::x0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::y0)] =
@@ -237,9 +238,9 @@ class MeasurementGenerator {
     double stripPitchLoc0{4._cm};
     /// @brief Pitch between two loc1 strips
     double stripPitchLoc1{3._cm};
-    /// @brief Vector
+    /// @brief Direction of the strip if it measures loc1
     Vector3 stripDirLoc1{Vector3::UnitX()};
-    /// @brief
+    /// @brief Direction of the strip if it measures loc0
     Vector3 stripDirLoc0{Vector3::UnitY()};
   };
   /// @brief Extrapolate the straight line track through the straw layers to
@@ -275,7 +276,7 @@ class MeasurementGenerator {
     /// Distance between two strip layers
     constexpr double stripLayDist = 0.5_cm;
     /// Number of strip layers on each side
-    constexpr std::size_t nStripLay = 4;
+    constexpr std::size_t nStripLay = 8;
 
     std::array<Vector3, nTubeLayers> tubePositions{
         filledArray<Vector3, nTubeLayers>(chamberDistance * Vector3::UnitZ())};
@@ -307,7 +308,7 @@ class MeasurementGenerator {
         auto planeExtpHigh =
             intersectPlane(line.position(), line.direction(), Vector3::UnitZ(),
                            stag.z() + tubeRadius);
-        ACTS_DEBUG("Extrapolated to plane "
+        ACTS_DEBUG("spawn() - Extrapolated to plane "
                    << toString(planeExtpLow.position()) << " "
                    << toString(planeExtpHigh.position()));
 
@@ -327,8 +328,8 @@ class MeasurementGenerator {
           if (rad > tubeRadius) {
             continue;
           }
-          ACTS_DEBUG("Tube position: " << toString(tube)
-                                       << ", radius: " << rad);
+          ACTS_DEBUG("spawn() - Tube position: " << toString(tube)
+                                                 << ", radius: " << rad);
 
           const double smearedR =
               genCfg.smearRadius
@@ -386,7 +387,8 @@ class MeasurementGenerator {
         for (const double plane : {planeLow, planeHigh}) {
           const auto extp = intersectPlane(line.position(), line.direction(),
                                            Vector3::UnitZ(), plane);
-
+          ACTS_VERBOSE("spawn() - Propagated line to "
+                       << toString(extp.position()) << ".");
           if (genCfg.combineSpacePoints) {
             const Vector3 extpPos{discretize(extp.position(), false),
                                   discretize(extp.position(), true), plane};
@@ -401,6 +403,12 @@ class MeasurementGenerator {
                   extpPos, genCfg.stripDirLoc0,
                   genCfg.stripDirLoc0.cross(Vector3::UnitZ()), stripCovLoc0,
                   0.));
+              const auto& nM{*measurements.back()};
+              ACTS_VERBOSE("spawn() - Created loc0 strip @"
+                           << toString(nM.localPosition())
+                           << ", dir: " << toString(nM.sensorDirection())
+                           << ", to-next:" << toString(nM.toNextSensor())
+                           << " -> covariance: " << nM.covariance()[0] << ".");
             }
             if (genCfg.createStripsLoc1) {
               const Vector3 extpPos{0., discretize(extp.position(), true),
@@ -408,6 +416,12 @@ class MeasurementGenerator {
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc1.cross(Vector3::UnitZ()),
                   genCfg.stripDirLoc1, 0., stripCovLoc1));
+              const auto& nM{*measurements.back()};
+              ACTS_VERBOSE("spawn() - Created loc1 strip @"
+                           << toString(nM.localPosition())
+                           << ", dir: " << toString(nM.sensorDirection())
+                           << ", to-next:" << toString(nM.toNextSensor())
+                           << " -> covariance: " << nM.covariance()[1] << ".");
             }
           }
         }
@@ -477,7 +491,7 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
     if (firstEta != hits.end() && lastEta != hits.rend()) {
       const Vector3 firstToLastEta =
           (**lastEta).localPosition() - (**firstEta).localPosition();
-      tanTheta = firstToLastPhi.y() / firstToLastPhi.z();
+      tanTheta = firstToLastEta.y() / firstToLastEta.z();
       /// -> y = tanTheta * z + y_{0} ->
       pars[toUnderlying(FitParIndex::y0)] =
           (**lastEta).localPosition().y() -
@@ -597,6 +611,8 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   auto outTree = std::make_unique<TTree>(
       std::format("{:}Tree", testName).c_str(), "MonitorTree");
 
+  ACTS_INFO("Start test " << testName << ".");
+
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueX0);
   DECLARE_BRANCH(double, trueTheta);
@@ -626,8 +642,8 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
                      double& phi) {
     y0 = pars[toUnderlying(FitParIndex::y0)];
     x0 = pars[toUnderlying(FitParIndex::x0)];
-    theta = pars[toUnderlying(FitParIndex::theta)];
-    phi = pars[toUnderlying(FitParIndex::phi)];
+    theta = pars[toUnderlying(FitParIndex::theta)] / 1._degree;
+    phi = pars[toUnderlying(FitParIndex::phi)] / 1._degree;
   };
 
   auto calibrator = std::make_unique<SpCalibrator>();
@@ -665,8 +681,12 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
     nIter = result.nIter;
 
     outTree->Fill();
+    if ((evt + 1) % 1000 == 0u) {
+      ACTS_INFO("Processed " << (evt + 1) << "/" << nEvents << " events.");
+    }
   }
   outFile.WriteObject(outTree.get(), outTree->GetName());
+  ACTS_INFO("Test finished. " << outTree->GetEntries() << " tracks written.");
 }
 #undef DECLARE_BRANCH
 
@@ -680,15 +700,33 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   GenCfg_t genCfg{};
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
-  {
+  // 2D straw only test
+  if (false) {
     RandomEngine engine{1602};
     runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
-  {
+  // 2D straws + twin measurement test
+  genCfg.twinStraw = true;
+  if (false) {
     RandomEngine engine{1503};
-    genCfg.twinStraw = true;
-    runFitTest(fitCfg, genCfg, "StrawOnlyTestTwin", engine, *outFile);
+    runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
   }
+  genCfg.createStrips = true;
+  genCfg.twinStraw = false;
+  genCfg.combineSpacePoints = false;
+  // 1D straws + single strip measurements
+  if (false) {
+    RandomEngine engine{1701};
+    runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
+  }
+  //
+  {
+    genCfg.createStraws = false;
+    genCfg.stripPitchLoc1 = 500._um;
+    RandomEngine engine{1404};
+    runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
+  }
+  // 2070 / 2225 / 117
 }
 
 BOOST_AUTO_TEST_SUITE_END()

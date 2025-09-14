@@ -167,7 +167,7 @@ CompositeSpacePointLineFitter::fit(
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
 
-    ACTS_INFO(
+    ACTS_VERBOSE(
         __func__
         << "() " << __LINE__ << ": Start iteration #" << (result.nIter + 1)
         << ", current parameters "
@@ -329,30 +329,30 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   assert(firstIdx + N < s_nPars);
   // Current parameters mapped to an Eigen interface
   Eigen::Map<ActsVector<N>> miniPars{currentPars.data() + firstIdx};
-  ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
-                     << ": Current parameters " << toString(miniPars)
-                     << " with chi2: " << cache.chi2 << ",  gradient: "
-                     << toString(cache.gradient) << ", hessian: \n"
-                     << cache.hessian);
+  ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Current parameters " << toString(miniPars)
+                        << " with chi2: " << cache.chi2 << ",  gradient: "
+                        << toString(cache.gradient) << ", hessian: \n"
+                        << cache.hessian);
 
   // Take out the filled block from the gradient
   Eigen::Map<const ActsVector<N>> miniGradient{cache.gradient.data() +
                                                firstIdx};
   // The gradient is already small enough
   if (miniGradient.norm() < m_cfg.precCutOff) {
-    ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
-                       << ": Gradient is small enough");
+    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Gradient is small enough");
     return UpdateStep::converged;
   }
   // Take out the filled block from the hessian
   Acts::ActsSquareMatrix<N> miniHessian{
       cache.hessian.block<N, N>(firstIdx, firstIdx)};
-  ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
-                     << ": Projected parameters: " << toString(miniPars)
-                     << " gradient: " << toString(miniGradient)
-                     << ", hessian: \n"
-                     << miniHessian << "\n, determinant"
-                     << miniHessian.determinant());
+  ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Projected parameters: " << toString(miniPars)
+                        << " gradient: " << toString(miniGradient)
+                        << ", hessian: \n"
+                        << miniHessian
+                        << "\n, determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted
@@ -360,12 +360,12 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     const ActsVector<N> update{(*inverseH) * miniGradient};
 
     if (update.norm() < m_cfg.precCutOff) {
-      ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
-                         << toString(update) << " is negligible small.");
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__ << ": Update "
+                          << toString(update) << " is negligible small.");
       return UpdateStep::converged;
     }
-    ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
-                       << ": Update parameters by " << toString(update));
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Update parameters by " << toString(update));
     miniPars -= update;
 
   } else {
@@ -374,8 +374,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
         std::min(m_cfg.gradientStep, miniGradient.norm()) *
         miniGradient.normalized()};
 
-    ACTS_INFO(__func__ << "<" << N << ">() - " << __LINE__
-                       << ": Update parameters by " << toString(update));
+    ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Update parameters by " << toString(update));
     miniPars -= update;
   }
   // Check parameter ranges
@@ -399,6 +399,9 @@ void CompositeSpacePointLineFitter::fillCovariance(const FitParIndex firstPar,
   // The Hessian can safely be inverted
   if (inverseH) {
     covariance.block<N, N>(firstIdx, firstIdx) = (*inverseH);
+    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Evaluated covariance: \n"
+                        << covariance);
   }
 }
 
