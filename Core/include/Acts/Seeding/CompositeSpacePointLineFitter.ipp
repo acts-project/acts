@@ -16,6 +16,25 @@
 #include <format>
 namespace Acts::Experimental {
 
+inline std::vector<FitParIndex>
+CompositeSpacePointLineFitter::extractFitablePars(
+    const std::array<std::size_t, 3>& hitCounts) {
+  std::vector<FitParIndex> pars{};
+  const auto& [nLoc0, nLoc1, nTime] = hitCounts;
+  if (nLoc0 > 1) {
+    pars.insert(pars.end(), {FitParIndex::x0, FitParIndex::phi});
+  }
+  // Measurements in the bending direction
+  if (nLoc1 > 1) {
+    pars.insert(pars.end(), {FitParIndex::y0, FitParIndex::theta});
+  }
+  // Time measurements
+  if (nTime > 1) {
+    pars.push_back(FitParIndex::t0);
+  }
+
+  return pars;
+}
 template <CompositeSpacePointContainer Cont_t>
 std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
     const Cont_t& measurements) const {

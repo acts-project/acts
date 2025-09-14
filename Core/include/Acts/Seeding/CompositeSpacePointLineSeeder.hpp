@@ -39,7 +39,10 @@ class CompositeSpacePointLineSeeder {
   };
   /// @brief Converts the line tangent ambiguity into a string
   static std::string toString(const TangentAmbi ambi);
-  /// @brief Translate the
+  /// @brief Translate the combination of two drift signs into the proper
+  ///        tangent ambiguity enum value
+  /// @param signTop: Left/right sign of the top straw tube
+  /// @param signBottom: Left/right sign of the bottom straw tube
   static constexpr TangentAmbi encodeAmbiguity(const int signTop,
                                                const int signBottom);
   /// @brief Construct the line that is tangential to a pair of two straw circle measurements

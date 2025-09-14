@@ -48,7 +48,7 @@ class CompositeSpacePointLineFitter {
   ///       invalid hits
   template <CompositeSpacePoint Sp_t>
   using Selector_t = Delegate<bool(const Sp_t&)>;
-  /// @brief Abrivation
+  /// @brief Abrivation of the underlying space point type
   template <CompositeSpacePointContainer Cont_t>
   using SpacePoint_t = RemovePointer_t<typename Cont_t::value_type>;
 
@@ -166,8 +166,8 @@ class CompositeSpacePointLineFitter {
       const Selector_t<SpacePoint_t<Cont_t>>& selector) const;
 
   /// @brief Helper function to extract which parameters shall be
-  /// template <CompositeSpacePointContainer_t Cont>
-  ///   std::vector<FitParIndex>
+  static std::vector<FitParIndex> extractFitablePars(
+      const std::array<std::size_t, 3>& hitCounts);
 
   template <CompositeSpacePointContainer Cont_t,
             CompositeSpacePointCalibrator<Cont_t, Cont_t> Calibrator_t>
