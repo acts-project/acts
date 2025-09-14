@@ -26,9 +26,15 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.3
     # via requests
+<<<<<<< HEAD
 click==8.3.0
     # via typer
 cryptography==46.0.1
+=======
+click==8.2.1
+    # via typer
+cryptography==45.0.7
+>>>>>>> 4cbe66e88 (Weekly Update: Regenerate requirements.txt)
     # via pyjwt
 docutils==0.21.2
     # via
@@ -131,7 +137,11 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/requirements.in
+<<<<<<< HEAD
 typer==0.19.1
+=======
+typer==0.17.4
+>>>>>>> 4cbe66e88 (Weekly Update: Regenerate requirements.txt)
     # via -r docs/requirements.in
 typing-extensions==4.15.0
     # via
