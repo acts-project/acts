@@ -16,7 +16,7 @@
 #include <format>
 namespace Acts::Experimental {
 
-inline std::vector<FitParIndex>
+inline std::vector<CompositeSpacePointLineFitter::FitParIndex>
 CompositeSpacePointLineFitter::extractFitablePars(
     const std::array<std::size_t, 3>& hitCounts) {
   std::vector<FitParIndex> pars{};
@@ -32,7 +32,7 @@ CompositeSpacePointLineFitter::extractFitablePars(
   if (nTime > 1) {
     pars.push_back(FitParIndex::t0);
   }
-
+  std::ranges::sort(pars);
   return pars;
 }
 template <CompositeSpacePointContainer Cont_t>
@@ -56,10 +56,10 @@ std::array<std::size_t, 3> CompositeSpacePointLineFitter::countDoF(
       continue;
     }
     ++nValid;
-    if (sp->mesuresLoc0()) {
+    if (sp->measuresLoc0()) {
       ++counts[toUnderlying(nonBending)];
     }
-    if (sp->meausresLoc1()) {
+    if (sp->measuresLoc1()) {
       ++counts[toUnderlying(bending)];
     }
     /// Count the straws as implicit time measurements
@@ -99,76 +99,28 @@ CompositeSpacePointLineFitter::fit(
   resCfg.calcAlongStraw = m_cfg.calcAlongStraw;
   resCfg.calcAlongStrip = m_cfg.calcAlongStrip;
   resCfg.includeToF = resCfg.includeToF;
-
-  std::size_t nLoc0{0};
-  std::size_t nLoc1{0};
-  std::size_t nTime{0};
-  std::size_t nStraw{0};
-  /// @brief Calculate the number of degrees of freedom & deduce which
-  ///        parameters are to be fitted. Returns false if the parameters
-  ///        to fit change w.r.t the currently configured parameters
-  auto calculateNdoF = [&]() -> bool {
-    nLoc0 = nLoc1 = nTime = nStraw = 0;
-    std::vector<FitParIndex> parsBefore = std::move(resCfg.parsToUse);
-    for (const auto& spacePoint : result.measurements) {
-      // Invalid calibration state
-      if (!fitOpts.selector(*spacePoint)) {
-        continue;
-      }
-      // Count the number of straw measurements
-      if (spacePoint->isStraw()) {
-        ++nStraw;
-      }
-      // Count the number of measurements to fit x0, phi
-      if (spacePoint->measuresLoc0()) {
-        ++nLoc0;
-      }
-      // Count the number of measurements to fit y0, theta
-      if (spacePoint->measuresLoc1()) {
-        ++nLoc1;
-      }
-      // Count the number of measurements with explicit time
-      if (m_cfg.fitT0 && spacePoint->hasTime()) {
-        ++nTime;
-      }
-    }
-    // Full fit procedure -> Check which parameters need to be fitted
-    if (nLoc0 > 1) {
-      resCfg.parsToUse.insert(resCfg.parsToUse.end(),
-                              {FitParIndex::x0, FitParIndex::phi});
-    }
-    // Measurements in the bending direction
-    if (nLoc1 > 1) {
-      resCfg.parsToUse.insert(resCfg.parsToUse.end(),
-                              {FitParIndex::y0, FitParIndex::theta});
-    }
-    // Time measurements
-    if (m_cfg.fitT0 && nTime + nStraw > 1) {
-      resCfg.parsToUse.push_back(FitParIndex::t0);
-    }
-    std::ranges::sort(resCfg.parsToUse);
-    if (resCfg.parsToUse.size() > 0) {
-      result.nDoF = nLoc1 + nLoc0 - resCfg.parsToUse.size();
-    }
-
-    ACTS_DEBUG(__func__ << "() " << __LINE__
-                        << ": Number of measurements (loc0/loc1/time): "
-                        << std::format("{:d}/{:d}/{:d}", nLoc0, nLoc1, nTime)
-                        << " --> parameters to fit: ");
-    return parsBefore == resCfg.parsToUse;
-  };
-
-  calculateNdoF();
+  resCfg.parsToUse =
+      extractFitablePars(countDoF(result.measurements, fitOpts.selector));
   if (resCfg.parsToUse.empty()) {
     ACTS_WARNING(__func__ << "() " << __LINE__
                           << ": No valid degrees of freedom parsed. Please "
                              "check your measurements");
     return result;
   }
+
   Line_t line{};
+
   // First check whether all measurements are straw and the
   // fast fitter shall be used.
-  if (m_cfg.useFastFitter && nStraw == nLoc1 + nLoc0) {
+  if (m_cfg.useFastFitter &&
+      std::ranges::none_of(resCfg.parsToUse,
+                           [](const FitParIndex idx) {
+                             return idx == FitParIndex::x0 ||
+                                    idx == FitParIndex::phi;
+                           }) &&
+      std::ranges::none_of(result.measurements, [&fitOpts](const auto& sp) {
+        return !sp->isStraw() && fitOpts.selector(*sp);
+      })) {
     detail::FastStrawLineFitter::Config fastCfg{};
     fastCfg.maxIter = m_cfg.maxIter;
     fastCfg.precCutOff = m_cfg.precCutOff;
@@ -233,15 +185,20 @@ CompositeSpacePointLineFitter::fit(
           fitOpts.calibContext, line.position(), line.direction(), t0,
           result.measurements);
       // Check whether the measurements are still valid
-      if (!calculateNdoF()) {
-        // No valid measurement is left
-        if (resCfg.parsToUse.empty()) {
-          ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
-                                << toString(line.position()) << " + "
-                                << toString(line.direction()) << ", t0: " << t0
-                                << " invalidated all measurements");
-          return result;
-        }
+      auto parsBkp = std::move(resCfg.parsToUse);
+      resCfg.parsToUse =
+          extractFitablePars(countDoF(result.measurements, fitOpts.selector));
+
+      // No valid measurement is left
+      if (resCfg.parsToUse.empty()) {
+        ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
+                              << toString(line.position()) << " + "
+                              << toString(line.direction()) << ", t0: " << t0
+                              << " invalidated all measurements");
+        return result;
+      }
+
+      if (parsBkp != resCfg.parsToUse) {
         // Instantiate an updated pull calculator
         pullCalculator =
             detail::CompSpacePointAuxiliaries{resCfg, logger().clone()};
@@ -318,6 +275,8 @@ CompositeSpacePointLineFitter::fit(
   }
   // Parameters converged
   if (result.converged) {
+    const auto doF = countDoF(result.measurements, fitOpts.selector);
+    result.nDoF = (doF[0] + doF[1] + doF[2]) - resCfg.parsToUse.size();
     line.updateParameters(result.parameters);
     const double t0 = result.parameters[toUnderlying(FitParIndex::t0)];
     // Recalibrate the measurements before returning

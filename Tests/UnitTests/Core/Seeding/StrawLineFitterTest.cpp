@@ -17,6 +17,7 @@
 #include <format>
 #include <random>
 #include <ranges>
+#include <set>
 #include <span>
 
 #include <TFile.h>
@@ -37,6 +38,7 @@ using Line_t = CompSpacePointAuxiliaries::Line_t;
 using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
+using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 10000;
@@ -51,12 +53,17 @@ class FitTestSpacePoint {
   /// @param pos: Position of the wire
   /// @param driftR: Straw drift radius
   /// @param driftRUncert: Uncertainty on the drift radius uncertainty
-  /// @param mLoc0: Flag toggling whether the position along the wire is also provided
+  /// @param twinUncert: Uncertainty on the measurement along the straw
   FitTestSpacePoint(const Vector3& pos, const double driftR,
-                    const double driftRUncert, const bool mLoc0 = false)
-      : m_position{pos}, m_driftR{driftR}, m_measLoc0{mLoc0} {
-    m_covariance[toUnderlying(ResidualIdx::bending)] =
-        Acts::square(driftRUncert);
+                    const double driftRUncert,
+                    const std::optional<double> twnUncert = std::nullopt)
+      : m_position{pos},
+        m_driftR{driftR},
+        m_measLoc0{twnUncert != std::nullopt} {
+    using enum ResidualIdx;
+    m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
+    m_covariance[toUnderlying(nonBending)] =
+        Acts::square(twnUncert.value_or(0.));
   }
 
   /// @brief Constructor for strip measurements
@@ -212,6 +219,10 @@ class MeasurementGenerator {
     bool createStraws{true};
     /// @brief Smear the straw radius
     bool smearRadius{true};
+    /// @brief Straw measurement measures the coordinate along the wire
+    bool twinStraw{false};
+    /// @brief Resolution of the coordinate along the wire measurement
+    double twinStrawReso{5._cm};
     /// @brief Create strip measurements
     bool createStrips{true};
     /// @brief Discretize strips
@@ -310,8 +321,8 @@ class MeasurementGenerator {
         /// actually crossed them. Then generate the circle and optionally smear
         /// the radius
         for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
-          const Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
-          const double rad = Acts::abs(Acts::detail::LineHelper::signedDistance(
+          Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
+          const double rad = Acts::abs(signedDistance(
               tube, Vector3::UnitX(), line.position(), line.direction()));
           if (rad > tubeRadius) {
             continue;
@@ -327,8 +338,18 @@ class MeasurementGenerator {
           if (smearedR > tubeRadius) {
             continue;
           }
+          ///
+          if (genCfg.twinStraw) {
+            auto iSectWire = lineIntersect<3>(line.position(), line.direction(),
+                                              tube, Vector3::UnitX());
+            tube[eX] =
+                normal_t{iSectWire.pathLength(), genCfg.twinStrawReso}(engine);
+          }
           measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-              tube, smearedR, SpCalibrator::driftUncert(smearedR)));
+              tube, smearedR, SpCalibrator::driftUncert(smearedR),
+              genCfg.twinStraw
+                  ? std::make_optional<double>(genCfg.twinStrawReso)
+                  : std::nullopt));
         }
       }
     }
@@ -400,6 +421,9 @@ class MeasurementGenerator {
     return measurements;
   }
 };
+
+using GenCfg_t = MeasurementGenerator::Config;
+
 /// @brief Construct the start parameters from the hit container && the true trajectory
 /// @param line: True trajectory to pick-up the correct left/right ambiguity for the straw seed hits
 /// @param hits: List of measurements to be used for fitting
@@ -460,13 +484,18 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   using Seeder = CompositeSpacePointLineSeeder;
   using SeedAux = CompSpacePointAuxiliaries;
   using enum Seeder::TangentAmbi;
+  GenCfg_t genCfg{};
+  genCfg.createStrips = false;
+  genCfg.createStraws = true;
+  genCfg.smearRadius = false;
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     const auto line = generateLine(engine);
-    auto testTubes = generateMeasurements(line, 0._ns, engine, false, false);
+    auto testTubes = MeasurementGenerator::spawn(line, 0._ns, engine, genCfg);
     const double lineTanTheta = line.direction().y() / line.direction().z();
     const double lineY0 = line.position().y();
-    for (std::size_t m1 = testTubes.size() - 1; m1 > 0; --m1) {
+    for (std::size_t m1 = testTubes.size() - 1; m1 > testTubes.size() / 2;
+         --m1) {
       for (std::size_t m2 = 0; m2 < m1; ++m2) {
         const auto& bottomTube = *testTubes[m2];
         const auto& topTube = *testTubes[m1];
@@ -486,6 +515,7 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
                                            signTop > 0 ? "R" : "L"));
 
         bool seenTruePars{false};
+        std::set<std::pair<double, double>> fourSeedPars{};
         for (const auto ambi : {LL, RL, LR, RR}) {
           const auto pars =
               Seeder::constructTangentLine(topTube, bottomTube, ambi);
@@ -516,9 +546,12 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
                                 << ", bottom: " << chi2Bot);
           BOOST_CHECK_LE(chi2Top, 1.e-17);
           BOOST_CHECK_LE(chi2Bot, 1.e-17);
+          BOOST_CHECK_EQUAL(
+              fourSeedPars.insert(std::make_pair(pars.theta, pars.y0)).second,
+              true);
         }
         BOOST_CHECK_EQUAL(seenTruePars, true);
-
+        BOOST_CHECK_EQUAL(fourSeedPars.size(), 4);
         const auto seedPars =
             Seeder::constructTangentLine(topTube, bottomTube, trueAmbi);
         /// Construct line parameters
@@ -538,20 +571,14 @@ BOOST_AUTO_TEST_CASE(SeedTangents) {
   dType bName{};                     \
   outTree->Branch(#bName, &bName);
 
-BOOST_AUTO_TEST_CASE(SimpleLineFit) {
-  RandomEngine engine{1503};
+void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
+                const std::string& testName, RandomEngine& engine,
+                TFile& outFile) {
+  Fitter_t fitter{fitCfg, getDefaultLogger(
+                              std::format("LineFitter_{:}", testName), logLvl)};
 
-  using Fitter_t = CompositeSpacePointLineFitter;
-  using FitOpts_t = Fitter_t::FitOptions<Container_t, SpCalibrator>;
-
-  Fitter_t::Config cfg{};
-  cfg.useHessian = false;
-
-  Fitter_t fitter{cfg, getDefaultLogger("LineFitter", logLvl)};
-
-  auto outFile =
-      std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
-  auto outTree = std::make_unique<TTree>("SimpleLineFit", "MonitorTree");
+  auto outTree = std::make_unique<TTree>(
+      std::format("{:}Tree", testName).c_str(), "MonitorTree");
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueX0);
@@ -572,6 +599,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   DECLARE_BRANCH(unsigned, nIter);
   DECLARE_BRANCH(unsigned, nDoF);
 
+  /// @brief Fill the parameter array to the tree variables
+  /// @param pars: Parameter array to safe
+  /// @param y0: Reference to the variable storing y0
+  /// @param x0: Reference to the variable storing x0
+  /// @param theta: Reference to the variable storing theta
+  /// @param phi: Reference to the variable storing phi
   auto fillPars = [](const auto pars, double& y0, double& x0, double& theta,
                      double& phi) {
     y0 = pars[toUnderlying(FitParIndex::y0)];
@@ -586,9 +619,12 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     const double t0 = uniform{-50._ns, 50._ns}(engine);
 
+    using FitOpts_t = Fitter_t::FitOptions<Container_t, SpCalibrator>;
+
     FitOpts_t fitOpts{};
     fitOpts.calibrator = calibrator.get();
-    fitOpts.measurements = generateMeasurements(line, t0, engine, true, true);
+    fitOpts.measurements =
+        MeasurementGenerator::spawn(line, t0, engine, genCfg);
     fitOpts.startParameters = startParameters(line, fitOpts.measurements);
     fillPars(fitOpts.startParameters, recoY0, recoX0, recoTheta, recoPhi);
     //
@@ -613,8 +649,29 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
     outTree->Fill();
   }
-  outFile->WriteObject(outTree.get(), outTree->GetName());
-  outTree.reset();
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
+#undef DECLARE_BRANCH
+
+BOOST_AUTO_TEST_CASE(SimpleLineFit) {
+  auto outFile =
+      std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
+
+  Fitter_t::Config fitCfg{};
+  fitCfg.useHessian = false;
+
+  GenCfg_t genCfg{};
+  genCfg.twinStraw = false;
+  genCfg.createStrips = false;
+  {
+    RandomEngine engine{1602};
+    runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
+  }
+  {
+    RandomEngine engine{1503};
+    genCfg.twinStraw = true;
+    runFitTest(fitCfg, genCfg, "StrawOnlyTestTwin", engine, *outFile);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

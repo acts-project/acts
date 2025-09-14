@@ -137,7 +137,7 @@ class CompositeSpacePointLineFitter {
     /// @brief List of measurements to fit
     Cont_t measurements{};
     /// @brief Abrivation of the SpacePoint type
-    using Sp_t = SpacrPoint_t<Cont_t>;
+    using Sp_t = SpacePoint_t<Cont_t>;
     /// @brief Good hit selector
     Selector_t<Sp_t> selector{};
     /// @brief Calibrator
