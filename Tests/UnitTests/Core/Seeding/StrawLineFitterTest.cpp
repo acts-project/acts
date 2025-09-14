@@ -466,6 +466,23 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
     tanTheta = std::tan(seedPars.theta);
     pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
+  } else {
+    auto firstEta = std::ranges::find_if(hits, [](const auto& sp) {
+      return !sp->isStraw() && sp->measuresLoc1();
+    });
+    auto lastEta = std::ranges::find_if(
+        std::ranges::reverse_view(hits),
+        [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc1(); });
+
+    if (firstEta != hits.end() && lastEta != hits.rend()) {
+      const Vector3 firstToLastEta =
+          (**lastEta).localPosition() - (**firstEta).localPosition();
+      tanTheta = firstToLastPhi.y() / firstToLastPhi.z();
+      /// -> y = tanTheta * z + y_{0} ->
+      pars[toUnderlying(FitParIndex::y0)] =
+          (**lastEta).localPosition().y() -
+          (**lastEta).localPosition().z() * tanTheta;
+    }
   }
 
   const Vector3 seedDir = makeDirectionFromAxisTangents(tanPhi, tanTheta);
