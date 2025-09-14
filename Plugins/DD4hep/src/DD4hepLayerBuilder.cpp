@@ -156,10 +156,6 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
                                           << " sensitive surfaces.");
-
-          // Since zMin/zMax are now already in local coordinates,
-          // no coordinate transformation is needed
-
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[AxisDirection::AxisZ] = {
