@@ -15,6 +15,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <chrono>
 #include <format>
 #include <random>
 #include <ranges>
@@ -32,6 +33,7 @@ using namespace Acts::detail::LineHelper;
 using namespace Acts::PlanarHelper;
 using namespace Acts::VectorHelpers;
 
+using TimePoint_t = std::chrono::system_clock::time_point;
 using RandomEngine = std::mt19937;
 using uniform = std::uniform_real_distribution<double>;
 using normal_t = std::normal_distribution<double>;
@@ -41,8 +43,8 @@ using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
-constexpr std::size_t nEvents = 1;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
+constexpr std::size_t nEvents = 100000;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -187,7 +189,7 @@ Line_t generateLine(RandomEngine& engine) {
   linePars[toUnderlying(ParIndex::y0)] =
       std::uniform_real_distribution{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      std::uniform_real_distribution{0.1_degree, 179.9_degree}(engine);
+      std::uniform_real_distribution{5_degree, 175_degree}(engine);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       0.2_degree) {
     return generateLine(engine);
@@ -226,8 +228,10 @@ class MeasurementGenerator {
     double twinStrawReso{5._cm};
     /// @brief Create strip measurements
     bool createStrips{true};
-    /// @brief Discretize strips
+    /// @brief Smear the strips around the pitch
     bool smearStrips{true};
+    /// @brief Alternatively, discretize the strips onto a strip plane
+    bool discretizeStrips{false};
     /// @brief Combine the two strip measurements to a single space point
     bool combineSpacePoints{false};
     /// @brief Create strip measurements constraining Loc0
@@ -360,7 +364,8 @@ class MeasurementGenerator {
       ///       projection
       /// @param extPos: Extrapolated position of the straight line in the plane
       /// @param loc1: Boolean to fetch either the loc1 projection or the loc0 projection
-      auto discretize = [&genCfg](const Vector3& extPos, const bool loc1) {
+      auto discretize = [&genCfg, &engine](const Vector3& extPos,
+                                           const bool loc1) -> Vector3 {
         const double pitch =
             loc1 ? genCfg.stripPitchLoc1 : genCfg.stripPitchLoc0;
         assert(pitch > 0.);
@@ -369,9 +374,15 @@ class MeasurementGenerator {
             loc1 ? genCfg.stripDirLoc1 : genCfg.stripDirLoc0;
         const Vector3 stripNormal = stripDir.cross(Vector3::UnitZ());
         const double dist = stripNormal.dot(extPos);
-        return genCfg.smearStrips
-                   ? pitch * static_cast<int>(std::ceil(dist / pitch))
-                   : dist;
+        if (genCfg.smearStrips) {
+          return normal_t{dist, pitch / std::sqrt(12)}(engine)*stripNormal;
+        }
+        if (genCfg.discretizeStrips) {
+          return pitch *
+                 static_cast<int>(std::ceil((dist - 0.5 * pitch) / pitch)) *
+                 stripNormal;
+        }
+        return dist * stripNormal;
       };
       /// Calculate the strip measurement's covariance
       const double stripCovLoc0 =
@@ -390,15 +401,16 @@ class MeasurementGenerator {
           ACTS_VERBOSE("spawn() - Propagated line to "
                        << toString(extp.position()) << ".");
           if (genCfg.combineSpacePoints) {
-            const Vector3 extpPos{discretize(extp.position(), false),
-                                  discretize(extp.position(), true), plane};
+            const Vector3 extpPos{discretize(extp.position(), false) +
+                                  discretize(extp.position(), true) +
+                                  plane * Vector3::UnitZ()};
             measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                 extpPos, genCfg.stripDirLoc0, genCfg.stripDirLoc1, stripCovLoc0,
                 stripCovLoc1));
           } else {
             if (genCfg.createStripsLoc0) {
-              const Vector3 extpPos{discretize(extp.position(), false), 0.,
-                                    plane};
+              const Vector3 extpPos{discretize(extp.position(), false) +
+                                    plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
                   extpPos, genCfg.stripDirLoc0,
                   genCfg.stripDirLoc0.cross(Vector3::UnitZ()), stripCovLoc0,
@@ -411,11 +423,12 @@ class MeasurementGenerator {
                            << " -> covariance: " << nM.covariance()[0] << ".");
             }
             if (genCfg.createStripsLoc1) {
-              const Vector3 extpPos{0., discretize(extp.position(), true),
-                                    plane};
+              const Vector3 extpPos{discretize(extp.position(), true) +
+                                    plane * Vector3::UnitZ()};
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  extpPos, genCfg.stripDirLoc1.cross(Vector3::UnitZ()),
-                  genCfg.stripDirLoc1, 0., stripCovLoc1));
+                  extpPos, genCfg.stripDirLoc1,
+                  genCfg.stripDirLoc1.cross(Vector3::UnitZ()), 0.,
+                  stripCovLoc1));
               const auto& nM{*measurements.back()};
               ACTS_VERBOSE("spawn() - Created loc1 strip @"
                            << toString(nM.localPosition())
@@ -611,22 +624,27 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
   auto outTree = std::make_unique<TTree>(
       std::format("{:}Tree", testName).c_str(), "MonitorTree");
 
+  TimePoint_t start = std::chrono::system_clock::now();
+
   ACTS_INFO("Start test " << testName << ".");
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueX0);
   DECLARE_BRANCH(double, trueTheta);
   DECLARE_BRANCH(double, truePhi);
+  DECLARE_BRANCH(double, trueT0);
 
   DECLARE_BRANCH(double, recoY0);
   DECLARE_BRANCH(double, recoX0);
   DECLARE_BRANCH(double, recoTheta);
   DECLARE_BRANCH(double, recoPhi);
+  DECLARE_BRANCH(double, recoT0);
 
-  DECLARE_BRANCH(double, covY0);
-  DECLARE_BRANCH(double, covX0);
-  DECLARE_BRANCH(double, covTheta);
-  DECLARE_BRANCH(double, covPhi);
+  DECLARE_BRANCH(double, sigmaY0);
+  DECLARE_BRANCH(double, sigmaX0);
+  DECLARE_BRANCH(double, sigmaTheta);
+  DECLARE_BRANCH(double, sigmaPhi);
+  DECLARE_BRANCH(double, sigmaT0);
 
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(unsigned, nIter);
@@ -651,6 +669,7 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
     const auto line = generateLine(engine);
     fillPars(line.parameters(), trueY0, trueX0, trueTheta, truePhi);
     const double t0 = uniform{-50._ns, 50._ns}(engine);
+    trueT0 = t0 / 1._ns;
 
     using FitOpts_t = Fitter_t::FitOptions<Container_t, SpCalibrator>;
 
@@ -666,15 +685,18 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
     if (!result.converged) {
       continue;
     }
+
     fillPars(result.parameters, recoY0, recoX0, recoTheta, recoPhi);
-    covY0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::y0),
-                                        toUnderlying(FitParIndex::y0)));
-    covX0 = std::sqrt(result.covariance(toUnderlying(FitParIndex::x0),
-                                        toUnderlying(FitParIndex::x0)));
-    covTheta = std::sqrt(result.covariance(toUnderlying(FitParIndex::theta),
-                                           toUnderlying(FitParIndex::theta)));
-    covPhi = std::sqrt(result.covariance(toUnderlying(FitParIndex::phi),
-                                         toUnderlying(FitParIndex::phi)));
+    recoT0 = 1. / result.parameters[toUnderlying(FitParIndex::t0)];
+
+    auto extractUncert = [&result](const auto idx) {
+      return std::sqrt(result.covariance(toUnderlying(idx), toUnderlying(idx)));
+    };
+    sigmaY0 = extractUncert(FitParIndex::y0);
+    sigmaX0 = extractUncert(FitParIndex::x0);
+    sigmaTheta = extractUncert(FitParIndex::theta) / 1._degree;
+    sigmaPhi = extractUncert(FitParIndex::phi) / 1._degree;
+    sigmaT0 = extractUncert(FitParIndex::t0) / 1._degree;
 
     chi2 = result.chi2;
     nDoF = result.nDoF;
@@ -685,8 +707,15 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
       ACTS_INFO("Processed " << (evt + 1) << "/" << nEvents << " events.");
     }
   }
+
+  TimePoint_t end = std::chrono::system_clock::now();  // timing: get end time
+  auto diff =
+      std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+
   outFile.WriteObject(outTree.get(), outTree->GetName());
-  ACTS_INFO("Test finished. " << outTree->GetEntries() << " tracks written.");
+  ACTS_INFO("Test finished. " << outTree->GetEntries()
+                              << " tracks written. Test took " << diff
+                              << " seconds.");
 }
 #undef DECLARE_BRANCH
 
@@ -701,30 +730,42 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
   // 2D straw only test
-  if (false) {
+  {
     RandomEngine engine{1602};
     runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
+  // fast straw only test
+  {
+    fitCfg.useFastFitter = true;
+    RandomEngine engine{1503};
+    runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
+  }
   // 2D straws + twin measurement test
   genCfg.twinStraw = true;
-  if (false) {
-    RandomEngine engine{1503};
+  {
+    RandomEngine engine{1701};
     runFitTest(fitCfg, genCfg, "StrawAndTwinTest", engine, *outFile);
   }
   genCfg.createStrips = true;
   genCfg.twinStraw = false;
   genCfg.combineSpacePoints = false;
   // 1D straws + single strip measurements
-  if (false) {
-    RandomEngine engine{1701};
+  {
+    RandomEngine engine{1404};
     runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
   }
   //
   {
     genCfg.createStraws = false;
+    genCfg.combineSpacePoints = true;
     genCfg.stripPitchLoc1 = 500._um;
-    RandomEngine engine{1404};
+    RandomEngine engine{2070};
     runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
+  }
+  {
+    genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
+    RandomEngine engine{2225};
+    runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);
   }
   // 2070 / 2225 / 117
 }

@@ -234,22 +234,17 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   return true;
 }
-bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
+inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
                                                        const Vector& wireDir) {
   const Vector& lineDir = line.direction();
   // Between two calls the wire projection has not changed
   const double wireProject = lineDir.dot(wireDir);
 
-  if (false && std::abs(wireProject - m_wireProject) < s_tolerance) {
-    ACTS_VERBOSE("Projection of the line matches the previous one."
-                 << " Don't update the auxiliaries");
-    return m_invProjDirLenSq > s_tolerance;
-  }
   m_wireProject = wireProject;
   const double projDirLenSq = 1. - square(m_wireProject);
   // The line is parallel to the wire
   if (projDirLenSq < s_tolerance) {
-    ACTS_VERBOSE("Line & wire are parallel: " << toString(wireDir) << " vs. "
+    ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: " << toString(wireDir) << " vs. "
                                               << toString(lineDir));
     m_invProjDirLenSq = 0.;
     reset();
@@ -258,7 +253,15 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
   m_invProjDirLenSq = 1. / projDirLenSq;
   m_invProjDirLen = std::sqrt(m_invProjDirLenSq);
   // Project the segment line onto the wire plane and normalize
-  m_projDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
+  Vector newProjDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
+  ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "<<toString(newProjDir)<<", |D| "<<newProjDir.norm());
+ 
+  if (newProjDir.dot(m_projDir) < s_tolerance) {
+    ACTS_VERBOSE("updateStrawAuxiliaries() - The old & the new project dir coincide. Don't update the auxillaries");
+    return true;
+  }
+  m_projDir = std::move(newProjDir);
+
   // Loop over all configured parameters and calculate the partials
   // of the wire projection
   for (auto partial : m_cfg.parsToUse) {
@@ -270,8 +273,8 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     const Vector& lGrad{line.gradient(static_cast<LineIndex>(partial))};
     m_projDirLenPartial[pIdx] = lGrad.dot(wireDir);
     // clang-format off
-    m_gradProjDir[pIdx] = m_invProjDirLen * (lGrad - m_projDirLenPartial[pIdx] * wireDir) +
-                          m_projDirLenPartial[pIdx] * m_wireProject * m_invProjDirLenSq * m_projDir;
+    m_gradProjDir[pIdx] = m_invProjDirLen * lGrad - (m_invProjDirLen *m_projDirLenPartial[pIdx]) * wireDir +
+                          (m_projDirLenPartial[pIdx] * m_wireProject * m_invProjDirLenSq) * m_projDir;
     // clang-format on
 
     // skip the Hessian calculation, if toggled
