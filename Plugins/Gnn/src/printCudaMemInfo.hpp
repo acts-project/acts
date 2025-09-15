@@ -8,7 +8,9 @@
 
 #pragma once
 
+#ifndef ACTS_GNN_CPUONLY
 #include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
+#endif
 #include <Acts/Utilities/Logger.hpp>
 
 #ifndef ACTS_GNN_CPUONLY
