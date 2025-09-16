@@ -124,6 +124,10 @@ class FastStrawLineFitter {
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
 
+  template <CompositeSpacePointContainer StripCont_t>
+  std::optional<FitResult> fit(const StripCont_t& measurements,
+                               const ResidualIdx projection) const;
+
   /// @brief Fit a straight line to a set of straw measurements taking the
   ///        time offset into account. The floating t0 parameter shrinks /
   ///        blows-up the drift radii of each straw measurement

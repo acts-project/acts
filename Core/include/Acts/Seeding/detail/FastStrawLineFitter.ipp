@@ -30,7 +30,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
   if (!result) {
     return std::nullopt;
   }
-  /// Calculate the chi2
+  // Calculate the chi2
   calcPostFitChi2(measurements, *result);
   return result;
 }
@@ -70,6 +70,80 @@ double FastStrawLineFitter::chi2Term(const TrigonomHelper& angle,
   return Acts::pow(dist - r.value_or(strawMeas.driftRadius()), 2) / cov;
 }
 
+template <CompositeSpacePointContainer StripCont_t>
+std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
+    const StripCont_t& measurements, const ResidualIdx projection) const {
+  if (projection == ResidualIdx::time) {
+    ACTS_WARNING(__func__ << "() - " << __LINE__
+                          << ": Only spatial projections, "
+                          << "i.e. nonBending / bending are sensible");
+    return std::nullopt;
+  }
+
+  FitAuxiliaries auxVars{};
+  Vector centerOfGravity{Vector::Zero()};
+  // @brief Selector function to check that the current strip provides a constraint in the projetor direction
+  auto select = [&projection](const auto& strip) -> bool {
+    // Skip straw measurements that are not twins &
+    // don't measure non-bending coordinate
+    if (strip->isStraw()) {
+      return strip->measuresLoc0() && projection == ResidualIdx::bending;
+    }
+    // Check that the strip is actually measuring the projection
+    return (strip->measuresLoc0() && projection == ResidualIdx::nonBending) ||
+           (strip->meausresLoc1() && projection == ResidaulIdx::bending);
+  };
+
+  auxVars.invCovs.resize(measurements.size());
+  for (const auto& [sIdx, strip] : enumerate(measurements)) {
+    if (!select(strip)) {
+      continue;
+    }
+    const auto& invCov =
+        (auxVars.invCovs[sIdx] =
+             1. / strip->covariance()[toUnderlying(projection)]);
+    auxVars.covNorm += invCov;
+    centerOfGravity += invCov * strip->localPosition();
+    ++auxVars.nDoF;
+  }
+  // To little information provided
+  if (auxVars.nDoF < 3) {
+    return std::nullopt;
+  }
+  // Reduce the number of degrees of freedom by 2 to account
+  // for the two free parameters to fit
+  auxVars.nDoF -= 2u;
+  auxVars.covNorm = 1. / auxVars.covNorm;
+  centerOfGravity *= auxVars.covNorm;
+
+  bool centerSet{false};
+  for (const auto& [sIdx, strip] : enumerate(measurements)) {
+    if (!select(strip)) {
+      continue;
+    }
+    const Vector pos = strip->localPosition() - centerOfGravity;
+    const Vector& measDir{
+        (projection == ResidualIdx::nonBending && strip->meausresLoc1()) ||
+                strip->isStraw()
+            ? strip->sensorDirection()
+            : strip->toNextSensor()};
+
+    if (!centerSet) {
+      auxVars.centerY = centerOfGravity.dot(measDir);
+      auxVars.centerZ = centerOfGravity.dot(strip->planeNormal());
+      centerSet = true;
+    }
+
+    const double y = pos.dot(measDir);
+    const double z = pos.dot(strip->planeNormal());
+
+    const auto& invCov = auxVars.invCovs[sIdx];
+    auxVars.T_zzyy += invCov * (Acts::square(z) - Acts::square(y));
+    auxVars.T_yz += invCov * z * y;
+  }
+  return fit(auxVars);
+}
+
 template <CompositeSpacePointContainer StrawCont_t,
           CompositeSpacePointFastCalibrator<
               Acts::RemovePointer_t<typename StrawCont_t::value_type>>
@@ -96,7 +170,7 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   auxVars.invCovs.resize(signs.size(), -1.);
   Vector centerOfGravity{Vector::Zero()};
 
-  /// Calculate first the center of gravity
+  // Calculate first the center of gravity
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     if (!strawMeas->isStraw()) {
       ACTS_WARNING(__func__ << "() - " << __LINE__
@@ -129,8 +203,8 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
     auxVars.nDoF = 0u;
     return auxVars;
   }
-  /// Reduce the number of degrees of freedom by 2 to account for the two free
-  /// parameters
+  // Reduce the number of degrees of freedom by 2 to account
+  // for the two free parameters to fit
   auxVars.nDoF -= 2u;
   auxVars.covNorm = 1. / auxVars.covNorm;
   centerOfGravity *= auxVars.covNorm;
@@ -139,7 +213,7 @@ FastStrawLineFitter::FitAuxiliaries FastStrawLineFitter::fillAuxiliaries(
   bool centerSet{false};
   for (const auto& [sIdx, strawMeas] : enumerate(measurements)) {
     const auto& invCov = auxVars.invCovs[sIdx];
-    /// The invalid measurements were marked
+    // Invalid measurements were marked
     if (invCov < 0.) {
       continue;
     }
@@ -230,15 +304,15 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     auxVars.nDoF = 0;
     return auxVars;
   }
-  /// Account for the time offset as extra degree of freedom
+  // Account for the time offset as extra degree of freedom
   --auxVars.nDoF;
-  /// Fill the new extra variables
+  // Fill the new extra variables
   auxVars.T_rz = 0.;
   auxVars.T_ry = 0.;
   auxVars.fitY0 = 0.;
   for (const auto& [spIdx, strawMeas] : enumerate(measurements)) {
     const double& invCov = auxVars.invCovs[spIdx];
-    /// Invalid (non)-straw measurements
+    // Invalid (non)-straw measurements
     if (invCov < 0.) {
       continue;
     }
