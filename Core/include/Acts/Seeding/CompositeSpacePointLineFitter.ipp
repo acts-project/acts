@@ -352,7 +352,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << " gradient: " << toString(miniGradient)
                         << ", hessian: \n"
                         << miniHessian
-                        << "\n, determinant: " << miniHessian.determinant());
+                        << ", determinant: " << miniHessian.determinant());
 
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted
@@ -365,7 +365,9 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
       return UpdateStep::converged;
     }
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Update parameters by " << toString(update));
+                          << ": Inverted Hessian \n"
+                          << (*inverseH) << "\n-> Update parameters by "
+                          << toString(update));
     miniPars -= update;
 
   } else {

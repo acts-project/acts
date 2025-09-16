@@ -234,8 +234,8 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   return true;
 }
-inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
-                                                       const Vector& wireDir) {
+inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
+    const Line_t& line, const Vector& wireDir) {
   const Vector& lineDir = line.direction();
   // Between two calls the wire projection has not changed
   const double wireProject = lineDir.dot(wireDir);
@@ -244,8 +244,8 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line
   const double projDirLenSq = 1. - square(m_wireProject);
   // The line is parallel to the wire
   if (projDirLenSq < s_tolerance) {
-    ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: " << toString(wireDir) << " vs. "
-                                              << toString(lineDir));
+    ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: "
+                 << toString(wireDir) << " vs. " << toString(lineDir));
     m_invProjDirLenSq = 0.;
     reset();
     return false;
@@ -254,12 +254,18 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line
   m_invProjDirLen = std::sqrt(m_invProjDirLenSq);
   // Project the segment line onto the wire plane and normalize
   Vector newProjDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
-  ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "<<toString(newProjDir)<<", |D| "<<newProjDir.norm());
- 
-  if (newProjDir.dot(m_projDir) < s_tolerance) {
-    ACTS_VERBOSE("updateStrawAuxiliaries() - The old & the new project dir coincide. Don't update the auxillaries");
+  ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "
+               << toString(newProjDir) << ", |D| " << newProjDir.norm());
+
+  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) <
+      2. * std::numeric_limits<double>::epsilon()) {
+    ACTS_VERBOSE(
+        "updateStrawAuxiliaries() - The old & the new dir projection coincide. "
+        << "Don't update the auxiliaries");
     return true;
   }
+
+  ACTS_VERBOSE("updateStrawAuxiliaries() - Update variables.");
   m_projDir = std::move(newProjDir);
 
   // Loop over all configured parameters and calculate the partials
@@ -276,7 +282,9 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line
     m_gradProjDir[pIdx] = m_invProjDirLen * lGrad - (m_invProjDirLen *m_projDirLenPartial[pIdx]) * wireDir +
                           (m_projDirLenPartial[pIdx] * m_wireProject * m_invProjDirLenSq) * m_projDir;
     // clang-format on
-
+    ACTS_VERBOSE("updateStrawAuxiliaries() - First derivative w.r.t. "
+                 << parName(partial) << " is "
+                 << toString(m_gradProjDir[pIdx]));
     // skip the Hessian calculation, if toggled
     if (!m_cfg.useHessian) {
       continue;
@@ -321,10 +329,10 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line
 void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
                                                     const Vector& hitMinSeg,
                                                     const Vector& wireDir) {
-  m_residual[nonBendingComp] =
-      m_invProjDirLenSq * (m_wireProject * hitMinSeg.dot(line.direction()) -
-                           hitMinSeg.dot(wireDir));
-
+  // clang-format off
+  m_residual[nonBendingComp] = m_invProjDirLenSq *
+                            hitMinSeg.dot(m_wireProject * line.direction() - wireDir);
+  // clang-format on
   ACTS_VERBOSE("updateAlongTheStraw() - Residual is "
                << m_residual[nonBendingComp]);
 
@@ -337,15 +345,13 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
     if (isDirectionParam(partial)) {
       // clang-format off
       m_gradient[param][nonBendingComp] = m_invProjDirLenSq * (
-                                       hitMinSeg.dot(lGradient) * m_wireProject +
-                                       hitMinSeg.dot(line.direction()) * m_projDirLenPartial[param] +
+                                       hitMinSeg.dot(m_wireProject * lGradient + m_projDirLenPartial[param] * line.direction()) +
                                        2. * m_residual[nonBendingComp] * m_wireProject * m_projDirLenPartial[param]);
       // clang-format on
 
     } else if (isPositionParam(partial)) {
       // clang-format off
-      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (m_wireProject * lGradient.dot(line.direction())
-                                                              - lGradient.dot(wireDir));
+      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (lGradient.dot(m_wireProject * line.direction() - wireDir));
       // clang-format on
     }
     ACTS_VERBOSE("updateAlongTheStraw() - First derivative w.r.t "
@@ -386,9 +392,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
         const Vector& lHessian = line.hessian(static_cast<LineIndex>(partial1), static_cast<LineIndex>(partial2));
         const double projHess = lHessian.dot(wireDir);
         m_hessian[hessIdx][nonBendingComp] = (param != param1 ? calcMixedHessian(param, param1) + calcMixedHessian(param1, param)
-                                                          : 2. * calcMixedHessian(param1, param)) +
-                                        m_invProjDirLenSq * (hitMinSeg.dot(lHessian) * m_wireProject +
-                                                             hitMinSeg.dot(line.direction()) * projHess +
+                                                              : 2. * calcMixedHessian(param1, param)) +
+                                        m_invProjDirLenSq * (hitMinSeg.dot(m_wireProject * lHessian  + projHess* line.direction()) +
                                                              2. * m_residual[nonBendingComp] * m_wireProject * projHess);
         // clang-format on
       } else {
@@ -400,9 +405,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
         const auto angIdx = toUnderlying(angParam);
         // clang-format off
         m_hessian[hessIdx][nonBendingComp] = m_invProjDirLenSq * (
-                -line.gradient(posParam).dot(line.gradient(angParam)) * m_wireProject -
-                 line.gradient(posParam).dot(line.direction()) * m_projDirLenPartial[angIdx] +
-                 2. * m_gradient[toUnderlying(posParam)][nonBendingComp] * m_wireProject * m_projDirLenPartial[angIdx]);
+                  2.* (m_gradient[toUnderlying(posParam)][nonBendingComp] * m_wireProject * m_projDirLenPartial[angIdx])
+                  - line.gradient(posParam).dot(m_wireProject * line.gradient(angParam) + m_projDirLenPartial[angIdx] * line.direction()));
         // clang-format on
       }
       ACTS_VERBOSE("updateAlongTheStraw() - Second derivative w.r.t. "

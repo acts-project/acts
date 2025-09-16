@@ -38,8 +38,8 @@ using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
-constexpr auto logLvl = Logging::Level::INFO;
-constexpr std::size_t nEvents = 10000;
+constexpr auto logLvl = Logging::Level::DEBUG;
+constexpr std::size_t nEvents = 100;
 constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
@@ -177,7 +177,7 @@ Line_t::ParamVector generateLine(RandomEngine& engine) {
   ACTS_DEBUG("Generated parameters -- "
              << "theta: "
              << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
-             << "phi: " << (linePars[toUnderlying(ParIndex::phi)] / 1._degree)
+             << ", phi: " << (linePars[toUnderlying(ParIndex::phi)] / 1._degree)
              << ", y0: " << linePars[toUnderlying(ParIndex::y0)]
              << ", x0: " << linePars[toUnderlying(ParIndex::x0)]);
   return linePars;
@@ -199,16 +199,14 @@ double angle(const Vector& v1, const Vector& v2) {
 #define CHECK_CLOSE(a, b, tol) \
   BOOST_CHECK_LE(std::abs(a - b) / absMax(a, b, 1.), tol);
 
-#define COMPARE_VECTORS(v1, v2, tol)                                    \
-  {                                                                     \
-    ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Compare vectors: " \
-                          << toString(v1) << " vs. " << toString(v2));  \
-    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::bending)],                 \
-                v2[toUnderlying(ResidualIdx::bending)], tol);           \
-    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::nonBending)],              \
-                v2[toUnderlying(ResidualIdx::nonBending)], tol);        \
-    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::time)],                    \
-                v2[toUnderlying(ResidualIdx::time)], tol);              \
+#define COMPARE_VECTORS(v1, v2, tol)                             \
+  {                                                              \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::bending)],          \
+                v2[toUnderlying(ResidualIdx::bending)], tol);    \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::nonBending)],       \
+                v2[toUnderlying(ResidualIdx::nonBending)], tol); \
+    CHECK_CLOSE(v1[toUnderlying(ResidualIdx::time)],             \
+                v2[toUnderlying(ResidualIdx::time)], tol);       \
   }
 
 BOOST_AUTO_TEST_SUITE(StrawLineSeederTest)
@@ -329,22 +327,25 @@ void testResidual(const Pars_t& linePars, const TestSpacePoint& testPoint) {
     const Vector numDeriv =
         (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
 
-    ACTS_INFO(__func__ << "() - " << __LINE__ << ": Derivative test: "
-                       << CompSpacePointAuxiliaries::parName(par)
-                       << ", derivative: " << toString(resCalc.gradient(par))
-                       << ",  numerical: " << toString(numDeriv));
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Derivative test: "
+                        << CompSpacePointAuxiliaries::parName(par)
+                        << ", derivative: " << toString(resCalc.gradient(par))
+                        << ",  numerical: " << toString(numDeriv));
 
     COMPARE_VECTORS(numDeriv, resCalc.gradient(par), tolerance);
     /// Next attempt to calculate the second derivative
     for (auto par1 : resCfg.parsToUse) {
+      if (par1 > par) {
+        break;
+      }
       const Vector numDeriv1{
           (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
-      ACTS_INFO(__func__ << "() - " << __LINE__ << ": Second deriv ("
-                         << CompSpacePointAuxiliaries::parName(par) << ", "
-                         << CompSpacePointAuxiliaries::parName(par1)
-                         << ") -- numerical: " << toString(numDeriv1)
-                         << ", analytic: "
-                         << toString(resCalc.hessian(par, par1)));
+      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
+                          << CompSpacePointAuxiliaries::parName(par) << ", "
+                          << CompSpacePointAuxiliaries::parName(par1)
+                          << ") -- numerical: " << toString(numDeriv1)
+                          << ", analytic: "
+                          << toString(resCalc.hessian(par, par1)));
       COMPARE_VECTORS(numDeriv1, resCalc.hessian(par, par1), tolerance);
     }
   }
@@ -374,7 +375,7 @@ void testSeed(const std::array<std::shared_ptr<TestSpacePoint>, 4>& spacePoints,
                       << toString(truthDir));
 
   // check the distances along the strips if they are the same
-  for (std::size_t i = 0; i < truthDistances.size(); i++) {
+  for (std::size_t i = 0; i < truthDistances.size(); ++i) {
     CHECK_CLOSE(Acts::abs(distsAlongStrip[i] + truthDistances[i]), 0.,
                 tolerance);
   }

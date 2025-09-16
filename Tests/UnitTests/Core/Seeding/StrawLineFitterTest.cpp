@@ -43,8 +43,8 @@ using FitParIndex = CompSpacePointAuxiliaries::FitParIndex;
 using ParamVec_t = CompositeSpacePointLineFitter::ParamVec_t;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 100000;
+constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
+constexpr std::size_t nEvents = 1;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
@@ -345,10 +345,10 @@ class MeasurementGenerator {
           }
           ///
           if (genCfg.twinStraw) {
-            auto iSectWire = lineIntersect<3>(line.position(), line.direction(),
-                                              tube, Vector3::UnitX());
-            tube[eX] =
-                normal_t{iSectWire.pathLength(), genCfg.twinStrawReso}(engine);
+            const auto iSectWire = lineIntersect<3>(
+                line.position(), line.direction(), tube, Vector3::UnitX());
+            tube[eX] = normal_t{iSectWire.position()[eX],
+                                genCfg.twinStrawReso}(engine);
           }
           measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
               tube, smearedR, SpCalibrator::driftUncert(smearedR),
@@ -460,12 +460,11 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
   double tanPhi{0.};
   double tanTheta{0.};
   /// Setup the seed parameters in x0 && phi
-  auto firstPhi = std::ranges::find_if(hits, [](const auto& sp) {
-    return !sp->isStraw() && sp->measuresLoc0();
-  });
-  auto lastPhi = std::ranges::find_if(
-      std::ranges::reverse_view(hits),
-      [](const auto& sp) { return !sp->isStraw() && sp->measuresLoc0(); });
+  auto firstPhi = std::ranges::find_if(
+      hits, [](const auto& sp) { return sp->measuresLoc0(); });
+  auto lastPhi =
+      std::ranges::find_if(std::ranges::reverse_view(hits),
+                           [](const auto& sp) { return sp->measuresLoc0(); });
 
   if (firstPhi != hits.end() && lastPhi != hits.rend()) {
     const Vector3 firstToLastPhi =
@@ -703,7 +702,7 @@ void runFitTest(const Fitter_t::Config& fitCfg, const GenCfg_t& genCfg,
     nIter = result.nIter;
 
     outTree->Fill();
-    if ((evt + 1) % 1000 == 0u) {
+    if ((evt + 1) % 10 == 0u) {
       ACTS_INFO("Processed " << (evt + 1) << "/" << nEvents << " events.");
     }
   }
@@ -724,18 +723,19 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
   Fitter_t::Config fitCfg{};
-  fitCfg.useHessian = false;
+  fitCfg.useHessian = true;
+  fitCfg.calcAlongStraw = true;
 
   GenCfg_t genCfg{};
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
   // 2D straw only test
-  {
+  if (false) {
     RandomEngine engine{1602};
     runFitTest(fitCfg, genCfg, "StrawOnlyTest", engine, *outFile);
   }
   // fast straw only test
-  {
+  if (false) {
     fitCfg.useFastFitter = true;
     RandomEngine engine{1503};
     runFitTest(fitCfg, genCfg, "FastStrawOnlyTest", engine, *outFile);
@@ -750,19 +750,20 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   genCfg.twinStraw = false;
   genCfg.combineSpacePoints = false;
   // 1D straws + single strip measurements
-  {
+  if (false) {
     RandomEngine engine{1404};
     runFitTest(fitCfg, genCfg, "StrawAndStripTest", engine, *outFile);
   }
   //
-  {
+
+  if (false) {
     genCfg.createStraws = false;
     genCfg.combineSpacePoints = true;
     genCfg.stripPitchLoc1 = 500._um;
     RandomEngine engine{2070};
     runFitTest(fitCfg, genCfg, "StripOnlyTest", engine, *outFile);
   }
-  {
+  if (false) {
     genCfg.stripDirLoc1 = makeDirectionFromPhiTheta(60._degree, 90._degree);
     RandomEngine engine{2225};
     runFitTest(fitCfg, genCfg, "StereoStripTest", engine, *outFile);

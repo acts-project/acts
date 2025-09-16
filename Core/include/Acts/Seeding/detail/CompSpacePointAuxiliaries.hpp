@@ -363,7 +363,7 @@ class CompSpacePointAuxiliaries {
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
   /// @brief Component of the direction vector parallel to the wire
-  double m_wireProject{1.};
+  double m_wireProject{0.};
   /// @brief Length squared of the projected direction
   double m_invProjDirLenSq{0.};
   /// @brief Inverse of the projected direction length
