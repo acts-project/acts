@@ -148,16 +148,16 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
-    # addAmbiguityResolutionML(
-    #     s,
-    #     AmbiguityResolutionMLConfig(
-    #         maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
-    #     ),
-    #     tracks="ckf_tracks",
-    #     outputDirRoot=tp,
-    #     onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
-    #     / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
-    # )
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
+        ),
+        tracks="ckf_tracks",
+        outputDirRoot=tp,
+        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
+        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+    )
 
     addAmbiguityResolution(
         s,
@@ -239,8 +239,8 @@ with tempfile.TemporaryDirectory() as temp:
         "performance_fitting_ckf.root",
         "performance_finding_ckf_ambi.root",
         "performance_fitting_ckf_ambi.root",
-        # "performance_finding_ckf_ml_solver.root",
-        # "performance_fitting_ckf_ml_solver.root",
+        "performance_finding_ckf_ml_solver.root",
+        "performance_fitting_ckf_ml_solver.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",
     ]:

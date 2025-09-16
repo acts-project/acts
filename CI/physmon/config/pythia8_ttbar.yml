@@ -3,7 +3,7 @@ histograms:
     nbins: 100
     min: 0
     max: 300
-  
+
   vertex_secondary:
     nbins: 100
     min: 0

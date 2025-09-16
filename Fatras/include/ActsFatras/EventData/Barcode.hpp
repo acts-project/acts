@@ -105,15 +105,11 @@ class Barcode {
 
   // Construct an invalid barcode with all levels set to zero.
   static constexpr Barcode Invalid() { return Barcode(); }
-  constexpr Barcode()
-      : vertexPrimaryID(0u),
-        vertexSecondaryID(0u),
-        particleID(0u),
-        generationID(0u),
-        subParticleID(0u) {}
 
-  Barcode(const Barcode&) = default;
-  Barcode(Barcode&&) = default;
+  // Default constructors
+  constexpr Barcode() = default;
+  constexpr Barcode(const Barcode&) = default;
+  constexpr Barcode(Barcode&&) = default;
   Barcode& operator=(const Barcode&) = default;
   Barcode& operator=(Barcode&&) = default;
 
@@ -284,11 +280,11 @@ class Barcode {
   }
 
  private:
-  PrimaryVertexId vertexPrimaryID;
-  SecondaryVertexId vertexSecondaryID;
-  ParticleId particleID;
-  GenerationId generationID;
-  SubParticleId subParticleID;
+  PrimaryVertexId vertexPrimaryID = 0u;
+  SecondaryVertexId vertexSecondaryID = 0u;
+  ParticleId particleID = 0u;
+  GenerationId generationID = 0u;
+  SubParticleId subParticleID = 0u;
 };
 
 }  // namespace ActsFatras
