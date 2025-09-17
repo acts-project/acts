@@ -438,11 +438,26 @@ jobs:
 
       - name: Build
         id: build
-        uses: eic/run-cvmfs-osg-eic-shell@main
+        uses: addnab/docker-run-action@v3
         continue-on-error: true
         with:
-          platform-release: "eic_xl:nightly"
+          image: "ghcr.io/eic/eic_ci:nightly"
+          options: -v ${{ github.workspace }}:/work
+          shell: bash
           run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+
+            # Modifying spack environment is currently not working
+            rm -rf /opt/local/include/Acts*
+            rm -rf /opt/local/lib/cmake/Acts
+            rm -rf /opt/local/lib/libActs*
+
             pushd acts
             ccache -z && \
             export CMAKE_INSTALL_PREFIX=$HOME/prefix
