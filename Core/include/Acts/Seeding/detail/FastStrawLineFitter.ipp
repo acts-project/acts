@@ -91,7 +91,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     }
     // Check that the strip is actually measuring the projection
     return (strip->measuresLoc0() && projection == ResidualIdx::nonBending) ||
-           (strip->meausresLoc1() && projection == ResidaulIdx::bending);
+           (strip->measuresLoc1() && projection == ResidualIdx::bending);
   };
 
   auxVars.invCovs.resize(measurements.size());
@@ -123,7 +123,7 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     }
     const Vector pos = strip->localPosition() - centerOfGravity;
     const Vector& measDir{
-        (projection == ResidualIdx::nonBending && strip->meausresLoc1()) ||
+        (projection == ResidualIdx::nonBending && strip->measuresLoc1()) ||
                 strip->isStraw()
             ? strip->sensorDirection()
             : strip->toNextSensor()};
