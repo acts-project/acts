@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -17,13 +18,13 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace Acts;
-using namespace Acts::Python;
+using namespace ActsExamples;
+using namespace ActsPython;
 
 PYBIND11_MODULE(ActsPythonBindingsPodio, m) {
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::PodioReader, m, "PodioReader",
-                             inputPath, outputFrame, category);
+  ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader", inputPath,
+                             outputFrame, category);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::PodioWriter, m, "PodioWriter",
-                             inputFrame, outputPath, category, collections);
+  ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter", inputFrame,
+                             outputPath, category, collections);
 }
