@@ -48,7 +48,7 @@ inline Intersection<N> lineIntersect(const ActsVector<N>& linePosA,
   }
   const ActsVector<N> aMinusB = linePosA - linePosB;
   const double pathLength =
-      (aMinusB.dot(lineDirB - lineDirA * dirDots)) / divisor;
+     (aMinusB.dot(lineDirB) - aMinusB.dot(lineDirA) * dirDots) / divisor;
 
   return Intersection<N>{linePosB + pathLength * lineDirB, pathLength,
                          IntersectionStatus::onSurface};
