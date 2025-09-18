@@ -13,14 +13,14 @@ target_sources(
     PRIVATE
     src/Definitions.cpp
     src/Utilities.cpp
-    # src/MagneticField.cpp
-    # src/Material.cpp
+    src/MagneticField.cpp
+    src/Material.cpp
     src/Surfaces.cpp
     src/Geometry.cpp
     src/GeometryGen1.cpp
     src/GeometryGen2.cpp
     src/GeometryGen3.cpp
-    # src/Navigation.cpp
+    src/Navigation.cpp
     # src/Propagation.cpp
     # src/Seeding.cpp
     # src/TrackFinding.cpp

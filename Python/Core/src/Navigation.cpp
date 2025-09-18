@@ -60,8 +60,9 @@ class DetectorElementStub : public DetectorElementBase {
 
 }  // namespace Test
 
-void addNavigation(Context& ctx) {
-  auto m = ctx.get("main");
+/// @brief Add the navigation bindings to a module.
+/// @param m the module to add the bindings to
+void addNavigation(py::module_& m) {
 
   {
     auto tryAll =

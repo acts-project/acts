@@ -13,13 +13,11 @@ target_sources(
     src/Alignment.cpp
     src/Detector.cpp
     src/Digitization.cpp
-    src/Material.cpp
+    src/MaterialMapping.cpp
     src/ExampleAlgorithms.cpp
-    src/MagneticField.cpp
     src/Output.cpp
     src/Input.cpp
     src/Propagation.cpp
-    src/Navigation.cpp
     src/Generators.cpp
     src/Obj.cpp
     src/TruthTracking.cpp
@@ -49,7 +47,6 @@ target_link_libraries(
     Acts::ExamplesGeometry
     Acts::ExamplesDetectorGeneric
     Acts::ExamplesDetectorTGeo
-    Acts::ExamplesMagneticField
     Acts::ExamplesIoCsv
     Acts::ExamplesIoObj
     Acts::ExamplesIoJson

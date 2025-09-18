@@ -28,13 +28,10 @@ void addContext(Context& ctx);
 void addFramework(Context& ctx);
 
 void addPropagation(Context& ctx);
-void addNavigation(Context& ctx);
 
 void addAlignment(Context& ctx);
 
-void addMagneticField(Context& ctx);
-
-void addMaterial(Context& ctx);
+void addMaterialMapping(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
@@ -74,11 +71,8 @@ void addModuleEntry(Context& ctx) {
   addOutput(ctx);
 
   addPropagation(ctx);
-  addNavigation(ctx);
   addAlignment(ctx);
-
-  addMagneticField(ctx);
-  addMaterial(ctx);
+  addMaterialMapping(ctx);
   addDetector(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
