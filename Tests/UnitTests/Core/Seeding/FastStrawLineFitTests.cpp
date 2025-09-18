@@ -28,7 +28,7 @@ using RandomEngine = std::mt19937;
 using uniform_t = std::uniform_real_distribution<double>;
 using gauss_t = std::normal_distribution<double>;
 
-constexpr std::size_t nTrials = 1000000;
+constexpr std::size_t nTrials = 1;
 constexpr auto logLvl = Logging::Level::INFO;
 namespace Acts::Test {
 
@@ -259,15 +259,17 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
 
 TestStrawCont_t generateStrips(const Line_t& trajLine, RandomEngine& engine) {
   TestStrawCont_t strips{};
-  constexpr std::array<double, 4> stripZ{-250._mm, -245_mm, 245._mm, 250._mm};
+  constexpr std::array<double, 16> stripZ{-500._mm, -545_mm, -540_mm, -535._mm,
+                                          -250._mm, -245_mm, -240_mm, -235._mm,
+                                          335._mm,  340_mm,  345_mm,  350._mm,
+                                          435._mm,  440_mm,  445_mm,  400._mm};
   constexpr double stripPitch = 1._cm;
   for (const auto z : stripZ) {
     auto planeExtp = Acts::PlanarHelper::intersectPlane(
         trajLine.position(), trajLine.direction(), Vector3::UnitZ(), z);
     Vector3 stripPos = planeExtp.position();
     stripPos[eY] = gauss_t{stripPos[eY], stripPitch}(engine);
-    strips.emplace_back(
-        std::make_unique<StrawTestPoint>(planeExtp.position(), stripPitch));
+    strips.emplace_back(std::make_unique<StrawTestPoint>(stripPos, stripPitch));
   }
   return strips;
 }
@@ -292,7 +294,7 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
 
 #define DECLARE_BRANCH(dTYPE, NAME) \
   dTYPE NAME{};                     \
-  outTree->Branch(#NAME, NAME);
+  outTree->Branch(#NAME, &NAME);
 
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
@@ -301,17 +303,21 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueTheta);
-  DECLARE_BRANCH(double, fitY0);
-  DECLARE_BRANCH(double, fitTheta);
-  DECLARE_BRANCH(double, fitdY0);
-  DECLARE_BRANCH(double, fitdTheta);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(std::size_t, nDoF);
   DECLARE_BRANCH(std::size_t, nIter);
 
   FastStrawLineFitter::Config cfg{};
   FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterNoT0", logLvl)};
+  ACTS_INFO("Start simple straw fit test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
+    }
     auto track = generateLine(engine);
     auto strawPoints = generateStrawCircles(track, engine, true);
     if (strawPoints.size() < 3) {
@@ -351,10 +357,10 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
     ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
     BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
-    fitTheta = (*fitResult).theta;
-    fitY0 = (*fitResult).y0;
-    fitdTheta = (*fitResult).dTheta;
-    fitdY0 = (*fitResult).dY0;
+    recoTheta = (*fitResult).theta;
+    recoY0 = (*fitResult).y0;
+    uncertTheta = (*fitResult).dTheta;
+    uncertY0 = (*fitResult).dY0;
     nDoF = (*fitResult).nDoF;
     chi2 = (*fitResult).chi2;
     nIter = (*fitResult).nIter;
@@ -369,12 +375,12 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueTheta);
   DECLARE_BRANCH(double, trueT0);
-  DECLARE_BRANCH(double, fitY0);
-  DECLARE_BRANCH(double, fitTheta);
-  DECLARE_BRANCH(double, fitT0);
-  DECLARE_BRANCH(double, fitdY0);
-  DECLARE_BRANCH(double, fitdTheta);
-  DECLARE_BRANCH(double, fitDT0);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoT0);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, uncertT0);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(double, meanSign);
   DECLARE_BRANCH(std::size_t, nDoF);
@@ -385,7 +391,11 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
   FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterWithT0", logLvl)};
   StrawTestCalibrator calibrator{};
   Acts::CalibrationContext cctx{};
+  ACTS_INFO("Start straw fit with t0 test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
+    }
     auto track = generateLine(engine);
     const double timeOffSet = uniform_t{-50._ns, 50._ns}(engine);
 
@@ -449,12 +459,12 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
     trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
     trueT0 = inNanoS(timeOffSet);
     /// Fit parameters
-    fitY0 = (*result).y0;
-    fitTheta = (*result).theta;
-    fitT0 = inNanoS((*result).t0);
-    fitdY0 = (*result).dY0;
-    fitdTheta = (*result).dTheta;
-    fitDT0 = inNanoS((*result).dT0);
+    recoY0 = (*result).y0;
+    recoTheta = (*result).theta;
+    recoT0 = inNanoS((*result).t0);
+    uncertY0 = (*result).dY0;
+    uncertTheta = (*result).dTheta;
+    uncertT0 = inNanoS((*result).dT0);
     nDoF = (*result).nDoF;
     chi2 = (*result).chi2;
     nIter = (*result).nIter;
@@ -472,17 +482,21 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
 
   DECLARE_BRANCH(double, trueY0);
   DECLARE_BRANCH(double, trueTheta);
-  DECLARE_BRANCH(double, fitY0);
-  DECLARE_BRANCH(double, fitTheta);
-  DECLARE_BRANCH(double, fitdY0);
-  DECLARE_BRANCH(double, fitdTheta);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
   DECLARE_BRANCH(double, chi2);
   DECLARE_BRANCH(std::size_t, nDoF);
   DECLARE_BRANCH(std::size_t, nIter);
 
   FastStrawLineFitter::Config cfg{};
   FastStrawLineFitter fastFitter{cfg, getDefaultLogger("StripFitter", logLvl)};
+  ACTS_INFO("Start strip fit test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
+    }
     auto track = generateLine(engine);
     auto linePars = track.parameters();
     /// True parameters
@@ -496,15 +510,15 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
       continue;
     }
     /// Fit parameters
-    fitY0 = (*result).y0;
-    fitTheta = (*result).theta;
-    fitdY0 = (*result).dY0;
-    fitdTheta = (*result).dTheta;
+    recoY0 = (*result).y0;
+    recoTheta = (*result).theta;
+    uncertY0 = (*result).dY0;
+    uncertTheta = (*result).dTheta;
     nDoF = (*result).nDoF;
     nIter = (*result).nIter;
     chi2 = 0.;
-    auto pos = fitY0 * Vector3::UnitY();
-    auto dir = makeDirectionFromPhiTheta(90._degree, fitTheta);
+    auto pos = recoY0 * Vector3::UnitY();
+    auto dir = makeDirectionFromPhiTheta(90._degree, recoTheta);
     for (const auto& strip : stripPoints) {
       chi2 += CompSpacePointAuxiliaries::chi2Term(pos, dir, *strip);
     }

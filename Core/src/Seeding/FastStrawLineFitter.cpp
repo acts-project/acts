@@ -22,7 +22,7 @@ namespace {
 constexpr double inDeg(const double x) {
   return x / 1._degree;
 }
-/// @brief Express a time in terms of nanoseconds
+/// @brief Express a time in units of nanoseconds
 constexpr double inNanoS(const double x) {
   return x / 1._ns;
 }
@@ -141,6 +141,17 @@ std::optional<FastStrawLineFitter::FitResult> FastStrawLineFitter::fit(
     ++result.nIter;
     const TrigonomHelper angles{result.theta};
     calcAngularDerivatives(angles, fitPars, thetaPrime, thetaTwoPrime);
+    if (std::abs(thetaTwoPrime) < 2. * std::numeric_limits<double>::epsilon()) {
+      ACTS_WARNING(__func__
+                   << "() - " << __LINE__
+                   << ": The fast straw fit encountered a singular "
+                      "second derivative "
+                   << fitPars << ", \n"
+                   << printThetaStep(result.theta, thetaPrime, thetaTwoPrime)
+                   << "\n"
+                   << result);
+      return std::nullopt;
+    }
     const double update = thetaPrime / thetaTwoPrime;
     ACTS_VERBOSE(
         __func__ << "() - " << __LINE__ << ": Fit iteration #" << result.nIter
