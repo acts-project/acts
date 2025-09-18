@@ -25,22 +25,12 @@ using namespace ActsPython;
 
 namespace ActsPython {
 void addContext(Context& ctx);
-void addAny(Context& ctx);
-void addUnits(Context& ctx);
 void addFramework(Context& ctx);
-void addLogging(Context& ctx);
-void addPdgParticle(Context& ctx);
-void addAlgebra(Context& ctx);
-void addBinning(Context& ctx);
-void addEventData(Context& ctx);
 
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
 void addAlignment(Context& ctx);
-void addGeometry(Context& ctx);
-void addGeometryBuildingGen1(Context& ctx);
-void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
 
@@ -78,48 +68,14 @@ void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
-}  // namespace ActsPython
-
-PYBIND11_MODULE(ActsPythonBindings, m) {
-  Context ctx;
-  ctx.modules["main"] = m;
-  auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = mex;
-  auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = prop;
-  m.doc() = "Acts";
-
-  m.attr("__version__") =
-      std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
-
-  {
-    auto mv = m.def_submodule("version");
-
-    mv.attr("major") = Acts::VersionMajor;
-    mv.attr("minor") = Acts::VersionMinor;
-    mv.attr("patch") = Acts::VersionPatch;
-
-    mv.attr("commit_hash") = Acts::CommitHash;
-    mv.attr("commit_hash_short") = Acts::CommitHashShort;
-  }
-
+void addModuleEntry(Context& ctx) {
   addContext(ctx);
-  addAny(ctx);
-  addUnits(ctx);
   addFramework(ctx);
-  addLogging(ctx);
-  addPdgParticle(ctx);
-  addAlgebra(ctx);
-  addBinning(ctx);
-  addEventData(ctx);
   addOutput(ctx);
 
   addPropagation(ctx);
   addNavigation(ctx);
   addAlignment(ctx);
-  addGeometryBuildingGen1(ctx);
-  addGeometry(ctx);
-  addExperimentalGeometry(ctx);
 
   addMagneticField(ctx);
   addMaterial(ctx);
@@ -154,3 +110,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addRootInput(ctx);
   addRootOutput(ctx);
 }
+
+}  // namespace ActsPython
