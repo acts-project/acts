@@ -16,8 +16,9 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <cstddef>
@@ -37,7 +38,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 /// @brief Get the value of a field, throwing an exception if the result is
 /// invalid.
@@ -54,9 +55,9 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
   }
 }
 
-void addMagneticField(Context& ctx) {
-  auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
-
+/// @brief Add the magnetic field bindings to a module.
+/// @param m the module to add the bindings to
+void addMagneticField(py::module_& m) {
   py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
       .def("getField", &getField)
@@ -83,12 +84,12 @@ void addMagneticField(Context& ctx) {
   py::class_<InterpolatedMagneticField2, InterpolatedMagneticField,
              MagneticFieldProvider,
              std::shared_ptr<InterpolatedMagneticField2>>(
-      mex, "InterpolatedMagneticField2");
+      m, "InterpolatedMagneticField2");
 
   py::class_<InterpolatedMagneticField3, InterpolatedMagneticField,
              MagneticFieldProvider,
              std::shared_ptr<InterpolatedMagneticField3>>(
-      mex, "InterpolatedMagneticField3");
+      m, "InterpolatedMagneticField3");
 
   py::class_<NullBField, MagneticFieldProvider, std::shared_ptr<NullBField>>(
       m, "NullBField")
@@ -120,7 +121,7 @@ void addMagneticField(Context& ctx) {
         .def_readwrite("bMagCenter", &Config::bMagCenter);
   }
 
-  mex.def(
+  m.def(
       "MagneticFieldMapXyz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstOctant) {
@@ -150,7 +151,7 @@ void addMagneticField(Context& ctx) {
       py::arg("lengthUnit") = UnitConstants::mm,
       py::arg("BFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
 
-  mex.def(
+  m.def(
       "MagneticFieldMapRz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstQuadrant) {
@@ -181,4 +182,4 @@ void addMagneticField(Context& ctx) {
       py::arg("firstQuadrant") = false);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
