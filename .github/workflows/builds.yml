@@ -441,7 +441,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         continue-on-error: true
         with:
-          image: "ghcr.io/eic/eic_ci:nightly"
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
           options: -v ${{ github.workspace }}:/work
           shell: bash
           run: |
@@ -452,11 +452,6 @@ jobs:
             done
             cd /work
             set -ue
-
-            # Modifying spack environment is currently not working
-            rm -rf /opt/local/include/Acts*
-            rm -rf /opt/local/lib/cmake/Acts
-            rm -rf /opt/local/lib/libActs*
 
             pushd acts
             ccache -z && \
