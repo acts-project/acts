@@ -12,6 +12,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -39,6 +40,8 @@ Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
     m_ssSensitiveSurfaces = 1;
   }
 }
+
+Layer::~Layer() noexcept = default;
 
 const ApproachDescriptor* Layer::approachDescriptor() const {
   return m_approachDescriptor.get();
@@ -192,9 +195,21 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3& position,
   // check the sensitive surfaces if you have some
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
                          options.resolveSensitive)) {
+    Vector3 lookupPosition = position;
+
+    // if possible use a position on the representative surface for the surface
+    // array lookup
+    if (SurfaceIntersection intersection =
+            surfaceRepresentation()
+                .intersect(gctx, position, direction)
+                .closest();
+        intersection.isValid()) {
+      lookupPosition = intersection.position();
+    }
+
     // get the candidates
     const std::vector<const Surface*>& sensitiveSurfaces =
-        m_surfaceArray->neighbors(position);
+        m_surfaceArray->neighbors(lookupPosition);
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected

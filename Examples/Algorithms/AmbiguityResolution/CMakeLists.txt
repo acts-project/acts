@@ -12,5 +12,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesAmbiguityResolution
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::PluginJson
+    PUBLIC Acts::ExamplesFramework Acts::PluginJson
 )

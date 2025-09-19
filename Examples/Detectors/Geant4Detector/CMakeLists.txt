@@ -13,10 +13,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorGeant4
-    PUBLIC
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::ExamplesGeant4
-        Acts::PluginGeant4
-        Acts::ExamplesDetectorsCommon
+    PUBLIC Acts::ExamplesGeant4 Acts::PluginGeant4 Acts::ExamplesDetectorsCommon
 )
