@@ -8,7 +8,6 @@
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -28,6 +27,8 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsLookupEstimation.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -41,17 +42,16 @@
 namespace py = pybind11;
 
 using namespace ActsExamples;
-using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
-                                "SpacePointMaker", inputMeasurements,
-                                outputSpacePoints, trackingGeometry,
-                                geometrySelection, stripGeometrySelection);
+  ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
+                                inputMeasurements, outputSpacePoints,
+                                trackingGeometry, geometrySelection,
+                                stripGeometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -67,7 +67,7 @@ void addTrackFinding(Context& ctx) {
 
   {
     using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
-        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+        SpacePointContainer<std::vector<const SimSpacePoint*>>,
         Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(
@@ -85,16 +85,15 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using seedOptions = Acts::SeedFinderOptions;
-    auto c = py::class_<seedOptions>(m, "SeedFinderOptions").def(py::init<>());
+    auto c = py::class_<Acts::SeedFinderOptions>(m, "SeedFinderOptions")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, beamPos, bFieldInZ);
     patchKwargsConstructor(c);
   }
   {
     using Config =
         Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
-            ActsExamples::SpacePointContainer<
-                std::vector<const SimSpacePoint*>>,
+            SpacePointContainer<std::vector<const SimSpacePoint*>>,
             Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
@@ -121,8 +120,8 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using seedConf = Acts::SeedConfirmationRangeConfig;
-    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+    auto c = py::class_<Acts::SeedConfirmationRangeConfig>(
+                 m, "SeedConfirmationRangeConfig")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, zMinSeedConf, zMaxSeedConf, rMaxSeedConf,
                        nTopForLargeR, nTopForSmallR, seedConfMinBottomRadius,
@@ -131,8 +130,9 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::CylindricalSpacePointGridConfig;
-    auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
+    auto c = py::class_<Acts::CylindricalSpacePointGridConfig>(
+                 m, "SpacePointGridConfig")
+                 .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, minPt, rMax, zMax, zMin, phiMin, phiMax, deltaRMax,
                        cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
@@ -140,25 +140,26 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Options = Acts::CylindricalSpacePointGridOptions;
-    auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
+    auto c = py::class_<Acts::CylindricalSpacePointGridOptions>(
+                 m, "SpacePointGridOptions")
+                 .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, bFieldInZ);
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
-      outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
-      gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+      SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints, outputSeeds,
+      seedFilterConfig, seedFinderConfig, seedFinderOptions, gridConfig,
+      gridOptions, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
+      numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GridTripletSeedingAlgorithm, mex,
-      "GridTripletSeedingAlgorithm", inputSpacePoints, outputSeeds, bFieldInZ,
-      minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax, deltaRMinTop,
-      deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax, zMin, zMax,
-      phiMin, phiMax, phiBinDeflectionCoverage, maxPhiBins, zBinNeighborsTop,
+      GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, bFieldInZ, minPt, cotThetaMax, impactMax,
+      deltaRMin, deltaRMax, deltaRMinTop, deltaRMaxTop, deltaRMinBottom,
+      deltaRMaxBottom, rMin, rMax, zMin, zMax, phiMin, phiMax,
+      phiBinDeflectionCoverage, maxPhiBins, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, zBinEdges, zBinsCustomLooping,
       rMinMiddle, rMaxMiddle, useVariableMiddleSPRange, rRangeMiddleSP,
       deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, deltaZMin, deltaZMax,
@@ -170,54 +171,51 @@ void addTrackFinding(Context& ctx) {
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
       maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
+  ACTS_PYTHON_DECLARE_ALGORITHM(SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
                                 outputSeeds, seedFilterConfig, seedFinderConfig,
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, seedFinderOptions,
-      layerMappingFile, geometrySelection, trackingGeometry, ActsGbtsMap,
-      fill_module_csv, inputClusters);
+      GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
+      outputSeeds, seedFinderConfig, seedFinderOptions, layerMappingFile,
+      geometrySelection, trackingGeometry, ActsGbtsMap, fill_module_csv,
+      inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputProtoTracks, trackingGeometry, geometrySelection,
-      inputMeasurements, subRegions, nLayers, xMin, xMax, yMin, yMax,
-      houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
-      localMaxWindowSize, kA);
+      HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
+      outputProtoTracks, trackingGeometry, geometrySelection, inputMeasurements,
+      subRegions, nLayers, xMin, xMax, yMin, yMax, houghHistSize_x,
+      houghHistSize_y, hitExtend_x, threshold, localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AdaptiveHoughTransformSeeder, mex,
-      "AdaptiveHoughTransformSeeder", inputSpacePoints, outputSeeds,
-      outputProtoTracks, trackingGeometry, qOverPtMin, qOverPtMinBinSize,
-      phiMinBinSize, threshold, noiseThreshold, deduplicate, inverseA,
-      doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize, zMinBinSize);
+      AdaptiveHoughTransformSeeder, mex, "AdaptiveHoughTransformSeeder",
+      inputSpacePoints, outputSeeds, outputProtoTracks, trackingGeometry,
+      qOverPtMin, qOverPtMinBinSize, phiMinBinSize, threshold, noiseThreshold,
+      deduplicate, inverseA, doSecondPhase, zRange, cotThetaRange,
+      cotThetaMinBinSize, zMinBinSize);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(MuonHoughSeeder, mex, "MuonHoughSeeder",
+                                inTruthSegments, inSpacePoints, outHoughMax,
+                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments,
-      inSpacePoints, outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0);
+      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
+      inputSeeds, inputProtoTracks, outputTrackParameters, outputSeeds,
+      outputProtoTracks, trackingGeometry, magneticField, bFieldMin,
+      initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
+      initialVarInflation, noTimeVarInflation, particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
-      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
-      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
-      particleHypothesis);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
-                                "TrackParamsLookupEstimation", refLayers, bins,
-                                inputHits, inputParticles,
-                                trackLookupGridWriters);
+      TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",
+      refLayers, bins, inputHits, inputParticles, trackLookupGridWriters);
 
   {
-    using Alg = ActsExamples::TrackFindingAlgorithm;
+    using Alg = TrackFindingAlgorithm;
     using Config = Alg::Config;
 
     auto alg =
-        py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
             mex, "TrackFindingAlgorithm")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
@@ -227,7 +225,7 @@ void addTrackFinding(Context& ctx) {
                                trackingGeometry,
                            std::shared_ptr<const Acts::MagneticFieldProvider>
                                magneticField,
-                           Logging::Level level) {
+                           Acts::Logging::Level level) {
                           return Alg::makeTrackFinderFunction(
                               std::move(trackingGeometry),
                               std::move(magneticField),
@@ -251,41 +249,42 @@ void addTrackFinding(Context& ctx) {
   {
     auto constructor =
         [](const std::vector<std::pair<
-               GeometryIdentifier,
+               Acts::GeometryIdentifier,
                std::tuple<std::vector<double>, std::vector<double>,
                           std::vector<double>, std::vector<std::size_t>>>>&
                input) {
-          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+          std::vector<std::pair<Acts::GeometryIdentifier,
+                                Acts::MeasurementSelectorCuts>>
               converted;
           converted.reserve(input.size());
           for (const auto& [id, cuts] : input) {
             const auto& [bins, chi2Measurement, chi2Outlier, num] = cuts;
             converted.emplace_back(
-                id, MeasurementSelectorCuts{bins, chi2Measurement, num,
-                                            chi2Outlier});
+                id, Acts::MeasurementSelectorCuts{bins, chi2Measurement, num,
+                                                  chi2Outlier});
           }
-          return std::make_unique<MeasurementSelector::Config>(converted);
+          return std::make_unique<Acts::MeasurementSelector::Config>(converted);
         };
 
-    py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
+    py::class_<Acts::MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
                       std::vector<std::size_t>, std::vector<double>>())
-        .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
+        .def_readwrite("etaBins", &Acts::MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOffMeasurement",
-                       &MeasurementSelectorCuts::chi2CutOff)
+                       &Acts::MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("chi2CutOffOutlier",
-                       &MeasurementSelectorCuts::chi2CutOffOutlier)
+                       &Acts::MeasurementSelectorCuts::chi2CutOffOutlier)
         .def_readwrite("numMeasurementsCutOff",
-                       &MeasurementSelectorCuts::numMeasurementsCutOff);
+                       &Acts::MeasurementSelectorCuts::numMeasurementsCutOff);
 
-    auto ms = py::class_<MeasurementSelector>(m, "MeasurementSelector");
-    auto c =
-        py::class_<MeasurementSelector::Config>(ms, "Config")
-            .def(py::init<std::vector<
-                     std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
-            .def(py::init(constructor));
+    auto ms = py::class_<Acts::MeasurementSelector>(m, "MeasurementSelector");
+    auto c = py::class_<Acts::MeasurementSelector::Config>(ms, "Config")
+                 .def(py::init<
+                      std::vector<std::pair<Acts::GeometryIdentifier,
+                                            Acts::MeasurementSelectorCuts>>>())
+                 .def(py::init(constructor));
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

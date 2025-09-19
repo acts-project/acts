@@ -12,7 +12,15 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 namespace Acts::Experimental {
 
-/// @brief Interface concept to define the straw measurement calibrator used by the FastStrawLineFitter. The basic assumption is that the straw radii are reconstructed from a time measurement which is converted into a drift-radius using a differentiable r-t relation. Due to e.g. late arrival of the particle, the drift time may be subject to corrections which is summarized by a general time shift t0. This shift in time can be estimated during a straight line fit. The calibrator returns the updated drift radius & the first and second derivative of the r-t relation called driftVelocity and driftAcceleration, respectively.
+/// @brief Interface concept to define the straw measurement calibrator used by the FastStrawLineFitter.
+///         The basic assumption is that the straw radii are reconstructed from
+///         a time measurement which is converted into a drift-radius using a
+///         differentiable r-t relation. Due to e.g. late arrival of the
+///         particle, the drift time may be subject to corrections which is
+///         summarized by a general time shift t0. This shift can be estimated
+///         during a straight line fit. The calibrator returns the updated drift
+///         radius & the first and second derivative of the r-t relation called
+///         driftVelocity and driftAcceleration, respectively.
 template <typename Calibrator_t, typename SpacePoint_t>
 concept CompositeSpacePointFastCalibrator =
     CompositeSpacePoint<SpacePoint_t> &&
@@ -34,7 +42,10 @@ concept CompositeSpacePointFastCalibrator =
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
 
-/// @brief Interface concept to define a generic
+/// @brief Interface concept for a CompositeSpacePointCalibrator. The space point
+///        container is parsed to the interface together with a reference track
+///        position, direction and the time offset, all expressed at the
+///        reference plane z=0.
 template <typename Calibrator_t, typename UnCalibCont_t, typename CalibCont_t>
 concept CompositeSpacePointCalibrator =
     CompositeSpacePointContainer<UnCalibCont_t> &&

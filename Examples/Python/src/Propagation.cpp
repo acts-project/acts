@@ -9,7 +9,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -19,6 +18,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
 #include <array>
@@ -38,41 +39,40 @@ class MagneticFieldProvider;
 }  // namespace Acts
 
 namespace py = pybind11;
+using namespace Acts;
+using namespace ActsExamples;
 
 namespace {
 
 template <typename stepper_t, typename navigator_t>
 void addPropagator(py::module_& m, const std::string& prefix) {
-  using propagator_t = Acts::Propagator<stepper_t, navigator_t>;
+  using propagator_t = Propagator<stepper_t, navigator_t>;
   py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
-      .def(py::init<>(
-               [=](stepper_t stepper, navigator_t navigator,
-                   Acts::Logging::Level level = Acts::Logging::Level::INFO) {
-                 return propagator_t{
-                     std::move(stepper), std::move(navigator),
-                     Acts::getDefaultLogger(prefix + "Propagator", level)};
-               }),
+      .def(py::init<>([=](stepper_t stepper, navigator_t navigator,
+                          Logging::Level level = Logging::Level::INFO) {
+             return propagator_t{
+                 std::move(stepper), std::move(navigator),
+                 getDefaultLogger(prefix + "Propagator", level)};
+           }),
            py::arg("stepper"), py::arg("navigator"),
-           py::arg("level") = Acts::Logging::INFO);
+           py::arg("level") = Logging::INFO);
 
-  using prop_if_t = ActsExamples::ConcretePropagator<propagator_t>;
-  py::class_<prop_if_t, ActsExamples::PropagatorInterface,
-             std::shared_ptr<prop_if_t>>(
+  using prop_if_t = ConcretePropagator<propagator_t>;
+  py::class_<prop_if_t, PropagatorInterface, std::shared_ptr<prop_if_t>>(
       m, (prefix + "ConcretePropagator").c_str())
       .def(py::init<propagator_t>());
 }
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addPropagation(Context& ctx) {
   auto [m, prop, mex] = ctx.get("main", "propagation", "examples");
 
   {
-    using Config = Acts::Navigator::Config;
+    using Config = Navigator::Config;
     auto nav =
-        py::class_<Acts::Navigator, std::shared_ptr<Acts::Navigator>>(
-            m, "Navigator")
+        py::class_<Navigator, std::shared_ptr<Navigator>>(m, "Navigator")
             .def(py::init<>([](Config cfg,
                                Logging::Level level = Logging::INFO) {
                    return Navigator{cfg, getDefaultLogger("Navigator", level)};
@@ -86,14 +86,14 @@ void addPropagation(Context& ctx) {
   }
 
   {
-    using Config = Acts::Experimental::DetectorNavigator::Config;
+    using Config = Experimental::DetectorNavigator::Config;
     auto nav =
-        py::class_<Acts::Experimental::DetectorNavigator,
-                   std::shared_ptr<Acts::Experimental::DetectorNavigator>>(
+        py::class_<Experimental::DetectorNavigator,
+                   std::shared_ptr<Experimental::DetectorNavigator>>(
             m, "DetectorNavigator")
             .def(py::init<>(
                      [](Config cfg, Logging::Level level = Logging::INFO) {
-                       return Acts::Experimental::DetectorNavigator{
+                       return Experimental::DetectorNavigator{
                            cfg, getDefaultLogger("DetectorNavigator", level)};
                      }),
                  py::arg("cfg"), py::arg("level") = Logging::INFO);
@@ -105,70 +105,65 @@ void addPropagation(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
-      propagatorImpl, sterileLogger, debugOutput, energyLoss,
-      multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
-      covarianceTransport, inputTrackParameters, outputSummaryCollection,
-      outputMaterialCollection);
+      PropagationAlgorithm, mex, "PropagationAlgorithm", propagatorImpl,
+      sterileLogger, debugOutput, energyLoss, multipleScattering,
+      recordMaterialInteractions, ptLoopers, maxStepSize, covarianceTransport,
+      inputTrackParameters, outputSummaryCollection, outputMaterialCollection);
 
-  py::class_<ActsExamples::PropagatorInterface,
-             std::shared_ptr<ActsExamples::PropagatorInterface>>(
+  py::class_<PropagatorInterface, std::shared_ptr<PropagatorInterface>>(
       mex, "PropagatorInterface");
 
   // Eigen based stepper
   {
-    auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
-    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+    auto stepper = py::class_<EigenStepper<>>(m, "EigenStepper");
+    stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
 
-    addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
+    addPropagator<EigenStepper<>, Navigator>(prop, "Eigen");
   }
 
   {
-    addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
+    addPropagator<EigenStepper<>, Experimental::DetectorNavigator>(
         prop, "EigenDetector");
   }
 
   // ATLAS based stepper
   {
-    auto stepper = py::class_<Acts::AtlasStepper>(m, "AtlasStepper");
-    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+    auto stepper = py::class_<AtlasStepper>(m, "AtlasStepper");
+    stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
 
-    addPropagator<Acts::AtlasStepper, Acts::Navigator>(prop, "Atlas");
+    addPropagator<AtlasStepper, Navigator>(prop, "Atlas");
   }
 
   {
-    addPropagator<Acts::AtlasStepper, Acts::Experimental::DetectorNavigator>(
+    addPropagator<AtlasStepper, Experimental::DetectorNavigator>(
         prop, "AtlasDetector");
   }
 
   // Sympy based stepper
   {
-    auto stepper = py::class_<Acts::SympyStepper>(m, "SympyStepper");
-    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+    auto stepper = py::class_<SympyStepper>(m, "SympyStepper");
+    stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
 
-    addPropagator<Acts::SympyStepper, Acts::Navigator>(prop, "Sympy");
+    addPropagator<SympyStepper, Navigator>(prop, "Sympy");
   }
 
   {
-    addPropagator<Acts::SympyStepper, Acts::Experimental::DetectorNavigator>(
+    addPropagator<SympyStepper, Experimental::DetectorNavigator>(
         prop, "SympyDetector");
   }
 
   // Straight line stepper
   {
-    auto stepper =
-        py::class_<Acts::StraightLineStepper>(m, "StraightLineStepper");
+    auto stepper = py::class_<StraightLineStepper>(m, "StraightLineStepper");
     stepper.def(py::init<>());
 
-    addPropagator<Acts::StraightLineStepper, Acts::Navigator>(prop,
-                                                              "StraightLine");
+    addPropagator<StraightLineStepper, Navigator>(prop, "StraightLine");
   }
 
   {
-    addPropagator<Acts::StraightLineStepper,
-                  Acts::Experimental::DetectorNavigator>(
+    addPropagator<StraightLineStepper, Experimental::DetectorNavigator>(
         prop, "StraightLineDetector");
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
