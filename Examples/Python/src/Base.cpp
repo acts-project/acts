@@ -35,7 +35,6 @@ void addContext(Context& ctx) {
 
   py::class_<Acts::MagneticFieldContext>(m, "MagneticFieldContext")
       .def(py::init<>());
-
 }
 
 }  // namespace ActsPython

@@ -121,12 +121,9 @@ void addGeometryGen2(py::module_& m) {
     // The surface hierarchy map
     using SurfaceHierarchyMap = GeometryHierarchyMap<std::shared_ptr<Surface>>;
 
-    py::class_<SurfaceHierarchyMap, std::shared_ptr<SurfaceHierarchyMap>>(
-        m, "SurfaceHierarchyMap");
-
     // Extract volume / layer surfaces
     m.def("extractVolumeLayerSurfaces", [](const SurfaceHierarchyMap& smap,
-                                             bool sensitiveOnly) {
+                                           bool sensitiveOnly) {
       std::map<unsigned int,
                std::map<unsigned int, std::vector<std::shared_ptr<Surface>>>>
           surfaceVolumeLayerMap;
@@ -142,7 +139,6 @@ void addGeometryGen2(py::module_& m) {
       return surfaceVolumeLayerMap;
     });
   }
-
 
   {
     // The internal layer structure builder

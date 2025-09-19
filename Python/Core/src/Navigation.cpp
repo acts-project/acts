@@ -63,7 +63,6 @@ class DetectorElementStub : public DetectorElementBase {
 /// @brief Add the navigation bindings to a module.
 /// @param m the module to add the bindings to
 void addNavigation(py::module_& m) {
-
   {
     auto tryAll =
         py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");

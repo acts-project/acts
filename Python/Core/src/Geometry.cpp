@@ -127,12 +127,10 @@ class PyTrackingGeometryVisitor : public TrackingGeometryMutableVisitor {
 
 namespace ActsPython {
 
-
 /// This adds the geometry bindings to the python module
 /// @param m the module to add the bindings to
 void addGeometry(py::module_& m) {
   {
-
     py::class_<GeometryContext>(m, "GeometryContext").def(py::init<>());
 
     py::class_<GeometryIdentifier>(m, "GeometryIdentifier")
@@ -361,7 +359,7 @@ void addGeometry(py::module_& m) {
 
   py::class_<PortalShellBase>(m, "PortalShellBase");
 
-    py::class_<ProtoLayer>(m, "ProtoLayer")
+  py::class_<ProtoLayer>(m, "ProtoLayer")
       .def(py::init<const GeometryContext&,
                     const std::vector<std::shared_ptr<Surface>>&,
                     const Transform3&>(),
@@ -369,7 +367,6 @@ void addGeometry(py::module_& m) {
       .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
       .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
       .def_property_readonly("surfaces", &ProtoLayer::surfaces);
-
 }
 
 }  // namespace ActsPython

@@ -11,20 +11,20 @@ pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 target_sources(
     ActsPythonBindings
     PRIVATE
-    src/Definitions.cpp
-    src/Utilities.cpp
-    src/MagneticField.cpp
-    src/Material.cpp
-    src/Surfaces.cpp
-    src/Geometry.cpp
-    src/GeometryGen1.cpp
-    src/GeometryGen2.cpp
-    src/GeometryGen3.cpp
-    src/Navigation.cpp
-    # src/Propagation.cpp
-    # src/Seeding.cpp
-    # src/TrackFinding.cpp
-    # src/Visualization.cpp
+        src/Definitions.cpp
+        src/Utilities.cpp
+        src/MagneticField.cpp
+        src/Material.cpp
+        src/Surfaces.cpp
+        src/Geometry.cpp
+        src/GeometryGen1.cpp
+        src/GeometryGen2.cpp
+        src/GeometryGen3.cpp
+        src/Navigation.cpp
+        # src/Propagation.cpp
+        # src/Seeding.cpp
+        # src/TrackFinding.cpp
+        src/Visualization.cpp
 )
 
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
@@ -38,7 +38,10 @@ set_target_properties(
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
 )
 
-target_link_libraries(ActsPythonBindings PUBLIC Acts::Core Acts::PythonUtilities)
+target_link_libraries(
+    ActsPythonBindings
+    PUBLIC Acts::Core Acts::PythonUtilities
+)
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES ${_python_dir}/setup.sh DESTINATION "python")

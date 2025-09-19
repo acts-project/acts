@@ -7,25 +7,25 @@ set(_python_install_dir "python/acts")
 target_sources(
     ActsPythonBindings
     PRIVATE
-    src/ModuleEntry.cpp
-    src/Framework.cpp
-    src/Base.cpp
-    src/Alignment.cpp
-    src/Detector.cpp
-    src/Digitization.cpp
-    src/MaterialMapping.cpp
-    src/ExampleAlgorithms.cpp
-    src/Output.cpp
-    src/Input.cpp
-    src/Propagation.cpp
-    src/Generators.cpp
-    src/Obj.cpp
-    src/TruthTracking.cpp
-    src/TrackFitting.cpp
-    src/TrackFinding.cpp
-    src/Vertexing.cpp
-    src/AmbiguityResolution.cpp
-    src/Utilities.cpp
+        src/ModuleEntry.cpp
+        src/Framework.cpp
+        src/Base.cpp
+        src/Alignment.cpp
+        src/Detector.cpp
+        src/Digitization.cpp
+        src/MaterialMapping.cpp
+        src/ExampleAlgorithms.cpp
+        src/Output.cpp
+        src/Input.cpp
+        src/Propagation.cpp
+        src/Generators.cpp
+        src/Obj.cpp
+        src/TruthTracking.cpp
+        src/TrackFitting.cpp
+        src/TrackFinding.cpp
+        src/Vertexing.cpp
+        src/AmbiguityResolution.cpp
+        src/Utilities.cpp
 )
 
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
@@ -42,31 +42,30 @@ set_target_properties(
 target_link_libraries(
     ActsPythonBindings
     PUBLIC
-    Acts::PythonUtilities
-    Acts::ExamplesFramework
-    Acts::ExamplesGeometry
-    Acts::ExamplesDetectorGeneric
-    Acts::ExamplesDetectorTGeo
-    Acts::ExamplesIoCsv
-    Acts::ExamplesIoObj
-    Acts::ExamplesIoJson
-    Acts::ExamplesGenerators
-    Acts::ExamplesPrinters
-    Acts::ExamplesTrackFinding
-    Acts::ExamplesTrackFitting
-    Acts::ExamplesVertexing
-    Acts::ExamplesFatras
-    Acts::ExamplesDetectorTelescope
-    Acts::ExamplesUtilities
-    Acts::ExamplesAmbiguityResolution
-    Acts::ExamplesTruthTracking
-    Acts::ExamplesDigitization
-    Acts::ExamplesPropagation
-    Acts::ExamplesMaterialMapping
+        Acts::PythonUtilities
+        Acts::ExamplesFramework
+        Acts::ExamplesGeometry
+        Acts::ExamplesDetectorGeneric
+        Acts::ExamplesDetectorTGeo
+        Acts::ExamplesIoCsv
+        Acts::ExamplesIoObj
+        Acts::ExamplesIoJson
+        Acts::ExamplesGenerators
+        Acts::ExamplesPrinters
+        Acts::ExamplesTrackFinding
+        Acts::ExamplesTrackFitting
+        Acts::ExamplesVertexing
+        Acts::ExamplesFatras
+        Acts::ExamplesDetectorTelescope
+        Acts::ExamplesUtilities
+        Acts::ExamplesAmbiguityResolution
+        Acts::ExamplesTruthTracking
+        Acts::ExamplesDigitization
+        Acts::ExamplesPropagation
+        Acts::ExamplesMaterialMapping
 )
 
 set(py_files
-
     # __init__.py
     examples/__init__.py
     examples/simulation.py
@@ -97,9 +96,9 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
     target_link_libraries(
         ActsPythonBindings
         PUBLIC
-        Acts::PluginGeoModel
-        Acts::ExamplesDetectorGeoModel
-        Acts::ExamplesMuonSpectrometerMockupDetector
+            Acts::PluginGeoModel
+            Acts::ExamplesDetectorGeoModel
+            Acts::ExamplesMuonSpectrometerMockupDetector
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
@@ -168,10 +167,10 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     target_link_libraries(
         ActsPythonBindingsGeant4
         PUBLIC
-        Acts::ExamplesGeant4
-        Acts::ExamplesDetectorGeant4
-        Acts::PythonUtilities
-        Acts::ExamplesMuonSpectrometerMockupDetector
+            Acts::ExamplesGeant4
+            Acts::ExamplesDetectorGeant4
+            Acts::PythonUtilities
+            Acts::ExamplesMuonSpectrometerMockupDetector
     )
     add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 

@@ -46,14 +46,9 @@ class PythonLogger {
 /// @brief This adds the classes from Core/Utilities to the python module
 /// @param m the pybind11 core module
 void addUtilities(py::module_& m) {
-  {
-    py::class_<AnyBase<512>>(m, "AnyBase512").def(py::init<>());
-  }
+  { py::class_<AnyBase<512>>(m, "AnyBase512").def(py::init<>()); }
 
-  {
-    py::class_<CalibrationContext>(m, "CalibrationContext")
-        .def(py::init<>());
-  }
+  { py::class_<CalibrationContext>(m, "CalibrationContext").def(py::init<>()); }
 
   // Add l ogging infrastructure
   {
@@ -76,10 +71,9 @@ void addUtilities(py::module_& m) {
                           Logging::Level other) { return self > other; })
         .def("__le__", [](Logging::Level self,
                           Logging::Level other) { return self <= other; })
-        .def("__ge__",
-             [](Logging::Level self, Logging::Level other) {
-               return self >= other;
-             });
+        .def("__ge__", [](Logging::Level self, Logging::Level other) {
+          return self >= other;
+        });
 
     auto makeLogFunction = [](Logging::Level level) {
       return
@@ -112,8 +106,8 @@ void addUtilities(py::module_& m) {
                       .def("setLevel", &PythonLogger::setLevel);
 
     static std::unordered_map<std::string, std::shared_ptr<PythonLogger>>
-        pythonLoggers = {{"root", std::make_shared<PythonLogger>(
-                                      "Python", Logging::INFO)}};
+        pythonLoggers = {
+            {"root", std::make_shared<PythonLogger>("Python", Logging::INFO)}};
 
     logging.def(
         "getLogger",
@@ -239,7 +233,6 @@ void addUtilities(py::module_& m) {
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a);
   }
-
 }
 
 }  // namespace ActsPython

@@ -201,7 +201,7 @@ void addDefinitions(py::module_& m) {
 
 #undef UNIT
 
-// Add the PdgParticle enum
+  // Add the PdgParticle enum
   py::enum_<PdgParticle>(m, "PdgParticle")
       .value("eInvalid", PdgParticle::eInvalid)
       .value("eElectron", PdgParticle::eElectron)

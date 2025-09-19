@@ -21,7 +21,7 @@ namespace ActsPython {
 void addDefinitions(py::module_& m);
 void addMagneticField(py::module_& m);
 void addUtilities(py::module_& m);
-//void addVisualization(py::module_& m);
+void addVisualization(py::module_& m);
 
 void addMaterial(py::module_& m);
 void addSurfaces(py::module_& m);
@@ -30,9 +30,9 @@ void addGeometryGen1(py::module_& m);
 void addGeometryGen2(py::module_& m);
 void addGeometryGen3(py::module_& m);
 void addNavigation(py::module_& m);
-//void addPropagation(py::module_& m);
-//void addSeeding(py::module_& mt);
-//void addTrackFinding(py::module_& m);
+// void addPropagation(py::module_& m);
+// void addSeeding(py::module_& mt);
+// void addTrackFinding(py::module_& m);
 
 /// Legacy python modules
 void addModuleEntry(Context& ctx);
@@ -63,7 +63,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addMagneticField(m);
   addMaterial(m);
   addUtilities(m);
-  //addVisualization(m);
+  addVisualization(m);
 
   addSurfaces(m);
   addGeometry(m);
@@ -71,10 +71,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGeometryGen2(m);
   addGeometryGen3(m);
   addNavigation(m);
-  //addPropagation(m);
-  //addSeeding(m);
-  //addTrackFinding(m);
-
+  // addPropagation(m);
+  // addSeeding(m);
+  // addTrackFinding(m);
 
   // Legacy python modules
   Context ctx;
@@ -85,5 +84,4 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   ctx.modules["propagation"] = prop;
 
   addModuleEntry(ctx);
-
 }

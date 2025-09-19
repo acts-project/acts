@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -57,7 +56,6 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
 /// @brief Add the magnetic field bindings to a module.
 /// @param m the module to add the bindings to
 void addMagneticField(py::module_& m) {
-
   py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
       .def("getField", &getField)

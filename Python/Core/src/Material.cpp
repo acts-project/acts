@@ -44,13 +44,11 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 
-
 namespace ActsPython {
 
-    /// @brief Add the material bindings to a module.
-    /// @param m the module to add the bindings to
-    void addMaterial(py::module_& m) {
-
+/// @brief Add the material bindings to a module.
+/// @param m the module to add the bindings to
+void addMaterial(py::module_& m) {
   {
     py::class_<ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
         m, "ISurfaceMaterial")
@@ -205,7 +203,6 @@ namespace ActsPython {
         py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, materialAssigner);
   }
-
 }
 
 }  // namespace ActsPython

@@ -32,7 +32,6 @@ namespace ActsPython {
 /// This adds the geometry building bindings for the Gen1 geometry
 /// @param m the module to add the bindings to
 void addGeometryGen1(py::module_ &m) {
-
   using SurfacePtrVector = std::vector<std::shared_ptr<const Surface>>;
 
   py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
