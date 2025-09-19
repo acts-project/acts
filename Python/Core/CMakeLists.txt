@@ -52,7 +52,7 @@ foreach(f ${py_files})
     file(MAKE_DIRECTORY ${_dir})
 
     file(
-        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target}
+        CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/${f} ${_target}
         SYMBOLIC
     )
 
