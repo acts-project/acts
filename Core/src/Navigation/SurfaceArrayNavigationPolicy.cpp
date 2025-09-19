@@ -8,11 +8,10 @@
 
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-
-#include <algorithm>
 
 namespace Acts {
 
@@ -88,6 +87,10 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   for (const auto* surface : sensitiveSurfaces) {
     stream.addSurfaceCandidate(*surface, args.tolerance);
   };
+}
+
+const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
+  return *m_surfaceArray;
 }
 
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
