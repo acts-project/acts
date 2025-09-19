@@ -15,11 +15,12 @@
 #include "Acts/Plugins/Gnn/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
 #include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingGnn/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 
@@ -54,21 +55,21 @@ using namespace ActsExamples;
 using namespace Acts;
 using namespace py::literals;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addGnnTrackFinding(Context &ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    using C = Acts::GraphConstructionBase;
+    using C = GraphConstructionBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "GraphConstructionBase");
   }
   {
-    using C = Acts::EdgeClassificationBase;
+    using C = EdgeClassificationBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "EdgeClassificationBase");
   }
   {
-    using C = Acts::TrackBuildingBase;
+    using C = TrackBuildingBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
   }
 
@@ -106,11 +107,11 @@ void addGnnTrackFinding(Context &ctx) {
       phiScale, zScale, etaScale, moreParallel, gpuDevice, gpuBlocks, epsilon);
 #endif
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
-      inputSpacePoints, inputSimHits, inputParticles,
-      inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
-      targetMinPT, targetMinSize, uniqueModules);
+  ACTS_PYTHON_DECLARE_ALGORITHM(TruthGraphBuilder, mex, "TruthGraphBuilder",
+                                inputSpacePoints, inputSimHits, inputParticles,
+                                inputMeasurementSimHitsMap,
+                                inputMeasurementParticlesMap, outputGraph,
+                                targetMinPT, targetMinSize, uniqueModules);
 
   {
     auto nodeFeatureEnum =
@@ -162,20 +163,17 @@ void addGnnTrackFinding(Context &ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingAlgorithmGnn, mex, "TrackFindingAlgorithmGnn",
+      TrackFindingAlgorithmGnn, mex, "TrackFindingAlgorithmGnn",
       inputSpacePoints, inputClusters, inputTruthGraph, outputProtoTracks,
       outputGraph, graphConstructor, edgeClassifiers, trackBuilder,
       nodeFeatures, featureScales, minMeasurementsPerTrack, geometryIdMap);
 
-  {
-    auto cls = py::class_<Acts::GnnHook, std::shared_ptr<Acts::GnnHook>>(
-        mex, "GnnHook");
-  }
+  { auto cls = py::class_<GnnHook, std::shared_ptr<GnnHook>>(mex, "GnnHook"); }
 
   {
-    using Class = Acts::TruthGraphMetricsHook;
+    using Class = TruthGraphMetricsHook;
 
-    auto cls = py::class_<Class, Acts::GnnHook, std::shared_ptr<Class>>(
+    auto cls = py::class_<Class, GnnHook, std::shared_ptr<Class>>(
                    mex, "TruthGraphMetricsHook")
                    .def(py::init([](const std::vector<std::int64_t> &g,
                                     Logging::Level lvl) {
@@ -185,14 +183,13 @@ void addGnnTrackFinding(Context &ctx) {
   }
 
   {
-    auto cls =
-        py::class_<Acts::Device>(mex, "Device")
-            .def_static("Cpu", &Acts::Device::Cpu)
-            .def_static("Cuda", &Acts::Device::Cuda, py::arg("index") = 0);
+    auto cls = py::class_<Device>(mex, "Device")
+                   .def_static("Cpu", &Device::Cpu)
+                   .def_static("Cuda", &Device::Cuda, py::arg("index") = 0);
   }
 
   {
-    using Class = Acts::GnnPipeline;
+    using Class = GnnPipeline;
 
     auto cls =
         py::class_<Class, std::shared_ptr<Class>>(mex, "GnnPipeline")
@@ -208,21 +205,20 @@ void addGnnTrackFinding(Context &ctx) {
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &GnnPipeline::run, py::arg("features"),
                  py::arg("moduleIds"), py::arg("spacepoints"),
-                 py::arg("device") = Acts::Device::Cuda(0),
-                 py::arg("hook") = Acts::GnnHook{},
-                 py::arg("timing") = nullptr);
+                 py::arg("device") = Device::Cuda(0),
+                 py::arg("hook") = GnnHook{}, py::arg("timing") = nullptr);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::PrototracksToParameters, mex, "PrototracksToParameters",
-      inputProtoTracks, inputSpacePoints, outputSeeds, outputParameters,
-      outputProtoTracks, geometry, magneticField, buildTightSeeds);
+      PrototracksToParameters, mex, "PrototracksToParameters", inputProtoTracks,
+      inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
+      geometry, magneticField, buildTightSeeds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
+      TrackFindingFromPrototrackAlgorithm, mex,
       "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
       inputMeasurements, inputInitialTrackParameters, outputTracks,
       measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
