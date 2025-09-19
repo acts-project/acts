@@ -17,7 +17,6 @@
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <numbers>
 #include <stdexcept>
 

@@ -23,7 +23,39 @@
 
 namespace Acts::Experimental {
 
-class ITripletSeedCuts;
+/// @c ITripletSeedCuts can be used to increase or decrease seed weights
+/// based on the space points used in a seed. Seed weights are also
+/// influenced by the SeedFilter default implementation. This tool is also used
+/// to decide if a seed passes a seed weight cut. As the weight is stored in
+/// seeds, there are two distinct methods.
+class ITripletSeedCuts {
+ public:
+  virtual ~ITripletSeedCuts() = default;
+
+  /// Returns seed weight bonus/malus depending on detector considerations.
+  /// @param bottom bottom space point of the current seed
+  /// @param middle middle space point of the current seed
+  /// @param top top space point of the current seed
+  /// @return seed weight to be added to the seed's weight
+  virtual float seedWeight(const ConstSpacePointProxy2& bottom,
+                           const ConstSpacePointProxy2& middle,
+                           const ConstSpacePointProxy2& top) const = 0;
+
+  /// @param weight the current seed weight
+  /// @param bottom bottom space point of the current seed
+  /// @param middle middle space point of the current seed
+  /// @param top top space point of the current seed
+  /// @return true if the seed should be kept, false if the seed should be
+  /// discarded
+  virtual bool singleSeedCut(float weight, const ConstSpacePointProxy2& bottom,
+                             const ConstSpacePointProxy2& middle,
+                             const ConstSpacePointProxy2& top) const = 0;
+
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  virtual void cutPerMiddleSp(
+      std::span<TripletCandidate2>& seedCandidates) const = 0;
+};
 
 /// @brief Triplet seed filter used in the triplet seeding algorithm
 ///
@@ -86,13 +118,11 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// other "high-quality" seed has been found for that inner-middle doublet
     /// Maximum number of normal seeds (not classified as "high-quality" seeds)
     /// in seed confirmation
-    std::uint32_t maxSeedsPerSpMConf =
-        std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t maxSeedsPerSpMConf = 5;
     /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
     /// in seed confirmation. If the limit is reached we check if there is a
     /// normal quality seed to be replaced
-    std::uint32_t maxQualitySeedsPerSpMConf =
-        std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t maxQualitySeedsPerSpMConf = 5;
 
     // Other parameters
 

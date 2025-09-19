@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <tuple>
 #include <unordered_map>
@@ -21,9 +21,9 @@
 #include <pyerrors.h>
 
 namespace py = pybind11;
-using namespace Acts::Python;
+using namespace ActsPython;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addContext(Context& ctx);
 void addAny(Context& ctx);
 void addUnits(Context& ctx);
@@ -69,7 +69,7 @@ void addTGeo(Context& ctx);
 void addJson(Context& ctx);
 void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
-void addExaTrkXTrackFinding(Context& ctx);
+void addGnnTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
@@ -78,10 +78,10 @@ void addCovfie(Context& ctx);
 void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
 
 PYBIND11_MODULE(ActsPythonBindings, m) {
-  Acts::Python::Context ctx;
+  Context ctx;
   ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
   ctx.modules["examples"] = mex;
@@ -142,7 +142,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTGeo(ctx);
   addDetray(ctx);
   addHepMC3(ctx);
-  addExaTrkXTrackFinding(ctx);
+  addGnnTrackFinding(ctx);
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);

@@ -676,8 +676,6 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         // use arithmetic average
         float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
-      } else if (cotThetaAvg2 <= 0) {
-        continue;
       }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
@@ -769,20 +767,6 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      if (!std::isinf(m_config.maxPtScattering)) {
-        // if pT > maxPtScattering, calculate allowed scattering angle using
-        // maxPtScattering instead of pt.
-        // To avoid 0-divison the pT check is skipped in case of B2==0, and
-        // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0 || options.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2 * m_config.maxPtScattering) {
-          float pTscatterSigma =
-              (m_config.highland / m_config.maxPtScattering) *
-              m_config.sigmaScattering;
-          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
-      }
-
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
         if constexpr (detailedMeasurement ==

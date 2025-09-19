@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <stdexcept>
@@ -30,4 +31,28 @@ ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
         return VariableBoundMeasurementProxy{
             container.emplaceMeasurement<dim>(geometryId, indices, par, cov)};
       });
+}
+
+Acts::Vector3 ActsExamples::measurementGlobalPosition(
+    const DigitizedParameters& digitizedParameters,
+    const Acts::Surface& surface, const Acts::GeometryContext& gctx) {
+  // we need a regular surface to perform the local to global transformation
+  // without direction input. the direction could be obtained from truth
+  // information but we can leave it out here.
+  const Acts::RegularSurface* regularSurface =
+      dynamic_cast<const Acts::RegularSurface*>(&surface);
+  if (regularSurface == nullptr) {
+    throw std::invalid_argument(
+        "Cannot make global measurement position for a non-regular surface");
+  }
+
+  Acts::Vector2 locPos = regularSurface->bounds().center();
+  for (auto i = 0ul; i < digitizedParameters.indices.size(); ++i) {
+    auto idx = digitizedParameters.indices.at(i);
+    if (idx == Acts::eBoundLoc0 || idx == Acts::eBoundLoc1) {
+      locPos[idx] = digitizedParameters.values.at(i);
+    }
+  }
+
+  return regularSurface->localToGlobal(gctx, locPos);
 }

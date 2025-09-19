@@ -3,6 +3,8 @@ acts_add_library(
     SHARED
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
+    src/RootMagneticFieldIo.cpp
+    src/RootMeasurementIo.cpp
     src/RootSpacePointIo.cpp
     src/TGeoCylinderDiscSplitter.cpp
     src/TGeoDetectorElement.cpp

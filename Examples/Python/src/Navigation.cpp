@@ -11,11 +11,12 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TypeTag.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -28,7 +29,9 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+using namespace Acts;
+
+namespace ActsPython {
 
 namespace Test {
 class DetectorElementStub : public DetectorElementBase {
@@ -68,13 +71,12 @@ void addNavigation(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, portals, sensitives);
   }
 
-  py::class_<Acts::NavigationPolicyFactory,
-             std::shared_ptr<Acts::NavigationPolicyFactory>>(
+  py::class_<NavigationPolicyFactory, std::shared_ptr<NavigationPolicyFactory>>(
       m, "NavigationPolicyFactory")
       // only to mirror the C++ API
-      .def_static("make", []() { return Acts::NavigationPolicyFactory{}; })
+      .def_static("make", []() { return NavigationPolicyFactory{}; })
       .def("add",
-           [](Acts::NavigationPolicyFactory* self, const py::object& cls) {
+           [](NavigationPolicyFactory* self, const py::object& cls) {
              auto mod = py::module_::import("acts");
              if (py::object o = mod.attr("TryAllNavigationPolicy"); cls.is(o)) {
                return std::move(*self).template add<TryAllNavigationPolicy>();
@@ -86,7 +88,7 @@ void addNavigation(Context& ctx) {
            })
 
       .def("add",
-           [](Acts::NavigationPolicyFactory* self, const py::object& cls,
+           [](NavigationPolicyFactory* self, const py::object& cls,
               const SurfaceArrayNavigationPolicy::Config& config) {
              auto mod = py::module_::import("acts");
              if (py::object o = mod.attr("SurfaceArrayNavigationPolicy");
@@ -101,7 +103,7 @@ void addNavigation(Context& ctx) {
            })
 
       .def("add",
-           [](Acts::NavigationPolicyFactory* self, const py::object& cls,
+           [](NavigationPolicyFactory* self, const py::object& cls,
               const TryAllNavigationPolicy::Config& config) {
              auto mod = py::module_::import("acts");
              if (py::object o = mod.attr("TryAllNavigationPolicy");
@@ -115,7 +117,7 @@ void addNavigation(Context& ctx) {
                  config);
            })
 
-      .def("_buildTest", [](Acts::NavigationPolicyFactory* self) {
+      .def("_buildTest", [](NavigationPolicyFactory* self) {
         auto vol1 = std::make_shared<TrackingVolume>(
             Transform3::Identity(),
             std::make_shared<CylinderVolumeBounds>(30, 40, 100));
@@ -150,4 +152,4 @@ void addNavigation(Context& ctx) {
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

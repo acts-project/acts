@@ -100,6 +100,10 @@ class ConeBounds : public SurfaceBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For ConeBounds: returns (averagePhi, (minZ + maxZ)/2) in cone coordinates
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input object

@@ -9,16 +9,19 @@
 #pragma once
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
 
+/// Container for doublets found by the doublet seed finder.
+///
+/// This implementation uses partial AoS/SoA depending on the access pattern in
+/// the doublet finding process.
 class DoubletsForMiddleSp {
  public:
   using Index = std::uint32_t;
@@ -32,18 +35,25 @@ class DoubletsForMiddleSp {
 
   void clear() {
     m_spacePoints.clear();
-    m_linCircles.clear();
+    m_cotTheta.clear();
+    m_er_iDeltaR.clear();
+    m_uv.clear();
+    m_xy.clear();
   }
 
-  void emplace_back(SpacePointIndex2 sp, const LinCircle& linCircle) {
-    m_spacePoints.emplace_back(sp);
-    m_linCircles.emplace_back(linCircle);
+  void emplace_back(SpacePointIndex2 sp, float cotTheta, float iDeltaR,
+                    float er, float u, float v, float x, float y) {
+    m_spacePoints.push_back(sp);
+    m_cotTheta.push_back(cotTheta);
+    m_er_iDeltaR.push_back({er, iDeltaR});
+    m_uv.push_back({u, v});
+    m_xy.push_back({x, y});
   }
 
   const std::vector<SpacePointIndex2>& spacePoints() const {
     return m_spacePoints;
   }
-  const std::vector<LinCircle>& linCircles() const { return m_linCircles; }
+  const std::vector<float>& cotTheta() const { return m_cotTheta; }
 
   struct IndexAndCotTheta {
     Index index{};
@@ -57,7 +67,7 @@ class DoubletsForMiddleSp {
     indexAndCotTheta.clear();
     indexAndCotTheta.reserve(range.second - range.first);
     for (Index i = range.first; i < range.second; ++i) {
-      indexAndCotTheta.emplace_back(i, m_linCircles[i].cotTheta);
+      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
     }
     std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
       return item.cotTheta;
@@ -76,18 +86,36 @@ class DoubletsForMiddleSp {
       return m_container->m_spacePoints[m_index];
     }
 
-    const LinCircle& linCircle() const {
-      return m_container->m_linCircles[m_index];
-    }
+    float cotTheta() const { return m_container->m_cotTheta[m_index]; }
+    float er() const { return m_container->m_er_iDeltaR[m_index][0]; }
+    float iDeltaR() const { return m_container->m_er_iDeltaR[m_index][1]; }
+    float u() const { return m_container->m_uv[m_index][0]; }
+    float v() const { return m_container->m_uv[m_index][1]; }
+    float x() const { return m_container->m_xy[m_index][0]; }
+    float y() const { return m_container->m_xy[m_index][1]; }
 
    private:
     const DoubletsForMiddleSp* m_container{};
     Index m_index{};
   };
+  /// Same as `Proxy` but also contains `cotTheta`. This is useful after sorting
+  /// doublets by `cotTheta` to avoid indirect access.
+  class Proxy2 : public Proxy {
+   public:
+    Proxy2(const DoubletsForMiddleSp* container,
+           IndexAndCotTheta indexAndCotTheta)
+        : Proxy(container, indexAndCotTheta.index),
+          m_cotTheta(indexAndCotTheta.cotTheta) {}
+
+    float cotTheta() const { return m_cotTheta; }
+
+   private:
+    float m_cotTheta{};
+  };
 
   Proxy operator[](Index index) const { return Proxy(this, index); }
-  Proxy operator[](IndexAndCotTheta indexAndCotTheta) const {
-    return Proxy(this, indexAndCotTheta.index);
+  Proxy2 operator[](IndexAndCotTheta indexAndCotTheta) const {
+    return Proxy2(this, indexAndCotTheta);
   }
 
   using const_iterator =
@@ -117,10 +145,10 @@ class DoubletsForMiddleSp {
 
     using Base::Base;
   };
-  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy,
+  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
                                          IndexAndCotTheta, true> {
    public:
-    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy,
+    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
                                  IndexAndCotTheta, true>;
 
     using Base::Base;
@@ -135,8 +163,12 @@ class DoubletsForMiddleSp {
 
  private:
   std::vector<SpacePointIndex2> m_spacePoints;
-  /// contains parameters required to calculate a circle with linear equation
-  std::vector<LinCircle> m_linCircles;
+
+  // parameters required to calculate a circle with linear equation
+  std::vector<float> m_cotTheta;
+  std::vector<std::array<float, 2>> m_er_iDeltaR;
+  std::vector<std::array<float, 2>> m_uv;
+  std::vector<std::array<float, 2>> m_xy;
 };
 
 struct MiddleSpInfo {
@@ -150,17 +182,30 @@ struct MiddleSpInfo {
   float sinPhiM{};
 };
 
+/// Interface and a collection of standard implementations for a doublet seed
+/// finder. Given a starting space point and a collection of candidates, it
+/// finds all doublets that satisfy the selection criteria. For the standard
+/// implementations the criteria are given by interaction point cuts.
+///
+/// @note The standard implementations rely on virtual function dispatch which
+/// did not turn out to affect the performance after measurement.
 class DoubletSeedFinder {
  public:
+  /// Collection of configuration parameters for the doublet seed finder. This
+  /// includes doublet cuts, steering switches, and assumptions about the space
+  /// points.
   struct Config {
+    /// Whether the input space points are sorted by radius
+    bool spacePointsSortedByRadius = false;
+
     /// Direction of the doublet candidate space points. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.
     Direction candidateDirection = Direction::Forward();
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * Acts::UnitConstants::mm;
+    float deltaRMin = 5 * UnitConstants::mm;
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * Acts::UnitConstants::mm;
+    float deltaRMax = 270 * UnitConstants::mm;
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
@@ -193,16 +238,16 @@ class DoubletSeedFinder {
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
 
-    /// Delegate to apply experiment specific cuts during doublet finding
-    Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
-                  const ConstSpacePointProxy2& /*other*/, float /*cotTheta*/,
-                  bool /*isBottomCandidate*/)>
-        experimentCuts;
+    using ExperimentCuts =
+        Delegate<bool(const ConstSpacePointProxy2& /*middle*/,
+                      const ConstSpacePointProxy2& /*other*/,
+                      float /*cotTheta*/, bool /*isBottomCandidate*/)>;
 
-    /// Whether the input space points are sorted by radius
-    bool spacePointsSortedByRadius = false;
+    /// Delegate to apply experiment specific cuts during doublet finding
+    ExperimentCuts experimentCuts;
   };
 
+  /// Derived configuration for the doublet seed finder using a magnetic field.
   struct DerivedConfig : public Config {
     DerivedConfig(const Config& config, float bFieldInZ);
 
@@ -210,12 +255,16 @@ class DoubletSeedFinder {
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 
+  /// Computes additional quantities from the middle space point which can be
+  /// reused during doublet finding.
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
+  /// Creates a new doublet seed finder instance given the configuration.
   static std::unique_ptr<DoubletSeedFinder> create(const DerivedConfig& config);
 
   virtual ~DoubletSeedFinder() = default;
 
+  /// Returns the configuration of the doublet seed finder.
   virtual const DerivedConfig& config() const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
