@@ -21,9 +21,9 @@ target_sources(
         src/GeometryGen2.cpp
         src/GeometryGen3.cpp
         src/Navigation.cpp
-        # src/Propagation.cpp
-        # src/Seeding.cpp
-        # src/TrackFinding.cpp
+        src/Propagation.cpp
+        src/Seeding.cpp
+        src/TrackFinding.cpp
         src/Visualization.cpp
 )
 

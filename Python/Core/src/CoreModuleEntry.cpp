@@ -30,9 +30,9 @@ void addGeometryGen1(py::module_& m);
 void addGeometryGen2(py::module_& m);
 void addGeometryGen3(py::module_& m);
 void addNavigation(py::module_& m);
-// void addPropagation(py::module_& m);
-// void addSeeding(py::module_& mt);
-// void addTrackFinding(py::module_& m);
+void addPropagation(py::module_& m);
+void addSeeding(py::module_& mt);
+void addTrackFinding(py::module_& m);
 
 /// Legacy python modules
 void addModuleEntry(Context& ctx);
@@ -71,9 +71,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGeometryGen2(m);
   addGeometryGen3(m);
   addNavigation(m);
-  // addPropagation(m);
-  // addSeeding(m);
-  // addTrackFinding(m);
+  addPropagation(m);
+  addSeeding(m);
+  addTrackFinding(m);
 
   // Legacy python modules
   Context ctx;
