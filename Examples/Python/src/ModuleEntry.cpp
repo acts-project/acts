@@ -24,7 +24,6 @@ namespace py = pybind11;
 using namespace ActsPython;
 
 namespace ActsPython {
-void addContext(Context& ctx);
 void addFramework(Context& ctx);
 
 void addPropagation(Context& ctx);
@@ -66,7 +65,6 @@ void addTraccc(Context& ctx);
 void addHashing(Context& ctx);
 
 void addModuleEntry(Context& ctx) {
-  addContext(ctx);
   addFramework(ctx);
   addOutput(ctx);
 

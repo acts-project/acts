@@ -9,7 +9,6 @@ target_sources(
     PRIVATE
         src/ModuleEntry.cpp
         src/Framework.cpp
-        src/Base.cpp
         src/Alignment.cpp
         src/Detector.cpp
         src/Digitization.cpp

@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
@@ -56,6 +57,9 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
 /// @brief Add the magnetic field bindings to a module.
 /// @param m the module to add the bindings to
 void addMagneticField(py::module_& m) {
+  py::class_<Acts::MagneticFieldContext>(m, "MagneticFieldContext")
+      .def(py::init<>());
+
   py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
       .def("getField", &getField)
