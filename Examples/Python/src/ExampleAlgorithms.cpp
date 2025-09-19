@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
@@ -15,6 +14,8 @@
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <vector>
 
@@ -26,7 +27,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addExampleAlgorithms(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -52,7 +53,7 @@ void addExampleAlgorithms(Context& ctx) {
 
     auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackSelectorAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                   .def(py::init<const Alg::Config&, Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
 
@@ -62,19 +63,19 @@ void addExampleAlgorithms(Context& ctx) {
   }
 
   {
-    using EtaBinnedConfig = Acts::TrackSelector::EtaBinnedConfig;
-    using Config = Acts::TrackSelector::Config;
+    using EtaBinnedConfig = TrackSelector::EtaBinnedConfig;
+    using Config = TrackSelector::Config;
 
-    auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
+    auto tool = py::class_<TrackSelector>(m, "TrackSelector")
                     .def(py::init<const Config&>(), py::arg("config"))
                     .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
     {
-      auto mc = py::class_<Acts::TrackSelector::MeasurementCounter>(
+      auto mc = py::class_<TrackSelector::MeasurementCounter>(
                     tool, "MeasurementCounter")
                     .def(py::init<>())
                     .def("addCounter",
-                         &Acts::TrackSelector::MeasurementCounter::addCounter);
+                         &TrackSelector::MeasurementCounter::addCounter);
     }
 
     {
@@ -110,4 +111,4 @@ void addExampleAlgorithms(Context& ctx) {
     }
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

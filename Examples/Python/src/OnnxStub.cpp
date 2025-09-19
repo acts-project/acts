@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-namespace Acts::Python {
+namespace ActsPython {
 struct Context;
-}  // namespace Acts::Python
+}  // namespace ActsPython
 
-namespace Acts::Python {
+namespace ActsPython {
 void addOnnx(Context& /*ctx*/) {
   // dummy function
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython
