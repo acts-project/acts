@@ -8,7 +8,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <type_traits>
 
@@ -19,65 +19,55 @@ namespace py = pybind11;
 
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addEventData(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  py::class_<Acts::ParticleHypothesis>(m, "ParticleHypothesis")
-      .def(py::init([](Acts::PdgParticle absPdg, float mass, float absCharge) {
-             return Acts::ParticleHypothesis(absPdg, mass,
-                                             AnyCharge{absCharge});
+  py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
+      .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
+             return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
            }),
            py::arg("pdg"), py::arg("mass"), py::arg("absCharge"))
-      .def(py::init([](std::underlying_type_t<Acts::PdgParticle> absPdg,
-                       float mass, float absCharge) {
-             return Acts::ParticleHypothesis(
-                 static_cast<Acts::PdgParticle>(absPdg), mass,
-                 AnyCharge{absCharge});
+      .def(py::init([](std::underlying_type_t<PdgParticle> absPdg, float mass,
+                       float absCharge) {
+             return ParticleHypothesis(static_cast<PdgParticle>(absPdg), mass,
+                                       AnyCharge{absCharge});
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
       .def("__str__",
-           [](const Acts::ParticleHypothesis& particleHypothesis) {
+           [](const ParticleHypothesis& particleHypothesis) {
              std::stringstream os;
              particleHypothesis.toStream(os);
              return os.str();
            })
       .def("absolutePdg",
-           [](const Acts::ParticleHypothesis& p) { return p.absolutePdg(); })
-      .def("mass", [](const Acts::ParticleHypothesis& p) { return p.mass(); })
+           [](const ParticleHypothesis& p) { return p.absolutePdg(); })
+      .def("mass", [](const ParticleHypothesis& p) { return p.mass(); })
       .def("absoluteCharge",
-           [](const Acts::ParticleHypothesis& p) { return p.absoluteCharge(); })
-      .def_property_readonly_static("muon",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::muon();
-                                    })
-      .def_property_readonly_static("pion",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::pion();
-                                    })
+           [](const ParticleHypothesis& p) { return p.absoluteCharge(); })
+      .def_property_readonly_static(
+          "muon",
+          [](py::object /* self */) { return ParticleHypothesis::muon(); })
+      .def_property_readonly_static(
+          "pion",
+          [](py::object /* self */) { return ParticleHypothesis::pion(); })
       .def_property_readonly_static(
           "electron",
-          [](py::object /* self */) {
-            return Acts::ParticleHypothesis::electron();
-          })
-      .def_property_readonly_static("kaon",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::kaon();
-                                    })
-      .def_property_readonly_static("proton",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::proton();
-                                    })
+          [](py::object /* self */) { return ParticleHypothesis::electron(); })
+      .def_property_readonly_static(
+          "kaon",
+          [](py::object /* self */) { return ParticleHypothesis::kaon(); })
+      .def_property_readonly_static(
+          "proton",
+          [](py::object /* self */) { return ParticleHypothesis::proton(); })
       .def_property_readonly_static(
           "geantino",
-          [](py::object /* self */) {
-            return Acts::ParticleHypothesis::geantino();
-          })
+          [](py::object /* self */) { return ParticleHypothesis::geantino(); })
       .def_property_readonly_static(
           "chargedGeantino", [](py::object /* self */) {
-            return Acts::ParticleHypothesis::chargedGeantino();
+            return ParticleHypothesis::chargedGeantino();
           });
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

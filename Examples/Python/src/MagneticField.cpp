@@ -15,9 +15,10 @@
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
-#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+#include "Acts/MagneticField/TextMagneticFieldIo.hpp"
+#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <cstddef>
@@ -34,13 +35,15 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+using namespace Acts;
+using namespace ActsExamples;
+
+namespace ActsPython {
 
 /// @brief Get the value of a field, throwing an exception if the result is
 /// invalid.
-Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
-                       const Acts::Vector3& position,
-                       Acts::MagneticFieldProvider::Cache& cache) {
+Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
+                 MagneticFieldProvider::Cache& cache) {
   if (Result<Vector3> res = self.getField(position, cache); !res.ok()) {
     std::stringstream ss;
 
@@ -52,59 +55,65 @@ Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
   }
 }
 
+/// @brief Add the magnetic field bindings to a module.
+/// @param m the module to add the bindings to
 void addMagneticField(Context& ctx) {
-  auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
+  auto& m = ctx.get("main");
 
-  py::class_<Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::MagneticFieldProvider>>(
+  py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
       .def("getField", &getField)
-      .def("makeCache", &Acts::MagneticFieldProvider::makeCache);
+      .def("makeCache", &MagneticFieldProvider::makeCache);
 
-  py::class_<Acts::InterpolatedMagneticField,
-             std::shared_ptr<Acts::InterpolatedMagneticField>>(
+  py::class_<InterpolatedMagneticField,
+             std::shared_ptr<InterpolatedMagneticField>>(
       m, "InterpolatedMagneticField");
 
-  m.def("solenoidFieldMap", &Acts::solenoidFieldMap, py::arg("rlim"),
-        py::arg("zlim"), py::arg("nbins"), py::arg("field"));
+  m.def("solenoidFieldMap", &solenoidFieldMap, py::arg("rlim"), py::arg("zlim"),
+        py::arg("nbins"), py::arg("field"));
 
-  py::class_<Acts::ConstantBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::ConstantBField>>(m, "ConstantBField")
-      .def(py::init<Acts::Vector3>());
+  py::class_<ConstantBField, MagneticFieldProvider,
+             std::shared_ptr<ConstantBField>>(m, "ConstantBField")
+      .def(py::init<Vector3>());
 
-  py::class_<ActsExamples::detail::InterpolatedMagneticField2,
-             Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
-             std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField2>>(
-      mex, "InterpolatedMagneticField2");
+  using InterpolatedMagneticField2 = InterpolatedBFieldMap<
+      Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>;
 
-  py::class_<ActsExamples::detail::InterpolatedMagneticField3,
-             Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
-             std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
-      mex, "InterpolatedMagneticField3");
+  using InterpolatedMagneticField3 = InterpolatedBFieldMap<
+      Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+           Axis<AxisType::Equidistant>>>;
 
-  py::class_<Acts::NullBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::NullBField>>(m, "NullBField")
+  py::class_<InterpolatedMagneticField2, InterpolatedMagneticField,
+             MagneticFieldProvider,
+             std::shared_ptr<InterpolatedMagneticField2>>(
+      m, "InterpolatedMagneticField2");
+
+  py::class_<InterpolatedMagneticField3, InterpolatedMagneticField,
+             MagneticFieldProvider,
+             std::shared_ptr<InterpolatedMagneticField3>>(
+      m, "InterpolatedMagneticField3");
+
+  py::class_<NullBField, MagneticFieldProvider, std::shared_ptr<NullBField>>(
+      m, "NullBField")
       .def(py::init<>());
 
-  py::class_<Acts::MultiRangeBField, Acts::MagneticFieldProvider,
-             std::shared_ptr<Acts::MultiRangeBField>>(m, "MultiRangeBField")
-      .def(py::init<
-           std::vector<std::pair<Acts::RangeXD<3, double>, Acts::Vector3>>>());
+  py::class_<MultiRangeBField, MagneticFieldProvider,
+             std::shared_ptr<MultiRangeBField>>(m, "MultiRangeBField")
+      .def(py::init<std::vector<std::pair<RangeXD<3, double>, Vector3>>>());
 
   {
-    using Config = Acts::SolenoidBField::Config;
+    using Config = SolenoidBField::Config;
 
-    auto sol =
-        py::class_<Acts::SolenoidBField, Acts::MagneticFieldProvider,
-                   std::shared_ptr<Acts::SolenoidBField>>(m, "SolenoidBField")
-            .def(py::init<Config>())
-            .def(py::init([](double radius, double length, std::size_t nCoils,
-                             double bMagCenter) {
-                   return Acts::SolenoidBField{
-                       Config{radius, length, nCoils, bMagCenter}};
-                 }),
-                 py::arg("radius"), py::arg("length"), py::arg("nCoils"),
-                 py::arg("bMagCenter"));
+    auto sol = py::class_<SolenoidBField, MagneticFieldProvider,
+                          std::shared_ptr<SolenoidBField>>(m, "SolenoidBField")
+                   .def(py::init<Config>())
+                   .def(py::init([](double radius, double length,
+                                    std::size_t nCoils, double bMagCenter) {
+                          return SolenoidBField{
+                              Config{radius, length, nCoils, bMagCenter}};
+                        }),
+                        py::arg("radius"), py::arg("length"), py::arg("nCoils"),
+                        py::arg("bMagCenter"));
 
     py::class_<Config>(sol, "Config")
         .def(py::init<>())
@@ -114,7 +123,7 @@ void addMagneticField(Context& ctx) {
         .def_readwrite("bMagCenter", &Config::bMagCenter);
   }
 
-  mex.def(
+  m.def(
       "MagneticFieldMapXyz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstOctant) {
@@ -127,27 +136,24 @@ void addMagneticField(Context& ctx) {
         };
 
         if (file.extension() == ".root") {
-          auto map = ActsExamples::makeMagneticFieldMapXyzFromRoot(
+          auto map = makeMagneticFieldMapXyzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstOctant);
-          return std::make_shared<
-              ActsExamples::detail::InterpolatedMagneticField3>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else if (file.extension() == ".txt") {
-          auto map = ActsExamples::makeMagneticFieldMapXyzFromText(
-              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
-              firstOctant);
-          return std::make_shared<
-              ActsExamples::detail::InterpolatedMagneticField3>(std::move(map));
+          auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
+                                                     file.native(), lengthUnit,
+                                                     BFieldUnit, firstOctant);
+          return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
       py::arg("file"), py::arg("tree") = "bField",
-      py::arg("lengthUnit") = Acts::UnitConstants::mm,
-      py::arg("BFieldUnit") = Acts::UnitConstants::T,
-      py::arg("firstOctant") = false);
+      py::arg("lengthUnit") = UnitConstants::mm,
+      py::arg("BFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
 
-  mex.def(
+  m.def(
       "MagneticFieldMapRz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstQuadrant) {
@@ -159,25 +165,23 @@ void addMagneticField(Context& ctx) {
         };
 
         if (file.extension() == ".root") {
-          auto map = ActsExamples::makeMagneticFieldMapRzFromRoot(
+          auto map = makeMagneticFieldMapRzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstQuadrant);
-          return std::make_shared<
-              ActsExamples::detail::InterpolatedMagneticField2>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else if (file.extension() == ".txt") {
-          auto map = ActsExamples::makeMagneticFieldMapRzFromText(
-              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
-              firstQuadrant);
-          return std::make_shared<
-              ActsExamples::detail::InterpolatedMagneticField2>(std::move(map));
+          auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
+                                                    file.native(), lengthUnit,
+                                                    BFieldUnit, firstQuadrant);
+          return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
       },
       py::arg("file"), py::arg("tree") = "bField",
-      py::arg("lengthUnit") = Acts::UnitConstants::mm,
-      py::arg("BFieldUnit") = Acts::UnitConstants::T,
+      py::arg("lengthUnit") = UnitConstants::mm,
+      py::arg("BFieldUnit") = UnitConstants::T,
       py::arg("firstQuadrant") = false);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython
