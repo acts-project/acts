@@ -15,9 +15,10 @@
 #include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
-#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+#include "Acts/MagneticField/TextMagneticFieldIo.hpp"
+#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <cstddef>
@@ -36,7 +37,6 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
-using namespace ActsExamples::detail;
 
 namespace ActsPython {
 
@@ -55,8 +55,10 @@ Vector3 getField(MagneticFieldProvider& self, const Vector3& position,
   }
 }
 
+/// @brief Add the magnetic field bindings to a module.
+/// @param m the module to add the bindings to
 void addMagneticField(Context& ctx) {
-  auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
+  auto& m = ctx.get("main");
 
   py::class_<MagneticFieldProvider, std::shared_ptr<MagneticFieldProvider>>(
       m, "MagneticFieldProvider")
@@ -74,15 +76,22 @@ void addMagneticField(Context& ctx) {
              std::shared_ptr<ConstantBField>>(m, "ConstantBField")
       .def(py::init<Vector3>());
 
-  py::class_<::InterpolatedMagneticField2, InterpolatedMagneticField,
-             MagneticFieldProvider,
-             std::shared_ptr<::InterpolatedMagneticField2>>(
-      mex, "InterpolatedMagneticField2");
+  using InterpolatedMagneticField2 = InterpolatedBFieldMap<
+      Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>;
 
-  py::class_<::InterpolatedMagneticField3, InterpolatedMagneticField,
+  using InterpolatedMagneticField3 = InterpolatedBFieldMap<
+      Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+           Axis<AxisType::Equidistant>>>;
+
+  py::class_<InterpolatedMagneticField2, InterpolatedMagneticField,
              MagneticFieldProvider,
-             std::shared_ptr<::InterpolatedMagneticField3>>(
-      mex, "InterpolatedMagneticField3");
+             std::shared_ptr<InterpolatedMagneticField2>>(
+      m, "InterpolatedMagneticField2");
+
+  py::class_<InterpolatedMagneticField3, InterpolatedMagneticField,
+             MagneticFieldProvider,
+             std::shared_ptr<InterpolatedMagneticField3>>(
+      m, "InterpolatedMagneticField3");
 
   py::class_<NullBField, MagneticFieldProvider, std::shared_ptr<NullBField>>(
       m, "NullBField")
@@ -114,7 +123,7 @@ void addMagneticField(Context& ctx) {
         .def_readwrite("bMagCenter", &Config::bMagCenter);
   }
 
-  mex.def(
+  m.def(
       "MagneticFieldMapXyz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstOctant) {
@@ -130,12 +139,12 @@ void addMagneticField(Context& ctx) {
           auto map = makeMagneticFieldMapXyzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstOctant);
-          return std::make_shared<::InterpolatedMagneticField3>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
                                                      file.native(), lengthUnit,
                                                      BFieldUnit, firstOctant);
-          return std::make_shared<::InterpolatedMagneticField3>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
@@ -144,7 +153,7 @@ void addMagneticField(Context& ctx) {
       py::arg("lengthUnit") = UnitConstants::mm,
       py::arg("BFieldUnit") = UnitConstants::T, py::arg("firstOctant") = false);
 
-  mex.def(
+  m.def(
       "MagneticFieldMapRz",
       [](const std::string& filename, const std::string& tree,
          double lengthUnit, double BFieldUnit, bool firstQuadrant) {
@@ -159,12 +168,12 @@ void addMagneticField(Context& ctx) {
           auto map = makeMagneticFieldMapRzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstQuadrant);
-          return std::make_shared<::InterpolatedMagneticField2>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else if (file.extension() == ".txt") {
           auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
                                                     file.native(), lengthUnit,
                                                     BFieldUnit, firstQuadrant);
-          return std::make_shared<::InterpolatedMagneticField2>(std::move(map));
+          return std::make_shared<decltype(map)>(std::move(map));
         } else {
           throw std::runtime_error("Unsupported magnetic field map file type");
         }
