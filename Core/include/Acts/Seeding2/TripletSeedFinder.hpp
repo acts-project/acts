@@ -77,7 +77,7 @@ class TripletTopCandidates {
   Proxy operator[](Index index) const { return Proxy(this, index); }
 
   using const_iterator =
-      ContainerIterator<TripletTopCandidates, Proxy, Index, true>;
+      Acts::detail::ContainerIterator<TripletTopCandidates, Proxy, Index, true>;
 
   const_iterator begin() const { return const_iterator(*this, 0); }
   const_iterator end() const { return const_iterator(*this, size()); }
