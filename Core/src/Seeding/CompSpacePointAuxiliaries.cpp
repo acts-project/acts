@@ -68,7 +68,7 @@ void CompSpacePointAuxiliaries::updateChiSq(
   }
 
   auto contract = [&invCov, this](const Vector& v1,
-                                  const Vector& v2) -> double {
+                                  const Vector& v2) {
     const double term = v1[0] * v2[0] * invCov[0] + v1[1] * v2[1] * invCov[1] +
                         v1[2] * v2[2] * invCov[2];
     ACTS_VERBOSE("updateChiSq() - Contribution from "
