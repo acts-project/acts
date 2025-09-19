@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Utilities/ContainerConcepts.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerConcepts.hpp"
 
 #include <span>
 #include <stdexcept>
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename Derived, typename Container, typename Value, typename Index,
           bool ReadOnly>
@@ -202,4 +202,4 @@ class ContainerSubset {
   index_subset_type m_subset{};
 };
 
-}  // namespace Acts
+}  // namespace Acts::detail
