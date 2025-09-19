@@ -11,7 +11,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
 
