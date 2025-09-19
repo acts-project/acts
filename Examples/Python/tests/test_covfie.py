@@ -33,7 +33,7 @@ def test_root_field_conversion():
         / "odd-bfield.root"
     )
 
-    af = acts.examples.MagneticFieldMapXyz(str(p))
+    af = acts.MagneticFieldMapXyz(str(p))
     bc = acts.MagneticFieldContext()
     fc = af.makeCache(bc)
 

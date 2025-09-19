@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
@@ -17,6 +16,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
@@ -28,7 +29,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace Acts::Python;
+using namespace ActsPython;
 using namespace ActsExamples;
 
 template <typename A, typename B = IAlgorithm>
@@ -64,7 +65,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
                         &Config::particlePtMax);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepTrackInputConverter, m,
+  ACTS_PYTHON_DECLARE_ALGORITHM(EDM4hepTrackInputConverter, m,
                                 "EDM4hepTrackInputConverter", inputFrame,
                                 inputTracks, outputTracks, Bz);
 
@@ -82,10 +83,10 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
                        outputSimTrackerHits);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepMeasurementInputConverter,
-                                m, "EDM4hepMeasurementInputConverter",
-                                inputFrame, outputMeasurements,
-                                outputMeasurementSimHitsMap, outputClusters);
+  ACTS_PYTHON_DECLARE_ALGORITHM(EDM4hepMeasurementInputConverter, m,
+                                "EDM4hepMeasurementInputConverter", inputFrame,
+                                outputMeasurements, outputMeasurementSimHitsMap,
+                                outputClusters);
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,

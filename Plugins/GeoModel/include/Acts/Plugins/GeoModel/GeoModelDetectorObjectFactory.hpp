@@ -21,7 +21,6 @@
 #include "GeoModelKernel/GeoDefinitions.h"
 
 class GeoShape;
-struct GeoModelTree;
 class Surface;
 
 namespace Acts {

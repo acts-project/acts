@@ -71,7 +71,7 @@ def test_solenoid(conf_const):
         field=solenoid,
     )
 
-    assert isinstance(field, acts.examples.InterpolatedMagneticField2)
+    assert isinstance(field, acts.InterpolatedMagneticField2)
 
 
 def test_multiregion_bfield():

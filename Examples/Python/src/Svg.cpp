@@ -26,7 +26,6 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -36,6 +35,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 #include <actsvg/core/draw.hpp>
 
 #include <algorithm>
@@ -53,6 +54,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace Acts::Experimental;
 using namespace ActsExamples;
 
 namespace {
@@ -75,8 +77,7 @@ bool viewRangeSel(const Svg::ProtoSurface& s, const Extent& vRange) {
 ///
 /// @param view is the view type, e.g. 'xy', 'zr', ...
 /// @param selection is the selection of the volume, e.g. 'all', 'sensitives', 'portals', 'materials'
-using ViewAndRange =
-    std::tuple<std::string, std::vector<std::string>, Acts::Extent>;
+using ViewAndRange = std::tuple<std::string, std::vector<std::string>, Extent>;
 
 /// Helper function to be picked in different access patterns
 ///
@@ -166,8 +167,7 @@ actsvg::svg::object drawDetectorVolume(const Svg::ProtoVolume& pVolume,
 
 // Helper function to be picked in different access patterns
 std::vector<actsvg::svg::object> drawDetector(
-    const Acts::GeometryContext& gctx,
-    const Acts::Experimental::Detector& detector,
+    const GeometryContext& gctx, const Detector& detector,
     const std::string& identification,
     const std::vector<std::tuple<int, Svg::DetectorVolumeConverter::Options>>&
         volumeIdxOpts,
@@ -190,7 +190,7 @@ std::vector<actsvg::svg::object> drawDetector(
     auto [pVolume, pGrid] =
         Svg::DetectorVolumeConverter::convert(gctx, *v, vopts);
 
-    for (auto [iv, var] : Acts::enumerate(viewAndRanges)) {
+    for (auto [iv, var] : enumerate(viewAndRanges)) {
       auto [view, selection, range] = var;
       // Get the view and the range
       auto svgVolView = drawDetectorVolume(
@@ -204,16 +204,13 @@ std::vector<actsvg::svg::object> drawDetector(
 
 }  // namespace
 
-namespace Acts::Python {
+namespace ActsPython {
 void addSvg(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   auto svg = m.def_submodule("svg");
 
-  {
-    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
-            py::arg("filename"));
-  }
+  { svg.def("toFile", &Svg::toFile, py::arg("objects"), py::arg("filename")); }
 
   py::class_<actsvg::svg::object>(svg, "object")
       .def_readwrite("id", &actsvg::svg::object::_id);
@@ -233,10 +230,7 @@ void addSvg(Context& ctx) {
              file.close();
            });
 
-  {
-    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
-            py::arg("filename"));
-  }
+  { svg.def("toFile", &Svg::toFile, py::arg("objects"), py::arg("filename")); }
 
   // Core components, added as an acts.svg submodule
   {
@@ -255,7 +249,7 @@ void addSvg(Context& ctx) {
 
     // Define the proto surface
     py::class_<Svg::ProtoSurface>(svg, "ProtoSurface");
-    // Convert an Acts::Surface object into an acts::svg::proto::surface
+    // Convert an Surface object into an svg::proto::surface
 
     svg.def("convertSurface", &Svg::SurfaceConverter::convert);
 
@@ -286,8 +280,8 @@ void addSvg(Context& ctx) {
 
     // Define the proto portal
     py::class_<Svg::ProtoPortal>(svg, "ProtoPortal");
-    // Convert an Acts::Experimental::Portal object into an
-    // acts::svg::proto::portal
+    // Convert an Portal object into an
+    // svg::proto::portal
     svg.def("convertPortal", &Svg::PortalConverter::convert);
 
     // Define the view functions
@@ -362,8 +356,8 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
                        indexedSurfacesOptions);
 
-    // Convert an Acts::Experimental::DetectorVolume object into an
-    // acts::svg::proto::volume
+    // Convert an DetectorVolume object into an
+    // svg::proto::volume
     svg.def("convertDetectorVolume", &Svg::DetectorVolumeConverter::convert);
 
     // Define the view functions
@@ -417,24 +411,25 @@ void addSvg(Context& ctx) {
   // Components from the ActsExamples - part of acts.examples
 
   {
-    using Writer = ActsExamples::SvgTrackingGeometryWriter;
-    auto w = py::class_<Writer, std::shared_ptr<Writer>>(
-                 mex, "SvgTrackingGeometryWriter")
-                 .def(py::init<const Writer::Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def("write", py::overload_cast<const AlgorithmContext&,
-                                                 const Acts::TrackingGeometry&>(
-                                   &Writer::write));
+    using Writer = SvgTrackingGeometryWriter;
+    auto w =
+        py::class_<Writer, std::shared_ptr<Writer>>(mex,
+                                                    "SvgTrackingGeometryWriter")
+            .def(py::init<const Writer::Config&, Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def("write",
+                 py::overload_cast<const AlgorithmContext&,
+                                   const TrackingGeometry&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, outputDir, converterOptions);
   }
   {
-    using Writer = ActsExamples::SvgPointWriter<ActsExamples::SimSpacePoint>;
+    using Writer = SvgPointWriter<SimSpacePoint>;
     auto w =
-        py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
+        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
             mex, "SvgSimSpacePointWriter")
-            .def(py::init<const Writer::Config&, Acts::Logging::Level>(),
+            .def(py::init<const Writer::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("write",
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
@@ -445,13 +440,11 @@ void addSvg(Context& ctx) {
   }
 
   {
-    using Writer =
-        ActsExamples::SvgPointWriter<ActsExamples::SimHit,
-                                     ActsExamples::AccessorPositionXYZ>;
+    using Writer = SvgPointWriter<SimHit, AccessorPositionXYZ>;
     auto w =
-        py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
-            mex, "SvgSimHitWriter")
-            .def(py::init<const Writer::Config&, Acts::Logging::Level>(),
+        py::class_<Writer, IWriter, std::shared_ptr<Writer>>(mex,
+                                                             "SvgSimHitWriter")
+            .def(py::init<const Writer::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("write",
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
@@ -480,4 +473,4 @@ void addSvg(Context& ctx) {
       py::arg("gctx"), py::arg("tGeometry"), py::arg("view"),
       py::arg("drawSurfaces") = true, py::arg("highlightMaterial") = false);
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython
