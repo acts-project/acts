@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/OstreamFormatter.hpp"
+
+#include <format>
 #include <ostream>
 #include <vector>
 
@@ -108,3 +111,8 @@ struct Edge {
 std::ostream& operator<<(std::ostream& os, const Edge& node);
 
 }  // namespace Acts::GraphViz
+
+ACTS_OSTREAM_FORMATTER(Acts::GraphViz::Style);
+ACTS_OSTREAM_FORMATTER(Acts::GraphViz::Shape);
+ACTS_OSTREAM_FORMATTER(Acts::GraphViz::Node);
+ACTS_OSTREAM_FORMATTER(Acts::GraphViz::Edge);

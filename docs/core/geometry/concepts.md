@@ -74,9 +74,6 @@ Not complete yet
 :::{doxygenclass} Acts::INavigationPolicy
 :::
 
-:::{doxygenclass} Acts::MultiNavigationPolicyBase
-:::
-
 :::{doxygenclass} Acts::MultiNavigationPolicy
 :::
 
@@ -87,6 +84,9 @@ Not complete yet
 :::
 
 :::{doxygenclass} Acts::Experimental::MultiLayerNavigationPolicy
+:::
+
+:::{doxygenclass} Acts::CylinderNavigationPolicy
 :::
 
 :::{doxygenstruct} Acts::ProtoLayer

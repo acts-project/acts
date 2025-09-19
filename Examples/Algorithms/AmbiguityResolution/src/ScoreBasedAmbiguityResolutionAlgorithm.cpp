@@ -122,7 +122,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   for (auto iTrack : goodTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
-    destProxy.copyFrom(srcProxy, false);
+    destProxy.copyFromWithoutStates(srcProxy);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 

@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
@@ -21,11 +20,13 @@
 
 using namespace Acts::detail;
 
-Acts::DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
+namespace Acts {
+
+DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
     const Config& config, std::unique_ptr<const Logger> mlogger)
     : m_config(config), m_logger(std::move(mlogger)) {}
 
-void Acts::DD4hepDetectorSurfaceFactory::construct(
+void DD4hepDetectorSurfaceFactory::construct(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) {
   ACTS_DEBUG("Configured to convert "
@@ -48,7 +49,7 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
   }
 }
 
-void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
+void DD4hepDetectorSurfaceFactory::recursiveConstruct(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options,
     int level) {
@@ -89,14 +90,14 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   }
 }
 
-Acts::DD4hepDetectorSurfaceFactory::DD4hepSensitiveSurface
-Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
+DD4hepDetectorSurfaceFactory::DD4hepSensitiveSurface
+DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Extract the axis definition
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
-  std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial = nullptr;
+  std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 
   // Create the corresponding detector element
   auto dd4hepDetElement = m_config.detectorElementFactory(
@@ -117,8 +118,8 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   return {dd4hepDetElement, sSurface};
 }
 
-Acts::DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
-Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
+DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
+DD4hepDetectorSurfaceFactory::constructPassiveComponents(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Underlying TGeo node, shape & transform
@@ -144,10 +145,10 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
   return {pSurface, assignToAll};
 }
 
-void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
+void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     const GeometryContext& gctx, const std::string& prefix,
-    const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
-    double thickness, const Options& options) const {
+    const dd4hep::DetElement& dd4hepElement, Surface& surface, double thickness,
+    const Options& options) const {
   // Bool proto material overrules converted material
   bool protoMaterial =
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
@@ -180,3 +181,5 @@ void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     surface.assignSurfaceMaterial(std::move(surfaceMaterial));
   }
 }
+
+}  // namespace Acts

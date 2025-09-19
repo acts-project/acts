@@ -33,7 +33,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:80
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -82,7 +82,7 @@ jobs:
 
       - name: Save PR number to file
         if: github.event_name == 'pull_request'
-        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+        run: echo -n ${{ github.event.number }} > PR_NUMBER.txt
 
       - name: Persist PR number
         if: github.event_name == 'pull_request'
@@ -96,7 +96,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:80
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -128,7 +128,7 @@ jobs:
   #   needs: build_performance
   #   if: github.ref == 'refs/heads/main'
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
   #     - name: Install dependencies
   #       run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
   #     - uses: actions/download-artifact@v4

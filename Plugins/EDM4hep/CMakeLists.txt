@@ -13,5 +13,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsPluginEDM4hep
-    PUBLIC Acts::Core Acts::PluginPodio EDM4HEP::edm4hep
+    PUBLIC Acts::PluginPodio EDM4HEP::edm4hep
 )

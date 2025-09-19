@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
-namespace Acts::Python {
+namespace ActsPython {
 void addRootInput(Context& /*ctx*/) {}
 void addRootOutput(Context& /*ctx*/) {}
-}  // namespace Acts::Python
+}  // namespace ActsPython
