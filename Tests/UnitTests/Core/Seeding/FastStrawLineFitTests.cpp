@@ -25,21 +25,21 @@ using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
 using namespace Acts::UnitLiterals;
 using RandomEngine = std::mt19937;
+using uniform_t = std::uniform_real_distribution<double>;
+using gauss_t = std::normal_distribution<double>;
 
 constexpr std::size_t nTrials = 1;
-
+constexpr auto logLvl = Logging::Level::INFO;
 namespace Acts::Test {
 
-constexpr bool debugMode = true;
-
-ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests",
-                                   Logging::Level::INFO));
+ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests", logLvl));
 
 class StrawTestPoint;
 using TestStrawCont_t = std::vector<std::unique_ptr<StrawTestPoint>>;
 using Line_t = CompSpacePointAuxiliaries::Line_t;
 using ResidualIdx = FastStrawLineFitter::ResidualIdx;
 
+/// @brief Outstream operator for a vector
 template <typename T>
 std::ostream& operator<<(std::ostream& ostr, const std::vector<T>& v) {
   ostr << "[";
@@ -52,6 +52,10 @@ std::ostream& operator<<(std::ostream& ostr, const std::vector<T>& v) {
   ostr << "]";
   return ostr;
 }
+/// @brief Converts an ACTS time into SI [ns]
+constexpr double inNanoS(const double x) {
+  return x / 1._ns;
+}
 
 class StrawTestPoint {
  public:
@@ -59,6 +63,11 @@ class StrawTestPoint {
                  const double driftRUncert)
       : m_pos{pos}, m_driftR{Acts::abs(driftR)} {
     m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(driftRUncert);
+  }
+
+  StrawTestPoint(const Vector3& pos, const double uncert)
+      : m_pos{pos}, m_isStraw{false} {
+    m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(uncert);
   }
   /// @brief Straw tube's direction
   const Vector3& localPosition() const { return m_pos; }
@@ -79,13 +88,13 @@ class StrawTestPoint {
   /// @brief Time of record
   double time() const { return m_drifT; }
   /// @brief All measurements are straws
-  bool isStraw() const { return true; }
+  bool isStraw() const { return m_isStraw; }
   /// @brief Dummy return not used in test
   bool hasTime() const { return false; }
   /// @brief Dummy return not used in test
   bool measuresLoc0() const { return false; }
   /// @brief Dummy return not used in test
-  bool measuresLoc1() const { return false; }
+  bool measuresLoc1() const { return true; }
   void setRadius(const double r, const double uncertR) {
     m_driftR = Acts::abs(r);
     m_cov[toUnderlying(ResidualIdx::bending)] = Acts::square(uncertR);
@@ -100,6 +109,7 @@ class StrawTestPoint {
   double m_driftR{0.};
   std::array<double, 3> m_cov{Acts::filledArray<double, 3>(0.)};
   double m_drifT{0.};
+  bool m_isStraw{true};
 };
 static_assert(CompositeSpacePoint<StrawTestPoint>);
 
@@ -107,17 +117,15 @@ class StrawTestCalibrator {
  public:
   /// @brief Choose the coefficient to arrive at a drift time of 750 ns
   ///        for 15 mm
-  static constexpr double CoeffRtoT = 1.;  // 750._ns * Acts::pow(15._mm, -2);
+  static constexpr double CoeffRtoT = 750._ns * Acts::pow(15._mm, -2);
   static constexpr double CoeffTtoR = 1. / CoeffRtoT;
 
   static double calcDriftUncert(const double driftR) {
     return 0.1_mm + 0.15_mm * Acts::pow(1._mm + Acts::abs(driftR), -2);
   }
-  static double driftTime(const double r) {
-    return CoeffRtoT * Acts::square(r);
-  }
+  static double driftTime(const double r) { return CoeffRtoT * r; }
   static double driftRadius(const double t) {
-    return std::sqrt(Acts::abs(t) * CoeffTtoR);
+    return CoeffTtoR * Acts::pow(t, 1);
   }
 
   static double driftRadius(const Acts::CalibrationContext& /*ctx*/,
@@ -126,15 +134,16 @@ class StrawTestCalibrator {
   }
   static double driftVelocity(const Acts::CalibrationContext& /*ctx*/,
                               const StrawTestPoint& straw, const double t0) {
-    return CoeffTtoR / (2. * driftRadius(straw.time() - t0));
+    return CoeffTtoR * Acts::pow(straw.time() - t0, 0);
   }
   static double driftAcceleration(const Acts::CalibrationContext& /*ctx*/,
-                                  const StrawTestPoint& straw,
-                                  const double t0) {
-    return -Acts::square(CoeffTtoR) /
-           (4. * Acts::pow(driftRadius(straw.time() - t0), 3));
+                                  const StrawTestPoint& /*straw*/,
+                                  const double /*t0*/) {
+    return 0.;
   }
 };
+static_assert(
+    CompositeSpacePointFastCalibrator<StrawTestCalibrator, StrawTestPoint>);
 
 /// @brief Generate a random straight track with a flat distribution in theta & y0
 ///        Range in theta is [0, 180] degrees in steps of 0.1 excluding the
@@ -145,16 +154,14 @@ Line_t generateLine(RandomEngine& engine) {
   Line_t::ParamVector linePars{};
   linePars[toUnderlying(ParIndex::x0)] = 0.;
   linePars[toUnderlying(ParIndex::phi)] = 90._degree;
-  linePars[toUnderlying(ParIndex::y0)] =
-      std::uniform_real_distribution{-5000., 5000.}(engine);
+  linePars[toUnderlying(ParIndex::y0)] = uniform_t{-5000., 5000.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      std::uniform_real_distribution{0.1_degree, 179.9_degree}(engine);
-  Line_t line{};
-  line.updateParameters(linePars);
+      uniform_t{0.1_degree, 179.9_degree}(engine);
   if (Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
       0.2_degree) {
     return generateLine(engine);
   }
+  Line_t line{linePars};
   ACTS_DEBUG("Generated parameters theta: "
              << (linePars[toUnderlying(ParIndex::theta)] / 1._degree)
              << ", y0: " << linePars[toUnderlying(ParIndex::y0)] << " - "
@@ -237,8 +244,7 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
       if (std::abs(rad) > tubeRadius) {
         continue;
       }
-      std::normal_distribution<> dist{
-          rad, StrawTestCalibrator::calcDriftUncert(rad)};
+      gauss_t dist{rad, StrawTestCalibrator::calcDriftUncert(rad)};
       const double smearedR = smearRadius ? std::abs(dist(engine)) : rad;
       if (smearedR > tubeRadius) {
         continue;
@@ -249,6 +255,23 @@ TestStrawCont_t generateStrawCircles(const Line_t& trajLine,
   }
   ACTS_DEBUG("Track hit in total " << circles.size() << " tubes ");
   return circles;
+}
+
+TestStrawCont_t generateStrips(const Line_t& trajLine, RandomEngine& engine) {
+  TestStrawCont_t strips{};
+  constexpr std::array<double, 16> stripZ{-500._mm, -545_mm, -540_mm, -535._mm,
+                                          -250._mm, -245_mm, -240_mm, -235._mm,
+                                          335._mm,  340_mm,  345_mm,  350._mm,
+                                          435._mm,  440_mm,  445_mm,  400._mm};
+  constexpr double stripPitch = 1._cm;
+  for (const auto z : stripZ) {
+    auto planeExtp = Acts::PlanarHelper::intersectPlane(
+        trajLine.position(), trajLine.direction(), Vector3::UnitZ(), z);
+    Vector3 stripPos = planeExtp.position();
+    stripPos[eY] = gauss_t{stripPos[eY], stripPitch}(engine);
+    strips.emplace_back(std::make_unique<StrawTestPoint>(stripPos, stripPitch));
+  }
+  return strips;
 }
 /// @brief Calculate the overall chi2 of the measurements to the track
 /// @param measurements: List of candidate straw measurements
@@ -269,40 +292,32 @@ double calcChi2(const TestStrawCont_t& measurements, const Line_t& track) {
   return chi2;
 }
 
+#define DECLARE_BRANCH(dTYPE, NAME) \
+  dTYPE NAME{};                     \
+  outTree->Branch(#NAME, &NAME);
+
 BOOST_AUTO_TEST_SUITE(FastStrawLineFitTests)
 
-BOOST_AUTO_TEST_CASE(SimpleLineFit) {
-  RandomEngine engine{1419};
+void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StrawFitTree", "FastFitTree");
 
-  std::unique_ptr<TFile> outFile{};
-  std::unique_ptr<TTree> outTree{};
-  double trueY0{0.};
-  double trueTheta{0.};
-  double fitY0{0.};
-  double fitTheta{0.};
-  double fitdY0{0.};
-  double fitdTheta{0.};
-  double chi2{0.};
-  std::size_t nDoF{0u};
-  std::size_t nIter{0u};
-  if (debugMode) {
-    outFile.reset(TFile::Open("FastStrawLineFitTest.root", "RECREATE"));
-    BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
-    outTree = std::make_unique<TTree>("FastFitTree", "FastFitTree");
-    outTree->Branch("trueY0", &trueY0);
-    outTree->Branch("trueTheta", &trueTheta);
-    outTree->Branch("fitY0", &fitY0);
-    outTree->Branch("fitTheta", &fitTheta);
-    outTree->Branch("errY0", &fitdY0);
-    outTree->Branch("errTheta", &fitdTheta);
-    outTree->Branch("chi2", &chi2);
-    outTree->Branch("nDoF", &nDoF);
-    outTree->Branch("nIter", &nIter);
-  }
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, chi2);
+  DECLARE_BRANCH(std::size_t, nDoF);
+  DECLARE_BRANCH(std::size_t, nIter);
 
   FastStrawLineFitter::Config cfg{};
-  FastStrawLineFitter fastFitter{cfg};
+  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterNoT0", logLvl)};
+  ACTS_INFO("Start simple straw fit test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
+    }
     auto track = generateLine(engine);
     auto strawPoints = generateStrawCircles(track, engine, true);
     if (strawPoints.size() < 3) {
@@ -312,7 +327,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
                             << " did not lead to any valid measurement ");
       continue;
     }
-    const std::vector<std::int32_t> trueDriftSigns =
+    const std::vector<int> trueDriftSigns =
         CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
 
     BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
@@ -342,21 +357,189 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     ACTS_DEBUG("testChi2: " << testChi2 << ", fit:" << (*fitResult).chi2);
 
     BOOST_CHECK_LE(Acts::abs(testChi2 - (*fitResult).chi2), 1.e-9);
-    if (debugMode) {
-      fitTheta = (*fitResult).theta;
-      fitY0 = (*fitResult).y0;
-      fitdTheta = (*fitResult).dTheta;
-      fitdY0 = (*fitResult).dY0;
-      nDoF = (*fitResult).nDoF;
-      chi2 = (*fitResult).chi2;
-      nIter = (*fitResult).nIter;
-      outTree->Fill();
+    recoTheta = (*fitResult).theta;
+    recoY0 = (*fitResult).y0;
+    uncertTheta = (*fitResult).dTheta;
+    uncertY0 = (*fitResult).dY0;
+    nDoF = (*fitResult).nDoF;
+    chi2 = (*fitResult).chi2;
+    nIter = (*fitResult).nIter;
+    outTree->Fill();
+  }
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
+
+void testFitWithT0(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StrawFitTreeT0", "FastFitTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, trueT0);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, recoT0);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, uncertT0);
+  DECLARE_BRANCH(double, chi2);
+  DECLARE_BRANCH(double, meanSign);
+  DECLARE_BRANCH(std::size_t, nDoF);
+  DECLARE_BRANCH(std::size_t, nIter);
+
+  FastStrawLineFitter::Config cfg{};
+  cfg.maxIter = 500;
+  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterWithT0", logLvl)};
+  StrawTestCalibrator calibrator{};
+  Acts::CalibrationContext cctx{};
+  ACTS_INFO("Start straw fit with t0 test.");
+  for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
     }
+    auto track = generateLine(engine);
+    const double timeOffSet = uniform_t{-50._ns, 50._ns}(engine);
+
+    ACTS_DEBUG("Generated time offset: " << inNanoS(timeOffSet) << " [ns]");
+    auto strawPoints = generateStrawCircles(track, engine, true);
+
+    if (strawPoints.size() < 4) {
+      ACTS_WARNING(__func__ << "() - " << __LINE__ << ": -- event: " << n
+                            << ", track " << toString(track.position()) << " + "
+                            << toString(track.direction())
+                            << " did not lead to any valid measurement ");
+      continue;
+    }
+    BOOST_CHECK_LE(calcChi2(generateStrawCircles(track, engine, false), track),
+                   1.e-12);
+
+    /// Fold-in the general offset
+    const std::vector<int> trueDriftSigns =
+        CompSpacePointAuxiliaries::strawSigns(track, strawPoints);
+
+    ACTS_DEBUG("Straw signs: " << trueDriftSigns);
+
+    for (auto& meas : strawPoints) {
+      const double dTime = StrawTestCalibrator::driftTime(meas->driftRadius());
+      BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
+                        meas->driftRadius(), 1.e-12);
+
+      const double updatedR =
+          StrawTestCalibrator::driftRadius(dTime + timeOffSet);
+
+      meas->setTimeRecord(dTime + timeOffSet);
+      BOOST_CHECK_CLOSE(StrawTestCalibrator::driftRadius(dTime),
+                        calibrator.driftRadius(cctx, *meas, timeOffSet), 1.e-3);
+
+      ACTS_DEBUG("Update drift radius of tube "
+                 << toString(meas->localPosition()) << " from "
+                 << meas->driftRadius() << " to " << updatedR
+                 << ", dTime: " << inNanoS(dTime));
+      meas->setRadius(updatedR, StrawTestCalibrator::calcDriftUncert(updatedR));
+      /// Calculate the numerical derivatives
+      constexpr double h = 1.e-8_ns;
+      const double numV =
+          -(calibrator.driftRadius(cctx, *meas, timeOffSet + h) -
+            calibrator.driftRadius(cctx, *meas, timeOffSet - h)) /
+          (2. * h);
+      BOOST_CHECK_LE(
+          Acts::abs(numV - calibrator.driftVelocity(cctx, *meas, timeOffSet)) /
+              std::max(numV, 1.),
+          1.e-3);
+    }
+
+    auto result = fastFitter.fit(cctx, calibrator, strawPoints, trueDriftSigns,
+                                 std::nullopt);
+
+    if (!result) {
+      continue;
+    }
+    auto linePars = track.parameters();
+    /// True parameters
+    trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
+    trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+    trueT0 = inNanoS(timeOffSet);
+    /// Fit parameters
+    recoY0 = (*result).y0;
+    recoTheta = (*result).theta;
+    recoT0 = inNanoS((*result).t0);
+    uncertY0 = (*result).dY0;
+    uncertTheta = (*result).dTheta;
+    uncertT0 = inNanoS((*result).dT0);
+    nDoF = (*result).nDoF;
+    chi2 = (*result).chi2;
+    nIter = (*result).nIter;
+    meanSign = {0.};
+    std::ranges::for_each(trueDriftSigns,
+                          [&meanSign](const int sign) { meanSign += sign; });
+    meanSign /= static_cast<double>(trueDriftSigns.size());
+    outTree->Fill();
   }
-  if (debugMode) {
-    outFile->WriteObject(outTree.get(), outTree->GetName());
-    outTree.reset();
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
+
+void testStripFit(RandomEngine& engine, TFile& outFile) {
+  auto outTree = std::make_unique<TTree>("StripFitTree", "FastFitTree");
+
+  DECLARE_BRANCH(double, trueY0);
+  DECLARE_BRANCH(double, trueTheta);
+  DECLARE_BRANCH(double, recoY0);
+  DECLARE_BRANCH(double, recoTheta);
+  DECLARE_BRANCH(double, uncertY0);
+  DECLARE_BRANCH(double, uncertTheta);
+  DECLARE_BRANCH(double, chi2);
+  DECLARE_BRANCH(std::size_t, nDoF);
+  DECLARE_BRANCH(std::size_t, nIter);
+
+  FastStrawLineFitter::Config cfg{};
+  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("StripFitter", logLvl)};
+  ACTS_INFO("Start strip fit test.");
+  for (std::size_t n = 0; n < nTrials; ++n) {
+    if ((n + 1) % 1000 == 0) {
+      ACTS_INFO(" -- processed " << (n + 1) << "/" << nTrials << " events");
+    }
+    auto track = generateLine(engine);
+    auto linePars = track.parameters();
+    /// True parameters
+    trueY0 = linePars[toUnderlying(Line_t::ParIndex::y0)];
+    trueTheta = linePars[toUnderlying(Line_t::ParIndex::theta)];
+
+    auto stripPoints = generateStrips(track, engine);
+
+    auto result = fastFitter.fit(stripPoints, ResidualIdx::bending);
+    if (!result) {
+      continue;
+    }
+    /// Fit parameters
+    recoY0 = (*result).y0;
+    recoTheta = (*result).theta;
+    uncertY0 = (*result).dY0;
+    uncertTheta = (*result).dTheta;
+    nDoF = (*result).nDoF;
+    nIter = (*result).nIter;
+    chi2 = 0.;
+    auto pos = recoY0 * Vector3::UnitY();
+    auto dir = makeDirectionFromPhiTheta(90._degree, recoTheta);
+    for (const auto& strip : stripPoints) {
+      chi2 += CompSpacePointAuxiliaries::chi2Term(pos, dir, *strip);
+    }
+
+    outTree->Fill();
   }
+
+  outFile.WriteObject(outTree.get(), outTree->GetName());
+}
+
+BOOST_AUTO_TEST_CASE(FitterTests) {
+  RandomEngine engine{1800};
+
+  std::unique_ptr<TFile> outFile{
+      TFile::Open("FastStrawLineFitTest.root", "RECREATE")};
+
+  BOOST_CHECK_EQUAL(outFile->IsZombie(), false);
+
+  testSimpleStrawFit(engine, *outFile);
+  testStripFit(engine, *outFile);
+  testFitWithT0(engine, *outFile);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
