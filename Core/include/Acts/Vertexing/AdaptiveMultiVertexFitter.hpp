@@ -156,7 +156,7 @@ class AdaptiveMultiVertexFitter {
   /// 3. The multivertex fit is performed for all vertices on said list.
   ///
   /// @param state Fitter state
-  /// @param newVertex Vertex to be added to fit
+  /// @param newVertices Vertex to be added to fit
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
