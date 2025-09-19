@@ -9,16 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <array>
 #include <cstddef>
 #include <functional>
 #include <string>
 
-namespace ActsExamples {
+namespace Acts {
 
-/// Method to setup the FieldMapper
+/// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
 /// global
 /// bin of the map magnetic field value e.g.: we have small grid with the
@@ -39,11 +41,9 @@ namespace ActsExamples {
 /// }
 /// @endcode
 /// @param[in] fieldMapFile Path to file containing field map in txt format
+/// @param[in] treeName The name of the root tree
 /// @param[in] lengthUnit The unit of the grid points
 /// @param[in] BFieldUnit The unit of the magnetic field
-/// @note This information is only used as a hint for the required size of
-///       the internal vectors. A correct value is not needed, but will help
-///       to speed up the field map initialization process.
 /// @param[in] firstQuadrant Flag if set to true indicating that only the
 /// first
 /// quadrant of the grid points and the BField values has been given and
@@ -54,14 +54,16 @@ namespace ActsExamples {
 /// If the flag is set to true the r-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapRzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant = false);
+    const std::string& fieldMapFile, const std::string& treeName,
+    double lengthUnit, double BFieldUnit, bool firstQuadrant = false);
 
-/// Method to setup the FieldMapper
+/// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value e.g.: we have small grid with
 /// the
@@ -89,11 +91,9 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
 /// }
 /// @endcode
 /// @param[in] fieldMapFile Path to file containing field map in txt format
+/// @param[in] treeName The name of the root tree
 /// @param[in] lengthUnit The unit of the grid points
 /// @param[in] BFieldUnit The unit of the magnetic field
-/// @note This information is only used as a hint for the required size of
-///       the internal vectors. A correct value is not needed, but will help
-///       to speed up the field map initialization process.
 /// @param[in] firstOctant Flag if set to true indicating that only the
 /// first
 /// octant of the grid points and the BField values has been given and that
@@ -103,11 +103,14 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
 /// If the flag is set to true the z-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromText(
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
+makeMagneticFieldMapXyzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstOctant = false);
+    const std::string& fieldMapFile, const std::string& treeName,
+    double lengthUnit, double BFieldUnit, bool firstOctant = false);
 
-}  // namespace ActsExamples
+}  // namespace Acts

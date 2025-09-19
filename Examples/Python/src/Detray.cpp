@@ -9,7 +9,8 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <string>
@@ -23,10 +24,11 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace Acts::Experimental;
 using namespace detray;
 using namespace detray::io::detail;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addDetray(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -42,17 +44,17 @@ void addDetray(Context& ctx) {
     // and write it to the corresponding json files.
     //
     // The memory resource and the detector are destroyed after the function
-    detray.def("writeToJson", [](const GeometryContext& gctx,
-                                 const Experimental::Detector& detector) {
-      auto memoryResource = vecmem::host_memory_resource();
+    detray.def("writeToJson",
+               [](const GeometryContext& gctx, const Detector& detector) {
+                 auto memoryResource = vecmem::host_memory_resource();
 
-      DetrayConverter::Options options;
-      options.writeToJson = true;
-      options.convertMaterial = false;
-      options.convertSurfaceGrids = true;
-      auto DetrayHostDetector =
-          DetrayConverter().convert<>(gctx, detector, memoryResource, options);
-    });
+                 DetrayConverter::Options options;
+                 options.writeToJson = true;
+                 options.convertMaterial = false;
+                 options.convertSurfaceGrids = true;
+                 auto DetrayHostDetector = DetrayConverter().convert<>(
+                     gctx, detector, memoryResource, options);
+               });
   }
 
   {
@@ -65,4 +67,4 @@ void addDetray(Context& ctx) {
                        writeToJson);
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython
