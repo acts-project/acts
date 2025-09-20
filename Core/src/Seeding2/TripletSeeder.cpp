@@ -49,9 +49,13 @@ void createSeedsFromGroupsImpl(
     const SpacePointContainer2& spacePoints,
     SpacePointCollections& bottomSpGroups,
     const ConstSpacePointProxy2& middleSp, SpacePointCollections& topSpGroups,
-    SeedContainer2& outputSeeds) {
+    SeedContainer2& outputSeeds,
+    const std::pair<float, float>& rangeDeltaZ) {
   MiddleSpInfo middleSpInfo = DoubletSeedFinder::computeMiddleSpInfo(middleSp);
-
+  // get the deltaZ here
+  middleSpInfo.maxDeltaZbottom = rangeDeltaZ.first;
+  middleSpInfo.maxDeltaZtop = rangeDeltaZ.second;  
+  
   // create middle-top doublets
   cache.topDoublets.clear();
   for (auto& topSpGroup : topSpGroups) {
@@ -109,8 +113,9 @@ void createSeedsFromGroupsImpl(
 
 }  // namespace
 
-TripletSeeder::TripletSeeder(std::unique_ptr<const Logger> logger_)
-    : m_logger(std::move(logger_)) {
+  TripletSeeder::TripletSeeder(Config config, std::unique_ptr<const Logger> logger_)
+    : m_config(std::move(config)),
+      m_logger(std::move(logger_)) {
   if (m_logger == nullptr) {
     throw std::invalid_argument("TripletSeeder: logger cannot be null");
   }
@@ -131,9 +136,12 @@ void TripletSeeder::createSeedsFromGroup(
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
 
+  std::pair<float, float> rangeDeltaZ = std::make_pair(m_config.experimentDeltaZbottom(std::abs(middleSp.zr()[0]), middleSp.zr()[1]),
+                                                       m_config.experimentDeltaZtop(std::abs(middleSp.zr()[0]), middleSp.zr()[1]));
+  
   createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                             tripletFinder, filter, spacePoints, bottomSpGroups,
-                            middleSp, topSpGroups, outputSeeds);
+                            middleSp, topSpGroups, outputSeeds, rangeDeltaZ);
 }
 
 void TripletSeeder::createSeedsFromGroups(
@@ -182,8 +190,13 @@ void TripletSeeder::createSeedsFromGroups(
   }
 
   for (ConstSpacePointProxy2 spM : middleSpGroup) {
+    const float zM = spM.zr()[0];
     const float rM = spM.zr()[1];
 
+    if (m_config.experimentVetoMiddle(zM, rM)) {
+      continue;
+    }
+    
     if (spacePointsSortedByRadius) {
       // check if spM is outside our radial region of interest
       if (rM < radiusRangeForMiddle.first) {
@@ -195,10 +208,14 @@ void TripletSeeder::createSeedsFromGroups(
       }
     }
 
+
+    std::pair<float, float> rangeDeltaZ = std::make_pair(m_config.experimentDeltaZbottom(std::abs(zM), rM),
+                                                         m_config.experimentDeltaZtop(std::abs(zM), rM));
     createSeedsFromGroupsImpl(*m_logger, cache, bottomFinder, topFinder,
                               tripletFinder, filter, spacePoints,
-                              bottomSpGroups, spM, topSpGroups, outputSeeds);
+                              bottomSpGroups, spM, topSpGroups, outputSeeds,
+                              rangeDeltaZ);
   }
 }
-
+  
 }  // namespace Acts::Experimental

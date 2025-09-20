@@ -35,9 +35,28 @@ class TripletSeeder {
     TripletTopCandidates tripletTopCandidates;
   };
 
-  explicit TripletSeeder(std::unique_ptr<const Logger> logger =
-                             getDefaultLogger("TripletSeeder",
-                                              Logging::Level::INFO));
+  struct Config {
+    static float voidDeltaZFunc(float, float) {
+      return std::numeric_limits<float>::max();
+    };
+    static bool vetoCandidate(float, float) {
+      return false;
+    };
+    
+    using experimentDeltaZ =
+      Delegate<float(float, float)>;
+    using experimentVeto =
+      Delegate<bool(float, float)>;
+    
+    experimentDeltaZ experimentDeltaZbottom {DelegateFuncTag<&Acts::Experimental::TripletSeeder::Config::voidDeltaZFunc>()};
+    experimentDeltaZ experimentDeltaZtop {DelegateFuncTag<&Acts::Experimental::TripletSeeder::Config::voidDeltaZFunc>()};
+    experimentVeto experimentVetoMiddle {DelegateFuncTag<&Acts::Experimental::TripletSeeder::Config::vetoCandidate>()};
+  };
+  
+  explicit TripletSeeder(Config,
+                         std::unique_ptr<const Logger> logger =
+                         getDefaultLogger("TripletSeeder",
+                                          Logging::Level::INFO));
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///
@@ -86,7 +105,8 @@ class TripletSeeder {
       SeedContainer2& outputSeeds) const;
 
  private:
-  std::unique_ptr<const Logger> m_logger;
+  Config m_config;
+  std::unique_ptr<const Logger> m_logger;  
 
   const Logger& logger() const { return *m_logger; }
 };
