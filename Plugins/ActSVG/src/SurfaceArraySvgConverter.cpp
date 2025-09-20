@@ -177,13 +177,14 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
       double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
+      Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
       if (vType == polar) {
         bCenter = Vector3(p0 * std::cos(p1), p0 * std::sin(p1), 0.);
       } else if (vType == cylinder) {
         bCenter = Vector3(radius * std::cos(p1), radius * std::sin(p1), p0);
       }
       // Get all the bin entries and members
-      auto bSurfaces = surfaceArray.neighbors(bCenter);
+      auto bSurfaces = surfaceArray.neighbors(bCenter, bDirection);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
         auto candidate = std::ranges::find(surfaces, bs);

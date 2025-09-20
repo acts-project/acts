@@ -265,6 +265,8 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     seq = Sequencer(events=10, numThreads=1)
 
+    rnd = acts.examples.RandomNumbers(seed=4242)
+
     root_files = [
         (
             "estimatedparams.root",
@@ -299,6 +301,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
         geoSelectionConfigFile=geoSelectionConfigFile,
         config=config,
         s=seq,
+        rnd=rnd,
     ).run()
 
     del seq
