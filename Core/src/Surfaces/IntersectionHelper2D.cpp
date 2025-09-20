@@ -27,7 +27,7 @@ Intersection2D IntersectionHelper2D::intersectSegment(const Vector2& s0,
   Vector2 edge(s1 - s0);
   double det = edge.x() * dir.y() - edge.y() * dir.x();
   if (std::abs(det) < s_epsilon) {
-    return Intersection2D::invalid();
+    return Intersection2D::Invalid();
   }
 
   auto line = Line(origin, dir);
@@ -75,9 +75,9 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(solx, 0.), -origin.y(),
                              IntersectionStatus::reachable),
-              Intersection2D::invalid()};
+              Intersection2D::Invalid()};
     }
-    return {Intersection2D::invalid(), Intersection2D::invalid()};
+    return {Intersection2D::Invalid(), Intersection2D::Invalid()};
   } else if (std::abs(dir.y()) < s_epsilon) {
     double soly = origin.y();
     double D = 1. - soly * soly / (Ry * Ry);
@@ -89,9 +89,9 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(0., soly), -origin.x(),
                              IntersectionStatus::reachable),
-              Intersection2D::invalid()};
+              Intersection2D::Invalid()};
     }
-    return {Intersection2D::invalid(), Intersection2D::invalid()};
+    return {Intersection2D::Invalid(), Intersection2D::Invalid()};
   }
   // General solution
   double k = dir.y() / dir.x();
@@ -107,7 +107,7 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     Vector2 toSolD(sol - origin);
     double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     return {Intersection2D(sol, solD, IntersectionStatus::reachable),
-            Intersection2D::invalid()};
+            Intersection2D::Invalid()};
   } else if (solver.solutions > 1) {
     double x0 = solver.first;
     double x1 = solver.second;
@@ -115,7 +115,7 @@ std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
     Vector2 alt(x1, k * x1 + d);
     return createSolution(sol, alt);
   }
-  return {Intersection2D::invalid(), Intersection2D::invalid()};
+  return {Intersection2D::Invalid(), Intersection2D::Invalid()};
 }
 
 Intersection2D IntersectionHelper2D::intersectCircleSegment(
@@ -130,7 +130,7 @@ Intersection2D IntersectionHelper2D::intersectCircleSegment(
       }
     }
   }
-  return Intersection2D::invalid();
+  return Intersection2D::Invalid();
 }
 
 }  // namespace Acts::detail

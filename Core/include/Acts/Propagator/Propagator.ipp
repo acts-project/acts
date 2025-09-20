@@ -51,17 +51,17 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
         return NavigationTarget::None();
       }
       IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, *nextTarget.surface,
-          nextTarget.surfaceIntersectionIndex, state.options.direction,
-          nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          ConstrainedStep::Type::Navigator, logger());
+          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
+          state.options.direction, nextTarget.boundaryTolerance(),
+          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+          logger());
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
         // This indicates a geometry overlap which is not handled by the
         // navigator, so we skip this target.
         // This can also happen in a well-behaved geometry with external
         // surfaces.
         ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
-                     << nextTarget.surface->geometryId());
+                     << nextTarget.surface().geometryId());
         continue;
       }
       if (preStepSurfaceStatus == IntersectionStatus::reachable) {
@@ -122,13 +122,13 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
 
     if (!nextTarget.isNone()) {
       IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, *nextTarget.surface,
-          nextTarget.surfaceIntersectionIndex, state.options.direction,
-          nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          ConstrainedStep::Type::Navigator, logger());
+          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
+          state.options.direction, nextTarget.boundaryTolerance(),
+          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+          logger());
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
         m_navigator.handleSurfaceReached(state.navigation, state.position,
-                                         state.direction, *nextTarget.surface);
+                                         state.direction, nextTarget.surface());
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::None();

@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <numbers>
@@ -73,17 +74,17 @@ class NoFieldIntersectionFinder {
                              BoundaryTolerance::AbsoluteEuclidean(m_tol));
 
       // Take the closest
-      auto closestForward = sMultiIntersection.closestForward();
+      Intersection3D closestForward = sMultiIntersection.closestForward();
 
       // Store if the intersection is reachable
       if (closestForward.status() == IntersectionStatus::reachable &&
           closestForward.pathLength() > 0.0) {
-        sIntersections.push_back(
-            {closestForward.surface().geometryId(),
-             surface
-                 ->globalToLocal(geoCtx, closestForward.position(),
-                                 Vector3{0, 1, 0})
-                 .value()});
+        sIntersections.emplace_back(
+            surface->geometryId(),
+            surface
+                ->globalToLocal(geoCtx, closestForward.position(),
+                                Vector3{0, 1, 0})
+                .value());
         continue;
       }
     }

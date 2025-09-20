@@ -21,6 +21,7 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -31,7 +32,6 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -70,29 +70,6 @@ using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
-
-/// Intersection with @c Layer
-using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
-/// Multi-intersection with @c Layer
-using LayerMultiIntersection =
-    std::pair<SurfaceMultiIntersection, const Layer*>;
-
-/// BoundarySurface of a volume
-using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
-
-/// Intersection with a @c BoundarySurface
-/// @note This struct is currently split between a gen1 boundary surface
-///       and a gen3 portal but only one of them will be set. This will go away
-///       once the gen 1 geometry is removed.
-struct BoundaryIntersection {
-  SurfaceIntersection intersection;
-  const BoundarySurface* boundarySurface;
-  const Portal* portal;
-};
-
-/// Multi-intersection with a @c BoundarySurface
-using BoundaryMultiIntersection =
-    std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
 
 /// @}
 
@@ -395,7 +372,7 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
+  boost::container::small_vector<NavigationTarget, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -411,7 +388,7 @@ class TrackingVolume : public Volume {
   /// @param logger A @c Logger instance
   ///
   /// @return is the templated boundary intersection
-  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
+  boost::container::small_vector<NavigationTarget, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
       const Logger& logger = getDummyLogger()) const;

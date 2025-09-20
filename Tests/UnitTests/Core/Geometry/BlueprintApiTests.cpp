@@ -16,7 +16,6 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -24,7 +23,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -192,14 +190,13 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     while (main.remainingCandidates() > 0) {
       const auto& candidate = main.currentCandidate();
 
-      ACTS_VERBOSE(candidate.portal);
-      ACTS_VERBOSE(candidate.intersection.position().transpose());
+      ACTS_VERBOSE(candidate.position().transpose());
 
       ACTS_VERBOSE("moving to position: " << position.transpose() << " (r="
                                           << VectorHelpers::perp(position)
                                           << ")");
 
-      Vector3 delta = candidate.intersection.position() - position;
+      Vector3 delta = candidate.position() - position;
 
       std::size_t substeps =
           std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
@@ -213,18 +210,17 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         csv << std::endl;
       }
 
-      position = candidate.intersection.position();
+      position = candidate.position();
       ACTS_VERBOSE("                 -> "
                    << position.transpose()
                    << " (r=" << VectorHelpers::perp(position) << ")");
 
       writeIntersection(position, candidate.surface());
 
-      if (candidate.portal != nullptr) {
-        ACTS_VERBOSE(
-            "On portal: " << candidate.portal->surface().toStream(gctx));
+      if (candidate.isPortalTarget()) {
+        ACTS_VERBOSE("On portal: " << candidate.surface().toStream(gctx));
         currentVolume =
-            candidate.portal->resolveVolume(gctx, position, direction).value();
+            candidate.portal().resolveVolume(gctx, position, direction).value();
 
         if (currentVolume == nullptr) {
           ACTS_VERBOSE("switched to nullptr -> we're done");
@@ -276,89 +272,100 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
     mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
 
-    mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
-      det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
-        cyl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
-            .setResizeStrategy(VolumeResizeStrategy::Gap);
+    mat.addCylinderContainer(
+        "Detector", AxisDirection::AxisR,
+        [&](Experimental::CylinderContainerBlueprintNode& det) {
+          det.addCylinderContainer(
+              "Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
+                cyl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
+                    .setResizeStrategy(VolumeResizeStrategy::Gap);
 
-        cyl.addCylinderContainer(
-            "PixelNegativeEndcap", AxisDirection::AxisZ, [&](auto& ec) {
-              ec.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+                cyl.addCylinderContainer(
+                    "PixelNegativeEndcap", AxisDirection::AxisZ, [&](auto& ec) {
+                      ec.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-              auto makeLayer = [&](const Transform3& trf, auto& layer) {
-                std::vector<std::shared_ptr<Surface>> surfaces;
-                auto layerSurfaces = makeFan(trf, 300_mm, 10, 2_mm);
-                std::copy(layerSurfaces.begin(), layerSurfaces.end(),
-                          std::back_inserter(surfaces));
-                layerSurfaces = makeFan(trf, 500_mm, 16, 2_mm);
-                std::copy(layerSurfaces.begin(), layerSurfaces.end(),
-                          std::back_inserter(surfaces));
+                      auto makeLayer = [&](const Transform3& trf, auto& layer) {
+                        std::vector<std::shared_ptr<Surface>> surfaces;
+                        auto layerSurfaces = makeFan(trf, 300_mm, 10, 2_mm);
+                        std::copy(layerSurfaces.begin(), layerSurfaces.end(),
+                                  std::back_inserter(surfaces));
+                        layerSurfaces = makeFan(trf, 500_mm, 16, 2_mm);
+                        std::copy(layerSurfaces.begin(), layerSurfaces.end(),
+                                  std::back_inserter(surfaces));
 
-                layer.setSurfaces(surfaces)
-                    .setLayerType(LayerBlueprintNode::LayerType::Disc)
-                    .setEnvelope(ExtentEnvelope{{
-                        .z = {5_mm, 5_mm},
-                        .r = {10_mm, 20_mm},
-                    }})
-                    .setTransform(base);
-              };
+                        layer.setSurfaces(surfaces)
+                            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+                            .setEnvelope(ExtentEnvelope{{
+                                .z = {5_mm, 5_mm},
+                                .r = {10_mm, 20_mm},
+                            }})
+                            .setTransform(base);
+                      };
 
-              ec.addLayer("PixelNeg1", [&](auto& layer) {
-                makeLayer(base * Translation3{Vector3{0, 0, -700_mm}}, layer);
+                      ec.addLayer("PixelNeg1", [&](auto& layer) {
+                        makeLayer(base * Translation3{Vector3{0, 0, -700_mm}},
+                                  layer);
+                      });
+
+                      ec.addLayer("PixelNeg2", [&](auto& layer) {
+                        makeLayer(base * Translation3{Vector3{0, 0, -500_mm}},
+                                  layer);
+                      });
+                    });
+
+                cyl.addCylinderContainer(
+                    "PixelBarrel", AxisDirection::AxisR, [&](auto& brl) {
+                      brl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
+                          .setResizeStrategy(VolumeResizeStrategy::Gap);
+
+                      auto makeLayer = [&](const std::string& name, double r,
+                                           std::size_t nStaves,
+                                           int nSensorsPerStave) {
+                        brl.addLayer(name, [&](auto& layer) {
+                          std::vector<std::shared_ptr<Surface>> surfaces =
+                              makeBarrelLayer(base, detectorElements, r,
+                                              nStaves, nSensorsPerStave, 2.5_mm,
+                                              10_mm, 20_mm);
+
+                          layer.setSurfaces(surfaces)
+                              .setLayerType(
+                                  LayerBlueprintNode::LayerType::Cylinder)
+                              .setEnvelope(ExtentEnvelope{{
+                                  .z = {5_mm, 5_mm},
+                                  .r = {1_mm, 1_mm},
+                              }})
+                              .setTransform(base);
+                        });
+                      };
+
+                      makeLayer("PixelLayer0", 30_mm, 18, 5);
+                      makeLayer("PixelLayer1", 90_mm, 30, 6);
+
+                      brl.addStaticVolume(
+                          base,
+                          std::make_shared<CylinderVolumeBounds>(100_mm, 110_mm,
+                                                                 250_mm),
+                          "PixelSupport");
+
+                      makeLayer("PixelLayer2", 150_mm, 40, 7);
+                      makeLayer("PixelLayer3", 250_mm, 70, 8);
+                    });
+
+                auto& ec = cyl.addCylinderContainer("PixelPosWrapper",
+                                                    AxisDirection::AxisR);
+                ec.setResizeStrategy(VolumeResizeStrategy::Gap);
+                ec.addStaticVolume(std::make_unique<TrackingVolume>(
+                    base * Translation3{Vector3{0, 0, 600_mm}},
+                    std::make_shared<CylinderVolumeBounds>(150_mm, 390_mm,
+                                                           200_mm),
+                    "PixelPositiveEndcap"));
               });
 
-              ec.addLayer("PixelNeg2", [&](auto& layer) {
-                makeLayer(base * Translation3{Vector3{0, 0, -500_mm}}, layer);
-              });
-            });
-
-        cyl.addCylinderContainer(
-            "PixelBarrel", AxisDirection::AxisR, [&](auto& brl) {
-              brl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
-                  .setResizeStrategy(VolumeResizeStrategy::Gap);
-
-              auto makeLayer = [&](const std::string& name, double r,
-                                   std::size_t nStaves, int nSensorsPerStave) {
-                brl.addLayer(name, [&](auto& layer) {
-                  std::vector<std::shared_ptr<Surface>> surfaces =
-                      makeBarrelLayer(base, detectorElements, r, nStaves,
-                                      nSensorsPerStave, 2.5_mm, 10_mm, 20_mm);
-
-                  layer.setSurfaces(surfaces)
-                      .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
-                      .setEnvelope(ExtentEnvelope{{
-                          .z = {5_mm, 5_mm},
-                          .r = {1_mm, 1_mm},
-                      }})
-                      .setTransform(base);
-                });
-              };
-
-              makeLayer("PixelLayer0", 30_mm, 18, 5);
-              makeLayer("PixelLayer1", 90_mm, 30, 6);
-
-              brl.addStaticVolume(base,
-                                  std::make_shared<CylinderVolumeBounds>(
-                                      100_mm, 110_mm, 250_mm),
-                                  "PixelSupport");
-
-              makeLayer("PixelLayer2", 150_mm, 40, 7);
-              makeLayer("PixelLayer3", 250_mm, 70, 8);
-            });
-
-        auto& ec =
-            cyl.addCylinderContainer("PixelPosWrapper", AxisDirection::AxisR);
-        ec.setResizeStrategy(VolumeResizeStrategy::Gap);
-        ec.addStaticVolume(std::make_unique<TrackingVolume>(
-            base * Translation3{Vector3{0, 0, 600_mm}},
-            std::make_shared<CylinderVolumeBounds>(150_mm, 390_mm, 200_mm),
-            "PixelPositiveEndcap"));
-      });
-
-      det.addStaticVolume(
-          base, std::make_shared<CylinderVolumeBounds>(0_mm, 23_mm, 1000_mm),
-          "BeamPipe");
-    });
+          det.addStaticVolume(
+              base,
+              std::make_shared<CylinderVolumeBounds>(0_mm, 23_mm, 1000_mm),
+              "BeamPipe");
+        });
   });
 
   std::ofstream dot{"api_test_container.dot"};

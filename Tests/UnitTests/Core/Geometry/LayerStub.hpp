@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include "../Surfaces/SurfaceStub.hpp"
 

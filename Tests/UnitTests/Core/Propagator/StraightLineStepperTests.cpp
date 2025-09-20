@@ -264,24 +264,27 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::Type::Navigator),
                   navDir * 2., 1e-6);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(tgContext, sls.position(slsState),
+                    navDir * sls.direction(slsState), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // Test the step size modification in the context of a surface
-  sls.updateStepSize(slsState,
-                     targetSurface
-                         ->intersect(tgContext, sls.position(slsState),
-                                     navDir * sls.direction(slsState),
-                                     BoundaryTolerance::Infinite())
-                         .closest(),
-                     navDir, ConstrainedStep::Type::Navigator);
+  sls.updateStepSize(
+      slsState,
+      getNavigationTarget(*targetSurface, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
   slsState.stepSize.setUser(navDir * stepSize);
   sls.releaseStepSize(slsState, ConstrainedStep::Type::Navigator);
-  sls.updateStepSize(slsState,
-                     targetSurface
-                         ->intersect(tgContext, sls.position(slsState),
-                                     navDir * sls.direction(slsState),
-                                     BoundaryTolerance::Infinite())
-                         .closest(),
-                     navDir, ConstrainedStep::Type::Navigator);
+  sls.updateStepSize(
+      slsState,
+      getNavigationTarget(*targetSurface, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction

@@ -566,26 +566,27 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::Type::Navigator),
                     distance);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(geoCtx, stepper.position(state),
+                    navDir * stepper.direction(state), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // test the step size modification in the context of a surface
-  stepper.updateStepSize(state,
-                         target
-                             ->intersect(geoCtx, stepper.position(state),
-                                         navDir * stepper.direction(state),
-                                         BoundaryTolerance::Infinite())
-                             .closest(),
-                         navDir, ConstrainedStep::Type::Navigator);
+  stepper.updateStepSize(
+      state, getNavigationTarget(*target, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
   state.stepSize.setUser(navDir * stepSize);
   stepper.releaseStepSize(state, ConstrainedStep::Type::Navigator);
-  stepper.updateStepSize(state,
-                         target
-                             ->intersect(geoCtx, stepper.position(state),
-                                         navDir * stepper.direction(state),
-                                         BoundaryTolerance::Infinite())
-                             .closest(),
-                         navDir, ConstrainedStep::Type::Navigator);
+  stepper.updateStepSize(
+      state, getNavigationTarget(*target, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
