@@ -8,7 +8,7 @@
 
 #pragma once
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename T>
 concept ContainerHasAt = requires(const T &t) { t.at(0); };
@@ -16,4 +16,4 @@ concept ContainerHasAt = requires(const T &t) { t.at(0); };
 template <typename T>
 concept ContainerHasArrayAccess = requires(const T &t) { t[0]; };
 
-}  // namespace Acts
+}  // namespace Acts::detail

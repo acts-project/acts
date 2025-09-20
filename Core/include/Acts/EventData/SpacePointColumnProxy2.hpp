@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerSubset.hpp"
 
 #include <cassert>
 #include <span>
@@ -135,9 +135,10 @@ class SpacePointColumnProxy {
   }
 
   class Subset
-      : public ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
+      : public detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
    public:
-    using Base = ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
+    using Base =
+        detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
 
     using Base::Base;
   };
