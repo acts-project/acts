@@ -53,7 +53,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addRootOutput(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   // Bindings for the binning in e.g., TrackFinderPerformanceWriter
   {

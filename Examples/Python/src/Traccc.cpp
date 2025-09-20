@@ -27,7 +27,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTraccc(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   auto traccc = mex.def_submodule("traccc");
 

@@ -24,7 +24,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addAmbiguityResolution(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,

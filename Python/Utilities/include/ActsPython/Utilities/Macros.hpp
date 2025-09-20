@@ -108,9 +108,3 @@ concept has_write_method =
     auto c = py::class_<Config>(r, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)
-
-#define ACTS_PYTHON_ADD_STUB_MODULE(mod) \
-  namespace py = pybind11;               \
-  namespace ActsPython {                 \
-  void add##mod(py::module_& /*m*/) {}   \
-  }
