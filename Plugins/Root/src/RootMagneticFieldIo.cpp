@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
+#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
@@ -17,8 +17,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::detail::InterpolatedMagneticField2
-ActsExamples::makeMagneticFieldMapRzFromRoot(
+Acts::InterpolatedBFieldMap<
+    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>
+Acts::makeMagneticFieldMapRzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
@@ -29,7 +31,7 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   std::vector<double> rPos;
   std::vector<double> zPos;
   // components of magnetic field on grid points
-  std::vector<Acts::Vector2> bField;
+  std::vector<Vector2> bField;
   // [1] Read in file and fill values
   std::unique_ptr<TFile> inputFile(TFile::Open(fieldMapFile.c_str()));
   if (inputFile == nullptr) {
@@ -59,15 +61,18 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
     tree->GetEvent(i);
     rPos.push_back(r);
     zPos.push_back(z);
-    bField.push_back(Acts::Vector2(Br, Bz));
+    bField.push_back(Vector2(Br, Bz));
   }
   /// [2] use helper function in core
-  return Acts::fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
-                          BFieldUnit, firstQuadrant);
+  return fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
+                    BFieldUnit, firstQuadrant);
 }
 
-ActsExamples::detail::InterpolatedMagneticField3
-ActsExamples::makeMagneticFieldMapXyzFromRoot(
+Acts::InterpolatedBFieldMap<
+    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>
+Acts::makeMagneticFieldMapXyzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
@@ -79,7 +84,7 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   std::vector<double> yPos;
   std::vector<double> zPos;
   // components of magnetic field on grid points
-  std::vector<Acts::Vector3> bField;
+  std::vector<Vector3> bField;
   // [1] Read in file and fill values
   std::unique_ptr<TFile> inputFile(TFile::Open(fieldMapFile.c_str()));
   if (inputFile == nullptr) {
@@ -113,9 +118,9 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
     xPos.push_back(x);
     yPos.push_back(y);
     zPos.push_back(z);
-    bField.push_back(Acts::Vector3(Bx, By, Bz));
+    bField.push_back(Vector3(Bx, By, Bz));
   }
 
-  return Acts::fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
-                           lengthUnit, BFieldUnit, firstOctant);
+  return fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField, lengthUnit,
+                     BFieldUnit, firstOctant);
 }

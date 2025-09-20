@@ -21,7 +21,7 @@ add_component_if(
     PluginPodio
     ACTS_BUILD_PLUGIN_PODIO
     OR
-    ACTS_PLUGIN_EDM4HEP
+    ACTS_BUILD_PLUGIN_EDM4HEP
 )
 add_component_if(EDM4hep PluginEDM4hep ACTS_BUILD_PLUGIN_EDM4HEP)
 

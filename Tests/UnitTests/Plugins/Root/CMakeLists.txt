@@ -1,6 +1,8 @@
 set(unittest_extra_libraries ActsPluginRoot)
 
 add_unittest(RootMaterialMapIo RootMaterialMapIoTests.cpp)
+add_unittest(RootMagneticFieldIo RootMagneticFieldIoTests.cpp)
+add_unittest(RootMeasurementIo RootMeasurementIoTests.cpp)
 add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
 add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)
 add_unittest(TGeoTrd1Conversion TGeoTrd1ConversionTests.cpp)
