@@ -43,7 +43,7 @@ void addVertexing(Context& ctx) {
       outputVertices, seedFinder, bField, minWeight, doSmoothing, maxIterations,
       useTime, tracksMaxZinterval, initialVariances, doFullSplitting,
       tracksMaxSignificance, maxMergeVertexSignificance, spatialBinExtent,
-      temporalBinExtent);
+      temporalBinExtent, simultaneousSeeds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(IterativeVertexFinderAlgorithm, mex,
                                 "IterativeVertexFinderAlgorithm",
