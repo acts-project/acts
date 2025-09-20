@@ -63,7 +63,12 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   ParticleData data;
 
   while (reader.read(data)) {
-    SimParticleState particle(ActsFatras::Barcode(data.particle_id),
+    SimParticleState particle(ActsFatras::Barcode()
+                                  .withVertexPrimary(data.particle_id_pv)
+                                  .withVertexSecondary(data.particle_id_sv)
+                                  .withParticle(data.particle_id_part)
+                                  .withGeneration(data.particle_id_gen)
+                                  .withSubParticle(data.particle_id_subpart),
                               Acts::PdgParticle{data.particle_type},
                               data.q * Acts::UnitConstants::e,
                               data.m * Acts::UnitConstants::GeV);

@@ -339,9 +339,9 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
       for (const auto& genParticle : generatorStableParticles) {
         SimParticle particle =
             EDM4hepUtil::readParticle(genParticle)
-                .withParticleId(SimBarcode{}
-                                    .setParticle(nParticles)
-                                    .setVertexPrimary(nPrimaryVertices));
+                .withParticleId(SimBarcode()
+                                    .withParticle(nParticles)
+                                    .withVertexPrimary(nPrimaryVertices));
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
@@ -557,8 +557,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
             });
 
         ACTS_VERBOSE("Converted sim hit for truth particle: "
-                     << simHit.particleId() << " ("
-                     << simHit.particleId().value() << ") at "
+                     << simHit.particleId() << " at "
                      << simHit.fourPosition().transpose() << " with time "
                      << simHit.time());
 
@@ -806,13 +805,13 @@ void EDM4hepSimInputConverter::processChildren(
       // incoming particle survived, interaction via descendant
     } else {
       // incoming particle decayed
-      pid = pid.setVertexSecondary(secondaryVertex);
+      pid = pid.withVertexSecondary(secondaryVertex);
     }
     particle.setParticleId(pid);
 
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "+ add particle " << particle << " ("
-                 << particle.particleId().value() << ") from #"
+                 << particle.particleId() << ") from #"
                  << daughter.getObjectID());
     ACTS_VERBOSE(indent(particle.particleId().generation())
                  << "  - generation: " << particle.particleId().generation());
@@ -853,7 +852,7 @@ void EDM4hepSimInputConverter::setSubParticleIds(
     unsigned long nextSubParticle = numByGeneration[particle.generation()];
     numByGeneration[particle.generation()] += 1;
 
-    particle.setSubParticle(nextSubParticle);
+    particle = particle.withSubParticle(nextSubParticle);
   }
 }
 

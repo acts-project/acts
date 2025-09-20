@@ -163,13 +163,8 @@ std::optional<SimBarcode> ParticleTrackingAction::makeParticleId(
   }
 
   auto pid = eventStore().trackIdMapping.at(parentId).makeDescendant();
-
-  auto key = EventStore::BarcodeWithoutSubparticle::Zeros();
-  key.set(0, pid.vertexPrimary())
-      .set(1, pid.vertexSecondary())
-      .set(2, pid.particle())
-      .set(3, pid.generation());
-  pid.setSubParticle(++eventStore().subparticleMap[key]);
+  auto key = pid.withoutSubparticle();
+  pid = pid.withSubParticle(++eventStore().subparticleMap[key]);
 
   return pid;
 }

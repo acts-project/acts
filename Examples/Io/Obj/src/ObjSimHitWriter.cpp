@@ -68,7 +68,8 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     }  // end simHit loop
   } else {
     // We need to associate first
-    std::unordered_map<std::size_t, std::vector<Acts::Vector4>> particleHits;
+    std::unordered_map<ActsFatras::Barcode, std::vector<Acts::Vector4>>
+        particleHits;
     // Pre-loop over hits ... write those below threshold
     for (const auto& simHit : simHits) {
       double momentum = simHit.momentum4Before().head<3>().norm();
@@ -89,12 +90,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
       }
       ACTS_VERBOSE("Accepting: Hit above threshold: " << momentum);
 
-      if (particleHits.find(simHit.particleId().value()) ==
-          particleHits.end()) {
-        particleHits[simHit.particleId().value()] = {};
+      if (particleHits.find(simHit.particleId()) == particleHits.end()) {
+        particleHits[simHit.particleId()] = {};
       }
-      particleHits[simHit.particleId().value()].push_back(
-          simHit.fourPosition());
+      particleHits[simHit.particleId()].push_back(simHit.fourPosition());
     }
     // Draw loop
     std::size_t lOffset = 1;

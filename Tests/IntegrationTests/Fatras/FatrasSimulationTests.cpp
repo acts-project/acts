@@ -186,7 +186,8 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
 
   // create input particles. particle number should ne non-zero.
   for (auto i = numParticles; 0 < i; --i) {
-    const auto pid = ActsFatras::Barcode().setVertexPrimary(42).setParticle(i);
+    const auto pid =
+        ActsFatras::Barcode().withVertexPrimary(42).withParticle(i);
     const auto particle =
         ActsFatras::Particle(pid, pdg)
             .setDirection(Acts::makeDirectionFromPhiEta(phi, eta))
