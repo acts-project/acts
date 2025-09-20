@@ -38,7 +38,7 @@ using ResidualIdx = CompSpacePointAuxiliaries::ResidualIdx;
 using Vector = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
-constexpr auto logLvl = Logging::Level::DEBUG;
+constexpr auto logLvl = Logging::Level::INFO;
 constexpr std::size_t nEvents = 100;
 constexpr double tolerance = 1.e-3;
 
