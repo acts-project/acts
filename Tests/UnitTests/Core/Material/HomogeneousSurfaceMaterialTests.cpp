@@ -46,21 +46,6 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
   BOOST_CHECK_EQUAL(hsm, hsmAssignedMoved);
 }
 
-// Test the Scaling
-BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
-  MaterialSlab mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
-  MaterialSlab matHalf = mat;
-  matHalf.scaleThickness(0.5);
-
-  HomogeneousSurfaceMaterial hsm(mat, 1.);
-  hsm.scale(0.5);
-
-  auto matBin = hsm.materialSlab(Vector3(0., 0., 0.));
-
-  BOOST_CHECK_EQUAL(matBin, matHalf);
-  BOOST_CHECK_NE(matBin, mat);
-}
-
 // Test the Access
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   // construct the material properties from arguments
