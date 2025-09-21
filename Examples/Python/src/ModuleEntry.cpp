@@ -34,6 +34,7 @@ void addAlgebra(Context& ctx);
 void addBinning(Context& ctx);
 void addEventData(Context& ctx);
 
+void addHelloWorld(Context& ctx);
 void addPropagation(Context& ctx);
 void addNavigation(Context& ctx);
 
@@ -114,6 +115,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addEventData(ctx);
   addOutput(ctx);
 
+  addHelloWorld(ctx);
   addPropagation(ctx);
   addNavigation(ctx);
   addAlignment(ctx);

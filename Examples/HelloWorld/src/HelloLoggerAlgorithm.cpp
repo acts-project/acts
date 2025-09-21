@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "HelloLoggerAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloLoggerAlgorithm.hpp"
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -18,8 +18,8 @@ ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::HelloLoggerAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber);
-  ACTS_DEBUG("  - that's an ACTS_DEBUG message");
-  ACTS_VERBOSE("  - that's an ACTS_VERBOSE message");
+  ACTS_INFO("Hello World! (from event=" << ctx.eventNumber << ")");
+  ACTS_DEBUG("That's an ACTS_DEBUG message");
+  ACTS_VERBOSE("That's an ACTS_VERBOSE message");
   return ActsExamples::ProcessCode::SUCCESS;
 }
