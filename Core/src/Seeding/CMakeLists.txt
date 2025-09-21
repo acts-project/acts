@@ -3,5 +3,6 @@ target_sources(
     PRIVATE
         EstimateTrackParamsFromSeed.cpp
         CompSpacePointAuxiliaries.cpp
+        CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
 )
