@@ -66,41 +66,85 @@ struct SimHitData {
 };
 
 // Write out muon simhits before digitization
-struct MuonSimHitData {
-  /// Hit surface identifier. Not available in the TrackML datasets.
-  int pdgId = 0;
-  /// three components of the muon station identifier
-  int StationName = 0;
-  int StationEta = 0;
-  int StationPhi = 0;
-  // True hit location in station frame, in mm.
-  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f,
-        LocalPositionExtrz = 0.0f;
-  /// True particle momentum in GeV before interaction.
-  float LocalDirectionx = 0.0f, LocalDirectiony = 0.0f, LocalDirectionz = 0.0f;
-  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi,
-                 LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz,
-                 LocalDirectionx, LocalDirectiony, LocalDirectionz);
+struct MuonSegmentData {
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
+  int sectorId{0};
+  /// @brief Position in the global coordinate system
+  float globalPositionX{0.f};
+  float globalPositionY{0.f};
+  float globalPositionZ{0.f};
+  /// @brief Segment direction in the global coordinate system
+  float globalDirectionX{0.f};
+  float globalDirectionY{0.f};
+  float globalDirectionZ{0.f};
+  /// @brief Position in the local coordinate system
+  float localPositionX{0.f};
+  float localPositionY{0.f};
+  float localPositionZ{0.f};
+  /// @brief Segment direction in the local coordinate system
+  float localDirectionX{0.f};
+  float localDirectionY{0.f};
+  float localDirectionZ{0.f};
+  /// @brief Segment time & associated error
+  float time{0.f};
+  float timeError{0.f};
+  /// @brief segment chi2 & number of degrees of freedom
+  float chiSquared{0.f};
+  unsigned nDoF{0u};
+
+  /// @brief how many precision hits are on the segment (Straw tubes or Mm)
+  unsigned precisionHits{0u};
+  /// @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc)
+  unsigned phiLayers{0u};
+  /// @brief  Complementary hits in the bending direction (Rpc / Tgc)
+  unsigned trigEtaLayers{0u};
+  DFE_NAMEDTUPLE(MuonSegmentData, sectorId, globalPositionX, globalPositionY,
+                 globalPositionZ, globalDirectionX, globalDirectionY,
+                 globalDirectionZ, localPositionX, localPositionY,
+                 localPositionZ, localDirectionX, localDirectionY,
+                 localDirectionZ, time, timeError, chiSquared, nDoF,
+                 precisionHits, phiLayers, trigEtaLayers);
 };
 
-// Write out muon simhits before digitization
-struct MuonDriftCircleData {
-  /// Drift radius, in mm.
-  float driftRadius = 0.0f;
-  /// Drift tube center location in the station frame
-  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f;
-  /// three components of the muon station identifier
-  int stationName = 0;
-  int stationEta = 0;
-  int stationPhi = 0;
-  // components of the tube identifier within the station
-  int multilayer = 0;
-  int tubelayer = 0;
-  int tube = 0;
-
-  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius, tubePositionx, tubePositiony,
-                 tubePositionz, stationName, stationEta, stationPhi, multilayer,
-                 tubelayer, tube);
+struct MuonSpacePointData {
+  /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
+  int sectorId{0};
+  /// @brief Number of the associated bucket inside the container. A change of bucket Id
+  ///         pushes the space point into a new bucket container
+  int bucketId{0};
+  /// @brief Local position of the space point measurement
+  float locPositionX{0.f};
+  float locPositionY{0.f};
+  float locPositionZ{0.f};
+  /// @brief Direction of the sensor line
+  float locSensorDirX{0.f};
+  float locSensorDirY{0.f};
+  float locSensorDirZ{0.f};
+  /// @brief Direction vector normal pointing to the next sensor
+  float locToNextSensorX{0.f};
+  float locToNextSensorY{0.f};
+  float locToNextSensorZ{0.f};
+  /// @brief Measurement covariance entries in the local x-y plane
+  float covX{0.f};
+  float covY{0.f};
+  float covT{0.f};
+  /// @brief Drift radius
+  float driftR{0.f};
+  //// @brief Associated gasGap type
+  unsigned short gasGap{0u};
+  /// @brief Primary measurement channel
+  unsigned short primaryCh{0u};
+  /// @brief Flag toggling whether the measurement is a precision one
+  bool measuresEta{false};
+  /// @brief Flag toggling whether the measurement is a non-precision one
+  bool measuresPhi{false};
+  /// @brief Flag toggling whether the measurement provides a time coordinate
+  bool measuresTime{false};
+  DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
+                 locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
+                 locSensorDirZ, locToNextSensorX, locToNextSensorY,
+                 locToNextSensorZ, covX, covY, covT, driftR, gasGap, primaryCh,
+                 measuresEta, measuresPhi, measuresTime);
 };
 
 struct TruthHitData {
@@ -166,10 +210,11 @@ struct MeasurementData {
   float local0 = 0, local1 = 0, phi = 0, theta = 0, time = 0;
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
+  float global_x = 0, global_y = 0, global_z = 0;
 
   DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, local_key,
                  local0, local1, phi, theta, time, var_local0, var_local1,
-                 var_phi, var_theta, var_time);
+                 var_phi, var_theta, var_time, global_x, global_y, global_z);
 };
 
 struct CellData {
@@ -213,14 +258,15 @@ struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0;
+  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0,
+                extra_id = 0;
   /// Center position components in mm.
   float cx = 0, cy = 0, cz = 0;
   /// Rotation matrix components.
   float rot_xu = 0, rot_xv = 0, rot_xw = 0;
   float rot_yu = 0, rot_yv = 0, rot_yw = 0;
   float rot_zu = 0, rot_zv = 0, rot_zw = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the surface bounds object, determines the parameters filled
   int bounds_type = 0;
   float bound_param0 = -1.f;
   float bound_param1 = -1.f;
@@ -235,10 +281,11 @@ struct SurfaceData {
   float pitch_v = -1.f;
 
   DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
-                 module_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv,
-                 rot_yw, rot_zu, rot_zv, rot_zw, bounds_type, bound_param0,
-                 bound_param1, bound_param2, bound_param3, bound_param4,
-                 bound_param5, bound_param6, module_t, pitch_u, pitch_v);
+                 module_id, extra_id, cx, cy, cz, rot_xu, rot_xv, rot_xw,
+                 rot_yu, rot_yv, rot_yw, rot_zu, rot_zv, rot_zw, bounds_type,
+                 bound_param0, bound_param1, bound_param2, bound_param3,
+                 bound_param4, bound_param5, bound_param6, module_t, pitch_u,
+                 pitch_v);
 };
 
 struct LayerVolumeData {
@@ -246,7 +293,7 @@ struct LayerVolumeData {
   std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
   std::uint32_t volume_id = 0, layer_id = 0;
-  /// The type of the surface bpounds object, determines the parameters filled
+  /// The type of the volume object, determines the parameters filled
   int volume_type = 0;
   float min_v0 = -1.f;
   float max_v0 = -1.f;
@@ -309,15 +356,16 @@ struct SurfaceGridData {
 };
 
 struct SpacepointData {
-  std::uint64_t measurement_id;
-  std::uint64_t geometry_id;
-  float x, y, z;
+  std::uint64_t measurement_id_1, measurement_id_2;
+  std::uint64_t geometry_id_1, geometry_id_2;
+  float x, y, z, t;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
-                 var_z);
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id_1, measurement_id_2,
+                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
 
 struct TrackParameterData {
+  std::size_t trackId;
   double d0;
   double z0;
   double phi;
@@ -332,12 +380,12 @@ struct TrackParameterData {
   double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
   double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
 
-  DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
-                 var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
-                 cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop,
-                 cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
-                 cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
-                 cov_qopphi, cov_qoptheta);
+  DFE_NAMEDTUPLE(TrackParameterData, trackId, d0, z0, phi, theta, qop, var_d0,
+                 var_z0, var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
+                 cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
+                 cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop,
+                 cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop,
+                 cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta);
 };
 
 struct ProtoTrackData {

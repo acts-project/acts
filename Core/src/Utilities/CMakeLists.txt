@@ -10,4 +10,6 @@ target_sources(
         IAxis.cpp
         GraphViz.cpp
         ProtoAxis.cpp
+        ScopedTimer.cpp
+        TransformComparator.cpp
 )

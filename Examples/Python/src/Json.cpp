@@ -14,13 +14,14 @@
 #include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
 #include <initializer_list>
@@ -50,18 +51,19 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace Acts::Experimental;
 using namespace ActsExamples;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addJson(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    py::class_<JsonMaterialDecorator, Acts::IMaterialDecorator,
+    py::class_<JsonMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<JsonMaterialDecorator>>(m,
                                                        "JsonMaterialDecorator")
         .def(py::init<const MaterialMapJsonConverter::Config&,
-                      const std::string&, Acts::Logging::Level, bool, bool>(),
+                      const std::string&, Logging::Level, bool, bool>(),
              py::arg("rConfig"), py::arg("jFileName"), py::arg("level"),
              py::arg("clearSurfaceMaterial") = true,
              py::arg("clearVolumeMaterial") = true);
@@ -71,21 +73,14 @@ void addJson(Context& ctx) {
     auto cls =
         py::class_<MaterialMapJsonConverter>(m, "MaterialMapJsonConverter")
             .def(py::init<const MaterialMapJsonConverter::Config&,
-                          Acts::Logging::Level>(),
+                          Logging::Level>(),
                  py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapJsonConverter::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialMapJsonConverter::Config);
-    ACTS_PYTHON_MEMBER(context);
-    ACTS_PYTHON_MEMBER(processSensitives);
-    ACTS_PYTHON_MEMBER(processApproaches);
-    ACTS_PYTHON_MEMBER(processRepresenting);
-    ACTS_PYTHON_MEMBER(processBoundaries);
-    ACTS_PYTHON_MEMBER(processVolumes);
-    ACTS_PYTHON_MEMBER(processDenseVolumes);
-    ACTS_PYTHON_MEMBER(processNonMaterial);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches,
+                       processRepresenting, processBoundaries, processVolumes,
+                       processDenseVolumes, processNonMaterial);
   }
 
   {
@@ -101,8 +96,7 @@ void addJson(Context& ctx) {
         py::class_<JsonMaterialWriter, IMaterialWriter,
                    std::shared_ptr<JsonMaterialWriter>>(mex,
                                                         "JsonMaterialWriter")
-            .def(py::init<const JsonMaterialWriter::Config&,
-                          Acts::Logging::Level>(),
+            .def(py::init<const JsonMaterialWriter::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("writeMaterial", &JsonMaterialWriter::writeMaterial)
             .def("write", &JsonMaterialWriter::write)
@@ -110,17 +104,12 @@ void addJson(Context& ctx) {
 
     auto c =
         py::class_<JsonMaterialWriter::Config>(cls, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonMaterialWriter::Config);
-    ACTS_PYTHON_MEMBER(converterCfg);
-    ACTS_PYTHON_MEMBER(fileName);
-    ACTS_PYTHON_MEMBER(writeFormat);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, converterCfg, fileName, writeFormat);
   }
 
   {
-    using IWriter = ActsExamples::ITrackParamsLookupWriter;
-    using Writer = ActsExamples::JsonTrackParamsLookupWriter;
+    using IWriter = ITrackParamsLookupWriter;
+    using Writer = JsonTrackParamsLookupWriter;
     using Config = Writer::Config;
 
     auto cls = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
@@ -132,15 +121,12 @@ void addJson(Context& ctx) {
     auto c = py::class_<Config>(cls, "Config")
                  .def(py::init<>())
                  .def(py::init<const std::string&>(), py::arg("path"));
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(path);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, path);
   }
 
   {
-    using IReader = ActsExamples::ITrackParamsLookupReader;
-    using Reader = ActsExamples::JsonTrackParamsLookupReader;
+    using IReader = ITrackParamsLookupReader;
+    using Reader = JsonTrackParamsLookupReader;
     using Config = Reader::Config;
 
     auto cls = py::class_<Reader, IReader, std::shared_ptr<Reader>>(
@@ -149,17 +135,14 @@ void addJson(Context& ctx) {
                    .def("readLookup", &Reader::readLookup)
                    .def_property_readonly("config", &Reader::config);
 
-    auto c = py::class_<Config>(cls, "Config")
-                 .def(py::init<>())
-                 .def(py::init<std::unordered_map<Acts::GeometryIdentifier,
-                                                  const Acts::Surface*>,
-                               std::pair<double, double>>(),
-                      py::arg("refLayers"), py::arg("bins"));
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(refLayers);
-    ACTS_PYTHON_MEMBER(bins);
-    ACTS_PYTHON_STRUCT_END();
+    auto c =
+        py::class_<Config>(cls, "Config")
+            .def(py::init<>())
+            .def(
+                py::init<std::unordered_map<GeometryIdentifier, const Surface*>,
+                         std::pair<double, double>>(),
+                py::arg("refLayers"), py::arg("bins"));
+    ACTS_PYTHON_STRUCT(c, refLayers, bins);
   }
 
   {
@@ -167,8 +150,7 @@ void addJson(Context& ctx) {
         py::class_<JsonSurfacesWriter, IWriter,
                    std::shared_ptr<JsonSurfacesWriter>>(mex,
                                                         "JsonSurfacesWriter")
-            .def(py::init<const JsonSurfacesWriter::Config&,
-                          Acts::Logging::Level>(),
+            .def(py::init<const JsonSurfacesWriter::Config&, Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def("write", &JsonSurfacesWriter::write)
             .def_property_readonly("config", &JsonSurfacesWriter::config);
@@ -176,21 +158,13 @@ void addJson(Context& ctx) {
     auto c =
         py::class_<JsonSurfacesWriter::Config>(cls, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonSurfacesWriter::Config);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_MEMBER(outputPrecision);
-    ACTS_PYTHON_MEMBER(writeLayer);
-    ACTS_PYTHON_MEMBER(writeApproach);
-    ACTS_PYTHON_MEMBER(writeSensitive);
-    ACTS_PYTHON_MEMBER(writeBoundary);
-    ACTS_PYTHON_MEMBER(writePerEvent);
-    ACTS_PYTHON_MEMBER(writeOnlyNames);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, trackingGeometry, outputDir, outputPrecision,
+                       writeLayer, writeApproach, writeSensitive, writeBoundary,
+                       writePerEvent, writeOnlyNames);
   }
 
   {
-    py::class_<Acts::ProtoDetector>(mex, "ProtoDetector")
+    py::class_<ProtoDetector>(mex, "ProtoDetector")
         .def(py::init<>([](std::string pathName) {
           nlohmann::json jDetector;
           auto in = std::ifstream(pathName, std::ifstream::in);
@@ -198,44 +172,37 @@ void addJson(Context& ctx) {
             in >> jDetector;
             in.close();
           }
-          Acts::ProtoDetector pDetector = jDetector["detector"];
+          ProtoDetector pDetector = jDetector["detector"];
           return pDetector;
         }));
   }
 
   {
     auto sjOptions =
-        py::class_<Acts::JsonSurfacesReader::Options>(m, "SurfaceJsonOptions")
+        py::class_<JsonSurfacesReader::Options>(m, "SurfaceJsonOptions")
             .def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(sjOptions, Acts::JsonSurfacesReader::Options);
-    ACTS_PYTHON_MEMBER(inputFile);
-    ACTS_PYTHON_MEMBER(jsonEntryPath);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(sjOptions, inputFile, jsonEntryPath);
 
     m.def("readSurfaceHierarchyMapFromJson",
-          Acts::JsonSurfacesReader::readHierarchyMap);
+          JsonSurfacesReader::readHierarchyMap);
 
-    m.def("readSurfaceVectorFromJson", Acts::JsonSurfacesReader::readVector);
+    m.def("readSurfaceVectorFromJson", JsonSurfacesReader::readVector);
 
-    py::class_<Acts::JsonDetectorElement, Acts::DetectorElementBase,
-               std::shared_ptr<Acts::JsonDetectorElement>>(
-        m, "JsonDetectorElement")
-        .def("surface", [](Acts::JsonDetectorElement& self) {
+    py::class_<JsonDetectorElement, DetectorElementBase,
+               std::shared_ptr<JsonDetectorElement>>(m, "JsonDetectorElement")
+        .def("surface", [](JsonDetectorElement& self) {
           return self.surface().getSharedPtr();
         });
 
     m.def("readDetectorElementsFromJson",
-          Acts::JsonSurfacesReader::readDetectorElements);
+          JsonSurfacesReader::readDetectorElements);
   }
 
   {
     mex.def("writeDetectorToJson",
-            [](const Acts::GeometryContext& gctx,
-               const Acts::Experimental::Detector& detector,
+            [](const GeometryContext& gctx, const Detector& detector,
                const std::string& name) -> void {
-              auto jDetector =
-                  Acts::DetectorJsonConverter::toJson(gctx, detector);
+              auto jDetector = DetectorJsonConverter::toJson(gctx, detector);
               std::ofstream out;
               out.open(name + ".json");
               out << jDetector.dump(4);
@@ -245,11 +212,10 @@ void addJson(Context& ctx) {
 
   {
     mex.def("writeDetectorToJsonDetray",
-            [](const Acts::GeometryContext& gctx,
-               const Acts::Experimental::Detector& detector,
+            [](const GeometryContext& gctx, const Detector& detector,
                const std::string& name) -> void {
               // Detray format test - manipulate for detray
-              Acts::DetectorVolumeJsonConverter::Options detrayOptions;
+              DetectorVolumeJsonConverter::Options detrayOptions;
               detrayOptions.transformOptions.writeIdentity = true;
               detrayOptions.transformOptions.transpose = true;
               detrayOptions.surfaceOptions.transformOptions =
@@ -257,9 +223,9 @@ void addJson(Context& ctx) {
               detrayOptions.portalOptions.surfaceOptions =
                   detrayOptions.surfaceOptions;
 
-              auto jDetector = Acts::DetectorJsonConverter::toJsonDetray(
+              auto jDetector = DetectorJsonConverter::toJsonDetray(
                   gctx, detector,
-                  Acts::DetectorJsonConverter::Options{detrayOptions});
+                  DetectorJsonConverter::Options{detrayOptions});
 
               // Write out the geometry, surface_grid, material
               auto jGeometry = jDetector["geometry"];
@@ -282,17 +248,17 @@ void addJson(Context& ctx) {
   }
 
   {
-    mex.def("readDetectorFromJson",
-            [](const Acts::GeometryContext& gctx,
-               const std::string& fileName) -> auto {
-              auto in = std::ifstream(
-                  fileName, std::ifstream::in | std::ifstream::binary);
-              nlohmann::json jDetectorIn;
-              in >> jDetectorIn;
-              in.close();
+    mex.def(
+        "readDetectorFromJson",
+        [](const GeometryContext& gctx, const std::string& fileName) -> auto {
+          auto in = std::ifstream(fileName,
+                                  std::ifstream::in | std::ifstream::binary);
+          nlohmann::json jDetectorIn;
+          in >> jDetectorIn;
+          in.close();
 
-              return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
-            });
+          return DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+        });
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

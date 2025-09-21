@@ -222,7 +222,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   std::vector<ActsFatras::Particle> particlesInput;
   particlesInput.reserve(inputParticles.size());
   for (const auto &p : inputParticles) {
-    particlesInput.push_back(p.initial());
+    particlesInput.push_back(p.initialState());
   }
 
   // prepare output containers
@@ -243,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   // fatal error leads to panic
   if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
-                        << ret.error());
+                        << ret.error().message());
     return ProcessCode::ABORT;
   }
   // failed particles are just logged. assumes that failed particles are due
@@ -302,7 +302,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
 
     if (auto it = particlesFinal.find(particleInitial.particleId());
         it != particlesFinal.end()) {
-      particleSimulated.final() = *it;
+      particleSimulated.finalState() = *it;
     } else {
       ACTS_ERROR("particle " << particleInitial.particleId()
                              << " has no final state");

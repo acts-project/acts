@@ -9,8 +9,8 @@ dependencies and are thus disabled by default.
    :maxdepth: 1
 
    dd4hep
-   exatrkx
+   gnn
    geant4
    json
-   tgeo
+   root
    MLAlgorithms

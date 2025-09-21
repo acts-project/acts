@@ -10,18 +10,20 @@
 
 #include <numbers>
 
-std::vector<std::tuple<Acts::ProtoAxis, std::size_t>>
-Acts::DD4hepBinningHelpers::convertBinning(
-    const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
-  // Return proto binning vector
-  std::vector<std::tuple<ProtoAxis, std::size_t>> protoBinnings;
+namespace Acts {
 
-  for (const auto &[ab, bVal] : allowedBinnings) {
+std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
+DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
+                                     const std::string &bname) {
+  // Return proto binning vector
+  std::vector<std::tuple<DirectedProtoAxis, std::size_t>> protoBinnings;
+
+  for (const auto &[ab, axisDir] : allowedBinnings) {
     auto type =
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
     if (!type.empty()) {
       // Default binning is bound
-      auto bType = Acts::AxisBoundaryType::Bound;
+      auto bType = AxisBoundaryType::Bound;
       // Equidistant or variable binning
       AxisType aType =
           type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
@@ -34,25 +36,25 @@ Acts::DD4hepBinningHelpers::convertBinning(
       // Equidistant binning
       if (aType == AxisType::Equidistant) {
         if (autoRange) {
-          protoBinnings.emplace_back(std::tuple<ProtoAxis, std::size_t>{
-              ProtoAxis(bVal, bType, nBins), nExpansion});
+          protoBinnings.emplace_back(DirectedProtoAxis(axisDir, bType, nBins),
+                                     nExpansion);
         } else {
           // Equidistant binning
           double minDefault =
-              bVal == AxisDirection::AxisPhi ? -std::numbers::pi : 0.;
+              axisDir == AxisDirection::AxisPhi ? -std::numbers::pi : 0.;
           double maxDefault =
-              bVal == AxisDirection::AxisPhi ? std::numbers::pi : 0.;
+              axisDir == AxisDirection::AxisPhi ? std::numbers::pi : 0.;
           auto min = getParamOr<double>(bname + "_" + ab + "_min",
                                         dd4hepElement, minDefault);
           auto max = getParamOr<double>(bname + "_" + ab + "_max",
                                         dd4hepElement, maxDefault);
           // Check for closed phi binning
-          if (bVal == AxisDirection::AxisPhi &&
+          if (axisDir == AxisDirection::AxisPhi &&
               (max - min) > 1.9 * std::numbers::pi) {
-            bType = Acts::AxisBoundaryType::Closed;
+            bType = AxisBoundaryType::Closed;
           }
-          protoBinnings.emplace_back(std::tuple<ProtoAxis, std::size_t>{
-              ProtoAxis(bVal, bType, min, max, nBins), nExpansion});
+          protoBinnings.emplace_back(
+              DirectedProtoAxis(axisDir, bType, min, max, nBins), nExpansion);
         }
       } else {
         // Variable binning
@@ -62,14 +64,16 @@ Acts::DD4hepBinningHelpers::convertBinning(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         // Check for closed phi binning
-        if (bVal == AxisDirection::AxisPhi &&
+        if (axisDir == AxisDirection::AxisPhi &&
             (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
-          bType = Acts::AxisBoundaryType::Closed;
+          bType = AxisBoundaryType::Closed;
         }
-        protoBinnings.emplace_back(std::tuple<ProtoAxis, std::size_t>{
-            ProtoAxis(bVal, bType, edges), nExpansion});
+        protoBinnings.emplace_back(DirectedProtoAxis(axisDir, bType, edges),
+                                   nExpansion);
       }
     }
   }
   return protoBinnings;
 }
+
+}  // namespace Acts

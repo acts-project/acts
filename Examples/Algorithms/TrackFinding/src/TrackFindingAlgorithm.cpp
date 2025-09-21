@@ -420,14 +420,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
 
-    // flag seeds which are covered by the track
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      if (auto it = discoveredSeeds.find(seedIdentifier);
-          it != discoveredSeeds.end()) {
-        it->second = true;
-      }
-    });
-
     // trim the track if requested
     if (m_cfg.trimTracks) {
       Acts::trimTrack(track, true, true, true, true);
@@ -438,11 +430,19 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       return;
     }
 
+    // flag seeds which are covered by the track
+    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
+      if (auto it = discoveredSeeds.find(seedIdentifier);
+          it != discoveredSeeds.end()) {
+        it->second = true;
+      }
+    });
+
     ++m_nSelectedTracks;
 
     auto destProxy = tracks.makeTrack();
     // make sure we copy track states!
-    destProxy.copyFrom(track, true);
+    destProxy.copyFrom(track);
   };
 
   if (seeds != nullptr && m_cfg.seedDeduplication) {
@@ -500,7 +500,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // TODO a lightweight copy without copying all the track state components
       //      might be a solution
       auto trackCandidate = tracksTemp.makeTrack();
-      trackCandidate.copyFrom(firstTrack, true);
+      trackCandidate.copyFrom(firstTrack);
 
       Acts::Result<void> firstSmoothingResult{
           Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
@@ -554,7 +554,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           auto secondRootBranch = tracksTemp.makeTrack();
-          secondRootBranch.copyFrom(trackCandidate, false);
+          secondRootBranch.copyFromWithoutStates(trackCandidate);
           auto secondResult =
               (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
                                   tracksTemp, secondRootBranch);
@@ -573,7 +573,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // TODO a lightweight copy without copying all the track state
               //      components might be a solution
               auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack, true);
+              secondTrackCopy.copyFrom(secondTrack);
 
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
@@ -583,7 +583,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
-              trackCandidate.copyFrom(secondTrackCopy, false);
+              // Retain tip and stem index of the first track
+              auto tipIndex = trackCandidate.tipIndex();
+              auto stemIndex = trackCandidate.stemIndex();
+              trackCandidate.copyFromWithoutStates(secondTrackCopy);
+              trackCandidate.tipIndex() = tipIndex;
+              trackCandidate.stemIndex() = stemIndex;
 
               // finalize the track candidate
 
@@ -643,7 +648,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
         // restore the track to the original state
-        trackCandidate.copyFrom(firstTrack, false);
+        auto tipIndex = trackCandidate.tipIndex();
+        auto stemIndex = trackCandidate.stemIndex();
+        trackCandidate.copyFromWithoutStates(firstTrack);
+        trackCandidate.tipIndex() = tipIndex;
+        trackCandidate.stemIndex() = stemIndex;
 
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(

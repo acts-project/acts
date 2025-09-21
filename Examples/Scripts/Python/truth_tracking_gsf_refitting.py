@@ -22,6 +22,8 @@ def runRefittingGsf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        reverseFilteringMomThreshold=0.0,
+        reverseFilteringCovarianceScaling=1.0,
         s=s,
     )
 
@@ -36,6 +38,7 @@ def runRefittingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
+        "reverseFilteringCovarianceScaling": 100.0,
         "level": acts.logging.INFO,
     }
 
@@ -44,6 +47,7 @@ def runRefittingGsf(
             acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="gsf_refit_tracks",
+            initialVarInflation=6 * [100.0],
             fit=acts.examples.makeGsfFitterFunction(
                 trackingGeometry, field, **gsfOptions
             ),
@@ -104,16 +108,14 @@ if __name__ == "__main__":
 
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = (
-        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
     # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
-    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

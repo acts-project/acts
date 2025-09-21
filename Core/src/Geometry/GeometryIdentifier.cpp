@@ -11,7 +11,7 @@
 #include <array>
 #include <ostream>
 
-std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
+std::ostream& Acts::operator<<(std::ostream& os, GeometryIdentifier id) {
   // zero represents an invalid/undefined identifier
   if (id.value() == 0u) {
     return (os << "undefined");
@@ -38,8 +38,11 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   return os;
 }
 
-Acts::GeometryIdentifier Acts::GeometryIdentifierHook::decorateIdentifier(
-    Acts::GeometryIdentifier identifier,
-    const Acts::Surface& /*surface*/) const {
+namespace Acts {
+
+GeometryIdentifier GeometryIdentifierHook::decorateIdentifier(
+    GeometryIdentifier identifier, const Surface& /*surface*/) const {
   return identifier;
 }
+
+}  // namespace Acts

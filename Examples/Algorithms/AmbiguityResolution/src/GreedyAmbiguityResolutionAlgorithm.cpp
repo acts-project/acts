@@ -79,8 +79,8 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
 
   m_core.resolve(state);
 
-  ACTS_INFO("Resolved to " << state.selectedTracks.size() << " tracks from "
-                           << tracks.size());
+  ACTS_DEBUG("Resolved to " << state.selectedTracks.size() << " tracks from "
+                            << tracks.size());
 
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
@@ -89,7 +89,7 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
   for (auto iTrack : state.selectedTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(state.trackTips.at(iTrack));
-    destProxy.copyFrom(srcProxy, false);
+    destProxy.copyFromWithoutStates(srcProxy);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 

@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <array>
 #include <exception>
@@ -31,8 +31,9 @@
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addContext(Context& ctx) {
   auto& m = ctx.get("main");
@@ -117,7 +118,7 @@ class PythonLogger {
   std::unique_ptr<const Logger> m_logger;
 };
 
-void addLogging(Acts::Python::Context& ctx) {
+void addLogging(Context& ctx) {
   auto& m = ctx.get("main");
   auto logging = m.def_submodule("logging", "");
 
@@ -158,6 +159,8 @@ void addLogging(Acts::Python::Context& ctx) {
           logger.log(level, message);
         };
   };
+
+  py::class_<Logger>(m, "Logger");
 
   auto logger =
       py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(logging, "Logger")
@@ -208,6 +211,28 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def("setFailureThreshold", &Logging::setFailureThreshold);
   logging.def("getFailureThreshold", &Logging::getFailureThreshold);
 
+  struct ScopedFailureThresholdContextManager {
+    std::optional<Logging::ScopedFailureThreshold> m_scopedFailureThreshold =
+        std::nullopt;
+    Logging::Level m_level;
+
+    explicit ScopedFailureThresholdContextManager(Logging::Level level)
+        : m_level(level) {}
+
+    void enter() { m_scopedFailureThreshold.emplace(m_level); }
+
+    void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
+              const py::object& /*traceback*/) {
+      m_scopedFailureThreshold.reset();
+    }
+  };
+
+  py::class_<ScopedFailureThresholdContextManager>(logging,
+                                                   "ScopedFailureThreshold")
+      .def(py::init<Logging::Level>(), "level"_a)
+      .def("__enter__", &ScopedFailureThresholdContextManager::enter)
+      .def("__exit__", &ScopedFailureThresholdContextManager::exit);
+
   static py::exception<Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
@@ -234,7 +259,7 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def("fatal", makeModuleLogFunction(Acts::Logging::FATAL));
 }
 
-void addPdgParticle(Acts::Python::Context& ctx) {
+void addPdgParticle(Context& ctx) {
   auto& m = ctx.get("main");
   py::enum_<Acts::PdgParticle>(m, "PdgParticle")
       .value("eInvalid", Acts::PdgParticle::eInvalid)
@@ -258,7 +283,7 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eLead", Acts::PdgParticle::eLead);
 }
 
-void addAlgebra(Acts::Python::Context& ctx) {
+void addAlgebra(Context& ctx) {
   auto& m = ctx.get("main");
 
   py::class_<Acts::Vector2>(m, "Vector2")
@@ -380,4 +405,4 @@ void addBinning(Context& ctx) {
                       .value("variable", Acts::AxisType::Variable);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

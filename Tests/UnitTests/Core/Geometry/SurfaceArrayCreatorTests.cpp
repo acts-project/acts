@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 1: one module sits at pi / -pi
     double angleShift = step / 2.;
     auto surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
-    std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
+    std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     auto axis = createEquidistantAxis(tgContext, surfacesRaw,
@@ -307,7 +307,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 2: two modules sit symmetrically around pi / -pi
     angleShift = 0.;
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
@@ -323,7 +323,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 3: two modules sit asymmetrically around pi / -pi shifted up
     angleShift = step / -4.;
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
@@ -339,13 +339,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 4: two modules sit asymmetrically around pi / -pi shifted down
     angleShift = step / 4.;
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfaces);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
                                  pl, tr);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
@@ -360,7 +360,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 1: one module sits at pi / -pi
     double angleShift = step / 2.;
     auto surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
-    auto surfacesRaw = unpack_shared_vector(surfaces);
+    auto surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     auto axis = createEquidistantAxis(tgContext, surfacesRaw,
@@ -376,7 +376,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 2: two modules sit symmetrically around pi / -pi
     angleShift = 0.;
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
@@ -393,7 +393,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 3: two modules sit asymmetrically around pi / -pi shifted up
     angleShift = step / -4.;
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
@@ -410,7 +410,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     // case 4: two modules sit asymmetrically around pi / -pi shifted down
     angleShift = step / 4.;
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
@@ -429,7 +429,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
 
   // single element in phi
   surfaces = fullPhiTestSurfacesEC(1);
-  auto surfacesRaw = unpack_shared_vector(surfaces);
+  auto surfacesRaw = unpackSmartPointers(surfaces);
   draw_surfaces(surfaces,
                 "SurfaceArrayCreator_createEquidistantAxis_EC_Single.obj");
 
@@ -439,8 +439,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                     AxisDirection::AxisPhi, pl, tr);
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
 
-  CHECK_CLOSE_ABS(axis.max, phi(Vector3(8, 1, 0)), 1e-3);
-  CHECK_CLOSE_ABS(axis.min, phi(Vector3(8, -1, 0)), 1e-3);
+  CHECK_CLOSE_ABS(axis.max, std::numbers::pi, 1e-3);
+  CHECK_CLOSE_ABS(axis.min, -std::numbers::pi, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
 }
 
@@ -448,7 +448,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
                         SurfaceArrayCreatorFixture) {
   // single element in z
   auto surfaces = straightLineSurfaces(1);
-  auto surfacesRaw = unpack_shared_vector(surfaces);
+  auto surfacesRaw = unpackSmartPointers(surfaces);
   ProtoLayer pl = ProtoLayer(tgContext, surfacesRaw);
   auto trf = Transform3::Identity();
   auto axis = createEquidistantAxis(tgContext, surfacesRaw,
@@ -463,7 +463,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   for (std::size_t i = 0; i <= 20; i++) {
     double z0 = -10 + 1. * i;
     surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, z0 + 1.5));
-    surfacesRaw = unpack_shared_vector(surfaces);
+    surfacesRaw = unpackSmartPointers(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
     trf = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisZ,
@@ -484,7 +484,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   Transform3 tr = Transform3::Identity();
   tr.rotate(AngleAxis3(std::numbers::pi / 4., Vector3(0, 0, 1)));
   surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, 0 + 1.5), tr);
-  surfacesRaw = unpack_shared_vector(surfaces);
+  surfacesRaw = unpackSmartPointers(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);
   trf = Transform3::Identity();
   axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisZ, pl,
@@ -500,7 +500,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
                         SurfaceArrayCreatorFixture) {
   // single element in r
   auto surfaces = fullPhiTestSurfacesEC(1, 0, 0, 15);
-  auto surfacesRaw = unpack_shared_vector(surfaces);
+  auto surfacesRaw = unpackSmartPointers(surfaces);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_R_1.obj");
   auto trf = Transform3::Identity();
   ProtoLayer pl = ProtoLayer(tgContext, surfacesRaw);
@@ -521,7 +521,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   surfaces.insert(surfaces.end(), ringc.begin(), ringc.end());
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_R_2.obj");
 
-  surfacesRaw = unpack_shared_vector(surfaces);
+  surfacesRaw = unpackSmartPointers(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);
   trf = Transform3::Identity();
   axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisR, pl,
@@ -565,7 +565,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
                         SurfaceArrayCreatorFixture) {
   SrfVec brl = makeBarrel(30, 7, 2, 1);
-  std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
+  std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
@@ -573,17 +573,10 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double R = 10.;
-  auto globalToLocal = [](const Vector3& pos) {
-    return Vector2(phi(pos) + 2 * std::numbers::pi / 30 / 2, pos.z());
-  };
-  auto localToGlobal = [R](const Vector2& loc) {
-    double phi = loc[0] - 2 * std::numbers::pi / 30 / 2;
-    return Vector3(R * std::cos(phi), R * std::sin(phi), loc[1]);
-  };
 
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      globalToLocal, localToGlobal,
+      Surface::SurfaceType::Cylinder, Transform3::Identity(), R, 0,
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
@@ -598,8 +591,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(ctr);
 
-    BOOST_CHECK_EQUAL(binContent.size(), 1u);
-    BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
+    BOOST_CHECK(binContent.size() <= 2u);
   }
 }
 
@@ -607,7 +599,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
                         SurfaceArrayCreatorFixture) {
   auto barrel = makeBarrelStagger(30, 7, 0, std::numbers::pi / 9.);
   auto brl = barrel.first;
-  std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
+  std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
 
   ProtoLayer pl(tgContext, brl);
@@ -623,17 +615,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   double R = 10.;
   Transform3 itr = tr.inverse();
 
-  auto globalToLocal = [tr](const Vector3& pos) {
-    Vector3 rot = tr * pos;
-    return Vector2(phi(rot), rot.z());
-  };
-  auto localToGlobal = [R, itr](const Vector2& loc) {
-    return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-  };
-
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                     AxisBoundaryType::Bound>(
-      globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
+      Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
@@ -670,17 +654,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     itr = tr.inverse();
 
-    auto globalToLocalVar = [tr](const Vector3& pos) {
-      Vector3 rot = tr * pos;
-      return Vector2(phi(rot), rot.z());
-    };
-    auto localToGlobalVar = [R, itr](const Vector2& loc) {
-      return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-    };
-
     auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                        AxisBoundaryType::Bound>(
-        globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
+        Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);

@@ -22,7 +22,7 @@ env:
   CCACHE_MAXSIZE: 1.25G
   CCACHE_KEY_SUFFIX: r2
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
-  DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.v5.tar.zst
+  DEPENDENCY_TAG: v11.1.0
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -30,13 +30,16 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:63
+    container: ghcr.io/acts-project/ubuntu2404:80
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache build
         uses: actions/cache@v4
@@ -53,7 +56,6 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
-          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
       - name: Build
         run: cmake --build build
@@ -80,7 +82,7 @@ jobs:
 
       - name: Save PR number to file
         if: github.event_name == 'pull_request'
-        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+        run: echo -n ${{ github.event.number }} > PR_NUMBER.txt
 
       - name: Persist PR number
         if: github.event_name == 'pull_request'
@@ -91,16 +93,19 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:63
+    container: ghcr.io/acts-project/ubuntu2404:80
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a409b5
+        run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
           cmake -B build -S .
@@ -123,7 +128,7 @@ jobs:
   #   needs: build_performance
   #   if: github.ref == 'refs/heads/main'
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v5
   #     - name: Install dependencies
   #       run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
   #     - uses: actions/download-artifact@v4

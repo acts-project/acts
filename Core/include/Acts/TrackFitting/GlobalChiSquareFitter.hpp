@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -99,10 +96,10 @@ struct Gx2FitterExtensions {
 
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
-    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
-    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
-    outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
-    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
+    calibrator.template connect<&Acts::detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&Acts::detail::voidFitterUpdater<traj_t>>();
+    outlierFinder.template connect<&Acts::detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&Acts::detail::voidSurfaceAccessor>();
   }
 };
 
@@ -821,8 +818,8 @@ class Gx2Fitter {
         if (scatteringMapId == scatteringMap->end()) {
           ACTS_DEBUG("    ... create entry in scattering map.");
 
-          detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                           stepper);
+          Acts::detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                                 stepper);
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid = interaction.evaluateMaterialSlab(
               state, navigator, MaterialUpdateStage::FullUpdate);
@@ -1231,10 +1228,7 @@ class Gx2Fitter {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1406,11 +1400,8 @@ class Gx2Fitter {
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
     ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // Setup the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
@@ -1569,11 +1560,8 @@ class Gx2Fitter {
       // update covariance
       params.covariance() = fullCovariancePredicted;
 
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      // set up the propagator
+      PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
@@ -1620,8 +1608,15 @@ class Gx2Fitter {
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");
-        return Experimental::GlobalChiSquareFitterError::
-            UsedUnreachableMeasurements;
+        tipIndex = gx2fResult.lastMeasurementIndex;
+
+        // It could happen, that no measurements were found. Then the track
+        // would be empty and the following operations would be invalid.
+        if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+          ACTS_INFO("Did not find any measurements in final propagation.");
+          return Experimental::GlobalChiSquareFitterError::
+              NotEnoughMeasurements;
+        }
       }
     }
 

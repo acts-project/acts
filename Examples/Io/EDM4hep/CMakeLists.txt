@@ -1,15 +1,16 @@
-add_library(
-    ActsExamplesIoEDM4hep
+acts_add_library(
+    ExamplesIoEDM4hep
     SHARED
-    src/EDM4hepMeasurementReader.cpp
-    src/EDM4hepMeasurementWriter.cpp
-    src/EDM4hepMultiTrajectoryWriter.cpp
-    src/EDM4hepReader.cpp
-    src/EDM4hepTrackWriter.cpp
-    src/EDM4hepTrackReader.cpp
-    src/EDM4hepParticleWriter.cpp
-    src/EDM4hepSimHitWriter.cpp
+    src/EDM4hepMeasurementInputConverter.cpp
+    src/EDM4hepMeasurementOutputConverter.cpp
+    src/EDM4hepMultiTrajectoryOutputConverter.cpp
+    src/EDM4hepSimInputConverter.cpp
+    src/EDM4hepTrackOutputConverter.cpp
+    src/EDM4hepTrackInputConverter.cpp
+    src/EDM4hepParticleOutputConverter.cpp
+    src/EDM4hepSimHitOutputConverter.cpp
     src/EDM4hepUtil.cpp
+    src/EDM4hepInputConverter.cpp
 )
 target_include_directories(
     ActsExamplesIoEDM4hep
@@ -19,16 +20,11 @@ target_link_libraries(
     ActsExamplesIoEDM4hep
     PUBLIC
         EDM4HEP::edm4hep
-        ActsPluginEDM4hep
+        Acts::PluginEDM4hep
         podio::podioRootIO
-        ActsCore
-        ActsFatras
-        ActsExamplesFramework
-        ActsExamplesDigitization
-        ActsExamplesDetectorDD4hep
-)
-
-install(
-    TARGETS ActsExamplesIoEDM4hep
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        Acts::Fatras
+        Acts::ExamplesFramework
+        Acts::ExamplesDigitization
+        Acts::ExamplesDetectorDD4hep
+        Acts::ExamplesIoPodio
 )

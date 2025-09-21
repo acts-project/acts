@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -44,31 +43,21 @@ void EllipseBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool EllipseBounds::inside(const Vector2& lposition,
-                           const BoundaryTolerance& boundaryTolerance) const {
-  if (boundaryTolerance.isInfinite()) {
-    return true;
-  }
+bool EllipseBounds::inside(const Vector2& lposition) const {
+  double phi =
+      detail::radian_sym(VectorHelpers::phi(lposition) - get(eAveragePhi));
+  return (-get(eHalfPhiSector) <= phi) && (phi < get(eHalfPhiSector)) &&
+         (square(lposition[eBoundLoc0] / get(eInnerRx)) +
+          square(lposition[eBoundLoc1] / get(eInnerRy))) >= 1 &&
+         (square(lposition[eBoundLoc0] / get(eOuterRx)) +
+          square(lposition[eBoundLoc1] / get(eOuterRy))) < 1;
+}
 
-  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-      absoluteBound.has_value()) {
-    double tol0 = absoluteBound->tolerance0;
-    double tol1 = absoluteBound->tolerance1;
-
-    double phi =
-        detail::radian_sym(VectorHelpers::phi(lposition) - get(eAveragePhi));
-    double phiHalf = get(eHalfPhiSector) + tol1;
-
-    bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
-    bool insideInner = (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-                       (1 < (square(lposition[0] / (get(eInnerRx) - tol0)) +
-                             square(lposition[1] / (get(eOuterRx) - tol0))));
-    bool insideOuter = (square(lposition[0] / (get(eInnerRy) + tol0)) +
-                        square(lposition[1] / (get(eOuterRy) + tol0))) < 1;
-    return insidePhi && insideInner && insideOuter;
-  }
-
-  throw std::logic_error("Unsupported boundary check type");
+Vector2 EllipseBounds::closestPoint(const Vector2& /*lposition*/,
+                                    const SquareMatrix2& /*metric*/) const {
+  throw std::runtime_error(
+      "EllipseBounds::closestPoint: This method is not implemented. See "
+      "https://github.com/acts-project/acts/issues/4478 for details.");
 }
 
 std::vector<Vector2> EllipseBounds::vertices(
@@ -80,6 +69,12 @@ std::vector<Vector2> EllipseBounds::vertices(
 
 const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
+}
+
+Vector2 EllipseBounds::center() const {
+  // For ellipse bounds, the centroid is at the center of the ellipse ring,
+  // positioned at the average phi
+  return Vector2::Zero();
 }
 
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {

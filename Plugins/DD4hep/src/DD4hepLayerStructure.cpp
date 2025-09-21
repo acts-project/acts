@@ -8,9 +8,9 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
-#include "Acts/Utilities/BinningType.hpp"
+namespace Acts::Experimental {
 
-Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
+DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
     std::unique_ptr<const Logger> logger)
     : m_surfaceFactory(std::move(surfaceFactory)), m_logger(std::move(logger)) {
@@ -20,11 +20,11 @@ Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
   }
 }
 
-std::tuple<std::shared_ptr<Acts::Experimental::LayerStructureBuilder>,
-           std::optional<Acts::Extent>>
-Acts::Experimental::DD4hepLayerStructure::builder(
-    DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
-    const dd4hep::DetElement& dd4hepElement, const Options& options) const {
+std::tuple<std::shared_ptr<LayerStructureBuilder>, std::optional<Extent>>
+DD4hepLayerStructure::builder(DD4hepDetectorElement::Store& dd4hepStore,
+                              const GeometryContext& gctx,
+                              const dd4hep::DetElement& dd4hepElement,
+                              const Options& options) const {
   // Check for misconfiguration with double naming
   if (dd4hepStore.contains(options.name)) {
     std::string reMessage = "DD4hepLayerStructure: structure with name '";
@@ -67,16 +67,18 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     const auto& extent = fCache.sExtent.value();
     // Check if the binning
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
-    for (auto& [b, bExp] : fCache.binnings) {
-      if (extent.constrains(b.getAxisDirection())) {
-        ACTS_VERBOSE("Binning '" << axisDirectionName(b.getAxisDirection())
+    for (auto& [dpAxis, bExp] : fCache.binnings) {
+      if (extent.constrains(dpAxis.getAxisDirection())) {
+        ACTS_VERBOSE("Binning '" << axisDirectionName(dpAxis.getAxisDirection())
                                  << "' is patched.");
-        ACTS_VERBOSE(" <- from : [" << b.getAxis().getBinEdges().front() << ", "
-                                    << b.getAxis().getBinEdges().back() << "]");
-        b.setRange(extent.min(b.getAxisDirection()),
-                   extent.max(b.getAxisDirection()));
-        ACTS_VERBOSE(" -> to   : [" << b.getAxis().getBinEdges().front() << ", "
-                                    << b.getAxis().getBinEdges().back() << "]");
+        ACTS_VERBOSE(" <- from : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
+        dpAxis.setRange(extent.min(dpAxis.getAxisDirection()),
+                        extent.max(dpAxis.getAxisDirection()));
+        ACTS_VERBOSE(" -> to   : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
       }
     }
   }
@@ -136,3 +138,5 @@ Acts::Experimental::DD4hepLayerStructure::builder(
               lsbConfig, getDefaultLogger(options.name, options.logLevel)),
           fCache.sExtent};
 }
+
+}  // namespace Acts::Experimental

@@ -7,7 +7,6 @@ import acts
 from acts.examples import (
     CsvSpacePointReader,
     TrackParamsEstimationAlgorithm,
-    SeedingPerformanceWriter,
 )
 from acts.examples.reconstruction import (
     addStandardSeeding,

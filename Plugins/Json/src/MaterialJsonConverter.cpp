@@ -116,10 +116,10 @@ void convertIndexedGridMaterial(
 
     // Global and bound -> grid local
     jMaterial["global_to_grid_local"] = Acts::GridAccessJsonConverter::toJson(
-        *(indexedMaterial->globalToGridLocal().instance()));
+        *(indexedMaterial->globalToGridLocalDelegate().instance()));
 
     jMaterial["bound_to_grid_local"] = Acts::GridAccessJsonConverter::toJson(
-        *(indexedMaterial->boundToGridLocal().instance()));
+        *(indexedMaterial->boundToGridLocalDelegate().instance()));
   }
 }
 
@@ -140,7 +140,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   nlohmann::json jMaterialAccessor = jMaterial["accessor"];
 
   // Prepare the material and its accessor
-  IndexedAccessorType materialAccessor{};
+  IndexedAccessorType materialAccessor(std::vector<Acts::MaterialSlab>{});
 
   // If it's locally indexed, we need to load the material vector
   if constexpr (std::is_same_v<IndexedAccessorType,

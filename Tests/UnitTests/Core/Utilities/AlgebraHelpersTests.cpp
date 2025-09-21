@@ -155,6 +155,75 @@ BOOST_AUTO_TEST_CASE(safeExpFloat) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(MatrixIdxUnrolling)
+
+template <std::size_t N>
+bool testUnrolling()
+  requires(N > 1)
+{
+  /// Fill a test matrix with unique values
+  Acts::ActsSquareMatrix<N> testMatrix{Acts::ActsSquareMatrix<N>::Zero()};
+  std::size_t counter{N};
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
+      testMatrix(j, i) = testMatrix(i, j) = counter;
+      ++counter;
+    }
+  }
+  /// Then unroll the matrix into a vector
+  std::vector<double> vec{};
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
+      vec.push_back(testMatrix(i, j));
+    }
+  }
+
+  if (vec.size() != Acts::sumUpToN(N)) {
+    std::cout << "Compressed vector size mismatch: expected "
+              << Acts::sumUpToN(N) << ", got " << vec.size() << std::endl;
+    return false;
+  }
+  /// Next test whether the indices are correct
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
+      const auto idx = Acts::vecIdxFromSymMat<N>(i, j);
+      if (idx >= vec.size()) {
+        std::cout << "Index out of bounds: " << idx << " for size "
+                  << vec.size() << std::endl;
+        return false;
+      }
+      if (idx != Acts::vecIdxFromSymMat<N>(j, i)) {
+        std::cout << "Index mismatch: expected "
+                  << Acts::vecIdxFromSymMat<N>(i, j) << ", got " << idx
+                  << std::endl;
+        return false;
+      }
+      if (vec[idx] != testMatrix(i, j)) {
+        std::cout << "Value mismatch at index " << idx << ": expected "
+                  << testMatrix(i, j) << ", got " << vec[idx] << std::endl;
+        return false;
+      }
+      /// Finally, check whether the indices can be recovered
+      const auto [iBack, jBack] = Acts::symMatIndices<N>(idx);
+      if (iBack != i || jBack != j) {
+        std::cout << "Index mismatch: expected (" << i << ", " << j
+                  << "), got (" << iBack << ", " << jBack << ") for index "
+                  << idx << std::endl;
+        return false;
+      }
+    }
+  }
+  if constexpr (N > 2) {
+    return testUnrolling<N - 1>();
+  }
+  return true;
+}
+BOOST_AUTO_TEST_CASE(matrixIdxUnrolling) {
+  BOOST_CHECK_EQUAL(testUnrolling<20>(), true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

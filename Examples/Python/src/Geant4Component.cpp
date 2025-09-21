@@ -13,7 +13,6 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
@@ -25,8 +24,12 @@
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -45,21 +48,16 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 using namespace Acts;
-using namespace Acts::Python;
-
-namespace Acts::Python {
-void addGeant4HepMC3(Context& ctx);
-}
+using namespace ActsPython;
 
 struct ExperimentalSensitiveCandidates
     : public Geant4::SensitiveCandidatesBase {
   std::shared_ptr<const Experimental::Detector> detector;
 
   /// Find the sensitive surfaces for a given position
-  std::vector<const Acts::Surface*> queryPosition(
-      const Acts::GeometryContext& gctx,
-      const Acts::Vector3& position) const override {
-    std::vector<const Acts::Surface*> surfaces;
+  std::vector<const Surface*> queryPosition(
+      const GeometryContext& gctx, const Vector3& position) const override {
+    std::vector<const Surface*> surfaces;
     // Here's the detector volume
     auto volume = detector->findDetectorVolume(gctx, position);
     if (volume != nullptr) {
@@ -72,9 +70,9 @@ struct ExperimentalSensitiveCandidates
     return surfaces;
   }
 
-  std::vector<const Acts::Surface*> queryAll() const override {
-    std::vector<const Acts::Surface*> surfaces;
-    detector->visitSurfaces([&](const Acts::Surface* surface) {
+  std::vector<const Surface*> queryAll() const override {
+    std::vector<const Surface*> surfaces;
+    detector->visitSurfaces([&](const Surface* surface) {
       if (surface->associatedDetectorElement() != nullptr) {
         surfaces.push_back(surface);
       }
@@ -112,50 +110,40 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(detector);
-    ACTS_PYTHON_MEMBER(geant4Handle);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector,
+                       geant4Handle);
   }
 
   {
     using Config = Geant4::SensitiveSurfaceMapper::Config;
     using State = Geant4::SensitiveSurfaceMapper::State;
-    auto sm =
-        py::class_<Geant4::SensitiveSurfaceMapper,
-                   std::shared_ptr<Geant4::SensitiveSurfaceMapper>>(
-            mod, "SensitiveSurfaceMapper")
-            .def(py::init([](const Config& cfg, Acts::Logging::Level level) {
-              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
-                  cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
-            }));
+    auto sm = py::class_<Geant4::SensitiveSurfaceMapper,
+                         std::shared_ptr<Geant4::SensitiveSurfaceMapper>>(
+                  mod, "SensitiveSurfaceMapper")
+                  .def(py::init([](const Config& cfg, Logging::Level level) {
+                    return std::make_shared<Geant4::SensitiveSurfaceMapper>(
+                        cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
+                  }));
 
     py::class_<State>(sm, "State").def(py::init<>());
 
     auto c = py::class_<Config>(sm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(materialMappings);
-    ACTS_PYTHON_MEMBER(volumeMappings);
-    ACTS_PYTHON_MEMBER(candidateSurfaces);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, materialMappings, volumeMappings, candidateSurfaces);
 
     sm.def("create",
-           [](const Config& cfg, Acts::Logging::Level level,
+           [](const Config& cfg, Logging::Level level,
               const std::shared_ptr<const TrackingGeometry>& tGeometry) {
              // Set a new surface finder
              Config ccfg = cfg;
-             auto candidateSurfaces =
-                 std::make_shared<Geant4::SensitiveCandidates>();
-             candidateSurfaces->trackingGeometry = tGeometry;
-             ccfg.candidateSurfaces = candidateSurfaces;
+             ccfg.candidateSurfaces =
+                 std::make_shared<Geant4::SensitiveCandidates>(
+                     tGeometry, getDefaultLogger("SensitiveCandidates", level));
              return std::make_shared<Geant4::SensitiveSurfaceMapper>(
                  ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
            });
 
     sm.def("create",
-           [](const Config& cfg, Acts::Logging::Level level,
+           [](const Config& cfg, Logging::Level level,
               const std::shared_ptr<const Experimental::Detector>& detector) {
              // Helper struct to find the sensitive surface candidates
 
@@ -189,30 +177,19 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto alg =
         py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
             mod, "Geant4Simulation")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
+            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
+                 py::arg("level"))
             .def_property_readonly("config", &Algorithm::config);
 
     auto c1 = py::class_<Config, Geant4SimulationBase::Config,
                          std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(outputPropagationSummaries);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(physicsList);
-    ACTS_PYTHON_MEMBER(killVolume);
-    ACTS_PYTHON_MEMBER(killAfterTime);
-    ACTS_PYTHON_MEMBER(killSecondaries);
-    ACTS_PYTHON_MEMBER(recordHitsOfCharged);
-    ACTS_PYTHON_MEMBER(recordHitsOfNeutrals);
-    ACTS_PYTHON_MEMBER(recordHitsOfPrimaries);
-    ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
-    ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
-    ACTS_PYTHON_MEMBER(recordPropagationSummaries);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(
+        c1, outputSimHits, outputParticles, outputPropagationSummaries,
+        sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
+        killAfterTime, killSecondaries, recordHitsOfCharged,
+        recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
+        keepParticlesWithoutHits, recordPropagationSummaries);
   }
 
   {
@@ -221,39 +198,32 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto alg =
         py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
             mod, "Geant4MaterialRecording")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
+            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
+                 py::arg("level"))
             .def_property_readonly("config", &Algorithm::config);
 
     auto c = py::class_<Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(outputMaterialTracks);
-    ACTS_PYTHON_MEMBER(excludeMaterials);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
   }
 
   {
-    using ISelector = Acts::IGeant4PhysicalVolumeSelector;
+    using ISelector = IGeant4PhysicalVolumeSelector;
     auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
         mod, "IVolumeSelector");
 
-    using NameSelector = Acts::Geant4PhysicalVolumeSelectors::NameSelector;
+    using NameSelector = Geant4PhysicalVolumeSelectors::NameSelector;
     auto ns = py::class_<NameSelector, std::shared_ptr<NameSelector>>(
                   mod, "VolumeNameSelector", is)
                   .def(py::init<const std::vector<std::string>&, bool>());
 
-    using Factory = Acts::Geant4DetectorSurfaceFactory;
+    using Factory = Geant4DetectorSurfaceFactory;
     auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Factory::Options);
-    ACTS_PYTHON_MEMBER(scaleConversion);
-    ACTS_PYTHON_MEMBER(convertMaterial);
-    ACTS_PYTHON_MEMBER(convertedMaterialThickness);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceSelector);
-    ACTS_PYTHON_MEMBER(passiveSurfaceSelector);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(o, scaleConversion, convertMaterial,
+                       convertedMaterialThickness, sensitiveSurfaceSelector,
+                       passiveSurfaceSelector);
   }
 
   {
@@ -263,14 +233,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def(py::init<const Geant4Detector::Config&>());
 
     auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(g4World);
-    ACTS_PYTHON_MEMBER(g4SurfaceOptions);
-    ACTS_PYTHON_MEMBER(protoDetector);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, protoDetector,
+                       geometryIdentifierHook, logLevel);
   }
 
   {
@@ -279,10 +243,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                  .def(py::init<const GdmlDetector::Config&>());
 
     auto c = py::class_<GdmlDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, GdmlDetector::Config);
-    ACTS_PYTHON_MEMBER(path);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, path, logLevel);
   }
 
   {
@@ -291,60 +252,60 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     /// @param gdmlFileName is the name of the GDML file
     /// @param sensitiveMatches is a list of strings to match sensitive volumes
     /// @param passiveMatches is a list of strings to match passive volumes
-    mod.def("convertSurfaces", [](const std::string& gdmlFileName,
-                                  const std::vector<std::string>&
-                                      sensitiveMatches,
-                                  const std::vector<std::string>&
-                                      passiveMatches,
-                                  bool convertMaterial) {
-      // Initiate the detector construction & retrieve world
-      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName, {});
-      const auto* world = gdmlContruction.Construct();
+    mod.def(
+        "convertSurfaces", [](const std::string& gdmlFileName,
+                              const std::vector<std::string>& sensitiveMatches,
+                              const std::vector<std::string>& passiveMatches,
+                              bool convertMaterial) {
+          // Initiate the detector construction & retrieve world
+          ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName,
+                                                                 {});
+          const auto* world = gdmlContruction.Construct();
 
-      // Create the selectors
-      auto sensitiveSelectors =
-          std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-              sensitiveMatches, false);
-      auto passiveSelectors =
-          std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-              passiveMatches, false);
+          // Create the selectors
+          auto sensitiveSelectors =
+              std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+                  sensitiveMatches, false);
+          auto passiveSelectors =
+              std::make_shared<Geant4PhysicalVolumeSelectors::NameSelector>(
+                  passiveMatches, false);
 
-      Acts::Geant4DetectorSurfaceFactory::Cache cache;
-      Acts::Geant4DetectorSurfaceFactory::Options options;
-      options.sensitiveSurfaceSelector = sensitiveSelectors;
-      options.passiveSurfaceSelector = passiveSelectors;
-      options.convertMaterial = convertMaterial;
+          Geant4DetectorSurfaceFactory::Config config;
+          Geant4DetectorSurfaceFactory::Cache cache;
+          Geant4DetectorSurfaceFactory::Options options;
+          options.sensitiveSurfaceSelector = sensitiveSelectors;
+          options.passiveSurfaceSelector = passiveSelectors;
+          options.convertMaterial = convertMaterial;
 
-      G4Transform3D nominal;
-      Acts::Geant4DetectorSurfaceFactory factory;
-      factory.construct(cache, nominal, *world, options);
+          G4Transform3D nominal;
+          Geant4DetectorSurfaceFactory factory(config);
+          factory.construct(cache, nominal, *world, options);
 
-      // Capture the sensitive elements and the surfaces
-      using Elements =
-          std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>;
-      Elements detectorElements;
-      detectorElements.reserve(cache.sensitiveSurfaces.size());
-      using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
-      Surfaces surfaces;
-      surfaces.reserve(cache.sensitiveSurfaces.size());
-      std::for_each(cache.sensitiveSurfaces.begin(),
-                    cache.sensitiveSurfaces.end(), [&](const auto& sensitive) {
-                      detectorElements.push_back(std::get<0>(sensitive));
-                      surfaces.push_back(std::get<1>(sensitive));
-                    });
+          // Capture the sensitive elements and the surfaces
+          using Elements = std::vector<std::shared_ptr<Geant4DetectorElement>>;
+          Elements detectorElements;
+          detectorElements.reserve(cache.sensitiveSurfaces.size());
+          using Surfaces = std::vector<std::shared_ptr<Surface>>;
+          Surfaces surfaces;
+          surfaces.reserve(cache.sensitiveSurfaces.size());
+          std::ranges::for_each(
+              cache.sensitiveSurfaces, [&](const auto& sensitive) {
+                detectorElements.push_back(std::get<0>(sensitive));
+                surfaces.push_back(std::get<1>(sensitive));
+              });
 
-      // Capture the passive surfaces
-      Surfaces passiveSurfaces;
-      passiveSurfaces.reserve(cache.passiveSurfaces.size());
-      for (const auto& passive : cache.passiveSurfaces) {
-        passiveSurfaces.push_back(passive);
-      }
+          // Capture the passive surfaces
+          Surfaces passiveSurfaces;
+          passiveSurfaces.reserve(cache.passiveSurfaces.size());
+          for (const auto& passive : cache.passiveSurfaces) {
+            passiveSurfaces.push_back(passive);
+          }
 
-      // Return a convenient tuple for drawing
-      return std::tuple<Elements, Surfaces, Surfaces>(
-          std::move(detectorElements), std::move(surfaces),
-          std::move(passiveSurfaces));
-    });
+          // Return a convenient tuple for drawing
+          return std::tuple<Elements, Surfaces, Surfaces>(
+              std::move(detectorElements), std::move(surfaces),
+              std::move(passiveSurfaces));
+        });
   }
 
   {
@@ -361,18 +322,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def("drawSector", &MockupSectorBuilder::drawSector);
 
     auto c = py::class_<Config>(ms, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(gdmlPath);
-    ACTS_PYTHON_MEMBER(NumberOfSectors);
-    ACTS_PYTHON_MEMBER(toleranceOverlap);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, gdmlPath, NumberOfSectors, toleranceOverlap);
 
     auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(SensitiveNames);
-    ACTS_PYTHON_MEMBER(PassiveNames);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(cch, name, SensitiveNames, PassiveNames);
   }
 
   {
@@ -383,17 +336,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(gammaCut);
-    ACTS_PYTHON_MEMBER(electronCut);
-    ACTS_PYTHON_MEMBER(positronCut);
-    ACTS_PYTHON_MEMBER(protonCut);
-    ACTS_PYTHON_MEMBER(volumes);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
+                       volumes);
   }
 
-  Acts::Python::Context ctx;
+  Context ctx;
   ctx.modules["geant4"] = mod;
-
-  addGeant4HepMC3(ctx);
 }

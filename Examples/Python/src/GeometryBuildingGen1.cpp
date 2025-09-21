@@ -14,7 +14,8 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <vector>
@@ -24,47 +25,52 @@
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 void addGeometryBuildingGen1(Context &ctx) {
   auto m = ctx.get("main");
 
   using SurfacePtrVector = std::vector<std::shared_ptr<const Surface>>;
 
-  py::class_<Acts::Layer, std::shared_ptr<Acts::Layer>>(m, "Layer");
+  py::class_<Layer, std::shared_ptr<Layer>>(m, "Layer");
 
   {
     auto creator =
-        py::class_<Acts::LayerCreator>(m, "LayerCreator")
-            .def(py::init<Acts::LayerCreator::Config>())
-            .def("cylinderLayer",
-                 [](const Acts::LayerCreator &self, const GeometryContext &gctx,
-                    SurfacePtrVector surfaces, std::size_t binsPhi,
-                    std::size_t binsZ) {
-                   return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
-                                             binsZ);
-                 })
-            .def("discLayer", [](const Acts::LayerCreator &self,
-                                 const GeometryContext &gctx,
-                                 SurfacePtrVector surfaces, std::size_t binsR,
-                                 std::size_t binsPhi) {
-              return self.discLayer(gctx, std::move(surfaces), binsR, binsPhi);
-            });
+        py::class_<LayerCreator>(m, "LayerCreator")
+            .def(py::init([](const LayerCreator::Config &cfg,
+                             Logging::Level level) {
+              return LayerCreator(cfg, getDefaultLogger("LayerCreator", level));
+            }))
+            .def(
+                "cylinderLayer",
+                [](const LayerCreator &self, const GeometryContext &gctx,
+                   SurfacePtrVector surfaces, std::size_t binsPhi,
+                   std::size_t binsZ) {
+                  return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
+                                            binsZ);
+                },
+                "gctx"_a, "surfaces"_a, "binsPhi"_a, "binsZ"_a)
+            .def(
+                "discLayer",
+                [](const LayerCreator &self, const GeometryContext &gctx,
+                   SurfacePtrVector surfaces, std::size_t binsR,
+                   std::size_t binsPhi) {
+                  return self.discLayer(gctx, std::move(surfaces), binsR,
+                                        binsPhi);
+                },
+                "gctx"_a, "surfaces"_a, "binsR"_a, "binsPhi"_a);
 
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, LayerCreator::Config);
-    ACTS_PYTHON_MEMBER(surfaceArrayCreator);
-    ACTS_PYTHON_MEMBER(cylinderZtolerance);
-    ACTS_PYTHON_MEMBER(cylinderPhiTolerance);
-    ACTS_PYTHON_MEMBER(defaultEnvelopeR);
-    ACTS_PYTHON_MEMBER(defaultEnvelopeZ);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(config, surfaceArrayCreator, cylinderZtolerance,
+                       cylinderPhiTolerance, defaultEnvelopeR,
+                       defaultEnvelopeZ);
   }
 
   {
-    using Creator = Acts::SurfaceArrayCreator;
+    using Creator = SurfaceArrayCreator;
     using Config = typename Creator::Config;
 
     auto creator =
@@ -75,8 +81,8 @@ void addGeometryBuildingGen1(Context &ctx) {
   }
 
   {
-    using Base = Acts::ILayerArrayCreator;
-    using Creator = Acts::LayerArrayCreator;
+    using Base = ILayerArrayCreator;
+    using Creator = LayerArrayCreator;
     using Config = typename Creator::Config;
 
     py::class_<Base, std::shared_ptr<Base>>(m, "ILayerArrayCreator");
@@ -89,8 +95,8 @@ void addGeometryBuildingGen1(Context &ctx) {
   }
 
   {
-    using Base = Acts::ITrackingVolumeArrayCreator;
-    using Creator = Acts::TrackingVolumeArrayCreator;
+    using Base = ITrackingVolumeArrayCreator;
+    using Creator = TrackingVolumeArrayCreator;
     using Config = typename Creator::Config;
 
     py::class_<Base, std::shared_ptr<Base>>(m, "ITrackingVolumeArrayCreator");
@@ -104,15 +110,15 @@ void addGeometryBuildingGen1(Context &ctx) {
 
   {
     auto helper =
-        py::class_<Acts::CylinderVolumeHelper>(m, "CylinderVolumeHelper")
-            .def(py::init([](const Acts::CylinderVolumeHelper::Config &cfg,
-                             Acts::Logging::Level level) {
-              return Acts::CylinderVolumeHelper(
-                  cfg, Acts::getDefaultLogger("CylinderVolumeHelper", level));
+        py::class_<CylinderVolumeHelper>(m, "CylinderVolumeHelper")
+            .def(py::init([](const CylinderVolumeHelper::Config &cfg,
+                             Logging::Level level) {
+              return CylinderVolumeHelper(
+                  cfg, getDefaultLogger("CylinderVolumeHelper", level));
             }))
             .def("createTrackingVolume",
-                 [](const Acts::CylinderVolumeHelper &self,
-                    GeometryContext gctx, const LayerVector &layers,
+                 [](const CylinderVolumeHelper &self, GeometryContext gctx,
+                    const LayerVector &layers,
                     std::shared_ptr<VolumeBounds> volumeBounds,
                     const Transform3 &trafo, const std::string &name) {
                    return self.createTrackingVolume(gctx, layers, {},
@@ -120,19 +126,15 @@ void addGeometryBuildingGen1(Context &ctx) {
                                                     trafo, name);
                  })
             .def("createContainerTrackingVolume",
-                 &Acts::CylinderVolumeHelper::createContainerTrackingVolume);
+                 &CylinderVolumeHelper::createContainerTrackingVolume);
 
     auto config = py::class_<CylinderVolumeHelper::Config>(helper, "Config")
                       .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, CylinderVolumeHelper::Config);
-    ACTS_PYTHON_MEMBER(layerArrayCreator);
-    ACTS_PYTHON_MEMBER(trackingVolumeArrayCreator);
-    ACTS_PYTHON_MEMBER(passiveLayerThickness);
-    ACTS_PYTHON_MEMBER(passiveLayerPhiBins);
-    ACTS_PYTHON_MEMBER(passiveLayerRzBins);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(config, layerArrayCreator, trackingVolumeArrayCreator,
+                       passiveLayerThickness, passiveLayerPhiBins,
+                       passiveLayerRzBins);
   }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

@@ -19,9 +19,10 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
 #include <random>
@@ -37,7 +38,9 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+using namespace Acts;
+
+namespace ActsPython {
 namespace {
 using std::uniform_real_distribution;
 
@@ -47,7 +50,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       std::size_t runs, std::size_t substepsPerCm,
                       std::pair<double, double> etaRange,
                       Logging::Level logLevel) {
-  using namespace Acts::UnitLiterals;
+  using namespace Acts;
+  using namespace UnitLiterals;
 
   ACTS_LOCAL_LOGGER(getDefaultLogger("pseudoNavigation", logLevel));
 
@@ -63,7 +67,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   for (std::size_t run = 0; run < runs; run++) {
     Vector3 position = Vector3::Zero();
@@ -214,15 +218,15 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 }  // namespace
 
 void addBlueprint(Context& ctx) {
-  using Acts::Experimental::Blueprint;
-  using Acts::Experimental::BlueprintNode;
-  using Acts::Experimental::BlueprintOptions;
-  using Acts::Experimental::CuboidContainerBlueprintNode;
-  using Acts::Experimental::CylinderContainerBlueprintNode;
-  using Acts::Experimental::GeometryIdentifierBlueprintNode;
-  using Acts::Experimental::LayerBlueprintNode;
-  using Acts::Experimental::MaterialDesignatorBlueprintNode;
-  using Acts::Experimental::StaticBlueprintNode;
+  using Experimental::Blueprint;
+  using Experimental::BlueprintNode;
+  using Experimental::BlueprintOptions;
+  using Experimental::CuboidContainerBlueprintNode;
+  using Experimental::CylinderContainerBlueprintNode;
+  using Experimental::GeometryIdentifierBlueprintNode;
+  using Experimental::LayerBlueprintNode;
+  using Experimental::MaterialDesignatorBlueprintNode;
+  using Experimental::StaticBlueprintNode;
 
   auto m = ctx.get("main");
 
@@ -251,9 +255,7 @@ void addBlueprint(Context& ctx) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, envelope);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
@@ -266,10 +268,12 @@ void addBlueprint(Context& ctx) {
         });
   };
 
-  auto addNodeMethods = [&blueprintNode](const std::string& name,
-                                         auto&& callable, auto&&... args) {
-    blueprintNode.def(name.c_str(), callable, args...)
-        .def(("add" + name).c_str(), callable, args...);
+  auto addNodeMethods = [&blueprintNode](
+                            std::initializer_list<std::string> names,
+                            auto&& callable, auto&&... args) {
+    for (const auto& name : names) {
+      blueprintNode.def(name.c_str(), callable, args...);
+    }
   };
 
   blueprintNode
@@ -324,8 +328,7 @@ void addBlueprint(Context& ctx) {
                            const std::shared_ptr<VolumeBounds>& bounds,
                            const std::string& name) {
                  return std::make_shared<StaticBlueprintNode>(
-                     std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                            name));
+                     std::make_unique<TrackingVolume>(transform, bounds, name));
                }),
                py::arg("transform"), py::arg("bounds"),
                py::arg("name") = "undefined")
@@ -336,7 +339,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(staticNode);
 
   addNodeMethods(
-      "StaticVolume",
+      {"StaticVolume", "addStaticVolume"},
       [](BlueprintNode& self, const Transform3& transform,
          const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
         auto node = std::make_shared<StaticBlueprintNode>(
@@ -358,16 +361,21 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CylinderContainerBlueprintNode::attachmentStrategy,
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CylinderContainerBlueprintNode::resizeStrategy,
-                        &CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CylinderContainerBlueprintNode::resizeStrategies,
+                        [](CylinderContainerBlueprintNode& self,
+                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                               strategies) {
+                          self.setResizeStrategies(strategies.first,
+                                                   strategies.second);
+                        })
           .def_property("direction", &CylinderContainerBlueprintNode::direction,
                         &CylinderContainerBlueprintNode::setDirection);
 
   addContextManagerProtocol(cylNode);
 
   addNodeMethods(
-      "CylinderContainer",
+      {"CylinderContainer", "addCylinderContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -389,16 +397,16 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CuboidContainerBlueprintNode::attachmentStrategy,
                         &CuboidContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CuboidContainerBlueprintNode::resizeStrategy,
-                        &CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CuboidContainerBlueprintNode::resizeStrategies,
+                        &CuboidContainerBlueprintNode::setResizeStrategies)
           .def_property("direction", &CuboidContainerBlueprintNode::direction,
                         &CuboidContainerBlueprintNode::setDirection);
 
   addContextManagerProtocol(boxNode);
 
   addNodeMethods(
-      "CuboidContainer",
+      {"CuboidContainer", "addCuboidContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -414,19 +422,21 @@ void addBlueprint(Context& ctx) {
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
                           py::overload_cast<CylinderVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
                           py::overload_cast<CuboidVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
-      "Material",
+      {"Material", "addMaterial"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<MaterialDesignatorBlueprintNode>(name);
         self.addChild(child);
@@ -459,7 +469,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(layerNode);
 
   addNodeMethods(
-      "Layer",
+      {"Layer", "addLayer"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<LayerBlueprintNode>(name);
         self.addChild(child);
@@ -502,8 +512,8 @@ void addBlueprint(Context& ctx) {
     return child;
   };
 
-  blueprintNode.def("GeometryIdentifier", geoIdFactory)
-      .def("withGeometryIdentifier", geoIdFactory);
+  addNodeMethods({"GeometryIdentifier", "withGeometryIdentifier"},
+                 geoIdFactory);
   addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY
@@ -512,4 +522,4 @@ void addBlueprint(Context& ctx) {
         "etaRange"_a = std::pair{-4.5, 4.5}, "logLevel"_a = Logging::INFO);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

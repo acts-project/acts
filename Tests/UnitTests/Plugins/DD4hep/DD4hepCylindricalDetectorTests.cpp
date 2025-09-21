@@ -136,9 +136,9 @@ const char* plugin_xml =
   </plugins>
   )""";
 
-const char* indent_4_xml = "    ";
-const char* indent_8_xml = "        ";
-const char* indent_12_xml = "            ";
+const std::string indent_4_xml(4, ' ');
+const std::string indent_8_xml(8, ' ');
+const std::string indent_12_xml(12, ' ');
 
 namespace {
 
@@ -153,8 +153,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto necR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., necZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> necSurfaces = {necR0Surfaces,
-                                                                necR1Surfaces};
+  std::vector<std::vector<Acts::Surface*>> necSurfaces = {necR0Surfaces,
+                                                          necR1Surfaces};
 
   // Barrel surfaces
   std::vector<std::array<double, 2u>> innerOuter = {
@@ -168,7 +168,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<const Acts::Surface*>> barrelSurfaces = {
+  std::vector<std::vector<Acts::Surface*>> barrelSurfaces = {
       b0Surfaces, b1Surfaces, b2Surfaces};
 
   // Nec surfaces
@@ -179,8 +179,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto pecR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., pecZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
-                                                                pecR1Surfaces};
+  std::vector<std::vector<Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
+                                                          pecR1Surfaces};
 
   // Create an XML from it
   std::ofstream cxml;
@@ -301,9 +301,10 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto world = lcdd->world();
 
   // Test starts here
+  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   auto surfaceFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
-      Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                             Acts::Logging::VERBOSE));
+      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
+                                             Acts::Logging::VERBOSE));
 
   auto layerStructure =
       std::make_shared<Acts::Experimental::DD4hepLayerStructure>(

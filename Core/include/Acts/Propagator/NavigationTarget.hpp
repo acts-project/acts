@@ -10,8 +10,6 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
-#include <utility>
-
 namespace Acts {
 
 class Surface;
@@ -35,7 +33,7 @@ struct NavigationTarget {
                    BoundaryTolerance boundaryTolerance_)
       : surface(&surface_),
         surfaceIntersectionIndex(surfaceIntersectionIndex_),
-        boundaryTolerance(std::move(boundaryTolerance_)) {}
+        boundaryTolerance(boundaryTolerance_) {}
 
   bool isNone() const { return surface == nullptr; }
 

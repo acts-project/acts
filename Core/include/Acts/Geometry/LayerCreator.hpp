@@ -12,7 +12,6 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -27,7 +26,9 @@ namespace Acts {
 namespace Test {
 struct LayerCreatorFixture;
 }
+
 class Surface;
+class SurfaceArray;
 class SurfaceArrayCreator;
 class Layer;
 
@@ -64,9 +65,6 @@ class LayerCreator {
   explicit LayerCreator(const Config& lcConfig,
                         std::unique_ptr<const Logger> logger =
                             getDefaultLogger("LayerCreator", Logging::INFO));
-
-  /// Destructor
-  ~LayerCreator() = default;
 
   /// returning a cylindrical layer
   ///

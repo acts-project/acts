@@ -37,7 +37,7 @@ struct NavigationState {
   /// A candidates can either be a surface or a portal (which contain a surface)
   struct SurfaceCandidate {
     /// A candidate intersection, in Surface view
-    ObjectIntersection<Surface> objectIntersection;
+    SurfaceIntersection objectIntersection;
     /// A candidate is either a detector Surface
     const Surface* surface = nullptr;
     /// Or a portal
@@ -71,7 +71,10 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  std::size_t surfaceCandidateIndex = 0;
+
+  // starting index of the surface candidate - to catch correctly the first
+  // surface
+  int surfaceCandidateIndex = -1;
 
   /// Boundary directives for surfaces
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();

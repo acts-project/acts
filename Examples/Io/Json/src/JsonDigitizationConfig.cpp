@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinningData.hpp"
@@ -18,7 +17,6 @@
 
 #include <cstddef>
 #include <fstream>
-#include <initializer_list>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -159,7 +157,11 @@ void ActsExamples::from_json(const nlohmann::json& j,
     for (const auto& jvar : jvariances) {
       auto idx =
           static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
-      auto vars = jvar["rms"].get<std::vector<double>>();
+      auto rms = jvar["rms"].get<std::vector<double>>();
+      auto vars = rms;
+      // Square the RMS values to get the variances
+      std::transform(vars.begin(), vars.end(), vars.begin(),
+                     [](double val) { return val * val; });
       gdc.varianceMap[idx] = vars;
     }
   }
@@ -170,7 +172,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::SmearingConfig& sdc) {
-  for (const auto& sc : sdc) {
+  for (const auto& sc : sdc.params) {
     j.push_back(nlohmann::json(sc));
   }
 }
@@ -180,7 +182,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   for (const auto& jpsc : j) {
     ActsExamples::ParameterSmearingConfig psc;
     from_json(jpsc, psc);
-    sdc.push_back(psc);
+    sdc.params.push_back(psc);
   }
 }
 
@@ -189,7 +191,7 @@ void ActsExamples::to_json(nlohmann::json& j,
   if (!dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
-  if (!dc.smearingDigiConfig.empty()) {
+  if (!dc.smearingDigiConfig.params.empty()) {
     j["smearing"] = nlohmann::json(dc.smearingDigiConfig);
   }
 }

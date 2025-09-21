@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
@@ -15,6 +14,8 @@
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <vector>
 
@@ -26,7 +27,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addExampleAlgorithms(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -52,33 +53,29 @@ void addExampleAlgorithms(Context& ctx) {
 
     auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackSelectorAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                   .def(py::init<const Alg::Config&, Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTracks);
-    ACTS_PYTHON_MEMBER(outputTracks);
-    ACTS_PYTHON_MEMBER(selectorConfig);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, inputTracks, outputTracks, selectorConfig);
   }
 
   {
-    using EtaBinnedConfig = Acts::TrackSelector::EtaBinnedConfig;
-    using Config = Acts::TrackSelector::Config;
+    using EtaBinnedConfig = TrackSelector::EtaBinnedConfig;
+    using Config = TrackSelector::Config;
 
-    auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
+    auto tool = py::class_<TrackSelector>(m, "TrackSelector")
                     .def(py::init<const Config&>(), py::arg("config"))
                     .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
     {
-      auto mc = py::class_<Acts::TrackSelector::MeasurementCounter>(
+      auto mc = py::class_<TrackSelector::MeasurementCounter>(
                     tool, "MeasurementCounter")
                     .def(py::init<>())
                     .def("addCounter",
-                         &Acts::TrackSelector::MeasurementCounter::addCounter);
+                         &TrackSelector::MeasurementCounter::addCounter);
     }
 
     {
@@ -86,30 +83,11 @@ void addExampleAlgorithms(Context& ctx) {
 
       patchKwargsConstructor(c);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-      ACTS_PYTHON_MEMBER(loc0Min);
-      ACTS_PYTHON_MEMBER(loc0Max);
-      ACTS_PYTHON_MEMBER(loc1Min);
-      ACTS_PYTHON_MEMBER(loc1Max);
-      ACTS_PYTHON_MEMBER(timeMin);
-      ACTS_PYTHON_MEMBER(timeMax);
-      ACTS_PYTHON_MEMBER(phiMin);
-      ACTS_PYTHON_MEMBER(phiMax);
-      ACTS_PYTHON_MEMBER(etaMin);
-      ACTS_PYTHON_MEMBER(etaMax);
-      ACTS_PYTHON_MEMBER(absEtaMin);
-      ACTS_PYTHON_MEMBER(absEtaMax);
-      ACTS_PYTHON_MEMBER(ptMin);
-      ACTS_PYTHON_MEMBER(ptMax);
-      ACTS_PYTHON_MEMBER(minMeasurements);
-      ACTS_PYTHON_MEMBER(maxHoles);
-      ACTS_PYTHON_MEMBER(maxOutliers);
-      ACTS_PYTHON_MEMBER(maxHolesAndOutliers);
-      ACTS_PYTHON_MEMBER(maxSharedHits);
-      ACTS_PYTHON_MEMBER(maxChi2);
-      ACTS_PYTHON_MEMBER(measurementCounter);
-      ACTS_PYTHON_MEMBER(requireReferenceSurface);
-      ACTS_PYTHON_STRUCT_END();
+      ACTS_PYTHON_STRUCT(c, loc0Min, loc0Max, loc1Min, loc1Max, timeMin,
+                         timeMax, phiMin, phiMax, etaMin, etaMax, absEtaMin,
+                         absEtaMax, ptMin, ptMax, minMeasurements, maxHoles,
+                         maxOutliers, maxHolesAndOutliers, maxSharedHits,
+                         maxChi2, measurementCounter, requireReferenceSurface);
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
       pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
@@ -129,11 +107,8 @@ void addExampleAlgorithms(Context& ctx) {
 
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, EtaBinnedConfig);
-      ACTS_PYTHON_MEMBER(cutSets);
-      ACTS_PYTHON_MEMBER(absEtaEdges);
-      ACTS_PYTHON_STRUCT_END();
+      ACTS_PYTHON_STRUCT(c, cutSets, absEtaEdges);
     }
   }
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

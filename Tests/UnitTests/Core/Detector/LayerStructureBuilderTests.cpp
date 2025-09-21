@@ -40,12 +40,11 @@ namespace {
 /// infrastructure with the new const-correct detector design
 ///
 std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
-    const std::vector<const Acts::Surface*>& surfaces) {
+    const std::vector<Acts::Surface*>& surfaces) {
   std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
-  for (const auto& s : surfaces) {
-    Surface* ncs = const_cast<Surface*>(s);
-    uSurfaces.push_back(ncs->getSharedPtr());
+  for (auto* s : surfaces) {
+    uSurfaces.push_back(s->getSharedPtr());
   }
   return uSurfaces;
 }
@@ -68,8 +67,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {
-      {ProtoAxis(Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
-                 -std::numbers::pi, std::numbers::pi, 22u),
+      {DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
+                         Acts::AxisBoundaryType::Closed, -std::numbers::pi,
+                         std::numbers::pi, 22u),
        1u}};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
@@ -188,12 +188,12 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      {Acts::ProtoAxis{Acts::AxisDirection::AxisZ,
-                       Acts::AxisBoundaryType::Bound, -480., 480., 14u},
+      {Acts::DirectedProtoAxis{Acts::AxisDirection::AxisZ,
+                               Acts::AxisBoundaryType::Bound, -480., 480., 14u},
        1u},
-      {Acts::ProtoAxis(Acts::AxisDirection::AxisPhi,
-                       Acts::AxisBoundaryType::Closed, -std::numbers::pi,
-                       std::numbers::pi, 32u),
+      {Acts::DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
+                               Acts::AxisBoundaryType::Closed,
+                               -std::numbers::pi, std::numbers::pi, 32u),
        1u}};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(

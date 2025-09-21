@@ -10,12 +10,16 @@
 
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
-Acts::NavigationLayer::NavigationLayer(
+namespace Acts {
+
+NavigationLayer::NavigationLayer(
     std::shared_ptr<const Surface> surfaceRepresentation, double thickness)
-    : Acts::Layer(nullptr),
+    : Layer(nullptr),
       m_surfaceRepresentation(std::move(surfaceRepresentation)) {
   m_layerThickness = thickness;
   m_layerType = navigation;
 }
 
-Acts::NavigationLayer::~NavigationLayer() = default;
+NavigationLayer::~NavigationLayer() = default;
+
+}  // namespace Acts
