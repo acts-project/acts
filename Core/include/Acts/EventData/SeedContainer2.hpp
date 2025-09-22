@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cassert>
 #include <span>
@@ -166,7 +166,7 @@ class SeedContainer2 {
   }
 
   template <bool read_only>
-  using Iterator = ContainerIterator<
+  using Iterator = detail::ContainerIterator<
       SeedContainer2,
       std::conditional_t<read_only, ConstSeedProxy2, MutableSeedProxy2>, Index,
       read_only>;

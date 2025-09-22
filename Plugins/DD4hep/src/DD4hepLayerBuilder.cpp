@@ -131,27 +131,24 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
-        double zMin =
-            (transform.translation() -
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        double zMax =
-            (transform.translation() +
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        if (zMin > zMax) {
-          std::swap(zMin, zMax);
-        }
+
+        // For disc layers, since ProtoLayer uses local coordinates,
+        // we can simply use ±dz directly in local coordinates
+        double dz = tube->GetDz() * UnitConstants::cm;
+        double zMin = -dz;
+        double zMax = +dz;
+
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
           // in case no surfaces are handed over the layer thickness will be
           // set to a default value to allow attaching material layers
-          double z = (zMin + zMax) * 0.5;
-          // create layer without surfaces
-          // manually create a proto layer
-          double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
-          double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
+          double eiz = (transform.translation().z() != 0.)
+                           ? -m_cfg.defaultThickness
+                           : 0.;
+          double eoz = (transform.translation().z() != 0.)
+                           ? +m_cfg.defaultThickness
+                           : 0.;
           pl.extent.range(AxisDirection::AxisZ).set(eiz, eoz);
           pl.extent.range(AxisDirection::AxisR).set(rMin, rMax);
           pl.envelope[AxisDirection::AxisR] = {0., 0.};

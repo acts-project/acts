@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -119,15 +120,17 @@ class DoubletsForMiddleSp {
   }
 
   using const_iterator =
-      ContainerIterator<DoubletsForMiddleSp, Proxy, Index, true>;
+      Acts::detail::ContainerIterator<DoubletsForMiddleSp, Proxy, Index, true>;
 
   const_iterator begin() const { return const_iterator(*this, 0); }
   const_iterator end() const { return const_iterator(*this, size()); }
 
   class Range
-      : public ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true> {
+      : public Acts::detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
+                                            Index, true> {
    public:
-    using Base = ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true>;
+    using Base = Acts::detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
+                                              Index, true>;
 
     using Base::Base;
   };
@@ -137,19 +140,21 @@ class DoubletsForMiddleSp {
     return Range(*this, range);
   }
 
-  class Subset : public ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
-                                        Index, true> {
+  class Subset
+      : public Acts::detail::ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
+                                             Index, true> {
    public:
-    using Base =
-        ContainerSubset<Subset, DoubletsForMiddleSp, Proxy, Index, true>;
+    using Base = Acts::detail::ContainerSubset<Subset, DoubletsForMiddleSp,
+                                               Proxy, Index, true>;
 
     using Base::Base;
   };
-  class Subset2 : public ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
-                                         IndexAndCotTheta, true> {
+  class Subset2
+      : public Acts::detail::ContainerSubset<Subset2, DoubletsForMiddleSp,
+                                             Proxy2, IndexAndCotTheta, true> {
    public:
-    using Base = ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
-                                 IndexAndCotTheta, true>;
+    using Base = Acts::detail::ContainerSubset<Subset2, DoubletsForMiddleSp,
+                                               Proxy2, IndexAndCotTheta, true>;
 
     using Base::Base;
   };
