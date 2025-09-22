@@ -273,7 +273,7 @@ class SurfaceArray {
         const Vector3 global =
             m_representative->localToGlobal(gctx, surfaceLocal, normal);
 
-        const SurfaceIntersection intersection =
+        const Intersection3D intersection =
             surface.intersect(gctx, global, normal, BoundaryTolerance::None())
                 .closest();
         if (!intersection.isValid() ||
@@ -346,7 +346,7 @@ class SurfaceArray {
                               double tolerance) const {
       GeometryContext gctx;
 
-      const SurfaceIntersection intersection =
+      const Intersection3D intersection =
           m_representative
               ->intersect(gctx, position, direction,
                           BoundaryTolerance::Infinite())
