@@ -148,7 +148,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initial(),
+    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, ip->initialState(),
                        fittedParameters);
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
-  // fitted parameter and total truth tracks (assumes one truth partilce has
+  // fitted parameter and total truth tracks (assumes one truth particle has
   // one truth track)
   for (const auto& particle : particles) {
     bool isReconstructed = false;
@@ -182,7 +182,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
+    m_effPlotTool.fill(m_effPlotCache, particle.initialState(), minDeltaR,
                        isReconstructed);
   }
 

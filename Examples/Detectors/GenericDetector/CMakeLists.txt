@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDetectorGeneric
+acts_add_library(
+    ExamplesDetectorGeneric
     SHARED
     src/AlignedGenericDetector.cpp
     src/GenericDetector.cpp
@@ -9,7 +9,7 @@ add_library(
     src/GenericDetectorBuilder.cpp
 )
 
-acts_compile_headers(ActsExamplesDetectorGeneric GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesDetectorGeneric GLOB "include/**/*.hpp")
 
 target_include_directories(
     ActsExamplesDetectorGeneric
@@ -18,10 +18,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorGeneric
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon
-)
-
-install(
-    TARGETS ActsExamplesDetectorGeneric
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::ExamplesDetectorsCommon
 )

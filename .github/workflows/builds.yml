@@ -20,7 +20,6 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v11.1.0
 
 jobs:
   linux_ubuntu:
@@ -31,7 +30,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -131,7 +130,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -141,7 +140,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -159,7 +158,7 @@ jobs:
           source build/this_acts_withdeps.sh
           python3 -m pip install -r Examples/Python/tests/requirements.txt
           python3 -m pip install pytest-md-report
-          pytest -rfExw -k "not exatrkx" -v
+          pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
@@ -170,7 +169,7 @@ jobs:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -182,7 +181,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: acts-linux-ubuntu
 
@@ -228,7 +227,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: physmon
           path: physmon
@@ -262,7 +261,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -337,7 +336,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           lfs: true
@@ -415,12 +414,12 @@ jobs:
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
           path: acts
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -467,7 +466,7 @@ jobs:
             export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
             echo "::group::EICrecon configure phase"
             ccache -z && \
-            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include" \
+            env CXXFLAGS="-I$CMAKE_INSTALL_PREFIX/include -L$CMAKE_INSTALL_PREFIX/lib" \
                 LDFLAGS="-L$CMAKE_INSTALL_PREFIX/lib" \
             cmake -B build -S . \
               -GNinja \

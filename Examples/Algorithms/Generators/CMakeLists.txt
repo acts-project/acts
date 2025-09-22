@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesGenerators
+acts_add_library(
+    ExamplesGenerators
     SHARED
     ActsExamples/Generators/EventGenerator.cpp
 )
@@ -9,10 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGenerators
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesIoHepMC3 HepMC3::HepMC3
-)
-
-install(
-    TARGETS ActsExamplesGenerators
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::ExamplesIoHepMC3 HepMC3::HepMC3
 )

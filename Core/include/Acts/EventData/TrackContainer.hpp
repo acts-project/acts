@@ -16,8 +16,8 @@
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Iterator.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <any>
 #include <string>
@@ -77,9 +77,10 @@ class TrackContainer {
 
   using size_type = IndexType;
   using iterator =
-      Acts::ContainerIndexIterator<TrackContainer, TrackProxy, false>;
+      detail::ContainerIterator<TrackContainer, TrackProxy, IndexType, false>;
   using const_iterator =
-      Acts::ContainerIndexIterator<TrackContainer, ConstTrackProxy, true>;
+      detail::ContainerIterator<TrackContainer, ConstTrackProxy, IndexType,
+                                true>;
 
 #ifndef DOXYGEN
   friend TrackProxy;

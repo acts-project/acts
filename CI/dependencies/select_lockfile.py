@@ -40,6 +40,13 @@ def retry_on_http_error(max_retries: int = 3, base_delay: float = 1.0):
                         time.sleep(delay)
                         continue
                     raise
+                except urllib.error.URLError as e:
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2**attempt)
+                        print(f"Got URL error {e}, retrying in {delay} seconds...")
+                        time.sleep(delay)
+                        continue
+                    raise
             return func(*args, **kwargs)  # Final attempt
 
         return wrapper

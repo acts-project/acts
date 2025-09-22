@@ -14,17 +14,6 @@
 
 namespace Acts::Experimental {
 
-inline MutableSpacePointProxy2
-SpacePointContainer2::createSpacePoint() noexcept {
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->emplace_back();
-  }
-
-  ++m_size;
-
-  return MutableProxy(*this, size() - 1);
-}
-
 inline MutableSpacePointProxy2 SpacePointContainer2::at(Index index) {
   if (index >= size()) {
     throw std::out_of_range(

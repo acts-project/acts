@@ -25,13 +25,11 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("CsvTrackParameterWriter", level)) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTracks.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or tracks");
+  if (m_cfg.inputTracks.empty()) {
+    throw std::invalid_argument("You have to provide tracks");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTracks.maybeInitialize(m_cfg.inputTracks);
+  m_inputTracks.initialize(m_cfg.inputTracks);
 }
 
 ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
@@ -47,34 +45,24 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     const AlgorithmContext& ctx) {
-  TrackParametersContainer inputTrackParameters;
+  const auto& inputTracks = m_inputTracks(ctx);
 
-  if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& tmp = m_inputTrackParameters(ctx);
-    inputTrackParameters = tmp;
-  } else {
-    const auto& inputTracks = m_inputTracks(ctx);
-
-    for (const auto& track : inputTracks) {
-      if (!track.hasReferenceSurface()) {
-        continue;
-      }
-      auto trackParam = track.createParametersAtReference();
-      inputTrackParameters.push_back(trackParam);
-    }
-  }
-
-  std::string path =
-      perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
+  std::string path = perEventFilepath(
+      m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
   ActsExamples::NamedTupleCsvWriter<TrackParameterData> writer(
       path, m_cfg.outputPrecision);
 
   TrackParameterData data{};
-  for (const auto& tp : inputTrackParameters) {
+  for (const auto& track : inputTracks) {
+    if (!track.hasReferenceSurface()) {
+      continue;
+    }
+    auto tp = track.createParametersAtReference();
     const auto& params = tp.parameters();
     const auto& cov = tp.covariance().value();
 
+    data.trackId = track.index();
     data.d0 = params[Acts::eBoundLoc0];
     data.z0 = params[Acts::eBoundLoc1];
     data.phi = params[Acts::eBoundPhi];

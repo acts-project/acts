@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -50,9 +51,7 @@ TrackingVolume::TrackingVolume(
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
 
-  DelegateChainBuilder{m_navigationDelegate}
-      .add<&INavigationPolicy::noopInitializeCandidates>()
-      .store(m_navigationDelegate);
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)

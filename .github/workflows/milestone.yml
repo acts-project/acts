@@ -2,7 +2,7 @@ name: Check PR milestone
 
 on:
   pull_request_target:
-    types: [milestoned, demilestoned, opened, reopened]
+    types: [milestoned, demilestoned, opened, reopened, synchronize]
     branches:
       - main
 
@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: "Check for milestone on PR"
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             let milestone = context.payload.pull_request.milestone;

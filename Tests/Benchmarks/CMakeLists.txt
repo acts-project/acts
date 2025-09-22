@@ -13,8 +13,8 @@ macro(add_benchmark _name)
     target_link_libraries(
         ${_target}
         PRIVATE
-            ActsCore
-            ActsTestsCommonHelpers
+            Acts::Core
+            Acts::TestsCommonHelpers
             Boost::program_options
             Boost::unit_test_framework
     )

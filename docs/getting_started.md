@@ -31,17 +31,17 @@ The following dependencies are required to build the ACTS core library:
 The following dependencies are optional and are needed to build additional
 components:
 
-- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
+- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the GNN plugin and its examples
 - [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 - [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 - [Geant4](https://geant4.org/) for some examples
 - [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 - [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
-- [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
+- [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the GNN plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
 - [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
-- [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
+- [libtorch](https://pytorch.org/cppdocs/installing.html) for the GNN plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 - [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
@@ -54,7 +54,7 @@ versions of all dependencies are provided e.g. by the [LCG
 releases](https://lcginfo.cern.ch/) starting from [LCG 102b](https://lcginfo.cern.ch/release/102b/).
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
-available and are discussed in the [Building Acts](#building-acts) section.
+available and are discussed in the [Building ACTS](#building-acts) section.
 
 [Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
@@ -280,12 +280,12 @@ components.
 | ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
 | ACTS_BUILD_PLUGIN_TRACCC            | Build Traccc plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
-| ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
-| ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
-| ACTS_EXATRKX_ENABLE_TORCH           | Build the torchscript backend for the<br>exatrkx plugin<br> type: `bool`, default: `ON`                                                                                                                                            |
-| ACTS_EXATRKX_ENABLE_CUDA            | Enable CUDA for the exatrkx plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                |
-| ACTS_EXATRKX_ENABLE_MODULEMAP       | Enable Module-Map-based graph<br>construction<br> type: `bool`, default: `OFF`                                                                                                                                                     |
-| ACTS_EXATRKX_ENABLE_TENSORRT        | Enable the native TensorRT inference<br>modules<br> type: `bool`, default: `OFF`                                                                                                                                                   |
+| ACTS_BUILD_PLUGIN_GNN               | Build the GNN plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
+| ACTS_GNN_ENABLE_ONNX                | Build the Onnx backend for the gnn<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_GNN_ENABLE_TORCH               | Build the torchscript backend for the<br>gnn plugin<br> type: `bool`, default: `ON`                                                                                                                                                |
+| ACTS_GNN_ENABLE_CUDA                | Enable CUDA for the gnn plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
+| ACTS_GNN_ENABLE_MODULEMAP           | Enable Module-Map-based graph<br>construction<br> type: `bool`, default: `OFF`                                                                                                                                                     |
+| ACTS_GNN_ENABLE_TENSORRT            | Enable the native TensorRT inference<br>modules<br> type: `bool`, default: `OFF`                                                                                                                                                   |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_ROOT              | Build ROOT plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
@@ -297,7 +297,7 @@ components.
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_BUILD_EXAMPLES_EXATRKX         | Build the Exa.TrkX example code<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
+| ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
@@ -376,7 +376,7 @@ To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and
 You can now use the ODD in the python binding by using:
 
 ```python
-oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
+oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_ACTS/thirdparty/OpenDataDetector/data/odd-material-maps.root")
 detector = getOpenDataDetector(oddMaterialDeco)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()

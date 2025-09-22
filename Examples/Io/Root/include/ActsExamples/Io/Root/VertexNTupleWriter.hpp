@@ -48,7 +48,7 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   struct Config {
     /// Input vertex collection.
     std::string inputVertices;
-    /// Tracks object from track finidng.
+    /// Tracks object from track finding.
     std::string inputTracks;
     /// Optional. Input truth vertex collection.
     std::string inputTruthVertices;

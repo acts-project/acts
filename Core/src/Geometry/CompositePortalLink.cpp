@@ -354,4 +354,8 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
   }
 }
 
+CompositePortalLink::PortalLinkRange CompositePortalLink::links() const {
+  return PortalLinkRange{m_children};
+}
+
 }  // namespace Acts

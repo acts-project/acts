@@ -19,10 +19,6 @@
 
 namespace Acts {
 
-std::array<std::string, Surface::SurfaceType::Other>
-    Surface::s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",       "Perigee",
-                                   "Plane", "Straw",    "Curvilinear"};
-
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
@@ -45,7 +41,11 @@ Surface::Surface(const GeometryContext& gctx, const Surface& other,
       m_transform(std::make_unique<Transform3>(shift * other.transform(gctx))),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
-Surface::~Surface() = default;
+Surface::~Surface() noexcept = default;
+
+std::ostream& operator<<(std::ostream& os, Surface::SurfaceType type) {
+  return os << Surface::s_surfaceTypeNames[static_cast<std::size_t>(type)];
+}
 
 bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction,
@@ -244,6 +244,15 @@ const Transform3& Surface::transform(const GeometryContext& gctx) const {
     return m_associatedDetElement->transform(gctx);
   }
   return *m_transform;
+}
+
+Vector2 Surface::closestPointOnBoundary(const Vector2& lposition,
+                                        const SquareMatrix2& metric) const {
+  return bounds().closestPoint(lposition, metric);
+}
+
+double Surface::distanceToBoundary(const Vector2& lposition) const {
+  return bounds().distance(lposition);
 }
 
 bool Surface::insideBounds(const Vector2& lposition,

@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDetectorsCommon
+acts_add_library(
+    ExamplesDetectorsCommon
     SHARED
     src/Detector.cpp
     src/AlignmentDecorator.cpp
@@ -11,10 +11,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorsCommon
-    PUBLIC ActsCore ActsExamplesFramework
-)
-
-install(
-    TARGETS ActsExamplesDetectorsCommon
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC Acts::ExamplesFramework
 )
