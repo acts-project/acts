@@ -43,15 +43,14 @@ class TrackToTruthJetAlgorithm : public IAlgorithm {
   TrackToTruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
-  ProcessCode finalize() const;
+  ProcessCode finalize() override;
 
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
-  ReadDataHandle<TrackJetContainer> m_inputJets{this,
-                                                              "inputJets"};
+  ReadDataHandle<TrackJetContainer> m_inputJets{this, "inputJets"};
   WriteDataHandle<TrackJetContainer> m_outputTrackJets{this, "outputTrackJets"};
 };
 
