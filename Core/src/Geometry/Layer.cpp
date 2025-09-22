@@ -200,20 +200,9 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
   // check the sensitive surfaces if you have some
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
                          options.resolveSensitive)) {
-    Vector3 lookupPosition = position;
-
-    // if possible use a position on the representative surface for the surface
-    // array lookup
-    if (Intersection3D intersection = surfaceRepresentation()
-                                          .intersect(gctx, position, direction)
-                                          .closest();
-        intersection.isValid()) {
-      lookupPosition = intersection.position();
-    }
-
     // get the candidates
     const std::vector<const Surface*>& sensitiveSurfaces =
-        m_surfaceArray->neighbors(lookupPosition);
+        m_surfaceArray->neighbors(position, direction);
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
