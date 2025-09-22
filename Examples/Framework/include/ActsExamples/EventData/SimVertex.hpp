@@ -78,7 +78,7 @@ class SimVertexBarcode {
     return SimVertexBarcode(m_id.withGeneration(id));
   }
 
-  Acts::HashedString hash() const { return m_id.hash(); }
+  std::size_t hash() const { return m_id.hash(); }
 
  private:
   /// The vertex ID
