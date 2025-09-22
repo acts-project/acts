@@ -71,6 +71,7 @@ call(
     + ["-r", source_dir]
     + ["--gcov-executable", args.gcov]
     + ["-j", str(mp.cpu_count())]
+    + ["--merge-mode-functions", "separate"]
     + excludes
     + extra_flags
     + ["--sonarqube", "coverage/cov.xml"]
