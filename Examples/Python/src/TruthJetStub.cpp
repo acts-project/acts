@@ -12,4 +12,4 @@
 namespace ActsPython {
 void addTruthJet(Context& /*ctx*/) {}
 void addTrackToTruthJet(Context& /*ctx*/) {}
-}  // namespace Acts::Python
+}  // namespace ActsPython

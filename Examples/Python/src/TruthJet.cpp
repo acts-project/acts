@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 #include "ActsExamples/Jets/TrackToTruthJetAlgorithm.hpp"
+#include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 

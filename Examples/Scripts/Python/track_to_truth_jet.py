@@ -160,7 +160,7 @@ def make_sequencer(
         level=acts.logging.DEBUG,
         inputTruthParticles="jet_input_particles",
         outputJets="truth_jets",
-        jetPtMin=10 * u.GeV
+        jetPtMin=10 * u.GeV,
     )
 
     s.addAlgorithm(truthJetAlg)
@@ -175,6 +175,7 @@ def make_sequencer(
         ),
         loglevel=acts.logging.DEBUG,
     )
+
 
 def make_geometry():
     from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
