@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace Acts::Experimental {

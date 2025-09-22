@@ -15,7 +15,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/MagneticField/TextMagneticFieldIo.hpp"
-#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -136,7 +136,7 @@ void addMagneticField(py::module_& m) {
         };
 
         if (file.extension() == ".root") {
-          auto map = makeMagneticFieldMapXyzFromRoot(
+          auto map = ActsPlugins::makeMagneticFieldMapXyzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstOctant);
           return std::make_shared<decltype(map)>(std::move(map));
@@ -165,7 +165,7 @@ void addMagneticField(py::module_& m) {
         };
 
         if (file.extension() == ".root") {
-          auto map = makeMagneticFieldMapRzFromRoot(
+          auto map = ActsPlugins::makeMagneticFieldMapRzFromRoot(
               std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
               firstQuadrant);
           return std::make_shared<decltype(map)>(std::move(map));

@@ -68,7 +68,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
   }
 
-  Acts::RootMaterialMapIo accessor(m_cfg.accessorConfig,
+  ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                    m_logger->clone("RootMaterialMapIo"));
   auto [surfaceMaps, volumeMaps] =
       accessor.read(*m_inputFile, m_cfg.accessorOptions);

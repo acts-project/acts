@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorStructure.hpp"
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepBlueprintFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 
 #include <fstream>
 

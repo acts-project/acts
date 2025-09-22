@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialMapIo.hpp"
+#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
@@ -28,7 +28,7 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
 
-void Acts::RootMaterialMapIo::write(TFile& rFile,
+void ActsPlugins::RootMaterialMapIo::write(TFile& rFile,
                                     const GeometryIdentifier& geoID,
                                     const ISurfaceMaterial& surfaceMaterial,
                                     const Options& options) {
@@ -136,7 +136,7 @@ void Acts::RootMaterialMapIo::write(TFile& rFile,
   }
 }
 
-void Acts::RootMaterialMapIo::write(
+void ActsPlugins::RootMaterialMapIo::write(
     TFile& rFile, const TrackingGeometryMaterial& detectorMaterial,
     const Options& options) {
   const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
@@ -151,7 +151,7 @@ void Acts::RootMaterialMapIo::write(
   }
 }
 
-void Acts::RootMaterialMapIo::connectForWrite(
+void ActsPlugins::RootMaterialMapIo::connectForWrite(
     TTree& rTree, MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.Branch("hGeoId", &treePayload.hGeoId);
@@ -164,7 +164,7 @@ void Acts::RootMaterialMapIo::connectForWrite(
   rTree.Branch(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapIo::connectForRead(TTree& rTree,
+void ActsPlugins::RootMaterialMapIo::connectForRead(TTree& rTree,
                                              MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
@@ -177,7 +177,7 @@ void Acts::RootMaterialMapIo::connectForRead(TTree& rTree,
   rTree.SetBranchAddress(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void Acts::RootMaterialMapIo::fillMaterialSlab(
+void ActsPlugins::RootMaterialMapIo::fillMaterialSlab(
     MaterialTreePayload& payload, const MaterialSlab& materialSlab) {
   payload.ht = materialSlab.thickness();
   payload.hX0 = materialSlab.material().X0();
@@ -187,7 +187,7 @@ void Acts::RootMaterialMapIo::fillMaterialSlab(
   payload.hRho = materialSlab.material().massDensity();
 }
 
-void Acts::RootMaterialMapIo::fillBinnedSurfaceMaterial(
+void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
   auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
   auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
@@ -233,7 +233,7 @@ void Acts::RootMaterialMapIo::fillBinnedSurfaceMaterial(
   rho.Write();
 }
 
-void Acts::RootMaterialMapIo::fillBinnedSurfaceMaterial(
+void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
@@ -255,7 +255,7 @@ void Acts::RootMaterialMapIo::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-Acts::TrackingGeometryMaterial Acts::RootMaterialMapIo::read(
+Acts::TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
     TFile& rFile, const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
@@ -352,7 +352,7 @@ Acts::TrackingGeometryMaterial Acts::RootMaterialMapIo::read(
 }
 
 std::shared_ptr<const Acts::ISurfaceMaterial>
-Acts::RootMaterialMapIo::readTextureSurfaceMaterial(
+ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
     TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
   std::shared_ptr<const Acts::ISurfaceMaterial> texturedSurfaceMaterial =
       nullptr;

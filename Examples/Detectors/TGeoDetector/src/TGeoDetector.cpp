@@ -22,8 +22,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
+#include "ActsPlugins/Root/TGeoCylinderDiscSplitter.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
@@ -50,13 +50,13 @@ namespace {
 ///
 /// @param config The input config
 /// @return Vector of layer builder configs
-std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
+std::vector<ActsPlugins::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     const TGeoDetector::Config& config, const Acts::Logger& logger) {
-  std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
+  std::vector<ActsPlugins::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // iterate over all configured detector volumes
   for (const auto& volume : config.volumes) {
-    Acts::TGeoLayerBuilder::Config layerBuilderConfig;
+    ActsPlugins::TGeoLayerBuilder::Config layerBuilderConfig;
     layerBuilderConfig.configurationName = volume.name;
     layerBuilderConfig.unit = config.unitScalor;
     layerBuilderConfig.detectorElementFactory = config.detectorElementFactory;
@@ -88,7 +88,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
         continue;
       }
 
-      Acts::TGeoLayerBuilder::LayerConfig lConfig;
+      ActsPlugins::TGeoLayerBuilder::LayerConfig lConfig;
       lConfig.volumeName = volume.subVolumeName.at(ncp);
       lConfig.sensorNames = volume.sensitiveNames.at(ncp);
       lConfig.localAxes = volume.sensitiveAxes.at(ncp);
@@ -231,7 +231,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   auto layerBuilderConfigs = makeLayerBuilderConfigs(config, logger);
 
   // Remember the layer builders to collect the detector elements
-  std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
+  std::vector<std::shared_ptr<const ActsPlugins::TGeoLayerBuilder>> tgLayerBuilders;
 
   for (auto& lbc : layerBuilderConfigs) {
     std::shared_ptr<const Acts::LayerCreator> layerCreatorLB = nullptr;
@@ -266,7 +266,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     lbc.protoLayerHelper =
         (protoLayerHelperLB != nullptr) ? protoLayerHelperLB : protoLayerHelper;
 
-    auto layerBuilder = std::make_shared<const Acts::TGeoLayerBuilder>(
+    auto layerBuilder = std::make_shared<const ActsPlugins::TGeoLayerBuilder>(
         lbc, logger.clone(lbc.configurationName + "LayerBuilder",
                           config.layerLogLevel));
     // remember the layer builder
@@ -280,7 +280,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.layerEnvelopeR = {config.layerEnvelopeR,
                                    config.layerEnvelopeR};
     auto ringLayoutConfiguration =
-        [&](const std::vector<Acts::TGeoLayerBuilder::LayerConfig>& lConfigs)
+        [&](const std::vector<ActsPlugins::TGeoLayerBuilder::LayerConfig>& lConfigs)
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {

@@ -18,8 +18,8 @@ An example use of the ``TGeo`` plugin can be found in the ``TGeoDetector`` examp
 Parsing the ROOT Geometry
 -------------------------
 
-Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder``, which implements an ``Acts::ILayerBuilder``, relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
-The ``Acts::TGeoLayerBuilder`` can be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described.
+Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``ActsPlugins::TGeoLayerBuilder``, which implements an ``Acts::ILayerBuilder``, relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
+The ``ActsPlugins::TGeoLayerBuilder`` can be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described.
 A dedicated ``Acts::TGeoParser`` struct is then used to select the nodes from the ROOT geometry.
 
 Conversion of TGeoShapes to Acts::Surfaces
@@ -39,7 +39,7 @@ In case a translation request is malformed, a ``std::exception`` is thrown, indi
 Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects can be found in the ``Tests/UnitTests/Plugins/Root`` unit test suite, a summary of the output can be seen below.
 
 Additionally, an option exists to split surfaces after the transformation
-has taken place by adding a splitter implementation to the ``Acts::TGeoLayerBuilder``, like the ``Acts::TGeoCylinderDiscSplitter``. This can be useful to describe e.g. a cylindrical detector with tangential planar surfaces.
+has taken place by adding a splitter implementation to the ``ActsPlugins::TGeoLayerBuilder``, like the ``Acts::TGeoCylinderDiscSplitter``. This can be useful to describe e.g. a cylindrical detector with tangential planar surfaces.
 
 .. figure:: figures/tgeo/TGeoBBox_PlaneSurface.png
   :width: 800

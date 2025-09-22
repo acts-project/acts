@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"

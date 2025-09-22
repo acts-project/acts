@@ -14,7 +14,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"

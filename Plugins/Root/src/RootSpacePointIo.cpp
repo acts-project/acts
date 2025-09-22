@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootSpacePointIo.hpp"
+#include "ActsPlugins/Root/RootSpacePointIo.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
@@ -15,11 +15,11 @@
 #include <TChain.h>
 #include <TTree.h>
 
-namespace Acts {
+namespace ActsPlugins {
 
 void RootSpacePointIo::connectForRead(
-    TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
-  using enum Experimental::SpacePointColumns;
+    TChain& tchain, const Acts::Experimental::SpacePointContainer2& spacePoints) {
+  using enum Acts::Experimental::SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     tchain.SetBranchAddress("x", &m_x);
@@ -48,8 +48,8 @@ void RootSpacePointIo::connectForRead(
 }
 
 void RootSpacePointIo::connectForWrite(
-    TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
-  using enum Experimental::SpacePointColumns;
+    TTree& ttree, const Acts::Experimental::SpacePointContainer2& spacePoints) {
+  using enum Acts::Experimental::SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     ttree.Branch("x", &m_x);
@@ -108,18 +108,18 @@ void RootSpacePointIo::write(
 }
 
 void RootSpacePointIo::write(
-    const Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
+    const Acts::Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
   connectForWrite(ttree, spacePoints);
 
-  for (Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
+  for (Acts::Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
     write(spacePoint);
     ttree.Fill();
   }
 }
 
-void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
-                            Experimental::SpacePointIndex2 index) {
-  using enum Experimental::SpacePointColumns;
+void RootSpacePointIo::read(Acts::Experimental::MutableSpacePointProxy2& spacePoint,
+                            Acts::Experimental::SpacePointIndex2 index) {
+  using enum Acts::Experimental::SpacePointColumns;
 
   if (spacePoint.container().hasColumns(SourceLinks)) {
     spacePoint.assignSourceLinks(std::array<SourceLink, 1>{SourceLink(index)});
@@ -152,7 +152,7 @@ void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
 }
 
 void RootSpacePointIo::read(TChain& tchain,
-                            Experimental::SpacePointContainer2& spacePoints) {
+                            Acts::Experimental::SpacePointContainer2& spacePoints) {
   connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();

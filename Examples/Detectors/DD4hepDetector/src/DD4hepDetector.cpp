@@ -8,7 +8,7 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
-#include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "ActsPlugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 

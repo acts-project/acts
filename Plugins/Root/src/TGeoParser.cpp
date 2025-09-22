@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include "RtypesCore.h"
@@ -20,8 +20,8 @@
 #include "TObjArray.h"
 #include "TObject.h"
 
-void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
-                              const Acts::TGeoParser::Options& options,
+void ActsPlugins::TGeoParser::select(ActsPlugins::TGeoParser::State& state,
+                              const ActsPlugins::TGeoParser::Options& options,
                               const TGeoMatrix& gmatrix) {
   // Volume is present
   if (state.volume != nullptr) {
@@ -59,11 +59,11 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
       const Double_t* translation = transform.GetTranslation();
 
       // Create a eigen transform
-      Vector3 t(options.unit * translation[0], options.unit * translation[1],
+      Acts::Vector3 t(options.unit * translation[0], options.unit * translation[1],
                 options.unit * translation[2]);
-      Vector3 cx(rotation[0], rotation[3], rotation[6]);
-      Vector3 cy(rotation[1], rotation[4], rotation[7]);
-      Vector3 cz(rotation[2], rotation[5], rotation[8]);
+      Acts::Vector3 cx(rotation[0], rotation[3], rotation[6]);
+      Acts::Vector3 cy(rotation[1], rotation[4], rotation[7]);
+      Acts::Vector3 cz(rotation[2], rotation[5], rotation[8]);
       auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 
       bool accept = true;
@@ -81,9 +81,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
           for (auto x : std::vector<double>{-dx, dx}) {
             for (auto y : std::vector<double>{-dy, dy}) {
               for (auto z : std::vector<double>{-dz, dz}) {
-                Vector3 edge = etrf * Vector3(x, y, z);
+                Acts::Vector3 edge = etrf * Acts::Vector3(x, y, z);
                 for (auto& [axisDir, checkRange] : options.parseRanges) {
-                  double val = VectorHelpers::cast(edge, axisDir);
+                  double val = Acts::VectorHelpers::cast(edge, axisDir);
                   if (val < checkRange.first || val > checkRange.second) {
                     accept = false;
                     break;
@@ -111,7 +111,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 }
 
 // Function to recursively find the node by volume name
-TGeoNode* Acts::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
+TGeoNode* ActsPlugins::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
                                               const char* volumeName) {
   // Check if the current node's volume matches the name
   if (std::strcmp(currentNode->GetVolume()->GetName(), volumeName) == 0) {

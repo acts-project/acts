@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "ActsPlugins/DD4hep/ConvertDD4hepDetector.hpp"
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
@@ -21,9 +21,9 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepMaterialHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>

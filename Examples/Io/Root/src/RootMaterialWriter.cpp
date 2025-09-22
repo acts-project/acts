@@ -70,7 +70,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
   const auto& [surfaceMaps, volumeMaps] = detMaterial;
 
   // Write the surface material maps
-  Acts::RootMaterialMapIo accessor(m_cfg.accessorConfig,
+  ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
                                    m_logger->clone("RootMaterialMapIo"));
 
   for (const auto& [geoId, sMap] : surfaceMaps) {
