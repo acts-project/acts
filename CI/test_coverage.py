@@ -82,6 +82,7 @@ call(
     + ["-r", source_dir]
     + ["-j", str(mp.cpu_count())]
     + ["--gcov-executable", args.gcov]
+    + ["--merge-mode-functions", "separate"]
     + excludes
     + extra_flags
 )
