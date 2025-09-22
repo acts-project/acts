@@ -14,10 +14,10 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
-#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -30,6 +30,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -648,8 +649,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume){
-
+BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
   Acts::Experimental::Blueprint::Config cfg;
@@ -674,28 +674,37 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume){
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Transform3::Identity(), std::move(planarBounds));
 
+  auto detElement =
+      std::make_unique<DetectorElementStub>(Transform3::Identity());
+
+  surface->assignDetectorElement(*detElement);
+
   parentVol->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(1));
   parentVol->addSurface(surface);
-  auto parentNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(std::move(parentVol));
+  auto parentNode = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(parentVol));
 
-  //put two tracking volumes in the sides of the parent as children and a plane surface in the middle of the parent volume
+  // put two tracking volumes in the sides of the parent as children and a plane
+  // surface in the middle of the parent volume
   double startZ1 = -1000. + 100. + 1.;
   double startZ2 = 1000. - 100. - 1.;
   Transform3 trf1 = Transform3(Translation3(0., 0., startZ1));
   Transform3 trf2 = Transform3(Translation3(0., 0., startZ2));
 
   auto childBounds = std::make_shared<CuboidVolumeBounds>(1_m, 1_m, 10_cm);
-  auto childVol1 = std::make_unique<TrackingVolume>(trf1,
-                                                   childBounds, "child1");
+  auto childVol1 =
+      std::make_unique<TrackingVolume>(trf1, childBounds, "child1");
   childVol1->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(2));
 
-  auto childNode1 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(std::move(childVol1));
+  auto childNode1 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(childVol1));
 
-  auto childVol2 = std::make_unique<TrackingVolume>(trf2,
-                                                   childBounds, "child2");
+  auto childVol2 =
+      std::make_unique<TrackingVolume>(trf2, childBounds, "child2");
   childVol2->assignGeometryId(Acts::GeometryIdentifier{}.withVolume(3));
 
-  auto childNode2 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(std::move(childVol2));
+  auto childNode2 = std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(childVol2));
 
   parentNode->addChild(childNode1);
   parentNode->addChild(childNode2);
@@ -705,7 +714,8 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume){
   auto trackingGeometry = root.construct({}, tgContext, *logger);
 
   Navigator::Config navCfg;
-  navCfg.trackingGeometry =  std::shared_ptr<const Acts::TrackingGeometry>(std::move(trackingGeometry));
+  navCfg.trackingGeometry = std::shared_ptr<const Acts::TrackingGeometry>(
+      std::move(trackingGeometry));
   navCfg.resolveSensitive = true;
   navCfg.resolveMaterial = true;
   navCfg.resolvePassive = false;
@@ -714,11 +724,11 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume){
   Navigator::Options options(tgContext);
   Navigator::State state = navigator.makeState(options);
 
-  Vector3 position{0.,0.,-1000. + 0.5};
+  Vector3 position{0., 0., -1000. + 0.5};
   Vector3 direction = Vector3::UnitZ();
 
   Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+      navigator.initialize(state, position, direction, Direction::Forward());
   BOOST_CHECK(result.ok());
   BOOST_CHECK(state.currentVolume != nullptr);
   BOOST_CHECK(state.currentVolume->volumeName() == "parent");
@@ -729,9 +739,6 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume){
   // it is supposed to find the boundary of the next child volume
   BOOST_CHECK(!target.isNone());
   BOOST_CHECK_EQUAL(target.surface, surface.get());
-
 }
-
-
 
 }  // namespace Acts::Test
