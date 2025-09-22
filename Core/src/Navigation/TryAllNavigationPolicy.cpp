@@ -42,6 +42,10 @@ void TryAllNavigationPolicy::initializeCandidates(
 
   if (m_cfg.sensitives && args.wantsSurfaces) {
     for (const auto& surface : m_volume->surfaces()) {
+      // skip no sensitive surfaces
+      if (surface.associatedDetectorElement() == nullptr) {
+        continue;
+      }
       stream.addSurfaceCandidate(surface, args.tolerance);
     }
   }

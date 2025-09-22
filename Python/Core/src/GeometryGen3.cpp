@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/Blueprint.hpp"
-
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
@@ -214,7 +213,9 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
 }  // namespace
 
-void addBlueprint(Context& ctx) {
+/// This adds the geometry building bindings for the Gen3 geometry
+/// @param m the module to add the bindings to
+void addGeometryGen3(py::module_& m) {
   using Experimental::Blueprint;
   using Experimental::BlueprintNode;
   using Experimental::BlueprintOptions;
@@ -224,8 +225,6 @@ void addBlueprint(Context& ctx) {
   using Experimental::LayerBlueprintNode;
   using Experimental::MaterialDesignatorBlueprintNode;
   using Experimental::StaticBlueprintNode;
-
-  auto m = ctx.get("main");
 
   auto blueprintNode =
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(
