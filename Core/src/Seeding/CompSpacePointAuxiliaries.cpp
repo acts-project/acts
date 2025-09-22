@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
-///
+//
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -61,24 +61,35 @@ CompSpacePointAuxiliaries::CompSpacePointAuxiliaries(
 }
 void CompSpacePointAuxiliaries::updateChiSq(
     ChiSqWithDerivatives& chiSqObj, const std::array<double, 3>& cov) const {
-  /// Calculate the inverted covariacne
+  // Calculate the inverted covariacne
   std::array<double, 3> invCov{cov};
   for (auto& val : invCov) {
     val = val > s_tolerance ? 1. / val : 0.;
   }
 
-  auto contract = [&invCov](const Vector& v1, const Vector& v2) -> double {
-    return v1[0] * v2[0] * invCov[0] + v1[1] * v2[1] * invCov[1] +
-           v1[2] * v2[2] * invCov[2];
+  auto contract = [&invCov, this](const Vector& v1, const Vector& v2) {
+    const double term = v1[0] * v2[0] * invCov[0] + v1[1] * v2[1] * invCov[1] +
+                        v1[2] * v2[2] * invCov[2];
+    ACTS_VERBOSE("updateChiSq() - Contribution from "
+                 << toString(v1) << " & " << toString(v2) << " is ("
+                 << (v1[0] * v2[0] * invCov[0]) << ", "
+                 << (v1[1] * v2[1] * invCov[1]) << ", "
+                 << v1[2] * v2[2] * invCov[2] << ") -> overall: " << term);
+    return term;
   };
+  ACTS_VERBOSE("updateChiSq() - Update chi2 value.");
   chiSqObj.chi2 += contract(residual(), residual());
   for (const auto partial1 : m_cfg.parsToUse) {
+    ACTS_VERBOSE("updateChiSq() - Update chi2 derivative w.r.t. "
+                 << parName(partial1) << ".");
     chiSqObj.gradient[toUnderlying(partial1)] +=
         2. * contract(residual(), gradient(partial1));
     for (const auto partial2 : m_cfg.parsToUse) {
       if (partial2 > partial1) {
         break;
       }
+      ACTS_VERBOSE("updateChiSq() - Update chi2 hessian w.r.t. "
+                   << parName(partial1) << " & " << parName(partial2) << ".");
       chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2)) +=
           2. * contract(gradient(partial1), gradient(partial2)) +
           (m_cfg.useHessian
@@ -87,7 +98,18 @@ void CompSpacePointAuxiliaries::updateChiSq(
     }
   }
 }
-
+void CompSpacePointAuxiliaries::symmetrizeHessian(
+    ChiSqWithDerivatives& chiSqObj) const {
+  for (const auto partial1 : m_cfg.parsToUse) {
+    for (const auto partial2 : m_cfg.parsToUse) {
+      if (partial2 >= partial1) {
+        break;
+      }
+      chiSqObj.hessian(toUnderlying(partial2), toUnderlying(partial1)) =
+          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+    }
+  }
+}
 const Vector& CompSpacePointAuxiliaries::residual() const {
   return m_residual;
 }
@@ -190,14 +212,14 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
       }
       const std::size_t projDirHess =
           vecIdxFromSymMat<s_nLinePars>(hIdx1, hIdx2);
-      /// Pure angular derivatives of the residual
+      // Pure angular derivatives of the residual
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
         const double partialSqDist = m_hessianProjDir[projDirHess].cross(wireDir).dot(hitMinSeg);
         // clang-format on
         m_hessian[resIdx] = partialSqDist * Vector3::Unit(bendingComp);
       } else {
-        /// Angular & Spatial mixed terms
+        // Angular & Spatial mixed terms
         const auto angParam = isDirectionParam(partial1) ? hIdx1 : hIdx2;
         const auto posParam = static_cast<LineIndex>(
             isDirectionParam(partial1) ? partial2 : partial1);
@@ -211,23 +233,18 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   return true;
 }
-bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
-                                                       const Vector& wireDir) {
+inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
+    const Line_t& line, const Vector& wireDir) {
   const Vector& lineDir = line.direction();
-  /// Between two calls the wire projection has not changed
+  // Between two calls the wire projection has not changed
   const double wireProject = lineDir.dot(wireDir);
 
-  if (false && std::abs(wireProject - m_wireProject) < s_tolerance) {
-    ACTS_VERBOSE("Projection of the line matches the previous one."
-                 << " Don't update the auxiliaries");
-    return m_invProjDirLenSq > s_tolerance;
-  }
   m_wireProject = wireProject;
   const double projDirLenSq = 1. - square(m_wireProject);
-  /// The line is parallel to the wire
+  // The line is parallel to the wire
   if (projDirLenSq < s_tolerance) {
-    ACTS_VERBOSE("Line & wire are parallel: " << toString(wireDir) << " vs. "
-                                              << toString(lineDir));
+    ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: "
+                 << toString(wireDir) << " vs. " << toString(lineDir));
     m_invProjDirLenSq = 0.;
     reset();
     return false;
@@ -235,7 +252,21 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
   m_invProjDirLenSq = 1. / projDirLenSq;
   m_invProjDirLen = std::sqrt(m_invProjDirLenSq);
   // Project the segment line onto the wire plane and normalize
-  m_projDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
+  Vector newProjDir = (lineDir - m_wireProject * wireDir) * m_invProjDirLen;
+  ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "
+               << toString(newProjDir) << ", |D| " << newProjDir.norm());
+
+  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) <
+      2. * std::numeric_limits<double>::epsilon()) {
+    ACTS_VERBOSE(
+        "updateStrawAuxiliaries() - The old & the new dir projection coincide. "
+        << "Don't update the auxiliaries");
+    return true;
+  }
+
+  ACTS_VERBOSE("updateStrawAuxiliaries() - Update variables.");
+  m_projDir = std::move(newProjDir);
+
   // Loop over all configured parameters and calculate the partials
   // of the wire projection
   for (auto partial : m_cfg.parsToUse) {
@@ -247,10 +278,12 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
     const Vector& lGrad{line.gradient(static_cast<LineIndex>(partial))};
     m_projDirLenPartial[pIdx] = lGrad.dot(wireDir);
     // clang-format off
-    m_gradProjDir[pIdx] = m_invProjDirLen * (lGrad - m_projDirLenPartial[pIdx] * wireDir) +
-                           m_projDirLenPartial[pIdx] * m_wireProject * m_projDir * m_invProjDirLenSq;
+    m_gradProjDir[pIdx] = m_invProjDirLen * lGrad - (m_invProjDirLen *m_projDirLenPartial[pIdx]) * wireDir +
+                          (m_projDirLenPartial[pIdx] * m_wireProject * m_invProjDirLenSq) * m_projDir;
     // clang-format on
-
+    ACTS_VERBOSE("updateStrawAuxiliaries() - First derivative w.r.t. "
+                 << parName(partial) << " is "
+                 << toString(m_gradProjDir[pIdx]));
     // skip the Hessian calculation, if toggled
     if (!m_cfg.useHessian) {
       continue;
@@ -295,10 +328,10 @@ bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(const Line_t& line,
 void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
                                                     const Vector& hitMinSeg,
                                                     const Vector& wireDir) {
-  m_residual[nonBendingComp] =
-      m_invProjDirLenSq * (hitMinSeg.dot(line.direction()) * m_wireProject -
-                           hitMinSeg.dot(wireDir));
-
+  // clang-format off
+  m_residual[nonBendingComp] = m_invProjDirLenSq *
+                            hitMinSeg.dot(m_wireProject * line.direction() - wireDir);
+  // clang-format on
   ACTS_VERBOSE("updateAlongTheStraw() - Residual is "
                << m_residual[nonBendingComp]);
 
@@ -311,14 +344,13 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
     if (isDirectionParam(partial)) {
       // clang-format off
       m_gradient[param][nonBendingComp] = m_invProjDirLenSq * (
-                                       hitMinSeg.dot(lGradient) * m_wireProject +
-                                       hitMinSeg.dot(line.direction()) * m_projDirLenPartial[param] +
+                                       hitMinSeg.dot(m_wireProject * lGradient + m_projDirLenPartial[param] * line.direction()) +
                                        2. * m_residual[nonBendingComp] * m_wireProject * m_projDirLenPartial[param]);
       // clang-format on
 
     } else if (isPositionParam(partial)) {
       // clang-format off
-      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (lGradient.dot(line.direction()* m_wireProject - wireDir));
+      m_gradient[param][nonBendingComp] = -m_invProjDirLenSq * (lGradient.dot(m_wireProject * line.direction() - wireDir));
       // clang-format on
     }
     ACTS_VERBOSE("updateAlongTheStraw() - First derivative w.r.t "
@@ -359,9 +391,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
         const Vector& lHessian = line.hessian(static_cast<LineIndex>(partial1), static_cast<LineIndex>(partial2));
         const double projHess = lHessian.dot(wireDir);
         m_hessian[hessIdx][nonBendingComp] = (param != param1 ? calcMixedHessian(param, param1) + calcMixedHessian(param1, param)
-                                                          : 2. * calcMixedHessian(param1, param)) +
-                                        m_invProjDirLenSq * (hitMinSeg.dot(lHessian) * m_wireProject +
-                                                             hitMinSeg.dot(line.direction()) * projHess +
+                                                              : 2. * calcMixedHessian(param1, param)) +
+                                        m_invProjDirLenSq * (hitMinSeg.dot(m_wireProject * lHessian  + projHess* line.direction()) +
                                                              2. * m_residual[nonBendingComp] * m_wireProject * projHess);
         // clang-format on
       } else {
@@ -373,9 +404,8 @@ void CompSpacePointAuxiliaries::updateAlongTheStraw(const Line_t& line,
         const auto angIdx = toUnderlying(angParam);
         // clang-format off
         m_hessian[hessIdx][nonBendingComp] = m_invProjDirLenSq * (
-                -line.gradient(posParam).dot(line.gradient(angParam)) * m_wireProject -
-                 line.gradient(posParam).dot(line.direction()) * m_projDirLenPartial[angIdx] +
-                 2. * m_gradient[toUnderlying(posParam)][nonBendingComp] * m_wireProject * m_projDirLenPartial[angIdx]);
+                  2.* (m_gradient[toUnderlying(posParam)][nonBendingComp] * m_wireProject * m_projDirLenPartial[angIdx])
+                  - line.gradient(posParam).dot(m_wireProject * line.gradient(angParam) + m_projDirLenPartial[angIdx] * line.direction()));
         // clang-format on
       }
       ACTS_VERBOSE("updateAlongTheStraw() - Second derivative w.r.t. "
@@ -396,20 +426,21 @@ void CompSpacePointAuxiliaries::updateStripResidual(
   constexpr double tolerance = 1.e-12;
   if (std::abs(normDot) < tolerance) {
     reset();
-    ACTS_WARNING("Segment line is embedded into the strip plane "
-                 << toString(line.direction())
-                 << ", normal: " << toString(normal));
+    ACTS_WARNING(
+        "updateStripResidual() - Segment line is embedded into the strip plane "
+        << toString(line.direction()) << ", normal: " << toString(normal));
     return;
   }
   const double planeOffSet = normal.dot(stripPos);
-  ACTS_VERBOSE("Plane normal: "
+  ACTS_VERBOSE("updateStripResidual() - Plane normal: "
                << toString(normal) << " |" << normal.norm()
                << "|, line direction: " << toString(line.direction())
                << ", angle: " << angle(normal, line.direction()));
+  const double invNormDot = 1. / normDot;
   const double travelledDist =
-      (planeOffSet - line.position().dot(normal)) / normDot;
-  ACTS_VERBOSE("Need to travel " << travelledDist
-                                 << " mm to reach the strip plane. ");
+      (planeOffSet - line.position().dot(normal)) * invNormDot;
+  ACTS_VERBOSE("updateStripResidual() - Need to travel "
+               << travelledDist << " mm to reach the strip plane. ");
 
   const Vector& b1 = isBending ? sensorN : sensorD;
   const Vector& b2 = isBending ? sensorD : sensorN;
@@ -422,8 +453,8 @@ void CompSpacePointAuxiliaries::updateStripResidual(
     reset();
     return;
   }
-  /// Linear independent vectors
-  /// Normal vector is indeed normal onto the plane spaned by these two vectors
+  // Linear independent vectors
+  // Normal vector is indeed normal onto the plane spaned by these two vectors
   assert(Acts::abs(b1.dot(normal)) < tolerance);
   assert(Acts::abs(b2.dot(normal)) < tolerance);
   assert(isBending || isNonBending);
@@ -431,23 +462,23 @@ void CompSpacePointAuxiliaries::updateStripResidual(
       (m_cfg.calcAlongStrip || (isBending && isNonBending)) &&
       Acts::abs(b1DotB2) > tolerance;
   if (decompStereo) {
-    /// A = lambda B1 + kappa B2
-    ///                <A, B2> - <A,B1><B1,B2>
-    ///   --> kappa = --------------------------
-    ///                    1 - <B1,B2>^{2}
-    ///                <A, B1> - <A,B2><B1,B2>
-    ///   --> lambda = --------------------------
-    ///                    1 - <B1,B2>^{2}
+    // A = lambda B1 + kappa B2
+    //                <A, B2> - <A,B1><B1,B2>
+    //   --> kappa = --------------------------
+    //                    1 - <B1,B2>^{2}
+    //                <A, B1> - <A,B2><B1,B2>
+    //   --> lambda = --------------------------
+    //                    1 - <B1,B2>^{2}
     const double invDist = 1. / (1. - square(b1DotB2));
     m_stereoTrf(bendingComp, bendingComp) =
         m_stereoTrf(nonBendingComp, nonBendingComp) = invDist;
     m_stereoTrf(bendingComp, nonBendingComp) =
         m_stereoTrf(nonBendingComp, bendingComp) = -b1DotB2 * invDist;
   }
-  ACTS_VERBOSE("Meausres bending "
-               << (isBending ? "yes" : "no")
-               << ", measures non-bending:" << (isNonBending ? "yes" : "no"));
-  ACTS_VERBOSE("strip orientation b1: "
+  ACTS_VERBOSE("updateStripResidual() - Measures bending "
+               << (isBending ? "yes" : "no") << ", measures non-bending "
+               << (isNonBending ? "yes" : "no"));
+  ACTS_VERBOSE("updateStripResidual() - Strip orientation b1: "
                << toString(b1) << " |" << b1.norm() << "|"
                << ", b2: " << toString(b2) << " |" << b2.norm() << "|"
                << ", stereo angle: " << angle(b1, b2));
@@ -462,25 +493,25 @@ void CompSpacePointAuxiliaries::updateStripResidual(
       spatial = m_stereoTrf * spatial;
     }
     residual[timeComp] = 0.;
-    ACTS_VERBOSE("Distance: " << toString(calcDistance)
-                              << ", <calc, n> =" << calcDistance.dot(normal)
-                              << " -> residual: " << toString(residual)
-                              << " --> closure test:"
-                              << toString(residual[bendingComp] * b1 +
-                                          residual[nonBendingComp] * b2));
+    ACTS_VERBOSE(
+        "updateStripResidual() - Distance: "
+        << toString(calcDistance) << ", <calc, n> =" << calcDistance.dot(normal)
+        << " -> residual: " << toString(residual) << " --> closure test:"
+        << toString(residual[bendingComp] * b1 +
+                    residual[nonBendingComp] * b2));
   };
-  /// Update the residual accordingly
+  // Update the residual accordingly
   assignResidual(line.position() + travelledDist * line.direction() - stripPos,
                  m_residual);
   for (const auto partial : m_cfg.parsToUse) {
-    ACTS_VERBOSE("stripResidual() - Calculate partial derivative w.r.t "
+    ACTS_VERBOSE("updateStripResidual() - Calculate partial derivative w.r.t "
                  << parName(partial));
     switch (partial) {
       case FitParIndex::phi:
       case FitParIndex::theta: {
         // clang-format off
         const Vector& lGrad = line.gradient(static_cast<LineIndex>(partial));
-        const double partialDist = -travelledDist / normDot * normal.dot(lGrad);
+        const double partialDist = -travelledDist * invNormDot * normal.dot(lGrad);
         const Vector gradCmp = travelledDist * lGrad +
                                partialDist * line.direction();
         // clang-format on
@@ -491,13 +522,13 @@ void CompSpacePointAuxiliaries::updateStripResidual(
       case FitParIndex::x0: {
         // clang-format off
         const Vector& lGrad = line.gradient(static_cast<LineIndex>(partial));
-        const Vector gradCmp = lGrad - lGrad.dot(normal) / normDot * line.direction();
+        const Vector gradCmp = lGrad - lGrad.dot(normal) * invNormDot * line.direction();
         assignResidual(gradCmp, m_gradient[toUnderlying(partial)]);
         // clang-format on
         break;
       }
       default:
-        /// Don't calculate anything for time
+        // Don't calculate anything for time
         break;
     }
   }
@@ -507,34 +538,34 @@ void CompSpacePointAuxiliaries::updateStripResidual(
   }
   for (const auto partial1 : m_cfg.parsToUse) {
     for (const auto partial2 : m_cfg.parsToUse) {
-      /// Avoid double counting
+      // Avoid double counting
       if (partial2 > partial1) {
         break;
       }
       const auto param = toUnderlying(partial1);
       const auto param1 = toUnderlying(partial2);
       const auto resIdx = vecIdxFromSymMat<s_nPars>(param, param1);
-      /// At least one parameter needs to be a directional one
+      // At least one parameter needs to be a directional one
       if (!(isDirectionParam(partial1) || isDirectionParam(partial2)) ||
           partial2 == FitParIndex::t0 || partial1 == FitParIndex::t0) {
         m_hessian[resIdx].setZero();
         continue;
       }
       ACTS_VERBOSE(
-          "stripResidual() - Calculate second partial derivative w.r.t "
+          "updateStripResidual() - Calculate second partial derivative w.r.t "
           << parName(partial1) << ", " << parName(partial2));
 
       if (isDirectionParam(partial1) && isDirectionParam(partial2)) {
         // clang-format off
-        auto calcMixedTerms = [&line, &normal, &normDot, &b1, &b2, this](const std::size_t p1,
-                                                                         const std::size_t p2) {
+        auto calcMixedTerms = [&line, &normal, &invNormDot, &b1, &b2, this](const std::size_t p1,
+                                                                            const std::size_t p2) {
 
-          return -normal.dot(line.gradient(static_cast<LineIndex>(p1))) / normDot *
+          return -normal.dot(line.gradient(static_cast<LineIndex>(p1))) * invNormDot *
                           (m_gradient[p2][bendingComp] * b1 + m_gradient[p2][nonBendingComp] * b2);
         };
         const Vector& lHessian = line.hessian(static_cast<LineIndex>(partial1),
                                               static_cast<LineIndex>(partial2));
-        const Vector hessianCmp = travelledDist * (lHessian - normal.dot(lHessian) / normDot * line.direction()) +
+        const Vector hessianCmp = travelledDist * (lHessian - normal.dot(lHessian) * invNormDot * line.direction()) +
                                   calcMixedTerms(param1, param) + calcMixedTerms(param, param1);
         assignResidual(hessianCmp, m_hessian[resIdx]);
         // clang-format on
@@ -542,9 +573,9 @@ void CompSpacePointAuxiliaries::updateStripResidual(
         // clang-format off
         const auto angParam = static_cast<LineIndex>(isDirectionParam(partial1) ? partial1 : partial2);
         const auto posParam = static_cast<LineIndex>(isDirectionParam(partial1) ? partial2 : partial1);
-        const double lH = (normal.dot(line.gradient(posParam)) / normDot);
+        const double lH = (normal.dot(line.gradient(posParam)) * invNormDot);
 
-        const Vector hessianCmp = lH * ((normal.dot(line.gradient(angParam)) / normDot) * line.direction() -
+        const Vector hessianCmp = lH * ((normal.dot(line.gradient(angParam)) * invNormDot) * line.direction() -
                                         line.gradient(angParam));
         // clang-format on
         assignResidual(hessianCmp, m_hessian[resIdx]);
