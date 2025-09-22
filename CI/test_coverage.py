@@ -63,7 +63,7 @@ coverage_dir = os.path.abspath("coverage")
 if not os.path.exists(coverage_dir):
     os.makedirs(coverage_dir)
 
-excludes = ["-e", "../Tests/", "-e", r".*json\.hpp", "-e", r".*pybind11\.hpp"]
+excludes = ["-e", "../Tests/", "-e", r".*json\.hpp", "-e", r"pybind11/.*\.h"]
 
 # create the html report
 call(
