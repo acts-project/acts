@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -489,7 +486,10 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
-                    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    if (trackState.typeFlags().test(
+                            TrackStateFlag::MeasurementFlag)) {
+                      trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
+                    }
                   }
                 });
           }
@@ -726,7 +726,7 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        auto fittedStates = *result.fittedStates;
+        auto& fittedStates = *result.fittedStates;
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.

@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesIoRoot
+acts_add_library(
+    ExamplesIoRoot
     SHARED
     src/RootMeasurementWriter.cpp
     src/RootMaterialDecorator.cpp
@@ -37,13 +37,12 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoRoot
     PUBLIC
-        ActsCore
-        ActsPluginRoot
-        ActsExamplesDigitization
-        ActsExamplesFramework
-        ActsExamplesPropagation
-        ActsExamplesTruthTracking
-        ActsExamplesMaterialMapping
+        Acts::PluginRoot
+        Acts::ExamplesDigitization
+        Acts::ExamplesFramework
+        Acts::ExamplesPropagation
+        Acts::ExamplesTruthTracking
+        Acts::ExamplesMaterialMapping
         Threads::Threads
     PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
 )
@@ -53,5 +52,3 @@ root_generate_dictionary(
 )
 set_target_properties(ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
 target_compile_options(ActsExamplesIoRootDict PRIVATE "-Wno-old-style-cast")
-
-install(TARGETS ActsExamplesIoRoot LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

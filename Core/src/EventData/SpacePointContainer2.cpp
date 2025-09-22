@@ -26,10 +26,6 @@ namespace Acts::Experimental {
 static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
 static_assert(
     std::random_access_iterator<SpacePointContainer2::const_iterator>);
-static_assert(std::random_access_iterator<
-              SpacePointContainer2::MutableRange::RangeIterator>);
-static_assert(std::random_access_iterator<
-              SpacePointContainer2::ConstRange::RangeIterator>);
 static_assert(
     std::random_access_iterator<SpacePointContainer2::MutableSubset::Iterator>);
 static_assert(
@@ -129,6 +125,16 @@ void SpacePointContainer2::clear() noexcept {
   }
 }
 
+MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
+  ++m_size;
+
+  for (const auto &[name, column] : m_namedColumns) {
+    column.first->emplace_back();
+  }
+
+  return MutableProxy(*this, size() - 1);
+}
+
 void SpacePointContainer2::assignSourceLinks(
     Index index, std::span<const SourceLink> sourceLinks) {
   if (index >= size()) {
@@ -167,7 +173,7 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     ((createColumn(
-         std::get<Is>(knownColumnMaks()), std::get<Is>(knownColumnNames()),
+         std::get<Is>(knownColumnMasks()), std::get<Is>(knownColumnNames()),
          std::get<Is>(knownColumnDefaults()), std::get<Is>(knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
@@ -187,7 +193,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
   };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-    ((dropColumn(std::get<Is>(knownColumnMaks()),
+    ((dropColumn(std::get<Is>(knownColumnMasks()),
                  std::get<Is>(knownColumnNames()),
                  std::get<Is>(knownColumns()))),
      ...);

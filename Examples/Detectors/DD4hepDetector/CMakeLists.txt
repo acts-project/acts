@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesDetectorDD4hep
+acts_add_library(
+    ExamplesDetectorDD4hep
     SHARED
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
@@ -11,23 +11,19 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorDD4hep
-    PUBLIC
-        ActsCore
-        ActsPluginDD4hep
-        ActsExamplesFramework
-        ActsExamplesDetectorsCommon
+    PUBLIC Acts::PluginDD4hep Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
     if(${DD4hep_VERSION} VERSION_LESS 1.11)
         target_link_libraries(
             ActsExamplesDetectorDD4hep
-            PUBLIC ActsExamplesGeant4 ${DD4hep_DDG4_LIBRARY}
+            PUBLIC Acts::ExamplesGeant4 ${DD4hep_DDG4_LIBRARY}
         )
     else()
         target_link_libraries(
             ActsExamplesDetectorDD4hep
-            PUBLIC ActsExamplesGeant4 DD4hep::DDG4
+            PUBLIC Acts::ExamplesGeant4 DD4hep::DDG4
         )
     endif()
 
@@ -60,11 +56,4 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
 set_target_properties(
     ActsExamplesDetectorDD4hep
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-dd4hep_set_version(ActsExamplesDetectorDD4hep MAJOR 1 MINOR 0 PATCH 0)
-dd4hep_generate_rootmap(ActsExamplesDetectorDD4hep)
-
-install(
-    TARGETS ActsExamplesDetectorDD4hep
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

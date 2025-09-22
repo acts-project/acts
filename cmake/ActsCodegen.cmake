@@ -72,7 +72,7 @@ message(STATUS "uv version: ${uv_version}")
 
 function(acts_code_generation)
     set(options ISOLATED)
-    set(oneValueArgs TARGET PYTHON PYTHON_VERSION OUTPUT)
+    set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
         PARSE_ARGV
@@ -123,7 +123,9 @@ function(acts_code_generation)
 
     get_filename_component(_output_name ${ARGS_OUTPUT} NAME)
 
-    set(_codegen_root ${CMAKE_CURRENT_BINARY_DIR}/codegen/${ARGS_TARGET})
+    string(SHA1 _output_hash ${_output_name})
+
+    set(_codegen_root ${CMAKE_CURRENT_BINARY_DIR}/codegen/${_output_hash})
     set(_output_file ${_codegen_root}/${ARGS_OUTPUT})
 
     get_filename_component(_output_dir ${_output_file} DIRECTORY)
@@ -140,9 +142,9 @@ function(acts_code_generation)
         VERBATIM
     )
 
-    add_custom_target(${ARGS_TARGET}_Internal DEPENDS ${_output_file})
-    add_library(${ARGS_TARGET} INTERFACE)
-    target_include_directories(${ARGS_TARGET} INTERFACE ${_codegen_root})
+    set(_internal_target codegen_${_output_hash}_Internal)
+    add_custom_target(${_internal_target} DEPENDS ${_output_file})
 
-    add_dependencies(${ARGS_TARGET} ${ARGS_TARGET}_Internal)
+    add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
+    target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
 endfunction()

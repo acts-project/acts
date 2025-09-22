@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesIoPodio
+acts_add_library(
+    ExamplesIoPodio
     SHARED
     src/PodioWriter.cpp
     src/PodioReader.cpp
@@ -12,7 +12,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoPodio
-    PUBLIC podio::podio ActsExamplesFramework ActsPluginPodio ActsCore
+    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio
 )
-
-install(TARGETS ActsExamplesIoPodio LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

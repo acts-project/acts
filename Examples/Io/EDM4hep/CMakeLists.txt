@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesIoEDM4hep
+acts_add_library(
+    ExamplesIoEDM4hep
     SHARED
     src/EDM4hepMeasurementInputConverter.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
@@ -20,17 +20,11 @@ target_link_libraries(
     ActsExamplesIoEDM4hep
     PUBLIC
         EDM4HEP::edm4hep
-        ActsPluginEDM4hep
+        Acts::PluginEDM4hep
         podio::podioRootIO
-        ActsCore
-        ActsFatras
-        ActsExamplesFramework
-        ActsExamplesDigitization
-        ActsExamplesDetectorDD4hep
-        ActsExamplesIoPodio
-)
-
-install(
-    TARGETS ActsExamplesIoEDM4hep
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        Acts::Fatras
+        Acts::ExamplesFramework
+        Acts::ExamplesDigitization
+        Acts::ExamplesDetectorDD4hep
+        Acts::ExamplesIoPodio
 )

@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -22,6 +23,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -286,7 +288,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navLayerIndex.value(), 0);
   // Check the target is correct
-  BOOST_CHECK_EQUAL(target.surface, state.navLayer().first.object());
+  BOOST_CHECK_EQUAL(target.surface, &state.navLayer().first.surface());
   // Intersect the target
   auto targetIntersection =
       target.surface->intersect(tgContext, position, direction)

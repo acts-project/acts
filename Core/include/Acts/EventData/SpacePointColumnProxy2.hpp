@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerSubset.hpp"
 
 #include <cassert>
 #include <span>
@@ -26,6 +27,8 @@ class SpacePointColumnProxy {
  public:
   constexpr static bool ReadOnly = read_only;
   using Index = SpacePointIndex2;
+  using IndexRange = SpacePointIndexRange2;
+  using IndexSubset = SpacePointIndexSubset2;
   using Value = T;
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
   using Column = const_if_t<ReadOnly, std::vector<Value>>;
@@ -129,6 +132,19 @@ class SpacePointColumnProxy {
   const Value &operator[](Index index) const noexcept {
     assert(index < column().size() && "Index out of bounds");
     return data()[index];
+  }
+
+  class Subset
+      : public detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
+   public:
+    using Base =
+        detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
+
+    using Base::Base;
+  };
+
+  Subset subset(const IndexSubset &subset) const noexcept {
+    return Subset(*m_column, subset);
   }
 
  private:

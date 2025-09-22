@@ -1,5 +1,5 @@
-add_library(
-    ActsExamplesGeneratorsPythia8
+acts_add_library(
+    ExamplesGeneratorsPythia8
     SHARED
     ActsExamples/Generators/Pythia8ProcessGenerator.cpp
 )
@@ -9,11 +9,6 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeneratorsPythia8
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesGenerators
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesGenerators
     PRIVATE Pythia8::Pythia8
-)
-
-install(
-    TARGETS ActsExamplesGeneratorsPythia8
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

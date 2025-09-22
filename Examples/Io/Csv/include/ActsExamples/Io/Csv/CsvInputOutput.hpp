@@ -318,10 +318,10 @@ class NamedTupleDsvReader {
  public:
   NamedTupleDsvReader() = delete;
   NamedTupleDsvReader(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader(NamedTupleDsvReader&&) = default;
+  NamedTupleDsvReader(NamedTupleDsvReader&&) noexcept = default;
   ~NamedTupleDsvReader() = default;
   NamedTupleDsvReader& operator=(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) = default;
+  NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) noexcept = default;
 
   /// Open a file at the given path.
   ///

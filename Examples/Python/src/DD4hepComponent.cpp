@@ -11,10 +11,11 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepIdentifierMapper.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/AlignedDD4hepDetectorElement.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <utility>
@@ -26,18 +27,18 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+using namespace Acts;
 using namespace ActsExamples;
-using namespace Acts::Python;
+using namespace ActsPython;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    py::class_<Acts::DD4hepDetectorElement, Acts::DetectorElementBase,
-               std::shared_ptr<Acts::DD4hepDetectorElement>>(
-        m, "DD4hepDetectorElement");
+    py::class_<DD4hepDetectorElement, DetectorElementBase,
+               std::shared_ptr<DD4hepDetectorElement>>(m,
+                                                       "DD4hepDetectorElement");
 
-    py::class_<ActsExamples::AlignedDD4hepDetectorElement,
-               Acts::DD4hepDetectorElement,
-               std::shared_ptr<ActsExamples::AlignedDD4hepDetectorElement>>(
+    py::class_<AlignedDD4hepDetectorElement, DD4hepDetectorElement,
+               std::shared_ptr<AlignedDD4hepDetectorElement>>(
         m, "AlignedDD4hepDetectorElement");
   }
 
@@ -54,96 +55,90 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
             .def_property_readonly("field", &DD4hepDetector::field);
 
     auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(
-        c, logLevel, dd4hepLogLevel, xmlFileNames, name, bTypePhi, bTypeR,
-        bTypeZ, envelopeR, envelopeZ, defaultLayerThickness, materialDecorator,
-        alignmentDecorator, geometryIdentifierHook, detectorElementFactory);
+    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
+                       bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
+                       defaultLayerThickness, materialDecorator,
+                       geometryIdentifierHook, detectorElementFactory);
     patchKwargsConstructor(c);
 
     m.def("alignedDD4hepDetectorElementFactory",
-          &ActsExamples::alignedDD4hepDetectorElementFactory);
+          &alignedDD4hepDetectorElementFactory);
   }
 
   {
-    py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider,
-               std::shared_ptr<Acts::DD4hepFieldAdapter>>(m,
-                                                          "DD4hepFieldAdapter");
+    py::class_<DD4hepFieldAdapter, MagneticFieldProvider,
+               std::shared_ptr<DD4hepFieldAdapter>>(m, "DD4hepFieldAdapter");
   }
 
   {
-    m.def("createDD4hepIdGeoIdMap",
-          [](const Acts::TrackingGeometry& tGeometry)
-              -> std::map<Acts::DD4hepDetectorElement::DD4hepVolumeID,
-                          Acts::GeometryIdentifier> {
-            // The surface visitor
-            struct DD4hepIdGrabber {
-              std::map<Acts::DD4hepDetectorElement::DD4hepVolumeID,
-                       Acts::GeometryIdentifier>
-                  dd4hepIdGeoIdMap;
+    m.def(
+        "createDD4hepIdGeoIdMap",
+        [](const TrackingGeometry& tGeometry)
+            -> std::map<DD4hepDetectorElement::DD4hepVolumeID,
+                        GeometryIdentifier> {
+          // The surface visitor
+          struct DD4hepIdGrabber {
+            std::map<DD4hepDetectorElement::DD4hepVolumeID, GeometryIdentifier>
+                dd4hepIdGeoIdMap;
 
-              void operator()(const Acts::Surface* surface) {
-                const auto* dde = surface->associatedDetectorElement();
-                const auto* dd4hepDetElement =
-                    dynamic_cast<const Acts::DD4hepDetectorElement*>(dde);
-                // Check if it is valid
-                if (dd4hepDetElement != nullptr) {
-                  dd4hep::DDSegmentation::VolumeID dd4hepID =
-                      dd4hepDetElement->sourceElement().volumeID();
-                  auto geoID = surface->geometryId();
-                  dd4hepIdGeoIdMap[dd4hepID] = geoID;
-                }
+            void operator()(const Surface* surface) {
+              const auto* dde = surface->associatedDetectorElement();
+              const auto* dd4hepDetElement =
+                  dynamic_cast<const DD4hepDetectorElement*>(dde);
+              // Check if it is valid
+              if (dd4hepDetElement != nullptr) {
+                dd4hep::DDSegmentation::VolumeID dd4hepID =
+                    dd4hepDetElement->sourceElement().volumeID();
+                auto geoID = surface->geometryId();
+                dd4hepIdGeoIdMap[dd4hepID] = geoID;
               }
-            };
+            }
+          };
 
-            // Create an instance
-            DD4hepIdGrabber dd4hepIdGrabber;
-            // Visit the surfaces & return what you have
-            tGeometry.visitSurfaces(dd4hepIdGrabber);
-            return dd4hepIdGrabber.dd4hepIdGeoIdMap;
-          });
+          // Create an instance
+          DD4hepIdGrabber dd4hepIdGrabber;
+          // Visit the surfaces & return what you have
+          tGeometry.visitSurfaces(dd4hepIdGrabber);
+          return dd4hepIdGrabber.dd4hepIdGeoIdMap;
+        });
   }
 
   {
-    using Options = Acts::Experimental::DD4hepDetectorStructure::Options;
+    using Options = Experimental::DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
     ACTS_PYTHON_STRUCT(o, logLevel, emulateToGraph, geoIdGenerator,
                        materialDecorator);
 
     patchKwargsConstructor(o);
 
-    m.def(
-        "attachDD4hepGeoIdMapper",
-        [](Acts::Experimental::DD4hepDetectorStructure::Options& options,
-           const std::map<Acts::DD4hepDetectorElement::DD4hepVolumeID,
-                          Acts::GeometryIdentifier>& dd4hepIdGeoIdMap) {
-          // The Geo mapper
-          auto geoIdMapper =
-              std::make_shared<const Acts::DD4hepIdentifierMapper>(
-                  Acts::DD4hepIdentifierMapper::Config{dd4hepIdGeoIdMap},
-                  Acts::getDefaultLogger("GeometryIdMapper", options.logLevel));
+    m.def("attachDD4hepGeoIdMapper",
+          [](Experimental::DD4hepDetectorStructure::Options& options,
+             const std::map<DD4hepDetectorElement::DD4hepVolumeID,
+                            GeometryIdentifier>& dd4hepIdGeoIdMap) {
+            // The Geo mapper
+            auto geoIdMapper = std::make_shared<const DD4hepIdentifierMapper>(
+                DD4hepIdentifierMapper::Config{dd4hepIdGeoIdMap},
+                getDefaultLogger("GeometryIdMapper", options.logLevel));
 
-          // A remaining recursive logger
-          auto geoIdGenerator =
-              std::make_shared<const Acts::Experimental::GeometryIdGenerator>(
-                  Acts::Experimental::GeometryIdGenerator::Config{},
-                  Acts::getDefaultLogger("GeometryIdGenerator",
-                                         options.logLevel));
+            // A remaining recursive logger
+            auto geoIdGenerator =
+                std::make_shared<const Experimental::GeometryIdGenerator>(
+                    Experimental::GeometryIdGenerator::Config{},
+                    getDefaultLogger("GeometryIdGenerator", options.logLevel));
 
-          std::tuple<
-              std::shared_ptr<const Acts::Experimental::GeometryIdGenerator>,
-              std::shared_ptr<const Acts::DD4hepIdentifierMapper>>
-              chainedGenerators = {geoIdGenerator, geoIdMapper};
+            std::tuple<std::shared_ptr<const Experimental::GeometryIdGenerator>,
+                       std::shared_ptr<const DD4hepIdentifierMapper>>
+                chainedGenerators = {geoIdGenerator, geoIdMapper};
 
-          auto chainedGeoIdGenerator = std::make_shared<
-              const Acts::Experimental::ChainedGeometryIdGenerator<
-                  std::shared_ptr<
-                      const Acts::Experimental::GeometryIdGenerator>,
-                  std::shared_ptr<const Acts::DD4hepIdentifierMapper>>>(
-              std::move(chainedGenerators),
-              Acts::getDefaultLogger("ChainedGeometryIdGenerator",
+            auto chainedGeoIdGenerator =
+                std::make_shared<const Experimental::ChainedGeometryIdGenerator<
+                    std::shared_ptr<const Experimental::GeometryIdGenerator>,
+                    std::shared_ptr<const DD4hepIdentifierMapper>>>(
+                    std::move(chainedGenerators),
+                    getDefaultLogger("ChainedGeometryIdGenerator",
                                      options.logLevel));
 
-          options.geoIdGenerator = chainedGeoIdGenerator;
-        });
+            options.geoIdGenerator = chainedGeoIdGenerator;
+          });
   }
 }
