@@ -90,7 +90,7 @@ class SurfaceArray {
     virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
         const = 0;
 
-    virtual Surface::SurfaceType surfaceType() const = 0;
+    virtual const Surface* surfaceRepresentation() const = 0;
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
@@ -134,71 +134,13 @@ class SurfaceArray {
     /// @param surfaces Input surface pointers
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
-      /// map surface center to grid
-      const auto surfaceToBinMapping = [&](const Surface& surface) {
-        const Vector3 pos =
-            surface.referencePosition(gctx, AxisDirection::AxisR);
-        const Vector3 normal = m_representative->normal(gctx, pos);
-        const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
-        if (globalBin != 0) {
-          m_grid.at(globalBin).push_back(&surface);
-        }
-        return globalBin;
-      };
-
-      /// flood fill neighboring bins given a starting bin
-      const auto binToSurfaceMapping = [&](const Surface& surface,
-                                           std::size_t startBin) {
-        const std::array<std::size_t, 2> startIndices =
-            m_grid.localBinsFromGlobalBin(startBin);
-        const auto startNeighborIndices =
-            m_grid.neighborHoodIndices(startIndices, 1u);
-
-        std::set<std::size_t> visited({startBin});
-        std::vector<std::size_t> queue(startNeighborIndices.begin(),
-                                       startNeighborIndices.end());
-
-        while (!queue.empty()) {
-          const std::size_t current = queue.back();
-          queue.pop_back();
-          if (visited.count(current) > 0) {
-            continue;
-          }
-
-          const std::array<std::size_t, 2> currentIndices =
-              m_grid.localBinsFromGlobalBin(current);
-          visited.insert(current);
-
-          const std::array<double, 2> gridLocal =
-              m_grid.binCenter(currentIndices);
-          const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
-          const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
-          const Vector3 global =
-              m_representative->localToGlobal(gctx, surfaceLocal, normal);
-
-          const SurfaceIntersection intersection =
-              surface.intersect(gctx, global, normal, BoundaryTolerance::None())
-                  .closest();
-          if (!intersection.isValid() ||
-              std::abs(intersection.pathLength()) > m_tolerance) {
-            continue;
-          }
-          m_grid.at(current).push_back(&surface);
-
-          const auto neighborIndices =
-              m_grid.neighborHoodIndices(currentIndices, 1u);
-          queue.insert(queue.end(), neighborIndices.begin(),
-                       neighborIndices.end());
-        }
-      };
-
       for (const Surface* surface : surfaces) {
-        const std::size_t globalBin = surfaceToBinMapping(*surface);
+        const std::size_t globalBin = fillSurfaceToBinMapping(gctx, *surface);
         if (globalBin == 0) {
           continue;
         }
 
-        binToSurfaceMapping(*surface, globalBin);
+        fillBinToSurfaceMapping(gctx, *surface, globalBin);
       }
 
       populateNeighborCache();
@@ -267,8 +209,8 @@ class SurfaceArray {
       return AnyGridConstView<SurfaceVector>{m_grid};
     }
 
-    Surface::SurfaceType surfaceType() const override {
-      return m_representative->type();
+    const Surface* surfaceRepresentation() const override {
+      return m_representative.get();
     }
 
     /// @brief Checks if global bin is valid
@@ -289,6 +231,64 @@ class SurfaceArray {
     }
 
    private:
+    /// map surface center to grid
+    std::size_t fillSurfaceToBinMapping(const GeometryContext& gctx,
+                                        const Surface& surface) {
+      const Vector3 pos = surface.referencePosition(gctx, AxisDirection::AxisR);
+      const Vector3 normal = m_representative->normal(gctx, pos);
+      const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
+      if (globalBin != 0) {
+        m_grid.at(globalBin).push_back(&surface);
+      }
+      return globalBin;
+    };
+
+    /// flood fill neighboring bins given a starting bin
+    void fillBinToSurfaceMapping(const GeometryContext& gctx,
+                                 const Surface& surface, std::size_t startBin) {
+      const std::array<std::size_t, 2> startIndices =
+          m_grid.localBinsFromGlobalBin(startBin);
+      const auto startNeighborIndices =
+          m_grid.neighborHoodIndices(startIndices, 1u);
+
+      std::set<std::size_t> visited({startBin});
+      std::vector<std::size_t> queue(startNeighborIndices.begin(),
+                                     startNeighborIndices.end());
+
+      while (!queue.empty()) {
+        const std::size_t current = queue.back();
+        queue.pop_back();
+        if (visited.count(current) > 0) {
+          continue;
+        }
+
+        const std::array<std::size_t, 2> currentIndices =
+            m_grid.localBinsFromGlobalBin(current);
+        visited.insert(current);
+
+        const std::array<double, 2> gridLocal =
+            m_grid.binCenter(currentIndices);
+        const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+        const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
+        const Vector3 global =
+            m_representative->localToGlobal(gctx, surfaceLocal, normal);
+
+        const SurfaceIntersection intersection =
+            surface.intersect(gctx, global, normal, BoundaryTolerance::None())
+                .closest();
+        if (!intersection.isValid() ||
+            std::abs(intersection.pathLength()) > m_tolerance) {
+          continue;
+        }
+        m_grid.at(current).push_back(&surface);
+
+        const auto neighborIndices =
+            m_grid.neighborHoodIndices(currentIndices, 1u);
+        queue.insert(queue.end(), neighborIndices.begin(),
+                     neighborIndices.end());
+      }
+    };
+
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
       for (std::size_t i = 0; i < m_grid.size(); i++) {
@@ -427,9 +427,7 @@ class SurfaceArray {
       return std::nullopt;
     }
 
-    Surface::SurfaceType surfaceType() const override {
-      return Surface::SurfaceType::Other;
-    }
+    const Surface* surfaceRepresentation() const override { return nullptr; }
 
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
