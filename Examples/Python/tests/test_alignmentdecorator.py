@@ -12,7 +12,7 @@ def test_alignmentdecorator_io_mode(capfd):
 
     # Create a dummy alignment store
     geoId = acts.GeometryIdentifier(volume=1, layer=2)
-    trf = acts.Transform3()
+    trf = acts.Transform3(acts.Vector3(0.0, 0.0, 0.0))
     geoIdMap = {}
     geoIdMap[geoId] = trf
     alignmentStore = acts.examples.GeoIdAlignmentStore(geoIdMap)

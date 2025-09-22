@@ -25,7 +25,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTruthJet(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto& mex = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TruthJetAlgorithm, mex, "TruthJetAlgorithm",
                                 inputTruthParticles, outputJets, jetPtMin);
