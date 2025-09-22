@@ -26,7 +26,7 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addUtilities(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+  auto& mex = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TrajectoriesToPrototracks, mex,
                                 "TrajectoriesToPrototracks", inputTrajectories,
