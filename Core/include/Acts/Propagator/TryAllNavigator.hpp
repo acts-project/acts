@@ -359,7 +359,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       auto intersections =
           candidate.intersect(state.options.geoContext, position, direction,
                               state.options.surfaceTolerance);
-      for (const auto& [intersection, intersectionIndex] : intersections) {
+      for (auto [intersectionIndex, intersection] : intersections) {
         // exclude invalid intersections
         if (!intersection.isValid() ||
             !detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -683,7 +683,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         auto intersections =
             candidate.intersect(state.options.geoContext, stepEnd,
                                 stepDirection, state.options.surfaceTolerance);
-        for (auto [intersection, intersectionIndex] : intersections) {
+        for (auto [intersectionIndex, intersection] : intersections) {
           // exclude invalid intersections
           if (!intersection.isValid() ||
               !detail::checkPathLength(intersection.pathLength(), nearLimit,

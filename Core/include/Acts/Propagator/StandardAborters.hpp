@@ -124,7 +124,7 @@ struct SurfaceReached {
 
     bool intersectionFound = false;
 
-    for (auto [intersection, index] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] : multiIntersection) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {

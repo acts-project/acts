@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -160,6 +161,8 @@ class MultiIntersection {
   using Container =
       std::array<IntersectionType, s_maximumNumberOfIntersections>;
 
+  using size_type = IntersectionIndex;
+
   constexpr explicit MultiIntersection(
       const IntersectionType& intersection) noexcept
       : m_intersections{intersection, IntersectionType::Invalid()}, m_size{1} {}
@@ -184,95 +187,17 @@ class MultiIntersection {
 
   constexpr IntersectionIndex size() const noexcept { return m_size; }
 
-  class Iterator {
-   public:
-    using container_iterator = Container::const_iterator;
-
-    using value_type = IndexedIntersection;
-    using difference_type = std::int8_t;
-
-    using iterator_category = std::random_access_iterator_tag;
-    using iterator_concept = std::random_access_iterator_tag;
-
-    constexpr Iterator(container_iterator it, IntersectionIndex index) noexcept
-        : m_it(it), m_index(index) {}
-
-    constexpr value_type operator*() const noexcept { return {*m_it, m_index}; }
-    constexpr value_type operator[](difference_type n) const noexcept {
-      return {*(m_it + n), m_index + n};
-    }
-
-    constexpr Iterator& operator++() noexcept {
-      ++m_it;
-      ++m_index;
-      return *this;
-    }
-    constexpr Iterator operator++(int) noexcept {
-      auto tmp = *this;
-      ++(*this);
-      return tmp;
-    }
-    constexpr Iterator& operator--() noexcept {
-      --m_it;
-      --m_index;
-      return *this;
-    }
-    constexpr Iterator operator--(int) noexcept {
-      auto tmp = *this;
-      --(*this);
-      return tmp;
-    }
-
-    constexpr Iterator& operator+=(difference_type n) noexcept {
-      m_it += n;
-      m_index += n;
-      return *this;
-    }
-    constexpr Iterator& operator-=(difference_type n) noexcept {
-      m_it -= n;
-      m_index -= n;
-      return *this;
-    }
-
-   private:
-    container_iterator m_it;
-    IntersectionIndex m_index;
-
-    friend constexpr Iterator operator+(Iterator it,
-                                        difference_type n) noexcept {
-      return it += n;
-    }
-
-    friend constexpr Iterator operator+(difference_type n,
-                                        Iterator it) noexcept {
-      return it += n;
-    }
-
-    friend constexpr Iterator operator-(Iterator it,
-                                        difference_type n) noexcept {
-      return it -= n;
-    }
-
-    friend constexpr difference_type operator-(const Iterator& lhs,
-                                               const Iterator& rhs) noexcept {
-      return lhs.m_index - rhs.m_index;
-    }
-
-    friend constexpr auto operator<=>(const Iterator& a,
-                                      const Iterator& b) noexcept {
-      return a.m_index <=> b.m_index;
-    }
-    friend constexpr bool operator==(const Iterator& a,
-                                     const Iterator& b) noexcept {
-      return a.m_index == b.m_index;
-    }
-  };
-
   constexpr auto begin() const noexcept {
-    return Iterator(m_intersections.begin(), 0);
+    return Acts::enumerate<std::span<const IntersectionType>,
+                           IntersectionIndex>(
+               std::span(m_intersections.data(), m_size))
+        .begin();
   }
   constexpr auto end() const noexcept {
-    return Iterator(m_intersections.begin() + m_size, m_size);
+    return Acts::enumerate<std::span<const IntersectionType>,
+                           IntersectionIndex>(
+               std::span(m_intersections.data(), m_size))
+        .end();
   }
 
   constexpr IntersectionType closest() const noexcept {

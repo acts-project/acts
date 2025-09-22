@@ -321,10 +321,10 @@ class DirectNavigator {
     auto intersections = surface.intersect(gctx, position, direction,
                                            boundaryTolerance, tolerance);
 
-    for (auto [intersection, index] : intersections) {
+    for (auto [intersectionIndex, intersection] : intersections) {
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger())) {
-        return NavigationTarget(intersection, index, surface,
+        return NavigationTarget(intersection, intersectionIndex, surface,
                                 boundaryTolerance);
       }
     }

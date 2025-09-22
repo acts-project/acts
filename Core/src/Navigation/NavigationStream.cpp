@@ -51,7 +51,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
-      for (auto [intersection, intersectionIndex] : multiIntersection) {
+      for (auto [intersectionIndex, intersection] : multiIntersection) {
         // Skip negative solutions, respecting the on surface tolerance
         if (intersection.pathLength() < -onSurfaceTolerance) {
           continue;
@@ -118,7 +118,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
         surface.intersect(gctx, queryPoint.position, queryPoint.direction,
                           candidate.boundaryTolerance(), onSurfaceTolerance);
     // Split them into valid intersections
-    for (auto [intersection, intersectionIndex] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] : multiIntersection) {
       // Skip wrong index solution
       if (intersectionIndex != candidate.intersectionIndex()) {
         continue;

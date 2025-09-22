@@ -793,10 +793,7 @@ class Navigator {
     // Request the compatible layers
     state.navLayers = state.currentVolume->compatibleLayers(
         state.options.geoContext, position, direction, navOpts);
-    std::ranges::sort(state.navLayers,
-                      [](const NavigationTarget& a, const NavigationTarget& b) {
-                        return NavigationTarget::pathLengthOrder(a, b);
-                      });
+    std::ranges::sort(state.navLayers, NavigationTarget::pathLengthOrder);
 
     // Print layer information
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -838,10 +835,7 @@ class Navigator {
       // Request the compatible boundaries
       state.navBoundaries = state.currentVolume->compatibleBoundaries(
           state.options.geoContext, position, direction, navOpts, logger());
-      std::ranges::sort(state.navBoundaries, [](const NavigationTarget& a,
-                                                const NavigationTarget& b) {
-        return NavigationTarget::pathLengthOrder(a, b);
-      });
+      std::ranges::sort(state.navBoundaries, NavigationTarget::pathLengthOrder);
     } else {
       // Gen 3 !
       state.stream.reset();

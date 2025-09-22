@@ -34,12 +34,13 @@ NavigationTarget GenericApproachDescriptor::approachSurface(
   for (const Surface* surface : m_surfaceCache) {
     auto multiIntersection =
         surface->intersect(gctx, position, direction, boundaryTolerance);
-    for (auto [intersection, index] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] : multiIntersection) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {
-        targets.emplace_back(intersection, index, *surface->associatedLayer(),
-                             *surface, boundaryTolerance);
+        targets.emplace_back(intersection, intersectionIndex,
+                             *surface->associatedLayer(), *surface,
+                             boundaryTolerance);
       }
     }
   }

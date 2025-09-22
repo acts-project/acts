@@ -49,6 +49,15 @@ class NavigationTarget {
         m_surfaceRepresentation(&target),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Create a layer intersection from a 3D intersection, intersection index,
+  /// and a layer
+  ///
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected target
+  /// @param surfaceRepresentation is the surface representation of the layer
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
   constexpr NavigationTarget(
       const Intersection3D& intersection, IntersectionIndex intersectionIndex,
       const Layer& target, const Surface& surfaceRepresentation,
@@ -59,6 +68,14 @@ class NavigationTarget {
         m_surfaceRepresentation(&surfaceRepresentation),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Create a boundary surface intersection from a 3D intersection,
+  /// intersection index, and a boundary surface
+  ///
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected target
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
   constexpr NavigationTarget(
       const Intersection3D& intersection, IntersectionIndex intersectionIndex,
       const BoundarySurface& target,
@@ -69,6 +86,14 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surfaceRepresentation()),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Create a portal intersection from a 3D intersection, intersection index,
+  /// and a portal
+  ///
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected target
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
   NavigationTarget(const Intersection3D& intersection,
                    IntersectionIndex intersectionIndex, const Portal& target,
                    const BoundaryTolerance& boundaryTolerance) noexcept
@@ -78,6 +103,14 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surface()),
         m_boundaryTolerance(boundaryTolerance) {}
 
+  /// Create a gen2 portal intersection from a 3D intersection, intersection
+  /// index, and a portal
+  ///
+  /// @param intersection is the intersection
+  /// @param intersectionIndex is the intersection index
+  /// @param target is the intersected target
+  /// @param boundaryTolerance is the boundary tolerance used for this
+  /// intersection
   NavigationTarget(const Intersection3D& intersection,
                    IntersectionIndex intersectionIndex,
                    const Experimental::Portal& target,

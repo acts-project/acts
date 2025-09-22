@@ -52,7 +52,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     // Check the surface intersection
     auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto [intersection, intersectionIndex] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] : multiIntersection) {
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
         if (sc.isPortalTarget()) {

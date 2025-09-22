@@ -261,12 +261,12 @@ NavigationTarget Layer::surfaceOnApproach(
   const Surface& layerSurface = surfaceRepresentation();
   const MultiIntersection3D multiIntersection = layerSurface.intersect(
       gctx, position, direction, options.boundaryTolerance);
-  for (auto [intersection, index] : multiIntersection) {
+  for (auto [intersectionIndex, intersection] : multiIntersection) {
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit)) {
-      return NavigationTarget(intersection, index, *this, layerSurface,
-                              options.boundaryTolerance);
+      return NavigationTarget(intersection, intersectionIndex, *this,
+                              layerSurface, options.boundaryTolerance);
     }
   }
   return NavigationTarget::None();

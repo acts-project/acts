@@ -380,7 +380,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
   auto checkIntersection =
       [&](MultiIntersection3D& candidates,
           const BoundarySurface* boundary) -> NavigationTarget {
-    for (auto [intersection, index] : candidates) {
+    for (auto [intersectionIndex, intersection] : candidates) {
       if (!intersection.isValid()) {
         continue;
       }
@@ -389,7 +389,8 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return {intersection, index, *boundary, options.boundaryTolerance};
+        return {intersection, intersectionIndex, *boundary,
+                options.boundaryTolerance};
       }
     }
 
