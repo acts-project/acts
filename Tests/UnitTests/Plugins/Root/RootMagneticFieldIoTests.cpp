@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Root/RootMagneticFieldIo.hpp"
+#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 

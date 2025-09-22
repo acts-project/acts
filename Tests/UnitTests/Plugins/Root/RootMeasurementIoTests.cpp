@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Root/RootMeasurementIo.hpp"
+#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <filesystem>

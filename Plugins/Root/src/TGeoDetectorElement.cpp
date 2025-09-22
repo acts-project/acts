@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -25,13 +25,13 @@
 
 using Line2D = Eigen::Hyperplane<double, 2>;
 
-namespace Acts {
+namespace ActsPlugins {
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
-    std::shared_ptr<const ISurfaceMaterial> material)
-    : DetectorElementBase(), m_detElement(&tGeoNode), m_identifier(identifier) {
+    std::shared_ptr<const Acts::ISurfaceMaterial> material)
+    : Acts::DetectorElementBase(), m_detElement(&tGeoNode), m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the
   // material)
   const Double_t* translation = tGeoMatrix.GetTranslation();
@@ -47,7 +47,7 @@ TGeoDetectorElement::TGeoDetectorElement(
     m_transform = cTransform;
     m_bounds = cBounds;
     m_thickness = cThickness;
-    m_surface = Surface::makeShared<CylinderSurface>(cBounds, *this);
+    m_surface = Acts::Surface::makeShared<CylinderSurface>(cBounds, *this);
   }
 
   // Check next if you do not have a surface
@@ -59,7 +59,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_bounds = dBounds;
       m_transform = dTransform;
       m_thickness = dThickness;
-      m_surface = Surface::makeShared<DiscSurface>(dBounds, *this);
+      m_surface = Acts::Surface::makeShared<DiscSurface>(dBounds, *this);
     }
   }
 
@@ -72,7 +72,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_bounds = pBounds;
       m_transform = pTransform;
       m_thickness = pThickness;
-      m_surface = Surface::makeShared<PlaneSurface>(pBounds, *this);
+      m_surface = Acts::Surface::makeShared<PlaneSurface>(pBounds, *this);
     }
   }
 
@@ -84,34 +84,34 @@ TGeoDetectorElement::TGeoDetectorElement(
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const Transform3& tgTransform,
-    const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
-    : DetectorElementBase(),
+    const Acts::Transform3& tgTransform,
+    const std::shared_ptr<const Acts::PlanarBounds>& tgBounds, double tgThickness)
+    : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
-  m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
+  m_surface = Acts::Surface::makeShared<PlaneSurface>(tgBounds, *this);
 }
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const Transform3& tgTransform,
-    const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
+    const Acts::Transform3& tgTransform,
+    const std::shared_ptr<const Acts::DiscBounds>& tgBounds, double tgThickness)
     : DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
       m_thickness(tgThickness) {
-  m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
+  m_surface = Acts::Surface::makeShared<DiscSurface>(tgBounds, *this);
 }
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;
 
-const Transform3& TGeoDetectorElement::nominalTransform() const {
+const Acts::Transform3& TGeoDetectorElement::nominalTransform() const {
   return m_transform;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

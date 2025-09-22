@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
+#include "ActsPlugins/Root/TGeoCylinderDiscSplitter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Root/TGeoDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -22,15 +22,15 @@
 #include <numbers>
 #include <utility>
 
-Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
+ActsPlugins::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
     const TGeoCylinderDiscSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-Acts::TGeoCylinderDiscSplitter::split(
-    const GeometryContext& gctx,
-    std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const {
+std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+ActsPlugins::TGeoCylinderDiscSplitter::split(
+    const Acts::GeometryContext& gctx,
+    std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const {
   const Acts::Surface& sf = tgde->surface();
   // Thickness
   auto tgIdentifier = tgde->identifier();
@@ -44,7 +44,7 @@ Acts::TGeoCylinderDiscSplitter::split(
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
       ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
-      std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
+      std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
           tgDetectorElements = {};
       tgDetectorElements.reserve(std::abs(m_cfg.discPhiSegments) *
                                  std::abs(m_cfg.discRadialSegments));
@@ -88,13 +88,13 @@ Acts::TGeoCylinderDiscSplitter::split(
         for (int im = 0; im < m_cfg.discPhiSegments; ++im) {
           // Get the moduleTransform
           double phi = -std::numbers::pi + im * phiStep;
-          auto tgTransform = Transform3(
-              Translation3(hR * std::cos(phi), hR * std::sin(phi),
+          auto tgTransform = Acts::Transform3(
+              Acts::Translation3(hR * std::cos(phi), hR * std::sin(phi),
                            discCenter.z()) *
-              AngleAxis3(phi - std::numbers::pi / 2., Vector3::UnitZ()));
+              Acts::AngleAxis3(phi - std::numbers::pi / 2., Acts::Vector3::UnitZ()));
 
           // Create a new detector element per split
-          auto tgDetectorElement = std::make_shared<Acts::TGeoDetectorElement>(
+          auto tgDetectorElement = std::make_shared<ActsPlugins::TGeoDetectorElement>(
               tgIdentifier, tgNode, tgTransform, tgTrapezoid, tgThickness);
 
           tgDetectorElements.push_back(tgDetectorElement);
@@ -111,7 +111,7 @@ Acts::TGeoCylinderDiscSplitter::split(
         sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
-      std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
+      std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
           tgDetectorElements = {};
       tgDetectorElements.reserve(std::abs(m_cfg.cylinderPhiSegments) *
                                  std::abs(m_cfg.cylinderLongitudinalSegments));
@@ -161,19 +161,19 @@ Acts::TGeoCylinderDiscSplitter::split(
           Acts::Vector3 planeAxisY{0., 0., 1.};
           Acts::Vector3 planeAxisX = planeAxisY.cross(planeAxisZ);
 
-          RotationMatrix3 planeRotation;
+          Acts::RotationMatrix3 planeRotation;
           planeRotation.col(0) = planeAxisX;
           planeRotation.col(1) = planeAxisY;
           planeRotation.col(2) = planeAxisZ;
 
           // curvilinear surfaces are boundless
-          Transform3 planeTransform{planeRotation};
+          Acts::Transform3 planeTransform{planeRotation};
           planeTransform.pretranslate(planeCenter);
 
-          Transform3 tgTransform = planeTransform;
+          Acts::Transform3 tgTransform = planeTransform;
 
           // Create a new detector element per split
-          auto tgDetectorElement = std::make_shared<Acts::TGeoDetectorElement>(
+          auto tgDetectorElement = std::make_shared<ActsPlugins::TGeoDetectorElement>(
               tgIdentifier, tgNode, tgTransform, tgRectangle, tgThickness);
 
           tgDetectorElements.push_back(tgDetectorElement);

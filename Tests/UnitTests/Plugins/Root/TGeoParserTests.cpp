@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoParser.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"

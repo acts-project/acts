@@ -9,7 +9,7 @@
 #include "DD4hepTestsHelper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <DD4hep/DD4hepUnits.h>

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMeasurementIo.hpp"
+#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -14,12 +14,12 @@
 
 #include <TTree.h>
 
-Acts::RootMeasurementIo::RootMeasurementIo(const Config& config)
+ActsPlugins::RootMeasurementIo::RootMeasurementIo(const Config& config)
     : m_cfg(config) {
   clear();
 }
 
-void Acts::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
+void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
   measurementTree.Branch("event_nr", &m_measurementPayload.eventNr);
   measurementTree.Branch("volume_id", &m_measurementPayload.volumeID);
   measurementTree.Branch("layer_id", &m_measurementPayload.layerID);
@@ -74,8 +74,8 @@ void Acts::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
   clear();
 }
 
-void Acts::RootMeasurementIo::fillIdentification(
-    int evnt, const GeometryIdentifier& geoId) {
+void ActsPlugins::RootMeasurementIo::fillIdentification(
+    int evnt, const Acts::GeometryIdentifier& geoId) {
   m_measurementPayload.eventNr = evnt;
   m_measurementPayload.volumeID = static_cast<int>(geoId.volume());
   m_measurementPayload.layerID = static_cast<int>(geoId.layer());
@@ -83,8 +83,8 @@ void Acts::RootMeasurementIo::fillIdentification(
   m_measurementPayload.extraID = static_cast<int>(geoId.extra());
 }
 
-void Acts::RootMeasurementIo::fillTruthParameters(
-    const Vector2& lp, const Vector4& xt, const Vector3& dir,
+void ActsPlugins::RootMeasurementIo::fillTruthParameters(
+    const Acts::Vector2& lp, const Acts::Vector4& xt, const Acts::Vector3& dir,
     const std::pair<double, double> angles) {
   m_measurementPayload.trueBound[eBoundLoc0] = lp[eBoundLoc0];
   m_measurementPayload.trueBound[eBoundLoc1] = lp[eBoundLoc1];
@@ -100,7 +100,7 @@ void Acts::RootMeasurementIo::fillTruthParameters(
   m_measurementPayload.incidentTheta = static_cast<float>(angles.second);
 }
 
-void Acts::RootMeasurementIo::fillBoundMeasurement(
+void ActsPlugins::RootMeasurementIo::fillBoundMeasurement(
     const std::vector<double>& measurements,
     const std::vector<double>& variances,
     const std::vector<unsigned int>& subspaceIndex) {
@@ -123,13 +123,13 @@ void Acts::RootMeasurementIo::fillBoundMeasurement(
   }
 }
 
-void Acts::RootMeasurementIo::fillGlobalPosition(const Vector3& pos) {
+void ActsPlugins::RootMeasurementIo::fillGlobalPosition(const Acts::Vector3& pos) {
   m_measurementPayload.recGx = pos.x();
   m_measurementPayload.recGy = pos.y();
   m_measurementPayload.recGz = pos.z();
 }
 
-void Acts::RootMeasurementIo::fillCluster(
+void ActsPlugins::RootMeasurementIo::fillCluster(
     const std::vector<std::tuple<int, int, float>>& channels) {
   m_clusterPayload.nch = static_cast<int>(channels.size());
   if (m_clusterPayload.nch == 0) {
@@ -147,7 +147,7 @@ void Acts::RootMeasurementIo::fillCluster(
   m_clusterPayload.clusterSize[1] = (*max1 - *min1 + 1);
 }
 
-void Acts::RootMeasurementIo::clear() {
+void ActsPlugins::RootMeasurementIo::clear() {
   for (unsigned int ib = 0; ib < eBoundSize; ++ib) {
     m_measurementPayload.trueBound[ib] =
         std::numeric_limits<float>::quiet_NaN();
