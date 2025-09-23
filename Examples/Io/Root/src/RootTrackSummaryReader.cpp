@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -168,7 +169,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
     std::lock_guard<std::mutex> lock(m_read_mutex);
     // now read
 
-    std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
+    Acts::SurfaceHandle<Acts::PerigeeSurface> perigeeSurface =
         Acts::Surface::makeShared<Acts::PerigeeSurface>(
             Acts::Vector3(0., 0., 0.));
 

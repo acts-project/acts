@@ -286,7 +286,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           using Elements = std::vector<std::shared_ptr<Geant4DetectorElement>>;
           Elements detectorElements;
           detectorElements.reserve(cache.sensitiveSurfaces.size());
-          using Surfaces = std::vector<std::shared_ptr<Surface>>;
+          using Surfaces = std::vector<SurfaceHandle<Surface>>;
           Surfaces surfaces;
           surfaces.reserve(cache.sensitiveSurfaces.size());
           std::ranges::for_each(

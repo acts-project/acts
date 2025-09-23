@@ -24,9 +24,7 @@ TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr) {
-  auto mutableSurface =
-      std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(std::move(material));
+  m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
 TelescopeDetectorElement::TelescopeDetectorElement(

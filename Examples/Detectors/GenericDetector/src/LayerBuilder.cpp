@@ -8,14 +8,16 @@
 
 #include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 
+#include "Acts/Surfaces/SurfaceHandle.hpp"
+
 #include <span>
 
 namespace ActsExamples::Generic {
 
 namespace {
-std::vector<std::shared_ptr<const Acts::Surface>> makeConstSurfaces(
-    std::span<const std::shared_ptr<Acts::Surface>> surfaces) {
-  std::vector<std::shared_ptr<const Acts::Surface>> constSurfaces;
+std::vector<Acts::SurfaceHandle<const Acts::Surface>> makeConstSurfaces(
+    std::span<const Acts::SurfaceHandle<Acts::Surface>> surfaces) {
+  std::vector<Acts::SurfaceHandle<const Acts::Surface>> constSurfaces;
   constSurfaces.reserve(surfaces.size());
   for (const auto& surface : surfaces) {
     constSurfaces.push_back(surface);

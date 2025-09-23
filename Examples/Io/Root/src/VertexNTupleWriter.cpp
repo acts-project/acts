@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -876,7 +877,7 @@ void VertexNTupleWriter::writeTrackInfo(
   auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
   // Perigee at the true vertex position
-  std::shared_ptr<Acts::PerigeeSurface> perigeeSurface;
+  Acts::SurfaceHandle<Acts::PerigeeSurface> perigeeSurface;
   if (truthPos.has_value()) {
     perigeeSurface =
         Acts::Surface::makeShared<Acts::PerigeeSurface>(truthPos->head<3>());

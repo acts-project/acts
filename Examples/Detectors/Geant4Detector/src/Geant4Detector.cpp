@@ -84,8 +84,8 @@ Geant4Detector::Geant4Detector(const Config& cfg)
   m_trackingGeometry = kdtBuilder.trackingGeometry(m_nominalGeometryContext);
 }
 
-std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
-           std::vector<std::shared_ptr<ActsPlugins::Geant4DetectorElement>>>
+std::tuple<std::vector<Acts::SurfaceHandle<Acts::Surface>>,
+           std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
 Geant4Detector::buildGeant4Volumes(const Config& cfg,
                                    const Acts::Logger& logger) {
   // Generate the surface cache
@@ -105,8 +105,8 @@ Geant4Detector::buildGeant4Volumes(const Config& cfg,
   ACTS_INFO("Found " << g4SurfaceCache.convertedMaterials
                      << " converted Geant4 Material slabs.");
 
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
-  std::vector<std::shared_ptr<ActsPlugins::Geant4DetectorElement>> elements;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces;
+  std::vector<std::shared_ptr<Acts::Geant4DetectorElement>> elements;
 
   // Reserve the right amount of surfaces
   surfaces.reserve(g4SurfaceCache.sensitiveSurfaces.size() +

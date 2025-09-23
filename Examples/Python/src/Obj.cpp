@@ -41,7 +41,7 @@ void addObj(Context& ctx) {
     /// @param fileName is the path to the output file
     ///
     mex.def("writeSurfacesObj",
-            [](const std::vector<std::shared_ptr<Surface>>& surfaces,
+            [](const std::vector<SurfaceHandle<Surface>>& surfaces,
                const GeometryContext& viewContext, const ViewConfig& viewConfig,
                const std::string& fileName) {
               GeometryView3D view3D;
@@ -68,7 +68,7 @@ void addObj(Context& ctx) {
               obj.write(fileName);
             });
     mex.def("writeVolumesSurfacesObj",
-            [](const std::vector<std::shared_ptr<Surface>>& surfaces,
+            [](const std::vector<SurfaceHandle<Surface>>& surfaces,
                const std::vector<std::shared_ptr<Experimental::DetectorVolume>>&
                    Volumes,
                const GeometryContext& viewContext, const ViewConfig& viewConfig,

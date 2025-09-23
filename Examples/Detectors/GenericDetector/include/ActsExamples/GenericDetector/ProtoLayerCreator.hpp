@@ -33,7 +33,7 @@ namespace ActsExamples::Generic {
 
 struct ProtoLayerSurfaces {
   Acts::MutableProtoLayer protoLayer;
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces;
   std::size_t bins0;
   std::size_t bins1;
 };

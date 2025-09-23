@@ -22,7 +22,7 @@ struct SensitiveGetter {
       auto geoId = surface->geometryId();
       if (geoId.sensitive() != 0u ||
           surface->associatedDetectorElement() != nullptr) {
-        selected.emplace_back(surface->getSharedPtr());
+        selected.emplace_back(Acts::SurfaceHandle{surface->getSharedPtr()});
       }
     }
   }
@@ -38,11 +38,11 @@ ActsExamples::StructureSelector::StructureSelector(
   }
   SensitiveGetter getter;
   m_trackingGeometry->visitSurfaces(getter);
-  m_surfaceMultiSet = GeometryIdMultiset<std::shared_ptr<const Acts::Surface>>(
+  m_surfaceMultiSet = GeometryIdMultiset<Acts::SurfaceHandle<const Acts::Surface>>(
       getter.selected.begin(), getter.selected.end());
 }
 
-std::vector<std::shared_ptr<const Acts::Surface>>
+std::vector<Acts::SurfaceHandle<const Acts::Surface>>
 ActsExamples::StructureSelector::selectSurfaces(
     const Acts::GeometryIdentifier& geoId) const {
   auto selectedRange =

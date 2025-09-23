@@ -9,6 +9,7 @@
 #include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -35,7 +36,7 @@ ActsExamples::ProcessCode ParticleTrackParamExtractor::execute(
     const AlgorithmContext& ctx) const {
   const SimParticleContainer& particles = m_inputParticles(ctx);
 
-  std::unordered_map<SimBarcode, std::shared_ptr<Acts::PerigeeSurface>>
+  std::unordered_map<SimBarcode, Acts::SurfaceHandle<Acts::PerigeeSurface>>
       perigeeSurfaces;
 
   for (auto&& [vtxId, vtxParticles] : groupByVertexId(particles)) {
