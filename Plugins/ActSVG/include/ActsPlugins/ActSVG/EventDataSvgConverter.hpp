@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 
 namespace ActsPlugins::Svg::EventDataConverter {

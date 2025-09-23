@@ -12,8 +12,8 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
 #include <vector>
 
@@ -33,7 +33,7 @@ class Detector;
 class Portal;
 }  //  namespace Experimental
 
-} // namespace Acts
+}  // namespace Acts
 
 namespace ActsPlugins {
 
@@ -95,7 +95,8 @@ std::vector<detray::io::surface_payload> convertPortal(
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::volume_payload convertVolume(
     DetrayConversionUtils::Cache& cCache, const Acts::GeometryContext& gctx,
-    const Acts::Experimental::DetectorVolume& volume, const Acts::Logger& logger);
+    const Acts::Experimental::DetectorVolume& volume,
+    const Acts::Logger& logger);
 
 /// Conversion method for detector objects to detray::detector payload
 ///
@@ -110,4 +111,4 @@ detray::io::detector_payload convertDetector(
     const Acts::Experimental::Detector& detector, const Acts::Logger& logger);
 
 }  // namespace DetrayGeometryConverter
-}  // namespace Acts
+}  // namespace ActsPlugins

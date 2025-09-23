@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 

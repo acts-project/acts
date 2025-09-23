@@ -40,7 +40,8 @@ struct Options {
 /// @param cOption is the conversion options struct
 ///
 /// @return a proto surface object
-ProtoSurface convert(const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+ProtoSurface convert(const Acts::GeometryContext& gctx,
+                     const Acts::Surface& surface,
                      const SurfaceConverter::Options& cOptions);
 
 }  // namespace SurfaceConverter

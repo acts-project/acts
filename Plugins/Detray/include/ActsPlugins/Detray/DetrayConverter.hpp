@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
 #include "ActsPlugins/Detray/DetraySurfaceGridsConverter.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
@@ -38,9 +38,9 @@ class DetrayConverter {
   };
 
   /// Constructor with logger
-  explicit DetrayConverter(
-      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger("DetrayConverter",
-                                                              Acts::Logging::INFO));
+  explicit DetrayConverter(std::unique_ptr<const Acts::Logger> logger =
+                               Acts::getDefaultLogger("DetrayConverter",
+                                                      Acts::Logging::INFO));
 
   /// Convert an Acts::Experimental::Detector to a detray::detector object
   ///
@@ -142,4 +142,4 @@ class DetrayConverter {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -33,7 +33,7 @@
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
 
-namespace Acts::EDM4hepUtil {
+namespace ActsPlugins::EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
@@ -41,24 +41,24 @@ namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values;
   // Dummy default
-  ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+  Acts::ParticleHypothesis particleHypothesis = Acts::ParticleHypothesis::pion();
   std::optional<Acts::BoundSquareMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
+Acts::ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+Acts::ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
                                         double Bz);
 
-void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
-void packCovariance(const ActsSquareMatrix<6>& from, float* to);
+void unpackCovariance(const float* from, Acts::ActsSquareMatrix<6>& to);
+void packCovariance(const Acts::ActsSquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
                                            double Bz,
-                                           const BoundTrackParameters& params);
+                                           const Acts::BoundTrackParameters& params);
 
-BoundTrackParameters convertTrackParametersFromEdm4hep(
+Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -69,10 +69,10 @@ edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
-template <TrackProxyConcept track_proxy_t>
+template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
-                const Logger& logger = getDummyLogger()) {
+                const Acts::Logger& logger = Acts::getDummyLogger()) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
@@ -106,7 +106,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+    Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
                                 state.parameters(), state.covariance(),
                                 track.particleHypothesis()};
 
@@ -137,7 +137,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
+  Acts::BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
                                    track.parameters(), track.covariance(),
                                    track.particleHypothesis()};
 
@@ -169,19 +169,19 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   }
 }
 
-template <TrackProxyConcept track_proxy_t>
+template <Acts::TrackProxyConcept track_proxy_t>
 void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
-               const Logger& logger = getDummyLogger()) {
+               const Acts::Logger& logger = Acts::getDummyLogger()) {
   ACTS_VERBOSE("Reading track from EDM4hep");
-  TrackStatePropMask mask = TrackStatePropMask::Smoothed;
+  Acts::TrackStatePropMask mask = Acts::TrackStatePropMask::Smoothed;
 
   std::optional<edm4hep::TrackState> ipState;
 
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = BoundMatrix::Zero();
-    params.values = BoundVector::Zero();
+    params.covariance = Acts::BoundMatrix::Zero();
+    params.values = Acts::BoundVector::Zero();
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;
@@ -191,12 +191,12 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     params.values[4] = trackState.omega;
     params.values[5] = trackState.time;
 
-    Vector3 center = {
+    Acts::Vector3 center = {
         trackState.referencePoint.x,
         trackState.referencePoint.y,
         trackState.referencePoint.z,
     };
-    params.surface = Acts::Surface::makeShared<PerigeeSurface>(center);
+    params.surface = Acts::Surface::makeShared<Acts::PerigeeSurface>(center);
 
     return params;
   };
@@ -216,13 +216,13 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto params = unpack(trackState);
 
     auto ts = track.appendTrackState(mask);
-    ts.typeFlags().set(MeasurementFlag);
+    ts.typeFlags().set(Acts::MeasurementFlag);
 
     auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
-        converted.covariance().value_or(BoundMatrix::Zero());
+        converted.covariance().value_or(Acts::BoundMatrix::Zero());
     ts.setReferenceSurface(params.surface);
   }
 
@@ -237,10 +237,10 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
-               << converted.covariance().value_or(BoundMatrix::Zero()));
+               << converted.covariance().value_or(Acts::BoundMatrix::Zero()));
 
   track.parameters() = converted.parameters();
-  track.covariance() = converted.covariance().value_or(BoundMatrix::Zero());
+  track.covariance() = converted.covariance().value_or(Acts::BoundMatrix::Zero());
   track.setReferenceSurface(params.surface);
 
   track.chi2() = from.getChi2();
@@ -248,4 +248,4 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.nMeasurements() = track.nTrackStates();
 }
 
-}  // namespace Acts::EDM4hepUtil
+}  // namespace ActsPlugins::EDM4hepUtil

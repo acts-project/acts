@@ -13,13 +13,13 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "ActsPlugins/ActSVG/GridSvgConverter.hpp"
-#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/TypeList.hpp"
+#include "ActsPlugins/ActSVG/GridSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -103,8 +103,8 @@ ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
         std::to_string(Acts::VectorHelpers::cast(center, indexGrid.casts[0u]));
     if (indexGrid.casts.size() > 1u) {
       centerInfo += ", ";
-      centerInfo +=
-          std::to_string(Acts::VectorHelpers::cast(center, indexGrid.casts[1u]));
+      centerInfo += std::to_string(
+          Acts::VectorHelpers::cast(center, indexGrid.casts[1u]));
       centerInfo += ")";
     }
     pSurface._aux_info["center"] = {centerInfo};
@@ -188,8 +188,9 @@ ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
 /// @param delegate the delegate to be translated
 /// @param refInstance the reference input type from the reference Axes
 template <typename surface_container, typename instance_type>
-void convert(const Acts::GeometryContext& gctx, const surface_container& surfaces,
-             const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
+void convert(const Acts::GeometryContext& gctx,
+             const surface_container& surfaces, const Options& cOptions,
+             ProtoIndexedSurfaceGrid& sgi,
              const Acts::Experimental::InternalNavigationDelegate& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
@@ -197,7 +198,8 @@ void convert(const Acts::GeometryContext& gctx, const surface_container& surface
   // Defining a Delegate type
   using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
       GridType, Acts::Experimental::IndexedSurfacesNavigation>;
-  using SubDelegateType = Acts::Experimental::IndexedSurfacesNavigation<GridType>;
+  using SubDelegateType =
+      Acts::Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();
@@ -217,11 +219,11 @@ void convert(const Acts::GeometryContext& gctx, const surface_container& surface
 ///
 /// @note parameters are as of the `convertImpl` method
 template <typename surface_container, typename... Args>
-void unrollConvert(const Acts::GeometryContext& gctx,
-                   const surface_container& surfaces, const Options& cOptions,
-                   ProtoIndexedSurfaceGrid& sgi,
-                   const Acts::Experimental::InternalNavigationDelegate& delegate,
-                   Acts::TypeList<Args...> /*unused*/) {
+void unrollConvert(
+    const Acts::GeometryContext& gctx, const surface_container& surfaces,
+    const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
+    const Acts::Experimental::InternalNavigationDelegate& delegate,
+    Acts::TypeList<Args...> /*unused*/) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 

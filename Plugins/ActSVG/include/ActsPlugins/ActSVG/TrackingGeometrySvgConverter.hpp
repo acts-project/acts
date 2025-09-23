@@ -48,9 +48,9 @@ struct State {
 /// @param cOptions the conversion options
 ///
 /// @return a vector of svg objects
-std::vector<actsvg::svg::object> convert(const Acts::GeometryContext& gctx,
-                                         const Acts::TrackingGeometry& tGeometry,
-                                         const Options& cOptions);
+std::vector<actsvg::svg::object> convert(
+    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
+    const Options& cOptions);
 
 /// Recursivele conversion of volumes
 ///
@@ -59,8 +59,9 @@ std::vector<actsvg::svg::object> convert(const Acts::GeometryContext& gctx,
 /// @param cOptions the conversion options
 /// @param cState [in,out] the conversion state collecting the input
 ///
-void convert(const Acts::GeometryContext& gctx, const Acts::TrackingVolume& tVolume,
-             const Options& cOptions, State& cState);
+void convert(const Acts::GeometryContext& gctx,
+             const Acts::TrackingVolume& tVolume, const Options& cOptions,
+             State& cState);
 
 }  // namespace TrackingGeometryConverter
 

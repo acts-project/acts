@@ -2,7 +2,7 @@ acts_add_library(
     PluginEDM4hep
     SHARED
     src/EDM4hepUtil.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
