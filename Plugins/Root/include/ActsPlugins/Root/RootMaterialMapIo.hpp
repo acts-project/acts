@@ -27,10 +27,9 @@ class IVolumeMaterial;
 class HomogeneousSurfaceMaterial;
 class MaterialSlab;
 class BinnedSurfaceMaterial;
-}
+}  // namespace Acts
 
 namespace ActsPlugins {
-
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
@@ -116,7 +115,7 @@ class RootMaterialMapIo {
   explicit RootMaterialMapIo(const Config& cfg,
                              std::unique_ptr<const Acts::Logger> mLogger =
                                  Acts::getDefaultLogger("RootMaterialMapIo",
-                                                  Acts::Logging::INFO))
+                                                        Acts::Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
   /// @brief Destructor
@@ -126,7 +125,8 @@ class RootMaterialMapIo {
   /// @param rFile the file to write to
   /// @param detectorMaterial the detector material maps
   /// @param options the options for writing
-  void write(TFile& rFile, const Acts::TrackingGeometryMaterial& detectorMaterial,
+  void write(TFile& rFile,
+             const Acts::TrackingGeometryMaterial& detectorMaterial,
              const Options& options);
 
   /// Write the material to file
@@ -135,7 +135,8 @@ class RootMaterialMapIo {
   /// @param surfaceMaterial is the surface associated with the material
   /// @param options the options for writing
   void write(TFile& rFile, const Acts::GeometryIdentifier& geoID,
-             const Acts::ISurfaceMaterial& surfaceMaterial, const Options& options);
+             const Acts::ISurfaceMaterial& surfaceMaterial,
+             const Options& options);
 
   /// Read the detector maps
   /// @param rFile the file to read from

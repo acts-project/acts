@@ -18,7 +18,7 @@
 class TTree;
 
 namespace Acts {
-  class GeometryIdentifier;
+class GeometryIdentifier;
 }
 
 namespace ActsPlugins {
@@ -30,10 +30,10 @@ class RootMeasurementIo {
   // Configuration struct
   struct Config {
     // Indicate the reconstruction indices to be stored
-    std::vector<BoundIndices>& recoIndices;
+    std::vector<Acts::BoundIndices>& recoIndices;
 
     // Indicate the cluster indices to be stored
-    std::vector<BoundIndices>& clusterIndices;
+    std::vector<Acts::BoundIndices>& clusterIndices;
   };
 
   /// Constructor from configuration struct
@@ -75,7 +75,7 @@ class RootMeasurementIo {
   /// Fill global information of the cluster/measurement
   ///
   /// @param pos The global position of the cluster
-  void fillGlobalPosition(const Vector3& pos);
+  void fillGlobalPosition(const Acts::Vector3& pos);
 
   /// Convenience function to fill the cluster information
   ///  - abstracted to be used in different contexts
@@ -88,7 +88,7 @@ class RootMeasurementIo {
 
  private:
   // Names of the bound parameters
-  static constexpr std::array<std::string, eBoundSize> bNames = {
+  static constexpr std::array<std::string, Acts::eBoundSize> bNames = {
       "loc0", "loc1", "phi", "theta", "qop", "time"};
 
   /// The configuration for the accessor
@@ -103,15 +103,15 @@ class RootMeasurementIo {
     int extraID = 0;
 
     // Reconstructed information
-    std::array<float, eBoundSize> recBound = {};
-    std::array<float, eBoundSize> varBound = {};
+    std::array<float, Acts::eBoundSize> recBound = {};
+    std::array<float, Acts::eBoundSize> varBound = {};
 
     float recGx = 0.;
     float recGy = 0.;
     float recGz = 0.;
 
     // Truth parameters
-    std::array<float, eBoundSize> trueBound = {};
+    std::array<float, Acts::eBoundSize> trueBound = {};
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
@@ -119,8 +119,8 @@ class RootMeasurementIo {
     float incidentTheta = 0.;
 
     // Residuals and pulls
-    std::array<float, eBoundSize> residual = {};
-    std::array<float, eBoundSize> pull = {};
+    std::array<float, Acts::eBoundSize> residual = {};
+    std::array<float, Acts::eBoundSize> pull = {};
   };
 
   struct ClusterPayload {

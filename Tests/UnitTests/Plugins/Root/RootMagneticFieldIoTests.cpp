@@ -10,9 +10,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 
 #include <fstream>
 
@@ -20,6 +20,9 @@
 #include <TTree.h>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {

@@ -14,7 +14,9 @@
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Volumes.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
@@ -26,4 +28,4 @@ DD4hepDetectorElement::DD4hepDetectorElement(
           std::move(material)),
       m_detElement(detElement) {}
 
-}  // namespace Acts
+}  // namespace ActsPlugins

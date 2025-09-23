@@ -26,8 +26,8 @@ proxy mechanism that connects the detection elements (conveniently called
 Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
-* {class}`Acts::TGeoDetectorElement` connects a TGeo volume to a {class}`Acts::Surface`
-* {class}`Acts::DD4hepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
+* {class}`ActsPlugins::TGeoDetectorElement` connects a TGeo volume to a {class}`Acts::Surface`
+* {class}`ActsPlugins::DD4hepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
 * {class}`Acts::Geant4DetectorElement` connects a Geant4 volume to a {class}`Acts::Surface`
 
 Further extensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`

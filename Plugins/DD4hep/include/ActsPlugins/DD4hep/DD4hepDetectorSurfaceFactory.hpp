@@ -28,11 +28,9 @@ class DetElement;
 
 namespace Acts {
 
-using namespace UnitLiterals;
-
 class ISurfaceMaterial;
 
-}
+}  // namespace Acts
 
 namespace ActsPlugins {
 class DD4hepDetectorElement;
@@ -102,7 +100,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Convert material directly
     bool convertMaterial = false;
     /// New reference material thickness for surfaces
-    double surfaceMaterialThickness = 1_mm;
+    double surfaceMaterialThickness = 1 * Acts::UnitConstants::mm;
   };
 
   /// The DD4hep detector element factory
@@ -200,4 +198,4 @@ class DD4hepDetectorSurfaceFactory {
                              const Options& options) const;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

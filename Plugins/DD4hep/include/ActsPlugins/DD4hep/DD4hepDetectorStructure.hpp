@@ -11,8 +11,8 @@
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <memory>
 #include <string>
@@ -23,7 +23,7 @@ class DetElement;
 }
 
 namespace Acts {
-  class IMaterialDecorator;
+class IMaterialDecorator;
 }
 
 namespace ActsPlugins {
@@ -45,7 +45,8 @@ class DD4hepDetectorStructure {
     /// a building graph is generated as `.dot` file with the given name
     std::string emulateToGraph = "";
     /// A Top level geometry id generator
-    std::shared_ptr<const Acts::IGeometryIdGenerator> geoIdGenerator = nullptr;
+    std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>
+        geoIdGenerator = nullptr;
     /// A Top level material decorator
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator = nullptr;
   };
@@ -55,9 +56,9 @@ class DD4hepDetectorStructure {
   /// @param logger is the screen output logger
   ///
   /// @note this needs to be provided
-  explicit DD4hepDetectorStructure(std::unique_ptr<const Acts::Logger> logger =
-                                       Acts::getDefaultLogger("DD4hepLayerStructure",
-                                                        Acts::Logging::INFO));
+  explicit DD4hepDetectorStructure(
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("DD4hepLayerStructure", Acts::Logging::INFO));
 
   DD4hepDetectorStructure() = delete;
 
@@ -72,7 +73,8 @@ class DD4hepDetectorStructure {
   /// reasons.
   ///
   /// @return a detector, and the detector element store
-  std::tuple<std::shared_ptr<const Acts::Experimnetal::Detector>, DD4hepDetectorElement::Store>
+  std::tuple<std::shared_ptr<const Acts::Experimental::Detector>,
+             DD4hepDetectorElement::Store>
   construct(const Acts::GeometryContext& gctx,
             const dd4hep::DetElement& dd4hepElement,
             const Options& options) const;
@@ -85,4 +87,4 @@ class DD4hepDetectorStructure {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

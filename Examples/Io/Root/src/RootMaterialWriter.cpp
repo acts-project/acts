@@ -71,7 +71,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
   // Write the surface material maps
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
-                                   m_logger->clone("RootMaterialMapIo"));
+                                          m_logger->clone("RootMaterialMapIo"));
 
   for (const auto& [geoId, sMap] : surfaceMaps) {
     // Get the Surface material

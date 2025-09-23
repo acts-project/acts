@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -19,6 +18,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -35,6 +35,9 @@
 #include "TGeoTrd1.h"
 #include "TGeoVolume.h"
 #include "TView.h"
+
+using namespace Acts;
+using namespace ActsPlugins;
 
 namespace Acts::Test {
 

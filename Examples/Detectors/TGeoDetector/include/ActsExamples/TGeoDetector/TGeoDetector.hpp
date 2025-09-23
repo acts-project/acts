@@ -10,11 +10,11 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 
 #include <cstddef>
 #include <map>

@@ -13,11 +13,11 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <memory>
 #include <string>
@@ -32,7 +32,7 @@ class LayerCreator;
 class Logger;
 class Surface;
 class ISurfaceMaterial;
-}
+}  // namespace Acts
 
 namespace ActsPlugins {
 /// @brief build layers of one cylinder-endcap setup from DD4hep input
@@ -112,21 +112,24 @@ class DD4hepLayerBuilder : public Acts::ILayerBuilder {
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at negative side
-  const Acts::LayerVector negativeLayers(const Acts::GeometryContext& gctx) const final;
+  const Acts::LayerVector negativeLayers(
+      const Acts::GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return the layers at the central sector
-  const Acts::LayerVector centralLayers(const Acts::GeometryContext& gctx) const final;
+  const Acts::LayerVector centralLayers(
+      const Acts::GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at positive side
-  const Acts::LayerVector positiveLayers(const Acts::GeometryContext& gctx) const final;
+  const Acts::LayerVector positiveLayers(
+      const Acts::GeometryContext& gctx) const final;
 
   /// Name identification
   /// @return the string based identification of this configuration
@@ -196,4 +199,4 @@ inline DD4hepLayerBuilder::Config DD4hepLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

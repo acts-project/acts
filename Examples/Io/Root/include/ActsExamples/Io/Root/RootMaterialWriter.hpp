@@ -17,9 +17,9 @@
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Material/ISurfaceMaterial.hpp>
 #include <Acts/Material/IVolumeMaterial.hpp>
-#include <ActsPlugins/Root/RootMaterialMapIo.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/RootMaterialMapIo.hpp>
 
 #include <map>
 #include <memory>

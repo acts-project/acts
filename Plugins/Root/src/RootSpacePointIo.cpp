@@ -164,4 +164,4 @@ void RootSpacePointIo::read(TChain& tchain, SpacePointContainer2& spacePoints) {
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

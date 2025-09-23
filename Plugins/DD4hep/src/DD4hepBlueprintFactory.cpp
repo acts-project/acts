@@ -10,11 +10,14 @@
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsPlugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 
-namespace Acts::Experimental {
+using namespace Acts;
+using namespace Acts::Experimental;
+
+namespace ActsPlugins {
 
 DD4hepBlueprintFactory::DD4hepBlueprintFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -306,4 +309,4 @@ DD4hepBlueprintFactory::extractInternals(
   return {internalsBuilder, rootsFinderBuilder, geoIdGenerator, aux, ext};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

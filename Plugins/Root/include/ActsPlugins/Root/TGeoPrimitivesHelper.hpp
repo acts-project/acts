@@ -48,4 +48,4 @@ struct TGeoPrimitivesHelper {
   /// @param second is the test string
   static bool match(const std::vector<std::string>& first, const char* second);
 };
-}  // namespace Acts
+}  // namespace ActsPlugins

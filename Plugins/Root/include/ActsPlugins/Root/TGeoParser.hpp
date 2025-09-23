@@ -67,9 +67,9 @@ struct TGeoParser {
     /// The local axis definition of TGeo object wrt Acts::Surface
     std::string localAxes = "XYZ";
     /// Scaling from TGeo to ROOT
-    double unit = 1 * UnitConstants::cm;
+    double unit = 1 * Acts::UnitConstants::cm;
     /// Parse restrictions, several can apply
-    std::vector<std::pair<AxisDirection, ParseRange> > parseRanges = {};
+    std::vector<std::pair<Acts::AxisDirection, ParseRange> > parseRanges = {};
   };
 
   /// The parsing module, it takes the top Volume and recursively steps down

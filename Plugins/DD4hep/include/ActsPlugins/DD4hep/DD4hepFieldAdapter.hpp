@@ -28,8 +28,9 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override;
 
-  Result<Acts::Vector3> getField(const Acts::Vector3& position,
-                           Acts::MagneticFieldProvider::Cache& cache) const override;
+  Acts::Result<Acts::Vector3> getField(
+      const Acts::Vector3& position,
+      Acts::MagneticFieldProvider::Cache& cache) const override;
 
  private:
   double m_fieldConversionFactor;
@@ -37,4 +38,4 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
   std::unique_ptr<dd4hep::OverlayedField> m_field;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins

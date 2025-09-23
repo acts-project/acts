@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <optional>
 #include <sstream>
@@ -25,19 +25,20 @@
 
 namespace ActsPlugins {
 
-static std::vector<std::tuple<std::string, Acts::AxisDirection>> allowedBinnings = {
-    {"x", AxisDirection::AxisX},
-    {"y", AxisDirection::AxisY},
-    {"z", AxisDirection::AxisZ},
-    {"phi", AxisDirection::AxisPhi},
-    {"r", AxisDirection::AxisR}};
+static std::vector<std::tuple<std::string, Acts::AxisDirection>>
+    allowedBinnings = {{"x", Acts::AxisDirection::AxisX},
+                       {"y", Acts::AxisDirection::AxisY},
+                       {"z", Acts::AxisDirection::AxisZ},
+                       {"phi", Acts::AxisDirection::AxisPhi},
+                       {"r", Acts::AxisDirection::AxisR}};
 
 /// Helper method to convert the string to binning value
 ///
 /// @param binningString
 ///
 /// @return a binningValue
-inline Acts::AxisDirection stringToAxisDirection(const std::string &binningString) {
+inline Acts::AxisDirection stringToAxisDirection(
+    const std::string &binningString) {
   using enum Acts::AxisDirection;
   if (binningString == "x") {
     return AxisX;
@@ -88,4 +89,4 @@ std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
 
 }  // namespace DD4hepBinningHelpers
-}  // namespace Acts
+}  // namespace ActsPlugins

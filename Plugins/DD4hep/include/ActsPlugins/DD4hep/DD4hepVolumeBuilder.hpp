@@ -20,12 +20,12 @@
 
 #include "DD4hep/DetElement.h"
 
-class TrackingVolume;
 namespace Acts {
+class TrackingVolume;
 class Logger;
 }  // namespace Acts
 
-using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<Acts::TrackingVolume>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 class TGeoMatrix;
@@ -40,7 +40,7 @@ namespace ActsPlugins {
 /// (volumes of endcaps) of one hierarchy (e.g. ECal, HCal...) with input from
 /// DD4hep.
 
-class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
+class DD4hepVolumeBuilder : public Acts::IConfinedTrackingVolumeBuilder {
  public:
   /// @struct Config
   /// Nested configuration struct for steering of the volume builder
@@ -54,8 +54,8 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
   /// Constructor
   /// @param [in] config is the configuration struct
   /// @param [in] logger is the logging instance
-  DD4hepVolumeBuilder(const Acts::DD4hepVolumeBuilder::Config& config,
-                      std::unique_ptr<const Logger> logger);
+  DD4hepVolumeBuilder(const DD4hepVolumeBuilder::Config& config,
+                      std::unique_ptr<const Acts::Logger> logger);
 
   /// Destructor
   ~DD4hepVolumeBuilder() override;
@@ -109,4 +109,4 @@ inline DD4hepVolumeBuilder::Config DD4hepVolumeBuilder::getConfiguration()
   return m_cfg;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -88,7 +88,7 @@ ACTS uses this parameter to resolve the layer detector elements.
 
 In ACTS the surfaces describing the sensitive modules of a detector are directly
 linked to these of the initial geometry input. In the case of DD4hep the
-{class}`Acts::DD4hepDetectorElement` was introduced which is the direct link of
+{class}`ActsPlugins::DD4hepDetectorElement` was introduced which is the direct link of
 ACTS to DD4hep. In the case for tracking relevant parameters in the DD4hep
 geometry description are changed (e.g. alignment) it will be automatically
 changed in ACTS.
@@ -252,7 +252,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
 
 * Sensor
 
-  * `axis_definitions`: local axis definitions for a sensor. Default: `XYZ`. See {class}`Acts::DD4hepDetectorElement` for details
+  * `axis_definitions`: local axis definitions for a sensor. Default: `XYZ`. See {class}`ActsPlugins::DD4hepDetectorElement` for details
 
 * Volume / subdetector
 
@@ -274,5 +274,5 @@ are added during the DD4hep construction.
 The DD4hep plugins ships with an adapter class that connects a DD4hep-defined
 field to the {class}`Acts::MagneticFieldProvider` interface:
 
-:::{doxygenclass} Acts::DD4hepFieldAdapter
+:::{doxygenclass} ActsPlugins::DD4hepFieldAdapter
 :::

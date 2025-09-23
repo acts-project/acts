@@ -10,7 +10,9 @@
 
 #include <numbers>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
@@ -76,4 +78,4 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
   return protoBinnings;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

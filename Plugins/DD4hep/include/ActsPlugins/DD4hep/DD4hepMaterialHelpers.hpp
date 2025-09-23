@@ -23,9 +23,7 @@
 #include <DDRec/DetectorData.h>
 
 namespace Acts {
-
 class Layer;
-
 }
 
 namespace ActsPlugins {
@@ -38,9 +36,9 @@ namespace ActsPlugins {
 ///                   assigned
 /// @param cylinderLayer is the target layer
 /// @param logger a @c Logger for output
-void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
-                                   Acts::Layer& cylinderLayer,
-                                   const Acts::Logger& logger = Acts::getDummyLogger());
+void addCylinderLayerProtoMaterial(
+    dd4hep::DetElement detElement, Acts::Layer& cylinderLayer,
+    const Acts::Logger& logger = Acts::getDummyLogger());
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
 ///
@@ -50,8 +48,9 @@ void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
 /// assigned
 /// @param discLayer is the target layer
 /// @param logger a @c Logger for output
-void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Acts::Layer& discLayer,
-                               const Acts::Logger& logger = Acts::getDummyLogger());
+void addDiscLayerProtoMaterial(
+    dd4hep::DetElement detElement, Acts::Layer& discLayer,
+    const Acts::Logger& logger = Acts::getDummyLogger());
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///

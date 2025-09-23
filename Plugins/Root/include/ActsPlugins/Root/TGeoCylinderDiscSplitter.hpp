@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/Root/ITGeoDetectorElementSplitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Root/ITGeoDetectorElementSplitter.hpp"
 
 #include <memory>
 #include <vector>
@@ -60,7 +60,7 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const TGeoDetectorElement>> split(
       const Acts::GeometryContext& gctx,
-      std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const override;
+      std::shared_ptr<const TGeoDetectorElement> tgde) const override;
 
  private:
   Config m_cfg;

@@ -28,10 +28,11 @@
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
 
-void ActsPlugins::RootMaterialMapIo::write(TFile& rFile,
-                                    const GeometryIdentifier& geoID,
-                                    const ISurfaceMaterial& surfaceMaterial,
-                                    const Options& options) {
+using namespace Acts;
+
+void ActsPlugins::RootMaterialMapIo::write(
+    TFile& rFile, const GeometryIdentifier& geoID,
+    const ISurfaceMaterial& surfaceMaterial, const Options& options) {
   /// Change to the file
   rFile.cd();
 
@@ -164,8 +165,8 @@ void ActsPlugins::RootMaterialMapIo::connectForWrite(
   rTree.Branch(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void ActsPlugins::RootMaterialMapIo::connectForRead(TTree& rTree,
-                                             MaterialTreePayload& treePayload) {
+void ActsPlugins::RootMaterialMapIo::connectForRead(
+    TTree& rTree, MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
   }
@@ -255,7 +256,7 @@ void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-Acts::TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
+TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
     TFile& rFile, const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
@@ -309,7 +310,7 @@ Acts::TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
     // Surface Material
     if (splitNames[0] == options.folderSurfaceNameBase) {
       // The surface material to be read in for this
-      std::shared_ptr<const Acts::ISurfaceMaterial> sMaterial = nullptr;
+      std::shared_ptr<const ISurfaceMaterial> sMaterial = nullptr;
 
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
       GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
@@ -351,11 +352,10 @@ Acts::TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
   return detectorMaterial;
 }
 
-std::shared_ptr<const Acts::ISurfaceMaterial>
+std::shared_ptr<const ISurfaceMaterial>
 ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
     TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
-  std::shared_ptr<const Acts::ISurfaceMaterial> texturedSurfaceMaterial =
-      nullptr;
+  std::shared_ptr<const ISurfaceMaterial> texturedSurfaceMaterial = nullptr;
 
   // Construct the common names & get the common histograms
   std::string nName = tdName + "/" + m_cfg.nBinsHistName;
@@ -388,7 +388,7 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
     auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
     auto rmin = static_cast<float>(minh->GetBinContent(ib));
     auto rmax = static_cast<float>(maxh->GetBinContent(ib));
-    bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
+    bUtility += BinUtility(nbins, rmin, rmax, opt, val);
   }
   ACTS_VERBOSE("Created " << bUtility);
 

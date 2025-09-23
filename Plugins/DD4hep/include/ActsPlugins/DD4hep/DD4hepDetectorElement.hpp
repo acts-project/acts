@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include <map>
 #include <memory>
@@ -24,7 +24,7 @@ namespace Acts {
 /// Forward declaration of Digitization module is enough
 class ISurfaceMaterial;
 
-}
+}  // namespace Acts
 
 namespace ActsPlugins {
 /// @class DD4hepDetectorElement
@@ -109,4 +109,4 @@ struct DD4hepDetectorElementExtension {
   std::shared_ptr<DD4hepDetectorElement> detectorElement;
 };
 
-}  // namespace Acts
+}  // namespace ActsPlugins
