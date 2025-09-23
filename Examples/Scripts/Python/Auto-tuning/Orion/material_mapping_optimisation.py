@@ -169,7 +169,7 @@ def runMaterialMappingVariance(
     )
     detectorTemp = getOpenDataDetector(matDeco)
     trackingGeometryTemp = detectorTemp.trackingGeometry()
-    matMapDeco = acts.MappingMaterialDecorator(
+    matMapDeco = acts.examples.MappingMaterialDecorator(
         tGeometry=trackingGeometryTemp, level=acts.logging.ERROR
     )
     # Update the binning using the bin map corresponding to this trial
@@ -473,7 +473,7 @@ if "__main__" == __name__:
     decorators = detector.contextDecorators()
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised
-    matMapDeco = acts.MappingMaterialDecorator(
+    matMapDeco = acts.examples.MappingMaterialDecorator(
         tGeometry=trackingGeometry, level=acts.logging.WARNING
     )
     binDict = matMapDeco.binningMap()

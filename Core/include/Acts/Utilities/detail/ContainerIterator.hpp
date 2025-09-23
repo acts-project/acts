@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Utilities/ContainerConcepts.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerConcepts.hpp"
 
 #include <cstddef>
 #include <iterator>
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename Container, typename Value, typename Index, bool ReadOnly>
 class ContainerIterator {
@@ -139,4 +139,4 @@ class ContainerIterator {
   }
 };
 
-}  // namespace Acts
+}  // namespace Acts::detail
