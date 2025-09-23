@@ -473,7 +473,6 @@ jobs:
             popd
 
             pushd EICrecon
-            export LD_LIBRARY_PATH="$CMAKE_INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
             echo "::group::EICrecon configure phase"
             ccache -z && \
             cmake -B build -S . \
