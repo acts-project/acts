@@ -17,10 +17,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Plugins/Geant4/Geant4Converters.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -30,6 +26,10 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsPlugins/Geant4/Geant4Converters.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorElement.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
 #include <algorithm>
 #include <array>
@@ -66,14 +66,14 @@ MockupSectorBuilder::buildChamber(
   g4WorldConfig.g4World = g4World;
 
   // Get the sensitive and passive surfaces and pass to the g4World Config
-  auto g4Sensitive =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamberConfig.SensitiveNames);
-  auto g4Passive =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamberConfig.PassiveNames);
+  auto g4Sensitive = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      chamberConfig.SensitiveNames);
+  auto g4Passive = std::make_shared<
+      ActsPlugins::Geant4PhysicalVolumeSelectors::NameSelector>(
+      chamberConfig.PassiveNames);
 
-  auto g4SurfaceOptions = Acts::Geant4DetectorSurfaceFactory::Options();
+  auto g4SurfaceOptions = ActsPlugins::Geant4DetectorSurfaceFactory::Options();
   g4SurfaceOptions.sensitiveSurfaceSelector = g4Sensitive;
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
   g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
@@ -95,7 +95,7 @@ MockupSectorBuilder::buildChamber(
   // Convert the physical volumes of the detector elements to straw surfaces
   for (const auto& detectorElement : elements) {
     auto context = Acts::GeometryContext();
-    auto g4conv = Acts::Geant4PhysicalVolumeConverter();
+    auto g4conv = ActsPlugins::Geant4PhysicalVolumeConverter();
 
     g4conv.forcedType = Acts::Surface::SurfaceType::Straw;
     auto g4ConvSurf = g4conv.Geant4PhysicalVolumeConverter::surface(
