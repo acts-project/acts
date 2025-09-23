@@ -157,7 +157,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   tree_t kdTree(std::move(kdTreePoints));
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
-  bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
+  bottomDoubletFinderConfig.spacePointsSortedByRadius = false;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
   bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
                                             ? m_cfg.deltaRMin
