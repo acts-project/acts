@@ -28,7 +28,7 @@ optimised, but used for templating:
 
 * {class}`ActsPlugins::TGeoDetectorElement` connects a TGeo volume to a {class}`Acts::Surface`
 * {class}`ActsPlugins::DD4hepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
-* {class}`Acts::Geant4DetectorElement` connects a Geant4 volume to a {class}`Acts::Surface`
+* {class}`ActsPlugins::Geant4DetectorElement` connects a Geant4 volume to a {class}`Acts::Surface`
 
 Further extensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
 binding for the ATLAS experiment.

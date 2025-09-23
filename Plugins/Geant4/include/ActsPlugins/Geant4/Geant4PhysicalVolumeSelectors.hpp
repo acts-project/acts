@@ -18,7 +18,7 @@
 
 class G4VPhysicalVolume;
 
-namespace Acts {
+namespace ActsPlugins {
 
 /// Interface class for selectors from physical volumes
 class IGeant4PhysicalVolumeSelector {

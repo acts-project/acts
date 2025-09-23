@@ -22,34 +22,37 @@ namespace Acts {
 class ISurfaceMaterial;
 class Surface;
 
+} // namespace Acts
+
+namespace ActsPlugins {
 /// @class Geant4DetectorElement
 ///
 /// Detector element representative for Geant4 sensitive
 /// elements.
-class Geant4DetectorElement : public DetectorElementBase {
+class Geant4DetectorElement : public Acts::DetectorElementBase {
  public:
   /// Broadcast the context type
-  using ContextType = GeometryContext;
+  using ContextType = Acts::GeometryContext;
 
   /// @brief  Constructor with arguments
   /// @param surface the surface representing this detector element
   /// @param g4physVol the physical volume representing this detector element
   /// @param toGlobal the global transformation before the volume
   /// @param thickness the thickness of this detector element
-  Geant4DetectorElement(std::shared_ptr<Surface> surface,
+  Geant4DetectorElement(std::shared_ptr<Acts::Surface> surface,
                         const G4VPhysicalVolume& g4physVol,
-                        const Transform3& toGlobal, double thickness);
+                        const Acts::Transform3& toGlobal, double thickness);
 
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& transform(const GeometryContext& gctx) const override;
+  const Acts::Transform3& transform(const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
-  const Surface& surface() const override;
+  const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
-  Surface& surface() override;
+  Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
   double thickness() const override;
@@ -59,11 +62,11 @@ class Geant4DetectorElement : public DetectorElementBase {
 
  private:
   /// Corresponding Surface
-  std::shared_ptr<Surface> m_surface;
+  std::shared_ptr<Acts::Surface> m_surface;
   /// The GEant4 physical volume
   const G4VPhysicalVolume* m_g4physVol{nullptr};
   /// The global transformation before the volume
-  Transform3 m_toGlobal;
+  Acts::Transform3 m_toGlobal;
   ///  Thickness of this detector element
   double m_thickness{0.};
 };

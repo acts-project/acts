@@ -10,13 +10,13 @@
 
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include "G4GDMLParser.hh"
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 
-namespace Acts::Experimental {
+namespace ActsPlugins {
 
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
@@ -37,7 +37,7 @@ namespace Acts::Experimental {
 /// @tparam reference_generator The reference generator for the KDTree
 template <std::size_t kDim = 2u, std::size_t bSize = 100u,
           typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1u, false>>
+              Acts::Experimental::detail::PolyhedronReferenceGenerator<1u, false>>
 class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
  public:
   /// Nested configuration struct
@@ -60,7 +60,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     /// A selector for passive surfaces
     std::shared_ptr<IGeant4PhysicalVolumeSelector> surfacePreselector =
-        std::make_shared<Acts::Geant4PhysicalVolumeSelectors::AllSelector>();
+        std::make_shared<Geant4PhysicalVolumeSelectors::AllSelector>();
   };
 
   /// Optional configuration for the KDTree
@@ -111,7 +111,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   std::vector<std::shared_ptr<Acts::Surface>> surfaces(
       [[maybe_unused]] const Acts::GeometryContext& gctx) const override {
     /// Surface factory options
-    Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
+    Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
 
     /// Copy the configuration
     /// This is done to avoid checking nullptrs
@@ -123,14 +123,14 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     g4SurfaceOptions.passiveSurfaceSelector = m_cfg.surfacePreselector;
 
     /// Generate the surface cache
-    Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
+    ActsPlugins::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
 
     /// Find and store surfaces in the cache object
     auto g4ToWorldConsistent = G4Transform3D(
         m_g4ToWorld.getRotation().inverse(), m_g4ToWorld.getTranslation());
 
-    Acts::Geant4DetectorSurfaceFactory::Config surfaceConfig;
-    Acts::Geant4DetectorSurfaceFactory(surfaceConfig)
+    Geant4DetectorSurfaceFactory::Config surfaceConfig;
+    Geant4DetectorSurfaceFactory(surfaceConfig)
         .construct(g4SurfaceCache, g4ToWorldConsistent, *m_g4World,
                    g4SurfaceOptions);
 
