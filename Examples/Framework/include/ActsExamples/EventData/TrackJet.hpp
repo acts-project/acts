@@ -34,7 +34,7 @@ enum hadronlabel {
 
 class TrackJet {
  public:
-  TrackJet(const Acts::Vector4& fm) {
+  explicit TrackJet(const Acts::Vector4& fm) {
     m_fourMomentum = fm;
     m_label = ActsExamples::unknown;
   }
@@ -50,7 +50,7 @@ class TrackJet {
 
   // TODO::Pass references instead of copies.
 
-  void setConstituents(const std::vector<int> constituents) {
+  void setConstituents(const std::vector<int> &constituents) {
     m_constituents = constituents;
   }
 
