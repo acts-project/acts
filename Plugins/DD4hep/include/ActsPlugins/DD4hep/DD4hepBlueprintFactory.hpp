@@ -16,9 +16,9 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <optional>
@@ -34,8 +34,7 @@ class DD4hepBlueprintFactory {
  public:
   /// @brief Nested config object
   struct Config {
-    std::shared_ptr<ActsPlugins::DD4hepLayerStructure> layerStructure =
-        nullptr;
+    std::shared_ptr<ActsPlugins::DD4hepLayerStructure> layerStructure = nullptr;
 
     /// The maximum number of portals to be checked for protal material
     unsigned int maxPortals = 8u;
@@ -50,10 +49,10 @@ class DD4hepBlueprintFactory {
   ///
   /// @param cfg the config object
   /// @param mlogger the logging instance
-  explicit DD4hepBlueprintFactory(const Config& cfg,
-                                  std::unique_ptr<const Acts::Logger> mlogger =
-                                      Acts::getDefaultLogger("DD4hepBlueprintFactory",
-                                                       Acts::Logging::INFO));
+  explicit DD4hepBlueprintFactory(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> mlogger = Acts::getDefaultLogger(
+          "DD4hepBlueprintFactory", Acts::Logging::INFO));
 
   /// @brief Create a blueprint from a DD4hep detector element
   ///
@@ -78,7 +77,7 @@ class DD4hepBlueprintFactory {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Private access to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// @brief Recursive parsing of the detector element tree
   ///
@@ -87,7 +86,8 @@ class DD4hepBlueprintFactory {
   /// @param gctx the geometry context
   /// @param dd4hepElement the detector element at current level
   /// @param hiearchyLevel the current hierarchy level
-  void recursiveParse(Cache& cache, Acts::Experimental::Gen2Blueprint::Node& mother,
+  void recursiveParse(Cache& cache,
+                      Acts::Experimental::Gen2Blueprint::Node& mother,
                       const Acts::GeometryContext& gctx,
                       const dd4hep::DetElement& dd4hepElement,
                       unsigned int hiearchyLevel = 0) const;
@@ -100,12 +100,12 @@ class DD4hepBlueprintFactory {
   /// @param extOpt the optional extent as output from the internal parsing
   ///
   /// @return a tuple of the bounds type, values and binning, auxiliary data
-  std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType, std::vector<double>,
-             std::vector<Acts::AxisDirection>, std::string>
-  extractExternals([[maybe_unused]] const Acts::GeometryContext& gctx,
-                   const dd4hep::DetElement& dd4hepElement,
-                   const std::string& baseName,
-                   const std::optional<Acts::Extent>& extOpt = std::nullopt) const;
+  std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
+             std::vector<double>, std::vector<Acts::AxisDirection>, std::string>
+  extractExternals(
+      [[maybe_unused]] const Acts::GeometryContext& gctx,
+      const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
+      const std::optional<Acts::Extent>& extOpt = std::nullopt) const;
 
   /// @brief Extract the internals from a DD4hep element
   ///
@@ -122,14 +122,15 @@ class DD4hepBlueprintFactory {
   /// @note The auxiliary information is returned as well for each of them
   ///
   /// @return a tuple of tools and auxiliary information
-  std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
-             std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>,
-             std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>,
-             std::array<std::string, 3u>, std::optional<Acts::Extent>>
+  std::tuple<
+      std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
+      std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>,
+      std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>,
+      std::array<std::string, 3u>, std::optional<Acts::Extent>>
   extractInternals(DD4hepDetectorElement::Store& dd4hepStore,
                    const Acts::GeometryContext& gctx,
                    const dd4hep::DetElement& dd4hepElement,
                    const std::string& baseName) const;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

@@ -17,7 +17,9 @@
 #include <DD4hep/Handle.h>
 #include <DD4hep/Objects.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
@@ -47,4 +49,4 @@ Result<Vector3> DD4hepFieldAdapter::getField(
   return Result<Vector3>::success(result);
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

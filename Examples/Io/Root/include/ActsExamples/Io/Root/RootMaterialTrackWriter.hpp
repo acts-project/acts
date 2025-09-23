@@ -10,9 +10,9 @@
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <ActsPlugins/Root/RootMaterialTrackIo.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/RootMaterialTrackIo.hpp>
 
 #include <mutex>
 #include <string>

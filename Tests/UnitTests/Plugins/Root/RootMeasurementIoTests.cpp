@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
+#include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <filesystem>
 
@@ -21,6 +21,7 @@
 
 using namespace Acts;
 using namespace Test;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(RootMeasurementIoTests)
 

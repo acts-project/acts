@@ -10,7 +10,8 @@
 
 #include <algorithm>
 
-bool ActsPlugins::TGeoPrimitivesHelper::match(const char* first, const char* second) {
+bool ActsPlugins::TGeoPrimitivesHelper::match(const char* first,
+                                              const char* second) {
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -38,8 +39,8 @@ bool ActsPlugins::TGeoPrimitivesHelper::match(const char* first, const char* sec
   return false;
 }
 
-bool ActsPlugins::TGeoPrimitivesHelper::match(const std::vector<std::string>& first,
-                                       const char* second) {
+bool ActsPlugins::TGeoPrimitivesHelper::match(
+    const std::vector<std::string>& first, const char* second) {
   return std::ranges::any_of(
       first, [&](const std::string& f) { return match(f.c_str(), second); });
 }

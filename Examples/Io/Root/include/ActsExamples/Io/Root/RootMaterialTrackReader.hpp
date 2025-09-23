@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include <cstddef>
 #include <cstdint>

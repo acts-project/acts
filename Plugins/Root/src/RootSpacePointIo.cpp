@@ -15,11 +15,14 @@
 #include <TChain.h>
 #include <TTree.h>
 
+using namespace Acts;
+using namespace Experimental;
+
 namespace ActsPlugins {
 
 void RootSpacePointIo::connectForRead(
-    TChain& tchain, const Acts::Experimental::SpacePointContainer2& spacePoints) {
-  using enum Acts::Experimental::SpacePointColumns;
+    TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
+  using enum Experimental::SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     tchain.SetBranchAddress("x", &m_x);
@@ -48,8 +51,8 @@ void RootSpacePointIo::connectForRead(
 }
 
 void RootSpacePointIo::connectForWrite(
-    TTree& ttree, const Acts::Experimental::SpacePointContainer2& spacePoints) {
-  using enum Acts::Experimental::SpacePointColumns;
+    TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
+  using enum Experimental::SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     ttree.Branch("x", &m_x);
@@ -108,18 +111,18 @@ void RootSpacePointIo::write(
 }
 
 void RootSpacePointIo::write(
-    const Acts::Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
+    const Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
   connectForWrite(ttree, spacePoints);
 
-  for (Acts::Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
+  for (Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
     write(spacePoint);
     ttree.Fill();
   }
 }
 
-void RootSpacePointIo::read(Acts::Experimental::MutableSpacePointProxy2& spacePoint,
-                            Acts::Experimental::SpacePointIndex2 index) {
-  using enum Acts::Experimental::SpacePointColumns;
+void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
+                            Experimental::SpacePointIndex2 index) {
+  using enum Experimental::SpacePointColumns;
 
   if (spacePoint.container().hasColumns(SourceLinks)) {
     spacePoint.assignSourceLinks(std::array<SourceLink, 1>{SourceLink(index)});
@@ -152,7 +155,7 @@ void RootSpacePointIo::read(Acts::Experimental::MutableSpacePointProxy2& spacePo
 }
 
 void RootSpacePointIo::read(TChain& tchain,
-                            Acts::Experimental::SpacePointContainer2& spacePoints) {
+                            Experimental::SpacePointContainer2& spacePoints) {
   connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();
@@ -164,4 +167,4 @@ void RootSpacePointIo::read(TChain& tchain,
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -23,6 +23,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
+using namespace ActsPlugins;
 
 namespace ActsPython {
 void addTGeo(Context& ctx) {

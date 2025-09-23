@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 #include <memory>
 #include <optional>
@@ -85,9 +85,11 @@ class DD4hepLayerStructure {
   /// @param options containing the optional descriptions
   ///
   /// @return a LayerStructureBuilder, and an optional extent
-  std::tuple<std::shared_ptr<Acts::LayerStructureBuilder>, std::optional<Acts::Extent>>
+  std::tuple<std::shared_ptr<Acts::Experimental::LayerStructureBuilder>,
+             std::optional<Acts::Extent>>
   builder(DD4hepDetectorElement::Store& dd4hepStore,
-          const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
+          const Acts::GeometryContext& gctx,
+          const dd4hep::DetElement& dd4hepElement,
           const Options& options) const;
 
  private:

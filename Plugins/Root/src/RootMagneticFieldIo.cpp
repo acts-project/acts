@@ -17,9 +17,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
+using namespace Acts;
+
+InterpolatedBFieldMap<
+    Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
 ActsPlugins::makeMagneticFieldMapRzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
@@ -68,10 +69,9 @@ ActsPlugins::makeMagneticFieldMapRzFromRoot(
                     BFieldUnit, firstQuadrant);
 }
 
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>,
-               Acts::Axis<Acts::AxisType::Equidistant>>>
+InterpolatedBFieldMap<
+    Grid<Vector3, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>,
+         Axis<AxisType::Equidistant>>>
 ActsPlugins::makeMagneticFieldMapXyzFromRoot(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&

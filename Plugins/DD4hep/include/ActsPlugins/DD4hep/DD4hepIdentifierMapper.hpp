@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Detector/GeometryIdMapper.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <climits>
 
@@ -44,7 +44,7 @@ struct DD4hepIdentifierCapture {
     // Get the DD4hepDetectorElement
     const auto* dde = surface.associatedDetectorElement();
     const auto* dd4hepDetElement =
-        dynamic_cast<const Acts::DD4hepDetectorElement*>(dde);
+        dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(dde);
     // Check if it is valid
     if (dd4hepDetElement) {
       return dd4hepDetElement->sourceElement().volumeID();
@@ -54,6 +54,7 @@ struct DD4hepIdentifierCapture {
 };
 
 using DD4hepIdentifierMapper =
-    Acts::Experimental::GeometryIdMapper<DD4hepIdentifier, DD4hepIdentifierCapture>;
+    Acts::Experimental::GeometryIdMapper<DD4hepIdentifier,
+                                         DD4hepIdentifierCapture>;
 
-}  // namespace Acts
+}  // namespace ActsPlugins

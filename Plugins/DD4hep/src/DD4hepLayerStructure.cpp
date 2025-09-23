@@ -8,7 +8,10 @@
 
 #include "ActsPlugins/DD4hep/DD4hepLayerStructure.hpp"
 
-namespace Acts::Experimental {
+using namespace Acts;
+using namespace Acts::Experimental;
+
+namespace ActsPlugins {
 
 DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
@@ -139,4 +142,4 @@ DD4hepLayerStructure::builder(DD4hepDetectorElement::Store& dd4hepStore,
           fCache.sExtent};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace ActsPlugins

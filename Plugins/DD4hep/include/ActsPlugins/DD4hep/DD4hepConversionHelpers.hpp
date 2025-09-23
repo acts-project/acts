@@ -150,9 +150,9 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
 /// @param unitConversion is a conversion factor DD4hep -> ACTS
 ///
 /// @return a transform extracted from parameters
-inline Acts::Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
-                                   const std::string& bname,
-                                   const double unitConversion = 1.) {
+inline Acts::Transform3 extractTransform(
+    const dd4hep::DetElement& dd4hepElement, const std::string& bname,
+    const double unitConversion = 1.) {
   Acts::Transform3 transform = Acts::Transform3::Identity();
   double x =
       unitConversion * getParamOr<double>(bname + "_x", dd4hepElement, 0.);
@@ -160,8 +160,8 @@ inline Acts::Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement
       unitConversion * getParamOr<double>(bname + "_y", dd4hepElement, 0.);
   double z =
       unitConversion * getParamOr<double>(bname + "_z", dd4hepElement, 0.);
-  transform.pretranslate(Vector3(x, y, z));
+  transform.pretranslate(Acts::Vector3(x, y, z));
   return transform;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -25,12 +25,12 @@ Acts::MaterialSlab ActsPlugins::TGeoMaterialConverter::materialSlab(
   double uScalor = options.unitLengthScalor;
   double rScalar = options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
-  auto material =
-      Acts::Material::fromMassDensity(static_cast<float>(matX0 * uScalor / cFactor),
-                                static_cast<float>(matL0 * uScalor / cFactor),
-                                static_cast<float>(tgMaterial.GetA()),
-                                static_cast<float>(tgMaterial.GetZ()),
-                                static_cast<float>(matRho * rScalar * cFactor));
+  auto material = Acts::Material::fromMassDensity(
+      static_cast<float>(matX0 * uScalor / cFactor),
+      static_cast<float>(matL0 * uScalor / cFactor),
+      static_cast<float>(tgMaterial.GetA()),
+      static_cast<float>(tgMaterial.GetZ()),
+      static_cast<float>(matRho * rScalar * cFactor));
 
   return Acts::MaterialSlab(material, static_cast<float>(thicknessOut));
 }

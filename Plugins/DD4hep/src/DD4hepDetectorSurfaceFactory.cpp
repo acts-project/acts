@@ -18,9 +18,11 @@
 
 #include "DD4hep/DetElement.h"
 
+using namespace Acts;
+using namespace Acts::Experimental;
 using namespace Acts::detail;
 
-namespace Acts {
+namespace ActsPlugins {
 
 DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
     const Config& config, std::unique_ptr<const Logger> mlogger)
@@ -182,4 +184,4 @@ void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

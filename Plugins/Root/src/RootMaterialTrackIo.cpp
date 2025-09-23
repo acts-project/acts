@@ -16,6 +16,8 @@
 #include <TChain.h>
 #include <TTree.h>
 
+using namespace Acts;
+
 void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_summaryPayload.vX);
@@ -103,8 +105,8 @@ void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
 }
 
 void ActsPlugins::RootMaterialTrackIo::write(
-    const Acts::GeometryContext& gctx, std::uint32_t eventNum,
-    const Acts::RecordedMaterialTrack& materialTrack) {
+    const GeometryContext& gctx, std::uint32_t eventNum,
+    const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
   // Clearing the vector first
   m_stepPayload.stepXs.clear();
@@ -204,10 +206,8 @@ void ActsPlugins::RootMaterialTrackIo::write(
     m_stepPayload.stepDz.push_back(direction.z());
 
     if (m_cfg.prePostStepInfo) {
-      Acts::Vector3 prePos =
-          mint.position - 0.5 * mint.pathCorrection * direction;
-      Acts::Vector3 posPos =
-          mint.position + 0.5 * mint.pathCorrection * direction;
+      Vector3 prePos = mint.position - 0.5 * mint.pathCorrection * direction;
+      Vector3 posPos = mint.position + 0.5 * mint.pathCorrection * direction;
 
       m_stepPayload.stepXs.push_back(prePos.x());
       m_stepPayload.stepYs.push_back(prePos.y());
@@ -219,7 +219,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
 
     // Store surface information
     if (m_cfg.surfaceInfo) {
-      const Acts::Surface* surface = mint.surface;
+      const Surface* surface = mint.surface;
       if (mint.intersectionID.value() != 0) {
         m_surfacePayload.surfaceId.push_back(mint.intersectionID.value());
         m_surfacePayload.surfacePathCorrection.push_back(mint.pathCorrection);
@@ -234,7 +234,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
         Intersection3D sfIntersection =
             surface
                 ->intersect(gctx, mint.position, mint.direction,
-                            Acts::BoundaryTolerance::None())
+                            BoundaryTolerance::None())
                 .closest();
         m_surfacePayload.surfaceId.push_back(surface->geometryId().value());
         m_surfacePayload.surfacePathCorrection.push_back(1.0);
@@ -242,8 +242,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
         m_surfacePayload.surfaceY.push_back(sfIntersection.position().y());
         m_surfacePayload.surfaceZ.push_back(sfIntersection.position().z());
       } else {
-        m_surfacePayload.surfaceId.push_back(
-            Acts::GeometryIdentifier().value());
+        m_surfacePayload.surfaceId.push_back(GeometryIdentifier().value());
         m_surfacePayload.surfaceX.push_back(0);
         m_surfacePayload.surfaceY.push_back(0);
         m_surfacePayload.surfaceZ.push_back(0);
@@ -253,7 +252,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
 
     // store volume information
     if (m_cfg.volumeInfo) {
-      Acts::GeometryIdentifier vlayerID;
+      GeometryIdentifier vlayerID;
       if (!mint.volume.empty()) {
         vlayerID = mint.volume.geometryId();
         m_volumePayload.volumeId.push_back(vlayerID.value());
@@ -283,13 +282,13 @@ void ActsPlugins::RootMaterialTrackIo::write(
   }
 }
 
-Acts::RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
-  Acts::RecordedMaterialTrack rmTrack;
+RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
+  RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
-  rmTrack.first.first = Acts::Vector3(m_summaryPayload.vX, m_summaryPayload.vY,
-                                      m_summaryPayload.vZ);
-  rmTrack.first.second = Acts::Vector3(
-      m_summaryPayload.vPx, m_summaryPayload.vPy, m_summaryPayload.vPz);
+  rmTrack.first.first =
+      Vector3(m_summaryPayload.vX, m_summaryPayload.vY, m_summaryPayload.vZ);
+  rmTrack.first.second =
+      Vector3(m_summaryPayload.vPx, m_summaryPayload.vPy, m_summaryPayload.vPz);
 
   // Fill the individual steps
   std::size_t msteps = m_stepPayload.stepLength.size();
@@ -309,30 +308,30 @@ Acts::RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
     rmTrack.second.materialInX0 += s / mX0;
     rmTrack.second.materialInL0 += s / mL0;
     /// Fill the position & the material
-    Acts::MaterialInteraction mInteraction;
+    MaterialInteraction mInteraction;
     mInteraction.position =
-        Acts::Vector3(m_stepPayload.stepX[is], m_stepPayload.stepY[is],
-                      m_stepPayload.stepZ[is]);
+        Vector3(m_stepPayload.stepX[is], m_stepPayload.stepY[is],
+                m_stepPayload.stepZ[is]);
     mInteraction.direction =
-        Acts::Vector3(m_stepPayload.stepDx[is], m_stepPayload.stepDy[is],
-                      m_stepPayload.stepDz[is]);
-    mInteraction.materialSlab = Acts::MaterialSlab(
-        Acts::Material::fromMassDensity(mX0, mL0, m_stepPayload.stepMatA[is],
-                                        m_stepPayload.stepMatZ[is],
-                                        m_stepPayload.stepMatRho[is]),
+        Vector3(m_stepPayload.stepDx[is], m_stepPayload.stepDy[is],
+                m_stepPayload.stepDz[is]);
+    mInteraction.materialSlab = MaterialSlab(
+        Material::fromMassDensity(mX0, mL0, m_stepPayload.stepMatA[is],
+                                  m_stepPayload.stepMatZ[is],
+                                  m_stepPayload.stepMatRho[is]),
         s);
     if (m_cfg.surfaceInfo) {
       // add the surface information to the interaction this allows the
       // mapping to be speed up
       mInteraction.intersectionID =
-          Acts::GeometryIdentifier(m_surfacePayload.surfaceId[is]);
-      mInteraction.intersection = Acts::Vector3(m_surfacePayload.surfaceX[is],
-                                                m_surfacePayload.surfaceY[is],
-                                                m_surfacePayload.surfaceZ[is]);
+          GeometryIdentifier(m_surfacePayload.surfaceId[is]);
+      mInteraction.intersection =
+          Vector3(m_surfacePayload.surfaceX[is], m_surfacePayload.surfaceY[is],
+                  m_surfacePayload.surfaceZ[is]);
       mInteraction.pathCorrection = m_surfacePayload.surfacePathCorrection[is];
     } else {
-      mInteraction.intersectionID = Acts::GeometryIdentifier();
-      mInteraction.intersection = Acts::Vector3(0, 0, 0);
+      mInteraction.intersectionID = GeometryIdentifier();
+      mInteraction.intersection = Vector3(0, 0, 0);
     }
     rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
   }

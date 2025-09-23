@@ -14,6 +14,8 @@
 
 #include <TTree.h>
 
+using namespace Acts;
+
 ActsPlugins::RootMeasurementIo::RootMeasurementIo(const Config& config)
     : m_cfg(config) {
   clear();
@@ -75,7 +77,7 @@ void ActsPlugins::RootMeasurementIo::connectForWrite(TTree& measurementTree) {
 }
 
 void ActsPlugins::RootMeasurementIo::fillIdentification(
-    int evnt, const Acts::GeometryIdentifier& geoId) {
+    int evnt, const GeometryIdentifier& geoId) {
   m_measurementPayload.eventNr = evnt;
   m_measurementPayload.volumeID = static_cast<int>(geoId.volume());
   m_measurementPayload.layerID = static_cast<int>(geoId.layer());
@@ -84,7 +86,7 @@ void ActsPlugins::RootMeasurementIo::fillIdentification(
 }
 
 void ActsPlugins::RootMeasurementIo::fillTruthParameters(
-    const Acts::Vector2& lp, const Acts::Vector4& xt, const Acts::Vector3& dir,
+    const Vector2& lp, const Vector4& xt, const Vector3& dir,
     const std::pair<double, double> angles) {
   m_measurementPayload.trueBound[eBoundLoc0] = lp[eBoundLoc0];
   m_measurementPayload.trueBound[eBoundLoc1] = lp[eBoundLoc1];
@@ -123,7 +125,7 @@ void ActsPlugins::RootMeasurementIo::fillBoundMeasurement(
   }
 }
 
-void ActsPlugins::RootMeasurementIo::fillGlobalPosition(const Acts::Vector3& pos) {
+void ActsPlugins::RootMeasurementIo::fillGlobalPosition(const Vector3& pos) {
   m_measurementPayload.recGx = pos.x();
   m_measurementPayload.recGy = pos.y();
   m_measurementPayload.recGz = pos.z();

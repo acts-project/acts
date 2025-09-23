@@ -23,15 +23,17 @@ class RootSpacePointIo {
   ///
   /// @param ttree the TTree to write to
   /// @param spacePoints the space points to write
-  void connectForWrite(TTree& ttree,
-                       const Acts::Experimental::SpacePointContainer2& spacePoints);
+  void connectForWrite(
+      TTree& ttree,
+      const Acts::Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
   /// @param spacePoints the space points to read into
-  void connectForRead(TChain& tchain,
-                      const Acts::Experimental::SpacePointContainer2& spacePoints);
+  void connectForRead(
+      TChain& tchain,
+      const Acts::Experimental::SpacePointContainer2& spacePoints);
 
   /// @brief Write a space point to the tree
   /// @note the caller has to do the TTree::Fill() after this call
@@ -58,7 +60,8 @@ class RootSpacePointIo {
   ///
   /// @param tchain the TChain to read from
   /// @param spacePoints the space points to read into
-  void read(TChain& tchain, Acts::Experimental::SpacePointContainer2& spacePoints);
+  void read(TChain& tchain,
+            Acts::Experimental::SpacePointContainer2& spacePoints);
 
  private:
   float m_x = 0;

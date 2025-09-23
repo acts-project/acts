@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+using namespace ActsPlugins;
+
 namespace Acts::Test {
 
 /// @brief Unit test checking the match probability

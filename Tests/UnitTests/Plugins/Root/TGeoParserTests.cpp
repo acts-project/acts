@@ -9,12 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsPlugins/Root/TGeoParser.hpp"
-#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <memory>
 #include <string>
@@ -23,12 +23,15 @@
 
 #include "TGeoManager.h"
 
+using namespace Acts;
+using namespace ActsPlugins;
+
 namespace Acts::Test {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
   RootGeometry() {
-    auto path = Acts::Test::getDataPath("panda.root");
+    auto path = getDataPath("panda.root");
     TGeoManager::Import(path.c_str());
   }
 };

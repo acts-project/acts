@@ -69,7 +69,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   }
 
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
-                                   m_logger->clone("RootMaterialMapIo"));
+                                          m_logger->clone("RootMaterialMapIo"));
   auto [surfaceMaps, volumeMaps] =
       accessor.read(*m_inputFile, m_cfg.accessorOptions);
 

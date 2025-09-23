@@ -20,9 +20,9 @@ class TChain;
 class TTree;
 
 namespace Acts {
-  class Surface;
-  class TrackingVolume;
-}
+class Surface;
+class TrackingVolume;
+}  // namespace Acts
 
 namespace ActsPlugins {
 

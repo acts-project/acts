@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
@@ -22,6 +21,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -78,8 +78,9 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
-    const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
-        surface->associatedDetectorElement());
+    const auto* detElement =
+        dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
+            surface->associatedDetectorElement());
 
     if (detElement == nullptr) {
       ACTS_ERROR("Surface has no associated detector element");
