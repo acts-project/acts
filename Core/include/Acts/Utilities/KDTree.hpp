@@ -15,7 +15,6 @@
 #include <cmath>
 #include <functional>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace Acts {

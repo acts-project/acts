@@ -129,8 +129,8 @@ class CylindricalSpacePointGrid2 {
   /// @param r The radial distance of the space point from the origin
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> insert(SpacePointIndex index, float phi, float r,
-                                    float z);
+  std::optional<std::size_t> insert(SpacePointIndex index, float phi, float z,
+                                    float r);
   /// Insert a space point into the grid.
   /// @param sp The space point to insert
   /// @return The index of the bin in which the space point was inserted, or

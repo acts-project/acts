@@ -232,47 +232,6 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  /**
-   * @brief Set the number of dimensions in which to embed points. This is just
-   * 3 for now (phi, r, and z), but we might want to increase or decrease this
-   * number in the future.
-   */
-  static constexpr std::size_t NDims = 3;
-
-  /**
-   * @brief Enumeration of the different dimensions in which we can apply cuts.
-   */
-  enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
-
-  /**
-   * @brief The k-d tree type used by this seeder internally, which is
-   * three-dimensional, contains internal spacepoint pointers, uses the Acts
-   * scalar type for coordinates, stores its coordinates in std::arrays, and
-   * has leaf size 4.
-   */
-  using tree_t = Acts::KDTree<NDims, Acts::Experimental::SpacePointIndex2,
-                              float, std::array, 4>;
-
-  struct SpacePointCandidates {
-    /*
-     * bottom_lh_v denotes the candidates bottom seed points, assuming that the
-     * track has monotonically _increasing_ z position. bottom_hl_v denotes the
-     * candidate bottom points assuming that the track has monotonically
-     * _decreasing_ z position. top_lh_v are the candidate top points for an
-     * increasing z track, and top_hl_v are the candidate top points for a
-     * decreasing z track.
-     */
-    std::vector<Acts::Experimental::SpacePointIndex2> bottom_lh_v, bottom_hl_v,
-        top_lh_v, top_hl_v;
-
-    void clear() {
-      bottom_lh_v.clear();
-      bottom_hl_v.clear();
-      top_lh_v.clear();
-      top_hl_v.clear();
-    }
-  };
-
   Config m_cfg;
 
   Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
@@ -284,16 +243,6 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-
-  void findSpacePointCandidates(
-      const Acts::Experimental::ConstSpacePointProxy2& spM, const tree_t& tree,
-      SpacePointCandidates& candidates) const;
-
-  typename tree_t::range_t validTupleOrthoRangeLH(
-      const Acts::Experimental::ConstSpacePointProxy2& low) const;
-
-  typename tree_t::range_t validTupleOrthoRangeHL(
-      const Acts::Experimental::ConstSpacePointProxy2& high) const;
 };
 
 }  // namespace ActsExamples

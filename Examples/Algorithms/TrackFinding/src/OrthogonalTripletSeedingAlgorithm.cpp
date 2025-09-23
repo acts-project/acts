@@ -14,6 +14,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding2/CylindricalSpacePointKDTree.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -110,8 +111,8 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       Acts::Experimental::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(spacePoints.size());
 
-  std::vector<typename tree_t::pair_t> kdTreePoints;
-  kdTreePoints.reserve(spacePoints.size());
+  Acts::Experimental::CylindricalSpacePointKDTreeBuilder kdTreeBuilder;
+  kdTreeBuilder.reserve(spacePoints.size());
 
   Acts::Extent rRangeSPExtent;
 
@@ -135,26 +136,39 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     newSp.varianceZ() = static_cast<float>(sp.varianceZ());
     newSp.varianceR() = static_cast<float>(sp.varianceR());
 
-    /*
-     * For every input point, we create a coordinate-pointer pair, which we then
-     * linearly pass to the k-d tree constructor. That constructor will take
-     * care of sorting the pairs and splitting the space.
-     */
-    typename tree_t::coordinate_t kdTreePoint;
-
-    kdTreePoint[DimPhi] = newSp.phi();
-    kdTreePoint[DimR] = newSp.zr()[1];
-    kdTreePoint[DimZ] = newSp.zr()[0];
-
-    kdTreePoints.emplace_back(kdTreePoint, newSpIndex);
+    kdTreeBuilder.insert(newSpIndex, newSp.phi(), newSp.zr()[1], newSp.zr()[0]);
 
     rRangeSPExtent.extend({newSp.xy()[0], newSp.xy()[1], newSp.zr()[0]});
   }
 
-  ACTS_VERBOSE("Created k-d tree populated with " << kdTreePoints.size()
+  ACTS_VERBOSE("Created k-d tree populated with " << kdTreeBuilder.size()
                                                   << " space points");
 
-  tree_t kdTree(std::move(kdTreePoints));
+  Acts::Experimental::CylindricalSpacePointKDTree kdTree =
+      kdTreeBuilder.build();
+
+  Acts::Experimental::CylindricalSpacePointKDTree::Options lhOptions;
+  lhOptions.rMax = m_cfg.rMax;
+  lhOptions.zMin = m_cfg.zMin;
+  lhOptions.zMax = m_cfg.zMax;
+  lhOptions.phiMin = m_cfg.phiMin;
+  lhOptions.phiMax = m_cfg.phiMax;
+  lhOptions.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
+                            ? m_cfg.deltaRMin
+                            : m_cfg.deltaRMinBottom;
+  lhOptions.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
+                            ? m_cfg.deltaRMax
+                            : m_cfg.deltaRMaxBottom;
+  lhOptions.collisionRegionMin = m_cfg.collisionRegionMin;
+  lhOptions.collisionRegionMax = m_cfg.collisionRegionMax;
+  lhOptions.cotThetaMax = m_cfg.cotThetaMax;
+  lhOptions.deltaPhiMax = m_cfg.deltaPhiMax;
+  Acts::Experimental::CylindricalSpacePointKDTree::Options hlOptions =
+      lhOptions;
+  hlOptions.deltaRMin =
+      std::isnan(m_cfg.deltaRMinTop) ? m_cfg.deltaRMin : m_cfg.deltaRMinTop;
+  hlOptions.deltaRMax =
+      std::isnan(m_cfg.deltaRMaxTop) ? m_cfg.deltaRMax : m_cfg.deltaRMaxTop;
 
   Acts::Experimental::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = false;
@@ -218,14 +232,16 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   Acts::Experimental::BroadTripletSeedFilter::Cache filterCache;
   Acts::Experimental::BroadTripletSeedFilter seedFilter(
       m_filterConfig, filterState, filterCache, *m_filterLogger);
+
   static thread_local Acts::Experimental::TripletSeeder::Cache cache;
-  static thread_local SpacePointCandidates candidates;
+  static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
+      Candidates candidates;
 
   /*
    * Run the seeding algorithm by iterating over all the points in the tree
    * and seeing what happens if we take them to be our middle spacepoint.
    */
-  for (const typename tree_t::pair_t &middle : kdTree) {
+  for (const auto &middle : kdTree) {
     ACTS_VERBOSE("Process middle " << middle.second);
 
     const auto spM = coreSpacePoints.at(middle.second).asConst();
@@ -255,8 +271,23 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       continue;
     }
 
+    std::size_t nTopSeedConf = 0;
+    if (m_cfg.seedConfirmation) {
+      // check if middle SP is in the central or forward region
+      Acts::SeedConfirmationRangeConfig seedConfRange =
+          (spM.zr()[0] > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+           spM.zr()[0] < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+              ? m_cfg.forwardSeedConfirmationRange
+              : m_cfg.centralSeedConfirmationRange;
+      // set the minimum number of top SP depending on whether the middle SP is
+      // in the central or forward region
+      nTopSeedConf = spM.zr()[1] > seedConfRange.rMaxSeedConf
+                         ? seedConfRange.nTopForLargeR
+                         : seedConfRange.nTopForSmallR;
+    }
+
     candidates.clear();
-    findSpacePointCandidates(spM, kdTree, candidates);
+    kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
     Acts::Experimental::SpacePointContainer2::ConstSubset bottomSps =
         coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
@@ -297,269 +328,6 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
 
   m_outputSeeds(ctx, std::move(seedContainerForStorage));
   return ProcessCode::SUCCESS;
-}
-
-void OrthogonalTripletSeedingAlgorithm::findSpacePointCandidates(
-    const Acts::Experimental::ConstSpacePointProxy2 &spM, const tree_t &tree,
-    SpacePointCandidates &candidates) const {
-  using range_t = typename tree_t::range_t;
-
-  /*
-   * Calculate the search ranges for bottom and top candidates for this middle
-   * space point.
-   */
-  range_t bottom_r = validTupleOrthoRangeHL(spM);
-  range_t top_r = validTupleOrthoRangeLH(spM);
-
-  /*
-   * Calculate the value of cot(θ) for this middle spacepoint.
-   */
-  float cotTheta =
-      std::max(std::abs(spM.zr()[0] / spM.zr()[1]), m_cfg.cotThetaMax);
-
-  /*
-   * Calculate the maximum Δr, given that we have already constrained our
-   * search space.
-   */
-  float deltaRMaxTop = top_r[DimR].max() - spM.zr()[1];
-  float deltaRMaxBottom = spM.zr()[1] - bottom_r[DimR].min();
-
-  /*
-   * Create the search range for the bottom spacepoint assuming a
-   * monotonically increasing z track, by calculating the minimum z value from
-   * the cot(θ), and by setting the maximum to the z position of the middle
-   * spacepoint - if the z position is higher than the middle point, then it
-   * would be a decreasing z track!
-   */
-  range_t bottom_lh_r = bottom_r;
-  bottom_lh_r[DimZ].shrink(spM.zr()[0] - cotTheta * deltaRMaxBottom,
-                           spM.zr()[0]);
-
-  /*
-   * Calculate the search ranges for the other four sets of points in a
-   * similar fashion.
-   */
-  range_t top_lh_r = top_r;
-  top_lh_r[DimZ].shrink(spM.zr()[0], spM.zr()[0] + cotTheta * deltaRMaxTop);
-
-  range_t bottom_hl_r = bottom_r;
-  bottom_hl_r[DimZ].shrink(spM.zr()[0],
-                           spM.zr()[0] + cotTheta * deltaRMaxBottom);
-  range_t top_hl_r = top_r;
-  top_hl_r[DimZ].shrink(spM.zr()[0] - cotTheta * deltaRMaxTop, spM.zr()[0]);
-
-  /*
-   * Now, we will actually search for the spaces. Remembering that we combine
-   * bottom and top candidates for increasing and decreasing tracks
-   * separately, we will first check whether both the search ranges for
-   * increasing tracks are not degenerate - if they are, we will never find
-   * any seeds and we do not need to bother doing the search.
-   */
-  if (!bottom_lh_r.degenerate() && !top_lh_r.degenerate()) {
-    /*
-     * Search the trees for points that lie in the given search range.
-     */
-    tree.rangeSearchMapDiscard(
-        top_lh_r, [&candidates](const typename tree_t::coordinate_t &,
-                                const typename tree_t::value_t &top) {
-          candidates.top_lh_v.push_back(top);
-        });
-  }
-
-  /*
-   * Perform the same search for candidate bottom spacepoints, but for
-   * monotonically decreasing z tracks.
-   */
-  if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(
-        top_hl_r, [&candidates](const typename tree_t::coordinate_t &,
-                                const typename tree_t::value_t &top) {
-          candidates.top_hl_v.push_back(top);
-        });
-  }
-
-  // apply cut on the number of top SP if seedConfirmation is true
-  bool search_bot_hl = true;
-  bool search_bot_lh = true;
-  if (m_cfg.seedConfirmation) {
-    // check if middle SP is in the central or forward region
-    Acts::SeedConfirmationRangeConfig seedConfRange =
-        (spM.zr()[0] > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-         spM.zr()[0] < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_cfg.forwardSeedConfirmationRange
-            : m_cfg.centralSeedConfirmationRange;
-    // set the minimum number of top SP depending on whether the middle SP is
-    // in the central or forward region
-    std::size_t nTopSeedConf = spM.zr()[1] > seedConfRange.rMaxSeedConf
-                                   ? seedConfRange.nTopForLargeR
-                                   : seedConfRange.nTopForSmallR;
-    // continue if number of top SPs is smaller than minimum
-    if (candidates.top_lh_v.size() < nTopSeedConf) {
-      search_bot_lh = false;
-    }
-    if (candidates.top_hl_v.size() < nTopSeedConf) {
-      search_bot_hl = false;
-    }
-  }
-
-  /*
-   * Next, we perform a search for bottom candidates in increasing z tracks,
-   * which only makes sense if we found any bottom candidates.
-   */
-  if (!candidates.top_lh_v.empty() && search_bot_lh) {
-    tree.rangeSearchMapDiscard(
-        bottom_lh_r, [&candidates](const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-          candidates.bottom_lh_v.push_back(bottom);
-        });
-  }
-
-  /*
-   * And repeat for the top spacepoints for decreasing z tracks!
-   */
-  if (!candidates.top_hl_v.empty() && search_bot_hl) {
-    tree.rangeSearchMapDiscard(
-        bottom_hl_r, [&candidates](const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-          candidates.bottom_hl_v.push_back(bottom);
-        });
-  }
-}
-
-auto OrthogonalTripletSeedingAlgorithm::validTupleOrthoRangeLH(
-    const Acts::Experimental::ConstSpacePointProxy2 &low) const ->
-    typename tree_t::range_t {
-  float colMin = m_cfg.collisionRegionMin;
-  float colMax = m_cfg.collisionRegionMax;
-  float pL = low.phi();
-  float rL = low.zr()[1];
-  float zL = low.zr()[0];
-
-  typename tree_t::range_t res;
-
-  /*
-   * Cut: Ensure that we search only in φ_min ≤ φ ≤ φ_max, as defined by the
-   * seeding configuration.
-   */
-  res[DimPhi].shrinkMin(m_cfg.phiMin);
-  res[DimPhi].shrinkMax(m_cfg.phiMax);
-
-  /*
-   * Cut: Ensure that we search only in r ≤ r_max, as defined by the seeding
-   * configuration.
-   */
-  res[DimR].shrinkMax(m_cfg.rMax);
-
-  /*
-   * Cut: Ensure that we search only in z_min ≤ z ≤ z_max, as defined by the
-   * seeding configuration.
-   */
-  res[DimZ].shrinkMin(m_cfg.zMin);
-  res[DimZ].shrinkMax(m_cfg.zMax);
-
-  /*
-   * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
-   * by the seeding configuration and the given lower spacepoint.
-   */
-  res[DimR].shrinkMin(rL + m_cfg.deltaRMinTop);
-  res[DimR].shrinkMax(rL + m_cfg.deltaRMaxTop);
-
-  /*
-   * Cut: Now that we have constrained r, we can use that new r range to
-   * further constrain z.
-   */
-  float zMax = (res[DimR].max() / rL) * (zL - colMin) + colMin;
-  float zMin = colMax - (res[DimR].max() / rL) * (colMax - zL);
-
-  /*
-   * This cut only works if z_low is outside the collision region for z.
-   */
-  if (zL > colMin) {
-    res[DimZ].shrinkMax(zMax);
-  } else if (zL < colMax) {
-    res[DimZ].shrinkMin(zMin);
-  }
-
-  /*
-   * Cut: Shrink the z-range using the maximum cot(θ).
-   */
-  res[DimZ].shrinkMin(zL - m_cfg.cotThetaMax * (res[DimR].max() - rL));
-  res[DimZ].shrinkMax(zL + m_cfg.cotThetaMax * (res[DimR].max() - rL));
-
-  /*
-   * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_L ≤ Δφ_max
-   */
-  res[DimPhi].shrinkMin(pL - m_cfg.deltaPhiMax);
-  res[DimPhi].shrinkMax(pL + m_cfg.deltaPhiMax);
-
-  // Cut: Ensure that z-distance between SPs is within max and min values.
-  res[DimZ].shrinkMin(zL - m_cfg.deltaZMax);
-  res[DimZ].shrinkMax(zL + m_cfg.deltaZMax);
-
-  return res;
-}
-
-auto OrthogonalTripletSeedingAlgorithm::validTupleOrthoRangeHL(
-    const Acts::Experimental::ConstSpacePointProxy2 &high) const ->
-    typename tree_t::range_t {
-  float pM = high.phi();
-  float rM = high.zr()[1];
-  float zM = high.zr()[0];
-
-  typename tree_t::range_t res;
-
-  /*
-   * Cut: Ensure that we search only in φ_min ≤ φ ≤ φ_max, as defined by the
-   * seeding configuration.
-   */
-  res[DimPhi].shrinkMin(m_cfg.phiMin);
-  res[DimPhi].shrinkMax(m_cfg.phiMax);
-
-  /*
-   * Cut: Ensure that we search only in r ≤ r_max, as defined by the seeding
-   * configuration.
-   */
-  res[DimR].shrinkMax(m_cfg.rMax);
-
-  /*
-   * Cut: Ensure that we search only in z_min ≤ z ≤ z_max, as defined by the
-   * seeding configuration.
-   */
-  res[DimZ].shrinkMin(m_cfg.zMin);
-  res[DimZ].shrinkMax(m_cfg.zMax);
-
-  /*
-   * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
-   * by the seeding configuration and the given higher spacepoint.
-   */
-  res[DimR].shrinkMin(rM - m_cfg.deltaRMaxBottom);
-  res[DimR].shrinkMax(rM - m_cfg.deltaRMinBottom);
-
-  /*
-   * Cut: Now that we have constrained r, we can use that new r range to
-   * further constrain z.
-   */
-  float fracR = res[DimR].min() / rM;
-
-  float zMin =
-      (zM - m_cfg.collisionRegionMin) * fracR + m_cfg.collisionRegionMin;
-  float zMax =
-      (zM - m_cfg.collisionRegionMax) * fracR + m_cfg.collisionRegionMax;
-
-  res[DimZ].shrinkMin(std::min(zMin, zM));
-  res[DimZ].shrinkMax(std::max(zMax, zM));
-
-  /*
-   * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
-   */
-  res[DimPhi].shrinkMin(pM - m_cfg.deltaPhiMax);
-  res[DimPhi].shrinkMax(pM + m_cfg.deltaPhiMax);
-
-  // Cut: Ensure that z-distance between SPs is within max and min values.
-  res[DimZ].shrinkMin(zM - m_cfg.deltaZMax);
-  res[DimZ].shrinkMax(zM + m_cfg.deltaZMax);
-
-  return res;
 }
 
 }  // namespace ActsExamples
