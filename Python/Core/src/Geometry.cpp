@@ -361,7 +361,7 @@ void addGeometry(py::module_& m) {
 
   py::class_<ProtoLayer>(m, "ProtoLayer")
       .def(py::init<const GeometryContext&,
-                    const std::vector<std::shared_ptr<Surface>>&,
+                    const std::vector<SurfaceHandle<Surface>>&,
                     const Transform3&>(),
            "gctx"_a, "surfaces"_a, "transform"_a = Transform3::Identity())
       .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)

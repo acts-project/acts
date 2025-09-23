@@ -18,6 +18,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -43,7 +44,7 @@ struct Parameters {
   // Dummy default
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
   std::optional<Acts::BoundSquareMatrix> covariance;
-  std::shared_ptr<const Acts::Surface> surface;
+  Acts::SurfaceHandle<const Acts::Surface> surface;
 };
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);

@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>
+Acts::GeometryHierarchyMap<Acts::SurfaceHandle<Acts::Surface>>
 JsonSurfacesReader::readHierarchyMap(
     const JsonSurfacesReader::Options& options) {
   // Read the json file into a json object
@@ -29,7 +29,7 @@ JsonSurfacesReader::readHierarchyMap(
   in.close();
 
   using SurfaceHierachyMap =
-      Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>;
+      Acts::GeometryHierarchyMap<Acts::SurfaceHandle<Acts::Surface>>;
   std::vector<SurfaceHierachyMap::InputElement> surfaceElements;
 
   // Walk down the path to the surface entries
@@ -50,7 +50,7 @@ JsonSurfacesReader::readHierarchyMap(
   return SurfaceHierachyMap(std::move(surfaceElements));
 }
 
-std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
+std::vector<Acts::SurfaceHandle<Acts::Surface>> JsonSurfacesReader::readVector(
     const Options& options) {
   // Read the json file into a json object
   nlohmann::json j;
@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
     jSurfaces = jSurfaces[jep];
   }
 
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces;
   for (const auto& jSurface : jSurfaces) {
     auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
     surfaces.push_back(surface);

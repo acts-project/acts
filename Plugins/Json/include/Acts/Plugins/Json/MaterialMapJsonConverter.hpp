@@ -20,6 +20,7 @@
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -41,7 +42,7 @@ class TrackingGeometry;
 class TrackingVolume;
 
 using SurfaceAndMaterialWithContext =
-    std::tuple<std::shared_ptr<const Acts::Surface>,
+    std::tuple<Acts::SurfaceHandle<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 using TrackingVolumeAndMaterial =

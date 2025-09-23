@@ -15,6 +15,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -169,7 +170,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// sensitive detector elements
   void resolveSensitive(
       const dd4hep::DetElement& detElement,
-      std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) const;
+      std::vector<SurfaceHandle<const Acts::Surface>>& surfaces) const;
 
   /// Private helper function to create a sensitive surface from a given
   /// detector element
@@ -177,7 +178,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// created
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  std::shared_ptr<const Acts::Surface> createSensitiveSurface(
+  SurfaceHandle<const Acts::Surface> createSensitiveSurface(
       const dd4hep::DetElement& detElement, bool isDisc = false) const;
 
   // Private helper function to convert the TGeo transformation matrix into

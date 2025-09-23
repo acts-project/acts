@@ -37,7 +37,7 @@ class GeoModelBlueprintCreater {
   struct Config {
     /// The detector surfaces - leave empty if filling is not done
     /// with a kdtree sorting structure
-    std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
+    std::vector<SurfaceHandle<Surface>> detectorSurfaces = {};
     /// The binning values for the KDTree sorting
     std::vector<AxisDirection> kdtBinning = {};
     /// Polyhedron approximation: number of segments per circlequarter

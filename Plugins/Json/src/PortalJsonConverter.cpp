@@ -71,7 +71,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 }
 
 std::tuple<std::vector<nlohmann::json>,
-           std::vector<std::shared_ptr<Acts::Surface>>>
+           std::vector<Acts::SurfaceHandle<Acts::Surface>>>
 Acts::PortalJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
@@ -86,7 +86,7 @@ Acts::PortalJsonConverter::toJsonDetray(
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
 
-  std::vector<std::shared_ptr<Acts::Surface>> subSurfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> subSurfaces = {};
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
@@ -312,7 +312,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
         detectorVolumes) {
   // The surface re-creation is trivial
   auto surface = SurfaceJsonConverter::fromJson(jPortal["surface"]);
-  auto regSurface = std::dynamic_pointer_cast<RegularSurface>(surface);
+  auto regSurface = dynamic_handle_cast<RegularSurface>(surface);
   if (!regSurface) {
     throw std::runtime_error(
         "PortalJsonConverter: surface is not a regular surface.");

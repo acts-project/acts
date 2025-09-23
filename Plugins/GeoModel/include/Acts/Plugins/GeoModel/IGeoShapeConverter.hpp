@@ -47,7 +47,7 @@ class IGeoShapeConverter {
   /// @param boundFactory: Reference to the bound factory to share equivalent bounds
   ///                      across multiple surfaces
   /// @return The detector element and surface
-  virtual Result<std::shared_ptr<Surface>> toPassiveSurface(
+  virtual Result<SurfaceHandle<Surface>> toPassiveSurface(
       PVConstLink geoPV, const Transform3& transform,
       SurfaceBoundFactory& boundFactory) const = 0;
 };

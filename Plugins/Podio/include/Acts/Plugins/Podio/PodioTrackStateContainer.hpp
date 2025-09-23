@@ -173,7 +173,7 @@ class PodioTrackStateContainerBase {
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackStateCollection& collection,
-      std::vector<std::shared_ptr<const Surface>>& surfaces) noexcept {
+      std::vector<SurfaceHandle<const Surface>>& surfaces) noexcept {
     surfaces.reserve(collection.size());
     for (ActsPodioEdm::TrackState trackState : collection) {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
@@ -334,7 +334,7 @@ class ConstPodioTrackStateContainer final
   const ActsPodioEdm::TrackStateCollection* m_collection;
   const ActsPodioEdm::BoundParametersCollection* m_params;
   const ActsPodioEdm::JacobianCollection* m_jacs;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
@@ -654,7 +654,7 @@ class MutablePodioTrackStateContainer final
   }
 
   void setReferenceSurface_impl(IndexType istate,
-                                std::shared_ptr<const Surface> surface) {
+                                SurfaceHandle<const Surface> surface) {
     auto trackState = m_collection->at(istate);
     trackState.setReferenceSurface(
         PodioUtil::convertSurfaceToPodio(m_helper, *surface));
@@ -715,7 +715,7 @@ class MutablePodioTrackStateContainer final
   std::unique_ptr<ActsPodioEdm::TrackStateCollection> m_collection;
   std::unique_ptr<ActsPodioEdm::BoundParametersCollection> m_params;
   std::unique_ptr<ActsPodioEdm::JacobianCollection> m_jacs;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>

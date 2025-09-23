@@ -15,6 +15,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <numbers>
 
@@ -121,7 +122,7 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
       gctx, params.parameters().template head<2>(), params.direction());
 
-  std::shared_ptr<const Acts::Surface> refSurface =
+  Acts::SurfaceHandle<const Acts::Surface> refSurface =
       params.referenceSurface().getSharedPtr();
   Acts::BoundVector targetPars = params.parameters();
   std::optional<Acts::BoundSquareMatrix> targetCov = params.covariance();

@@ -142,7 +142,7 @@ class PodioTrackContainerBase {
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackCollection& collection,
-      std::vector<std::shared_ptr<const Surface>>& surfaces) noexcept {
+      std::vector<SurfaceHandle<const Surface>>& surfaces) noexcept {
     surfaces.reserve(collection.size());
     for (ActsPodioEdm::Track track : collection) {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
@@ -151,7 +151,7 @@ class PodioTrackContainerBase {
   }
 
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 };
 
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
@@ -170,8 +170,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   // BEGIN INTERFACE HELPER
 
  private:
-  std::shared_ptr<const Surface> getOrCreateSurface(IndexType itrack) {
-    std::shared_ptr<const Surface>& ptr = m_surfaces.at(itrack);
+  SurfaceHandle<const Surface> getOrCreateSurface(IndexType itrack) {
+    SurfaceHandle<const Surface>& ptr = m_surfaces.at(itrack);
     if (!ptr) {
       ActsPodioEdm::Track track = m_collection->at(itrack);
       ptr = PodioUtil::convertSurfaceFromPodio(m_helper,
@@ -208,7 +208,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   void setReferenceSurface_impl(IndexType itrack,
-                                std::shared_ptr<const Surface> surface) {
+                                SurfaceHandle<const Surface> surface) {
     auto track = m_collection->at(itrack);
     if (surface == nullptr) {
       track.setReferenceSurface({.surfaceType = PodioUtil::kNoSurface,
