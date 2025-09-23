@@ -339,13 +339,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       auto ip = particles.find(barcode);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        ACTS_VERBOSE("Find the truth particle with barcode "
-                     << barcode << "=" << barcode.value());
+        ACTS_VERBOSE("Find the truth particle with barcode " << barcode << "="
+                                                             << barcode.hash());
         // Get the truth particle charge
         truthQ = static_cast<int>(particle.charge());
       } else {
         ACTS_DEBUG("Truth particle with barcode "
-                   << barcode << "=" << barcode.value() << " not found!");
+                   << barcode << "=" << barcode.hash() << " not found!");
       }
     }
 
@@ -354,7 +354,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
     // particle barcodes for a given track state (size depends on a type of
     // digitization, for smeared digitization is not more than 1)
-    std::vector<std::uint64_t> particleIds;
+    std::vector<std::vector<std::uint32_t>> particleIds;
 
     for (const auto& state : track.trackStatesReversed()) {
       const auto& surface = state.referenceSurface();
@@ -421,7 +421,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            particleIds.push_back(simHit.particleId().value());
+            particleIds.push_back(simHit.particleId().asVector());
           }
         }
 
