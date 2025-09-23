@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-namespace Acts::FastJet {
+namespace ActsPlugins::FastJet {
 
 template <typename TrackContainer>
 std::vector<fastjet::PseudoJet> InputTracks<TrackContainer>::fourMomenta()
