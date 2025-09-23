@@ -20,7 +20,7 @@
 
 namespace Acts::Experimental {
 
-Portal::Portal(std::shared_ptr<RegularSurface> surface)
+Portal::Portal(SurfaceHandle<RegularSurface> surface)
     : m_surface(std::move(surface)) {
   throw_assert(m_surface, "Portal surface is nullptr");
 }

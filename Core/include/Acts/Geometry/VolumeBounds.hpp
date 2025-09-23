@@ -27,8 +27,11 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
+template <class T>
+class SurfaceHandle;
+
 struct OrientedSurface {
-  std::shared_ptr<RegularSurface> surface;
+  SurfaceHandle<RegularSurface> surface;
   Direction direction = Direction::AlongNormal();
 };
 

@@ -98,7 +98,7 @@ concept MutableMultiTrajectoryBackend =
     CommonMultiTrajectoryBackend<T> &&
     requires(T v, HashedString key, TrackIndexType istate,
              TrackStatePropMask mask, std::string col, std::size_t dim,
-             SourceLink sl, std::shared_ptr<const Surface> surface) {
+             SourceLink sl, SurfaceHandle<const Surface> surface) {
       { v.parameters_impl(istate) } -> std::same_as<detail::Parameters>;
 
       { v.covariance_impl(istate) } -> std::same_as<detail::Covariance>;

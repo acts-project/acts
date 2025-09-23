@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -31,7 +32,7 @@ using VectorHelpers::phi;
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -70,7 +71,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
+    std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -127,7 +128,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -174,7 +175,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
+    std::vector<SurfaceHandle<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -277,7 +278,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+    std::vector<SurfaceHandle<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {

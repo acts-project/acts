@@ -9,6 +9,7 @@
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
@@ -48,7 +49,7 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
-    trackingVolume->addSurface(surface);
+    trackingVolume->addSurface(SurfaceHandle<Surface>(surface));
   }
 
   return trackingVolume;

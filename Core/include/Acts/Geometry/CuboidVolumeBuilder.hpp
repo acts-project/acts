@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
@@ -65,7 +66,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Configuration of the surface
     std::vector<SurfaceConfig> surfaceCfg;
     // Encapsulated surface
-    std::vector<std::shared_ptr<const Surface>> surfaces;
+    std::vector<SurfaceHandle<const Surface>> surfaces;
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
@@ -137,7 +138,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] cfg Configuration of the surface
   ///
   /// @return Pointer to the created surface
-  std::shared_ptr<const Surface> buildSurface(const GeometryContext& gctx,
+  SurfaceHandle<const Surface> buildSurface(const GeometryContext& gctx,
                                               const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encapsulated with a

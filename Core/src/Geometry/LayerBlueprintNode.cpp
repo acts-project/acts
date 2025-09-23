@@ -13,6 +13,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
 namespace Acts::Experimental {
@@ -23,7 +24,7 @@ struct LayerBlueprintNodeImpl {
 
   std::string m_name;
 
-  std::vector<std::shared_ptr<Surface>> m_surfaces{};
+  std::vector<SurfaceHandle<Surface>> m_surfaces{};
 
   /// If a proto layer is already given externally, this node will not perform
   /// sizing from surfaces
@@ -147,13 +148,13 @@ const std::string& LayerBlueprintNode::name() const {
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
-    std::vector<std::shared_ptr<Surface>> surfaces) {
+    std::vector<SurfaceHandle<Surface>> surfaces) {
   impl().m_surfaces = std::move(surfaces);
   impl().m_protoLayer.reset();
   return *this;
 }
 
-const std::vector<std::shared_ptr<Surface>>& LayerBlueprintNode::surfaces()
+const std::vector<SurfaceHandle<Surface>>& LayerBlueprintNode::surfaces()
     const {
   return impl().m_surfaces;
 }

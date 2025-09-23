@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <memory>
-#include <functional>
 #include <concepts>
+#include <functional>
+#include <memory>
 
 namespace Acts {
 
@@ -49,6 +49,9 @@ class SurfaceHandle {
   /// @param ptr Shared pointer to wrap
   explicit SurfaceHandle(std::shared_ptr<T> ptr) : m_ptr(std::move(ptr)) {}
 
+  /// NOLINTBEGIN(google-explicit-constructor)
+  SurfaceHandle(std::nullptr_t /*null*/) : m_ptr(nullptr) {}
+
   /// @brief Construct from compatible SurfaceHandle (e.g., derived to base, non-const to const)
   /// @param other Handle to convert from
   template <class U>
@@ -60,6 +63,7 @@ class SurfaceHandle {
   template <class U>
     requires std::convertible_to<U*, T*>
   SurfaceHandle(SurfaceHandle<U>&& other) : m_ptr(std::move(other.m_ptr)) {}
+  /// NOLINTEND(google-explicit-constructor)
 
   /// @brief Copy constructor
   SurfaceHandle(const SurfaceHandle&) = default;
@@ -144,7 +148,9 @@ class SurfaceHandle {
   /// @brief Compare with nullptr
   /// @param ptr nullptr
   /// @return true if handle is not empty
-  bool operator!=(std::nullptr_t) const noexcept { return static_cast<bool>(m_ptr); }
+  bool operator!=(std::nullptr_t) const noexcept {
+    return static_cast<bool>(m_ptr);
+  }
 
  private:
   /// Internal shared pointer
@@ -192,6 +198,16 @@ SurfaceHandle<U> dynamic_handle_cast(const SurfaceHandle<T>& handle) {
 /// Type aliases for common use cases
 using SurfacePtr = SurfaceHandle<Surface>;
 using ConstSurfacePtr = SurfaceHandle<const Surface>;
+
+/// @brief Stream operator for SurfaceHandle
+template <class T>
+std::ostream& operator<<(std::ostream& os, const SurfaceHandle<T>& handle) {
+  if (handle) {
+    return os << "SurfaceHandle[" << handle->name() << "]";
+  } else {
+    return os << "SurfaceHandle[nullptr]";
+  }
+}
 
 }  // namespace Acts
 

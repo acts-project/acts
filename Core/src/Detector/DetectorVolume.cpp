@@ -29,7 +29,7 @@ class IVolumeMaterial;
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, std::string name, const Transform3& transform,
     std::shared_ptr<VolumeBounds> bounds,
-    std::vector<std::shared_ptr<Surface>> surfaces,
+    std::vector<SurfaceHandle<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
     ExternalNavigationDelegate externalNavigation,
     InternalNavigationDelegate internalNavigation)
@@ -68,7 +68,7 @@ std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::Experimental::DetectorVolume::makeShared(
     const GeometryContext& gctx, std::string name, const Transform3& transform,
     std::shared_ptr<VolumeBounds> bounds,
-    std::vector<std::shared_ptr<Surface>> surfaces,
+    std::vector<SurfaceHandle<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
     ExternalNavigationDelegate externalNavigation,
     InternalNavigationDelegate internalNavigation) {
@@ -108,7 +108,7 @@ Acts::Experimental::DetectorVolume::portalPtrs() {
   return m_portals.internal;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>>&
+std::vector<Acts::SurfaceHandle<Acts::Surface>>&
 Acts::Experimental::DetectorVolume::surfacePtrs() {
   return m_surfaces.internal;
 }
@@ -239,10 +239,10 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
 
 void Acts::Experimental::DetectorVolume::assignInternalNavigation(
     InternalNavigationDelegate internalNavigation,
-    const std::vector<std::shared_ptr<Surface>>& surfaces,
+    const std::vector<Acts::SurfaceHandle<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes) {
   m_internalNavigation = std::move(internalNavigation);
-  m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
+  m_surfaces = ObjectStore<Acts::SurfaceHandle<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 }
 

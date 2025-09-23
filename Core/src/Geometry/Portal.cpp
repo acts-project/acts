@@ -46,7 +46,7 @@ Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
   }
 }
 
-Portal::Portal(Direction direction, std::shared_ptr<RegularSurface> surface,
+Portal::Portal(Direction direction, SurfaceHandle<RegularSurface> surface,
                TrackingVolume& volume)
     : Portal(direction,
              std::make_unique<TrivialPortalLink>(std::move(surface), volume)) {}
@@ -128,7 +128,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
 }
 
 void Portal::setLink(const GeometryContext& gctx, Direction direction,
-                     std::shared_ptr<RegularSurface> surface,
+                     SurfaceHandle<RegularSurface> surface,
                      TrackingVolume& volume) {
   setLink(gctx, direction,
           std::make_unique<TrivialPortalLink>(std::move(surface), volume));

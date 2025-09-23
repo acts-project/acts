@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <vector>
 
@@ -83,7 +84,7 @@ void DiscLayer::buildApproachDescriptor() {
         m_representingVolume->volumeBounds().orientedSurfaces(
             m_representingVolume->transform());
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const Surface>> aSurfaces;
+    std::vector<SurfaceHandle<const Surface>> aSurfaces;
     aSurfaces.push_back(bSurfaces.at(negativeFaceXY).surface);
     aSurfaces.push_back(bSurfaces.at(positiveFaceXY).surface);
     aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
