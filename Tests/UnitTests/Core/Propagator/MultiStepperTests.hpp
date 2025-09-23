@@ -123,7 +123,7 @@ struct MultiStepperTester {
           {1. / n, params, cov ? Opt{make_random_sym_matrix()} : Opt{}});
     }
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1., 0., 0.}).planeSurface();
 
     return MultiComponentBoundTrackParameters(surface, cmps,
@@ -280,7 +280,7 @@ struct MultiStepperTester {
         std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
         cmps(4, {0.25, pars, cov});
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3::Ones().normalized())
             .planeSurface();
 
@@ -424,11 +424,11 @@ struct MultiStepperTester {
     MultiStepper multi_stepper(defaultNullBField);
     SingleStepper single_stepper(defaultNullBField);
 
-    std::shared_ptr<PlaneSurface> start_surface =
+    auto start_surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::shared_ptr<PlaneSurface> right_surface =
+    auto right_surface =
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -533,11 +533,11 @@ struct MultiStepperTester {
     MultiStepper multi_stepper(defaultNullBField);
     SingleStepper single_stepper(defaultNullBField);
 
-    std::shared_ptr<PlaneSurface> start_surface =
+    auto start_surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::shared_ptr<PlaneSurface> right_surface =
+    auto right_surface =
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -609,7 +609,7 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -652,7 +652,7 @@ struct MultiStepperTester {
 
     MultiStepper multi_stepper(defaultBField);
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
@@ -765,7 +765,7 @@ struct MultiStepperTester {
 
     Propagator propagator(std::move(multi_stepper), VoidNavigator{});
 
-    std::shared_ptr<PlaneSurface> surface =
+    auto surface =
         CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
             .planeSurface();
     using PropagatorOptions =

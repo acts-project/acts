@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Repeat transport to surface
   FreeToBoundCorrection freeToBoundCorrection(false);
-  std::shared_ptr<PlaneSurface> surface =
+  auto surface =
       CurvilinearSurface(position, direction).planeSurface();
   detail::transportCovarianceToBound(
       tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,

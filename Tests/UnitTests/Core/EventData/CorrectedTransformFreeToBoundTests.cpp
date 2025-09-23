@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   double distance = 10_mm;
-  std::shared_ptr<PlaneSurface> eSurface =
+  Acts::SurfaceHandle<PlaneSurface> eSurface =
       CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
           .planeSurface();
 

@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
-  std::shared_ptr<PlaneSurface> plane =
+  auto plane =
       CurvilinearSurface(pos, dir).planeSurface();
   auto bp = BoundTrackParameters::create(
                 tgContext, plane, makeVector4(pos, time), dir, charge / absMom,
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.initialize(slsState, bp);
 
   // Test the intersection in the context of a surface
-  std::shared_ptr<PlaneSurface> targetSurface =
+  auto targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
                           BoundaryTolerance::Infinite(), s_onSurfaceTolerance,

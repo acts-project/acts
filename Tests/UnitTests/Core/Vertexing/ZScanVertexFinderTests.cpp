@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     // Create perigee surface
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
+    auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
@@ -222,7 +223,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     // Create perigee surface
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
+    auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
@@ -263,7 +264,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec,
+      tracks.emplace_back(BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec,
                                                std::move(covMat),
                                                ParticleHypothesis::pion()));
     }

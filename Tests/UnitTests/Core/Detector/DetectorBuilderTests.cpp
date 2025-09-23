@@ -34,7 +34,7 @@
 class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
  public:
   explicit CompBuilder(
-      const std::vector<std::shared_ptr<Acts::Surface>>& sensitives = {})
+      const std::vector<Acts::SurfaceHandle<Acts::Surface>>& sensitives = {})
       : m_sensitives(sensitives) {}
 
   Acts::Experimental::DetectorComponent construct(
@@ -70,7 +70,7 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
   }
 
  private:
-  std::vector<std::shared_ptr<Acts::Surface>> m_sensitives;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> m_sensitives;
 };
 
 class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_Misconfigured) {
       Acts::Transform3::Identity(),
       std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
 
-  std::vector<std::shared_ptr<Acts::Surface>> sensitives;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> sensitives;
   sensitives.push_back(detElement0.surface().getSharedPtr());
   sensitives.push_back(detElement1.surface().getSharedPtr());
   dCfg.builder = std::make_shared<CompBuilder>(sensitives);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
       Acts::Transform3::Identity(),
       std::make_shared<Acts::RectangleBounds>(5., 5.), 0.1);
 
-  std::vector<std::shared_ptr<Acts::Surface>> sensitives;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> sensitives;
   sensitives.push_back(detElement0.surface().getSharedPtr());
   sensitives.push_back(detElement1.surface().getSharedPtr());
   dCfg.builder = std::make_shared<CompBuilder>(sensitives);

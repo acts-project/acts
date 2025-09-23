@@ -24,6 +24,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
                   << std::endl;
       }
       // Create perigee surface
-      std::shared_ptr<PerigeeSurface> perigeeSurface =
+      auto perigeeSurface =
           Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
       // Create position of vertex and perigee surface
@@ -235,7 +236,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params =
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+            BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                                  ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
@@ -413,7 +414,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
                   << std::endl;
       }
       // Create perigee surface
-      std::shared_ptr<PerigeeSurface> perigeeSurface =
+      auto perigeeSurface =
           Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
       // Create position of vertex and perigee surface
@@ -456,7 +457,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params =
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+            BoundTrackParameters(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                                  ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<InputTrackStub>(params));

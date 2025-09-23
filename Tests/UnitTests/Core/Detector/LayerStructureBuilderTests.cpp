@@ -39,9 +39,9 @@ namespace {
 /// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
-std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
+std::vector<Acts::SurfaceHandle<Acts::Surface>> unpackSurfaces(
     const std::vector<Acts::Surface*>& surfaces) {
-  std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
   for (auto* s : surfaces) {
     uSurfaces.push_back(s->getSharedPtr());

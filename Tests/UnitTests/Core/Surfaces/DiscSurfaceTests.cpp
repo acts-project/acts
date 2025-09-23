@@ -411,10 +411,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 BOOST_AUTO_TEST_SUITE(DiscSurfaceMerging)
 
 namespace {
-std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rMin,
-                                      double rMax,
-                                      double halfPhi = std::numbers::pi,
-                                      double avgPhi = 0) {
+auto makeDisc(const Transform3& transform, double rMin,
+               double rMax,
+               double halfPhi = std::numbers::pi,
+               double avgPhi = 0) {
   return Surface::makeShared<DiscSurface>(
       transform, std::make_shared<RadialBounds>(rMin, rMax, halfPhi, avgPhi));
 }

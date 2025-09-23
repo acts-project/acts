@@ -25,6 +25,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -275,7 +276,7 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
 
 BOOST_AUTO_TEST_CASE(test_direct_navigator_fwd_bwd) {
   // Create 10 surfaces at z = 0, 100, 200, ..., 900
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   for (int i = 0; i < 10; i++) {
     Transform3 transform = Transform3::Identity();
     transform.translate(Vector3{0.0_mm, 0.0_mm, i * 100.0_mm});

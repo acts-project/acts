@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -281,7 +282,7 @@ inline Acts::Transform3 createCurvilinearTransform(
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
 struct ZCylinderSurfaceBuilder {
-  std::shared_ptr<Acts::CylinderSurface> operator()(
+  Acts::SurfaceHandle<Acts::CylinderSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -295,7 +296,7 @@ struct ZCylinderSurfaceBuilder {
 
 /// Construct a disc at track position with plane normal along track tangent.
 struct DiscSurfaceBuilder {
-  std::shared_ptr<Acts::DiscSurface> operator()(
+  Acts::SurfaceHandle<Acts::DiscSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -318,7 +319,7 @@ struct DiscSurfaceBuilder {
 
 /// Construct a plane at track position with plane normal along track tangent.
 struct PlaneSurfaceBuilder {
-  std::shared_ptr<Acts::PlaneSurface> operator()(
+  Acts::SurfaceHandle<Acts::PlaneSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
@@ -330,7 +331,7 @@ struct PlaneSurfaceBuilder {
 
 /// Construct a z-straw at the track position.
 struct ZStrawSurfaceBuilder {
-  std::shared_ptr<Acts::StrawSurface> operator()(
+  Acts::SurfaceHandle<Acts::StrawSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
