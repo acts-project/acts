@@ -734,11 +734,62 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   BOOST_CHECK(state.currentVolume->volumeName() == "parent");
   BOOST_CHECK_EQUAL(state.currentSurface, nullptr);
 
+  // Do the chain simulating a straight line propagation
+  // and check if we end up to the expected elements
+
   NavigationTarget target = navigator.nextTarget(state, position, direction);
 
   // it is supposed to find the boundary of the next child volume
   BOOST_CHECK(!target.isNone());
+  auto targetGeoId = target.surface->geometryId();
+  // portal of child1 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 2 && targetGeoId.boundary() == 1);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  // check that we end up in the expected volume (child1)
+  BOOST_CHECK(state.currentVolume->volumeName() == "child1");
+
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface->geometryId();
+  // portal of child1 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 2 && targetGeoId.boundary() == 2);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  // check that we end up in the expected volume (parent)
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+  // the next target should be the plane surface inside the parent volume
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
   BOOST_CHECK_EQUAL(target.surface, surface.get());
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  // check that we are still in the parent volume
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
+
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface->geometryId();
+  // portal of child2 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 3 && targetGeoId.boundary() == 1);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  // check that we end up in the expected volume (child2)
+  BOOST_CHECK(state.currentVolume->volumeName() == "child2");
+  target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
+  targetGeoId = target.surface->geometryId();
+  // portal of child2 volume as expected
+  BOOST_CHECK(targetGeoId.volume() == 3 && targetGeoId.boundary() == 2);
+
+  step(position, direction, target);
+  navigator.handleSurfaceReached(state, position, direction, *target.surface);
+  // check that we end up in the expected volume (parent)
+  BOOST_CHECK(state.currentVolume->volumeName() == "parent");
 }
 
 }  // namespace Acts::Test
