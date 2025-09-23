@@ -16,7 +16,7 @@
 #include <span>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 
@@ -167,4 +167,4 @@ using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
 template <typename T>
 using MutableSpacePointColumnProxy = SpacePointColumnProxy<T, false>;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

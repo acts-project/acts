@@ -15,7 +15,7 @@
 
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Container for triplet candidates found by the triplet seed finder.
 ///
@@ -193,4 +193,4 @@ class TripletSeedFinder {
       TripletTopCandidates& tripletTopCandidates) const = 0;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

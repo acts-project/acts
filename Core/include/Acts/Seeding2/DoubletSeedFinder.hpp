@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// Container for doublets found by the doublet seed finder.
 ///
@@ -120,17 +120,16 @@ class DoubletsForMiddleSp {
   }
 
   using const_iterator =
-      Acts::detail::ContainerIterator<DoubletsForMiddleSp, Proxy, Index, true>;
+      detail::ContainerIterator<DoubletsForMiddleSp, Proxy, Index, true>;
 
   const_iterator begin() const { return const_iterator(*this, 0); }
   const_iterator end() const { return const_iterator(*this, size()); }
 
-  class Range
-      : public Acts::detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
-                                            Index, true> {
+  class Range : public detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
+                                              Index, true> {
    public:
-    using Base = Acts::detail::ContainerRange<Range, Range, DoubletsForMiddleSp,
-                                              Index, true>;
+    using Base =
+        detail::ContainerRange<Range, Range, DoubletsForMiddleSp, Index, true>;
 
     using Base::Base;
   };
@@ -140,21 +139,20 @@ class DoubletsForMiddleSp {
     return Range(*this, range);
   }
 
-  class Subset
-      : public Acts::detail::ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
-                                             Index, true> {
+  class Subset : public detail::ContainerSubset<Subset, DoubletsForMiddleSp,
+                                                Proxy, Index, true> {
    public:
-    using Base = Acts::detail::ContainerSubset<Subset, DoubletsForMiddleSp,
-                                               Proxy, Index, true>;
+    using Base = detail::ContainerSubset<Subset, DoubletsForMiddleSp, Proxy,
+                                         Index, true>;
 
     using Base::Base;
   };
   class Subset2
-      : public Acts::detail::ContainerSubset<Subset2, DoubletsForMiddleSp,
-                                             Proxy2, IndexAndCotTheta, true> {
+      : public detail::ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
+                                       IndexAndCotTheta, true> {
    public:
-    using Base = Acts::detail::ContainerSubset<Subset2, DoubletsForMiddleSp,
-                                               Proxy2, IndexAndCotTheta, true>;
+    using Base = detail::ContainerSubset<Subset2, DoubletsForMiddleSp, Proxy2,
+                                         IndexAndCotTheta, true>;
 
     using Base::Base;
   };
@@ -299,4 +297,4 @@ class DoubletSeedFinder {
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

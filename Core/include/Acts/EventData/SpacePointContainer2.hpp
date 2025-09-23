@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
 
@@ -1103,6 +1103,6 @@ class SpacePointContainer2 {
   }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
 
 #include "Acts/EventData/SpacePointContainer2.ipp"

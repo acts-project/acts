@@ -15,7 +15,7 @@
 #include <cassert>
 #include <span>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 template <typename T, bool read_only>
@@ -302,4 +302,4 @@ class SpacePointProxy2 {
   Index m_index{};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

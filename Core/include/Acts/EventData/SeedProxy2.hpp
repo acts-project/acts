@@ -13,7 +13,7 @@
 
 #include <cassert>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SeedContainer2;
 
@@ -244,4 +244,4 @@ class SeedProxy2 {
   IndexType m_index{0};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

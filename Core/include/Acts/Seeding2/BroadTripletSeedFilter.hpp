@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @c ITripletSeedCuts can be used to increase or decrease seed weights
 /// based on the space points used in a seed. Seed weights are also
@@ -191,4 +191,4 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
