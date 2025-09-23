@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <boost/container/small_vector.hpp>
@@ -34,7 +35,8 @@ NavigationTarget GenericApproachDescriptor::approachSurface(
   for (const Surface* surface : m_surfaceCache) {
     auto multiIntersection =
         surface->intersect(gctx, position, direction, boundaryTolerance);
-    for (auto [intersectionIndex, intersection] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit)) {

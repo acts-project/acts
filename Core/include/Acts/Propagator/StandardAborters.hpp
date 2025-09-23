@@ -12,6 +12,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -124,7 +125,8 @@ struct SurfaceReached {
 
     bool intersectionFound = false;
 
-    for (auto [intersectionIndex, intersection] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {

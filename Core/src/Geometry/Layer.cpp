@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -250,7 +251,8 @@ NavigationTarget Layer::surfaceOnApproach(
   const Surface& layerSurface = surfaceRepresentation();
   const MultiIntersection3D multiIntersection = layerSurface.intersect(
       gctx, position, direction, options.boundaryTolerance);
-  for (auto [intersectionIndex, intersection] : multiIntersection) {
+  for (auto [intersectionIndex, intersection] :
+       Acts::enumerate(multiIntersection)) {
     if (intersection.isValid() &&
         detail::checkPathLength(intersection.pathLength(), nearLimit,
                                 farLimit)) {

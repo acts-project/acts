@@ -18,6 +18,7 @@
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -321,7 +322,8 @@ class DirectNavigator {
     auto intersections = surface.intersect(gctx, position, direction,
                                            boundaryTolerance, tolerance);
 
-    for (auto [intersectionIndex, intersection] : intersections) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(intersections)) {
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger())) {
         return NavigationTarget(intersection, intersectionIndex, surface,

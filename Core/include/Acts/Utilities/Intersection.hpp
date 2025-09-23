@@ -188,16 +188,10 @@ class MultiIntersection {
   constexpr IntersectionIndex size() const noexcept { return m_size; }
 
   constexpr auto begin() const noexcept {
-    return Acts::enumerate<std::span<const IntersectionType>,
-                           IntersectionIndex>(
-               std::span(m_intersections.data(), m_size))
-        .begin();
+    return std::span(m_intersections.data(), m_size).begin();
   }
   constexpr auto end() const noexcept {
-    return Acts::enumerate<std::span<const IntersectionType>,
-                           IntersectionIndex>(
-               std::span(m_intersections.data(), m_size))
-        .end();
+    return std::span(m_intersections.data(), m_size).end();
   }
 
   constexpr IntersectionType closest() const noexcept {
@@ -221,8 +215,8 @@ class MultiIntersection {
   }
 
  private:
-  Container m_intersections;
-  IntersectionIndex m_size = 0;
+  Container m_intersections{};
+  IntersectionIndex m_size{};
 };
 
 using MultiIntersection2D = MultiIntersection<2>;

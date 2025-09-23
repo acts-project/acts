@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -380,7 +381,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
   auto checkIntersection =
       [&](MultiIntersection3D& candidates,
           const BoundarySurface* boundary) -> NavigationTarget {
-    for (auto [intersectionIndex, intersection] : candidates) {
+    for (auto [intersectionIndex, intersection] : Acts::enumerate(candidates)) {
       if (!intersection.isValid()) {
         continue;
       }

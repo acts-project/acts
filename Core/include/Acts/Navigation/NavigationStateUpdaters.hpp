@@ -13,6 +13,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
 #include <algorithm>
@@ -52,7 +53,8 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     // Check the surface intersection
     auto multiIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);
-    for (auto [intersectionIndex, intersection] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           intersection.pathLength() > overstepTolerance) {
         if (sc.isPortalTarget()) {

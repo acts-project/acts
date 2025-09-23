@@ -12,6 +12,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
 
@@ -51,7 +52,8 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
-      for (auto [intersectionIndex, intersection] : multiIntersection) {
+      for (auto [intersectionIndex, intersection] :
+           Acts::enumerate(multiIntersection)) {
         // Skip negative solutions, respecting the on surface tolerance
         if (intersection.pathLength() < -onSurfaceTolerance) {
           continue;
@@ -118,7 +120,8 @@ bool NavigationStream::update(const GeometryContext& gctx,
         surface.intersect(gctx, queryPoint.position, queryPoint.direction,
                           candidate.boundaryTolerance(), onSurfaceTolerance);
     // Split them into valid intersections
-    for (auto [intersectionIndex, intersection] : multiIntersection) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       // Skip wrong index solution
       if (intersectionIndex != candidate.intersectionIndex()) {
         continue;
