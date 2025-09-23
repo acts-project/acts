@@ -17,7 +17,7 @@
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 
-namespace Acts::FastJet {
+namespace ActsPlugins::FastJet {
 
 /// Default jet definition: Anti-kt with a radius of 0.4
 const fastjet::JetDefinition DefaultJetDefinition =
@@ -83,6 +83,6 @@ class TrackJetBuilder {
   fastjet::ClusterSequence m_clusterSeq{};
 };
 
-}  // namespace Acts::FastJet
+}  // namespace ActsPlugins::FastJet
 
 #include "Jets.ipp"
