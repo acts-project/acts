@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "actsvg/core.hpp"
 #include "actsvg/meta.hpp"
 
@@ -45,7 +45,8 @@ struct Options {
   /// Link length
   double linkLength = 10.;
   /// Link index map
-  std::map<const Acts::Experimental::DetectorVolume*, unsigned int> volumeIndices;
+  std::map<const Acts::Experimental::DetectorVolume*, unsigned int>
+      volumeIndices;
 };
 
 /// Convert into a ProtoPortal

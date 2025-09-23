@@ -61,4 +61,4 @@ InterpolatedField covfieField(const Acts::MagneticFieldProvider& magneticField,
                               const Acts::Vector3& min,
                               const Acts::Vector3& max);
 
-}  // namespace Acts::Covfie
+}  // namespace ActsPlugins::Covfie
