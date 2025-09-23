@@ -32,6 +32,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -89,7 +90,7 @@ inline void decorateJson<Acts::ISurfaceMaterial>(
 namespace {
 
 Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
-    const std::shared_ptr<const Acts::Surface>& surface,
+    const Acts::SurfaceHandle<const Acts::Surface>& surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};

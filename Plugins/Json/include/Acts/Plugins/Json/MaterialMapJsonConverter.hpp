@@ -20,6 +20,7 @@
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -43,7 +44,7 @@ class TrackingVolume;
 /// A tuple containing a surface, its associated material, and geometry context.
 /// @note Used for material mapping and JSON conversion.
 using SurfaceAndMaterialWithContext =
-    std::tuple<std::shared_ptr<const Acts::Surface>,
+    std::tuple<Acts::SurfaceHandle<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 /// A pair containing a tracking volume and its associated material.

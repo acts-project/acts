@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -42,7 +43,7 @@ class JsonDetectorElement : public DetectorElementBase {
   const Transform3 &transform(const GeometryContext &gctx) const override;
 
  private:
-  std::shared_ptr<Surface> m_surface;
+  SurfaceHandle<Surface> m_surface;
   Transform3 m_transform{};
   double m_thickness{};
 };

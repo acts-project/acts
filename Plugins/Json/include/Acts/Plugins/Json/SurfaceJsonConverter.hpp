@@ -14,6 +14,7 @@
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <memory>
 #include <string>
@@ -29,7 +30,7 @@ namespace Acts {
 class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
-    std::tuple<std::shared_ptr<const Acts::Surface>,
+    std::tuple<Acts::SurfaceHandle<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 
@@ -48,14 +49,14 @@ void to_json(nlohmann::json& j, const Surface& surface);
 /// @param j Destination JSON object
 /// @param surface Source shared_ptr<Surface> to convert
 /// @note it will take the default context
-void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
+void to_json(nlohmann::json& j, const SurfaceHandle<const Surface>& surface);
 
 /// Contextual conversion of a surface
 ///
 /// @param j the json to be filled
 /// @param surface the surface to be converted
 /// @param gctx the geometry context for this
-void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
+void toJson(nlohmann::json& j, const SurfaceHandle<const Surface>& surface,
             const Acts::GeometryContext& gctx);
 
 /// Conversion to Surface from jsonn
@@ -63,7 +64,7 @@ void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
-std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
+SurfaceHandle<Surface> surfaceFromJson(const nlohmann::json& j);
 
 /// Conversion to Surface from json in correct type
 ///
@@ -72,9 +73,9 @@ std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
 ///
 /// @param j the read-in json object
 ///
-/// @return a shared_ptr to a typed surface object for type polymorphism
+/// @return a SurfaceHandle to a typed surface object for type polymorphism
 template <typename surface_t, typename bounds_t>
-std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
+SurfaceHandle<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];
   Transform3 sTransform = Transform3JsonConverter::fromJson(jTransform);
   if constexpr (std::is_same_v<bounds_t, void>) {
@@ -125,7 +126,7 @@ nlohmann::json toJsonDetray(const GeometryContext& gctx, const Surface& surface,
 /// @param jSurface the surface json object
 ///
 /// @return a shared object created from json input
-std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
+SurfaceHandle<Surface> fromJson(const nlohmann::json& jSurface);
 
 }  // namespace SurfaceJsonConverter
 

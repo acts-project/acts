@@ -67,7 +67,7 @@ nlohmann::json toJson(
 /// @note detray also only has outside pointing links
 ///
 /// @return a tuple of json object
-std::tuple<std::vector<nlohmann::json>, std::vector<std::shared_ptr<Surface>>>
+std::tuple<std::vector<nlohmann::json>, std::vector<SurfaceHandle<Surface>>>
 toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
