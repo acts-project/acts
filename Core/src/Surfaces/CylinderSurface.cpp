@@ -351,7 +351,7 @@ ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
+std::pair<SurfaceHandle<CylinderSurface>, bool> CylinderSurface::mergedWith(
     const CylinderSurface& other, AxisDirection direction,
     bool externalRotation, const Logger& logger) const {
   using namespace UnitLiterals;

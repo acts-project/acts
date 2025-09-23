@@ -206,7 +206,7 @@ class TrackProxy {
   // looks like a false-positive. clang-tidy believes `srf` is not movable.
   /// Set a new reference surface for this track
   /// @param srf The surface to set
-  void setReferenceSurface(std::shared_ptr<const Surface> srf)
+  void setReferenceSurface(SurfaceHandle<const Surface> srf)
     requires(!ReadOnly)
   {
     m_container->container().setReferenceSurface_impl(m_index, std::move(srf));

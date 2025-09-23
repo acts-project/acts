@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -286,7 +287,7 @@ Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
       vtxInfo.linPoint = vtxInfo.oldPosition;
     }
 
-    const std::shared_ptr<PerigeeSurface> vtxPerigeeSurface =
+    const SurfaceHandle<PerigeeSurface> vtxPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
             VectorHelpers::position(vtxInfo.linPoint));
 

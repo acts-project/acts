@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <memory>
 #include <ostream>
@@ -76,11 +77,11 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   /// @note This will clear any previously registered proto layer
   /// @return Reference to this node for chaining
   LayerBlueprintNode& setSurfaces(
-      std::vector<std::shared_ptr<Surface>> surfaces);
+      std::vector<SurfaceHandle<Surface>> surfaces);
 
   /// Access the registered surfaces.
   /// @return The registered surfaces
-  const std::vector<std::shared_ptr<Surface>>& surfaces() const;
+  const std::vector<SurfaceHandle<Surface>>& surfaces() const;
 
   /// Register a proto layer with the layer node.
   /// @param protoLayer The proto layer to register

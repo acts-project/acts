@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -83,7 +84,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
   ///
   /// @param aDir is the axis direction for the binning
   /// @param offset is the sift for the navigation layer
-  std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
+  SurfaceHandle<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
                                                    AxisDirection aDir,
                                                    double offset) const;

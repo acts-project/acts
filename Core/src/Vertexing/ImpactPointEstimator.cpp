@@ -12,6 +12,7 @@
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -359,7 +360,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
 
   // Surface with normal vector in direction of the z axis of coordinateSystem
-  std::shared_ptr<PlaneSurface> planeSurface =
+  SurfaceHandle<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
   Intersection3D intersection =
@@ -421,7 +422,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
     const BoundTrackParameters& track, const Vertex& vtx,
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     bool calculateTimeIP) const {
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+  const SurfaceHandle<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
@@ -505,7 +506,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+  const SurfaceHandle<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
@@ -544,7 +545,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+  const SurfaceHandle<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options

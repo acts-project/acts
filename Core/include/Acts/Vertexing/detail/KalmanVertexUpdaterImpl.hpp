@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -385,7 +386,7 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
       cache.wMat, crossCovVP, vtxCov, newTrkParams);
 
   // Create new refitted parameters
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  SurfaceHandle<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtxPos.template head<3>());
 
   BoundTrackParameters refittedPerigee =

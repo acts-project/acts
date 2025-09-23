@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <vector>
 
@@ -60,7 +61,7 @@ void PlaneLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
-  std::vector<std::shared_ptr<const Surface>> aSurfaces;
+  std::vector<SurfaceHandle<const Surface>> aSurfaces;
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume

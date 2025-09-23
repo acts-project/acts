@@ -362,7 +362,7 @@ class TrackStateProxy {
   /// Set the reference surface to a given value
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
-  void setReferenceSurface(std::shared_ptr<const Surface> srf)
+  void setReferenceSurface(SurfaceHandle<const Surface> srf)
     requires(!ReadOnly)
   {
     m_traj->setReferenceSurface(m_istate, std::move(srf));

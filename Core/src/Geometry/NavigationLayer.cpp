@@ -9,11 +9,12 @@
 #include "Acts/Geometry/NavigationLayer.hpp"
 
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 namespace Acts {
 
 NavigationLayer::NavigationLayer(
-    std::shared_ptr<const Surface> surfaceRepresentation, double thickness)
+    SurfaceHandle<const Surface> surfaceRepresentation, double thickness)
     : Layer(nullptr),
       m_surfaceRepresentation(std::move(surfaceRepresentation)) {
   m_layerThickness = thickness;

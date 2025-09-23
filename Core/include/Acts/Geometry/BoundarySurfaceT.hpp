@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 
 #include <memory>
@@ -56,7 +57,7 @@ class BoundarySurfaceT {
   /// @param surface The unique surface the boundary represents
   /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+  BoundarySurfaceT(SurfaceHandle<const RegularSurface> surface,
                    const volume_t* inside, const volume_t* outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside),
@@ -70,7 +71,7 @@ class BoundarySurfaceT {
   /// @param surface The unique surface the boundary represents
   /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+  BoundarySurfaceT(SurfaceHandle<const RegularSurface> surface,
                    VolumePtr inside, VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
@@ -85,7 +86,7 @@ class BoundarySurfaceT {
   /// @param insideArray The inside volume array the boundary surface points to
   /// @param outsideArray The outside volume array the boundary surface
   /// points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+  BoundarySurfaceT(SurfaceHandle<const RegularSurface> surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
       : m_surface(std::move(surface)),
@@ -167,7 +168,7 @@ class BoundarySurfaceT {
 
  protected:
   /// the represented surface by this
-  std::shared_ptr<const RegularSurface> m_surface;
+  SurfaceHandle<const RegularSurface> m_surface;
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
   const volume_t* m_oppositeVolume;
   /// the outside (w.r.t. normal vector) volume to point to if only one exists

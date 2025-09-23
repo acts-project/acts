@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,7 +44,7 @@ class GridPortalLink : public PortalLinkBase {
   /// class
   /// @param surface The surface
   /// @param direction The binning direction
-  GridPortalLink(std::shared_ptr<RegularSurface> surface,
+  GridPortalLink(SurfaceHandle<RegularSurface> surface,
                  AxisDirection direction);
 
  public:
@@ -61,7 +62,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_t>
   static std::unique_ptr<GridPortalLinkT<axis_t>> make(
-      std::shared_ptr<RegularSurface> surface, AxisDirection direction,
+      SurfaceHandle<RegularSurface> surface, AxisDirection direction,
       axis_t&& axis) {
     using enum AxisDirection;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -91,7 +92,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_1_t, AxisConcept axis_2_t>
   static std::unique_ptr<GridPortalLinkT<axis_1_t, axis_2_t>> make(
-      std::shared_ptr<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
+      SurfaceHandle<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
     std::optional<AxisDirection> direction;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
       direction = AxisDirection::AxisRPhi;
@@ -111,7 +112,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @param direction The binning direction
   /// @return A unique pointer to the grid portal link
   static std::unique_ptr<GridPortalLink> make(
-      const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
+      const SurfaceHandle<RegularSurface>& surface, TrackingVolume& volume,
       AxisDirection direction);
 
   /// Merge two grid portal links into a single one. The routine can merge
@@ -383,8 +384,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const std::shared_ptr<CylinderSurface>& surface,
-      const IAxis* other) const;
+      const SurfaceHandle<CylinderSurface>& surface, const IAxis* other) const;
 
   /// Expand a 1D grid to a 2D one for a disc surface
   /// @param surface The disc surface
@@ -392,7 +392,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
+      const SurfaceHandle<DiscSurface>& surface, const IAxis* other) const;
 
   /// Expand a 1D grid to a 2D one for a plane surface
   /// @param surface The plane surface
@@ -400,7 +400,7 @@ class GridPortalLink : public PortalLinkBase {
   ///              can be null for auto determination
   /// @return A unique pointer to the 2D grid portal link
   std::unique_ptr<GridPortalLink> extendTo2dImpl(
-      const std::shared_ptr<PlaneSurface>& surface, const IAxis* other) const;
+      const SurfaceHandle<PlaneSurface>& surface, const IAxis* other) const;
 
   /// Helper enum to declare which local direction to fill
   enum class FillDirection {
@@ -441,7 +441,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// @param direction The binning direction
   /// @param axes The axes for the grid
   /// @note The axes are checked for consistency with the bounds of @p surface.
-  GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
+  GridPortalLinkT(SurfaceHandle<RegularSurface> surface,
                   AxisDirection direction, Axes&&... axes)
       : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {
@@ -514,15 +514,12 @@ class GridPortalLinkT : public GridPortalLink {
     if constexpr (DIM == 2) {
       return std::make_unique<GridPortalLinkT<Axes...>>(*this);
     } else {
-      if (auto cylinder =
-              std::dynamic_pointer_cast<CylinderSurface>(m_surface)) {
-        return extendTo2dImpl(cylinder, other);
-      } else if (auto disc =
-                     std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
-        return extendTo2dImpl(disc, other);
-      } else if (auto plane =
-                     std::dynamic_pointer_cast<PlaneSurface>(m_surface)) {
-        return extendTo2dImpl(plane, other);
+      if (auto cylinder = dynamic_handle_cast<CylinderSurface>(m_surface)) {
+        return extendTo2dImpl(std::move(cylinder), other);
+      } else if (auto disc = dynamic_handle_cast<DiscSurface>(m_surface)) {
+        return extendTo2dImpl(std::move(disc), other);
+      } else if (auto plane = dynamic_handle_cast<PlaneSurface>(m_surface)) {
+        return extendTo2dImpl(std::move(plane), other);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};

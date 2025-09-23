@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -147,7 +148,7 @@ operator()(const Extent& lExtent) const {
   return {type, {minX, minY, maxX, maxY}, transform};
 }
 
-std::vector<std::shared_ptr<Acts::Surface>>
+std::vector<Acts::SurfaceHandle<Acts::Surface>>
 Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
     const SupportSurfaceComponents& components, unsigned int splits) {
   // Resolve the components
@@ -171,7 +172,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
   std::copy_n(values.begin(), 6u, bounds.begin());
 
   // Return vector for generated surfaces
-  std::vector<std::shared_ptr<Acts::Surface>> cSupport;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> cSupport;
   if (splits == 1u) {
     // No splitting is done in this case
     cSupport.push_back(Surface::makeShared<CylinderSurface>(
@@ -221,7 +222,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
   return cSupport;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>>
+std::vector<Acts::SurfaceHandle<Acts::Surface>>
 Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
     const SupportSurfaceComponents& components, unsigned int splits) {
   // Resolve the components
@@ -245,7 +246,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
   std::copy_n(values.begin(), 4u, bounds.begin());
 
   // Return vector for generated surfaces
-  std::vector<std::shared_ptr<Acts::Surface>> dSupport;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> dSupport;
   if (splits == 1u) {
     // No splitting is done in this case
     dSupport.push_back(Surface::makeShared<DiscSurface>(
@@ -285,7 +286,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
   return dSupport;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>>
+std::vector<Acts::SurfaceHandle<Acts::Surface>>
 Acts::Experimental::detail::SupportSurfacesHelper::rectangularSupport(
     const SupportSurfaceComponents& components) {
   // Resolve the components
@@ -313,7 +314,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::rectangularSupport(
 }
 
 void Acts::Experimental::detail::SupportSurfacesHelper::addSupport(
-    std::vector<std::shared_ptr<Surface>>& layerSurfaces,
+    std::vector<Acts::SurfaceHandle<Surface>>& layerSurfaces,
     std::vector<std::size_t>& assignToAll, const Extent& layerExtent,
     const SurfaceComponentsCreator& componentCreator,
     unsigned int supportSplits) {
@@ -321,7 +322,7 @@ void Acts::Experimental::detail::SupportSurfacesHelper::addSupport(
   auto supportComponents = componentCreator(layerExtent);
   const auto& sType = std::get<0>(supportComponents);
 
-  std::vector<std::shared_ptr<Acts::Surface>> supportSurfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> supportSurfaces = {};
 
   if (sType == Surface::SurfaceType::Cylinder) {
     supportSurfaces = cylindricalSupport(supportComponents, supportSplits);

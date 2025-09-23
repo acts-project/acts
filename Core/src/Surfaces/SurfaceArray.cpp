@@ -20,14 +20,14 @@ namespace Acts {
 SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 
 SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-                           std::vector<std::shared_ptr<const Surface>> surfaces,
+                           std::vector<SurfaceHandle<const Surface>> surfaces,
                            const Transform3& transform)
     : p_gridLookup(std::move(gridLookup)),
       m_surfaces(std::move(surfaces)),
       m_surfacesRawPointers(unpackSmartPointers(m_surfaces)),
       m_transform(transform) {}
 
-SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
+SurfaceArray::SurfaceArray(SurfaceHandle<const Surface> srf)
     : p_gridLookup(std::make_unique<SingleElementLookup>(srf.get())),
       m_surfaces({std::move(srf)}) {
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());

@@ -187,7 +187,7 @@ class VectorTrackContainerBase {
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
       m_params;
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
-  std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
+  std::vector<SurfaceHandle<const Surface>> m_referenceSurfaces;
 
   std::vector<unsigned int> m_nMeasurements;
   std::vector<unsigned int> m_nHoles;
@@ -267,7 +267,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   std::size_t size() const;
 
   void setReferenceSurface_impl(IndexType itrack,
-                                std::shared_ptr<const Surface> surface) {
+                                SurfaceHandle<const Surface> surface) {
     m_referenceSurfaces[itrack] = std::move(surface);
   }
 

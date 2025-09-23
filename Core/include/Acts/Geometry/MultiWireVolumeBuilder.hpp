@@ -28,7 +28,7 @@ class MultiWireVolumeBuilder {
     std::string name = "undefined";
 
     /// The surfaces to be wrapped from the tracking volume
-    std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
+    std::vector<SurfaceHandle<Surface>> mlSurfaces = {};
 
     /// The transform of the tracking volume
     Transform3 transform = Transform3::Identity();

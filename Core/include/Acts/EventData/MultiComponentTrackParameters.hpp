@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <memory>
 #include <type_traits>
@@ -44,7 +45,7 @@ class MultiComponentBoundTrackParameters {
  private:
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       m_components;
-  std::shared_ptr<const Surface> m_surface;
+  SurfaceHandle<const Surface> m_surface;
 
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
@@ -93,7 +94,7 @@ class MultiComponentBoundTrackParameters {
       avgDir += w * dir;
     }
 
-    std::shared_ptr<PlaneSurface> s =
+    SurfaceHandle<PlaneSurface> s =
         CurvilinearSurface(avgPos, avgDir).planeSurface();
 
     std::vector<std::tuple<double, ParametersVector, CovarianceMatrix>> bound;
@@ -126,7 +127,7 @@ class MultiComponentBoundTrackParameters {
   /// @param particleHypothesis Particle hypothesis for the parameters
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
-      std::shared_ptr<const Surface> surface,
+      SurfaceHandle<const Surface> surface,
       const std::vector<std::tuple<double, ParametersVector, covariance_t>>&
           cmps,
       ParticleHypothesis particleHypothesis)
@@ -157,7 +158,7 @@ class MultiComponentBoundTrackParameters {
   /// below that that also take the charge as an input. The charge sign is
   /// only used in debug builds to check for consistency with the q/p
   /// parameter.
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
+  MultiComponentBoundTrackParameters(SurfaceHandle<const Surface> surface,
                                      const ParametersVector& params,
                                      std::optional<BoundSquareMatrix> cov,
                                      ParticleHypothesis particleHypothesis)

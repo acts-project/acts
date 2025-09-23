@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 
 #include <algorithm>
@@ -28,7 +29,7 @@ namespace {
 
 template <typename... Args>
 std::unique_ptr<GridPortalLink> makeGrid(
-    const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
+    const SurfaceHandle<RegularSurface>& surface, AxisDirection direction,
     const Logger& logger, std::tuple<Args...> args, const IAxis* otherAxis,
     bool prepend) {
   // @TODO: PlaneSurface support
@@ -90,7 +91,7 @@ std::unique_ptr<GridPortalLink> makeGrid(
 }
 
 std::unique_ptr<GridPortalLink> mergeVariable(
-    const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double /*tolerance*/, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("Variable merge: direction is " << direction);
@@ -133,7 +134,7 @@ std::unique_ptr<GridPortalLink> mergeVariable(
 }
 
 std::unique_ptr<GridPortalLink> mergeEquidistant(
-    const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("===> potentially equidistant merge: checking bin widths");
@@ -185,7 +186,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
 }
 
 std::unique_ptr<GridPortalLink> colinearMerge(
-    const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
+    const SurfaceHandle<RegularSurface>& mergedSurface, const IAxis& axisA,
     const IAxis& axisB, double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   AxisType aType = axisA.getType();
@@ -245,22 +246,28 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
   // to be adjusteed to the input geometry.
   constexpr auto tolerance = s_onSurfaceTolerance;
 
-  std::shared_ptr<RegularSurface> mergedSurface = nullptr;
+  SurfaceHandle<RegularSurface> mergedSurface;
   bool reversed = false;
 
   if (const auto* cylinderA = dynamic_cast<const CylinderSurface*>(surfaceA);
       cylinderA != nullptr) {
-    std::tie(mergedSurface, reversed) =
+    SurfaceHandle<CylinderSurface> tempSurface;
+    std::tie(tempSurface, reversed) =
         cylinderA->mergedWith(dynamic_cast<const CylinderSurface&>(*surfaceB),
                               direction, true, logger);
+    mergedSurface = tempSurface;
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(surfaceA);
              discA != nullptr) {
-    std::tie(mergedSurface, reversed) = discA->mergedWith(
+    SurfaceHandle<DiscSurface> tempSurface;
+    std::tie(tempSurface, reversed) = discA->mergedWith(
         dynamic_cast<const DiscSurface&>(*surfaceB), direction, true, logger);
+    mergedSurface = tempSurface;
   } else if (const auto* planeA = dynamic_cast<const PlaneSurface*>(surfaceA);
              planeA != nullptr) {
-    std::tie(mergedSurface, reversed) = planeA->mergedWith(
+    SurfaceHandle<PlaneSurface> tempSurface;
+    std::tie(tempSurface, reversed) = planeA->mergedWith(
         dynamic_cast<const PlaneSurface&>(*surfaceB), direction, logger);
+    mergedSurface = tempSurface;
   } else {
     throw std::invalid_argument{"Unsupported surface type"};
   }

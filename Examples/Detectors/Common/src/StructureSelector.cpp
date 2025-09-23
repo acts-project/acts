@@ -8,12 +8,13 @@
 
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 
 namespace {
 
 struct SensitiveGetter {
-  std::vector<std::shared_ptr<const Acts::Surface>> selected;
+  std::vector<Acts::SurfaceHandle<const Acts::Surface>> selected;
   /// @brief Visitor call operator
   /// @param surface
   void operator()(const Acts::Surface* surface) {

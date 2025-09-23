@@ -39,6 +39,9 @@ class TrackingVolume;
 class IVisualization3D;
 class Surface;
 
+template <class T>
+class SurfaceHandle;
+
 /// @class Surface
 ///
 /// @brief Abstract Base Class for tracking surfaces
@@ -117,11 +120,11 @@ class Surface : public virtual GeometryObject,
   /// @param args Constructor arguments to forward to surface creation
   /// @return Shared pointer to the created surface instance
   template <class T, typename... Args>
-  static std::shared_ptr<T> makeShared(Args&&... args) {
-    return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+  static SurfaceHandle<T> makeShared(Args&&... args) {
+    return SurfaceHandle<T>(std::shared_ptr<T>(new T(std::forward<Args>(args)...)));
   }
 
-  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
+  /// Retrieve a @c SurfaceHandle for this surface (non-const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
@@ -129,10 +132,10 @@ class Surface : public virtual GeometryObject,
   ///       exception), in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
-  /// @return The shared pointer
-  std::shared_ptr<Surface> getSharedPtr();
+  /// @return The surface handle
+  SurfaceHandle<Surface> getSharedPtr();
 
-  /// Retrieve a @c std::shared_ptr for this surface (const version)
+  /// Retrieve a @c SurfaceHandle for this surface (const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
@@ -140,8 +143,8 @@ class Surface : public virtual GeometryObject,
   ///       exception, in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
-  /// @return The shared pointer
-  std::shared_ptr<const Surface> getSharedPtr() const;
+  /// @return The surface handle
+  SurfaceHandle<const Surface> getSharedPtr() const;
 
   /// Assignment operator
   /// @note copy construction invalidates the association
@@ -550,3 +553,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+#include "Acts/Surfaces/SurfaceHandle.hpp"

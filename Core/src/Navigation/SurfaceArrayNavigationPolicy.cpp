@@ -12,6 +12,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 namespace Acts {
 
@@ -32,7 +33,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   sacConfig.doPhiBinningOptimization = false;
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
-  std::vector<std::shared_ptr<const Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
     if (surface.associatedDetectorElement() == nullptr) {

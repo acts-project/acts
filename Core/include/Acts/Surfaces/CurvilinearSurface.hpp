@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -101,7 +102,7 @@ class CurvilinearSurface final {
   /// Return the plane surface representation of the curvilinear surface
   ///
   /// @return the plane surface representation of the curvilinear surface
-  std::shared_ptr<PlaneSurface> planeSurface() const;
+  SurfaceHandle<PlaneSurface> planeSurface() const;
 
   /// Return the surface representation of the curvilinear surface
   ///
@@ -109,7 +110,7 @@ class CurvilinearSurface final {
   ///   This is useful if the type of the surface is not relevant.
   ///
   /// @return the surface representation of the curvilinear surface
-  std::shared_ptr<Surface> surface() const;
+  SurfaceHandle<Surface> surface() const;
 
   /// Output operator
   ///

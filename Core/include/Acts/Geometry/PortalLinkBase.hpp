@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -31,7 +32,7 @@ class PortalLinkBase {
   /// Constructor from a surface. This constructor is only
   /// called from derived classes
   /// @param surface The surface
-  explicit PortalLinkBase(std::shared_ptr<RegularSurface> surface)
+  explicit PortalLinkBase(SurfaceHandle<RegularSurface> surface)
       : m_surface(std::move(surface)) {
     if (!m_surface) {
       throw std::invalid_argument("Surface pointer must not be null");
@@ -96,13 +97,13 @@ class PortalLinkBase {
 
   /// Setter for the surface
   /// @param surface The surface
-  void setSurface(std::shared_ptr<RegularSurface> surface) {
+  void setSurface(SurfaceHandle<RegularSurface> surface) {
     m_surface = std::move(surface);
   }
 
-  /// Getter for the underlying shared pointer
-  /// @return The shared pointer to the surface
-  const std::shared_ptr<RegularSurface>& surfacePtr() const {
+  /// Getter for the underlying surface handle
+  /// @return The surface handle to the surface
+  const SurfaceHandle<RegularSurface>& surfacePtr() const {
     return m_surface;
   }
 
@@ -117,7 +118,7 @@ class PortalLinkBase {
                                       AxisDirection direction);
 
   /// Surface associated with this portal link
-  std::shared_ptr<RegularSurface> m_surface;
+  SurfaceHandle<RegularSurface> m_surface;
 };
 
 }  // namespace Acts

@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -598,7 +599,7 @@ TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
   return MutableSurfaceRange{m_surfaces};
 }
 
-void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
+void TrackingVolume::addSurface(SurfaceHandle<Surface> surface) {
   if (surface == nullptr) {
     throw std::invalid_argument("Surface is nullptr");
   }

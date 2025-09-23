@@ -35,13 +35,13 @@ class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
   using KDTS =
-      KDTree<kDIM, std::shared_ptr<Surface>, double, std::array, bSize>;
+      KDTree<kDIM, SurfaceHandle<Surface>, double, std::array, bSize>;
 
   /// Broadcast the query definition
   using Query = std::array<double, kDIM>;
 
   /// Broadcast the entry
-  using Entry = std::pair<Query, std::shared_ptr<Surface>>;
+  using Entry = std::pair<Query, SurfaceHandle<Surface>>;
 
   /// Constructor from a vector of surfaces
   ///
@@ -50,7 +50,7 @@ class KdtSurfaces {
   /// @param casts the cast list from global position into kdtree local
   /// @param rgen the reference point generator
   KdtSurfaces(const GeometryContext& gctx,
-              const std::vector<std::shared_ptr<Surface>>& surfaces,
+              const std::vector<SurfaceHandle<Surface>>& surfaces,
               const std::array<AxisDirection, kDIM>& casts,
               const reference_generator& rgen =
                   detail::PolyhedronReferenceGenerator<1u, false>{})
@@ -86,10 +86,10 @@ class KdtSurfaces {
   /// @param range is the range to be queried
   ///
   /// @return the matching surfaces from the KDT structure
-  std::vector<std::shared_ptr<Surface>> surfaces(
+  std::vector<SurfaceHandle<Surface>> surfaces(
       const RangeXD<kDIM, double>& range) const {
     // Strip the surfaces
-    std::vector<std::shared_ptr<Surface>> surfacePtrs;
+    std::vector<SurfaceHandle<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
     std::ranges::for_each(
         surfaceQuery, [&](auto& surf) { surfacePtrs.push_back(surf.second); });
@@ -101,7 +101,7 @@ class KdtSurfaces {
   /// @param extent is the range Extent to be queried
   ///
   /// @return the matching surfaces fpulled from the KDT structure
-  std::vector<std::shared_ptr<Surface>> surfaces(const Extent& extent) const {
+  std::vector<SurfaceHandle<Surface>> surfaces(const Extent& extent) const {
     RangeXD<kDIM, double> qRange;
     for (auto [ibv, v] : enumerate(m_casts)) {
       qRange[ibv] = extent.range(v);
@@ -184,7 +184,7 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   /// The call to provide the surfaces
   /// @param gctx Geometry context (not used in KDT provider)
   /// @return Vector of surfaces from the KDT query
-  std::vector<std::shared_ptr<Surface>> surfaces(
+  std::vector<SurfaceHandle<Surface>> surfaces(
       [[maybe_unused]] const GeometryContext& gctx) const final {
     return m_kdt->surfaces(m_region);
   }

@@ -8,6 +8,7 @@
 
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
 namespace Acts::Experimental {
@@ -20,7 +21,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
                << m_volume.volumeName());
 
   // Fill the grid with surfaces
-  std::vector<std::shared_ptr<const Surface>> surfaces = {};
+  std::vector<SurfaceHandle<const Surface>> surfaces = {};
   for (const auto& surface : m_volume.surfaces()) {
     if (surface.associatedDetectorElement() == nullptr) {
       continue;

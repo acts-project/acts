@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -148,12 +149,12 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-std::shared_ptr<Surface> Surface::getSharedPtr() {
-  return shared_from_this();
+SurfaceHandle<Surface> Surface::getSharedPtr() {
+  return SurfaceHandle<Surface>(shared_from_this());
 }
 
-std::shared_ptr<const Surface> Surface::getSharedPtr() const {
-  return shared_from_this();
+SurfaceHandle<const Surface> Surface::getSharedPtr() const {
+  return SurfaceHandle<const Surface>(shared_from_this());
 }
 
 Surface& Surface::operator=(const Surface& other) {
