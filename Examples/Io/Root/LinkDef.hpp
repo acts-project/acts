@@ -30,6 +30,8 @@
 #pragma link C++ class std::vector<std::vector<double>>+;
 #pragma link C++ class std::vector<std::vector<bool>>+;
 
+#pragma link C++ class std::vector<std::vector<std::vector<std::uint32_t>>>+;
+
 // clang-format on
 
 #endif

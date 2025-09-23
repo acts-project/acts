@@ -279,8 +279,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId(
-        std::numeric_limits<std::size_t>::max());
+    ActsFatras::Barcode majorityParticleId{};
     TrackMatchClassification trackClassification =
         TrackMatchClassification::Unknown;
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
@@ -324,8 +323,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
         const auto& particle = *ip;
         ACTS_VERBOSE("Find the truth particle with barcode "
-                     << majorityParticleId << "="
-                     << majorityParticleId.value());
+                     << majorityParticleId << "=" << majorityParticleId.hash());
         // Get the truth particle info at vertex
         t_p = particle.absoluteMomentum();
         t_charge = static_cast<int>(particle.charge());
@@ -364,7 +362,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         }
       } else {
         ACTS_DEBUG("Truth particle with barcode "
-                   << majorityParticleId << "=" << majorityParticleId.value()
+                   << majorityParticleId << "=" << majorityParticleId.hash()
                    << " not found in the input collection!");
       }
     }
@@ -375,7 +373,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
-    m_majorityParticleId.push_back(majorityParticleId.value());
+    m_majorityParticleId.push_back(majorityParticleId.asVector());
     m_trackClassification.push_back(static_cast<int>(trackClassification));
     m_nMajorityHits.push_back(nMajorityHits);
     m_t_charge.push_back(t_charge);
