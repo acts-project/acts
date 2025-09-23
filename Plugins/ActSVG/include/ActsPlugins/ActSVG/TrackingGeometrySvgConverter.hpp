@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -19,7 +19,9 @@ namespace Acts {
 class TrackingGeometry;
 class TrackingVolume;
 
-namespace Svg {
+}  // namespace Acts
+
+namespace ActsPlugins::Svg {
 
 namespace TrackingGeometryConverter {
 
@@ -28,7 +30,7 @@ struct Options {
   /// Prefix the output names
   std::string prefix = "";
   /// Write the layer conversion options
-  GeometryHierarchyMap<LayerConverter::Options> layerOptions;
+  Acts::GeometryHierarchyMap<LayerConverter::Options> layerOptions;
 };
 
 /// State object to collect geometry-wise information
@@ -46,8 +48,8 @@ struct State {
 /// @param cOptions the conversion options
 ///
 /// @return a vector of svg objects
-std::vector<actsvg::svg::object> convert(const GeometryContext& gctx,
-                                         const TrackingGeometry& tGeometry,
+std::vector<actsvg::svg::object> convert(const Acts::GeometryContext& gctx,
+                                         const Acts::TrackingGeometry& tGeometry,
                                          const Options& cOptions);
 
 /// Recursivele conversion of volumes
@@ -57,7 +59,7 @@ std::vector<actsvg::svg::object> convert(const GeometryContext& gctx,
 /// @param cOptions the conversion options
 /// @param cState [in,out] the conversion state collecting the input
 ///
-void convert(const GeometryContext& gctx, const TrackingVolume& tVolume,
+void convert(const Acts::GeometryContext& gctx, const Acts::TrackingVolume& tVolume,
              const Options& cOptions, State& cState);
 
 }  // namespace TrackingGeometryConverter
@@ -83,20 +85,18 @@ struct Options {
 /// that omit the module info and grid info
 ///
 std::array<actsvg::svg::object, 2> convert(
-    const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
+    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
     const Options& cOptions);
 }  // namespace TrackingGeometryProjections
 
 [[nodiscard("Not drawing svg outputs")]]
 std::vector<actsvg::svg::object> drawTrackingGeometry(
-    const GeometryContext& gctx, const TrackingGeometry& tGeometry,
+    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
     std::variant<actsvg::views::x_y, actsvg::views::z_r> view,
     bool drawSurfaces = true, bool highlightMaterial = false);
 
 [[nodiscard("Not drawing svg outputs")]]
 std::vector<actsvg::svg::object> drawSurfaceArrays(
-    const Acts::GeometryContext& gctx, const TrackingGeometry& tGeometry);
+    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry);
 
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace ActsPlugins::Svg

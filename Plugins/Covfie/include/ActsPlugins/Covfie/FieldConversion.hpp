@@ -19,12 +19,12 @@
 #include <covfie/core/field_view.hpp>
 #include <covfie/core/parameter_pack.hpp>
 
-// acts includes
+// Acts includes
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
-namespace Acts::CovfiePlugin {
+namespace ActsPlugins::Covfie {
 
 using BuilderBackend =
     covfie::backend::strided<covfie::vector::size3,
@@ -61,4 +61,4 @@ InterpolatedField covfieField(const Acts::MagneticFieldProvider& magneticField,
                               const Acts::Vector3& min,
                               const Acts::Vector3& max);
 
-}  // namespace Acts::CovfiePlugin
+}  // namespace Acts::Covfie

@@ -81,4 +81,4 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
 };
 
 }  // namespace Geant4PhysicalVolumeSelectors
-}  // namespace Acts
+}  // namespace ActsPlugins

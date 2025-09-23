@@ -13,9 +13,9 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/GridSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -26,9 +26,9 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts::Svg {
+namespace ActsPlugins::Svg {
 
-using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
+using ProtoSurface = actsvg::proto::surface<std::vector<Acts::Vector3>>;
 using ProtoSurfaces = std::vector<ProtoSurface>;
 using ProtoGrid = actsvg::proto::grid;
 using ProtoAssociations = std::vector<std::vector<std::size_t>>;
@@ -40,7 +40,7 @@ namespace IndexedSurfacesConverter {
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
-  GeometryHierarchyMap<Style> surfaceStyles;
+  Acts::GeometryHierarchyMap<Style> surfaceStyles;
   /// The Grid converter options
   GridConverter::Options gridOptions;
 };
@@ -56,7 +56,7 @@ struct Options {
 ///
 /// @return a collection of proto surface object and a grid, and associations
 template <typename surface_container, typename index_grid>
-ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
+ProtoIndexedSurfaceGrid convertImpl(const Acts::GeometryContext& gctx,
                                     const surface_container& surfaces,
                                     const index_grid& indexGrid,
                                     const Options& cOptions) {
@@ -67,18 +67,18 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // Make a local copy of the grid Options, in case we have to estimate
   // an additional bound
   GridConverter::Options gridOptions = cOptions.gridOptions;
-  Extent constrain;
+  Acts::Extent constrain;
 
   // Estimate the radial extension
   // - for 1D phi
   // - for 2D z-phi or phi-z
   bool estimateR = (index_grid::grid_type::DIM == 1 &&
-                    indexGrid.casts[0u] == AxisDirection::AxisPhi) ||
+                    indexGrid.casts[0u] == Acts::AxisDirection::AxisPhi) ||
                    (index_grid::grid_type::DIM == 2 &&
-                    (indexGrid.casts[0u] == AxisDirection::AxisPhi ||
-                     indexGrid.casts[1u] == AxisDirection::AxisPhi));
+                    (indexGrid.casts[0u] == Acts::AxisDirection::AxisPhi ||
+                     indexGrid.casts[1u] == Acts::AxisDirection::AxisPhi));
 
-  for (auto [is, s] : enumerate(surfaces)) {
+  for (auto [is, s] : Acts::enumerate(surfaces)) {
     // Create the surface converter options
     SurfaceConverter::Options sOptions;
     // Try to see if you have predefined surface styles
@@ -92,19 +92,19 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       auto sExtent = s->polyhedronRepresentation(gctx, 4u).extent();
       if constexpr (index_grid::grid_type::DIM == 2u) {
         pSurface._radii[0u] =
-            static_cast<float>(sExtent.medium(AxisDirection::AxisR));
+            static_cast<float>(sExtent.medium(Acts::AxisDirection::AxisR));
       }
-      constrain.extend(sExtent, {AxisDirection::AxisR});
+      constrain.extend(sExtent, {Acts::AxisDirection::AxisR});
     }
     // Add center info
     std::string centerInfo = " - center = (";
-    const Vector3& center = s->center(gctx);
+    const Acts::Vector3& center = s->center(gctx);
     centerInfo +=
-        std::to_string(VectorHelpers::cast(center, indexGrid.casts[0u]));
+        std::to_string(Acts::VectorHelpers::cast(center, indexGrid.casts[0u]));
     if (indexGrid.casts.size() > 1u) {
       centerInfo += ", ";
       centerInfo +=
-          std::to_string(VectorHelpers::cast(center, indexGrid.casts[1u]));
+          std::to_string(Acts::VectorHelpers::cast(center, indexGrid.casts[1u]));
       centerInfo += ")";
     }
     pSurface._aux_info["center"] = {centerInfo};
@@ -114,10 +114,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 
   // Adjust the grid options
   if constexpr (index_grid::grid_type::DIM == 1u) {
-    if (indexGrid.casts[0u] == AxisDirection::AxisPhi) {
-      auto estRangeR = constrain.range(AxisDirection::AxisR);
+    if (indexGrid.casts[0u] == Acts::AxisDirection::AxisPhi) {
+      auto estRangeR = constrain.range(Acts::AxisDirection::AxisR);
       std::array<double, 2u> rRange = {estRangeR.min(), estRangeR.max()};
-      gridOptions.optionalBound = {rRange, AxisDirection::AxisR};
+      gridOptions.optionalBound = {rRange, Acts::AxisDirection::AxisR};
     }
   }
 
@@ -166,7 +166,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
         pGrid._bin_ids.push_back(binInfo);
         if (estimateR) {
           pGrid._reference_r =
-              static_cast<float>(constrain.medium(AxisDirection::AxisR));
+              static_cast<float>(constrain.medium(Acts::AxisDirection::AxisR));
         }
       }
     }
@@ -188,16 +188,16 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 /// @param delegate the delegate to be translated
 /// @param refInstance the reference input type from the reference Axes
 template <typename surface_container, typename instance_type>
-void convert(const GeometryContext& gctx, const surface_container& surfaces,
+void convert(const Acts::GeometryContext& gctx, const surface_container& surfaces,
              const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::InternalNavigationDelegate& delegate,
+             const Acts::Experimental::InternalNavigationDelegate& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsNavigation<
-      GridType, Experimental::IndexedSurfacesNavigation>;
-  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
+  using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
+      GridType, Acts::Experimental::IndexedSurfacesNavigation>;
+  using SubDelegateType = Acts::Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();
@@ -217,11 +217,11 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
 ///
 /// @note parameters are as of the `convertImpl` method
 template <typename surface_container, typename... Args>
-void unrollConvert(const GeometryContext& gctx,
+void unrollConvert(const Acts::GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
-                   const Experimental::InternalNavigationDelegate& delegate,
-                   TypeList<Args...> /*unused*/) {
+                   const Acts::Experimental::InternalNavigationDelegate& delegate,
+                   Acts::TypeList<Args...> /*unused*/) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 
@@ -238,8 +238,8 @@ void unrollConvert(const GeometryContext& gctx,
 /// @return a collection of proto surface object and a grid, and associations
 template <typename surface_container>
 ProtoIndexedSurfaceGrid convert(
-    const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::InternalNavigationDelegate& delegate,
+    const Acts::GeometryContext& gctx, const surface_container& surfaces,
+    const Acts::Experimental::InternalNavigationDelegate& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
   ProtoSurfaces pSurfaces;
@@ -248,7 +248,7 @@ ProtoIndexedSurfaceGrid convert(
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
   unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
-                GridAxisGenerators::PossibleAxes{});
+                Acts::GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return sgi;
 }
@@ -257,7 +257,7 @@ ProtoIndexedSurfaceGrid convert(
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an ActsPlugins::Svg::object with an XY view
 ///
 /// @param pIndexGrid is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -276,9 +276,9 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
   std::vector<actsvg::svg::object> sObs;
   for (const auto& s : pSurfaces) {
     if (pGrid._type == ProtoGrid::e_z_phi) {
-      sObs.push_back(Acts::Svg::View::zrphi(s, s._name));
+      sObs.push_back(zrphi(s, s._name));
     } else {
-      sObs.push_back(Acts::Svg::View::xy(s, s._name));
+      sObs.push_back(xy(s, s._name));
     }
   }
 
@@ -294,13 +294,13 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
 
   auto xmax = xyIndexedGrid._x_range[1u];
   // The association info boxes
-  for (auto [ig, gTile] : enumerate(gOb._sub_objects)) {
+  for (auto [ig, gTile] : Acts::enumerate(gOb._sub_objects)) {
     // Target surface text
     std::vector<std::string> binText;
     binText.push_back("Source:");
     binText.push_back(pGrid._bin_ids[ig]);
     binText.push_back("Target:");
-    for (const auto [is, sis] : enumerate(pIndices[ig])) {
+    for (const auto [is, sis] : Acts::enumerate(pIndices[ig])) {
       const auto& ps = pSurfaces[sis];
       std::string oInfo = std::string("- object: ") + std::to_string(sis);
       if (ps._aux_info.contains("center")) {
@@ -339,4 +339,4 @@ static inline actsvg::svg::object zphi(
 }
 
 }  // namespace View
-}  // namespace Acts::Svg
+}  // namespace ActsPlugins::Svg

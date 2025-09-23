@@ -25,15 +25,16 @@ class IAxis;
 namespace Experimental {
 class Detector;
 }
+}  // namespace Acts
 
-namespace DetraySurfaceGridsConverter {
+namespace ActsPlugins::DetraySurfaceGridsConverter {
 
 /// Conversion method for axis objects to detray::axis payloads
 ///
 /// @param ia the axis to be converted
 ///
 /// @return the axis_payload(bounds, binning, bins, edges)
-detray::io::axis_payload convertAxis(const IAxis& ia);
+detray::io::axis_payload convertAxis(const Acts::IAxis& ia);
 
 /// Conversion method for grid objects to detray::grid payloads
 ///
@@ -62,7 +63,7 @@ detray::io::grid_payload<std::size_t, detray::io::accel_id> convertImpl(
 /// @return the grid_payload(axes, bins)
 template <typename instance_type>
 std::optional<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
-convert(const Experimental::InternalNavigationDelegate& delegate,
+convert(const Acts::Experimental::InternalNavigationDelegate& delegate,
         [[maybe_unused]] const instance_type& refInstance);
 
 /// Conversion method for instance objects to detray::grid payloads
@@ -85,6 +86,4 @@ unrollConvert(const Acts::Experimental::InternalNavigationDelegate& delegate,
 detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
 convertSurfaceGrids(const Acts::Experimental::Detector& detector);
 
-}  // namespace DetraySurfaceGridsConverter
-
-}  // namespace Acts
+}  // namespace ActsPlugins::DetraySurfaceGridsConverter

@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
-#include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
-#include "Acts/Plugins/Detray/DetraySurfaceGridsConverter.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridsConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -23,7 +23,7 @@
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/utils/consistency_checker.hpp>
 
-namespace Acts {
+namespace ActsPlugins {
 
 class DetrayConverter {
  public:
@@ -39,8 +39,8 @@ class DetrayConverter {
 
   /// Constructor with logger
   explicit DetrayConverter(
-      std::unique_ptr<const Logger> logger = getDefaultLogger("DetrayConverter",
-                                                              Logging::INFO));
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger("DetrayConverter",
+                                                              Acts::Logging::INFO));
 
   /// Convert an Acts::Experimental::Detector to a detray::detector object
   ///
@@ -51,8 +51,8 @@ class DetrayConverter {
   ///
   /// @returns a detector of requested return type
   template <typename detector_t = DetrayHostDetector>
-  detector_t convert(const GeometryContext& gctx,
-                     const Experimental::Detector& detector,
+  detector_t convert(const Acts::GeometryContext& gctx,
+                     const Acts::Experimental::Detector& detector,
                      vecmem::memory_resource& mr, const Options& options) {
     // The building cache object
     DetrayConversionUtils::Cache cCache(detector.volumes());
@@ -136,7 +136,7 @@ class DetrayConverter {
 
  private:
   /// The logger instance
-  std::unique_ptr<const Logger> m_logger = nullptr;
+  std::unique_ptr<const Acts::Logger> m_logger = nullptr;
 
   // Return the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

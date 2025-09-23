@@ -12,7 +12,7 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
@@ -33,6 +33,10 @@ class Detector;
 class Portal;
 }  //  namespace Experimental
 
+} // namespace Acts
+
+namespace ActsPlugins {
+
 namespace DetrayGeometryConverter {
 
 /// Conversion method for transform objects to detray::transform payloads
@@ -40,7 +44,7 @@ namespace DetrayGeometryConverter {
 /// @param t the transform to be converted
 ///
 /// @return the transform_payload(translation, rotation)
-detray::io::transform_payload convertTransform(const Transform3& t);
+detray::io::transform_payload convertTransform(const Acts::Transform3& t);
 
 /// Conversion method for surface bounds to detray::mask payloads
 ///
@@ -48,7 +52,7 @@ detray::io::transform_payload convertTransform(const Transform3& t);
 /// @param portal the flag for conversion into detray portal format
 ///
 /// @return the mask_payload representing the bounds
-detray::io::mask_payload convertMask(const SurfaceBounds& bounds,
+detray::io::mask_payload convertMask(const Acts::SurfaceBounds& bounds,
                                      bool portal = false);
 
 /// Conversion method for surface objects to detray::surface payloads
@@ -58,8 +62,8 @@ detray::io::mask_payload convertMask(const SurfaceBounds& bounds,
 /// @param portal the flag for conversion into detray portal format
 ///
 /// @return the surface_payload for portals and volumes by @param Surface acts object
-detray::io::surface_payload convertSurface(const GeometryContext& gctx,
-                                           const Surface& surface,
+detray::io::surface_payload convertSurface(const Acts::GeometryContext& gctx,
+                                           const Acts::Surface& surface,
                                            bool portal = false);
 
 /// Conversion method for Portal object to detray::portal payloads
@@ -75,10 +79,10 @@ detray::io::surface_payload convertSurface(const GeometryContext& gctx,
 ///
 /// @brief convert the acts portal to detray surface payload and populate the payload
 std::vector<detray::io::surface_payload> convertPortal(
-    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
-    const Experimental::Portal& portal, std::size_t ip,
-    const Experimental::DetectorVolume& volume,
-    const std::vector<OrientedSurface>& orientedSurfaces);
+    DetrayConversionUtils::Cache& cCache, const Acts::GeometryContext& gctx,
+    const Acts::Experimental::Portal& portal, std::size_t ip,
+    const Acts::Experimental::DetectorVolume& volume,
+    const std::vector<Acts::OrientedSurface>& orientedSurfaces);
 
 /// Conversion method for volume objects to detray::volume payloads
 ///
@@ -90,8 +94,8 @@ std::vector<detray::io::surface_payload> convertPortal(
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
 detray::io::volume_payload convertVolume(
-    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
-    const Experimental::DetectorVolume& volume, const Acts::Logger& logger);
+    DetrayConversionUtils::Cache& cCache, const Acts::GeometryContext& gctx,
+    const Acts::Experimental::DetectorVolume& volume, const Acts::Logger& logger);
 
 /// Conversion method for detector objects to detray::detector payload
 ///
@@ -102,8 +106,8 @@ detray::io::volume_payload convertVolume(
 ///
 /// @return the detector_payload for portals and volumes by @param detector acts object
 detray::io::detector_payload convertDetector(
-    DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
-    const Experimental::Detector& detector, const Acts::Logger& logger);
+    DetrayConversionUtils::Cache& cCache, const Acts::GeometryContext& gctx,
+    const Acts::Experimental::Detector& detector, const Acts::Logger& logger);
 
 }  // namespace DetrayGeometryConverter
 }  // namespace Acts
