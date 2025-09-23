@@ -20,6 +20,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/TemporaryDirectory.hpp"
