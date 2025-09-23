@@ -134,11 +134,11 @@ class SpacePointColumnProxy {
     return data()[index];
   }
 
-  class Subset
-      : public detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
+  class Subset : public detail::ContainerSubset<Subset, Subset, Column, Value,
+                                                Index, ReadOnly> {
    public:
     using Base =
-        detail::ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
+        detail::ContainerSubset<Subset, Subset, Column, Value, Index, ReadOnly>;
 
     using Base::Base;
   };

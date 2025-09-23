@@ -10,9 +10,8 @@
 
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 #include "Acts/Seeding2/TripletSeeder.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
+#include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -22,13 +21,12 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class GridTripletSeedingAlgorithm final : public IAlgorithm {
+class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -63,7 +61,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// Maximum radial distance between bottom-middle doublet components
     float deltaRMaxBottom = std::numeric_limits<float>::quiet_NaN();
 
-    // Seeding parameters used in the space-point grid creation and bin finding
+    // Seeding parameters used in the space-point kd tree creation
 
     /// minimum extension of sensitive detector layer relevant for seeding as
     /// distance from x=y=0 (i.e. in r)
@@ -83,28 +81,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float phiMin = -std::numbers::pi_v<float>;
     /// maximum phi value for phiAxis construction
     float phiMax = std::numbers::pi_v<float>;
-    /// Multiplicator for the number of phi-bins. The minimum number of phi-bins
-    /// depends on min_pt, magnetic field: 2*pi/(minPT particle phi-deflection).
-    /// phiBinDeflectionCoverage is a multiplier for this number. If
-    /// numPhiNeighbors (in the configuration of the BinFinders) is configured
-    /// to return 1 neighbor on either side of the current phi-bin (and you want
-    /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
-    /// maximum number of phi bins
-    int maxPhiBins = 10000;
-
-    /// vector containing the map of z bins in the top and bottom layers
-    std::vector<std::pair<int, int>> zBinNeighborsTop;
-    std::vector<std::pair<int, int>> zBinNeighborsBottom;
-    /// number of phiBin neighbors at each side of the current bin that will be
-    /// used to search for SPs
-    int numPhiNeighbors = 1;
-
-    /// Vector containing the z-bin edges for non equidistant binning in z
-    std::vector<float> zBinEdges;
-
-    /// Order of z bins to loop over when searching for SPs
-    std::vector<std::size_t> zBinsCustomLooping;
 
     // Seeding parameters used to define the region of interest for middle
     // space-point
@@ -125,12 +101,21 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float deltaRMiddleMinSPRange = 10 * Acts::UnitConstants::mm;
     float deltaRMiddleMaxSPRange = 10 * Acts::UnitConstants::mm;
 
+    /// Vector containing minimum and maximum z boundaries for cutting middle
+    /// space-points
+    std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                             2700 * Acts::UnitConstants::mm};
+
     // Seeding parameters used to define the cuts on space-point doublets
 
     /// Minimal value of z-distance between space-points in doublet
     float deltaZMin = -std::numeric_limits<float>::infinity();
     /// Maximum value of z-distance between space-points in doublet
     float deltaZMax = std::numeric_limits<float>::infinity();
+
+    /// Shrink the phi range of middle space-point (analogous to phi bin size in
+    /// grid from default seeding + number of phi bins used in search)
+    float deltaPhiMax = 0.085;
 
     // Seed finder doublet cuts
 
@@ -234,7 +219,8 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  GridTripletSeedingAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  OrthogonalTripletSeedingAlgorithm(const Config& cfg,
+                                    Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///
@@ -246,11 +232,49 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;
-  Acts::Experimental::CylindricalSpacePointGrid2::Config m_gridConfig;
+  /**
+   * @brief Set the number of dimensions in which to embed points. This is just
+   * 3 for now (phi, r, and z), but we might want to increase or decrease this
+   * number in the future.
+   */
+  static constexpr std::size_t NDims = 3;
 
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
+  /**
+   * @brief Enumeration of the different dimensions in which we can apply cuts.
+   */
+  enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
+
+  /**
+   * @brief The k-d tree type used by this seeder internally, which is
+   * three-dimensional, contains internal spacepoint pointers, uses the Acts
+   * scalar type for coordinates, stores its coordinates in std::arrays, and
+   * has leaf size 4.
+   */
+  using tree_t = Acts::KDTree<NDims, Acts::Experimental::SpacePointIndex2,
+                              float, std::array, 4>;
+
+  struct SpacePointCandidates {
+    /*
+     * bottom_lh_v denotes the candidates bottom seed points, assuming that the
+     * track has monotonically _increasing_ z position. bottom_hl_v denotes the
+     * candidate bottom points assuming that the track has monotonically
+     * _decreasing_ z position. top_lh_v are the candidate top points for an
+     * increasing z track, and top_hl_v are the candidate top points for a
+     * decreasing z track.
+     */
+    std::vector<Acts::Experimental::SpacePointIndex2> bottom_lh_v, bottom_hl_v,
+        top_lh_v, top_hl_v;
+
+    void clear() {
+      bottom_lh_v.clear();
+      bottom_hl_v.clear();
+      top_lh_v.clear();
+      top_hl_v.clear();
+    }
+  };
+
+  Config m_cfg;
+
   Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::Experimental::TripletSeeder> m_seedFinder;
@@ -261,15 +285,15 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
                                                             "InputSpacePoints"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  /// Get the proper radius validity range given a middle space point candidate.
-  /// In case the radius range changes according to the z-bin we need to
-  /// retrieve the proper range. We can do this computation only once, since all
-  /// the middle space point candidates belong to the same z-bin
-  /// @param spM space point candidate to be used as middle SP in a seed
-  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
-  std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const Acts::Experimental::ConstSpacePointProxy2& spM,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
+  void findSpacePointCandidates(
+      const Acts::Experimental::ConstSpacePointProxy2& spM, const tree_t& tree,
+      SpacePointCandidates& candidates) const;
+
+  typename tree_t::range_t validTupleOrthoRangeLH(
+      const Acts::Experimental::ConstSpacePointProxy2& low) const;
+
+  typename tree_t::range_t validTupleOrthoRangeHL(
+      const Acts::Experimental::ConstSpacePointProxy2& high) const;
 };
 
 }  // namespace ActsExamples

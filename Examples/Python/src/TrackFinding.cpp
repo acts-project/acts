@@ -21,6 +21,7 @@
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
+#include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -170,6 +171,22 @@ void addTrackFinding(Context& ctx) {
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
       maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      OrthogonalTripletSeedingAlgorithm, mex,
+      "OrthogonalTripletSeedingAlgorithm", inputSpacePoints, outputSeeds,
+      bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin, deltaRMax,
+      deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom, rMin, rMax,
+      zMin, zMax, phiMin, phiMax, rMinMiddle, rMaxMiddle,
+      useVariableMiddleSPRange, rRangeMiddleSP, deltaRMiddleMinSPRange,
+      deltaRMiddleMaxSPRange, deltaZMin, deltaZMax, interactionPointCut,
+      collisionRegionMin, collisionRegionMax, helixCutTolerance,
+      sigmaScattering, radLengthPerSeed, toleranceParam, deltaInvHelixDiameter,
+      compatSeedWeight, impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM,
+      compatSeedLimit, seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+      useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
