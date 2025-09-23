@@ -18,6 +18,7 @@
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -359,7 +360,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
       auto intersections =
           candidate.intersect(state.options.geoContext, position, direction,
                               state.options.surfaceTolerance);
-      for (auto [intersectionIndex, intersection] : intersections) {
+      for (auto [intersectionIndex, intersection] :
+           Acts::enumerate(intersections)) {
         // exclude invalid intersections
         if (!intersection.isValid() ||
             !detail::checkPathLength(intersection.pathLength(), nearLimit,
@@ -683,7 +685,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         auto intersections =
             candidate.intersect(state.options.geoContext, stepEnd,
                                 stepDirection, state.options.surfaceTolerance);
-        for (auto [intersectionIndex, intersection] : intersections) {
+        for (auto [intersectionIndex, intersection] :
+             Acts::enumerate(intersections)) {
           // exclude invalid intersections
           if (!intersection.isValid() ||
               !detail::checkPathLength(intersection.pathLength(), nearLimit,
