@@ -19,7 +19,7 @@ namespace Acts {
 void GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
   for (const Surface* surface : m_surfaceCache) {
-    Surface* mutableSurface = const_cast<Surface*>(surface);
+    auto* mutableSurface = const_cast<Surface*>(surface);
     mutableSurface->associateLayer(lay);
   }
 }

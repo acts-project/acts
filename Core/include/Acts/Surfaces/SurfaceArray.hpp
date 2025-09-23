@@ -258,7 +258,7 @@ class SurfaceArray {
       while (!queue.empty()) {
         const std::size_t current = queue.back();
         queue.pop_back();
-        if (visited.count(current) > 0) {
+        if (visited.contains(current)) {
           continue;
         }
 
