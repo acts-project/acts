@@ -33,6 +33,7 @@ else()
             boost_stacktrace_include
             NAMES "boost/stacktrace.hpp"
             REQUIRED
+            PATHS ${Boost_INCLUDE_DIRS}
         )
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
