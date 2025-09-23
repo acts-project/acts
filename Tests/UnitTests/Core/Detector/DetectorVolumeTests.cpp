@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       portals, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
       tryAllPortals());
 
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces = {};
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       innerBox};
 
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   std::vector<double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces = {};
   for (const auto& r : radii) {
     surfaces.push_back(Acts::Surface::makeShared<Acts::CylinderSurface>(
         Acts::Transform3::Identity(),

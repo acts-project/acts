@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
   // Test that 4 surfaces can be built
   for (const auto& cfg : surfaceConfig) {
-    std::shared_ptr<const Surface> pSur = cvb.buildSurface(tgContext, cfg);
+    SurfaceHandle<const Surface> pSur = cvb.buildSurface(tgContext, cfg);
     BOOST_REQUIRE_NE(pSur, nullptr);
     CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
     BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);

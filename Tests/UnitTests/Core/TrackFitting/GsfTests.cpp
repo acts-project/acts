@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   // create a boundless target surface near the tracker exit
   Acts::Vector3 center(-3._m, 0., 0.);
   Acts::Vector3 normal(1., 0., 0.);
-  std::shared_ptr<PlaneSurface> targetSurface =
+  auto targetSurface =
       Acts::CurvilinearSurface(center, normal).planeSurface();
 
   options.referenceSurface = targetSurface.get();

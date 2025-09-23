@@ -82,7 +82,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
 class MaterialBlender : public ISurfaceMaterialAccumulater {
  public:
   explicit MaterialBlender(
-      const std::vector<std::shared_ptr<Surface>>& surfaces = {})
+      const std::vector<SurfaceHandle<Surface>>& surfaces = {})
       : m_surfaces(surfaces) {}
 
   /// The state of the material accumulater, this is used
@@ -152,7 +152,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   }
 
  private:
-  std::vector<std::shared_ptr<Surface>> m_surfaces;
+  std::vector<SurfaceHandle<Surface>> m_surfaces;
 };
 
 BOOST_AUTO_TEST_SUITE(MaterialMapperTestSuite)
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_SUITE(MaterialMapperTestSuite)
 /// is being added in future PRs
 BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   // Create a vector of surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces = {
+  std::vector<SurfaceHandle<Surface>> surfaces = {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30.0, 100.0),
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 50.0,

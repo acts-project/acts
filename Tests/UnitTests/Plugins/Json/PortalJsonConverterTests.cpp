@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(PortalJsonConverter)
 BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   std::ofstream out;
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
+  auto surface =
       Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
                                Acts::Vector3(0., 1., 0.))
           .planeSurface();
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto forwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
+  auto surface =
       Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
                                Acts::Vector3(0., 1., 0.))
           .planeSurface();
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
 
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  std::shared_ptr<Acts::PlaneSurface> surface =
+  auto surface =
       Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
                                Acts::Vector3(0., 1., 0.))
           .planeSurface();

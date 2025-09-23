@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   Vector3 sNormal = Vector3(1.2, -0.3, 0.05).normalized();
 
   // Create a surface & parameters with covariance on the surface
-  std::shared_ptr<PlaneSurface> pSurface =
+  auto pSurface =
       CurvilinearSurface(sPosition, sNormal).planeSurface();
 
   Covariance cov;

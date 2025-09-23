@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -53,11 +54,11 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<std::shared_ptr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 
 struct SurfaceArrayCreatorFixture {
   SurfaceArrayCreator m_SAC;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   SurfaceArrayCreatorFixture()
       : m_SAC(SurfaceArrayCreator::Config(),
@@ -102,8 +103,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
-      std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(trans, bounds);
+      SurfaceHandle<Surface> srf =
+          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -133,8 +134,8 @@ struct SurfaceArrayCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(trans, bounds);
+      SurfaceHandle<Surface> srf =
+          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -159,8 +160,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(trans, bounds);
+      SurfaceHandle<Surface> srf =
+          SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(trans, bounds));
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -208,14 +209,14 @@ struct SurfaceArrayCreatorFixture {
             Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        std::shared_ptr<PlaneSurface> srfA =
-            Surface::makeShared<PlaneSurface>(trans, bounds);
+        SurfaceHandle<PlaneSurface> srfA =
+            SurfaceHandle<PlaneSurface>(Surface::makeShared<PlaneSurface>(trans, bounds));
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
-        std::shared_ptr<Surface> srfB =
-            Surface::makeShared<PlaneSurface>(transB, bounds);
+        SurfaceHandle<Surface> srfB =
+            SurfaceHandle<Surface>(Surface::makeShared<PlaneSurface>(transB, bounds));
 
         pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
 
@@ -238,8 +239,8 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
-    std::shared_ptr<const PlaneSurface> srf =
-        std::dynamic_pointer_cast<const PlaneSurface>(srfx);
+    SurfaceHandle<const PlaneSurface> srf =
+        dynamic_handle_cast<const PlaneSurface>(srfx);
     const PlanarBounds* bounds =
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -338,12 +339,10 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     angleShift = step / 4.;
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
     surfacesRaw = unpackSmartPointers(surfaces);
-    pl = ProtoLayer(tgContext, surfaces);
-    surfacesRaw = unpackSmartPointers(surfaces);
+    pl = ProtoLayer(tgContext, surfacesRaw);
     tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, AxisDirection::AxisPhi,
                                  pl, tr);
-    surfacesRaw = unpackSmartPointers(surfaces);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
@@ -542,7 +541,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
   auto ringB = fullPhiTestSurfacesEC(15, 0, 0, 15, 2, 3.5);
   auto ringC = fullPhiTestSurfacesEC(20, 0, 0, 20, 2, 3.8);
 
-  std::vector<std::shared_ptr<const Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   std::copy(ringA.begin(), ringA.end(), std::back_inserter(surfaces));
   std::copy(ringB.begin(), ringB.end(), std::back_inserter(surfaces));
   std::copy(ringC.begin(), ringC.end(), std::back_inserter(surfaces));
@@ -573,12 +572,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   double R = 10.;
 
   auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
+      SurfaceHandle<CylinderSurface>(Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
+  SurfaceArray sa(std::move(sl), std::move(brl));
 
   // Write the surrace array with grid
   ObjVisualization3D objVis;
@@ -598,10 +597,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
                         SurfaceArrayCreatorFixture) {
   auto barrel = makeBarrelStagger(30, 7, 0, std::numbers::pi / 9.);
   auto brl = barrel.first;
+  auto brlCopy = brl;  // Create a copy for the second SurfaceArray
   std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
 
-  ProtoLayer pl(tgContext, brl);
+  ProtoLayer pl(tgContext, brlRaw);
 
   // EQUIDISTANT
   Transform3 tr = Transform3::Identity();
@@ -615,13 +615,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   Transform3 itr = tr.inverse();
 
   auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
+      SurfaceHandle<CylinderSurface>(Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100));
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                     AxisBoundaryType::Bound>(cylinder, 1.,
                                                              pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
+  SurfaceArray sa(std::move(sl), std::move(brl));
   auto axes = sa.getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
@@ -655,7 +655,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
         cylinder, 1., pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
-    SurfaceArray sa2(std::move(sl2), brl);
+    SurfaceArray sa2(std::move(sl2), std::move(brlCopy));
     axes = sa2.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);

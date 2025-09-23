@@ -43,7 +43,7 @@ auto logger = getDefaultLogger("MultiWireNavigationTests", Logging::VERBOSE);
 // a function that constructs and returns detector elements for straw surfaces
 void generateStrawSurfaces(
     std::size_t nStraws, std::size_t nLayers, double radius, double halfZ,
-    std::vector<std::shared_ptr<Surface>>& strawSurfaces,
+    std::vector<SurfaceHandle<Surface>>& strawSurfaces,
     std::vector<std::unique_ptr<DetectorElementStub>>& elements) {
   // The transform of the 1st surface
   Vector3 ipos = {-0.5 * nStraws * 2 * radius + radius,
@@ -74,7 +74,7 @@ void generateStrawSurfaces(
 }
 
 BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
+  std::vector<SurfaceHandle<Surface>> strawSurfaces = {};
   std::vector<std::unique_ptr<DetectorElementStub>> detElements = {};
 
   generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 // This tests the multilayer navigation policy for gen3 geometry interface
 BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   // Create the surfaces
-  std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
+  std::vector<SurfaceHandle<Surface>> strawSurfaces = {};
   std::vector<std::unique_ptr<DetectorElementStub>> detElements = {};
 
   generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,

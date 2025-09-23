@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -47,7 +48,7 @@ namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SrfVec = std::vector<std::shared_ptr<const Surface>>;
+using SrfVec = std::vector<SurfaceHandle<const Surface>>;
 
 void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
@@ -57,8 +58,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
-    std::shared_ptr<const PlaneSurface> srf =
-        std::dynamic_pointer_cast<const PlaneSurface>(srfx);
+    auto srf = dynamic_handle_cast<const PlaneSurface>(srfx);
     const PlanarBounds* bounds =
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -85,7 +85,7 @@ struct LayerCreatorFixture {
   std::shared_ptr<const SurfaceArrayCreator> p_SAC;
   std::shared_ptr<LayerCreator> p_LC;
 
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  std::vector<SurfaceHandle<const Surface>> m_surfaces;
 
   LayerCreatorFixture() {
     p_SAC = std::make_shared<const SurfaceArrayCreator>(
@@ -132,8 +132,7 @@ struct LayerCreatorFixture {
       trans.translate(Vector3(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
-      std::shared_ptr<PlaneSurface> srf =
-          Surface::makeShared<PlaneSurface>(trans, bounds);
+      auto srf = Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -160,7 +159,7 @@ struct LayerCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-      std::shared_ptr<PlaneSurface> srf =
+      auto srf =
           Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
@@ -209,14 +208,12 @@ struct LayerCreatorFixture {
             Eigen::AngleAxisd(std::numbers::pi / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        std::shared_ptr<PlaneSurface> srfA =
-            Surface::makeShared<PlaneSurface>(trans, bounds);
+        auto srfA = Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
-        std::shared_ptr<PlaneSurface> srfB =
-            Surface::makeShared<PlaneSurface>(transB, bounds);
+        auto srfB = Surface::makeShared<PlaneSurface>(transB, bounds);
 
         pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
 
@@ -234,7 +231,7 @@ struct LayerCreatorFixture {
 BOOST_AUTO_TEST_SUITE(Tools)
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
-  std::vector<std::shared_ptr<const Surface>> srf;
+  std::vector<SurfaceHandle<const Surface>> srf;
 
   srf = makeBarrel(30, 7, 2, 1.5);
   draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
@@ -327,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
-  std::vector<std::shared_ptr<const Surface>> surfaces;
+  std::vector<SurfaceHandle<const Surface>> surfaces;
   auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
   surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
   auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);

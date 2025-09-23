@@ -24,6 +24,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
       std::make_shared<StraightPropagator>(straightStepper);
 
   // Create perigee surface, initial track parameters will be relative to it
-  std::shared_ptr<PerigeeSurface> perigeeSurface{
+  auto perigeeSurface{
       Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.})};
 
   // Vertex position and corresponding d0 and z0
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT * resT;
-    tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+    tracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                         ParticleHypothesis::pion());
   }
 
@@ -213,7 +214,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double relTol = 5e-4;
     double small = 5e-4;
 
-    std::shared_ptr<PerigeeSurface> perigee =
+    auto perigee =
         Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
     const LinearizedTrack linTrack1 =

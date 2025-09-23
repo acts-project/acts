@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
   std::vector<double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> surfaces = {};
   for (auto [ir, r] : Acts::enumerate(radii)) {
     auto detElement = std::make_unique<Acts::Test::DetectorElementStub>(
         Acts::Transform3::Identity(),

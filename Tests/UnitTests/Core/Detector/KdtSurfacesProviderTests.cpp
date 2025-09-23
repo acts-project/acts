@@ -37,9 +37,9 @@ namespace {
 /// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
-std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
+std::vector<Acts::SurfaceHandle<Acts::Surface>> unpackSurfaces(
     const std::vector<Acts::Surface*>& surfaces) {
-  std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
   for (auto* s : surfaces) {
     uSurfaces.push_back(s->getSharedPtr());
@@ -47,10 +47,10 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
   return uSurfaces;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
+std::vector<Acts::SurfaceHandle<Acts::Surface>> pixelSurfaces(
     CylindricalTrackingGeometry::DetectorStore& dStore) {
   // The surfaces for the KDTree structure
-  std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> pixelSurfaces;
   // Fill Discs
   std::vector<double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
   for (const auto& z : pixelDiscs) {

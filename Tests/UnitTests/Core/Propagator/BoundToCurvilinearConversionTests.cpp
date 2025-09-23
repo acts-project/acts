@@ -23,6 +23,7 @@
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 
 #include <cmath>
 #include <cstdlib>
@@ -173,17 +174,17 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     AngleAxis3 surface_transform0;
     surface_transform0 = surface_rot;
 
-    std::shared_ptr<Surface> surface;
+    SurfaceHandle<Surface> surface;
     switch (test_data.surface_type) {
       case TestData::kPlane: {
-        surface = std::dynamic_pointer_cast<Surface>(
+        surface = dynamic_handle_cast<Surface>(
             Surface::makeShared<PlaneSurface>(Translation3(surface_center) *
                                               surface_transform0));
         break;
       }
       case TestData::kPolarDisk: {
         surface =
-            std::dynamic_pointer_cast<Surface>(Surface::makeShared<DiscSurface>(
+            dynamic_handle_cast<Surface>(Surface::makeShared<DiscSurface>(
                 Translation3(surface_center) * surface_transform0));
         break;
       }

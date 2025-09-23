@@ -58,7 +58,7 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
   }
 
  private:
-  std::shared_ptr<Acts::Surface> m_surface;
+  Acts::SurfaceHandle<Acts::Surface> m_surface;
 };
 
 BOOST_AUTO_TEST_SUITE(Detector)

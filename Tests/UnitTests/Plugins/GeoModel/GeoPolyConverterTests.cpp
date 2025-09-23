@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
       trapCache.sensitiveSurfaces[0];
   ActsPlugins::GeoModelSensitiveSurface polySensSurface =
       polyCache.sensitiveSurfaces[0];
-  std::shared_ptr<Surface> polySurface = std::get<1>(polySensSurface);
-  std::shared_ptr<Surface> trapSurface = std::get<1>(trapSensSurface);
+  Acts::SurfaceHandle<Acts::Surface> polySurface = std::get<1>(polySensSurface);
+  Acts::SurfaceHandle<Acts::Surface> trapSurface = std::get<1>(trapSensSurface);
 
   const auto* polyBounds =
       dynamic_cast<const DiamondBounds*>(&polySurface->bounds());

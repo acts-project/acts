@@ -45,7 +45,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
   std::vector<double> layer0Radii = {100, 102, 104, 106, 108, 110};
   auto layer0VolumeBounds =
       std::make_unique<CylinderVolumeBounds>(80, 130, 200);
-  std::vector<std::shared_ptr<Surface>> layer0Surfaces = {};
+  std::vector<SurfaceHandle<Surface>> layer0Surfaces = {};
   for (const auto [ir, r] : enumerate(layer0Radii)) {
     // First 4 surfaces are active
     if (ir < 4u) {

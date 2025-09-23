@@ -26,6 +26,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -306,7 +307,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  BoundTrackParameters initialParams{surface, boundVector, std::nullopt,
+  BoundTrackParameters initialParams{SurfaceHandle<const Surface>(surface), boundVector, std::nullopt,
                                      ParticleHypothesis::pion()};
 
   using Propagator = Propagator<StraightLineStepper>;
@@ -337,7 +338,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
           .closest();
   CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
-  BoundTrackParameters endParameters{surface,
+  BoundTrackParameters endParameters{SurfaceHandle<const Surface>(surface),
                                      detail::Test::someBoundParametersA(),
                                      std::nullopt, ParticleHypothesis::pion()};
   {

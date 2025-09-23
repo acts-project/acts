@@ -80,7 +80,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::uniform_real_distribution<> copyDist(0, 1);
   std::mt19937 rng{42};
 
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   std::vector<std::pair<BoundVector, BoundMatrix>> parametersVector;
   for (std::size_t s = 0; s < 50; ++s) {
     surfaces.push_back(Surface::makeShared<PlaneSurface>(

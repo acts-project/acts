@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(addCylinderSupportCase) {
   // This tests the functionally to take the surfaces from a cylinder layer,
   // estimate their extend and use this to construct a support structure
   // with some given additional instructuions
-  std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> lSurfaces;
   std::vector<std::size_t> assignToAll;
 
   // The Extent - estimated by surfaces and other constraints
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(addDiscSupportCase) {
   // This tests the functionally to take the surfaces from a disc layer,
   // estimate their extend and use this to construct a support structure
   // with some given additional instructuions
-  std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> lSurfaces;
   std::vector<std::size_t> assignToAll;
 
   // The Extent
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(addRectangularSupportCase) {
   // This tests the functionally to take the surfaces from a plane layer,
   // estimate their extend and use this to construct a support structure
   // with some given additional instructuions
-  std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> lSurfaces;
   std::vector<std::size_t> assignToAll;
 
   // As a plane extent in z
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(addRectangularSupportCase) {
 }
 
 BOOST_AUTO_TEST_CASE(addMisconfiguredSupportCase) {
-  std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
+  std::vector<Acts::SurfaceHandle<Acts::Surface>> lSurfaces;
   std::vector<std::size_t> assignToAll;
 
   // Unconstrainted extent

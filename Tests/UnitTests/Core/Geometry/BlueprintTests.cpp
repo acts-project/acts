@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
   double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
   double r = 300_mm;
   std::size_t nSensors = 8;
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
   double yrot = 0_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
   double r = 300_mm;
@@ -1074,7 +1074,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<SurfaceHandle<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
     double r = 300_mm;
     std::size_t nSensors = 8;
@@ -1137,7 +1137,7 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
-    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<SurfaceHandle<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
     double r = 300_mm;

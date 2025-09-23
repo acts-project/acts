@@ -18,6 +18,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -69,23 +70,23 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   auto params1a =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1a, 0), mom1a.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1a, 0), mom1a.normalized(),
           1_e / mom1a.norm(), covMat, ParticleHypothesis::pion())
           .value();
   auto params1b =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1b, 0), mom1b.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1b, 0), mom1b.normalized(),
           -1_e / mom1b.norm(), covMat, ParticleHypothesis::pion())
           .value();
   auto params1c =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1c, 0), mom1c.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1c, 0), mom1c.normalized(),
           1_e / mom1c.norm(), covMat, ParticleHypothesis::pion())
           .value();
 
@@ -149,23 +150,23 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   auto params1a =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1a, 0), mom1a.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1a, 0), mom1a.normalized(),
           1_e / mom1a.norm(), covMat, ParticleHypothesis::pion())
           .value();
   auto params1b =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1b, 0), mom1b.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1b, 0), mom1b.normalized(),
           -1_e / mom1b.norm(), covMat, ParticleHypothesis::pion())
           .value();
   auto params1c =
       BoundTrackParameters::create(
-          geoContext, perigeeSurface, makeVector4(pos1c, 0), mom1c.normalized(),
+          geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1c, 0), mom1c.normalized(),
           -1_e / mom1c.norm(), covMat, ParticleHypothesis::pion())
           .value();
 
@@ -215,7 +216,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   // Perigee surface for track parameters
   Vector3 pos0{0, 0, 0};
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           geoContext, perigeeSurface, makeVector4(pos, 0),
+                           geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());
@@ -329,22 +330,22 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
+  auto perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   InputTrackStub params1a(BoundTrackParameters::create(
-                              geoContext, perigeeSurface, makeVector4(pos1a, 0),
+                              geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1a, 0),
                               mom1a, 1_e / mom1a.norm(), covMat,
                               ParticleHypothesis::pion())
                               .value());
   InputTrackStub params1b(BoundTrackParameters::create(
-                              geoContext, perigeeSurface, makeVector4(pos1b, 0),
+                              geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1b, 0),
                               mom1b, -1_e / mom1b.norm(), covMat,
                               ParticleHypothesis::pion())
                               .value());
   InputTrackStub params1c(BoundTrackParameters::create(
-                              geoContext, perigeeSurface, makeVector4(pos1c, 0),
+                              geoContext, SurfaceHandle<const Surface>(perigeeSurface), makeVector4(pos1c, 0),
                               mom1c, -1_e / mom1c.norm(), covMat,
                               ParticleHypothesis::pion())
                               .value());

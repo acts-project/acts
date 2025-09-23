@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   };
 
   // Assume that the components are on a generic plane surface
-  std::shared_ptr<PlaneSurface> surface =
+  auto surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
   const std::size_t NComps = 4;
   std::vector<GsfComponent> cmps;
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
 }
 
 BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
-  std::shared_ptr<PlaneSurface> dummy =
+  auto dummy =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
   std::vector<GsfComponent> cmps;
 

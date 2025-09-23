@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceHandle.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -184,10 +185,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
+    auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(vtxPosVec[vtxIdx]);
 
-    allTracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+    allTracks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                            ParticleHypothesis::pion());
   }
 
@@ -394,10 +395,10 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), trueVtxTime + relTDist(gen);
 
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
+    auto perigeeSurface =
         Surface::makeShared<PerigeeSurface>(trueVtxPos);
 
-    trks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+    trks.emplace_back(SurfaceHandle<const Surface>(perigeeSurface), paramVec, std::move(covMat),
                       ParticleHypothesis::pion());
   }
 

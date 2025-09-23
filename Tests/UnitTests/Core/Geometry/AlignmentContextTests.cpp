@@ -93,7 +93,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// the transform for positioning in 3D space
   std::shared_ptr<const Transform3> m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<Surface> m_elementSurface{nullptr};
+  SurfaceHandle<Surface> m_elementSurface{nullptr};
   /// the element thickness
   double m_elementThickness{0.};
 };

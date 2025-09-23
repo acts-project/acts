@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(Layers)
 /// Unit test for creating compliant/non-compliant NavigationLayer object
 BOOST_AUTO_TEST_CASE(NavigationLayerConstruction) {
   // default constructor, copy and assignment are all deleted
-  std::shared_ptr<const Surface> pSurface = Surface::makeShared<SurfaceStub>();
+  SurfaceHandle<const Surface> pSurface = Surface::makeShared<SurfaceStub>();
   auto pNavigationLayer = NavigationLayer::create(std::move(pSurface));
   BOOST_CHECK_EQUAL(pNavigationLayer->layerType(), LayerType::navigation);
   // next level: with thickness
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(NavigationLayerConstruction) {
 /// Unit test for testing NavigationLayer properties
 BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   const double thickness = 0.1;
-  std::shared_ptr<const Surface> pSurface = Surface::makeShared<SurfaceStub>();
+  SurfaceHandle<const Surface> pSurface = Surface::makeShared<SurfaceStub>();
   auto rawSurfacePtr = pSurface.get();
   auto pNavigationLayer =
       NavigationLayer::create(std::move(pSurface), thickness);

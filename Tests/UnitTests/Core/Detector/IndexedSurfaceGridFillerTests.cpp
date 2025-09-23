@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   IndexedGridFiller filler{{}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
   CenterReferenceGenerator generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {pSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
 
   AxisDirectionReferenceGenerator<AxisDirection::AxisX> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {pSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator<1u, true> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {pSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator<1u, true> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {pSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator<1u, true> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {cSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator<1u, true> generator;
-  std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
+  std::vector<SurfaceHandle<Surface>> surfaces = {cSurface};
 
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);

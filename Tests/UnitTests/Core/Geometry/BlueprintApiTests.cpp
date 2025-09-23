@@ -48,14 +48,14 @@ auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
 
 GeometryContext gctx;
 
-inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
+inline std::vector<SurfaceHandle<Surface>> makeFanLayer(
     const Transform3& base,
     std::vector<std::unique_ptr<DetectorElementBase>>& elements,
     double r = 300_mm, std::size_t nSensors = 8, double thickness = 0) {
   auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
   double deltaPhi = 2 * std::numbers::pi / nSensors;
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
   for (std::size_t i = 0; i < nSensors; i++) {
     // Create a fan of sensors
 
@@ -76,7 +76,7 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
   return surfaces;
 }
 
-inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
+inline std::vector<SurfaceHandle<Surface>> makeBarrelLayer(
     const Transform3& base,
     std::vector<std::unique_ptr<DetectorElementBase>>& elements,
     double r = 300_mm, std::size_t nStaves = 10, int nSensorsPerStave = 8,
@@ -84,7 +84,7 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
   auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
 
   double deltaPhi = 2 * std::numbers::pi / nStaves;
-  std::vector<std::shared_ptr<Surface>> surfaces;
+  std::vector<SurfaceHandle<Surface>> surfaces;
 
   for (std::size_t istave = 0; istave < nStaves; istave++) {
     for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
               ec.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
               auto makeLayer = [&](const Transform3& trf, auto& layer) {
-                std::vector<std::shared_ptr<Surface>> surfaces;
+                std::vector<SurfaceHandle<Surface>> surfaces;
                 auto layerSurfaces = makeFan(trf, 300_mm, 10, 2_mm);
                 std::copy(layerSurfaces.begin(), layerSurfaces.end(),
                           std::back_inserter(surfaces));
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
               auto makeLayer = [&](const std::string& name, double r,
                                    std::size_t nStaves, int nSensorsPerStave) {
                 brl.addLayer(name, [&](auto& layer) {
-                  std::vector<std::shared_ptr<Surface>> surfaces =
+                  std::vector<SurfaceHandle<Surface>> surfaces =
                       makeBarrelLayer(base, detectorElements, r, nStaves,
                                       nSensorsPerStave, 2.5_mm, 10_mm, 20_mm);
 

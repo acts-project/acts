@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Construction
-  const std::vector<std::shared_ptr<const Surface>> aSurfaces{
+  const std::vector<SurfaceHandle<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
   const double thickness(1.0);
