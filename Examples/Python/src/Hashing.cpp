@@ -8,8 +8,9 @@
 
 #include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
 #include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 
@@ -21,7 +22,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addHashing(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
@@ -30,7 +31,7 @@ void addHashing(Context& ctx) {
   auto hashingExampleModule = mex.def_submodule("_hashing");
 
   {
-    using Config = Acts::HashingAlgorithmConfig;
+    using Config = HashingAlgorithmConfig;
     auto c = py::class_<Config>(hashingModule, "HashingAlgorithmConfig")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
@@ -38,7 +39,7 @@ void addHashing(Context& ctx) {
   }
 
   {
-    using Config = Acts::HashingTrainingConfig;
+    using Config = HashingTrainingConfig;
     auto c = py::class_<Config>(hashingModule, "HashingTrainingConfig")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, annoySeed, f);
@@ -46,11 +47,11 @@ void addHashing(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingAlgorithmHashing, hashingExampleModule,
-      "SeedingAlgorithmHashing", inputSpacePoints, outputSeeds, outputBuckets,
-      seedFilterConfig, seedFinderConfig, seedFinderOptions, gridConfig,
-      gridOptions, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
-      numPhiNeighbors, hashingConfig, hashingTrainingConfig, useExtraCuts);
+      SeedingAlgorithmHashing, hashingExampleModule, "SeedingAlgorithmHashing",
+      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
+      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
+      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
+      hashingConfig, hashingTrainingConfig, useExtraCuts);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

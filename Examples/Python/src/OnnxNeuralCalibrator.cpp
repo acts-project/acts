@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <pybind11/pybind11.h>
@@ -17,7 +17,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-namespace Acts::Python {
+namespace ActsPython {
 
 void addOnnxNeuralCalibrator(Context &ctx) {
   auto [m, mex, onnx] = ctx.get("main", "examples", "onnx");
@@ -32,4 +32,4 @@ void addOnnxNeuralCalibrator(Context &ctx) {
       py::arg("modelPath"), py::arg("nComp") = 1,
       py::arg("volumeIds") = std::vector<std::size_t>({7, 8, 9}));
 }
-}  // namespace Acts::Python
+}  // namespace ActsPython

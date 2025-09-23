@@ -8,61 +8,23 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include <string>
-#include <unordered_map>
+#include <concepts>
 
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
-#include <pybind11/pybind11.h>
 
-namespace Acts {
-namespace Concepts {
+namespace ActsExamples {
+struct AlgorithmContext;
+enum class ProcessCode;
+}  // namespace ActsExamples
+
+namespace ActsPython::Concepts {
 template <typename T>
 concept has_write_method =
     requires(T& t, const ActsExamples::AlgorithmContext& ctx) {
       { t.write(ctx) } -> std::same_as<ActsExamples::ProcessCode>;
     };
-}  // namespace Concepts
-
-namespace Python {
-
-struct Context {
-  std::unordered_map<std::string, pybind11::module_> modules;
-
-  pybind11::module_& get(const std::string& name) { return modules.at(name); }
-
-  template <typename... Args>
-  auto get(Args&&... args)
-    requires(sizeof...(Args) >= 2)
-  {
-    return std::make_tuple((modules.at(args))...);
-  }
-};
-
-template <typename T, typename Ur, typename Ut>
-void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::*begin,
-                         Ur Ut::*end) {
-  obj.def_property(
-      name.c_str(), [=](Ut& self) { return std::pair{self.*begin, self.*end}; },
-      [=](Ut& self, std::pair<Ur, Ur> p) {
-        self.*begin = p.first;
-        self.*end = p.second;
-      });
-}
-
-inline void patchClassesWithConfig(pybind11::module_& m) {
-  pybind11::module::import("acts._adapter").attr("_patch_config")(m);
-}
-
-template <typename T>
-void patchKwargsConstructor(T& c) {
-  pybind11::module::import("acts._adapter").attr("_patchKwargsConstructor")(c);
-}
-}  // namespace Python
-}  // namespace Acts
+}  // namespace ActsPython::Concepts
 
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
@@ -122,7 +84,7 @@ void patchKwargsConstructor(T& c) {
             .def_property_readonly("config", &Writer::config);              \
                                                                             \
     constexpr bool has_write_method =                                       \
-        Acts::Concepts::has_write_method<Writer>;                           \
+        ActsPython::Concepts::has_write_method<Writer>;                     \
                                                                             \
     if constexpr (has_write_method) {                                       \
       w.def("write", &Writer::write);                                       \

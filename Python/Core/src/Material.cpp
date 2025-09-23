@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -22,13 +21,9 @@
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
-#include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
-#include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
-#include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <array>
 #include <map>
@@ -43,79 +38,43 @@
 namespace Acts {
 class TrackingGeometry;
 }  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace ActsExamples;
+using namespace Acts;
 
-namespace Acts::Python {
-void addMaterial(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
+namespace ActsPython {
 
+/// @brief Add the material bindings to a module.
+/// @param m the module to add the bindings to
+void addMaterial(py::module_& m) {
   {
-    py::class_<Acts::ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
+    py::class_<ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
         m, "ISurfaceMaterial")
-        .def("toString", &Acts::ISurfaceMaterial::toString);
+        .def("toString", &ISurfaceMaterial::toString);
 
-    py::class_<Acts::ProtoGridSurfaceMaterial, Acts::ISurfaceMaterial,
+    py::class_<ProtoGridSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<ProtoGridSurfaceMaterial>>(
         m, "ProtoGridSurfaceMaterial");
 
-    py::class_<Acts::ProtoSurfaceMaterial, Acts::ISurfaceMaterial,
+    py::class_<ProtoSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<ProtoSurfaceMaterial>>(m,
                                                       "ProtoSurfaceMaterial");
 
-    py::class_<Acts::HomogeneousSurfaceMaterial, Acts::ISurfaceMaterial,
+    py::class_<HomogeneousSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<HomogeneousSurfaceMaterial>>(
         m, "HomogeneousSurfaceMaterial");
 
-    py::class_<Acts::IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
+    py::class_<IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
         m, "IVolumeMaterial");
   }
 
   {
-    py::class_<Acts::IMaterialDecorator,
-               std::shared_ptr<Acts::IMaterialDecorator>>(m,
-                                                          "IMaterialDecorator")
+    py::class_<IMaterialDecorator, std::shared_ptr<IMaterialDecorator>>(
+        m, "IMaterialDecorator")
         .def("decorate", py::overload_cast<Surface&>(
-                             &Acts::IMaterialDecorator::decorate, py::const_));
-  }
-
-  {
-    py::class_<MappingMaterialDecorator, Acts::IMaterialDecorator,
-               std::shared_ptr<MappingMaterialDecorator>>(
-        m, "MappingMaterialDecorator")
-        .def(py::init<const Acts::TrackingGeometry&, Acts::Logging::Level, bool,
-                      bool>(),
-             py::arg("tGeometry"), py::arg("level"),
-             py::arg("clearSurfaceMaterial") = true,
-             py::arg("clearVolumeMaterial") = true)
-        .def("binningMap", &MappingMaterialDecorator::binningMap)
-        .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
-  }
-
-  {
-    using Alg = ActsExamples::MaterialMapping;
-
-    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "MaterialMapping")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def("scoringParameters", &Alg::scoringParameters)
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Alg::Config>(alg, "Config")
-                 .def(py::init<const Acts::GeometryContext&,
-                               const Acts::MagneticFieldContext&>());
-
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappingMaterialCollection,
-                       materialSurfaceMapper, materialVolumeMapper,
-                       materialWriters, trackingGeometry, geoContext,
-                       magFieldContext);
+                             &IMaterialDecorator::decorate, py::const_));
   }
 
   {
@@ -125,7 +84,7 @@ void addMaterial(Context& ctx) {
             m, "SurfaceMaterialMapper")
             .def(py::init([](const SurfaceMaterialMapper::Config& config,
                              SurfaceMaterialMapper::StraightLinePropagator prop,
-                             Acts::Logging::Level level) {
+                             Logging::Level level) {
                    return std::make_shared<SurfaceMaterialMapper>(
                        config, std::move(prop),
                        getDefaultLogger("SurfaceMaterialMapper", level));
@@ -144,7 +103,7 @@ void addMaterial(Context& ctx) {
             m, "VolumeMaterialMapper")
             .def(py::init([](const VolumeMaterialMapper::Config& config,
                              VolumeMaterialMapper::StraightLinePropagator prop,
-                             Acts::Logging::Level level) {
+                             Logging::Level level) {
                    return std::make_shared<VolumeMaterialMapper>(
                        config, std::move(prop),
                        getDefaultLogger("VolumeMaterialMapper", level));
@@ -157,36 +116,33 @@ void addMaterial(Context& ctx) {
   }
 
   {
-    py::class_<Acts::IAssignmentFinder,
-               std::shared_ptr<Acts::IAssignmentFinder>>(m,
-                                                         "IAssignmentFinder");
+    py::class_<IAssignmentFinder, std::shared_ptr<IAssignmentFinder>>(
+        m, "IAssignmentFinder");
   }
 
   {
     auto isma =
-        py::class_<Acts::IntersectionMaterialAssigner, Acts::IAssignmentFinder,
-                   std::shared_ptr<Acts::IntersectionMaterialAssigner>>(
+        py::class_<IntersectionMaterialAssigner, IAssignmentFinder,
+                   std::shared_ptr<IntersectionMaterialAssigner>>(
             m, "IntersectionMaterialAssigner")
-            .def(py::init([](const Acts::IntersectionMaterialAssigner::Config&
-                                 config,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<Acts::IntersectionMaterialAssigner>(
+            .def(py::init([](const IntersectionMaterialAssigner::Config& config,
+                             Logging::Level level) {
+                   return std::make_shared<IntersectionMaterialAssigner>(
                        config,
                        getDefaultLogger("IntersectionMaterialAssigner", level));
                  }),
                  py::arg("config"), py::arg("level"))
             .def("assignmentCandidates",
-                 &Acts::IntersectionMaterialAssigner::assignmentCandidates);
+                 &IntersectionMaterialAssigner::assignmentCandidates);
 
-    auto c =
-        py::class_<Acts::IntersectionMaterialAssigner::Config>(isma, "Config")
-            .def(py::init<>());
+    auto c = py::class_<IntersectionMaterialAssigner::Config>(isma, "Config")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, surfaces, trackingVolumes, detectorVolumes);
   }
 
   {
-    py::class_<Acts::ISurfaceMaterialAccumulater,
-               std::shared_ptr<Acts::ISurfaceMaterialAccumulater>>(
+    py::class_<ISurfaceMaterialAccumulater,
+               std::shared_ptr<ISurfaceMaterialAccumulater>>(
         m, "ISurfaceMaterialAccumulater");
   }
 
@@ -199,7 +155,7 @@ void addMaterial(Context& ctx) {
             .def(
                 py::init(
                     [](const BinnedSurfaceMaterialAccumulater::Config& config,
-                       Acts::Logging::Level level) {
+                       Logging::Level level) {
                       return std::make_shared<BinnedSurfaceMaterialAccumulater>(
                           config,
                           getDefaultLogger("BinnedSurfaceMaterialAccumulater",
@@ -221,7 +177,7 @@ void addMaterial(Context& ctx) {
     auto mm = py::class_<MaterialMapper, std::shared_ptr<MaterialMapper>>(
                   m, "MaterialMapper")
                   .def(py::init([](const MaterialMapper::Config& config,
-                                   Acts::Logging::Level level) {
+                                   Logging::Level level) {
                          return std::make_shared<MaterialMapper>(
                              config, getDefaultLogger("MaterialMapper", level));
                        }),
@@ -232,26 +188,11 @@ void addMaterial(Context& ctx) {
   }
 
   {
-    auto mmca = py::class_<CoreMaterialMapping, IAlgorithm,
-                           std::shared_ptr<CoreMaterialMapping>>(
-                    mex, "CoreMaterialMapping")
-                    .def(py::init<const CoreMaterialMapping::Config&,
-                                  Acts::Logging::Level>(),
-                         py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<CoreMaterialMapping::Config>(mmca, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
-                       unmappedMaterialTracks, materialMapper,
-                       materiaMaplWriters);
-  }
-
-  {
     auto mvc =
         py::class_<MaterialValidater, std::shared_ptr<MaterialValidater>>(
             m, "MaterialValidater")
             .def(py::init([](const MaterialValidater::Config& config,
-                             Acts::Logging::Level level) {
+                             Logging::Level level) {
                    return std::make_shared<MaterialValidater>(
                        config, getDefaultLogger("MaterialValidater", level));
                  }),
@@ -262,23 +203,6 @@ void addMaterial(Context& ctx) {
         py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, materialAssigner);
   }
-
-  {
-    auto mv = py::class_<MaterialValidation, IAlgorithm,
-                         std::shared_ptr<MaterialValidation>>(
-                  mex, "MaterialValidation")
-                  .def(py::init<const MaterialValidation::Config&,
-                                Acts::Logging::Level>(),
-                       py::arg("config"), py::arg("level"))
-                  .def("execute", &MaterialValidation::execute)
-                  .def_property_readonly("config", &MaterialValidation::config);
-
-    auto c =
-        py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
-                       randomNumberSvc, materialValidater,
-                       outputMaterialTracks);
-  }
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

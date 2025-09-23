@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/Blueprint.hpp"
-
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
@@ -19,9 +18,10 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
 
 #include <fstream>
 #include <random>
@@ -37,7 +37,9 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+using namespace Acts;
+
+namespace ActsPython {
 namespace {
 using std::uniform_real_distribution;
 
@@ -47,7 +49,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       std::size_t runs, std::size_t substepsPerCm,
                       std::pair<double, double> etaRange,
                       Logging::Level logLevel) {
-  using namespace Acts::UnitLiterals;
+  using namespace Acts;
+  using namespace UnitLiterals;
 
   ACTS_LOCAL_LOGGER(getDefaultLogger("pseudoNavigation", logLevel));
 
@@ -63,7 +66,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   for (std::size_t run = 0; run < runs; run++) {
     Vector3 position = Vector3::Zero();
@@ -213,18 +216,18 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
 }  // namespace
 
-void addBlueprint(Context& ctx) {
-  using Acts::Experimental::Blueprint;
-  using Acts::Experimental::BlueprintNode;
-  using Acts::Experimental::BlueprintOptions;
-  using Acts::Experimental::CuboidContainerBlueprintNode;
-  using Acts::Experimental::CylinderContainerBlueprintNode;
-  using Acts::Experimental::GeometryIdentifierBlueprintNode;
-  using Acts::Experimental::LayerBlueprintNode;
-  using Acts::Experimental::MaterialDesignatorBlueprintNode;
-  using Acts::Experimental::StaticBlueprintNode;
-
-  auto m = ctx.get("main");
+/// This adds the geometry building bindings for the Gen3 geometry
+/// @param m the module to add the bindings to
+void addGeometryGen3(py::module_& m) {
+  using Experimental::Blueprint;
+  using Experimental::BlueprintNode;
+  using Experimental::BlueprintOptions;
+  using Experimental::CuboidContainerBlueprintNode;
+  using Experimental::CylinderContainerBlueprintNode;
+  using Experimental::GeometryIdentifierBlueprintNode;
+  using Experimental::LayerBlueprintNode;
+  using Experimental::MaterialDesignatorBlueprintNode;
+  using Experimental::StaticBlueprintNode;
 
   auto blueprintNode =
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(
@@ -324,8 +327,7 @@ void addBlueprint(Context& ctx) {
                            const std::shared_ptr<VolumeBounds>& bounds,
                            const std::string& name) {
                  return std::make_shared<StaticBlueprintNode>(
-                     std::make_unique<Acts::TrackingVolume>(transform, bounds,
-                                                            name));
+                     std::make_unique<TrackingVolume>(transform, bounds, name));
                }),
                py::arg("transform"), py::arg("bounds"),
                py::arg("name") = "undefined")
@@ -519,4 +521,4 @@ void addBlueprint(Context& ctx) {
         "etaRange"_a = std::pair{-4.5, 4.5}, "logLevel"_a = Logging::INFO);
 }
 
-}  // namespace Acts::Python
+}  // namespace ActsPython

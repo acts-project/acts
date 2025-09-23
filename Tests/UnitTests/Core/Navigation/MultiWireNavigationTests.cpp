@@ -13,6 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/MultiWireStructureBuilder.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
@@ -151,6 +152,9 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   // Build the volume
   MultiWireVolumeBuilder mwBuilder(mwCfg);
   std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
+
+  SingleTrapezoidPortalShell portalShell(*volume);
+  portalShell.applyToVolume();
 
   // Check the volume
   // we do not except any children volumes
